@@ -1,4 +1,3 @@
-<!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
 ![Egeria Logo](https://github.com/odpi/egeria/blob/master/assets/img/ODPi_Egeria_Logo_color.png?raw=true)
@@ -6,17 +5,10 @@
 [![GitHub](https://img.shields.io/github/license/odpi/egeria)](LICENSE)
 
 
-# pyegeria: a python client for Egeria
+# pyegeria: source code
 
-This is an experimental package for easily using the Egeria
-open metadata environment from python. Details about the
-open source Egeria project can be found at [Egeria Project](https://egeria-project.org).
-
-This package is in active development. There is some initial
-support for Egeria's platform services along with some basic utilities. 
-Next will be support to configure and operate servers.
-
-The code is organized to mimic the existing Egeria Java Client structure.
+This directory holds the pyegeria source code. Each python file provides a set of services around a given topic.
+This is a work in progress - so some volatility is to be expected.
 
 All feedback is welcome. Please engage via our [community](http://egeria-project.org/guides/community/), 
 team calls, or via github issues in this repo. If interested in contributing,
