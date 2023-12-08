@@ -1,0 +1,55 @@
+
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the ODPi Egeria project.
+
+
+[tool.poetry]
+name = "pyegeria"
+version = "0.0.10"
+authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
+
+description = "A prototype python client for Egeria"
+readme= "README.md"
+#packages = [{include = "pyegeria"}]
+
+license =  "LICENSE"
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+requests = ">=2.28.*"
+validators =">=0.22"
+
+setuptools = ">=58.0"
+urllib3 = ">=1.26"
+
+[tool.poetry.group.test.dependencies]
+pytest ="7.4.*"
+requests-mock = "1.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+
+
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3"
+]
+keywords = ["metadata management", "egeria", "catalog"]
+dependencies = [
+
+    'tomli; python_version <= "3.11"',
+]
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
+
+[project.urls]
+Homepage = "https://egeria-project.org"
+
+[project.scripts]

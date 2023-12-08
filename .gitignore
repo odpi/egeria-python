@@ -2,6 +2,35 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+.idea
+# IntelliJ
+*.iml
+**.iml
+*.ipr
+*.iws
+.idea
+venv
+# DrawIO temporary files
+*.dtmp
+*.bkp
+
+# emacs files
+*#
+*~
+
+# Mac OS
+__MACOSX
+*.dylib
+
+# Eclipse
+.cache
+.classpath
+.project
+.checkstyle
+#Python
+*.pyc
+
 
 # C extensions
 *.so

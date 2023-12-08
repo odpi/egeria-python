@@ -1,0 +1,11 @@
+
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the ODPi Egeria project.
+
+# config.toml for connected_asset_client_base
+
+[egeria_platform]
+url = "https://localhost:9443"
+
+[config]
+isDebug = false
