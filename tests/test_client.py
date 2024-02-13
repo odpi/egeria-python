@@ -11,11 +11,11 @@ import warnings
 
 from contextlib import nullcontext as does_not_raise
 
-import pyegeria.client
-from pyegeria.util_exp import (
+import pyegeria._client
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
-    print_exception_response,
+    print_exception_response, UserNotAuthorizedException,
 )
 
 
@@ -44,20 +44,21 @@ class TestClient:
             (
                 "https://127.0.0.1:30081",
                 "garygeeke",
-                200,
-                does_not_raise(),
+                400,
+                pytest.raises(InvalidParameterException),
             ),
             (
                 "https://127.0.0.1:9443",
-                "",
-                404,
-                pytest.raises(InvalidParameterException),
+                "garygeeke",
+                200,
+                does_not_raise(),
+
             ),
             (
                 "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
                 "meow",
-                404,
-                pytest.raises(InvalidParameterException),
+                401,
+                pytest.raises(UserNotAuthorizedException)
             ),
             (
                 "https://wolfsonnet.me:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",

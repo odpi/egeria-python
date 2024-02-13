@@ -21,7 +21,7 @@ import requests
 from contextlib import nullcontext as does_not_raise
 disable_ssl_warnings = True
 
-from pyegeria.util_exp import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     print_exception_response,
@@ -124,7 +124,7 @@ class TestServerOperations():
             server = self.good_server_1
             p_client = ServerOps(server, self.good_platform2_url, self.good_user_1)
             response = p_client.add_archive_file(
-                "/Users/dwolfson/localGit/pdr/pyEgeria/CocoGovernanceEngineDefinitionsArchive.json",
+                "/Users/dwolfson/localGit/pdr/pyegeria/CocoGovernanceEngineDefinitionsArchive.json",
                 server)
             print_rest_response(response)
             assert response.get("relatedHTTPCode") == 200, "Invalid URL or server"

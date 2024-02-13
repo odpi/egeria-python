@@ -15,7 +15,7 @@ import warnings
 from contextlib import nullcontext as does_not_raise
 
 
-from pyegeria.util_exp import (
+from pyegeria._exceptions import (
     validate_user_id,
     validate_server_name,
     validate_guid,
