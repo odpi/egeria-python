@@ -6,18 +6,12 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
-from .client import Client
-
 from requests import Response
 
-from .util_exp import (
-    OMAGCommonErrorCode,
-    EgeriaException,
+from pyegeria._exceptions import (
     InvalidParameterException,
-    OMAGServerInstanceErrorCode,
-    PropertyServerException,
-    is_json,
 )
+from pyegeria._client import Client
 
 
 class ServerOps(Client):
@@ -66,8 +60,6 @@ class ServerOps(Client):
         """
         Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
 
-           /open-metadata/server-operations/users/{userId}/servers/{serverName}/instance/configuration
-
         Parameters
         ----------
         server: str - name of the server to get the configuration for.
@@ -81,22 +73,15 @@ class ServerOps(Client):
             server = self.server_name
 
         url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
-
         response = self.make_request("GET", url)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json()
+        if type(response) is dict:
+            return response.json().get("omagserverConfig", "No configuration found")
         else:
-            raise InvalidParameterException(response.content)
+            return ("No configuration found")
 
     def add_archive_file(self, archive_file: str, server: str = None) -> Response:
         """
         Load the server with the contents of the indicated archive file.
-
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/file
 
         Parameters
         ----------
@@ -166,34 +151,36 @@ class ServerOps(Client):
         else:
             raise InvalidParameterException(response.content)
 
-    def get_active_server_status(self, server: str = None) -> Response:
+    def get_active_server_status(self, server: str = None) -> dict:
         """
-        Get the status for the specified server.
-        /open-metadata/server-operations/users/{userId}/servers/{server}/instance/status
+                Get the status for the specified server.
+                /open-metadata/platform-services/users/{userId}/server-platform/servers/{server}/instance/status
 
-        Parameters
-        ----------
-        server : Use the server if specified. If None, use the default server associated with the Platform object.
+                Parameters
+                ----------
+                server : Use the server if specified. If None, use the default server associated with the Platform object.
 
-        Returns
-        -------
-        Response object. Also throws exceptions if no viable endpoint or errors
+                Returns
+                -------
+                dict: a json object containing the status of the specified server
 
-        """
+                Raises
+                ------
+                InvalidParameterException
+                  If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+                PropertyServerException
+                  Raised by the server when an issue arises in processing a valid request
+                NotAuthorizedException
+                  The principle specified by the user_id does not have authorization for the requested action
+                """
         if server is None:
             server = self.server_name
 
         url = self.admin_command_root + "/servers/" + server + "/instance/status"
 
         response = self.make_request("GET", url)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json()
-        else:
-            raise InvalidParameterException(response.content)
+        return response.json()
 
     def get_active_service_list_for_server(self, server: str = None) -> Response:
         """
@@ -215,21 +202,11 @@ class ServerOps(Client):
 
         url = self.admin_command_root + "/servers/" + server + "/services"
         response = self.make_request("GET", url)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
+        return response.json().get("serverServicesList")
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            service_list = response.json().get("serverServicesList")
-            return service_list
-        else:
-            raise InvalidParameterException(response.content)
-
-    def get_server_status(self, server: str = None) -> Response:
+    def get_server_status(self, server: str = None) -> dict:
         """
         Get status of the server specified.
-
-        /open-metadata/server-operations/users/{userId}/server-platform/servers/{server}/status
 
         Parameters
         ----------
@@ -237,27 +214,18 @@ class ServerOps(Client):
 
         Returns
         -------
-        Response object. Also throws exceptions if no viable endpoint or errors
-
+        Json dict containing the active server status.
         """
         if server is None:
             server = self.server_name
 
         url = self.admin_command_root + "/servers/" + server + "/instance/status"
         response = self.make_request("GET", url)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json()
-        else:
-            raise InvalidParameterException(response.content)
-
+        return response.json()
 
 if __name__ == "__main__":
     p = ServerOps("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
-    response = p.list_servers()
+    response = p.get_active_service_list_for_server()
     out = response.json()["result"]
     print(out)
-# activatePlatform(corePlatformName, corePlatformURL, [cocoMDS2Name, cocoMDS3Name, cocoMDS5Name, cocoMDS6Name])
+
