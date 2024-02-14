@@ -7,7 +7,7 @@ easy access to Egeria (https://egeria-project.org). The package is currently in
 development. 
 
 The first capabilities are around Egeria's platform services used to start and stop
-the server platform and servers. 
+the server platform and servers along with some basic configuration of Egeria servers.
 
 """
 
