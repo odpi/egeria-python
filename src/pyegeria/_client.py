@@ -9,17 +9,11 @@ different client capabilities. It also provides the common methods used to make 
 import inspect
 import json
 import os
+
 import requests
 from requests import Response
-from enum import Enum
-from pyegeria._globals import max_paging_size
 
-from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-)
+from pyegeria._globals import max_paging_size
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
@@ -27,7 +21,12 @@ from pyegeria._validators import (
     validate_user_id,
     is_json
 )
-
+from pyegeria.exceptions import (
+    OMAGCommonErrorCode,
+    InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException,
+)
 
 # class RequestType(Enum):
 #     """
@@ -64,6 +63,7 @@ class Client:
             The password used to authenticate the server identity
 
     Methods
+    -------
         create_egeria_bearer_token(user_Id: str, password: str = None) -> str
            Create a bearer token using the simple Egeria token service - store the bearer token in the object instance.
 
@@ -116,7 +116,6 @@ class Client:
         #     else:
         #         self.token = token
 
-
         if api_key is None:
             api_key = os.environ.get("API_KEY",None)
         self.api_key = api_key
@@ -129,9 +128,10 @@ class Client:
             "Content-Type": "text/plain",
             "x-api-key": api_key,
             }
+       # if no token is set yet, allow it to be set by a subsequent method
         if token is None:
-            validate_user_id(user_id)
-            self.user_id = user_id
+        #     validate_user_id(user_id)
+            pass
         else:
             self.headers["Authorization"] = f"Bearer {token}"
             self.text_headers["Authorization"] = f"Bearer {token}"
@@ -469,7 +469,6 @@ class Client:
                 }
             )
             raise InvalidParameterException(exc_msg)
-
 
 
 if __name__ == "__main__":

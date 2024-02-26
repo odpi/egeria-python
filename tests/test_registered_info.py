@@ -17,7 +17,7 @@ import json
 
 from pyegeria.registered_info import RegisteredInfo
 
-from pyegeria._exceptions import (
+from pyegeria.exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -100,7 +100,7 @@ class TestRegisteredInfoServices:
             r_client = RegisteredInfo(self.good_platform1_url,
                                       server_name=self.good_server_1, user_id=self.good_user_1)
 
-            response = r_client.list_severity_definitions(fmt='table', skinny=False, wrap_len=30)
+            response = r_client.list_severity_definitions(fmt='json', skinny=False, wrap_len=20)
             print(json.dumps(response, indent=4))
             assert True
 

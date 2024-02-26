@@ -27,9 +27,6 @@ class CoreServerConfig(Client):
      services in the OMAG server.
 
     Methods:
-        - __init__(server_name: str, platform_url: str, user_id: str, user_pwd: str = None,
-                  verify_flag: bool = enable_ssl_check):
-            Constructor method for the CoreServerConfig class.
 
         - get_stored_configuration(server_name: str = None) -> dict:
             Retrieves all the configuration documents for a server.
@@ -110,6 +107,30 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/configuration"
         response = self.make_request("GET", url)
         return response.json().get("omagserverConfig", "No configuration found")
+
+    def is_server_configured(self, server_name:str= None) -> bool:
+        """ Check if the server has a stored configuration
+
+        Parameters
+        ----------
+        server_name : str, optional
+            The name of the server. If not provided, it uses the default server_name from the instance.
+
+        Returns
+        -------
+        bool
+            Returns True if the server has a stored configuration, False otherwise.
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        response = self.get_stored_configuration(server_name=server_name)
+
+        if 'auditTrail' in response:
+            return True
+        else:
+            return False
+
 
     def get_configured_access_services(self, server_name: str = None) -> list | str:
         """ Return the list of access services that are configured for this server.
@@ -2262,7 +2283,7 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/engine-definitions/client-config"
         self.make_request("POST", url, body)
 
-    def clear_an_engine_list(self, server_name: str = None) -> None:
+    def clear_engine_list(self, server_name: str = None) -> None:
         """ Remove the configuration for the Governance Engine OMAS Engine client configuration in a single call.
         This overrides the current values.
 
@@ -2408,3 +2429,77 @@ class CoreServerConfig(Client):
 
         # return response.json().get("config", "No engine definitions client configuration found")
         return response.json().get("services", "No engine host services")
+
+    def get_placeholder_variables(self) -> dict:
+        """ get placeholder variables
+
+        Get the placeholder variables from the platform.
+
+        Returns:
+            dict: A dictionary containing the placeholder variables.
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+
+
+
+        """
+        url = self.admin_command_root + "/stores/placeholder-variables"
+        response = self.make_request("GET", url)
+
+        return response.json().get("stringMap")
+
+    def set_placeholder_variables(self, placeholder_variables: dict) -> None:
+        """ Set placeholder variables - replaces previous placeholders with the new list
+
+        Parameters
+        ----------
+        placeholder_variables : dict
+            A dictionary containing the placeholder variables.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        url = f"{self.admin_command_root}/stores/placeholder-variables"
+        self.make_request("POST", url, placeholder_variables)
+
+    def clear_placeholder_variables(self) -> None:
+        """
+        Clears the placeholder variables for a store.
+
+        Parameters:
+        - self: The instance of the class.
+
+        Returns:
+        - None
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        url = f"{self.admin_command_root}/stores/placeholder-variables"
+        self.make_request("DELETE", url)
+

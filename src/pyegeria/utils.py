@@ -51,7 +51,7 @@ def wrap_text(df: pd.DataFrame, wrap_len: int = 30) -> pd.DataFrame:
             return cell_contents
 
     # Apply the helper function to each element in the DataFrame
-    return df.applymap(lambda x: wrap_cell_contents(x, wrap_len))
+    return df.map(lambda x: wrap_cell_contents(x, wrap_len))
 
 
 def print_nice_table(df, wrap_len: int = 20, tablefmt: str = "grid") -> None:

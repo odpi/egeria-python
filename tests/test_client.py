@@ -12,7 +12,7 @@ import warnings
 from contextlib import nullcontext as does_not_raise
 
 import pyegeria._client
-from pyegeria._exceptions import (
+from pyegeria.exceptions import (
     InvalidParameterException,
     PropertyServerException,
     print_exception_response, UserNotAuthorizedException,
