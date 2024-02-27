@@ -8,14 +8,13 @@ Copyright Contributors to the ODPi Egeria project.
 
 from requests import Response
 
-from pyegeria._exceptions import (
+from pyegeria.exceptions import (
     InvalidParameterException,
 )
-from pyegeria._client import Client
+from pyegeria import Platform
 
 
-class ServerOps(Client):
-
+class ServerOps(Platform):
     """
     Client to issue operations on a running OMAG server.
 
@@ -44,42 +43,19 @@ class ServerOps(Client):
     admin_command_root: str
 
     def __init__(
-        self,
-        server_name: str,
-        platform_url: str,
-        user_id: str,
-        user_pwd: str = None,
-        verify_flag: bool = False,
+            self,
+            server_name: str,
+            platform_url: str,
+            user_id: str,
+            user_pwd: str = None,
+            verify_flag: bool = False,
     ):
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
+        Platform.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
         self.admin_command_root = (self.platform_url +
                                    "/open-metadata/server-operations/users/" +
                                    user_id)
 
-    def get_active_configuration(self, server: str = None) -> str:
-        """
-        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
-
-        Parameters
-        ----------
-        server: str - name of the server to get the configuration for.
-
-        Returns
-        -------
-        Returns configuration if server is active; InvalidParameter exception thrown otherwise
-
-        """
-        if server is None:
-            server = self.server_name
-
-        url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
-        response = self.make_request("GET", url)
-        if type(response) is dict:
-            return response.json().get("omagserverConfig", "No configuration found")
-        else:
-            return ("No configuration found")
-
-    def add_archive_file(self, archive_file: str, server: str = None) -> Response:
+    def add_archive_file(self, archive_file: str, server: str = None) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -98,20 +74,12 @@ class ServerOps(Client):
             server = self.server_name
 
         url = (
-            self.admin_command_root
-            + "/servers/" + server
-            + "/instance/open-metadata-archives/file"
+                self.admin_command_root
+                + "/servers/" + server
+                + "/instance/open-metadata-archives/file"
         )
 
-        response = self.make_request("POST-DATA", url, archive_file)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json()
-        else:
-            raise InvalidParameterException(response.content)
+        self.make_request("POST-DATA", url, archive_file)
 
     def add_archive(self, archive_connection: str, server: str = None) -> Response:
         """
@@ -136,9 +104,9 @@ class ServerOps(Client):
             server = self.server_name
 
         url = (
-            self.admin_command_root
-            + "/servers/" + server
-            + "/instance/open-metadata-archives/connection"
+                self.admin_command_root
+                + "/servers/" + server
+                + "/instance/open-metadata-archives/connection"
         )
 
         response = self.make_request("POST-DATA", url, archive_connection)
@@ -223,9 +191,9 @@ class ServerOps(Client):
         response = self.make_request("GET", url)
         return response.json()
 
+
 if __name__ == "__main__":
     p = ServerOps("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
     response = p.get_active_service_list_for_server()
     out = response.json()["result"]
     print(out)
-

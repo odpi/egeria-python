@@ -12,9 +12,11 @@ This is an experimental package for easily using the Egeria
 open metadata environment from python. Details about the
 open source Egeria project can be found at [Egeria Project](https://egeria-project.org).
 
-This package is in active development. There is some initial
-support for Egeria's platform services along with some basic utilities. 
-Next will be support to configure and operate servers.
+This package is in active development. There is initial
+support for Egeria's platform services and configuration of Open Metadata and Governance servers
+along with some basic utilities. 
+Next will be additional support to configure and operate servers, followed
+by glossary support.
 
 The code is organized to mimic the existing Egeria Java Client structure.
 

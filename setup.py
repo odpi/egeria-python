@@ -5,7 +5,7 @@ setup(
     extras_require=dict(tests=["pytest"]),
     # packages=find_packages(where="src"),
     package_dir={"": "src"},
-    version='0.04',
+    version='0.1.1.6',
     packages=['pyegeria'],
     url='https://egeria-project.org',
     license='Apache 2.0',

@@ -196,6 +196,7 @@ class TestValidators:
 
         with expectation as e:
             res = validate_url(url)
+            print(f"\n\n\turl: {url}, result: {res}")
             assert res == result, "Invalid URL"
         if e:
             print_exception_response(e.value)

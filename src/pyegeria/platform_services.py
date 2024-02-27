@@ -11,16 +11,16 @@ import json
 
 import requests
 
-from pyegeria._exceptions import (
+from pyegeria import CoreServerConfig, Client
+from pyegeria.exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
     UserNotAuthorizedException,
-    PropertyServerException,
+    PropertyServerException, print_exception_response,
 )
-from pyegeria.server_operations import ServerOps
 
 
-class Platform(ServerOps):
+class Platform(Client):
     """
     Client to operate Egeria Platforms - inherits from Server Ops
 
@@ -43,33 +43,37 @@ class Platform(ServerOps):
 
 
 
-        get_platform_origin(self) -> str
+        get_platform_origin() -> str
 
-        activate_server_stored_config(self, server: str = None, timeout: int = 30) -> None
+        activate_server_stored_config(server: str = None, timeout: int = 30) -> None
 
-        activate_server_supplied_config(self, config_body: str, server: str = None, timeout: int = 30) -> None
+        activate_server_supplied_config(config_body: str, server: str = None, timeout: int = 30) -> None
 
-        get_known_servers(self) -> list[str] | str
+        get_active_server_instance_status(server: str = None)-> dict | str
 
-        is_server_known(self, server: str = None) -> bool
+        get_known_servers() -> list[str] | str
 
-        check_server_active(self, server: str = None)
+        is_server_known(server: str = None) -> bool
 
-        get_active_server_list(self) -> dict | str
+        is_server_configured(server: str = None) -> bool
 
-        shutdown_platform(self) -> None:
+        check_server_active(server: str = None)
 
-        shutdown_server(self, server: str = None) -> None:
+        get_active_server_list() -> dict | str
 
-        shutdown_unregister_servers(self) -> None
+        shutdown_platform() -> None:
 
-        shutdown_all_servers(self) -> None
+        shutdown_server(server: str = None) -> None:
 
-        activate_server_if_down(self, server: str) -> bool
+        shutdown_unregister_servers() -> None
 
-        activate_servers_on_platform(self, server_list: str) -> bool
+        shutdown_all_servers() -> None
 
-        list_servers(self) -> list[str] | str
+        activate_server_if_down(server: str) -> bool
+
+        activate_servers_on_platform(server_list: str) -> bool
+
+       activate_platform(self, platform_name: str, hosted_server_names: [str], timeout:int = 60) -> None
 
     """
 
@@ -83,7 +87,7 @@ class Platform(ServerOps):
             user_pwd: str = None,
             verify_flag: bool = False,
     ):
-        ServerOps.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
         self.admin_command_root = (self.platform_url +
                                    "/open-metadata/platform-services/users/" +
                                    user_id +
@@ -212,7 +216,7 @@ class Platform(ServerOps):
             )
             raise InvalidParameterException(exc_msg)
 
-    def activate_server_stored_config(self, server: str = None, timeout: int = 30) -> None:
+    def activate_server_stored_config(self, server: str = None, timeout: int = 60) -> None:
         """ Activate a server on the associated platform with the stored configuration.
 
         Parameters
@@ -239,7 +243,7 @@ class Platform(ServerOps):
 
         self.make_request("POST", url, time_out=timeout)
 
-    def activate_server_supplied_config(self, config_body: str, server: str = None, timeout: int = 30) -> None:
+    def activate_server_supplied_config(self, config_body: str, server: str = None, timeout: int = 60) -> None:
         """ Activate a server on the associated platform with the stored configuration.
 
         Parameters
@@ -269,6 +273,34 @@ class Platform(ServerOps):
 
         url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
         self.make_request("POST", url, config_body, time_out=timeout)
+
+    def get_active_server_instance_status(self, server: str = None) -> dict | str:
+        """ Get the current status of all services running in the specified active server.
+
+                Parameters
+                ----------
+                server : str, optional
+                    The current active server we want to get status from.
+                    If None, use the default server associated with the Platform object.
+                Returns
+                -------
+                List of server status.
+
+                Raises
+                ------
+                InvalidParameterException
+                  If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+                PropertyServerException
+                  Raised by the server when an issue arises in processing a valid request
+                NotAuthorizedException
+                  The principle specified by the user_id does not have authorization for the requested action
+                """
+        if server is None:
+            server = self.server_name
+
+        url = f"{self.admin_command_root}/servers/{server}/instance/status"
+        response = self.make_request("GET", url)
+        return response.json().get("serverStatus", "No status found")
 
     def get_known_servers(self) -> list[str] | str:
         """ List all known servers on the associated platform.
@@ -319,6 +351,50 @@ class Platform(ServerOps):
         url = self.admin_command_root + "/servers/" + server + "/is-known"
         response = self.make_request("GET", url)
         return response.json().get("flag")
+
+    def is_server_configured(self, server: str = None) -> bool:
+        """ is a server known and configured?
+        Parameters
+        ----------
+        server : str, optional
+            The name of the server to check if configured. If not specified, the server name stored in `self.server_name` will be used.
+
+        Returns
+        -------
+        bool
+            Returns `True` if the server is configured, otherwise `False`.
+        """
+        if server is None:
+            server = self.server_name
+        config_response = self.get_active_configuration(server)
+        if type(config_response) is dict:
+            return True
+        else:
+            return False
+
+    def get_active_configuration(self, server: str = None) -> dict | str:
+        """
+        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+
+        Parameters
+        ----------
+        server: str - name of the server to get the configuration for.
+
+        Returns
+        -------
+        Returns configuration if server is active; InvalidParameter exception thrown otherwise
+
+        """
+        if server is None:
+            server = self.server_name
+
+        is_known = self.is_server_known(server)
+        if is_known is False:
+            return "No active configuration found"
+
+        url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
+        response = self.make_request("GET", url)
+        return response.json().get("omagserverConfig", "No active configuration found")
 
     def check_server_active(self, server: str = None):
         """ Get status of the server specified.
@@ -469,14 +545,17 @@ class Platform(ServerOps):
         url = self.admin_command_root + "/servers/instance"
         self.make_request("DELETE", url)
 
-    def activate_server_if_down(self, server: str) -> bool:
+    def activate_server_if_down(self, server: str, verbose:bool = True, timeout:int = 60) -> bool:
         """ Activate server if it is down.
 
         Parameters
         ----------
         server : str
             The name of the server to activate. If None, the method uses the server name stored in the object.
-
+        verbose: bool, optional
+            If 'verbose' is False, then print statements are ignored. Defaults to True.
+        timeout: int, optional
+            A time in seconds to wait for the request to complete
         Returns
         -------
         bool
@@ -491,31 +570,47 @@ class Platform(ServerOps):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
+        c_client = CoreServerConfig(server,self.platform_url, self.user_id)
+
         if server is None:
             server = self.server_name
         try:
-            is_known = self.is_server_known(server)
-            if is_known:
-                actives = self.get_active_server_list()
-                if actives is None:
-                    self.activate_server_stored_config(server)
+            if verbose:
+                print(f"\n\tChecking OMAG Server {server}")
+            is_configured = c_client.is_server_configured()
+            if is_configured:
+                if verbose:
+                    print(f"        OMAG Server {server} is configured")
+                active_servers = self.get_active_server_list()
+                if server in active_servers:
+                    if verbose:
+                        print(f"        OMAG Server {server} is active")
                     return True
-                if server not in actives:
-                    self.activate_server_stored_config(server)
+                else: # configured but not active, so activate
+                    if verbose:
+                        print(f"        OMAG Server {server} is being activated")
+                    self.activate_server_stored_config(timeout=timeout)
                     return True
-                else:
-                    return True  # server was already active
             else:
+                if verbose:
+                    print(f"      OMAG Server {server} needs to be configured")
                 return False
+
         except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            if verbose:
+                print_exception_response(e)
             raise (e)
 
-    def activate_servers_on_platform(self, server_list: str) -> bool:
+    def activate_servers_on_platform(self, server_list: [str], verbose = False, timeout:int = 60) -> bool:
         """ Activate the servers from the list provided.
         Parameters
         ----------
         server_list : str
             A string representing the list of servers to be activated.
+        verbose: bool, optional
+            If verbose is true, print out diagnostic messages.
+        timeout: int, optional
+            A time in seconds to wait for the request to complete
 
         Returns
         -------
@@ -538,12 +633,73 @@ class Platform(ServerOps):
         `activate_server_stored_config` method for each server. The method returns True if at least one server
         is successfully activated, otherwise it returns False.
         """
+        c_client = CoreServerConfig(server_list[0], self.platform_url, self.user_id)
         num_servers = len(server_list)
         if num_servers > 0:
-            for x in range(num_servers):
-                self.activate_server_stored_config(server_list[x])
+            for x in server_list:
+                if c_client.is_server_configured(x) is True:
+                    if verbose:
+                        print(f"\t\tServer {x} is configured and ready to be activated")
+                    self.activate_server_stored_config(x, timeout=timeout)
+                    if verbose:
+                        print(f"\t\tServer {x} was activated")
+                else:
+                    if verbose:
+                        print(f"\t\tServer {x} is not configured - returning")
+                    return False # a server was not configured
             return True
-        return False
+        else:
+            if verbose:
+                print(f"\t\tServer list empty")
+            return False
+
+    def activate_platform(self, platform_name: str, hosted_server_names: [str], timeout:int = 60) -> None:
+        """ Activate an OMAG Server Platform and start the servers requested
+
+        Parameters
+        ----------
+        platform_name : str
+            The display friendly name of the platform to activate.
+
+        hosted_server_names : list of str
+            List of names of the OMAG servers to activate.
+
+        timeout: int, optional
+            A time in seconds to wait for the request to complete
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        Exception
+            If there is an error while activating the platform or starting the servers.
+
+        Notes
+        -----
+        This method attempts to activate a platform by checking its status. If the platform is already active and running, it prints a message indicating so and activates any hosted servers
+        * that are down. If the platform is not active, it prints a message indicating so. If there is any exception while activating the platform or starting the servers, it prints an error
+        * message and the exception response.
+        """
+        try:
+            status = self.get_platform_origin()
+            if status:
+                print(f"\n\n\t Platform {platform_name} is active and running: \n\t\t{status}")
+                print(f"\tWill start the following servers if configured: {hosted_server_names}")
+                for server in hosted_server_names:
+                    activated = self.activate_server_if_down(server, timeout=timeout)
+                    if activated:
+                        print(f"\t Started server: {server}")
+                return
+            else:
+                print(f"   {platform_name}, is down - start it before proceeding")
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        )as e:
+            print(f"   {platform_name}, is down - start it before proceeding")
+            print_exception_response(e)
 
 
 if __name__ == "__main__":

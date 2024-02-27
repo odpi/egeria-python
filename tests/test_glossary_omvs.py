@@ -17,17 +17,17 @@ import json
 
 from contextlib import nullcontext as does_not_raise
 
-from pyegeria._exceptions import (
+from pyegeria.exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    print_rest_response, print_json_list_as_table,
 )
 
 from pyegeria.core_omag_server_config import CoreServerConfig
 
 from pyegeria.glossary_omvs import GlossaryBrowser
+from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -49,25 +49,26 @@ class TestCoreAdminServices:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
     good_integ_1 = "fluffy_integration"
-    good_server_1 = "fluffy"
-    good_server_2 = "fluffyView1"
+    good_server_1 = "simple-metadata-store"
+    good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
-    good_server_5 = "cocoMDS1"
+    good_server_5 = "fluffy_kv"
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
-    good_view_server_1 = "cocoView1"
-    good_view_server_2 = "fluffyView1"
+    good_view_server_1 = "view-server"
+    good_view_server_2 = "fluffy_view"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
     def test_find_glossaries(self):
         try:
-            g_client = GlossaryBrowser(self.good_server_2, self.good_platform1_url)
+            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url,
+                                       user_id=self.good_user_2)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-
-            response = g_client.find_glossaries('f', starts_with=True, ignore_case=True,page_size=0, effective_time=None)
+            response = g_client.find_glossaries('*', starts_with=False, ends_with=False,
+                                                ignore_case=True,page_size=0, effective_time=None)
             # resp_str = json.loads(response)
 
             if type(response) is list :
@@ -89,16 +90,15 @@ class TestCoreAdminServices:
 
     def test_get_terms_for_glossary(self):
         try:
-            g_client = GlossaryBrowser(self.good_server_2, self.good_platform1_url)
+            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url,
+                                       user_id="erinoverview")
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            # g_client.set_bearer_token("2")
-            glossary_guid = "ac9e78c0-b1ee-42ff-8865-54f071fc8615"
+            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
             response = g_client.get_terms_for_glossary(glossary_guid, page_size=500, effective_time=None)
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
-                # print_json_list_as_table(response)
                 count = len(response)
                 print(f"Found {count} terms")
             elif type(response) is str:
@@ -116,14 +116,14 @@ class TestCoreAdminServices:
 
     def test_find_glossary_terms(self):
         try:
-            g_client = GlossaryBrowser(self.good_server_2, self.good_platform1_url)
+            g_client = GlossaryBrowser(self.good_view_server_2, self.good_platform1_url)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "ac9e78c0-b1ee-42ff-8865-54f071fc8615"
-            response = g_client.find_glossary_terms('7', glossary_guid=glossary_guid, starts_with=False,
+            glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+            response = g_client.find_glossary_terms('*', glossary_guid=glossary_guid, starts_with=True,
                                                     ends_with= False, for_lineage=False, for_duplicate_processing=True,
-                                                    status_filter=['ACTIVE'], page_size=10, effective_time=None)
-            # resp_str = json.loads(response)
+                                                    status_filter=[], page_size=10, effective_time=None)
 
             if type(response) is list :
                 print("\n\n" + json.dumps(response, indent=4))
@@ -144,18 +144,42 @@ class TestCoreAdminServices:
 
     def test_get_terms_by_name(self):
         try:
-            g_client = GlossaryBrowser(self.good_server_2, self.good_platform1_url)
+            g_client = GlossaryBrowser(self.good_view_server_2, self.good_platform1_url)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "ac9e78c0-b1ee-42ff-8865-54f071fc8615"
-            response = g_client.get_terms_by_name('Email09', glossary_guid=glossary_guid, for_lineage=False,
+            glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd"
+            response = g_client.get_terms_by_name('Email24', glossary_guid=glossary_guid, for_lineage=False,
                                                   for_duplicate_processing=False, status_filter=[], page_size=10,
                                                   effective_time=None)
-            # resp_str = json.loads(response)
 
             if type(response) is list :
                 print("\n\n" + json.dumps(response, indent=4))
                 # print_json_list_as_table(response)
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_glossary_for_term(self):
+        try:
+            g_client = GlossaryBrowser(self.good_view_server_2, self.good_platform1_url)
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_guid = "009f0bb7-a0db-44ab-8fb6-a2aa85c7c1a1"
+            response = g_client.get_glossary_for_term(term_guid, for_lineage=False,
+                                                  for_duplicate_processing=False)
+
+            if type(response) is dict :
+                print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} terms")
             elif type(response) is str:
