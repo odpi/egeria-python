@@ -1135,6 +1135,39 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/read-only-repository"
         self.make_request("POST", url)
 
+    def set_plug_in_repository(self, config_body: dict, server_name:str = None)-> None:
+        """ Configure the metadata repository using a full repository connection body.
+
+        Parameters
+        ----------
+        config_body : dict
+            The configuration body for the plug-in repository. This should contain the necessary parameters for
+            connecting to the repository.
+
+        server_name : str, optional
+            The name of the server. If not provided, the default server name will be used.
+
+        Returns
+        -------
+        None
+            This method does not return anything.
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
+        self.make_request("POST", url, config_body)
+
+
     def set_xtdb_in_mem_repository(self, server_name: str = None) -> None:
         """ Set xtdb local repository connection to be XTDB with an in memory repository
 

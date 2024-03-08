@@ -3,15 +3,15 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 This is a simple class to create and manage a connection to an Egeria backend. It is the Superclass for the
-different client capabilities. It also provides the common methods used to make restful requests to Egeria.
+different client capabilities. It also provides the common methods used to make restful self.session to Egeria.
 
 """
 import inspect
 import json
 import os
+import httpx
+import asyncio
 
-import requests
-from requests import Response
 
 from pyegeria._globals import max_paging_size
 from pyegeria._validators import (
@@ -25,19 +25,10 @@ from pyegeria.exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
+    UserNotAuthorizedException, print_exception_response,
 )
 
-# class RequestType(Enum):
-#     """
-#     Enum class for RequestType containing 4 values - GET, POST, PUT, PATCH, DELETE
-#     """
-#
-#     GET = "GET"
-#     POST = "POST"
-#     PUT = "PUT"
-#     PATCH = "PATCH"
-#     DELETE = "DELETE"
+
 
 
 ...
@@ -96,6 +87,7 @@ class Client:
         page_size: int = max_paging_size,
         token: str = None,
         token_src: str = None,
+        async_mode: bool = False
     ):
         self.server_name = None
         self.platform_url = None
@@ -105,6 +97,10 @@ class Client:
         self.page_size = page_size
         self.token_src = token_src
         self.token = token
+        self.sync_mode = async_mode
+        self.exc_type = None
+        self.exc_value = None
+        self.exc_tb = None
 
         #
         #           I'm commenting this out since you should only have to use tokens if you want - just have to
@@ -122,17 +118,15 @@ class Client:
 
         self.headers = {
             "Content-Type": "application/json",
-            "x-api-key": api_key,
             }
         self.text_headers = {
             "Content-Type": "text/plain",
-            "x-api-key": api_key,
             }
-       # if no token is set yet, allow it to be set by a subsequent method
-        if token is None:
-        #     validate_user_id(user_id)
-            pass
-        else:
+        if self.api_key is not None:
+            self.headers["X-Api-Key"] = self.api_key
+            self.text_headers["X-Api-Key"] = self.api_key
+
+        if token is not None:
             self.headers["Authorization"] = f"Bearer {token}"
             self.text_headers["Authorization"] = f"Bearer {token}"
 
@@ -145,7 +139,28 @@ class Client:
             self.platform_url = platform_url
             if validate_server_name(server_name):
                 self.server_name = server_name
-            self.session = requests.Session()
+            # if self.sync_mode:
+            #     self.session = httpx.Client(verify=self.ssl_verify)
+            # else:
+            #     self.session = httpx.AsyncClient(verify=self.ssl_verify)
+            self.session = httpx.AsyncClient(verify=self.ssl_verify)
+
+    def __enter__(self):
+        print("entered client")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.aclose()
+        if exc_type is not None:
+            self.exc_type = exc_type
+            self.exc_val = exc_val
+            self.exc_tb = exc_tb
+
+        return False # allows exceptions to propagate
+
+    def close_session(self) -> None:
+        """Close the session"""
+        self.session.aclose()
 
     def create_egeria_bearer_token(self, user_Id: str, password: str = None) -> str:
         """ Create and set an Egeria Bearer Token for the user
@@ -184,8 +199,9 @@ class Client:
             "userId": user_Id,
             "password": password
         }
-        response = self.session.post(url, json=data, headers=self.headers, verify=self.ssl_verify, timeout=30)
-        # response = self.make_request("POST", url, data)
+        with httpx.Client(verify=self.ssl_verify) as client:
+            response = client.post(url, json=data, headers=self.headers)
+
         token = response.text
         if token:
             self.token_src = 'Egeria'
@@ -235,10 +251,28 @@ class Client:
     def get_token(self) -> str:
         return self.text_headers["Authorization"]
 
-    def make_request(
-        self, request_type: str, endpoint: str, payload: str | dict = None, time_out: int = 30) -> Response:
+    def make_request(self, request_type: str, endpoint: str,  payload: str | dict = None,
+                     time_out: int = 30) -> dict | str:
+
+        # if self.sync_mode:
+        #     print(f"\nasync is: {self.sync_mode}")
+        # loop = asyncio.new_event_loop()
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_make_request(request_type, endpoint,
+                                                         payload, time_out))
+        # asyncio.set_event_loop(loop)
+        # response = asyncio.run( self._async_make_request(request_type, endpoint,
+        #                                                  payload, time_out))
+        # else:
+        #     response = await self.smart_make_request( request_type, endpoint,
+        #                                                    payload, time_out)
+        # # response = self.async_make_request(request_type, endpoint,payload, time_out)
+        return response
+
+    async def _async_make_request(
+        self, request_type: str, endpoint: str, payload: str | dict = None, time_out: int = 30) -> dict | str:
         """
-        Function to make an API call via the Requests Library. Raise an exception if the HTTP response code
+        Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
         is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
 
         :param request_type: Type of Request.
@@ -258,36 +292,36 @@ class Client:
         try:
             response = ""
             if request_type == "GET":
-                response = requests.get(
-                    endpoint, params=payload, verify=self.ssl_verify, headers=self.headers
-                )
+                # if self.sync_mode:
+                #     response = self.session.get(endpoint, params=payload, headers=self.headers)
+                # else:
+                response = await self.session.get(endpoint, params=payload, headers=self.headers)
+
             elif request_type == "POST":
                 if type(payload) is str:
-                    response = requests.post(
-                        endpoint,
-                        headers=self.text_headers,
-                        timeout=time_out,
-                        data=payload,
-                        verify=self.ssl_verify,
-                )
+                    # if True:
+                    response = await self.session.post(endpoint, headers=self.text_headers, data=payload)
+                    #
+                    # else: response = self.session.post(endpoint, headers=self.text_headers,
+                    #                                        timeout=time_out, data=payload)
                 else:
-                    response = requests.post(
-                        endpoint,
-                        headers=self.headers,
-                        timeout=time_out,
-                        json=payload,
-                        verify=self.ssl_verify,
-                    )
+                    if True:
+                        response = await self.session.post(endpoint, headers=self.headers, json=payload, )
+                    # else: response = self.session.post(endpoint, headers=self.headers,
+                    #                                     timeout=time_out, json=payload, )
+
             elif request_type == "POST-DATA":
-                response = requests.post(
-                    endpoint,
-                    headers=self.headers,
-                    timeout=time_out,
-                    data=payload,
-                    verify=self.ssl_verify,
-                )
+                    if True:
+                        response = await self.session.post(endpoint, headers=self.headers,
+                                                          data=payload )
+
+                    # else: response = self.session.post(endpoint, headers=self.headers,
+                    #                                      timeout=time_out, data=payload )
             elif request_type == "DELETE":
-                response = requests.delete(endpoint, timeout=30, verify=self.ssl_verify, headers=self.headers)
+                    if True:
+                            response = await self.session.delete(endpoint, timeout=30, headers=self.headers)
+                    # else: response = self.session.delete(endpoint, timeout=30, headers=self.headers)
+
             status_code = response.status_code
 
             if status_code in (200, 201):
@@ -395,7 +429,7 @@ class Client:
                     caller_method,
                     endpoint,
                     OMAGCommonErrorCode.EXCEPTION_RESPONSE_FROM_API.value["message_id"],
-                )
+                ) + "==>System reports:'" + response.reason_phrase + "'"
                 exc_msg = json.dumps(
                     {
                         "class": "VoidResponse",
@@ -431,14 +465,15 @@ class Client:
         except UserNotAuthorizedException:
             raise
         except (
-            requests.ConnectionError,
-            requests.ConnectTimeout,
-            requests.HTTPError,
-            requests.RequestException,
-            requests.Timeout,
-            # InvalidParameterException
-            # HTTPSConnectionPool,
+            httpx.NetworkError,
+            httpx.ProtocolError,
+            httpx.HTTPStatusError,
+            httpx.TimeoutException,
         ) as e:
+            if type(response) is str:
+                reason = response
+            else: reason = response.reason_phrase
+
             msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
                 "message_template"
             ].format(
@@ -447,7 +482,7 @@ class Client:
                 class_name,
                 endpoint,
                 OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value["message_id"],
-            )
+            ) + "==>System reports:'" + reason + "'"
             exc_msg = json.dumps(
                 {
                     "class": "VoidResponse",
@@ -469,6 +504,9 @@ class Client:
                 }
             )
             raise InvalidParameterException(exc_msg)
+        # finally:
+        #     self.session.close()
+            
 
 
 if __name__ == "__main__":
