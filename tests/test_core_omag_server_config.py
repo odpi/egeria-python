@@ -75,7 +75,7 @@ class TestCoreAdminServices:
         if excinfo:
             print_exception_response(excinfo.value)
 
-    def test_is_server_configured(self, server:str = good_server_1):
+    def test_is_server_configured(self, server:str = good_server_4):
         try:
             o_client = CoreServerConfig(
                 server, self.good_platform1_url,
@@ -698,6 +698,58 @@ class TestCoreAdminServices:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+
+    def test_set_plug_in_repository(self, server:str = good_server_2):
+        server_name = server
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url,
+                self.good_user_1)
+            full_config_body = {
+                "class": "Connection",
+                "connectorType": {
+                    "class": "ConnectorType",
+                    "connectorProviderClassName": "org.odpi.egeria.connectors.juxt.xtdb.repositoryconnector.XtdbOMRSRepositoryConnectorProvider"
+                },
+                "configurationProperties": {
+                    "xtdbConfig": {
+                        "xtdb.lucene/lucene-store": {
+                            "db-dir": "data/servers/" + server_name + "/xtdb/lucene"
+                        },
+                        "xtdb/index-store": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-index"
+                            }
+                        },
+                        "xtdb/document-store": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-docs"
+                            }
+                        },
+                        "xtdb/tx-log": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-tx"
+                            }
+                        }
+                    }
+                }
+            }
+            o_client.set_plug_in_repository(full_config_body)
+            assert True
+
+            print(f"\n\n\t\tServer {server}: Plug-in repository type set")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
 
     def test_set_xtdb_in_mem_repository(self, server:str = good_server_1):
 

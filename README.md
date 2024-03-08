@@ -14,11 +14,12 @@ open source Egeria project can be found at [Egeria Project](https://egeria-proje
 
 This package is in active development. There is initial
 support for Egeria's platform services and configuration of Open Metadata and Governance servers
-along with some basic utilities. 
-Next will be additional support to configure and operate servers, followed
-by glossary support.
+along with some basic utilities. This client depends on Egeria 4.4 Snapshot and above - although most of 
+the functions may work on earlier versions of Egeria as well. 
 
 The code is organized to mimic the existing Egeria Java Client structure.
+
+A new examples folder holds some useful text widgets that help to visualize the status of an Egeria deployment.
 
 All feedback is welcome. Please engage via our [community](http://egeria-project.org/guides/community/), 
 team calls, or via github issues in this repo. If interested in contributing,

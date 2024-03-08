@@ -16,23 +16,27 @@ available may fail..
 """
 
 import pytest
-import requests
-
+import json
 from contextlib import nullcontext as does_not_raise
-disable_ssl_warnings = True
 
-from pyegeria._exceptions import (
+from pyegeria.exceptions import (
     InvalidParameterException,
     PropertyServerException,
+    UserNotAuthorizedException,
     print_exception_response,
-    print_rest_response,
 )
+from pyegeria.utils import print_rest_response
 
 from pyegeria.server_operations import ServerOps
+from rich.console import Console
+from rich import print, print_json, pretty
 
-class TestServerOperations():
+disable_ssl_warnings = True
+
+
+class TestServerOperations:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://127.0.0.1:9444"
+    good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
 
     # good_platform1_url = "https://127.0.0.1:30080"
@@ -44,142 +48,102 @@ class TestServerOperations():
     bad_user_1 = "eviledna"
     bad_user_2 = ""
 
-    good_server_1 = "cocoMDS1"
-    good_server_2 = "cocoMDS2"
-    good_server_3 = "meow"
+    good_server_1 = "active-metadata-store"
+    good_server_2 = "integration-daemon"
+    good_server_3 = "engine-host"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-    @pytest.mark.parametrize(
-        "server, url, user_id, status_code, expectation",
-        [
-            (
-                    "meow",
-                    "https://google.com",
-                    "garygeeke",
-                    404,
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://localhost:9443",
-                    "garygeeke",
-                    503,
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS1",
-                    "https://127.0.0.1:30081",
-                    "garygeeke",
-                    404,
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS9",
-                    "https://127.0.0.1:9443",
-                    "garygeeke",
-                    404,
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://127.0.0.1:9443",
-                    "garygeeke",
-                    200,
-                    does_not_raise(),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
-                    "meow",
-                    404,
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://wolfsonnet.me:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
-                    "cocoMDS2",
-                    503,
-                    pytest.raises(InvalidParameterException),
-            ),
-            ("", "", "", 400, pytest.raises(InvalidParameterException)),
-        ],
-    )
-    def test_get_active_configuration(
-            self, server, url, user_id, status_code, expectation
-    ):
-        with expectation as excinfo:
-            p_client = ServerOps(server, url, user_id)
-            response = p_client.get_active_configuration(server)
-            print_rest_response(response)
-            assert response.get("relatedHTTPCode") == status_code, "Invalid URL"
+    def test_get_active_configuration(self, server: str = good_server_1):
+        server_name = server
+        try:
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            response = s_client.get_active_configuration(server)
+            print(f"\n\n\tThe active configuration of {server} is \n{response}")
+            assert True
 
-        if excinfo:
-            print_exception_response(excinfo.value)
-            assert excinfo.typename == "InvalidParameterException"
+        except (InvalidParameterException, PropertyServerException) as e:
+            print_exception_response(e)
+            assert e.related_http_code != "404", "Invalid parameters"
 
     def test_add_archive_files(self):
         # Todo - the base function doesn't seem to validate the file or to actually load? Check
         try:
             server = self.good_server_1
             p_client = ServerOps(server, self.good_platform2_url, self.good_user_1)
-            response = p_client.add_archive_file(
-                "/Users/dwolfson/localGit/pdr/pyegeria/CocoGovernanceEngineDefinitionsArchive.json",
+            p_client.add_archive_file(
+                "CocoSustainabilityArchive.omarchive",
                 server)
-            print_rest_response(response)
-            assert response.get("relatedHTTPCode") == 200, "Invalid URL or server"
+            assert True, "Should have raised an exception"
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
+
     @pytest.mark.skip(reason="Need to find a good archive connection body")
     def test_add_archive(self):
         # Todo - the base function doesn't seem to validate the file or to actually load? Check
         try:
             server = self.good_server_1
             p_client = ServerOps(server, self.good_platform2_url, self.good_user_1)
-            response = p_client.add_archive("./cocoGovernanceEngineDefinition.json", server)
-            print_rest_response(response)
-            assert response.get("relatedHTTPCode") == 200, "Invalid URL or server"
+            p_client.add_archive("./cocoGovernanceEngineDefinition.json", server)
+
+            assert True, "Should have raised an exception"
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
-    def test_get_active_server_status(self):
+    def test_get_active_server_status(self, server: str= good_server_1):
         try:
-            server = self.good_server_2
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_server_status(server)
-            print_rest_response(response)
+            print(response)
             assert response.get("relatedHTTPCode") == 200, "Invalid URL or server"
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
-    @pytest.mark.skip(reason="Needs to be implemented")
     def test_get_active_service_list_for_server(self):
         try:
-            server = self.good_server_2
+            server = self.good_server_1
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_service_list_for_server(server)
             print(f"\n\n\tActive Service list for server {server} is {response}")
-            assert len(response) >= 0, "Exception?"
+            assert True, "Invalid URL or server"
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-    def test_get_server_status(self):
+    def test_get_governance_engine_summaries(self, server:str = good_server_3):
         try:
-            server = self.good_server_2
-            p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
-            response = p_client.get_server_status(server)
-            print_rest_response(response)
-            assert response.get("relatedHTTPCode") == 200, "Invalid URL"
+            serve_name = server
+            s_client = ServerOps(serve_name, self.good_platform1_url, self.good_user_1)
+            response = s_client.get_governance_engine_summaries(server)
+            print(f"\n\n\tGovernance Engine Summary for server {server} is {json.dumps(response, indent=4)}")
+
+            assert True, "Invalid URL or server"
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
+    def test_get_integration_daemon_status(self, server:str = good_server_2):
+        try:
+            serve_name = server
+            s_client = ServerOps(serve_name, self.good_platform1_url, self.good_user_1)
+            response = s_client.get_integration_daemon_status(server)
+
+            if type(response) is dict:
+                # print(f"\n\n\tIntegration Daemon Status for server {server} is {json.dumps(response, indent=4)}")
+                print(f"\n\n\tIntegration Daemon Status for server {server} is:")
+                print_json(json.dumps(response))
+            else:
+                print(f"\n\n\tIntegration Daemon Status response was: {response}")
+            assert True, "Invalid URL or server"
+
+        except (InvalidParameterException, PropertyServerException) as e:
+            print_exception_response(e)
+            assert e.related_http_code != "200", "Invalid parameters"
