@@ -12,7 +12,7 @@ A running Egeria environment is needed to run these tests.
 """
 
 import pytest
-
+import time
 import json
 
 from contextlib import nullcontext as does_not_raise
@@ -34,7 +34,7 @@ from pyegeria.utils import print_json_list_as_table
 disable_ssl_warnings = True
 
 
-class TestCoreAdminServices:
+class TestGlossaryOMVS:
     good_platform1_url = "https://127.0.0.1:9443"
     good_platform2_url = "https://127.0.0.1:9444"
     bad_platform1_url = "https://localhost:9443"
@@ -67,8 +67,11 @@ class TestCoreAdminServices:
                                        user_id=self.good_user_2)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
             response = g_client.find_glossaries('*', starts_with=False, ends_with=False,
                                                 ignore_case=True,page_size=0, effective_time=None)
+            duration = time.perf_counter() - start_time
+            print(f"Duration was {duration} seconds")
             # resp_str = json.loads(response)
 
             if type(response) is list :
@@ -95,7 +98,9 @@ class TestCoreAdminServices:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            start_time = time.perf_counter()
             response = g_client.get_terms_for_glossary(glossary_guid, page_size=500, effective_time=None)
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -116,15 +121,16 @@ class TestCoreAdminServices:
 
     def test_find_glossary_terms(self):
         try:
-            g_client = GlossaryBrowser(self.good_view_server_2, self.good_platform1_url)
+            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
-            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
-            response = g_client.find_glossary_terms('*', glossary_guid=glossary_guid, starts_with=True,
+            #glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
+            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+            start_time = time.perf_counter()
+            response = g_client.find_glossary_terms('Fa', glossary_guid=glossary_guid, starts_with=True,
                                                     ends_with= False, for_lineage=False, for_duplicate_processing=True,
                                                     status_filter=[], page_size=10, effective_time=None)
-
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list :
                 print("\n\n" + json.dumps(response, indent=4))
                 # print_json_list_as_table(response)
