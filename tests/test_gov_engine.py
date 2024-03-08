@@ -17,6 +17,7 @@ from datetime import datetime
 import json
 
 from contextlib import nullcontext as does_not_raise
+
 disable_ssl_warnings = True
 
 from pyegeria.exceptions import (
@@ -28,17 +29,24 @@ from pyegeria.exceptions import (
 )
 from pyegeria.gov_engine import GovEng
 
+good_platform2_url = "https://oak.local:9443"
+
+
 def test_get_engine_actions():
     try:
         g_client = GovEng(
-            "cocoMDS2", "https://127.0.0.1:9443",
+            "active-metadata-store", good_platform2_url,
             "erinoverview")
 
         gov_actions = g_client.get_engine_actions()
         if gov_actions:
             print("\n\n")
             for g in gov_actions:
-                print(json.dumps(g, indent=4))
+                # print(json.dumps(g, indent=4))
+                targets = g.get("actionTargetElements", "none")
+                if type(targets) is list:
+                    prop = targets[0]["targetElement"]["elementProperties"]["propertiesAsStrings"]
+                    print(f"type ={type(prop)}, prop ={prop}")
 
         assert gov_actions is not None, "Failed to find governance actions"
 
@@ -49,10 +57,11 @@ def test_get_engine_actions():
         print_exception_response(e)
         assert False, "Invalid request"
 
+
 def test_get_engine_action():
     try:
         g_client = GovEng(
-            "cocoMDS2", "https://127.0.0.1:9443",
+            "active-metadata-store", "https://127.0.0.1:9443",
             "erinoverview")
         guid = "EngineAction-417ceb34-0856-4b59-a3f0-b401406d0c21"
         gov_action = g_client.get_engine_action(guid)
@@ -71,11 +80,11 @@ def test_get_engine_action():
         assert False, "Invalid request"
 
 
-@pytest.mark.skip(reason="bug")
+# @pytest.mark.skip(reason="bug")
 def test_get_active_engine_actions():
     try:
         g_client = GovEng(
-            "cocoMDS2", "https://127.0.0.1:9443",
+            "active-metadata-store", "https://127.0.0.1:9443",
             "erinoverview")
 
         gov_actions = g_client.get_active_engine_actions()
@@ -92,6 +101,7 @@ def test_get_active_engine_actions():
     ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
 
 def test_get_engine_actions_by_name():
     try:
@@ -114,6 +124,7 @@ def test_get_engine_actions_by_name():
         print_exception_response(e)
         assert False, "Invalid request"
 
+
 def test_find_engine_actions():
     try:
         g_client = GovEng(
@@ -131,19 +142,20 @@ def test_find_engine_actions():
     except (
             InvalidParameterException,
             PropertyServerException,
-        ) as e:
+    ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
 
 def test_get_governance_action_process_by_guid():
     try:
         g_client = GovEng(
             "cocoMDS2", "https://127.0.0.1:9443",
-             "erinoverview" )
+            "erinoverview")
 
         guid = "GovernanceActionProcess-47925639-6a07-489f-b185-85be1722ec2e"
         gov_process = g_client.get_governance_action_process_by_guid(guid)
-        print("\n\n" )
+        print("\n\n")
         if gov_process:
             print(json.dumps(gov_process, indent=4))
         assert gov_process is not None, "Failed to find governance process"
@@ -151,19 +163,20 @@ def test_get_governance_action_process_by_guid():
     except (
             InvalidParameterException,
             PropertyServerException,
-        ) as e:
+    ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
 
 def test_get_governance_action_process_by_name():
     try:
         g_client = GovEng(
             "cocoMDS2", "https://127.0.0.1:9443",
-             "erinoverview" )
+            "erinoverview")
 
         name = "governance-action-process:clinical-trials:drop-foot:weekly-measurements:onboarding"
         gov_process = g_client.get_governance_action_processes_by_name(name)
-        print("\n\n" )
+        print("\n\n")
         if gov_process:
             print(json.dumps(gov_process, indent=4))
         assert gov_process is not None, "Failed to find governance process"
@@ -171,15 +184,16 @@ def test_get_governance_action_process_by_name():
     except (
             InvalidParameterException,
             PropertyServerException,
-        ) as e:
+    ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
 
 def test_find_governance_action_processes():
     try:
         g_client = GovEng(
             "cocoMDS2", "https://127.0.0.1:9443",
-             "erinoverview" )
+            "erinoverview")
 
         gov_processes = g_client.find_governance_action_processes(".*")
         if gov_processes:
@@ -192,22 +206,22 @@ def test_find_governance_action_processes():
     except (
             InvalidParameterException,
             PropertyServerException,
-        ) as e:
+    ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
 
 def test_initiate_governance_action_process():
     try:
         g_client = GovEng(
             "cocoMDS2", "https://127.0.0.1:9443",
-             "erinoverview" )
-
+            "erinoverview")
 
         n = datetime.now()
         governance_process_GUID = g_client.initiate_governance_action_process(
-                    "governance-action-process:clinical-trials:drop-foot:weekly-measurements:onboarding",
-                    None,None, n,
-                    None,None,None)
+            "governance-action-process:clinical-trials:drop-foot:weekly-measurements:onboarding",
+            None, None, n,
+            None, None, None)
 
         print("\n\n" + governance_process_GUID)
         assert governance_process_GUID is not None, "Failed to initiate governance action"
@@ -218,11 +232,13 @@ def test_initiate_governance_action_process():
     ) as e:
         print_exception_response(e)
         assert False, "Invalid request"
+
+
 def test_initiate_engine_action():
     try:
         g_client = GovEng(
             "cocoMDS2", "https://127.0.0.1:9443",
-             "erinoverview" )
+            "erinoverview")
 
         request_parameters = {
             "sourceFile": "/moo",
@@ -230,9 +246,9 @@ def test_initiate_engine_action():
         }
         n = datetime.now()
         governanceActionGUID = g_client.initiate_engine_action(
-                        "FTP Oak Dene Week 1", 0,"meow", "a description",
-                        None,None,None,n, "AssetGovernance", "simulate-ftp",
-                        request_parameters, "Populate landing area",None,None,None)
+            "FTP Oak Dene Week 1", 0, "meow", "a description",
+            None, None, None, n, "AssetGovernance", "simulate-ftp",
+            request_parameters, "Populate landing area", None, None, None)
 
         print("\n\n" + governanceActionGUID)
         assert governanceActionGUID is not None, "Failed to initiate governance action"
@@ -244,6 +260,7 @@ def test_initiate_engine_action():
         print_exception_response(e)
         assert False, "Invalid request"
 
+
 def test_print_engine_actions():
     g_client = GovEng(
         "cocoMDS1", "https://127.0.0.1:9444",
@@ -251,26 +268,6 @@ def test_print_engine_actions():
     g_client.print_engine_actions()
 
     assert True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def test_print_governance_actions():
