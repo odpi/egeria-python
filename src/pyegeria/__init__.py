@@ -34,5 +34,6 @@ from .platform_services import Platform
 from .registered_info import RegisteredInfo
 from .glossary_omvs import GlossaryBrowser
 from .server_operations import ServerOps
+from .gov_engine import GovEng
 
 __version__ = "0.1"

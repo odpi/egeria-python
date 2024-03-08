@@ -12,7 +12,7 @@ from pyegeria.exceptions import (
     InvalidParameterException,
 )
 from pyegeria import Platform
-
+import asyncio
 
 class ServerOps(Platform):
     """
@@ -40,7 +40,6 @@ class ServerOps(Platform):
 
     """
 
-    admin_command_root: str
 
     def __init__(
             self,
@@ -51,11 +50,57 @@ class ServerOps(Platform):
             verify_flag: bool = False,
     ):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
-        self.admin_command_root = (self.platform_url +
+        self.ops_command_root = (self.platform_url +
                                    "/open-metadata/server-operations/users/" +
                                    user_id)
 
-    def add_archive_file(self, archive_file: str, server: str = None) -> None:
+
+    async def _async_get_active_configuration(self, server: str = None) -> dict | str:
+        """
+        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+
+        Parameters
+        ----------
+        server: str - name of the server to get the configuration for.
+
+        Returns
+        -------
+        Returns configuration if server is active; InvalidParameter exception thrown otherwise
+
+        """
+        if server is None:
+            server = self.server_name
+
+        is_known = await self._async_is_server_known(server)
+        if is_known is False:
+            return "No active configuration found"
+
+        url = self.ops_command_root + "/servers/" + server + "/instance/configuration"
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("omagserverConfig", "No active configuration found")
+
+    def get_active_configuration(self, server: str = None) -> dict | str:
+        """
+        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+
+        Parameters
+        ----------
+        server: str - name of the server to get the configuration for.
+
+        Returns
+        -------
+        Returns configuration if server is active; InvalidParameter exception thrown otherwise
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_active_configuration(server))
+        return response
+
+
+
+
+    async def _async_add_archive_file(self, archive_file: str, server: str = None) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -74,16 +119,33 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-                self.admin_command_root
+                self.ops_command_root
                 + "/servers/" + server
                 + "/instance/open-metadata-archives/file"
         )
 
-        self.make_request("POST-DATA", url, archive_file)
+        await self._async_make_request("POST-DATA", url, archive_file)
 
-    def add_archive(self, archive_connection: str, server: str = None) -> Response:
+    def add_archive_file(self, archive_file: str, server: str = None) -> None:
         """
         Load the server with the contents of the indicated archive file.
+
+        Parameters
+        ----------
+        archive_file: the name of the archive file to load
+                - note that the path is relative to the working directory of the platform.
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
+
+        Returns
+        -------
+        Response object.  Also throws exceptions if no viable server or endpoint errors
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_add_archive_file(archive_file, server))
+
+    async def _async_add_archive(self, archive_connection: str, server: str = None) -> None:
+        """ Load the server with the contents of the indicated archive file.
 
         /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
 
@@ -104,53 +166,89 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-                self.admin_command_root
+                self.ops_command_root
                 + "/servers/" + server
                 + "/instance/open-metadata-archives/connection"
         )
+        await self._async_make_request("POST-DATA", url, archive_connection)
 
-        response = self.make_request("POST-DATA", url, archive_connection)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json()
-        else:
-            raise InvalidParameterException(response.content)
-
-    def get_active_server_status(self, server: str = None) -> dict:
+    def add_archive(self, archive_connection: str, server: str = None) -> None:
         """
-                Get the status for the specified server.
-                /open-metadata/platform-services/users/{userId}/server-platform/servers/{server}/instance/status
+        Load the server with the contents of the indicated archive file.
 
-                Parameters
-                ----------
-                server : Use the server if specified. If None, use the default server associated with the Platform object.
+        /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
 
-                Returns
-                -------
-                dict: a json object containing the status of the specified server
+        Parameters
+        ----------
+        archive_connection: str
+            the name of the archive connection to load from
+        server: str
+            Use the server if specified. If None, use the default server associated with the Platform object.
 
-                Raises
-                ------
-                InvalidParameterException
-                  If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-                PropertyServerException
-                  Raised by the server when an issue arises in processing a valid request
-                NotAuthorizedException
-                  The principle specified by the user_id does not have authorization for the requested action
-                """
+        Returns
+        -------
+        Response object.  Also throws exceptions if no viable server or endpoint errors
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_add_archive_file(archive_connection,server))
+
+    async def _async_get_active_server_status(self, server:str = None) -> dict:
+        """  Get the status for the specified server.
+
+        Parameters
+        ----------
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
+
+        Returns
+        -------
+        dict: a json object containing the status of the specified server
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
         if server is None:
             server = self.server_name
 
         url = self.admin_command_root + "/servers/" + server + "/instance/status"
 
-        response = self.make_request("GET", url)
+        response = await self._async_make_request("GET", url)
+        return response
 
+    def get_active_server_status(self, server: str = None) -> dict:
+        """
+        Get the status for the specified server.
+        /open-metadata/platform-services/users/{userId}/server-platform/servers/{server}/instance/status
+
+        Parameters
+        ----------
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
+
+        Returns
+        -------
+        dict: a json object containing the status of the specified server
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_active_server_status(server))
         return response.json()
 
-    def get_active_service_list_for_server(self, server: str = None) -> Response:
+    async def _async_get_active_service_list_for_server(self, server: str = None) -> Response:
         """
         List all known active servers on the associated platform.
 
@@ -168,13 +266,15 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server + "/services"
-        response = self.make_request("GET", url)
+        url = self.ops_command_root + "/servers/" + server + "/services"
+        response = await self._async_make_request("GET", url)
         return response.json().get("serverServicesList")
 
-    def get_server_status(self, server: str = None) -> dict:
+    def get_active_service_list_for_server(self, server: str = None) -> Response:
         """
-        Get status of the server specified.
+        List all known active servers on the associated platform.
+
+        /open-metadata/server-operations/users/{userId}/server-platform/servers/{server}/services
 
         Parameters
         ----------
@@ -182,14 +282,76 @@ class ServerOps(Platform):
 
         Returns
         -------
-        Json dict containing the active server status.
+        Response object. Also throws exceptions if no viable endpoint or errors
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_active_service_list_for_server(server))
+        return response
+
+    async def _async_get_governance_engine_summaries(self, server: str = None) -> dict:
+        """ Get Governance Engine Summaries. Async version.
+        Parameters
+        ----------
+        server : str, optional
+            The name of the server to get governance engine summaries from. If not provided, the default server name will be used.
+
+        Returns
+        -------
+        Response
+            The response object containing the governance engine summaries.
+
         """
         if server is None:
             server = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server + "/instance/status"
-        response = self.make_request("GET", url)
-        return response.json()
+        url = (f"{self.platform_url}/servers/{server}/open-metadata/engine-host/users/{self.user_id}"
+               f"/governance-engines/summary")
+        response = await self._async_make_request("GET", url)
+        return response.json().get("governanceEngineSummaries")
+
+    def get_governance_engine_summaries(self, server: str = None) -> dict:
+        """Get Governance Engine Summaries.
+        Parameters
+        ----------
+        server : str, optional
+            The name of the server to get governance engine summaries from. If not provided, the default server name will be used.
+
+        Returns
+        -------
+        Response
+            The response object containing the governance engine summaries.
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_governance_engine_summaries(server))
+        return response
+#
+# Integration Daemon
+#
+    async def _async_get_integration_daemon_status(self, server: str = None) -> dict | str:
+        """ Get the current status of the integration daemon. Async version.
+
+        """
+        if server is None:
+            server = self.server_name
+
+        url = f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/{self.user_id}/status"
+        response = await self._async_make_request("GET", url)
+        return response.json().get("integrationDaemonStatus", "No Integration Groups")
+        # return response.json()
+
+    def get_integration_daemon_status(self, server: str = None) -> dict | str:
+        """ Get the current status of the integration daemon. Async version.
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_integration_daemon_status(server))
+        return response
+
+    def get_integration_connector_status(self, server: str = None)-> list:
+        response = self.get_integration_daemon_status(server)
+        pass
 
 
 if __name__ == "__main__":

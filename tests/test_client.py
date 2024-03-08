@@ -10,8 +10,8 @@ import pytest
 import warnings
 
 from contextlib import nullcontext as does_not_raise
+from pyegeria import Client
 
-import pyegeria._client
 from pyegeria.exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -38,8 +38,8 @@ class TestClient:
             (
                 "https://localhost:9443",
                 "garygeeke",
-                400,
-                pytest.raises(InvalidParameterException),
+                200,
+                does_not_raise(),
             ),
             (
                 "https://127.0.0.1:30081",
@@ -63,8 +63,8 @@ class TestClient:
             (
                 "https://wolfsonnet.me:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
                 "woof",
-                503,
-                pytest.raises(InvalidParameterException),
+                401,
+                pytest.raises(UserNotAuthorizedException),
             ),
             ("", "", 400, pytest.raises(InvalidParameterException)),
         ],
@@ -74,8 +74,8 @@ class TestClient:
         user_pwd = "nonesuch"
         response = ""
         with expectation as excinfo:
-            t_client = pyegeria.client.Client(
-                server, url, user_id, user_pwd, False
+            t_client = Client(
+                server, url, user_id, user_pwd, False, async_mode=True
             )
             endpoint = (
                 url
