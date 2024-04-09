@@ -322,7 +322,7 @@ class EgeriaException(Exception):
     Define the Egeria exceptions raised during error handling. Modeled on the exceptions defined in the Egeria core.
 
     """
-
+    raw_error_message = ""
     def __init__(self, response_body) -> None:
         response_dict = json.loads(response_body)
         self.response_class = response_dict["class"]
@@ -373,6 +373,7 @@ def print_exception_response(e: EgeriaException):
         print(
             f"\t\t   Error Code: {e.exception_error_message_id} with http code {str(e.related_http_code)}"
         )
+        # print(f"\t\t   Raw Error Text is {e.raw_error_message}")
         print(f"\t\t   Class: {e.exception_class_name}")
         print(f"\t\t   Caller: {e.action_description}")
         print(f"\t\t   System Action: {e.exception_system_action}")

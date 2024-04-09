@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
-![Egeria Logo](https://github.com/odpi/egeria/blob/master/assets/img/ODPi_Egeria_Logo_color.png?raw=true)
+![Egeria Logo](https://egeria-project.org/assets/images/egeria-header.png)
 
 [![GitHub](https://img.shields.io/github/license/odpi/egeria)](LICENSE)
 
@@ -13,9 +13,8 @@ open metadata environment from python. Details about the
 open source Egeria project can be found at [Egeria Project](https://egeria-project.org).
 
 This package is in active development. There is initial
-support for Egeria's platform services and configuration of Open Metadata and Governance servers
-along with some basic utilities. This client depends on Egeria 4.4 Snapshot and above - although most of 
-the functions may work on earlier versions of Egeria as well. 
+support for many of Egeria's services including configuraiton, operation, and use.  This client depends on 
+Egeria 4.4 Snapshot and above - although most of the functions may work on earlier versions of Egeria as well. 
 
 The code is organized to mimic the existing Egeria Java Client structure.
 

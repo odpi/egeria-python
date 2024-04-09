@@ -5,7 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 
-A simple display for glossary terms
+A simple display for my profile
 """
 
 import time
@@ -24,7 +24,7 @@ from rich.prompt import Prompt
 from rich.tree import Tree
 from rich import print
 from rich.console import Console
-
+from pyegeria.my_profile_omvs import MyProfile
 
 from pyegeria.server_operations import ServerOps
 from pyegeria.gov_engine import GovEng
@@ -52,52 +52,60 @@ bad_server_1 = "coco"
 bad_server_2 = ""
 
 
-def display_glossary_terms(search_string: str, guid: str=None, server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+def display_my_profiles(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
 
-    g_client = GlossaryBrowser(server, url)
-    token = g_client.create_egeria_bearer_token(username, "secret")
+    m_client = MyProfile(server, url, user_id=username)
+    token = m_client.create_egeria_bearer_token(username, "secret")
+    my_profiles = m_client.get_my_profile()
 
-
-    def generate_table(search_string:str = '*') -> Table:
+    def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
+            title=f"My Profile Information {good_platform1_url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Glossary View Server '{server}' @ Platform - {url}",
+            caption=f"My Profile from Server '{server}' @ Platform - {url}",
             expand=True
         )
-        table.add_column("Display Name")
-        table.add_column("Qualified Name")
 
-        table.add_column("Abbreviation")
-        table.add_column("Summary")
-        table.add_column("Description")
+        table.add_column("Name")
+        table.add_column("Job Title")
+        table.add_column("userId")
+        table.add_column("myGUID")
+        table.add_column("Role Type")
+        table.add_column("Role")
+        table.add_column("Role GUID")
 
-        terms = g_client.find_glossary_terms(search_string, guid, starts_with=True,
-                                             ends_with=False, status_filter=[], page_size=500)
-        if type(terms) is str:
-            return table
+        if len(my_profiles) == 0:
+            name = " "
+            job_title = " "
+            user_id = " "
+            my_guid = " "
+            role_type = " "
+            role = " "
+            role_guid = " "
+        else:
+            name = my_profiles["profileProperties"]["fullName"]
+            job_title = my_profiles["profileProperties"]["jobTitle"]
+            id_list=" "
+            for identities in my_profiles["userIdentities"]:
+                id_list = f"{identities['userIdentity']['properties']['userId']} {id_list}"
 
-        for term in terms:
-            props = term.get("glossaryTermProperties","None")
-            if props == "None":
-                return table
+            my_guid = my_profiles["elementHeader"]["guid"]
 
-            display_name = props["displayName"]
-            qualified_name = props["qualifiedName"]
-            abbrev = props.get("abbreviation"," ")
-            summary = props.get("summary", " ")
-            description = props.get("description", " ")
+            my_roles = my_profiles["roles"]
+            for a_role in my_roles:
+                my_role_props = a_role["properties"]
+                role_type = my_role_props["typeName"]
+                role = my_role_props.get("title"," ")
+                role_guid = a_role["elementHeader"]["guid"]
+                table.add_row(
+                    name, job_title, str(id_list), my_guid, role_type, role, role_guid
+                )
 
-
-            table.add_row(
-                display_name,qualified_name, abbrev, summary, description
-            )
-
-        g_client.close_session()
+        m_client.close_session()
         return table
 
     try:
@@ -107,7 +115,7 @@ def display_glossary_terms(search_string: str, guid: str=None, server: str = goo
         #         live.update(generate_table())
         console = Console()
         with console.pager():
-            console.print(generate_table(search_string))
+            console.print(generate_table())
 
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
@@ -115,20 +123,17 @@ def display_glossary_terms(search_string: str, guid: str=None, server: str = goo
         assert e.related_http_code != "200", "Invalid parameters"
 
 if __name__ == "__main__":
-    sus_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
-    parser.add_argument("--guid", help="GUID of glossary to search")
-    parser.add_argument("--sustainability", help="Set True for Sustainability Glossary")
+
     args = parser.parse_args()
 
     server = args.server if args.server is not None else "view-server"
     url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
-    guid = args.guid if args.guid is not None else None
-    guid = sus_guid  if args.sustainability else None
+    userid = args.userid if args.userid is not None else 'erinoverview'
+    # guid = args.guid if args.guid is not None else None
+    guid = None
 
-    search_string = Prompt.ask("Enter the term you are searching for:", default="*")
-    display_glossary_terms(search_string, guid,server, url, userid)
+    display_my_profiles(server, url, userid)

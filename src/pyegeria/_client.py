@@ -6,13 +6,18 @@ This is a simple class to create and manage a connection to an Egeria backend. I
 different client capabilities. It also provides the common methods used to make restful self.session to Egeria.
 
 """
+import asyncio
 import inspect
 import json
 import os
+
 import httpx
-import asyncio
 
-
+from pyegeria._exceptions import (
+    OMAGCommonErrorCode,
+    InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException, )
 from pyegeria._globals import max_paging_size
 from pyegeria._validators import (
     validate_name,
@@ -21,15 +26,6 @@ from pyegeria._validators import (
     validate_user_id,
     is_json
 )
-from pyegeria.exceptions import (
-    OMAGCommonErrorCode,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, print_exception_response,
-)
-
-
-
 
 ...
 
@@ -77,17 +73,17 @@ class Client:
     json_header = {"Content-Type": "application/json"}
 
     def __init__(
-        self,
-        server_name: str,
-        platform_url: str,
-        user_id: str = None,
-        user_pwd: str = None,
-        verify_flag: bool = False,
-        api_key: str = None,
-        page_size: int = max_paging_size,
-        token: str = None,
-        token_src: str = None,
-        async_mode: bool = False
+            self,
+            server_name: str,
+            platform_url: str,
+            user_id: str = None,
+            user_pwd: str = None,
+            verify_flag: bool = False,
+            api_key: str = None,
+            page_size: int = max_paging_size,
+            token: str = None,
+            token_src: str = None,
+            async_mode: bool = False
     ):
         self.server_name = None
         self.platform_url = None
@@ -113,15 +109,15 @@ class Client:
         #         self.token = token
 
         if api_key is None:
-            api_key = os.environ.get("API_KEY",None)
+            api_key = os.environ.get("API_KEY", None)
         self.api_key = api_key
 
         self.headers = {
             "Content-Type": "application/json",
-            }
+        }
         self.text_headers = {
             "Content-Type": "text/plain",
-            }
+        }
         if self.api_key is not None:
             self.headers["X-Api-Key"] = self.api_key
             self.text_headers["X-Api-Key"] = self.api_key
@@ -146,7 +142,6 @@ class Client:
             self.session = httpx.AsyncClient(verify=self.ssl_verify)
 
     def __enter__(self):
-        print("entered client")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -156,17 +151,80 @@ class Client:
             self.exc_val = exc_val
             self.exc_tb = exc_tb
 
-        return False # allows exceptions to propagate
+        return False  # allows exceptions to propagate
+
+    async def _async_close_session(self) -> None:
+        """Close the session"""
+        await self.session.aclose()
 
     def close_session(self) -> None:
         """Close the session"""
-        self.session.aclose()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_close_session())
+        return
 
-    def create_egeria_bearer_token(self, user_Id: str, password: str = None) -> str:
+    async def _async_create_egeria_bearer_token(self, user_id: str = None, password: str = None) -> str:
+        """ Create and set an Egeria Bearer Token for the user. Async version
+            Parameters
+            ----------
+            user_id : str, opt
+                The user id to authenticate with. If None, then user_id from class instance used.
+            password : str, opt
+                The password for the user. If None, then user_pwd from class instance is used.
+
+            Returns
+            -------
+            token
+                The bearer token for the specified user.
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+            Notes
+            -----
+            This routine creates a new bearer token for the user and updates the object with it.
+            It uses Egeria's mechanisms to create a token. This is useful if an Egeria token expires.
+            A bearer token from another source can be set with the set_bearer_token() method.
+
+            """
+        if user_id is None:
+            validate_user_id(self.user_id)
+            user_id = self.user_id
+        if password is None:
+            validate_name(self.user_pwd)
+            password = self.user_pwd
+
+        url = f"{self.platform_url}/api/token"
+        data = {
+            "userId": user_id,
+            "password": password
+        }
+        async with httpx.AsyncClient(verify=self.ssl_verify) as client:
+            try:
+                response = await client.post(url, json=data, headers=self.headers)
+                token = response.text
+            except httpx.HTTPError as e:
+                print(e)
+                return "FAILED"
+
+        if token:
+            self.token_src = 'Egeria'
+            self.headers["Authorization"] = f"Bearer {token}"
+            self.text_headers["Authorization"] = f"Bearer {token}"
+            return token
+        else:
+            raise InvalidParameterException("No token returned - request issue")
+
+    def create_egeria_bearer_token(self, user_id: str = None, password: str = None) -> str:
         """ Create and set an Egeria Bearer Token for the user
         Parameters
         ----------
-        user_Id : str
+        user_id : str
             The user id to authenticate with.
         password : str
             The password for the user.
@@ -191,32 +249,56 @@ class Client:
         A bearer token from another source can be set with the set_bearer_token() method.
 
         """
-        validate_name(user_Id)
-        validate_name(password)
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_egeria_bearer_token(user_id, password))
+        return response
 
-        url = f"{self.platform_url}/api/token"
-        data = {
-            "userId": user_Id,
-            "password": password
-        }
-        with httpx.Client(verify=self.ssl_verify) as client:
-            response = client.post(url, json=data, headers=self.headers)
+    async def _async_refresh_egeria_bearer_token(self) -> None:
+        """
+        Refreshes the Egeria bearer token. Async version.
 
-        token = response.text
-        if token:
-            self.token_src = 'Egeria'
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
-            return token
-        else:
-            raise InvalidParameterException("No token returned - request issue")
+        This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
+        source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
+        `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
+        it raises an `InvalidParameterException`.
 
-    def refresh_egeria_bearer_token(self)-> None:
+        Parameters:
+
+        Returns:
+            None
+
+        Raises:
+            InvalidParameterException: If the token source is invalid.
+        """
         if (self.token_src == 'Egeria') and validate_user_id(self.user_id) and validate_name(self.user_pwd):
-            self.create_egeria_bearer_token(self.user_id, self.user_pwd)
+            await self._async_create_egeria_bearer_token(self.user_id, self.user_pwd)
         else:
             raise InvalidParameterException("Invalid token source")
-        # todo - should I turn the above into a regular exception?
+
+    def refresh_egeria_bearer_token(self) -> None:
+        """
+        Refreshes the Egeria bearer token.
+
+        This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
+        source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
+        `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
+        it raises an `InvalidParameterException`.
+
+        Parameters:
+
+        Returns:
+            None
+
+        Raises:
+            InvalidParameterException: If the token source is invalid.
+            PropertyServerException
+                Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+                The principle specified by the user_id does not have authorization for the requested action
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_refresh_egeria_bearer_token())
+        return
 
     def set_bearer_token(self, token: str) -> None:
         """ Retrieve and set a Bearer Token
@@ -247,31 +329,21 @@ class Client:
         self.headers["Authorization"] = f"Bearer {token}"
         self.text_headers["Authorization"] = f"Bearer {token}"
 
-
     def get_token(self) -> str:
+        """ Retrieve and return the bearer token   """
         return self.text_headers["Authorization"]
 
-    def make_request(self, request_type: str, endpoint: str,  payload: str | dict = None,
+    def make_request(self, request_type: str, endpoint: str, payload: str | dict = None,
                      time_out: int = 30) -> dict | str:
-
-        # if self.sync_mode:
-        #     print(f"\nasync is: {self.sync_mode}")
-        # loop = asyncio.new_event_loop()
+        """ Make a request to the Egeria API"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_make_request(request_type, endpoint,
-                                                         payload, time_out))
-        # asyncio.set_event_loop(loop)
-        # response = asyncio.run( self._async_make_request(request_type, endpoint,
-        #                                                  payload, time_out))
-        # else:
-        #     response = await self.smart_make_request( request_type, endpoint,
-        #                                                    payload, time_out)
-        # # response = self.async_make_request(request_type, endpoint,payload, time_out)
+                                                                    payload, time_out))
         return response
 
-    async def _async_make_request(
-        self, request_type: str, endpoint: str, payload: str | dict = None, time_out: int = 30) -> dict | str:
-        """
+    async def _async_make_request(self, request_type: str, endpoint: str, payload: str | dict = None,
+                                  time_out: int = 30) -> dict | str:
+        """  Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
         is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
 
@@ -288,39 +360,28 @@ class Client:
         calling_frame = inspect.currentframe().f_back
         caller_method = inspect.getframeinfo(calling_frame).function
 
-
         try:
             response = ""
             if request_type == "GET":
-                # if self.sync_mode:
-                #     response = self.session.get(endpoint, params=payload, headers=self.headers)
-                # else:
-                response = await self.session.get(endpoint, params=payload, headers=self.headers)
+                response = await self.session.get(endpoint, params=payload, headers=self.headers, timeout=time_out)
 
             elif request_type == "POST":
-                if type(payload) is str:
-                    # if True:
-                    response = await self.session.post(endpoint, headers=self.text_headers, data=payload)
-                    #
-                    # else: response = self.session.post(endpoint, headers=self.text_headers,
-                    #                                        timeout=time_out, data=payload)
+                if payload is None:
+                    response = await self.session.post(endpoint, headers=self.headers, timeout=time_out)
+                elif type(payload) is str:
+                    response = await self.session.post(endpoint, headers=self.text_headers, data=payload,
+                                                       timeout=time_out)
                 else:
-                    if True:
-                        response = await self.session.post(endpoint, headers=self.headers, json=payload, )
-                    # else: response = self.session.post(endpoint, headers=self.headers,
-                    #                                     timeout=time_out, json=payload, )
+                    response = await self.session.post(endpoint, headers=self.headers,
+                                                       json=payload, timeout=time_out)
 
             elif request_type == "POST-DATA":
-                    if True:
-                        response = await self.session.post(endpoint, headers=self.headers,
-                                                          data=payload )
-
-                    # else: response = self.session.post(endpoint, headers=self.headers,
-                    #                                      timeout=time_out, data=payload )
+                if True:
+                    response = await self.session.post(endpoint, headers=self.headers,
+                                                       data=payload, timeout=time_out)
             elif request_type == "DELETE":
-                    if True:
-                            response = await self.session.delete(endpoint, timeout=30, headers=self.headers)
-                    # else: response = self.session.delete(endpoint, timeout=30, headers=self.headers)
+                if True:
+                    response = await self.session.delete(endpoint, headers=self.headers, timeout=time_out)
 
             status_code = response.status_code
 
@@ -376,7 +437,7 @@ class Client:
                     )
                     raise InvalidParameterException(exc_msg)
 
-            if response.status_code in (400, 401, 403, 404, 405):
+            if response.status_code in (400, 401, 403, 404, 405, 415):
                 # 4xx are client side errors - 400 bad request, 401 unauthorized
                 msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
                     "message_template"
@@ -415,7 +476,7 @@ class Client:
                         },
                     }
                 )
-                if response.status_code in (401,403,405):
+                if response.status_code in (401, 403, 405):
                     raise UserNotAuthorizedException(exc_msg)
                 else:
                     raise InvalidParameterException(exc_msg)
@@ -423,8 +484,8 @@ class Client:
             elif response.status_code in (500, 501, 502, 503, 504):
                 # server errors
                 msg = OMAGCommonErrorCode.EXCEPTION_RESPONSE_FROM_API.value[
-                    "message_template"
-                ].format(
+                          "message_template"
+                      ].format(
                     str(response.status_code),
                     caller_method,
                     endpoint,
@@ -465,18 +526,19 @@ class Client:
         except UserNotAuthorizedException:
             raise
         except (
-            httpx.NetworkError,
-            httpx.ProtocolError,
-            httpx.HTTPStatusError,
-            httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ProtocolError,
+                httpx.HTTPStatusError,
+                httpx.TimeoutException,
         ) as e:
             if type(response) is str:
                 reason = response
-            else: reason = response.reason_phrase
+            else:
+                reason = response.reason_phrase
 
             msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                "message_template"
-            ].format(
+                      "message_template"
+                  ].format(
                 e.args[0],
                 caller_method,
                 class_name,
@@ -504,9 +566,6 @@ class Client:
                 }
             )
             raise InvalidParameterException(exc_msg)
-        # finally:
-        #     self.session.close()
-            
 
 
 if __name__ == "__main__":

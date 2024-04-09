@@ -11,22 +11,17 @@ A running Egeria environment is needed to run these tests.
 
 """
 import pytest
-import rich
-import json
+from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
-from rich.live import Live
-from rich import print as rprint
 
-
-from pyegeria.registered_info import RegisteredInfo
-
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria.registered_info import RegisteredInfo
 
 disable_ssl_warnings = True
 
@@ -50,12 +45,12 @@ class TestRegisteredInfoServices:
     @pytest.mark.parametrize(
         "service_kind",
         [
-            (
-                None
-            ),
-            (
-                "all"
-            ),
+            # (
+            #     None
+            # ),
+            # (
+            #     "all"
+            # ),
             # (
             #     "access-services"
             # ),
@@ -69,9 +64,9 @@ class TestRegisteredInfoServices:
             # (
             #     "governance-services"
             # ),
-            # (
-            #      "integration-services"
-            # ),
+            (
+                 "integration-services"
+            ),
             # (
             #         "view-services"
             # ),

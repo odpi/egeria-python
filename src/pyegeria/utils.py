@@ -7,7 +7,7 @@ General utility functions in support of the Egeria Python Client package.
 """
 import json
 import textwrap
-
+from rich import print, print_json
 import pandas as pd
 from tabulate import tabulate
 
@@ -73,16 +73,6 @@ def print_json_list_as_table(input_json, wrap_len: int = 30, tablefmt: str = "gr
     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
 
 
-def print_rest_request(url):
-    """
-
-    Args:
-        url:
-    """
-    print(" ")
-    print(url)
-
-
 def print_rest_request_body(body):
     """
 
@@ -90,8 +80,7 @@ def print_rest_request_body(body):
         body:
     """
     pretty_body = json.dumps(body, indent=4)
-    print(pretty_body)
-    print(" ")
+    print_json(pretty_body, indent=4, sort_keys=True)
 
 
 def print_rest_response(response):
@@ -101,9 +90,8 @@ def print_rest_response(response):
         response:
     """
     print("Returns:")
-    pretty_response = json.dumps(response, indent=4)
-    print(pretty_response)
-    print(" ")
+    pretty_body = json.dumps(response, indent=4)
+    print_json(pretty_body, indent=4, sort_keys=True)
 
 
 def print_guid_list(guids):
@@ -112,7 +100,7 @@ def print_guid_list(guids):
         print("No assets created")
     else:
         pretty_guids = json.dumps(guids, indent=4)
-        print(pretty_guids)
+        print_json(pretty_guids, indent=4, sort_keys=True)
 
 
 #

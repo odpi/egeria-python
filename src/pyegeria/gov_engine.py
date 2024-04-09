@@ -5,26 +5,13 @@ Copyright Contributors to the ODPi Egeria project.
  Governance Engine functions.  These functions initiate and manage Governance Actions and Processes
 """
 
-import sys
-import json
 from datetime import datetime
+
 from ._client import Client
-from ._globals import enable_ssl_check, is_debug
-from requests import Response
+from ._globals import enable_ssl_check
 
 
-from .exceptions import (
-    OMAGCommonErrorCode,
-    EgeriaException,
-    InvalidParameterException,
-    OMAGServerInstanceErrorCode,
-    PropertyServerException,
-    UserNotAuthorizedException
-    )
-
-
-
-def body_slimmer(body:dict)-> dict:
+def body_slimmer(body: dict) -> dict:
     """ body_slimmer is a little function to remove unused keys from a dict
 
     Parameters
@@ -67,8 +54,6 @@ class GovEng(Client):
 
        """
 
-
-
     def __init__(
             self,
             server_name: str,
@@ -86,14 +71,8 @@ class GovEng(Client):
                 + "/open-metadata/framework-services/governance-engine/open-governance-service/users/"
                 + user_id
         )
-        # self.engine_info_root = (
-        #         self.platform_url
-        #         + "/servers/" + server_name
-        #         + "/open-metadata/framework-services/governance-engine/users/"
-        #         + user_id
-        # )
 
-    def get_engine_actions(self, start_from: str = 0, page_size: str = 0) -> [dict]:
+    def get_engine_actions(self, start_from: int = 0, page_size: int = 0) -> [dict]:
         """ Get engine actions associated deployed on the server.
 
         Args:
@@ -115,15 +94,8 @@ class GovEng(Client):
                str(start_from) + "&pageSize=" + str(page_size))
         response = self.make_request("GET", url)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
+        governance_elements = response.json().get('elements')
+        return governance_elements
 
     def get_engine_action(self, engine_action_guid: str) -> str:
         """ Return the governance action associated with the supplied guid
@@ -146,17 +118,10 @@ class GovEng(Client):
         url = self.engine_command_root + "/engine-actions/" + engine_action_guid
         response = self.make_request("GET", url)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
+        governance_element = response.json().get('element')
+        return governance_element
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElement = response.json().get('element')
-            return (governanceActionElement)
-        else:
-            raise InvalidParameterException(response.content)
-
-    def get_active_engine_actions(self, start_from:int = 0, page_size:int = 0) -> [str]:
+    def get_active_engine_actions(self, start_from: int = 0, page_size: int = 0) -> [str]:
         """ Get active governance actions associated on the server.
 
         Args:
@@ -174,21 +139,13 @@ class GovEng(Client):
             Pagination of 0 defaults to server default.
         """
         url = (self.engine_command_root + "/engine-actions/active?startFrom=" +
-              str(start_from) + "&pageSize=" + str(page_size))
+               str(start_from) + "&pageSize=" + str(page_size))
 
         response = self.make_request("GET", url)
-
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
-
-    def get_engine_actions_by_name(self, name: str, startFrom: int = 0, pageSize: int = 0) -> str:
+        governance_elements = response.json().get('elements')
+        return governance_elements
+        
+    def get_engine_actions_by_name(self, name: str, start_from: int = 0, page_size: int = 0) -> str:
         """ Retrieve engine actions matching the name string.
         Args:
             name (str): The qualified name or display name of the governance action to get.
@@ -207,24 +164,17 @@ class GovEng(Client):
 
         """
         url = (self.engine_command_root + "/engine-actions/by-name?startFrom=" +
-               str(startFrom) + "&pageSize=" + str(pageSize))
+               str(start_from) + "&pageSize=" + str(page_size))
         body = {
             "class": "NameRequestBody",
             "name": name
         }
         response = self.make_request("POST", url, body)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
+        governance_elements = response.json().get('elements')
+        return governance_elements
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
-
-    def find_engine_actions(self, search_string:str, startFrom: int=0, pageSize:int=0) -> [str]:
+    def find_engine_actions(self, search_string: str, start_from: int = 0, page_size: int = 0) -> [str]:
         """ Search for engine actions matching the search string.
 
         Args:
@@ -243,26 +193,17 @@ class GovEng(Client):
             Pagination of 0 defaults to server default.
        """
         url = (self.engine_command_root + "/engine-actions/by-search-string?startFrom=" +
-              str(startFrom) + "&pageSize=" + str(pageSize))
+               str(start_from) + "&pageSize=" + str(page_size))
         body = {
             "class": "SearchStringRequestBody",
             "searchString": search_string
         }
         response = self.make_request("POST", url, body)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
+        governance_elements = response.json().get('elements')
+        return governance_elements
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
-
-
-
-    def get_governance_action_process_by_guid(self, gov_process_guid: str)->str:
+    def get_governance_action_process_by_guid(self, gov_process_guid: str) -> str:
         """
             Retrieves information about a governance action process based on its GUID.
 
@@ -285,18 +226,10 @@ class GovEng(Client):
             """
         url = self.engine_command_root + "/governance-action-processes/" + gov_process_guid
         response = self.make_request("GET", url)
+        governance_element = response.json().get('element')
+        return governance_element
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElement = response.json().get('element')
-            return(governanceActionElement)
-        else:
-            raise InvalidParameterException(response.content)
-
-    def get_governance_action_processes_by_name(self, name:str, start_from: int=0, page_size: int=0) -> [str]:
+    def get_governance_action_processes_by_name(self, name: str, start_from: int = 0, page_size: int = 0) -> [str]:
         """
         Retrieves governance action processes based on their name only (no wildcards).
 
@@ -316,26 +249,18 @@ class GovEng(Client):
             Pagination of 0 defaults to server default.
 
         """
-        url =   (self.engine_command_root + "/governance-action-processes/by-name?startFrom=" + str(start_from)
-                + "&pageSize=" + str(page_size))
+        url = (self.engine_command_root + "/governance-action-processes/by-name?startFrom=" + str(start_from)
+               + "&pageSize=" + str(page_size))
         body = {
-            "class"         : "NameRequestBody",
-            "name"          : name
+            "class":          "NameRequestBody",
+            "name":           name
         }
         response = self.make_request("POST", url, body)
-
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
-
+        governance_elements = response.json().get('elements')
+        return governance_elements
+        
     def find_governance_action_processes(self, search_string: str, start_from: int = 0, page_size: int = 0) -> [str]:
-        ''' Return governance action processes that match the search string (with regex).
+        """ Return governance action processes that match the search string (with regex).
 
         Args:
             search_string (str): The search string to query for.
@@ -352,7 +277,7 @@ class GovEng(Client):
         Note:
             Pagination of 0 defaults to server default.
 
-        '''
+        """
         url = (self.engine_command_root + "/governance-action-processes/by-search-string?startFrom=" + str(start_from)
                + "&pageSize=" + str(page_size))
         body = {
@@ -361,20 +286,12 @@ class GovEng(Client):
         }
         response = self.make_request("POST", url, body)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            governanceActionElements = response.json().get('elements')
-            return governanceActionElements
-        else:
-            raise InvalidParameterException(response.content)
-
+        governance_elements = response.json().get('elements')
+        return governance_elements
+        
     def initiate_governance_action_process(self, qualified_name: str, request_source_guids: [str],
-                                    action_targets: [str], start_time: datetime, request_parameters: dict,
-                                    orig_service_name: str, orig_engine_name: str
-                                    ) -> str:
+                                           action_targets: [str], start_time: datetime, request_parameters: dict,
+                                           orig_service_name: str, orig_engine_name: str) -> str:
         """ initiate_gov_action_process
 
         This method starts a governance action process using the supplied parameters.
@@ -409,34 +326,26 @@ class GovEng(Client):
         """
         url = self.engine_command_root + "/governance-action-processes/initiate"
         body = {
-            "class"                     :"GovernanceActionProcessRequestBody",
-            "processQualifiedName"      : qualified_name,
-            "requestSourceGUIDs"        : request_source_guids,
-            "actionTargets"             : action_targets,
-            "startTime"                 : int(start_time.timestamp() * 1000),
-            "requestParameters"         : request_parameters,
-            "originatorServiceName"     : orig_service_name,
-            "originatorEngineName"      : orig_engine_name
+            "class":                     "GovernanceActionProcessRequestBody",
+            "processQualifiedName":       qualified_name,
+            "requestSourceGUIDs":         request_source_guids,
+            "actionTargets":              action_targets,
+            "startTime":                  int(start_time.timestamp() * 1000),
+            "requestParameters":          request_parameters,
+            "originatorServiceName":      orig_service_name,
+            "originatorEngineName":       orig_engine_name
         }
         new_body = body_slimmer(body)
         response = self.make_request("POST", url, new_body)
 
-        if response.status_code != 200:
-            return response.json()  # should never get here?
-
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json().get('guid')
-        else:
-            raise InvalidParameterException(response.content)
-
-
-    def initiate_engine_action (self, qualified_name: str, domain_identifier: int, display_name: str,
-                             description: str, request_source_guids: str, action_targets: str,
-                             received_guards: [str], start_time: datetime, gov_engine_name: str,
-                             request_type: str, request_parameters: dict, process_name: str,
-                             request_src_name: str= None, originator_svc_name: str= None,
-                             originator_eng_name: str = None) -> str:
+        return response.json().get('guid')
+        
+    def initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str,
+                               description: str, request_source_guids: str, action_targets: str,
+                               received_guards: [str], start_time: datetime, gov_engine_name: str,
+                               request_type: str, request_parameters: dict, process_name: str,
+                               request_src_name: str = None, originator_svc_name: str = None,
+                               originator_eng_name: str = None) -> str:
         """
             Initiates an engine action with the specified parameters.
 
@@ -465,7 +374,8 @@ class GovEng(Client):
                 this exception is raised with details from the response content.
 
             Note:
-                The `start_time` parameter should be a `datetime` object representing the start time of the governance action.
+                The `start_time` parameter should be a `datetime` object representing the start 
+                time of the governance action.
 
 
             """
@@ -473,35 +383,27 @@ class GovEng(Client):
                                           "/engine-actions/initiate")
 
         body = {
-            "class"                     : "GovernanceActionRequestBody",
-            "qualifiedName"             : qualified_name + str(int(start_time.timestamp())),
-            "domainIdentifier"          : domain_identifier,
-            "displayName"               : display_name,
-            "description"               : description,
-            "requestSourceGUIDs"        : request_source_guids,
-            "actionTargets"             : action_targets,
-            "receivedGuards"            : received_guards,
-            "startTime"                 : int(start_time.timestamp()*1000),
-            "requestType"               : request_type,
-            "requestParameters"         : request_parameters,
-            "processName"               : process_name,
-            "requestSourceName"         : request_src_name,
-            "originatorServiceName"     : originator_svc_name,
-            "originatorEngineName"      : originator_eng_name
+            "class":                      "GovernanceActionRequestBody",
+            "qualifiedName":              qualified_name + str(int(start_time.timestamp())),
+            "domainIdentifier":           domain_identifier,
+            "displayName":                display_name,
+            "description":                description,
+            "requestSourceGUIDs":         request_source_guids,
+            "actionTargets":              action_targets,
+            "receivedGuards":             received_guards,
+            "startTime":                  int(start_time.timestamp()*1000),
+            "requestType":                request_type,
+            "requestParameters":          request_parameters,
+            "process_name":                process_name,
+            "requestSourceName":          request_src_name,
+            "originatorServiceName":      originator_svc_name,
+            "originatorEngineName":       originator_eng_name
         }
         new_body = body_slimmer(body)
         response = self.make_request("POST", url, new_body)
-        if response.status_code != 200:
-            return response.json()  # should never get here?
+        return response.json().get('guid')
 
-        related_code = response.json().get("relatedHTTPCode")
-        if related_code == 200:
-            return response.json().get('guid')
-        else:
-            raise InvalidParameterException(response.content)
-
-
-    def print_engine_action_summary(self,governanceAction: dict):
+    def print_engine_action_summary(self, governance_action: dict):
         """ print_governance_action_summary
 
                 Print all the governance actions with their status, in the server.
@@ -518,25 +420,25 @@ class GovEng(Client):
                 PropertyServerException
                 UserNotAuthorizedException
                 """
-        if governanceAction:
-            name = governanceAction.get('displayName')
+        if governance_action:
+            name = governance_action.get('displayName')
             if not name:
-                name = governanceAction.get('qualifiedName')
-            actionStatus = governanceAction.get('actionStatus')
-            if governanceAction.get('completionGuards'):
-                completionGuards = governanceAction.get('completionGuards')
+                name = governance_action.get('qualifiedName')
+            action_status = governance_action.get('action_status')
+            if governance_action.get('completion_guards'):
+                completion_guards = governance_action.get('completion_guards')
             else:
-                completionGuards = "\t"
-            if governanceAction.get('processName'):
-                processName = governanceAction.get('processName')
+                completion_guards = "\t"
+            if governance_action.get('process_name'):
+                process_name = governance_action.get('process_name')
             else:
-                processName = "\t"
-            if governanceAction.get('completionMessage'):
-                completionMessage = governanceAction.get('completionMessage')
+                process_name = "\t"
+            if governance_action.get('completion_message'):
+                completion_message = governance_action.get('completion_message')
             else:
-                completionMessage = ""
-            print(actionStatus + "\n\t| " + name + "\t| " + processName + "\t| " + '%s' % ', '.join(
-                map(str, completionGuards)) + "\t| " + completionMessage)
+                completion_message = ""
+            print(action_status + "\n\t| " + name + "\t| " + process_name + "\t| " + '%s' % ', '.join(
+                map(str, completion_guards)) + "\t| " + completion_message)
 
     def print_engine_actions(self):
         """ print_governance_actions
@@ -556,18 +458,7 @@ class GovEng(Client):
                 UserNotAuthorizedException
 
         """
-        governance_actions = self.get_engine_actions(0,0)
-        if governance_actions != None:
+        governance_actions = self.get_engine_actions(0, 0)
+        if governance_actions is not None:
             for x in range(len(governance_actions)):
                 self.print_engine_action_summary(governance_actions[x])
-
-
-
-
-
-
-
-
-
-
-

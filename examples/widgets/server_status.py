@@ -22,7 +22,6 @@ from rich.table import Table
 from rich.live import Live
 
 from pyegeria.server_operations import ServerOps
-from pyegeria.core_omag_server_config import CoreServerConfig
 
 disable_ssl_warnings = True
 
@@ -46,7 +45,6 @@ bad_server_2 = ""
 
 def test_display_status(server: str = good_server_1, url: str = good_platform2_url, username: str = good_user_1):
     p_client = ServerOps(server, url, username)
-    c_client = CoreServerConfig(server, url, username)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -55,14 +53,12 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
             # style = "black on grey66",
             header_style="white on dark_blue",
             caption=f"Server Status for Platform - '{url}'",
-            show_lines=True,
-            # expand=True
+            # show_lines=True,
         )
 
         table.add_column("Known Server")
         table.add_column("Status")
-        table.add_column("Server Type")
-        table.add_column("Server Description")
+
         known_server_list = p_client.get_known_servers()
         active_server_list = p_client.get_active_server_list()
         if len(known_server_list) == 0:
@@ -73,14 +69,11 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
                 status = "Active"
             else:
                 status = "Inactive"
-            server_type = c_client.get_server_type_classification(server)["serverTypeName"]
-            description = c_client.get_basic_server_properties(server).get("localServerDescription", " ")
 
             table.add_row(server,
                           "[red]Inactive" if status == "Inactive" else "[green]Active",
-                          server_type, description)
-        p_client.close_session()
-        c_client.close_session()
+                          )
+        # p_client.close_session()
         return table
 
     try:
