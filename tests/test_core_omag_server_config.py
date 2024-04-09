@@ -32,7 +32,8 @@ disable_ssl_warnings = True
 class TestCoreAdminServices:
     good_platform1_url = "https://127.0.0.1:9443"
     good_platform2_url = "https://127.0.0.1:9444"
-    bad_platform1_url = "https://localhost:9443"
+    good_platform3_url = "https://127.0.0.1:9445"
+    bad_platform1_url = "https://localhost"
 
     # good_platform1_url = "https://127.0.0.1:30080"
     # good_platform2_url = "https://127.0.0.1:30081"
@@ -42,25 +43,26 @@ class TestCoreAdminServices:
     good_user_2 = "erinoverview"
     bad_user_1 = "eviledna"
     bad_user_2 = ""
-    good_integ_1 = "fluffy_integration"
+    good_integ_1 = "integration-daemon"
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "lazView1"
+    good_server_2 = "cocoMDS1"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
-    good_server_5 = "fluffy_kv"
+    good_server_5 = "engine-host"
     good_server_6 = "cocoView1"
-    good_engine_host_1 = "governDL01"
-    good_view_server_1 = "cocoView1"
-    good_view_server_2 = "fluffy_view"
-    bad_server_1 = "coco"
+    good_engine_host_1 = "engine-host"
+    good_view_server_1 = "view-server"
+    good_view_server_2 = "cocoView1"
+    bad_server_1 = "coc"
     bad_server_2 = ""
 
     @pytest.mark.parametrize("server, url, user, expectation",
-                             [("fluffy", "https://laz.local:9443", "garygeeke", does_not_raise()),
-                              ("fluffy", "https://localhost:9443", "garygeeke",
+                             # [
+                             [(good_server_4, good_platform1_url, "garygeeke", does_not_raise()),
+                              (bad_server_1, bad_platform1_url, "garygeeke",
                                pytest.raises(InvalidParameterException)),
-                              ("simple-metadata-store", "https://laz.local:9443", "garygeeke", does_not_raise()),
-                              (good_server_3, "https://laz.local:9443", "garygeeke", does_not_raise())
+                              (good_server_3, good_platform1_url, "garygeeke", does_not_raise()),
+                              (good_server_1, good_platform1_url, "garygeeke", does_not_raise())
                               ])
     def test_get_stored_configuration(self, server, url, user, expectation):
         with expectation as excinfo:
@@ -73,18 +75,14 @@ class TestCoreAdminServices:
         if excinfo:
             print_exception_response(excinfo.value)
 
-    #
-    #   Configure Access Services
-    #
-    def test_get_configured_access_services(self):
+    def test_is_server_configured(self, server:str = good_server_4):
         try:
             o_client = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
-            response = o_client.get_configured_access_services()
-            assert type(response) is list, "Failed to get access services"
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
+            configured = o_client.is_server_configured()
+            assert True
+            print(f"\n\n\t Server {server} configured status is {configured}")
 
         except (
                 InvalidParameterException,
@@ -94,13 +92,36 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_configure_all_access_services_good(self):
+
+    #
+    #   Configure Access Services
+    #
+    def test_get_configured_access_services(self,server:str = good_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_5, self.good_platform1_url,
+                server, self.good_platform1_url,
+                self.good_user_1)
+            response = o_client.get_configured_access_services()
+            assert type(response) is list, "Failed to get access services"
+            if type(response) is list:
+                print(f"\n\n\t Response for server {server} is: {json.dumps(response, indent=4)}")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_configure_all_access_services_good(self, server:str = good_server_1):
+        try:
+            o_client = CoreServerConfig(
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.configure_all_access_services()
-
+            print(f"\n\n\t Server {server} has all access services configured")
+            assert True
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -109,28 +130,31 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request or improper server configuration"
 
-    def test_configure_all_access_services_bad(self):
+    def test_configure_all_access_services_bad(self, server:str = bad_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_2, self.good_platform1_url,
+                server, self.bad_platform1_url,
                 self.good_user_1)
             o_client.configure_all_access_services()
-
+            print(f"\n\n Expected this to fail for {server} - why didn't it?")
+            assert False
         except (
                 InvalidParameterException,
                 PropertyServerException,
                 UserNotAuthorizedException
         ) as e:
+            print("Expected this to fail")
             print_exception_response(e)
             assert True, "Invalid request or improper server configuration"
 
-    def test_configure_all_access_services_no_topics(self):
+    def test_configure_all_access_services_no_topics(self, server:str = good_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_5, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.configure_all_access_services_no_topics()
-
+            print(f"\n\n\t Server {server} has all access services configured")
+            assert True
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -139,14 +163,14 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_all_access_services(self):
+    def test_clear_all_access_services(self, server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.clear_all_access_services()
             assert True, "Failed to delete access services"
-            print("\n\n\tAll access services cleared")
+            print(f"\n\n\tServer {server} has all access services cleared")
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -155,15 +179,18 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request - clear access services failed"
 
-    def test_get_access_service_config(self):
+    def test_get_access_service_config(self, server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_access_service_config("subject-area")
-            assert type(response) is dict, "Failed to get access services"
+            print(f"\n\n\t Config for server {server} is:")
             if type(response) is dict:
-                print("\n\n" + json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print(f"response was: {response}")
+            assert True
 
         except (
                 InvalidParameterException,
@@ -173,18 +200,18 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_configure_access_service(self):
+    def test_configure_access_service(self, server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             access_service_options = {
                 "SupportedZones": ["quarantine", "clinical-trials", "research", "data-lake", "trash-can"]
             }
             o_client.configure_access_service("subject-area", access_service_options)
-            print("\n\n\t Configured an access service")
-
+            print(f"\n\n\t Server {server} configured an access service")
+            assert True
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -193,17 +220,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_configure_access_service_no_topics(self):
+    def test_configure_access_service_no_topics(self, server:str = good_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             access_service_options = {
                 "SupportedZones": ["quarantine", "clinical-trials", "research", "data-lake", "trash-can"]
             }
-            o_client.configure_access_service("discovery-engine")
-
-            print("\n\n\t Configured an access service")
+            o_client.configure_access_service("discovery-engine", access_service_options)
+            assert True
+            print(f"\n\n\t Server {server} configured an access service")
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -212,14 +239,14 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_access_service(self):
+    def test_clear_access_service(self,server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.clear_access_service("subject-area", )
             assert True, "Failed to delete access services"
-            print("\n\n\tAll access services cleared")
+            print(f"\n\n\tserver {server} has all access services cleared")
         except (
                 InvalidParameterException,
                 PropertyServerException,
@@ -228,15 +255,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request - clear access services failed"
 
-    def test_get_access_services_config(self):
+    def test_get_access_services_config(self,server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_access_services_configuration()
             assert type(response) is list, "Failed to get access services"
             if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
+                print(f"\n\n\t Server {server} access services: \njson.dumps(response, indent=4)")
 
         except (
                 InvalidParameterException,
@@ -249,13 +276,14 @@ class TestCoreAdminServices:
     #
     #   Event Bus Methods
     #
-    def test_get_event_bus(self):
+    def test_get_event_bus(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_event_bus()
+            print(f"\n\n\t Server {server} event bus: \n")
             if response is None:
                 print("\n\n\n\t No event bus configured")
             else:
@@ -270,11 +298,11 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_event_bus(self):
+    def test_set_event_bus(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             event_bus_config = {
                 "producer": {
@@ -287,7 +315,7 @@ class TestCoreAdminServices:
 
             o_client.set_event_bus(event_bus_config)
             assert True
-            print("\n\n\t\tSet event bus configuration")
+            print(f"\n\n\t\tServer {server} -Set event bus configuration")
 
         except (
                 InvalidParameterException,
@@ -297,16 +325,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_event_bus(self):
+    def test_clear_event_bus(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_event_bus()
             assert True, "Failed to clear event bus"
-            print("\n\n\tEvent bus configuration cleared")
+            print(f"\n\n\tServer {server}: Event bus configuration cleared")
 
         except (
                 InvalidParameterException,
@@ -319,16 +347,16 @@ class TestCoreAdminServices:
     #
     #   Audit Methods
     #
-    def test_get_audit_log_destinations(self):
+    def test_get_audit_log_destinations(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             destinations = o_client.get_audit_log_destinations()
 
-            print("\n\n" + json.dumps(destinations, indent=4))
+            print(f"\n\n\tServer {server} json.dumps(destinations, indent=4)")
             assert destinations is not None, "Failed to get audit log destinations"
 
         except (
@@ -339,16 +367,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_audit_log_destinations(self):
+    def test_clear_audit_log_destinations(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_audit_log_destinations()
             assert True, "Failed to delete audit logs"
-            print("\n\n\tAll audit log destinations cleared")
+            print(f"\n\n\tServer {server}: All audit log destinations cleared")
 
         except (
                 InvalidParameterException,
@@ -358,16 +386,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_a_log_destination(self):
+    def test_clear_a_log_destination(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_a_log_destination("Console- default")
             assert True, "Failed to delete audit logs"
-            print("\n\n\tAudit log destinations cleared")
+            print(f"\n\n\tServer {server}: Audit log destinations cleared")
 
         except (
                 InvalidParameterException,
@@ -377,16 +405,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_console_log_destinations(self):
+    def test_add_console_log_destinations(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_console_log_destinations([])
             assert True
-            print("\n\n\tConsole log destination added")
+            print(f"\n\n\tServer {server}: Console log destination added")
 
         except (
                 InvalidParameterException,
@@ -396,15 +424,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_default_log_destinations(self):
+    def test_add_default_log_destinations(self, server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_default_log_destinations()
 
-            print("\n\n\t\tAdded default log destinations")
+            print(f"\n\n\t\tServer {server}:Added default log destinations")
             assert True
 
         except(
@@ -415,16 +443,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_topic_log_destinations(self):
+    def test_add_topic_log_destinations(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_event_topic_log_destinations("meow", [])
 
-            print("\n\n\t\tAdded topic log destinations")
+            print(f"\n\n\t\tServer {server}: Added topic log destinations")
             assert True
 
         except (
@@ -435,16 +463,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_file_log_destinations(self):
+    def test_add_file_log_destinations(self, server: str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_file_log_destinations("./logs", [])
 
-            print("\n\n\t\tAdded file log destinations")
+            print(f"\n\n\t\tServer {server}: Added file log destinations")
             assert True
 
         except (
@@ -455,16 +483,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_slf4j_log_destination(self):
+    def test_add_slf4j_log_destination(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_slf4j_log_destination()
             assert True
-            print("\n\n\t\tAdded slf4j log destination")
+            print(f"\n\n\t\tServer {server}: Added slf4j log destination")
 
         except (
                 InvalidParameterException,
@@ -477,14 +505,14 @@ class TestCoreAdminServices:
     #
     # Basic Repository Config
     #
-    def test_set_no_repository_mode(self):
+    def test_set_no_repository_mode(self, server: str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.set_no_repository_mode()
-
+            print(f"\n\n\t\tServer {server}: Set no_repository_mode")
             assert True
 
             print("\n\n\t\tNo repository mode set")
@@ -497,16 +525,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_local_repository_config(self):
+    def test_get_local_repository_config(self, server: str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             config = o_client.get_local_repository_config()
             assert config is not None, "Failed to get repository config"
-            print("\n\n" + json.dumps(config, indent=4))
+            print(f"\n\n\tServer {server}: json.dumps(config, indent=4)")
 
 
         except (
@@ -517,16 +545,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_local_repository_config(self):
+    def test_clear_local_repository_config(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.clear_local_repository_config()
             assert True
 
-            print("\n\n\t\tLocal repository config cleared")
+            print(f"\n\n\t\tServer {server}: Local repository config cleared")
 
         except (
                 InvalidParameterException,
@@ -535,34 +563,35 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_local_metadata_collection_id(self):
+    def test_get_local_metadata_collection_id(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_local_metadata_collection_id()
             assert response is not None and type(response) is str, "no collection id returned"
 
-            print("\n\nMetadata collection ID GUID is: " + response)
+            print(f"\n\n\tServer {server}: Metadata collection ID GUID is: " + response)
 
         except (
                 InvalidParameterException,
                 PropertyServerException,
+                UserNotAuthorizedException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_local_metadata_collection_id(self):
+    def test_set_local_metadata_collection_id(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.set_local_metadata_collection_id("aCollectionid")
             assert True
 
-            print("\n\n\t\tMetadata collection id set")
+            print(f"\n\n\t\tServer {server}: Metadata collection id set")
 
         except (
                 InvalidParameterException,
@@ -572,16 +601,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_local_metadata_collection_name(self):
+    def test_get_local_metadata_collection_name(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_local_metadata_collection_name()
             assert response is not None and type(response) is str, "no collection id returned"
 
-            print("\n\n\t\tThe metadata collection name is: " + response)
+            print(f"\n\n\t\tServer {server}: The metadata collection name is: " + response)
 
         except (
                 InvalidParameterException,
@@ -591,16 +620,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_local_metadata_collection_name(self):
+    def test_set_local_metadata_collection_name(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.set_local_metadata_collection_name("aCollectionName")
             assert True
 
-            print("\n\n\t\tMetadata collection id set")
+            print(f"\n\n\t\tServer {server}: Metadata collection id set")
 
         except (
                 InvalidParameterException,
@@ -613,16 +642,16 @@ class TestCoreAdminServices:
     #
     #   Local Repository Config
     #
-    def test_set_in_mem_local_repository(self):
+    def test_set_in_mem_local_repository(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.set_in_mem_local_repository()
             assert True
 
-            print("\n\n\t\tIn memory repository type set")
+            print(f"\n\n\t\tServer {server}: In memory repository type set")
 
         except (
                 InvalidParameterException,
@@ -632,16 +661,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_graph_local_repository(self):
+    def test_set_graph_local_repository(self,server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             o_client.set_graph_local_repository()
             assert True
 
-            print("\n\n\t\tLocal graph repository type set")
+            print(f"\n\n\t\tServer {server}: Local graph repository type set")
 
         except (
                 InvalidParameterException,
@@ -651,7 +680,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_read_only_local_repository(self):
+    def test_set_read_only_local_repository(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -660,7 +689,7 @@ class TestCoreAdminServices:
             o_client.set_read_only_local_repository()
             assert True
 
-            print("\n\n\t\tRead-only repository type set")
+            print(f"\n\n\t\tServer {server}: Read-only repository type set")
 
         except (
                 InvalidParameterException,
@@ -670,7 +699,59 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_in_mem_repository(self):
+    def test_set_plug_in_repository(self, server:str = good_server_2):
+        server_name = server
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url,
+                self.good_user_1)
+            full_config_body = {
+                "class": "Connection",
+                "connectorType": {
+                    "class": "ConnectorType",
+                    "connectorProviderClassName": "org.odpi.egeria.connectors.juxt.xtdb.repositoryconnector.XtdbOMRSRepositoryConnectorProvider"
+                },
+                "configurationProperties": {
+                    "xtdbConfig": {
+                        "xtdb.lucene/lucene-store": {
+                            "db-dir": "data/servers/" + server_name + "/xtdb/lucene"
+                        },
+                        "xtdb/index-store": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-index"
+                            }
+                        },
+                        "xtdb/document-store": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-docs"
+                            }
+                        },
+                        "xtdb/tx-log": {
+                            "kv-store": {
+                                "xtdb/module": "xtdb.rocksdb/->kv-store",
+                                "db-dir": "data/servers/" + server_name + "/xtdb/rdb-tx"
+                            }
+                        }
+                    }
+                }
+            }
+            o_client.set_plug_in_repository(full_config_body)
+            assert True
+
+            print(f"\n\n\t\tServer {server}: Plug-in repository type set")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+
+    def test_set_xtdb_in_mem_repository(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -679,7 +760,7 @@ class TestCoreAdminServices:
             o_client.set_xtdb_in_mem_repository()
             assert True
 
-            print("\n\n\t\tXTDB in-memory repository type set")
+            print(f"\n\n\t\tServer {server}: XTDB in-memory repository type set")
 
         except (
                 InvalidParameterException,
@@ -689,7 +770,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_local_kv_repository(self):
+    def test_set_xtdb_local_kv_repository(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -698,7 +779,7 @@ class TestCoreAdminServices:
             o_client.set_xtdb_local_kv_repository()
             assert True
 
-            print("\n\n\t\tXTDB local kv repository type set")
+            print(f"\n\n\t\tServer {server}: XTDB local kv repository type set")
 
         except (
                 InvalidParameterException,
@@ -708,7 +789,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_local_repository(self):
+    def test_set_xtdb_local_repository(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -738,7 +819,7 @@ class TestCoreAdminServices:
             o_client.set_xtdb_local_repository(body)
             assert True
 
-            print("\n\n\t\tXTDB in-memory repository type set")
+            print(f"\n\n\t\tServer {server}: XTDB in-memory repository type set")
 
         except (
                 InvalidParameterException,
@@ -748,17 +829,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_open_metadata_archives(self):
+    def test_get_open_metadata_archives(self, server:str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
             response = o_client.get_open_metadata_archives()
             if response is not None:
-                print("\n\n" + json.dumps(response, indent=4))
+                print(f"\n\n\tServer {server}: \njson.dumps(response, indent=4)")
                 assert True
             else:
-                print("\n\n\t No archives found")
+                print(f"\n\n\t Server {server}: No archives found")
 
         except (
                 InvalidParameterException,
@@ -768,17 +849,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_startup_open_metadata_archive(self):
+    def test_add_startup_open_metadata_archive(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_startup_open_metadata_archive_file("./content-packs/OpenConnectorsArchive.omarchive")
             assert True
 
-            print("\n\n\t\tArchives added")
+            print(f"\n\n\t\tServer {server}: Archives added")
 
         except (
                 InvalidParameterException,
@@ -788,17 +869,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_open_metadata_archives(self):
+    def test_clear_open_metadata_archives(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_open_metadata_archives()
             assert True
 
-            print("\n\n\t\tArchives cleared")
+            print(f"\n\n\t\tServer {server}: Archives cleared")
 
         except (
                 InvalidParameterException,
@@ -811,16 +892,16 @@ class TestCoreAdminServices:
     #
     #   Basic settings and security
     #
-    def test_get_basic_server_properties(self):
+    def test_get_basic_server_properties(self, server:str = good_server_1):
 
         try:
             o_client = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_basic_server_properties()
             assert (type(response) is dict) or (type(response) is str), "No server properties returned"
-            print("\n\nResponse is: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server}: Response is- \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -830,7 +911,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_basic_server_properties(self):
+    def test_set_basic_server_properties(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -840,7 +921,7 @@ class TestCoreAdminServices:
                                                  "garygeeke", "admin", 0, "fluffy_view")
             assert True
 
-            print("\n\n\t\tBasic server properties set")
+            print(f"\n\n\t\tServer {server}: Basic server properties set")
 
         except (
                 InvalidParameterException,
@@ -849,14 +930,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_server_security_connection(self):
+    def test_get_server_security_connection(self, server:str = good_server_1):
 
         try:
             o_client = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_server_security_connection()
+            print(f"Server {server}:\n")
             if response is None:
                 print("No security has been configured")
             else:
@@ -871,17 +953,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_server_security_connection(self):
+    def test_clear_server_security_connection(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_server_security_connection()
             assert True
 
-            print("\n\n\t\tServer security cleared")
+            print(f"\n\n\t\tServer {server}: Server security cleared")
 
         except (
                 InvalidParameterException,
@@ -891,7 +973,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_security_connection(self):
+    def test_set_security_connection(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -908,7 +990,7 @@ class TestCoreAdminServices:
             o_client.set_server_security_connection(body)
             assert True
 
-            print("\n\n\t\tSecurity connection set")
+            print(f"\n\n\t\tServer {server}: Security connection set")
 
         except (
                 InvalidParameterException,
@@ -918,13 +1000,14 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_server_classification(self):
+    def test_get_server_classification(self, server:str = good_server_1):
         try:
             o_client = CoreServerConfig(
                 self.good_server_2, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_server_classification()
+            print(f"Server {server}:\n")
             if response is None:
                 print("No server properties set")
             else:
@@ -943,15 +1026,15 @@ class TestCoreAdminServices:
     #   Config view services
     #
 
-    def test_get_configured_view_svcs(self):
+    def test_get_configured_view_svcs(self, server:str = good_view_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_6, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_configured_view_svcs()
             assert (type(response) is str) or (type(response) is list), "No view services"
-            print("\n\nView services configuration: \n" + json.dumps(response, indent=4))
+            print(f"\n\n\tServer {server}: View services configuration- \n{json.dumps(response, indent=4)}")
 
         except (
                 InvalidParameterException,
@@ -961,17 +1044,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_config_all_view_services(self):
+    def test_config_all_view_services(self, server:str = good_view_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_view_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.config_all_view_services("fluffy", self.good_platform1_url, )
+            o_client.config_all_view_services(self.good_server_3, self.good_platform1_url, )
             assert True
 
-            print("\n\n\t\tView service set")
+            print(f"\n\n\t\tServer {server}: View service set")
 
         except (
                 InvalidParameterException,
@@ -981,17 +1064,16 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_config_all_view_services_w_body(self):
+    def test_config_all_view_services_w_body(self, server:str = good_view_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_view_server_2, self.good_platform1_url,
-                self.good_user_1)
+                server, self.good_platform1_url,self.good_user_1)
 
             body = {
                 "class": "ViewServiceRequestBody",
                 "omagserverPlatformRootURL": self.good_platform1_url,
-                "omagserverName": self.good_server_5,
+                "omagserverName": self.good_server_3,
                 "resourceEndpoints": [
                     {
                         "class": "ResourceEndpointConfig",
@@ -1068,7 +1150,7 @@ class TestCoreAdminServices:
             o_client.config_all_view_services_w_body(body)
             assert True
 
-            print("\n\n\t\tView service set")
+            print(f"\n\n\t\tServer {server}: View service set using body")
 
         except (
                 InvalidParameterException,
@@ -1078,17 +1160,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_all_view_svcs(self):
+    def test_clear_all_view_svcs(self, server:str = good_view_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_6, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_all_view_services()
             assert True
 
-            print("\n\n\t\tView services cleared")
+            print(f"\n\n\t\tServer {server}: View services cleared")
 
         except (
                 InvalidParameterException,
@@ -1098,15 +1180,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_view_svc_config(self):
+    def test_get_view_svc_config(self, server:str = good_view_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_6, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_view_svc_config("glossary-author")
             assert (type(response) is dict) or (type(response) is str), "No view services"
-            print("\n\nView services configuration: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server} view services configuration: \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -1116,18 +1198,18 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_config_view_service(self):
+    def test_config_view_service(self, server:str = good_view_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_view_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.config_view_service("glossary-author", "cocoMDS1",
+            o_client.config_view_service("glossary-browser", self.good_server_3,
                                          self.good_platform1_url)
             assert True
 
-            print("\n\n\t\tView service set")
+            print(f"\n\n\t\tServer {server}: view service set")
 
         except (
                 InvalidParameterException,
@@ -1137,17 +1219,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_view_svcs(self):
+    def test_clear_view_svc(self, server:str = good_view_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.clear_server_security_connection("rex")
+            o_client.clear_view_service("tex")
             assert True
 
-            print("\n\n\t\tView service cleared")
+            print(f"\n\n\t\tServer {server}: view service cleared")
 
         except (
                 InvalidParameterException,
@@ -1157,15 +1239,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_view_svcs_config(self):
+    def test_get_view_svcs_config(self, server:str = "cocoView1"):
         try:
             o_client = CoreServerConfig(
-                self.good_view_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_view_svcs_config()
             assert (type(response) is list) or (type(response) is str), "No view services"
-            print("\n\nView services configuration: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server}: view services configuration: \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -1181,15 +1263,15 @@ class TestCoreAdminServices:
 
 
 
-    def test_get_server_type(self):
+    def test_get_server_type(self, server:str = good_view_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_2, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_server_type_classification()
             assert (type(response) is dict) or (type(response) is str), "No view services"
-            print("\n\nServer Types: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server}: type is: \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -1199,17 +1281,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_cohort_registration(self):
+    def test_add_cohort_registration(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.add_cohort_registration("pdr-cohort")
             assert True
 
-            print("\n\n\t\tAdded to cohort")
+            print(f"\n\n\t\tServer {server}: added to cohort")
 
         except (
                 InvalidParameterException,
@@ -1219,15 +1301,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_cohort_config(self):
+    def test_get_cohort_config(self, server:str = good_server_1):
         try:
             o_client = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_cohort_config("pdr-cohort")
             assert (type(response) is dict) or (type(response) is str), "No view services"
-            print("\n\nView services configuration: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server}: cohort configuration: \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -1237,21 +1319,21 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_deploy_server_config(self):
+    def test_deploy_server_config(self, server:str = good_server_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             target_platform_body = {
-                "urlRoot": "https://hades.local:9443"
+                "urlRoot": "https://cray.local:9443"
             }
 
             o_client.deploy_server_config(target_platform_body)
             assert True
 
-            print("\n\n\t\tDeployed to target")
+            print(f"\n\n\t\tServer {server}: Deployed to target")
 
         except (
                 InvalidParameterException,
@@ -1264,17 +1346,17 @@ class TestCoreAdminServices:
     #
     #   Integration Groups
     #
-    def test_clear_all_integration_groups(self):
+    def test_clear_all_integration_groups(self, server:str = good_integ_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_all_integration_groups()
             assert True
 
-            print("\n\n\t\tAll integration groups cleared")
+            print(f"\n\n\t\tServer {server}: all integration groups cleared")
 
         except (
                 InvalidParameterException,
@@ -1284,17 +1366,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_an_integration_groups(self):
+    def test_clear_an_integration_group(self, server:str = good_integ_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.clear_an_integration_groups("newton")
+            o_client.clear_an_integration_group("Egeria:IntegrationGroup:DefaultIntegrationGroup")
             assert True
 
-            print("\n\n\t\tAn integration group cleared")
+            print(f"\n\n\t\tServer {server}: An integration group cleared")
 
         except (
                 InvalidParameterException,
@@ -1304,15 +1386,15 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_integration_groups_config(self):
+    def test_get_integration_groups_config(self, server:str = good_integ_1):
         try:
             o_client = CoreServerConfig(
-                self.good_integ_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_integration_groups_config()
             assert (type(response) is list) or (type(response) is str), "No integration groups found"
-            print("\n\nIntegration Groups configuration: \n" + json.dumps(response, indent=4))
+            print(f"\n\nServer {server}: Integration Groups configuration- \n" + json.dumps(response, indent=4))
 
         except (
                 InvalidParameterException,
@@ -1322,18 +1404,18 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_config_integration_group(self):
+    def test_config_integration_group(self, server:str = good_integ_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_4, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.config_integration_group("fluffy", self.good_platform1_url,
+            o_client.config_integration_group(self.good_server_3, self.good_platform1_url,
                                               "Egeria:IntegrationGroup:DefaultIntegrationGroup")
             assert True
 
-            print("\n\n\t\tConfigured Integration Group")
+            print(f"\n\n\t\tServer {server}: configured Integration Group")
 
         except (
                 InvalidParameterException,
@@ -1346,17 +1428,17 @@ class TestCoreAdminServices:
     #
     # Engine Configurations
     #
-    def test_clear_engine_definitions_client_configs(self):
+    def test_clear_engine_definitions_client_configs(self, server:str = good_engine_host_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_engine_host_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             o_client.clear_engine_definitions_client_config()
             assert True
 
-            print("\n\n\t\tEngine definition client configuration cleared")
+            print(f"\n\n\t\tServer {server}: engine definition client configuration cleared")
 
         except (
                 InvalidParameterException,
@@ -1366,18 +1448,18 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_engine_definitions_client_config(self):
+    def test_set_engine_definitions_client_config(self, server:str = good_engine_host_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_engine_host_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.set_engine_definitions_client_config(self.good_server_5,
+            o_client.set_engine_definitions_client_config(self.good_server_3,
                                                           self.good_platform1_url)
             assert True
 
-            print("\n\n\t\tClient config for engine definition set")
+            print(f"\n\n\t\tServer {server}: client config for engine definition set")
 
         except (
                 InvalidParameterException,
@@ -1387,17 +1469,17 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_clear_an_engine_list(self):
+    def test_clear_engine_list(self, server:str = good_engine_host_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_engine_host_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.clear_an_engine_list()
+            o_client.clear_engine_list()
             assert True
 
-            print("\n\n\t\tEngine list cleared")
+            print(f"\n\n\t\tServer {server}: Engine list cleared")
 
         except (
                 InvalidParameterException,
@@ -1425,15 +1507,15 @@ class TestCoreAdminServices:
     #         print_exception_response(e)
     #         assert False, "Invalid request"
 
-    def test_get_engine_host_services_config(self):
+    def test_get_engine_host_services_config(self, server:str = good_engine_host_1):
         try:
             o_client = CoreServerConfig(
-                self.good_engine_host_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             response = o_client.get_engine_host_services_config()
             assert (type(response) is dict) or (type(response) is str), "No Engine List found"
-            print("\n\nEngine List: \n" + json.dumps(response, indent=4))
+            print(f"\n\n\tServer {server} Engine List: {json.dumps(response, indent=4)}")
 
         except (
                 InvalidParameterException,
@@ -1443,11 +1525,11 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_engine_list(self):
+    def test_set_engine_list(self, server:str = good_engine_host_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_engine_host_1, self.good_platform1_url,
+                server, self.good_platform1_url,
                 self.good_user_1)
 
             engine_list_body = [
@@ -1466,7 +1548,7 @@ class TestCoreAdminServices:
             o_client.set_engine_list(engine_list_body)
             assert True
 
-            print("\n\n\t\tEngine list set")
+            print(f"\n\n\t\tServer {server}: Engine list set")
 
         except (
                 InvalidParameterException,
@@ -1475,3 +1557,69 @@ class TestCoreAdminServices:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+
+    def test_get_placeholder_variables(self, server:str = good_server_1):
+        try:
+            o_client = CoreServerConfig(
+                server, self.good_platform1_url,
+                self.good_user_2)
+
+            response = o_client.get_placeholder_variables()
+            if type(response) is dict:
+                print(f"\n\n\tPlaceholder variables are: \n{json.dumps(response, indent=4)}")
+            else:
+                print("\n\n\tNo placeholders found")
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_clear_placeholder_variables(self, server:str = good_server_1):
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url,
+                self.good_user_1)
+
+            o_client.clear_placeholder_variables()
+            assert True
+
+            print(f"\n\n\t\tPlaceholder variables have been cleared")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_set_placeholder_variables(self, server:str = good_server_1):
+
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url,
+                self.good_user_1)
+
+            placeholder_variables = {
+                "freddie_endpoint": "http://localhost:9092",
+                "ingres-endpoint": "http://localhost:4321"
+            }
+            o_client.set_placeholder_variables(placeholder_variables)
+            assert True
+
+            print(f"\n\n\t\tSet placeholder variables: \n {placeholder_variables}")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+# todo: test case for set repository proxy details

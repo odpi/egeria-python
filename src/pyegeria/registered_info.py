@@ -22,7 +22,7 @@ class RegisteredInfo(Client):
     """ Client to discover Egeria services and capabilities
 
     Attributes:
-
+    ----------
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -35,13 +35,13 @@ class RegisteredInfo(Client):
             Defaults to False.
 
     Methods:
-        __init__(self,platform_url: str, end_user_id: str)
-         Initializes the connection - throwing an exception if there is a problem
-
+    -------
         list_registered_svcs(self, kind: str = None, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30)
             -> list | str
-        Returns information about the different kinds of services as either JSON or a printable table.
+            Returns information about the different kinds of services as either JSON or a printable table.
 
+        list_severity_definitions(self, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30) -> list | str
+            Returns a list of severity definitions for an OMAG Server used by the audit services.
     """
 
     admin_command_root: str

@@ -289,8 +289,6 @@ def validate_url(url: str) -> bool:
     Validate that the provided url is neither null nor empty. The syntax of the url
     string is also checked to see that it conforms to standards.
 
-    Note: The validation package used does not view http://localhost:9443 as valid - expects a domain suffix.
-
     Parameters
     ----------
     url : str  The url string to validate.
@@ -329,8 +327,12 @@ def validate_url(url: str) -> bool:
         )
         raise InvalidParameterException(exc_msg)
 
+    # The following hack allows localhost to be used as a hostname - which is disallowed by the
+    # validations package
+    if ('localhost' in url) and ('localhost.' not in url):
+        url = url.replace('localhost', '127.0.0.1')
+
     result = validators.url(url)
-    # print(f"validation result is {result}")
     if result is not True:
         msg = OMAGCommonErrorCode.SERVER_URL_MALFORMED.value["message_template"].format(
             url

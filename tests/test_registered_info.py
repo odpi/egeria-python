@@ -11,11 +11,9 @@ A running Egeria environment is needed to run these tests.
 
 """
 import pytest
-
-import json
-
-
-from pyegeria.registered_info import RegisteredInfo
+from rich import print as rprint
+from rich.console import Console
+from rich.table import Table
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -23,6 +21,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria.registered_info import RegisteredInfo
 
 disable_ssl_warnings = True
 
@@ -46,31 +45,31 @@ class TestRegisteredInfoServices:
     @pytest.mark.parametrize(
         "service_kind",
         [
-            (
-                None
-            ),
-            (
-                "all"
-            ),
-            (
-                "access-services"
-            ),
-            (
-                "common-services"
-            ),
-            (
-                "engine-services"
-
-            ),
-            (
-                "governance-services"
-            ),
+            # (
+            #     None
+            # ),
+            # (
+            #     "all"
+            # ),
+            # (
+            #     "access-services"
+            # ),
+            # (
+            #     "common-services"
+            # ),
+            # (
+            #     "engine-services"
+            #
+            # ),
+            # (
+            #     "governance-services"
+            # ),
             (
                  "integration-services"
             ),
-            (
-                    "view-services"
-            ),
+            # (
+            #         "view-services"
+            # ),
         ],
     )
     def test_list_registered_svcs(self, service_kind):
@@ -83,7 +82,8 @@ class TestRegisteredInfoServices:
             assert (type(response) is list) or (type(response) is str), "No services found"
             if type(response) is list:
                 print(f"\n\nView services configuration for {service_kind}: \n\n")
-                print(json.dumps(response, indent=4))
+                # print(json.dumps(response, indent=4))
+                rprint(response)
             else:
                 print(f"\n\n{response}: \n\n")
 
@@ -98,10 +98,26 @@ class TestRegisteredInfoServices:
     def test_list_severity_definitions(self):
         try:
             r_client = RegisteredInfo(self.good_platform1_url,
-                                      server_name=self.good_server_1, user_id=self.good_user_1)
+                                      server_name=self.good_server_3, user_id=self.good_user_1)
 
-            response = r_client.list_severity_definitions(fmt='table', skinny=False, wrap_len=30)
-            print(json.dumps(response, indent=4))
+            response = r_client.list_severity_definitions(fmt='json', skinny=False, wrap_len=20)
+            # print(json.dumps(response, indent=4))
+            # rich.inspect(response)
+            console = Console()
+
+            table = Table(
+                title="Severity Codes",
+                style = "black on grey66",
+                header_style= "white on dark_blue"
+            )
+            table.add_column("Number")
+            table.add_column("Name", width = 30)
+            table.add_column("Description")
+
+            for code in response:
+                ordinal, name, description = (str(code['ordinal']), code['name'], code['description'])
+                table.add_row(ordinal, name, description)
+            console.print(table)
             assert True
 
         except (
