@@ -6,15 +6,15 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 import asyncio
-import json
 from datetime import datetime
-from httpx import AsyncClient, Response
+
+from httpx import Response
 
 from pyegeria import Client, max_paging_size, body_slimmer
-from ._validators import validate_name, validate_guid, validate_search_string
 from pyegeria._exceptions import (
     InvalidParameterException,
 )
+from ._validators import validate_name, validate_guid, validate_search_string
 
 
 class AutomatedCuration(Client):
@@ -92,7 +92,7 @@ class AutomatedCuration(Client):
 
         url = f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-templates/new-element"
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid","GUID failed to be returned")
+        return response.json().get("guid", "GUID failed to be returned")
 
     def create_element_from_template(self, body: dict, server: str = None) -> str:
         """ Create a new metadata element from a template.  Async version.
@@ -145,8 +145,8 @@ class AutomatedCuration(Client):
         )
         return response
 
-    async def _async_create_kafka_server_element_from_template(self, kafka_server:str, host_name: str, port: str,
-                                                               server:str = None) -> str:
+    async def _async_create_kafka_server_element_from_template(self, kafka_server: str, host_name: str, port: str,
+                                                               server: str = None) -> str:
         """ Create a Kafka server element from a template. Async version.
 
             Parameters
@@ -210,7 +210,6 @@ class AutomatedCuration(Client):
         )
         return response
 
-
     async def _async_create_postgres_server_element_from_template(self, postgres_server: str, host_name: str, port: str,
                                                                   db_user: str, db_pwd: str, server: str = None) -> str:
         """ Create a Postgres server element from a template. Async version.
@@ -247,7 +246,7 @@ class AutomatedCuration(Client):
                 "serverName": postgres_server,
                 "hostIdentifier": host_name,
                 "portNumber": port,
-                "databaseUserId" : db_user,
+                "databaseUserId": db_user,
                 "databasePassword": db_pwd
             }
         }
@@ -285,14 +284,14 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_postgres_server_element_from_template(postgres_server,host_name,
-                                                                     port, db_user,db_pwd,server)
+            self._async_create_postgres_server_element_from_template(postgres_server, host_name,
+                                                                     port, db_user, db_pwd, server)
         )
         return response
 
     #
-# Engine Actions
-#
+    # Engine Actions
+    #
     async def _async_get_engine_actions(self, server: str = None, start_from: int = 0,
                                         page_size: int = max_paging_size) -> list:
         """ Retrieve the engine actions that are known to the server. Async version.
@@ -562,16 +561,19 @@ class AutomatedCuration(Client):
         name : str
             The name of the engine action to retrieve.
         server : str, optional
-            The name of the server to retrieve the engine action from. If not provided, the default server specified in the instance will be used.
+             The name of the server to retrieve the engine action from. If not provided, the default server specified in
+             the instance will be used.
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global maximum paging size will be used.
+            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
+            maximum paging size will be used.
 
         Returns
         -------
         list of dict | str
-            A list of dictionaries representing the retrieved engine actions, or "no actions" if no engine actions were found with the given name.
+            A list of dictionaries representing the retrieved engine actions, or "no actions" if no engine actions were
+             found with the given name.
         Raises:
         ------
         InvalidParameterException
@@ -604,16 +606,19 @@ class AutomatedCuration(Client):
         name : str
             The name of the engine action to retrieve.
         server : str, optional
-            The name of the server to retrieve the engine action from. If not provided, the default server specified in the instance will be used.
+            The name of the server to retrieve the engine action from. If not provided, the default server specified in
+            the instance will be used.
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global maximum paging size will be used.
+            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
+             maximum paging size will be used.
 
         Returns
         -------
         list of dict | str
-            A list of dictionaries representing the retrieved engine actions, or "no actions" if no engine actions were found with the given name.
+            A list of dictionaries representing the retrieved engine actions, or "no actions" if no engine actions were
+            found with the given name.
         Raises:
         ------
         InvalidParameterException
@@ -745,9 +750,9 @@ class AutomatedCuration(Client):
         )
         return response
 
-#
-# Governance action processes
-#
+    #
+    # Governance action processes
+    #
 
     async def _async_get_governance_action_process_by_guid(self, process_guid: str, server: str = None) -> dict | str:
         """ Retrieve the governance action process metadata element with the supplied unique identifier. Async Version.
@@ -863,7 +868,7 @@ class AutomatedCuration(Client):
        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_gov_action_process_graph(process_guid, server)
+            self._async_gov_action_process_graph(process_guid, server)
         )
         return response
 
@@ -877,11 +882,13 @@ class AutomatedCuration(Client):
            name : str
                The name of the engine action to retrieve.
            server : str, optional
-               The name of the server to retrieve the engine action from. If not provided, the default server specified in the instance will be used.
+               The name of the server to retrieve the engine action from. If not provided, the default server specified
+               in the instance will be used.
            start_from : int, optional
                The index to start retrieving engine actions from. If not provided, the default value will be used.
            page_size : int, optional
-               The maximum number of engine actions to retrieve in a single request. If not provided, the default global maximum paging size will be used.
+               The maximum number of engine actions to retrieve in a single request. If not provided, the default
+               global maximum paging size will be used.
 
            Returns
            -------
@@ -916,11 +923,13 @@ class AutomatedCuration(Client):
            name : str
                The name of the engine action to retrieve.
            server : str, optional
-               The name of the server to retrieve the engine action from. If not provided, the default server specified in the instance will be used.
+               The name of the server to retrieve the engine action from. If not provided, the default server specified
+               in the instance will be used.
            start_from : int, optional
                The index to start retrieving engine actions from. If not provided, the default value will be used.
            page_size : int, optional
-               The maximum number of engine actions to retrieve in a single request. If not provided, the default global maximum paging size will be used.
+               The maximum number of engine actions to retrieve in a single request. If not provided, the default global
+                maximum paging size will be used.
 
            Returns
            -------
@@ -1041,8 +1050,8 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_gov_action_processes(search_string, server, starts_with, ends_with, ignore_case,
-                                                 start_from, page_size)
+            self._async_find_gov_action_processes(search_string, server, starts_with, ends_with, ignore_case,
+                                                  start_from, page_size)
         )
         return response
 
@@ -1117,6 +1126,8 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str
             - optional unique name of the governance engine (if initiated by a governance engine).
+        server: str, optional
+            - if not specified, the server from the class instance will be used
 
         Returns
         -------
@@ -1202,7 +1213,8 @@ class AutomatedCuration(Client):
                     action_type_name: str
                       The name of the governance action type to retrieve.
                     server: str, optional
-                        The name of the server. If None, will use the default server specified in the instance will be used.
+                        The name of the server. If None, will use the default server specified in the instance
+                        will be used.
                 Returns:
                 -------
                     dict: The JSON representation of the governance action type element.
@@ -1369,8 +1381,10 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_initiate_gov_action_type(self, action_type_qualified_name: str, request_source_guids: [str],
-                                              action_targets: list, start_time: datetime= None, request_parameters: dict= None,
-                                              orig_service_name: str= None, orig_engine_name: str = None, server: str = None) -> str:
+                                              action_targets: list, start_time: datetime = None,
+                                              request_parameters: dict = None,
+                                              orig_service_name: str = None, orig_engine_name: str = None,
+                                              server: str = None) -> str:
         """ Using the named governance action type as a template, initiate an engine action. Async version.
 
         Parameters
@@ -1389,6 +1403,8 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str
             - optional unique name of the governance engine (if initiated by a governance engine).
+        server : str, optional
+            - The name of the server. If None, will use the default server specified in the instance will be used.
 
         Returns
         -------
@@ -1439,6 +1455,8 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str
             - optional unique name of the governance engine (if initiated by a governance engine).
+        server : str, optional
+            - The name of the server. If None, will use the default server specified in the instance will be used.
 
         Returns
         -------
@@ -1458,7 +1476,7 @@ class AutomatedCuration(Client):
         )
         return response
 
-    async def _async_initiate_postgres_server_survey(self, postgres_server_guid: str,  server: str = None )-> str:
+    async def _async_initiate_postgres_server_survey(self, postgres_server_guid: str, server: str = None) -> str:
         server = self.server_name if server is None else server
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
                f"initiate")
@@ -1467,9 +1485,9 @@ class AutomatedCuration(Client):
             "class": "InitiateGovernanceActionTypeRequestBody",
             "governanceActionTypeQualifiedName": "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-postgres-server",
             "actionTargets": [{
-                "class" : "NewActionTarget",
-                "actionTargetName" : "serverToSurvey",
-                "actionTargetGUID" : postgres_server_guid
+                "class": "NewActionTarget",
+                "actionTargetName": "serverToSurvey",
+                "actionTargetGUID": postgres_server_guid
             }]
         }
         response = await self._async_make_request("POST", url, body)
@@ -1507,7 +1525,7 @@ class AutomatedCuration(Client):
     def initiate_file_folder_survey(self, file_folder_guid: str, server: str = None) -> str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_file_folder_survey( file_folder_guid, server)
+            self._async_initiate_file_folder_survey(file_folder_guid, server)
         )
         return response
 
@@ -1536,13 +1554,12 @@ class AutomatedCuration(Client):
         )
         return response
 
-    async def run_gov_action_postgres_server_survey(self, postgres_server: str, host_name: str, port: str,):
+    async def run_gov_action_postgres_server_survey(self, postgres_server: str, host_name: str, port: str, ):
         pass
         # New combo process to do
         # run a process the creates the postgres server catalog entry, runs the server survey
         # creates a survey report
         # adds a to-do list element when done
-
 
     async def _async_initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str,
                                             description: str, request_source_guids: str, action_targets: str,
@@ -1928,8 +1945,8 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_catalog_target(integ_connector_guid, metadata_element_guid,
-                                           server)
+            self._async_remove_catalog_target(integ_connector_guid, metadata_element_guid,
+                                              server)
         )
         return
 
@@ -2081,7 +2098,7 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_find_technology_types(self, search_string: str = "*", server: str = None, start_from: int = 0,
-                                           page_size: int = max_paging_size, starts_with: bool=False,
+                                           page_size: int = max_paging_size, starts_with: bool = False,
                                            ends_with: bool = False, ignore_case: bool = True) -> list | str:
         """ Retrieve the list of technology types that contain the search string. Async version.
 
@@ -2127,7 +2144,7 @@ class AutomatedCuration(Client):
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
         validate_name(search_string)
-        if search_string== "*":
+        if search_string == "*":
             search_string = ""
 
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/"
@@ -2139,7 +2156,7 @@ class AutomatedCuration(Client):
         return response.json().get("elements", "no tech found")
 
     def find_technology_types(self, type_name: str = "*", server: str = None, start_from: int = 0,
-                              page_size: int = max_paging_size, starts_with: bool=False,
+                              page_size: int = max_paging_size, starts_with: bool = False,
                               ends_with: bool = False, ignore_case: bool = True) -> list | str:
         """ Retrieve the list of technology types that contain the search string. Async version.
 
@@ -2168,7 +2185,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_technology_types(type_name, server, start_from,
-                                              page_size, starts_with,ends_with, ignore_case)
+                                              page_size, starts_with, ends_with, ignore_case)
         )
         return response
 
@@ -2183,6 +2200,6 @@ class AutomatedCuration(Client):
 
 if __name__ == "__main__":
     p = AutomatedCuration("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
-    response = p.get_active_service_list_for_server()
-    out = response.json()["result"]
+    response = p.get_active_engine_actions()
+    out = response.json()
     print(out)

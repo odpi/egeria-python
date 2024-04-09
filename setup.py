@@ -5,7 +5,7 @@ setup(
     extras_require=dict(tests=["pytest"]),
     # packages=find_packages(where="src"),
     package_dir={"": "src"},
-    version='0.3.1',
+    version='0.3.2',
     packages=find_packages(where="src"),
     url="https://egeria-project.org/egeria-python",
     project_urls={
