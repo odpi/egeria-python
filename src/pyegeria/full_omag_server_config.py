@@ -601,7 +601,6 @@ class FullServerConfig(CoreServerConfig):
 
         self.make_request("POST", url, target_url_root)
 
-
     def get_event_bus(self, server_name: str = None) -> dict:
         """ Returns the event bus configuration for the specified server
 

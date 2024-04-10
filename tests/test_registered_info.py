@@ -78,7 +78,7 @@ class TestRegisteredInfoServices:
         try:
             r_client = RegisteredInfo(self.good_platform1_url, self.good_user_1)
 
-            response = r_client.list_registered_svcs(service_kind, fmt='table')
+            response = r_client.list_registered_svcs(service_kind, fmt='json')
 
             assert (type(response) is list) or (type(response) is str), "No services found"
             if type(response) is list:

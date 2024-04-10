@@ -79,8 +79,7 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
             table.add_row(server,
                           "[red]Inactive" if status == "Inactive" else "[green]Active",
                           server_type, description)
-        p_client.close_session()
-        c_client.close_session()
+
         return table
 
     try:
@@ -88,14 +87,14 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
             while True:
                 time.sleep(2)
                 live.update(generate_table())
-                # services = p_client.get_server_status(server)['serverStatus']['services']
-                # for service in services:
-                #     service_name = service['serviceName']
-                #     service_status = service['serviceStatus']
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
+
+    finally:
+        p_client.close_session()
+        c_client.close_session()
 
 
 if __name__ == "__main__":

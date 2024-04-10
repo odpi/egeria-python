@@ -11,7 +11,7 @@ A simple display for glossary terms
 import time
 import json
 import argparse
-from pyegeria._exceptions import (
+from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,

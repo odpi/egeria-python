@@ -55,8 +55,9 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
     print(layout)
 
     print(layout)
-    p_client1 = ServerOps(server, "https://cray.local:9443", username)
-    p_client2 = ServerOps('ecosystem-monitor', "https://cray.local:9446", username)
+    p_client1 = ServerOps("Core Catalog", "https://localhost:9443", username)
+    p_client2 = ServerOps('Datalake Catalog', "https://localhost:9444", username)
+    p_client3 = ServerOps('DevCatalog', "https://localhost:9445", username)
 
 
     def generate_table(p_client) -> Table:
@@ -86,17 +87,13 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
             table.add_row(server,
                           "[red]Inactive" if status == "Inactive" else "[green]Active",
                           )
-        # p_client.close_session()
         return table
 
     try:
-        # panel_group = Group(
-        #     rich.align.Align(Panel(, generate_table(p_client2)), box.ROUNDED))
-        #
-        # )
         layout.split_row(
             Layout(Panel(generate_table(p_client1), box.ROUNDED)),
-            Layout(Panel(generate_table(p_client2), box.ROUNDED))
+            Layout(Panel(generate_table(p_client2), box.ROUNDED)),
+            Layout(Panel(generate_table(p_client3), box.ROUNDED))
         )
         with Live(layout, refresh_per_second=4, screen=True) as live:
             while True:
