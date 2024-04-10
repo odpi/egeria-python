@@ -16,7 +16,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -114,7 +114,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_configure_all_access_services_good(self, server:str = good_server_1):
+    def test_configure_all_access_services_good(self, server:str = good_server_3):
         try:
             o_client = CoreServerConfig(
                 server, self.good_platform1_url,
@@ -1239,7 +1239,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_view_svcs_config(self, server:str = good_view_server_1):
+    def test_get_view_svcs_config(self, server:str = "cocoView1"):
         try:
             o_client = CoreServerConfig(
                 server, self.good_platform1_url,
@@ -1621,3 +1621,5 @@ class TestCoreAdminServices:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+
+# todo: test case for set repository proxy details

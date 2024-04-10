@@ -6,7 +6,7 @@ import inspect
 import json
 import validators
 from json import JSONDecodeError
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
 )
@@ -330,7 +330,7 @@ def validate_url(url: str) -> bool:
     # The following hack allows localhost to be used as a hostname - which is disallowed by the
     # validations package
     if ('localhost' in url) and ('localhost.' not in url):
-       url = url.replace('localhost', '127.0.0.1')
+        url = url.replace('localhost', '127.0.0.1')
 
     result = validators.url(url)
     if result is not True:

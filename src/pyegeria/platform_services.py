@@ -6,20 +6,23 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
+import asyncio
 import inspect
 import json
-import httpx
-# import requests
 
-from pyegeria import CoreServerConfig, Client
+import httpx
+
+from pyegeria import Client
 from pyegeria._validators import validate_user_id
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
     UserNotAuthorizedException,
     PropertyServerException, print_exception_response,
 )
-import asyncio
+
+
+# import requests
 
 
 class Platform(Client):
@@ -88,9 +91,9 @@ class Platform(Client):
             user_id: str,
             user_pwd: str = None,
             verify_flag: bool = False,
-            sync_mode: bool = True
+
     ):
-        validate_user_id(user_id) # add this check since we aren't using bearer tokens in this class
+        validate_user_id(user_id)  # add this check since we aren't using bearer tokens in this class
 
         Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
         self.admin_command_root = (self.platform_url +
@@ -122,12 +125,15 @@ class Platform(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
+        global response
         calling_frame = inspect.currentframe().f_back
         caller_method = inspect.getframeinfo(calling_frame).function
         class_name = __class__.__name__
 
         url = self.admin_command_root + "/origin"
+
         local_session = httpx.Client(verify=self.ssl_verify)
+        response = " "
         try:
             response = local_session.get(url)
             if response.status_code != 200:
@@ -171,7 +177,7 @@ class Platform(Client):
                 raise InvalidParameterException(exc_msg)
             else:
                 return response.text
-        except (InvalidParameterException):
+        except InvalidParameterException:
             raise
 
         except (
@@ -246,12 +252,13 @@ class Platform(Client):
 
         await self._async_make_request("POST", url, time_out=timeout)
 
-    def activate_server_stored_config(self, server: str = None, timeout: int = 60) -> None:
+    def activate_server_stored_config(self, server: str = None, timeout: int = 90) -> None:
         """ Activate a server on the associated platform with the stored configuration.
 
         Parameters
         ----------
         server : Use the server if specified. If None, use the default server associated with the Platform object.
+        timeout: number of seconds to wait for a response before raising an exception
 
         Returns
         -------
@@ -267,10 +274,11 @@ class Platform(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_activate_server_stored_config(server,timeout))
+        response = loop.run_until_complete(self._async_activate_server_stored_config(server, timeout))
         return response
 
-    async def _async_activate_server_supplied_config(self, config_body: str, server: str = None, timeout: int = 60) -> None:
+    async def _async_activate_server_supplied_config(self, config_body: dict, server: str = None, timeout: int = 60)\
+            -> None:
         """ Activate a server on the associated platform with the stored configuration. Async version.
 
         Parameters
@@ -301,7 +309,31 @@ class Platform(Client):
         url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
         await self._async_make_request("POST", url, config_body, time_out=timeout)
 
-    def activate_server_supplied_config(self, config_body: str, server: str = None, timeout: int = 60) -> None:
+    def activate_server_supplied_config(self, config_body: dict, server: str = None, timeout: int = 60) -> None:
+        """ Activate a server on the associated platform with the stored configuration.
+
+            Parameters
+            ----------
+            config_body: str
+                Server configuration to use for activation.
+            server : str, optional
+                Use the server if specified. If None, use the default server associated with the Platform object.
+            timeout: int, optional
+                A request timeout in seconds
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+            """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_activate_server_supplied_config(config_body, server, timeout))
 
@@ -460,7 +492,8 @@ class Platform(Client):
         Parameters
         ----------
         server : str, optional
-            The name of the server to check if configured. If not specified, the server name stored in `self.server_name` will be used.
+            The name of the server to check if configured. If not specified, the server name stored in
+            `self.server_name` will be used.
 
         Returns
         -------
@@ -471,15 +504,11 @@ class Platform(Client):
             server = self.server_name
         url = f"{self.platform_url}/open-metadata/admin-services/users/{self.user_id}/servers/{server}/configuration"
 
-        try:
-
-            response = await self._async_make_request("GET", url)
-            config = response.json().get("omagserverConfig", "No configuration found")
-            if 'auditTrail' in config:
-                return True
-            else: return False
-
-        except InvalidParameterException as e:
+        response = await self._async_make_request("GET", url)
+        config = response.json().get("omagserverConfig", "No configuration found")
+        if 'auditTrail' in config:
+            return True
+        else:
             return False
 
     def is_server_configured(self, server: str = None) -> bool:
@@ -487,7 +516,8 @@ class Platform(Client):
         Parameters
         ----------
         server : str, optional
-            The name of the server to check if configured. If not specified, the server name stored in `self.server_name` will be used.
+            The name of the server to check if configured. If not specified,
+            the server name stored in `self.server_name` will be used.
 
         Returns
         -------
@@ -499,8 +529,8 @@ class Platform(Client):
         return response
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
-        """
-        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+        """  Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+             Async version.
 
         Parameters
         ----------
@@ -524,8 +554,7 @@ class Platform(Client):
         return response.json().get("omagserverConfig", "No active configuration found")
 
     def get_active_configuration(self, server: str = None) -> dict | str:
-        """
-        Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+        """ Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
 
         Parameters
         ----------
@@ -599,7 +628,7 @@ class Platform(Client):
         url = self.admin_command_root + "/servers/active"
 
         response = await self._async_make_request("GET", url)
-        return response.json().get('serverList',"No servers active")
+        return response.json().get('serverList', "No servers active")
 
     def get_active_server_list(self) -> list:
         """
@@ -877,7 +906,7 @@ class Platform(Client):
         except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             if verbose:
                 print_exception_response(e)
-            raise (e)
+            raise e
 
     def activate_server_if_down(self, server: str, verbose: bool = True, timeout: int = 60) -> bool:
         """ Activate server if it is down.
@@ -992,7 +1021,8 @@ class Platform(Client):
         is successfully activated, otherwise it returns False.
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_activate_servers_on_platform(server_list, verbose))
+        response = loop.run_until_complete(self._async_activate_servers_on_platform(server_list,
+                                                                                    verbose, timeout=timeout))
         return response
 
     async def _async_activate_platform(self, platform_name: str, hosted_server_names: [str], timeout: int = 60) -> None:
@@ -1019,9 +1049,10 @@ class Platform(Client):
 
         Notes
         -----
-        This method attempts to activate a platform by checking its status. If the platform is already active and running, it prints a message indicating so and activates any hosted servers
-        * that are down. If the platform is not active, it prints a message indicating so. If there is any exception while activating the platform or starting the servers, it prints an error
-        * message and the exception response.
+        This method attempts to activate a platform by checking its status. If the platform is already active and
+        running, it prints a message indicating so and activates any hosted servers
+        that are down. If the platform is not active, it prints a message indicating so. If there is any exception
+        while activating the platform or starting the servers, it prints an error message and the exception response.
         """
         try:
             status = self.get_platform_origin()
@@ -1067,9 +1098,10 @@ class Platform(Client):
 
         Notes
         -----
-        This method attempts to activate a platform by checking its status. If the platform is already active and running, it prints a message indicating so and activates any hosted servers
-        * that are down. If the platform is not active, it prints a message indicating so. If there is any exception while activating the platform or starting the servers, it prints an error
-        * message and the exception response.
+        This method attempts to activate a platform by checking its status. If the platform is already active and
+        running, it prints a message indicating so and activates any hosted servers
+        that are down. If the platform is not active, it prints a message indicating so. If there is any exception
+        while activating the platform or starting the servers, it prints an error message and the exception response.
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_activate_platform(platform_name, hosted_server_names, timeout))

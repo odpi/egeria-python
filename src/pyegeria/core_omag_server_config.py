@@ -108,7 +108,7 @@ class CoreServerConfig(Client):
         response = self.make_request("GET", url)
         return response.json().get("omagserverConfig", "No configuration found")
 
-    def is_server_configured(self, server_name:str= None) -> bool:
+    def is_server_configured(self, server_name: str = None) -> bool:
         """ Check if the server has a stored configuration
 
         Parameters
@@ -130,7 +130,6 @@ class CoreServerConfig(Client):
             return True
         else:
             return False
-
 
     def get_configured_access_services(self, server_name: str = None) -> list | str:
         """ Return the list of access services that are configured for this server.
@@ -1135,7 +1134,41 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/read-only-repository"
         self.make_request("POST", url)
 
-    def set_plug_in_repository(self, config_body: dict, server_name:str = None)-> None:
+    def set_repository_proxy_details(self, connector_provider: str, server_name: str = None) -> None:
+        """ Sets the local repository to use the proxy repository specified by the connection.
+
+        Parameters
+        ----------
+        connector_provider: str
+            Specifies the class of the proxy connector provider.
+        server_name : str, optional
+            The name of the server. If not provided, the default server name of the instance will be used.
+
+        Returns
+        -------
+        None
+            This method does not return anything.
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        validate_name(connector_provider)
+
+        url = (f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/repository-proxy/"
+               f"details?connectorProvider={connector_provider}")
+        self.make_request("POST", url)
+
+    def set_plug_in_repository(self, config_body: dict, server_name: str = None) -> None:
         """ Configure the metadata repository using a full repository connection body.
 
         Parameters
@@ -1166,7 +1199,6 @@ class CoreServerConfig(Client):
 
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
         self.make_request("POST", url, config_body)
-
 
     def set_xtdb_in_mem_repository(self, server_name: str = None) -> None:
         """ Set xtdb local repository connection to be XTDB with an in memory repository
@@ -1475,7 +1507,7 @@ class CoreServerConfig(Client):
             "maxPageSize": max_page_size
         }
         url = self.admin_command_root + "/servers/" + server_name + "/server-properties"
-        print(url)
+
         self.make_request("POST", url, basic_props)
 
     def get_basic_server_properties(self, server_name: str = None) -> dict | str:
@@ -1981,7 +2013,12 @@ class CoreServerConfig(Client):
     #   Cohort Configuration, etc.
     #
     def add_cohort_registration(self, cohort_name: str, server_name: str = None) -> None:
-        """ add a cohort registration
+        """ Enable registration of server to an open metadata repository cohort using the default topic structure
+            (DEDICATED_TOPICS). A cohort is a group of open metadata repositories that are sharing metadata.
+            An OMAG server can connect to zero, one or more cohorts. Each cohort needs a unique name.
+            The members of the cohort use a shared topic to exchange registration information and events
+            related to the changes in their supported metadata types and instances. They are also able to query
+            each other's metadata directly through REST calls.
 
         Parameters
         ----------
@@ -2349,38 +2386,6 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/engine-list"
         self.make_request("DELETE", url)
 
-    # def get_engine_list(self, server_name: str = None) -> list | str:
-    #     """ Get the list of engines from the specified by the server_name parameter.
-    #
-    #     Parameters
-    #     ----------
-    #
-    #     server_name : str, optional
-    #         The name of the server. If None, the default server name will be used.
-    #
-    #     Returns
-    #     -------
-    #     List containing the JSON structure of the Integration Groups configuration.
-    #
-    #     Raises
-    #     ------
-    #     InvalidParameterException
-    #         If the response code is not 200.
-    #     PropertyServerException:
-    #         Raised by the server when an issue arises in processing a valid request
-    #     NotAuthorizedException:
-    #         The principle specified by the user_id does not have authorization for the requested action
-    #
-    #     """
-    #     if server_name is None:
-    #         server_name = self.server_name
-    #
-    #     url = self.admin_command_root + "/servers/" + server_name + "/engine-list"
-    #     response = self.make_request("GET", url)
-    #
-    #     # return response.json().get("config", "No engine definitions client configuration found")
-    #     return response.json()
-
     def set_engine_list(self, engine_list: [dict], server_name: str = None) -> None:
         """ Set up the list of governance engine that will use the metadata from the same metadata access server
          as the engine host uses for retrieving the engine configuration.
@@ -2535,4 +2540,3 @@ class CoreServerConfig(Client):
         """
         url = f"{self.admin_command_root}/stores/placeholder-variables"
         self.make_request("DELETE", url)
-

@@ -10,30 +10,26 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
-import pytest
-import rich
 import json
+import pytest
+from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
-from rich.live import Live
-from rich import print as rprint
 
-
-from pyegeria.registered_info import RegisteredInfo
-
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria.registered_info import RegisteredInfo
 
 disable_ssl_warnings = True
 
 
 class TestRegisteredInfoServices:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://127.0.0.1:9444"
+    good_platform2_url = "https://cray.local:9443"
     bad_platform1_url = "https://localhost:9443"
 
     good_user_1 = "garygeeke"
@@ -42,7 +38,7 @@ class TestRegisteredInfoServices:
     bad_user_2 = ""
 
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "cocoMDS2"
+    good_server_2 = "view-server"
     good_server_3 = "active-metadata-store"
     bad_server_1 = "coco"
     bad_server_2 = ""
@@ -50,12 +46,12 @@ class TestRegisteredInfoServices:
     @pytest.mark.parametrize(
         "service_kind",
         [
-            (
-                None
-            ),
-            (
-                "all"
-            ),
+            # (
+            #     None
+            # ),
+            # (
+            #     "all"
+            # ),
             # (
             #     "access-services"
             # ),
@@ -69,9 +65,9 @@ class TestRegisteredInfoServices:
             # (
             #     "governance-services"
             # ),
-            # (
-            #      "integration-services"
-            # ),
+            (
+                 "integration-services"
+            ),
             # (
             #         "view-services"
             # ),
@@ -124,6 +120,29 @@ class TestRegisteredInfoServices:
                 table.add_row(ordinal, name, description)
             console.print(table)
             assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_list_asset_types(self):
+        user = self.good_user_2
+        try:
+            r_client = RegisteredInfo(self.good_platform1_url, user, "secret",
+                                      server_name =self.good_server_2,)
+            token = r_client.create_egeria_bearer_token(user, "secret")
+            response = r_client.list_asset_types()
+
+            assert type(response) is list, "No services found"
+            if type(response) is list:
+                print(f"\n\nAsset types are: \n\n")
+                print(json.dumps(response, indent=4))
+            else:
+                print(f"\n\n{response}: \n\n")
 
         except (
                 InvalidParameterException,

@@ -11,7 +11,7 @@ A simple display for glossary terms
 import time
 import json
 import argparse
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -66,6 +66,7 @@ def display_glossary_terms(search_string: str, guid: str=None, server: str = goo
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
+            caption=f"Glossary View Server '{server}' @ Platform - {url}",
             expand=True
         )
         table.add_column("Display Name")

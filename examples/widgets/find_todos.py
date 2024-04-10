@@ -11,7 +11,7 @@ A simple display for glossary terms
 import time
 import json
 import argparse
-from pyegeria._exceptions import (
+from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -57,7 +57,6 @@ def display_to_dos(search_string: str, guid: str=None, server: str = good_server
     m_client = MyProfile(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, "secret")
 
-
     def generate_table(search_string:str = '*') -> Table:
         """Make a new table."""
         table = Table(
@@ -95,7 +94,7 @@ def display_to_dos(search_string: str, guid: str=None, server: str = good_server
             for item in todo_items:
                 props = item["properties"]
                 name = props["name"]
-                type_name = props["extendedProperties"].get("toDoType", " ")
+                type_name = props.get("toDoType", " ")
                 created = props.get("creationTime", " ")
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", " ")

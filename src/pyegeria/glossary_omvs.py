@@ -1,6 +1,9 @@
 """
+PDX-License-Identifier: Apache-2.0
+Copyright Contributors to the ODPi Egeria project.
 
-This module contains the core OMAG configuration class and its methods.
+This module contains an initial version of the glossary_omvs module. There are additional methods that will be
+added in subsequent versions of the glossary_omvs module.
 
 """
 import json
@@ -20,32 +23,12 @@ from pyegeria.utils import body_slimmer
 
 class GlossaryBrowser(Client):
     """
-    CoreServerConfig is a class that extends the Client class. It provides methods to configure and interact with access
-     services in the OMAG server.
+    GlossaryBrowser is a class that extends the Client class. It provides methods to search and retrieve glossaries,
+    terms and categories.
 
     Methods:
 
-        - get_stored_configuration(server_name: str = None) -> dict:
-            Retrieves all the configuration documents for a server.
 
-        - get_configured_access_services(server_name: str = None) -> dict:
-            Returns the list of access services that are configured for this server.
-
-        - configure_all_access_services(server_name: str = None) -> None:
-            Enables all access services that are registered with this server platform.
-
-        - configure_all_access_services_no_topics(server_name: str = None) -> None:
-            Configures all access services for the specified server with no cohort/Event Bus.
-
-        - clear_all_access_services(server_name: str = None) -> None:
-            Disables the access services. This removes all configuration for the access services and disables the
-            enterprise repository services.
-
-        - get_access_service_config(access_service_name: str, server_name: str = None) -> dict:
-            Retrieves the config for an access service.
-
-        - configure_access_service(access_service_name: str, server_name: str = None) -> None:
-            Enables a single access service.
      """
 
     def __init__(
@@ -95,6 +78,11 @@ class GlossaryBrowser(Client):
         type_name: str, [default=None], optional
             An optional parameter indicating the subtype of the glossary to filter by.
             Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
         Returns
         -------
         List | str
@@ -124,7 +112,7 @@ class GlossaryBrowser(Client):
 
         validate_search_string(search_string)
 
-        if search_string is '*':
+        if search_string == '*':
             search_string = None
 
         body = {
@@ -152,48 +140,55 @@ class GlossaryBrowser(Client):
                    The search string is located in the request body and is interpreted as a plain string.
                    The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
-               Parameters
-               ----------
-               search_string: str,
-                   Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+           Parameters
+           ----------
+           search_string: str,
+               Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
 
-               effective_time: str, [default=None], optional
-                   Effective time of the query. If not specified will default to any time.
-               server_name : str, optional
-                   The name of the server to  configure.
-                   If not provided, the server name associated with the instance is used.
-               starts_with : bool, [default=False], optional
-                   Starts with the supplied string.
-               ends_with : bool, [default=False], optional
-                   Ends with the supplied string
-               ignore_case : bool, [default=False], optional
-                   Ignore case when searching
-               for_lineage : bool, [default=False], optional
+           effective_time: str, [default=None], optional
+               Effective time of the query. If not specified will default to any time.
+           server_name : str, optional
+               The name of the server to  configure.
+               If not provided, the server name associated with the instance is used.
+           starts_with : bool, [default=False], optional
+               Starts with the supplied string.
+           ends_with : bool, [default=False], optional
+               Ends with the supplied string
+           ignore_case : bool, [default=False], optional
+               Ignore case when searching
+           for_lineage : bool, [default=False], optional
+                Indicates the search is for lineage.
+           for_duplicate_processing : bool, [default=False], optional
+           type_name: str, [default=None], optional
+               An optional parameter indicating the subtype of the glossary to filter by.
+               Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
+            start_from: int, [default=0], optional
+                When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=None]
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+           Returns
+           -------
+           List | str
 
-               for_duplicate_processing : bool, [default=False], optional
-               type_name: str, [default=None], optional
-                   An optional parameter indicating the subtype of the glossary to filter by.
-                   Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
-               Returns
-               -------
-               List | str
+           A list of glossary definitions active in the server.
 
-               A list of glossary definitions active in the server.
+           Raises
+           ------
 
-               Raises
-               ------
+           InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+           PropertyServerException
+             Raised by the server when an issue arises in processing a valid request
+           NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
-               InvalidParameterException
-                 If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-               PropertyServerException
-                 Raised by the server when an issue arises in processing a valid request
-               NotAuthorizedException
-                 The principle specified by the user_id does not have authorization for the requested action
-
-               """
+           """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_find_glossaries(search_string, effective_time, starts_with,
-                                                           ends_with, ignore_case, for_lineage))
+                                        ends_with, ignore_case, for_lineage,
+                                        for_duplicate_processing,type_name,
+                                        server_name,start_from, page_size))
 
         return response.json().get("elementList", "No Glossaries found")
 
@@ -284,6 +279,11 @@ class GlossaryBrowser(Client):
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
+        start_from: int, [default=0], optional
+             When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
 
         Returns
         -------
@@ -333,6 +333,11 @@ class GlossaryBrowser(Client):
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            he class instance.
 
         Returns
         -------
@@ -340,7 +345,6 @@ class GlossaryBrowser(Client):
 
         Raises
         ------
-
         InvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
         PropertyServerException
@@ -594,7 +598,7 @@ class GlossaryBrowser(Client):
         ignore_case_s = str(ignore_case).lower()
         for_lineage_s = str(for_lineage).lower()
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
-        if search_string is '*':
+        if search_string == '*':
             search_string = None
 
         # validate_search_string(search_string)
@@ -637,3 +641,137 @@ class GlossaryBrowser(Client):
 #
 #   Catagories
 #
+
+#
+#   Feedback
+#
+    async def _async_get_comment(self, commemtGUID: str, effective_time: datetime, server_name: str=None,
+                                 for_lineage: bool = False, for_duplicate_processing: bool = False) -> dict | list:
+        """ Retrieve the comment specified by the comment GUID """
+        if server_name is None:
+            server_name = self.server_name
+
+        validate_guid(commemtGUID)
+
+        if effective_time is None:
+            effective_time = datetime.now().isoformat()
+
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processing).lower()
+
+        body = {
+            "effective_time": effective_time
+        }
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+               f"{commemtGUID}?forLineage={for_lineage_s}&"
+               f"forDuplicateProcessing={for_duplicate_processing_s}")
+
+        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
+
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+
+    async def _async_add_comment_reply(self, commentGUID: str, is_public: bool, comment_type: str, comment_text: str,
+                                       server_name: str=None, for_lineage: bool = False,
+                                       for_duplicate_processing: bool = False ) -> str:
+        """ Reply to a comment """
+
+        if server_name is None:
+            server_name = self.server_name
+
+        validate_guid(commentGUID)
+        validate_name(comment_type)
+
+        is_public_s = str(is_public).lower()
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processing).lower()
+
+        body = {
+            "class": "CommentRequestBody",
+            "commentType": comment_type,
+            "commentText": comment_text,
+            "isPublic": is_public
+        }
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+               f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
+               f"forDuplicateProcessing={for_duplicate_processing_s}")
+
+        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
+
+        response = await self._async_make_request("POST", url, body)
+        return response
+
+
+    async def _async_update_comment(self, commentGUID: str, is_public: bool, comment_type: str, comment_text: str,
+                                    server_name: str=None, is_merge_update: bool = False, for_lineage: bool = False,
+                                    for_duplicate_processing: bool = False) -> str:
+        """ Update the specified comment"""
+        if server_name is None:
+            server_name = self.server_name
+
+        validate_guid(commentGUID)
+        validate_name(comment_type)
+
+        is_public_s = str(is_public).lower()
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processing).lower()
+
+        body = {
+            "class": "CommentRequestBody",
+            "commentType": comment_type,
+            "commentText": comment_text,
+            "isPublic": is_public
+        }
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+               f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
+               f"forDuplicateProcessing={for_duplicate_processing_s}")
+
+        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
+
+        response = await self._async_make_request("POST", url, body)
+        return response
+
+    async def _async_find_comment(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
+                                         effective_time: str = None, starts_with: bool = False,
+                                         ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
+                                         for_duplicate_processing: bool = False, server_name: str = None,
+                                         start_from: int = 0, page_size: int = None):
+        """Find comments by search string"""
+        if server_name is None:
+            server_name = self.server_name
+        if page_size is None:
+            page_size = self.page_size
+        if effective_time is None:
+            effective_time = datetime.now().isoformat()
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processing).lower()
+        if search_string == '*':
+            search_string = None
+
+        # validate_search_string(search_string)
+
+        body = {
+            "class": "GlossarySearchStringRequestBody",
+            "glossaryGUID": glossary_guid,
+            "searchString": search_string,
+            "effectiveTime": effective_time,
+            "limitResultsByStatus": status_filter
+        }
+        # body = body_slimmer(body)
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+               f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
+               f"forDuplicateProcessing={for_duplicate_processing_s}")
+
+        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
+
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("elementList", "No terms found")

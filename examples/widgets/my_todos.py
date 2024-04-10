@@ -17,7 +17,7 @@ from rich.live import Live
 from rich.table import Table
 from rich import console
 
-from pyegeria._exceptions import (
+from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
