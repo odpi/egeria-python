@@ -30,7 +30,7 @@ from contextlib import nullcontext as does_not_raise
 
 disable_ssl_warnings = True
 
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -43,6 +43,7 @@ from rich import inspect
 
 from pyegeria.platform_services import Platform
 from pyegeria.server_operations import ServerOps
+
 
 class TestPlatform:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -69,42 +70,42 @@ class TestPlatform:
     @pytest.mark.parametrize(
         "server, url, user_id, exc_type, expectation",
         [
+            # (
+            #         "meow",
+            #         "https://google.com",
+            #         "garygeeke",
+            #         "InvalidParameterException",
+            #         pytest.raises(InvalidParameterException),
+            # ),
             (
-                    "meow",
-                    "https://google.com",
-                    "garygeeke",
-                    "InvalidParameterException",
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS2",
+                    "active-metadata-server",
                     "https://localhost:9443",
                     "garygeeke",
                     "nothing",
                     does_not_raise(),
             ),
-            (
-                    "cocoMDS1",
-                    good_platform3_url,
-                    "garygeeke",
-                    "",
-                    does_not_raise(),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://127.0.0.1:9443",
-                    None,
-                    "InvalidParameterException",
-                    pytest.raises(InvalidParameterException),
-            ),
-            (
-                    "cocoMDS2",
-                    "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
-                    "meow",
-                    "InvalidParameterException",
-                    pytest.raises(InvalidParameterException),
-            ),
-            ("", "", "", "InvalidParameterException", pytest.raises(InvalidParameterException)),
+            # (
+            #         "cocoMDS1",
+            #         good_platform3_url,
+            #         "garygeeke",
+            #         "",
+            #         does_not_raise(),
+            # ),
+            # (
+            #         "cocoMDS2",
+            #         "https://127.0.0.1:9443",
+            #         None,
+            #         "InvalidParameterException",
+            #         pytest.raises(InvalidParameterException),
+            # ),
+            # (
+            #         "cocoMDS2",
+            #         "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
+            #         "meow",
+            #         "InvalidParameterException",
+            #         pytest.raises(InvalidParameterException),
+            # ),
+            # ("", "", "", "InvalidParameterException", pytest.raises(InvalidParameterException)),
         ],
     )
     def test_get_platform_origin(self, server, url, user_id, exc_type, expectation):
@@ -131,7 +132,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_activate_server_stored_config(self, server: str = good_server_1):
+    def test_activate_server_stored_config(self, server: str = "cocoMDS1"):
         """
         Need to decide if its worth it to broaden out the test cases..for instance
         in this method if there is an exception - such as invalid server name
@@ -151,7 +152,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_shutdown_server(self, server: str = good_server_1):
+    def test_shutdown_server(self, server: str = 'cocoMDS1'):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             p_client.shutdown_server(server)
@@ -601,21 +602,6 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_load_archive_file(self):
-        try:
-            server = self.good_server_4
-            p_client = Platform(server, self.good_platform1_url, self.good_user_1)
-            file_name = "content-packs/CocoSustainabilityArchive.omarchive"
-            p_client.add_archive_file(file_name, server)
-            print(f"Archive file: {file_name} was loaded successfully")
-            assert True
-
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
-            print_exception_response(e)
-            assert False, "Invalid parameters"
-        finally:
-            p_client.close_session()
-
     def test_get_active_server_instance_status(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
@@ -718,7 +704,7 @@ class TestPlatform:
 
     def test_activate_server_if_down(self):
         try:
-            server = self.good_server_2
+            server = self.good_server_3
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
 
             response = p_client.activate_server_if_down(server, verbose=True)

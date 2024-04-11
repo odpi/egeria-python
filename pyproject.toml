@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+#requires = ["hatchling"]
+requires = ["setuptools", "wheel"]
+#build-backend = "hatchling.build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyegeria"
-version = "0.2.4"
+version = "0.3.3"
+#license = 'Apache 2.0'
 authors = [
     {name ="Dan Wolfson", email= "dan.wolfson@pdr-associates.com"},
 ]
@@ -23,7 +26,6 @@ dependencies = [
     "pandas~=2.2.0",
     "rich~=13.7.1",
     "httpx~=0.26.0"
-
 ]
 keywords = ["egeria", "metadata", "governance"]
 classifiers = [

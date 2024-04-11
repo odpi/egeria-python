@@ -13,7 +13,7 @@ import time
 import json
 import argparse
 
-from pyegeria.exceptions import (
+from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -62,7 +62,7 @@ def display_gov_actions_status(server: str = good_server_3, url: str = good_plat
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Server: {server_name} running on {url}",
+            caption=f"Server: '{server_name}' running on {url}",
             expand=True
         )
         # table.footer: f"Server {server_name} on Platform {good_platform1_url}"

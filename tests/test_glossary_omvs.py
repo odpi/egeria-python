@@ -18,7 +18,7 @@ import json
 
 from contextlib import nullcontext as does_not_raise
 
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -35,7 +35,7 @@ from pyegeria.utils import print_json_list_as_table
 disable_ssl_warnings = True
 
 
-class TestCoreAdminServices:
+class TestGlossaryBrowser:
     good_platform1_url = "https://127.0.0.1:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
@@ -79,7 +79,8 @@ class TestCoreAdminServices:
                 count = len(response)
                 print(f"Found {count} glossaries")
                 for i in range(count):
-                    print(f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']}")
+                    print(f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}")
+                    # print(json.dumps(response[i],indent = 4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
@@ -152,7 +153,10 @@ class TestCoreAdminServices:
                                        user_id="erinoverview")
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
+            glossary_guid = "c13e22d5-756a-4b54-b784-14037ee3dfc4" # larger sustainability glossary
+
             start_time = time.perf_counter()
             response = g_client.get_terms_for_glossary(glossary_guid, page_size=500, effective_time=None)
             print(f"Duration is {time.perf_counter()-start_time} seconds")

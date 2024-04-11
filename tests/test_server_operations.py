@@ -3,33 +3,27 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-This file contains a set of test routines to test the platform_services of the Egeria python client.
+This file contains a set of test routines to test the server operations services of the Egeria python client.
 The routines assume that pytest is being used as the test tool and framework.
 
 A running Egeria environment is needed to run these tests. A set of platform, server and user variables are
-created local to the TestPlatform class to hold the set of values to be used for testing. The default values have
-been configured based on running the Egeria Lab Helm chart on a local kubernetes cluster and setting the portmap.
-However, the tests are not dependent on this configuration. It should, however, be noted that the tests are currently
+created local to the TestPlatform class to hold the set of values to be used for testing.  It should, however, be noted that the tests are currently
 order sensitive - in other words if you delete all the servers the subsequent tests that expect the servers to be
 available may fail..
 
 """
 
-import pytest
 import json
-from contextlib import nullcontext as does_not_raise
 
-from pyegeria.exceptions import (
+import pytest
+from rich import print, print_json
+
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.utils import print_rest_response
-
 from pyegeria.server_operations import ServerOps
-from rich.console import Console
-from rich import print, print_json, pretty
 
 disable_ssl_warnings = True
 
@@ -70,9 +64,9 @@ class TestServerOperations:
         # Todo - the base function doesn't seem to validate the file or to actually load? Check
         try:
             server = self.good_server_1
-            p_client = ServerOps(server, self.good_platform2_url, self.good_user_1)
+            p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             p_client.add_archive_file(
-                "CocoSustainabilityArchive.omarchive",
+                "content-packs/CocoSustainabilityArchive.omarchive",
                 server)
             assert True, "Should have raised an exception"
 
@@ -119,8 +113,8 @@ class TestServerOperations:
 
     def test_get_governance_engine_summaries(self, server:str = good_server_3):
         try:
-            serve_name = server
-            s_client = ServerOps(serve_name, self.good_platform1_url, self.good_user_1)
+            server_name = server
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_governance_engine_summaries(server)
             print(f"\n\n\tGovernance Engine Summary for server {server} is {json.dumps(response, indent=4)}")
 
@@ -130,10 +124,14 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
+    #
+    #   Integration Daemon Ops
+    #
+
     def test_get_integration_daemon_status(self, server:str = good_server_2):
         try:
-            serve_name = server
-            s_client = ServerOps(serve_name, self.good_platform1_url, self.good_user_1)
+            server_name = server
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_integration_daemon_status(server)
 
             if type(response) is dict:
@@ -142,6 +140,50 @@ class TestServerOperations:
                 print_json(json.dumps(response))
             else:
                 print(f"\n\n\tIntegration Daemon Status response was: {response}")
+            assert True, "Invalid URL or server"
+
+        except (InvalidParameterException, PropertyServerException) as e:
+            print_exception_response(e)
+            assert e.related_http_code != "200", "Invalid parameters"
+
+
+    def test_get_connector_config(self, server:str = good_server_2):
+        try:
+            server_name = server
+            connector = "FilesMonitor"
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            response = s_client.get_connector_config(connector,server)
+            print(f"\n\n\tConnector configuration for connector {connector} is \n{json.dumps(response, indent=4)}")
+
+            assert True, "Invalid URL or server"
+
+        except (InvalidParameterException, PropertyServerException) as e:
+            print_exception_response(e)
+            assert e.related_http_code != "200", "Invalid parameters"
+
+# todo - review with Mandy?
+    def test_restart_integration_connector(self, server:str = good_server_2):
+        try:
+            server_name = server
+            connector = "FilesMonitor"
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            # response = s_client.restart_integration_connector(connector,server)
+            s_client.restart_integration_connector(None, server)
+
+            assert True, "Invalid URL or server"
+
+        except (InvalidParameterException, PropertyServerException) as e:
+            print_exception_response(e)
+            assert e.related_http_code != "200", "Invalid parameters"
+
+    def test_refresh_integration_connectors(self, server:str = good_server_2):
+        try:
+            server_name = server
+            connector = "FilesMonitor"
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+
+            s_client.refresh_integration_connectors(None, server)
+
             assert True, "Invalid URL or server"
 
         except (InvalidParameterException, PropertyServerException) as e:

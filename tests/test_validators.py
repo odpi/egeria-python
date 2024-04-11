@@ -6,11 +6,9 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 """
 
-from datetime import time
 from json import JSONDecodeError
 
 import pytest
-import warnings
 
 from contextlib import nullcontext as does_not_raise
 
@@ -25,7 +23,7 @@ from pyegeria._validators import (
     validate_url,
     is_json,
 )
-from pyegeria.exceptions import (
+from pyegeria._exceptions import (
     print_exception_response,
     InvalidParameterException
 )

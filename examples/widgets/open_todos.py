@@ -89,7 +89,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
             for item in todo_items:
                 props = item["properties"]
                 name = props["name"]
-                type_name = props["extendedProperties"].get("toDoType", " ")
+                type_name = props.get("toDoType", " ")
                 created = props.get("creationTime", " ")
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", " ")
@@ -109,7 +109,6 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
                     name, type_name, created, priority, due, completed, status, sponsor
                 )
 
-        m_client.close_session()
         return table
 
     try:
@@ -122,6 +121,8 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
+    finally:
+        m_client.close_session()
 
 
 if __name__ == "__main__":

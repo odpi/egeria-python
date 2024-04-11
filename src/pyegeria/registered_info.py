@@ -10,12 +10,16 @@ integration service, it is important to know what companion service it depends o
 companion service is also configured and running.
 
 """
+import json
+from rich.console import Console
+from rich import print, print_json
+
 import pandas as pd
 from tabulate import tabulate
 
-from .utils import wrap_text
+from pyegeria.utils import wrap_text
 
-from ._client import Client
+from pyegeria._client import Client
 
 
 class RegisteredInfo(Client):
@@ -42,6 +46,9 @@ class RegisteredInfo(Client):
 
         list_severity_definitions(self, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30) -> list | str
             Returns a list of severity definitions for an OMAG Server used by the audit services.
+
+        list_asset_types(self, server: str = None) -> list | str
+            Lists the defined asset types.
     """
 
     admin_command_root: str
@@ -93,7 +100,7 @@ class RegisteredInfo(Client):
                The principle specified by the user_id does not have authorization for the requested action
 
            """
-        if kind is None or kind is "help":
+        if kind is None or kind == "help":
             return ("""
             The kinds of services that you can get more information include:
                 all.....................lists all registered services
@@ -107,15 +114,15 @@ class RegisteredInfo(Client):
                 Pass in a parameter from the left-hand column into the function to 
                 get more details on the specified service category.
             """)
-        if kind is "all":
+        if kind == "all":
             url = f"{self.admin_command_root}"
         else:
             url = f"{self.admin_command_root}/{kind}"
         response = self.make_request("GET", url)
 
-        if fmt is 'json':
+        if fmt == 'json':
             return response.json().get("services", "No services found")
-        elif fmt is 'table':
+        elif fmt == 'table':
             df = pd.DataFrame(response.json().get("services", []))
             if skinny:
                 df = df.drop(columns=['serviceId', 'serviceDevelopmentStatus'])
@@ -155,10 +162,38 @@ class RegisteredInfo(Client):
                f"/users/{self.user_id}/audit-log/severity-definitions"
                )
         response = self.make_request("GET", url)
-        if fmt is 'json':
+        if fmt == 'json':
             return response.json().get("severities", "No severities found")
-        elif fmt is 'table':
+        elif fmt == 'table':
             df = pd.DataFrame(response.json().get("severities", []))
             if skinny:
                 df = df.drop(columns=['ordinal'])
             return tabulate(wrap_text(df, wrap_len=wrap_len), headers='keys', tablefmt='psql')
+
+    def list_asset_types(self, server: str = None) -> list | str:
+        """ Get the registered severities for the OMAG Server
+
+          Parameters
+          ----------
+           server: str, optional, default = None
+
+          Returns
+          -------
+          dict | str
+              Returns a list of the asset types.
+
+          Raises
+          ------
+          InvalidParameterException
+              If the response code is not 200.
+          PropertyServerException:
+              Raised by the server when an issue arises in processing a valid request
+          NotAuthorizedException:
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        server = self.server_name if server is None else server
+        url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/asset-catalog/assets/types"
+
+        response = self.make_request("GET", url)
+        return response.json().get('types', 'no types found')
