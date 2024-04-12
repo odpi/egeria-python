@@ -25,7 +25,7 @@ fileSystemRoot = os.environ.get('fileSystemRoot', 'data')
 # describes its location in an IntelliJ workspace.  The default value can be overridden using the "egeriaDistributionRoot"
 # environment variable.
 #
-egeriaSampleDataRoot = os.environ.get('egeriaSampleDataRoot', '.')
+egeriaSampleDataRoot = os.environ.get('egeriaSampleDataRoot', '')
 #
 # Flag to enable debug, this cases extra information to be printed including rest calls request and response details
 # Switching this flag to True produces a very large amount of output and is not recommended.
