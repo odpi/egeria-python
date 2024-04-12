@@ -3,10 +3,33 @@ from setuptools import find_packages, setup
 setup(
     name='pyegeria',
     extras_require=dict(tests=["pytest"]),
+    include_package_data= True,
     # packages=find_packages(where="src"),
     package_dir={"": "src"},
-    version='0.3.3',
+    scripts=["examples/widgets/server_status.py",
+             "examples/widgets/engine_action_status.py",
+             "examples/widgets/find_todos.py",
+             "examples/widgets/glossary_view.py",
+             "examples/widgets/integration_daemon_status.py",
+             "examples/widgets/gov_engine_status.py",
+             "examples/widgets/list_asset_types.py",
+             "examples/widgets/multi-server_status.py",
+             "examples/widgets/my_todos.py",
+             "examples/widgets/open_todos.py",
+             "examples/widgets/server_status_widget.py",
+             "examples/widgets/view_my_profile.py",
+             ],
+    # entry_points = {
+    #     'console_scripts': [
+    #         'server_status = examples.widgets.server_status:main',
+    #         'my_todos = examples.widgets.my_todos:main',
+    #     ]
+    # },
+    # version='0.3.4',
     packages=find_packages(where="src"),
+    package_data= {
+        'examples': ['*'],
+    },
     url="https://egeria-project.org/egeria-python",
     project_urls={
         "Issues": "https://github.com/odpi/egeria-python/issues",
