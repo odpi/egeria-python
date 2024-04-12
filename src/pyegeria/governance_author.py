@@ -22,6 +22,8 @@ class GovernanceAuthor(AutomatedCuration):
 
     Attributes:
 
+        server_name: str
+                Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str

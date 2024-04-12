@@ -20,7 +20,7 @@ class MyProfile(Client):
     Parameters
     ----------
     server_name : str
-        The name of the server to configure.
+        The name of the view server to configure.
     platform_url : str
         The URL of the platform.
     token : str, optional

@@ -19,16 +19,21 @@ from ._validators import validate_name, validate_guid, validate_search_string
 
 class AutomatedCuration(Client):
     """ Set up and maintain automation services in Egeria.
-    class AutomatedCuration(Platform):
 
-        def __init__(
-                self,
-                server_name: str,
-                platform_url: str,
-                user_id: str,
-                user_pwd: str = None,
-                verify_flag: bool = False,
-        ):
+    Attributes:
+        server_name : str
+            The name of the View Server to use.
+        platform_url : str
+            URL of the server platform to connect to
+        user_id : str
+            The identity of the user calling the method - this sets a default optionally used by the methods
+            when the user doesn't pass the user_id on a method call.
+        user_pwd: str
+            The password associated with the user_id. Defaults to None
+        verify_flag: bool
+            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
+            Defaults to False.
+
     """
 
     def __init__(

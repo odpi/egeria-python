@@ -1,4 +1,4 @@
 """
 
-pyegeria-examples
+examples
 """

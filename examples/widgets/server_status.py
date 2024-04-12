@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
@@ -91,8 +91,7 @@ def test_display_status(server: str = good_server_1, url: str = good_platform2_u
         assert e.related_http_code != "200", "Invalid parameters"
 
 
-# if __name__ == "__main__":
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")

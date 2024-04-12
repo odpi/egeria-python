@@ -24,31 +24,24 @@ from pyegeria._validators import (
 class CoreServerConfig(Client):
     """
     CoreServerConfig is a class that extends the Client class. It provides methods to configure and interact with access
-     services in the OMAG server.
+    services in the OMAG server.
 
-    Methods:
+    Attributes:
 
-        - get_stored_configuration(server_name: str = None) -> dict:
-            Retrieves all the configuration documents for a server.
+        server_name: str
+            The name of the OMAG server to configure.
+        platform_url : str
+            URL of the server platform to connect to
+        user_id : str
+            The identity of the user calling the method - this sets a default optionally used by the methods
+            when the user doesn't pass the user_id on a method call.
+        user_pwd: str
+            The password associated with the user_id. Defaults to None
+        verify_flag: bool
+            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
+            Defaults to False.
 
-        - get_configured_access_services(server_name: str = None) -> dict:
-            Returns the list of access services that are configured for this server.
 
-        - configure_all_access_services(server_name: str = None) -> None:
-            Enables all access services that are registered with this server platform.
-
-        - configure_all_access_services_no_topics(server_name: str = None) -> None:
-            Configures all access services for the specified server with no cohort/Event Bus.
-
-        - clear_all_access_services(server_name: str = None) -> None:
-            Disables the access services. This removes all configuration for the access services and disables the
-            enterprise repository services.
-
-        - get_access_service_config(access_service_name: str, server_name: str = None) -> dict:
-            Retrieves the config for an access service.
-
-        - configure_access_service(access_service_name: str, server_name: str = None) -> None:
-            Enables a single access service.
      """
 
     def __init__(

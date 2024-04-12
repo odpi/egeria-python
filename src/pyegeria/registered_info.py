@@ -27,6 +27,8 @@ class RegisteredInfo(Client):
 
     Attributes:
     ----------
+        server_name: str
+                Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -55,11 +57,11 @@ class RegisteredInfo(Client):
 
     def __init__(
             self,
+            server_name: str,
             platform_url: str,
             user_id: str,
             user_pwd: str = None,
             verify_flag: bool = False,
-            server_name: str = None
     ):
         if server_name is None:
             server_name = "NA"

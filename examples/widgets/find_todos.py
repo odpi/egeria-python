@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 """
-SPDX-License-Identifier: Apache-2.0
+SPDX-Lic
+ense-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 Unit tests for the Utils helper functions using the Pytest framework.

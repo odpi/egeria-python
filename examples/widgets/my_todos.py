@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
@@ -114,7 +115,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
         table.add_column("Due")
         table.add_column("Completion")
         table.add_column("Status")
-        # table.add_column("Sponsor")
+        table.add_column("Sponsor")
 
         my_profile = m_client.get_my_profile()
         my_guid = my_profile["elementHeader"]["guid"]
