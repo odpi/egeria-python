@@ -40,5 +40,5 @@ from .gov_engine import GovEng
 from .my_profile_omvs import MyProfile
 from .full_omag_server_config import FullServerConfig
 from .server_operations import ServerOps
-
+from .collection_manager_omvs import CollectionManager
 __version__ = "0.3"
