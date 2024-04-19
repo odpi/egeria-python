@@ -3,10 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
-
-
-A simple server status display
+An example of displaying the status of two platforms concurrently.
 """
 
 import time

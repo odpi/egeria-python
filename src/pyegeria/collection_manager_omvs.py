@@ -6,6 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 import asyncio
+import json
 import time
 
 # import json
@@ -16,6 +17,11 @@ from pyegeria._validators import (
     validate_search_string,
 )
 from pyegeria.utils import body_slimmer
+from pyegeria._exceptions import (
+    OMAGCommonErrorCode,
+    InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException, )
 
 
 class CollectionManager(Client):
@@ -771,13 +777,14 @@ class CollectionManager(Client):
 
         if parent_guid is None:
             is_own_anchor = False
+        is_own_anchor_s = str(is_own_anchor).lower()
 
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}?"
                f"classificationName={classification_name}")
 
         body = {
             "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor,
+            "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1,
@@ -911,12 +918,12 @@ class CollectionManager(Client):
             """
         if server_name is None:
             server_name = self.server_name
-
+        is_own_anchor_s = str(is_own_anchor).lower()
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/root-collection"
 
         body = {
             "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor,
+            "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1,
@@ -1049,12 +1056,12 @@ class CollectionManager(Client):
 
         if server_name is None:
             server_name = self.server_name
-
+        is_own_anchor_s = str(is_own_anchor).lower()
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/data-spec-collection"
 
         body = {
             "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor,
+            "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1,
@@ -1189,12 +1196,13 @@ class CollectionManager(Client):
         """
         if server_name is None:
             server_name = self.server_name
+        is_own_anchor_s = str(is_own_anchor).lower()
 
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/folder"
 
         body = {
             "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor,
+            "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1,
@@ -1462,7 +1470,7 @@ class CollectionManager(Client):
         url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products"
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json.get("guid", "No GUID returned")
+        return resp.json().get("guid", "No GUID returned")
 
     def create_digital_product(self, body: dict, server_name: str = None) -> str:
         """ Create a new collection that represents a digital product. Async version.
@@ -1574,9 +1582,9 @@ class CollectionManager(Client):
        """
         if server_name is None:
             server_name = self.server_name
-
+        replace_all_props_s = str(replace_all_props).lower()
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/update?"
-               f"replaceAllProperties={replace_all_props}")
+               f"replaceAllProperties={replace_all_props_s}")
 
         body = {
             "class": "CollectionProperties",
@@ -1690,8 +1698,9 @@ class CollectionManager(Client):
         if server_name is None:
             server_name = self.server_name
 
+        replace_all_props_s = str(replace_all_props).lower()
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products/"
-               f"{collection_guid}/update?replaceAllProperties={replace_all_props}")
+               f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}")
 
         await self._async_make_request("POST", url, body)
         return
@@ -1750,7 +1759,7 @@ class CollectionManager(Client):
         return
 
     async def _async_attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-                                       resource_use_description: str, resource_use_props: dict = None,
+                                       resource_use_description: str = None, resource_use_props: dict = None,
                                        watch_resources: bool = False, make_anchor: bool = False,
                                        server_name: str = None) -> None:
         """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
@@ -1789,6 +1798,10 @@ class CollectionManager(Client):
         """
         if server_name is None:
             server_name = self.server_name
+        watch_resources_s = str(watch_resources).lower()
+        make_anchor_s = str(make_anchor).lower()
+
+
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
                f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor}")
 
@@ -2239,9 +2252,9 @@ class CollectionManager(Client):
         """
         if server_name is None:
             server_name = self.server_name
-
+        replace_all_props_s = str(replace_all_props).lower()
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
-               f"{element_guid}/update?replaceAllProperties={replace_all_props}")
+               f"{element_guid}/update?replaceAllProperties={replace_all_props_s}")
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
@@ -2374,3 +2387,36 @@ class CollectionManager(Client):
         loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid,
                                                                           server_name))
         return
+
+    def get_member_list(self, root_collection_name:str, server_name: str = None) -> list | bool:
+        if server_name is None:
+            server_name = self.server_name
+        # first find the guid for the collection we are using as root
+        root_guids = self.get_collections_by_name(root_collection_name)
+        if type(root_guids) is str:
+            return False
+        if len(root_guids) != 1:
+            raise InvalidParameterException("root_collection_name must have exactly one root collection for this method")
+        root = root_guids[0]['elementHeader']['guid']
+
+        # now find the members of the collection
+        member_list = []
+        members = self.get_collection_members(root)
+        if type(members) is str:
+            return False
+        # finally, construct a list of  member information
+        for member_rel in members:
+            member_guid = member_rel['member']['guid']
+            member_resp = self.get_collection(member_guid)
+            member = member_resp['element']
+            # print(json.dumps(member, indent = 4))
+            member_instance = {
+                "name" : member['properties']['name'],
+                "qualifiedName" : member['properties']['qualifiedName'],
+                "guid" : member['elementHeader']['guid'],
+                "description" : member['properties']['description'],
+                "collectionType" : member['properties']['collectionType'],
+            }
+            member_list.append(member_instance)
+
+        return member_list
