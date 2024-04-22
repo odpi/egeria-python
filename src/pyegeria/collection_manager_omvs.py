@@ -253,7 +253,7 @@ class CollectionManager(Client):
         search_string: str,
             Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -299,14 +299,16 @@ class CollectionManager(Client):
             search_string = None
 
         body = {
-            "filter": search_string
+            "filter": search_string,
+            "effective_time" : effective_time
         }
 
+        body_s = body_slimmer(body)
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
                f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("elements","No elements found")
 
     def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
@@ -321,7 +323,7 @@ class CollectionManager(Client):
         search_string: str,
             Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -375,7 +377,7 @@ class CollectionManager(Client):
         name: str,
             name to use to find matching collections.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -409,13 +411,14 @@ class CollectionManager(Client):
         validate_search_string(name)
 
         body = {
-            "filter": name
+            "filter": name,
+            effective_time: effective_time,
         }
-
+        body_s = body_slimmer(body)
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
                f"by-name?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("elements","No elements found")
 
     def get_collections_by_name(self, name: str, effective_time: str = None, server_name: str = None,
@@ -429,7 +432,7 @@ class CollectionManager(Client):
         name: str,
             name to use to find matching collections.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -473,7 +476,7 @@ class CollectionManager(Client):
         collection_type: str,
             collection_type to use to find matching collections.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -508,13 +511,15 @@ class CollectionManager(Client):
         validate_search_string(collection_type)
 
         body = {
-            "filter": collection_type
+            "filter": collection_type,
+            effective_time: effective_time,
         }
+        body_s = body_slimmer(body)
 
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
                f"by-collection-type?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("elements","No elements found")
 
     def get_collections_by_type(self, collection_type: str, effective_time: str = None, server_name: str = None,
@@ -528,7 +533,7 @@ class CollectionManager(Client):
         name: str,
             name to use to find matching collections.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -570,7 +575,7 @@ class CollectionManager(Client):
         collection_guid: str,
             unique identifier of the collection.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -1344,7 +1349,7 @@ class CollectionManager(Client):
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/from-template"
 
         resp = await self._async_make_request("POST", url, body)
-        return resp
+        return resp.json().get("guid","No GUID Returned")
 
     def create_collection_from_template(self, body: dict, server_name: str = None) -> str:
         """ Create a new metadata element to represent a collection using an existing metadata element as a template.

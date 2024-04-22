@@ -2,11 +2,11 @@
 PDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-    Maintain and explore the contents of nested collections.
+    Create, maintain and explore projects.
+    https://egeria-project.org/concepts/project
 
 """
 import asyncio
-import json
 import time
 
 # import json
@@ -17,14 +17,9 @@ from pyegeria._validators import (
     validate_search_string,
 )
 from pyegeria.utils import body_slimmer
-from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, )
 
 
-class CollectionManager(Client):
+class ProjectManager(Client):
     """
     Maintain and explore the contents of nested collections. These collections can be used to represent digital
     products, or collections of resources for a particular project or team. They can be used to organize assets and
@@ -57,20 +52,26 @@ class CollectionManager(Client):
             verify_flag: bool = enable_ssl_check,
             sync_mode: bool = True
     ):
-        self.command_base: str = f"/api/open-metadata/collection-manager/collections"
+        self.command_base: str = f"/api/open-metadata/project-manager/metadata-elements"
         Client.__init__(self, server_name, platform_url, user_id=user_id, token=token, async_mode=sync_mode)
 
     #
-    #       Retrieving Collections - https://egeria-project.org/concepts/collection
+    #       Retrieving Projects= Information - https://egeria-project.org/concepts/project
     #
-    async def _async_get_linked_collections(self, parent_guid: str, server_name: str = None,
-                                            start_from: int = 0, page_size: int = None) -> list | str:
-        """  Returns the list of collections that are linked off of the supplied element. Async version.
+    async def _async_get_linked_projects(self, parent_guid: str, project_status: str = None, effective_time: str = None,
+                                         server_name: str = None, start_from: int = 0, page_size: int = None) \
+            -> list | str:
+        """  Returns the list of projects that are linked off of the supplied element. Any relationship will do.
+             The request body is optional, but if supplied acts as a filter on project status. Async version.
 
         Parameters
         ----------
         parent_guid: str
             The list of collections linked off the parent guid.
+        project_status: str, optional
+            Optionally, filter results by project status.
+        effective_time: str, optional
+            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -83,7 +84,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections linked off of the supplied element.
+        A list of projects linked off of the supplied element filtered by project status and effective time.
 
         Raises
         ------
@@ -102,23 +103,29 @@ class CollectionManager(Client):
             page_size = self.page_size
 
         body = {
-
+            "filter": project_status,
+            "effectiveTime": effective_time,
         }
+        body_s = body_slimmer(body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/"
+               f"metadata-elements/{parent_guid}/projects?startFrom={start_from}&pageSize={page_size}")
 
-        url =(f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/"
-              f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
-
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_s)
         return resp.json()
 
-    def get_linked_collections(self, parent_guid: str, server_name: str = None,
-                               start_from: int = 0, page_size: int = None) -> list | str:
-        """  Returns the list of collections that are linked off of the supplied element.
+    def get_linked_projects(self, parent_guid: str, project_status: str = None, effective_time: str = None,
+                            server_name: str = None, start_from: int = 0, page_size: int = None) -> list | str:
+        """  Returns the list of projects that are linked off of the supplied element. Any relationship will do.
+             The request body is optional, but if supplied acts as a filter on project status.
 
         Parameters
         ----------
         parent_guid: str
             The list of collections linked off the parent guid.
+        project_status: str, optional
+            Optionally, filter results by project status.
+        effective_time: str, optional
+            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -131,7 +138,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections linked off of the supplied element.
+        A list of projects linked off of the supplied element filtered by project status and effective time.
 
         Raises
         ------
@@ -145,19 +152,124 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_linked_collections(parent_guid, server_name,
-                                                                          start_from, page_size)),
+        resp = loop.run_until_complete(self._async_get_linked_projects(parent_guid, project_status,
+                                                                       effective_time, server_name,
+                                                                       start_from, page_size)),
         return resp
 
-    async def _async_get_classified_collections(self, classification: str, server_name: str = None,
-                                                start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections with a particular classification.  These classifications
-            are typically "RootCollection", "Folder" or "DigitalProduct". Async version.
+    async def _async_get_classified_projects(self, project_classification: str, effective_time: str = None,
+                                             server_name: str = None, start_from: int = 0, page_size: int = None) \
+            -> list | str:
+        """ Returns the list of projects with a particular classification. The name of the classification is
+            supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
+            Campaign or Task. There is also GlossaryProject and GovernanceProject. Async version.
 
         Parameters
         ----------
-        classification: str
-            The classification of the collection to inspect.
+        project_classification: str
+            The project classification to search for.
+        effective_time: str, optional
+            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        server_name : str, optional
+            The name of the server to  configure.
+            If not provided, the server name associated with the instance is used.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+        if page_size is None:
+            page_size = self.page_size
+
+        body = {
+            "filter": project_classification,
+            "effectiveTime": effective_time,
+        }
+        body_s = body_slimmer(body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/"
+               f"projects/by-classifications?startFrom={start_from}&pageSize={page_size}")
+
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json()
+
+    def get_classified_projects(self, project_classification: str, effective_time: str = None, server_name: str = None,
+                                start_from: int = 0, page_size: int = None) -> list | str:
+        """ Returns the list of projects with a particular classification. The name of the classification is
+            supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
+            Campaign or Task. There is also GlossaryProject and GovernanceProject.
+
+        Parameters
+        ----------
+        project_classification: str
+            The project classification to search for.
+        effective_time: str, optional
+            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        server_name : str, optional
+            The name of the server to  configure.
+            If not provided, the server name associated with the instance is used.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_get_classified_projects(project_classification,
+                                                                           effective_time, server_name,
+                                                                           start_from, page_size)),
+        return resp
+
+    async def _async_get_project_team(self, project_guid: str, team_role: str = None, effective_time: str = None,
+                                      server_name: str = None, start_from: int = 0,
+                                      page_size: int = None) -> list | str:
+        """ Returns the list of actors that are linked off of the project. This includes the project managers.
+            The optional request body allows a teamRole to be specified as a filter. To filter out the project managers,
+            specify ProjectManagement as the team role. See https://egeria-project.org/concepts/project for details.
+            Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The identity of the project to return team information about.
+        team_role: str, optional
+            team role to filter on. Project managers would be "ProjectManagement".
+        effective_time: str, optional
+            Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -170,7 +282,7 @@ class CollectionManager(Client):
         Returns
         -------
         list | str
-            The list of collections (if found) with the specified classification. Returns a string if none found.
+            The list of actors linked off the project, including project managers Returns a string if none found.
 
         Raises
         ------
@@ -189,27 +301,33 @@ class CollectionManager(Client):
             page_size = self.page_size
 
         body = {
-            "filter": classification
+            effective_time: effective_time,
+            "filter": team_role
         }
+        body_s = body_slimmer(body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/metadata-elements/"
+               f"{project_guid}/projects/team?startFrom={start_from}&pageSize={page_size}")
 
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/by-classifications?"
-               f"startFrom={start_from}&pageSize={page_size}")
+        resp = await self._async_make_request("POST", url, body_s)
 
-        resp = await self._async_make_request("POST", url, body)
-        # result = resp.json().get("elements","No elements found")
-        result = resp.json().get("elements","No Elements to return")
+        result = resp.json().get("elements", "No Elements to return")
         return result
 
-
-    def get_classified_collections(self, classification: str, server_name: str = None,
-                                   start_from: int = 0, page_size: int = None) -> list | str:
-        """  Returns the list of collections with a particular classification.  These classifications
-             are typically "RootCollection", "Folder" or "DigitalProduct".
+    def get_project_team(self, project_guid: str, team_role: str = None, effective_time: str = None,
+                         server_name: str = None, start_from: int = 0, page_size: int = None) -> list | str:
+        """ Returns the list of actors that are linked off of the project. This includes the project managers.
+            The optional request body allows a teamRole to be specified as a filter. To filter out the project managers,
+            specify ProjectManagement as the team role. See https://egeria-project.org/concepts/project for details.
+            Async version.
 
         Parameters
         ----------
-        classification: str
-            The classification of the collection to inspect.
+        project_guid: str
+            The identity of the project to return team information about.
+        team_role: str, optional
+            team role to filter on. Project managers would be "ProjectManagement".
+        effective_time: str, optional
+            Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -218,35 +336,36 @@ class CollectionManager(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+
         Returns
         -------
-        List | str
-
-        A list of collections linked off of the supplied element.
+        list | str
+            The list of actors linked off the project, including project managers Returns a string if none found.
 
         Raises
         ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_classified_collections(classification, server_name,
-                                                                          start_from, page_size)),
+        resp = loop.run_until_complete(self._async_get_project_team(project_guid, team_role, effective_time,
+                                                                    server_name, start_from, page_size)),
         return resp
 
-    async def _async_find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                                      ends_with: bool = False, ignore_case: bool = False,
-                                      server_name: str = None,
-                                      start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections matching the search string.
+    async def _async_find_projects(self, search_string: str, effective_time: str = None, starts_with: bool = False,
+                                   ends_with: bool = False, ignore_case: bool = False,
+                                   server_name: str = None,
+                                   start_from: int = 0, page_size: int = None) -> list | str:
+        """ Returns the list of projects matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+            Async version.
 
         Parameters
         ----------
@@ -272,7 +391,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections match matching the search string. Returns a string if none found.
+        A list of projects matching the search string. Returns a string if none found.
 
         Raises
         ------
@@ -299,20 +418,21 @@ class CollectionManager(Client):
             search_string = None
 
         body = {
-            "filter": search_string
+            "filter": search_string,
+            "effective_time": effective_time,
         }
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
+        body_s = body_slimmer(body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
                f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("elements","No elements found")
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("elements", "No elements found")
 
     def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                          ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
                          start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections matching the search string. Async version.
+        """ Returns the list of projects matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
@@ -331,11 +451,6 @@ class CollectionManager(Client):
             Ends with the supplied string
         ignore_case : bool, [default=False], optional
             Ignore case when searching
-        for_lineage : bool, [default=False], optional
-        for_duplicate_processing : bool, [default=False], optional
-        type_name: str, [default=None], optional
-            An optional parameter indicating the subtype of the glossary to filter by.
-            Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -345,7 +460,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections match matching the search string. Returns a string if none found.
+        A list of projects matching the search string. Returns a string if none found.
 
         Raises
         ------
@@ -359,23 +474,23 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_find_collections(search_string, effective_time, starts_with,
-                                                                    ends_with, ignore_case,
-                                                                    server_name, start_from, page_size))
+        resp = loop.run_until_complete(self._async_find_projects(search_string, effective_time, starts_with,
+                                                                 ends_with, ignore_case,
+                                                                 server_name, start_from, page_size))
 
         return resp
 
-    async def _async_get_collections_by_name(self, name: str, effective_time: str = None,
-                                             server_name: str = None,
-                                             start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections with a particular name.
+    async def _async_get_projects_by_name(self, name: str, effective_time: str = None,
+                                          server_name: str = None,
+                                          start_from: int = 0, page_size: int = None) -> list | str:
+        """ Returns the list of projects with a particular name. Async version.
 
         Parameters
         ----------
         name: str,
             name to use to find matching collections.
         effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+            Effective time of the query. If not specified will default to any time. ISO 8601 format.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -409,182 +524,74 @@ class CollectionManager(Client):
         validate_search_string(name)
 
         body = {
-            "filter": name
+            "filter": name,
+            "effective_time": effective_time,
         }
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
+        body_s = body_slimmer(body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
                f"by-name?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("elements","No elements found")
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("elements", "No elements found")
 
-    def get_collections_by_name(self, name: str, effective_time: str = None, server_name: str = None,
-                                start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections matching the search string. Async version.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    def get_project_by_name(self, name: str, effective_time: str = None, server_name: str = None,
+                            start_from: int = 0, page_size: int = None) -> list | str:
+        """ Returns the list of projects with a particular name.
 
-        Parameters
-        ----------
-        name: str,
-            name to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
+            Parameters
+            ----------
+            name: str,
+                name to use to find matching collections.
+            effective_time: str, [default=None], optional
+                Effective time of the query. If not specified will default to any time. ISO 8601 format.
+            server_name : str, optional
+                The name of the server to  configure.
+                If not provided, the server name associated with the instance is used.
+            start_from: int, [default=0], optional
+                        When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=None]
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+            Returns
+            -------
+            List | str
 
-        Returns
-        -------
-        List | str
+            A list of collections match matching the name. Returns a string if none found.
 
-        A list of collections match matching the search string. Returns a string if none found.
+            Raises
+            ------
 
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_collections_by_name(name, effective_time,
-                                                                    server_name, start_from, page_size))
+        resp = loop.run_until_complete(self._async_get_projects_by_name(name, effective_time,
+                                                                        server_name, start_from, page_size))
 
         return resp
 
-    async def _async_get_collections_by_type(self, collection_type: str, effective_time: str = None,
-                                             server_name: str = None,
-                                             start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections with a particular collectionType. This is an optional text field in the
-            collection element.
+    async def _async_get_project(self, project_guid: str,
+                                 server_name: str = None) -> dict | str:
+        """ Return the properties of a specific project. Async version.
 
         Parameters
         ----------
-        collection_type: str,
-            collection_type to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+        project_guid: str,
+            unique identifier of the project.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-
-        Returns
-        -------
-        List | str
-
-        A list of collections match matching the name. Returns a string if none found.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_search_string(collection_type)
-
-        body = {
-            "filter": collection_type
-        }
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/"
-               f"by-collection-type?startFrom={start_from}&pageSize={page_size}")
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("elements","No elements found")
-
-    def get_collections_by_type(self, collection_type: str, effective_time: str = None, server_name: str = None,
-                                start_from: int = 0, page_size: int = None) -> list | str:
-        """ Returns the list of collections matching the search string. Async version.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-
-        Parameters
-        ----------
-        name: str,
-            name to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-
-        Returns
-        -------
-        List | str
-
-        A list of collections match matching the search string. Returns a string if none found.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_collections_by_type(collection_type, effective_time,
-                                                                           server_name, start_from, page_size))
-
-        return resp
-
-    async def _async_get_collection(self, collection_guid: str, effective_time: str = None,
-                                    server_name: str = None) -> dict | str:
-        """ Return the properties of a specific collection. Async version.
-
-        Parameters
-        ----------
-        collection_guid: str,
-            unique identifier of the collection.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
 
         Returns
         -------
         dict | str
 
-        A JSON dict representing the specified collection. Returns a string if none found.
+        A JSON dict representing the specified project. Returns a string if none found.
 
         Raises
         ------
@@ -600,22 +607,20 @@ class CollectionManager(Client):
         if server_name is None:
             server_name = self.server_name
 
-        validate_guid(collection_guid)
+        validate_guid(project_guid)
 
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}"
+        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}"
 
         resp = await self._async_make_request("GET", url)
         return resp.json()
 
-    def get_collection(self, collection_guid: str, effective_time: str = None, server_name: str = None) -> dict | str:
-        """ Return the properties of a specific collection.
+    def get_project(self, project_guid: str, server_name: str = None) -> dict | str:
+        """ Return the properties of a specific project.
 
         Parameters
         ----------
-        collection_guid: str,
-            unique identifier of the collection.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+        project_guid: str,
+            unique identifier of the project.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -624,7 +629,7 @@ class CollectionManager(Client):
         -------
         dict | str
 
-        A JSON dict representing the specified collection. Returns a string if none found.
+        A JSON dict representing the specified project. Returns a string if none found.
 
         Raises
         ------
@@ -638,32 +643,30 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_collection(collection_guid, effective_time,
-                                                                  server_name))
+        resp = loop.run_until_complete(self._async_get_project(project_guid, server_name))
 
         return resp
 
     #
-    #   Create collection methods
+    #   Create project methods
     #
-    async def _async_create_collection_w_body(self, classification_name: str, body: dict,
-                                              server_name: str = None) -> str:
-        """  Create Collections: https://egeria-project.org/concepts/collection Async version.
+    async def _async_create_project_w_body(self, body: dict, classification: str = None,
+                                           server_name: str = None) -> str:
+        """  Create project: https://egeria-project.org/concepts/project Async version.
 
             Parameters
-            ----------
-            classification_name: str
-                Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+            ----------.
             body: dict
-                A dict representing the details of the collection to create.
+                A dict representing the details of the project to create.
+            classification: str, optional
+                An optional project classification. See https://egeria-project.org/types/1/0130-Projects for values.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
+            str - the guid of the created project
 
             Raises
             ------
@@ -673,35 +676,56 @@ class CollectionManager(Client):
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
+            Notes
+            -----
+
+            Body structure like:
+            {
+              "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+              "isOwnAnchor" : false,
+              "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+              "parentRelationshipTypeName" : "open metadata type name",
+              "parentAtEnd1": true,
+              "projectProperties": {
+                "class" : "ProjectProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "identifier" : "Add business identifier",
+                "name" : "Add display name here",
+                "description" : "Add description of the project here",
+                "status": "Add appropriate valid value for type",
+                "startDate" : "date/time",
+                "plannedEndDate" : "date/time"
+              }
+            }
 
     """
         if server_name is None:
             server_name = self.server_name
+        if classification is None:
+            url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects"
+        else:
+            url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects?"
+                   f"classificationName={classification}")
+        body_s = body_slimmer(body)
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("guid", "No GUID returned")
 
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}?"
-               f"classificationName={classification_name}")
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID returned")
-
-    def create_collection_w_body(self, classification_name: str, body: dict, server_name: str = None) -> str:
-        """ Create Collections: https://egeria-project.org/concepts/collection
+    def create_project_w_body(self, body: dict, classification: str = None, server_name: str = None) -> str:
+        """  Create project: https://egeria-project.org/concepts/project
 
             Parameters
-            ----------
-            classification_name: str
-                Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+            ----------.
             body: dict
-                A dict representing the details of the collection to create.
+                A dict representing the details of the project to create.
+            classification: str, optional
+                An optional project classification. See https://egeria-project.org/types/1/0130-Projects for values.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is
-                used.
+                The name of the server to  configure. If not provided, the server name associated with the instance
+                 is used.
 
             Returns
             -------
             str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
 
             Raises
             ------
@@ -712,22 +736,44 @@ class CollectionManager(Client):
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
 
-        """
+            Notes
+            -----
+            Body structure like:
+            {
+              "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+              "isOwnAnchor" : false,
+              "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+              "parentRelationshipTypeName" : "open metadata type name",
+              "parentAtEnd1": true,
+              "projectProperties": {
+                "class" : "ProjectProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "identifier" : "Add business identifier",
+                "name" : "Add display name here",
+                "description" : "Add description of the project here",
+                "status": "Add appropriate valid value for type",
+                "startDate" : "date/time",
+                "plannedEndDate" : "date/time"
+              }
+            }
+
+    """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection_w_body(classification_name, body, server_name))
+        resp = loop.run_until_complete(self._async_create_project_w_body(body, classification, server_name))
         return resp
 
-    async def _async_create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-                                       parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                       description: str, collection_type: str, is_own_anchor: bool = False,
-                                       collection_ordering: str = None,
-                                       order_property_name: str = None, server_name: str = None) -> str:
-        """ Create Collections: https://egeria-project.org/concepts/collection Async version.
+    async def _async_create_project(self, anchor_guid: str, parent_guid: str,
+                                    parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
+                                    description: str, classification_name: str = None, identifier: str = None,
+                                    is_own_anchor: bool = False, status: str = None, start_date: str = None,
+                                    planned_end_date: str = None, server_name: str = None) -> str:
+        """ Create Project: https://egeria-project.org/concepts/project Async version.
 
             Parameters
             ----------
-            classification_name: str
-                Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+            classification_name: str, optional
+                Type of project to create; "PersonalProject", "Campaign", etc. If not provided, project will not
+                be classified.
             anchor_guid: str
                 The unique identifier of the element that should be the anchor for the new element. Set to null if no
                 anchor, or if this collection is to be its own anchor.
@@ -736,31 +782,30 @@ class CollectionManager(Client):
                If this property is specified, parentRelationshipTypeName must also be specified
             parent_relationship_type_name: str
                 The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
+                element. Examples could be "ResourceList".
             parent_at_end1: bool
                 Identifies which end any parent entity sits on the relationship.
             display_name: str
                 The display name of the element. Will also be used as the basis of the qualified_name.
             description: str
                 A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
+            identifier: str
+                A project identifier.
             is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-                 "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
+                Indicates if the collection should be classified as its own anchor or not.
+            status: str, optional, defaults to "OTHER"
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
             server_name: str, optional, defaults to None
                 The name of the server to  configure. If not provided, the server name associated with the instance is
                  used.
 
             Returns
             -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
+            str - the guid of the created project
 
             Raises
             ------
@@ -777,74 +822,78 @@ class CollectionManager(Client):
 
         if parent_guid is None:
             is_own_anchor = False
-        is_own_anchor_s = str(is_own_anchor).lower()
 
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}?"
-               f"classificationName={classification_name}")
+        if classification_name is None:
+            url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects"
+        else:
+            url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects?"
+                   f"classificationName={classification_name}")
 
         body = {
             "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
+            "isOwnAnchor": str(is_own_anchor).lower(),
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
-            "collectionProperties": {
-                "class": "CollectionProperties",
+            "parentAtEnd1": str(parent_at_end1).lower(),
+            "projectProperties": {
+                "class": "ProjectProperties",
                 "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                "identifier": identifier,
                 "name": display_name,
                 "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name
+                "status": status,
+                "startDate": start_date,
+                "plannedEndDate": planned_end_date
             }
         }
+        body_s = body_slimmer(body)
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("guid", "No GUID returned")
 
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID returned")
-
-    def create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-                          parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                          description: str, collection_type: str, is_own_anchor: bool = False,
-                          collection_ordering: str = "OTHER", order_property_name: str = "Something",
-                          server_name: str = None) \
-            -> str:
-        """  Create Collections: https://egeria-project.org/concepts/collection
+    def create_project(self, anchor_guid: str, parent_guid: str,
+                       parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
+                       description: str, classification_name: str, identifier: str = None, is_own_anchor: bool = False,
+                       status: str = None, start_date: str = None,
+                       planned_end_date: str = None, server_name: str = None) -> str:
+        """ Create Project: https://egeria-project.org/concepts/project
 
             Parameters
             ----------
             classification_name: str
-                Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+                Type of project to create; "PersonalProject", "Campaign", etc. If not provided, the project will not
+                have a project classification.
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element. Set to null if no
+                anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
             parent_relationship_type_name: str
                 The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
+                element. Examples could be "ResourceList".
             parent_at_end1: bool
                 Identifies which end any parent entity sits on the relationship.
             display_name: str
                 The display name of the element. Will also be used as the basis of the qualified_name.
             description: str
                 A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
+            identifier: str
+                A project identifier.
             is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
+                Indicates if the collection should be classified as its own anchor or not.
+            status: str, optional, defaults to "OTHER"
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the instance is
+                 used.
 
             Returns
             -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
+            str - the guid of the created project
 
             Raises
             ------
@@ -857,54 +906,41 @@ class CollectionManager(Client):
 
             """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection(classification_name, anchor_guid, parent_guid,
-                                                                     parent_relationship_type_name, parent_at_end1,
-                                                                     display_name, description,
-                                                                     collection_type, is_own_anchor,
-                                                                     collection_ordering,
-                                                                     order_property_name, server_name))
+        resp = loop.run_until_complete(self._async_create_project(anchor_guid, parent_guid,
+                                                                  parent_relationship_type_name, parent_at_end1,
+                                                                  display_name, description,
+                                                                  classification_name, identifier, is_own_anchor,
+                                                                  status,
+                                                                  start_date, planned_end_date, server_name))
         return resp
 
-    async def _async_create_root_collection(self, anchor_guid: str, parent_guid: str,
-                                            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                            description: str, collection_type: str, is_own_anchor: bool = False,
-                                            server_name: str = None) -> str:
-        """ Create a new collection with the RootCollection classification.  Used to identify the top of a
-            collection hierarchy. Async version.
+    async def _async_create_project_task(self, project_guid: str, display_name: str, identifier: str = None,
+                                         description: str = None, status: str = None, start_date: str = None,
+                                         planned_end_date: str = None, server_name: str = None) -> str:
+        """ Create a new project with the Task classification and link it to a project. Async version.
 
             Parameters
             ----------
-            anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
-            parent_guid: str
-               The optional unique identifier for an element that should be connected to the newly created element.
-               If this property is specified, parentRelationshipTypeName must also be specified
-            parent_relationship_type_name: str
-                The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
-            parent_at_end1: bool
-                Identifies which end any parent entity sits on the relationship.
+            project_guid: str
+                The unique identifier of the project to create the task for.
             display_name: str
                 The display name of the element. Will also be used as the basis of the qualified_name.
+            identifier: str
+                A project identifier.
             description: str
                 A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
-            is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
+            status: str, optional,
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
+                The name of the server to  configure. If not provided, the server name associated with the instance is
+                 used.
             Returns
             -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
+            str - the guid of the created project task
 
             Raises
             ------
@@ -918,752 +954,286 @@ class CollectionManager(Client):
             """
         if server_name is None:
             server_name = self.server_name
-        is_own_anchor_s = str(is_own_anchor).lower()
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/root-collection"
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+               f"{project_guid}/task")
 
         body = {
-            "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"root-collection-{display_name}-{time.asctime()}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-
-            }
-        }
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID Returned")
-
-    def create_root_collection(self, anchor_guid: str, parent_guid: str,
-                               parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                               description: str, collection_type: str, is_own_anchor: bool = False,
-                               server_name: str = None) \
-            -> str:
-        """  Create a new collection with the RootCollection classification.  Used to identify the top of a
-             collection hierarchy.
-
-            Parameters
-            ----------
-            anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
-            parent_guid: str
-               The optional unique identifier for an element that should be connected to the newly created element.
-               If this property is specified, parentRelationshipTypeName must also be specified
-            parent_relationship_type_name: str
-                The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
-            parent_at_end1: bool
-                Identifies which end any parent entity sits on the relationship.
-            display_name: str
-                The display name of the element. Will also be used as the basis of the qualified_name.
-            description: str
-                A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
-            is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_root_collection(anchor_guid, parent_guid,
-                                                                          parent_relationship_type_name, parent_at_end1,
-                                                                          display_name, description,
-                                                                          collection_type, is_own_anchor,
-                                                                           server_name))
-        return resp
-
-    async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
-                                                 parent_relationship_type_name: str, parent_at_end1: bool,
-                                                 display_name: str,
-                                                 description: str, collection_type: str, is_own_anchor: bool = True,
-                                                 collection_ordering: str = "OTHER",
-                                                 order_property_name: str = "Something",
-                                                 server_name: str = None) -> str:
-        """  Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
-             and schema types. Async version.
-
-            Parameters
-            ----------
-            anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
-            parent_guid: str
-               The optional unique identifier for an element that should be connected to the newly created element.
-               If this property is specified, parentRelationshipTypeName must also be specified
-            parent_relationship_type_name: str
-                The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
-            parent_at_end1: bool
-                Identifies which end any parent entity sits on the relationship.
-            display_name: str
-                The display name of the element. Will also be used as the basis of the qualified_name.
-            description: str
-                A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
-            is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-        """
-
-        if server_name is None:
-            server_name = self.server_name
-        is_own_anchor_s = str(is_own_anchor).lower()
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/data-spec-collection"
-
-        body = {
-            "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"data-spec-collection-{display_name}-{time.asctime()}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name
-            }
-        }
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID Returned")
-
-    def create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
-                                    parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                    description: str, collection_type: str, is_own_anchor: bool,
-                                    collection_ordering: str = "OTHER",
-                                    order_property_name: str = "Something", server_name: str = None) -> str:
-        """  Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
-         and schema types.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-            or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Add appropriate valid value for the collection type.
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_data_spec_collection(anchor_guid, parent_guid,
-                                                                               parent_relationship_type_name,
-                                                                               parent_at_end1,
-                                                                               display_name, description,
-                                                                               collection_type, is_own_anchor,
-                                                                               collection_ordering,
-                                                                               order_property_name, server_name))
-        return resp
-
-    async def _async_create_folder_collection(self, anchor_guid: str, parent_guid: str,
-                                              parent_relationship_type_name: str, parent_at_end1: bool,
-                                              display_name: str,
-                                              description: str, collection_type: str, is_own_anchor: bool = True,
-                                              collection_ordering: str = "OTHER",
-                                              order_property_name: str = "Something", server_name: str = None) -> str:
-        """ Create a new collection with the Folder classification.  This is used to identify the organizing
-            collections in a collection hierarchy. Async version.
-
-            Parameters
-            ----------
-            anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
-            parent_guid: str
-               The optional unique identifier for an element that should be connected to the newly created element.
-               If this property is specified, parentRelationshipTypeName must also be specified
-            parent_relationship_type_name: str
-                The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
-            parent_at_end1: bool
-                Identifies which end any parent entity sits on the relationship.
-            display_name: str
-                The display name of the element. Will also be used as the basis of the qualified_name.
-            description: str
-                A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
-            is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-        is_own_anchor_s = str(is_own_anchor).lower()
-
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/folder"
-
-        body = {
-            "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"folder-collection-{display_name}-{time.asctime()}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name
-            }
-        }
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid", "No GUID returned")
-
-    def create_folder_collection(self, anchor_guid: str, parent_guid: str,
-                                 parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                 description: str, collection_type: str, is_own_anchor: bool,
-                                 collection_ordering: str = "OTHER",
-                                 order_property_name: str = "Something", server_name: str = None) -> str:
-        """ Create a new collection with the Folder classification.  This is used to identify the organizing
-            collections in a collection hierarchy.
-
-            Parameters
-            ----------
-            anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
-            parent_guid: str
-               The optional unique identifier for an element that should be connected to the newly created element.
-               If this property is specified, parentRelationshipTypeName must also be specified
-            parent_relationship_type_name: str
-                The name of the relationship, if any, that should be established between the new element and the parent
-                element. Examples could be "ResourceList" or "DigitalServiceProduct".
-            parent_at_end1: bool
-                Identifies which end any parent entity sits on the relationship.
-            display_name: str
-                The display name of the element. Will also be used as the basis of the qualified_name.
-            description: str
-                A description of the collection.
-            collection_type: str
-                Add appropriate valid value for the collection type.
-            is_own_anchor: bool, optional, defaults to False
-                Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            A JSON dict representing the specified collection. Returns a string if none found.
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_folder_collection(anchor_guid, parent_guid,
-                                                                            parent_relationship_type_name,
-                                                                            parent_at_end1,
-                                                                            display_name, description,
-                                                                            collection_type, is_own_anchor,
-                                                                            collection_ordering,
-                                                                            order_property_name, server_name))
-        return resp
-
-    async def _async_create_collection_from_template(self, body: dict, server_name: str = None) -> str:
-        """ Create a new metadata element to represent a collection using an existing metadata element as a template.
-            The template defines additional classifications and relationships that should be added to the new collection.
-            Async version.
-
-            Parameters
-            ----------
-
-            body: dict
-                A dict representing the details of the collection to create.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-
-            {
-              "class": "TemplateRequestBody",
-              "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor": false,
-              "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
-              "parentRelationshipTypeName": "open metadata type name",
-              "parentAtEnd1": true,
-              "templateGUID": "template GUID",
-              "replacementProperties": {
-                "class": "ElementProperties",
-                "propertyValueMap" : {
-                  "propertyName" : {
-                    "class": "PrimitiveTypePropertyValue",
-                    "typeName": "string",
-                    "primitiveTypeCategory" : "OM_PRIMITIVE_TYPE_STRING",
-                    "primitiveValue" : "value of property"
-                  }
-                }
-              },
-              "placeholderPropertyValues" : {
-                "placeholderProperty1Name" : "property1Value",
-                "placeholderProperty2Name" : "property2Value"
-              }
-            }
-
-    """
-        if server_name is None:
-            server_name = self.server_name
-
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/from-template"
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp
-
-    def create_collection_from_template(self, body: dict, server_name: str = None) -> str:
-        """ Create a new metadata element to represent a collection using an existing metadata element as a template.
-            The template defines additional classifications and relationships that should be added to the new collection.
-
-            Parameters
-            ----------
-            body: dict
-                A dict representing the details of the collection to create.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-
-            {
-              "class": "TemplateRequestBody",
-              "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor": false,
-              "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
-              "parentRelationshipTypeName": "open metadata type name",
-              "parentAtEnd1": true,
-              "templateGUID": "template GUID",
-              "replacementProperties": {
-                "class": "ElementProperties",
-                "propertyValueMap" : {
-                  "propertyName" : {
-                    "class": "PrimitiveTypePropertyValue",
-                    "typeName": "string",
-                    "primitiveTypeCategory" : "OM_PRIMITIVE_TYPE_STRING",
-                    "primitiveValue" : "value of property"
-                  }
-                }
-              },
-              "placeholderPropertyValues" : {
-                "placeholderProperty1Name" : "property1Value",
-                "placeholderProperty2Name" : "property2Value"
-              }
-            }
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection_from_template(body, server_name))
-        return resp
-
-    async def _async_create_digital_product(self, body: dict, server_name: str = None) -> str:
-        """ Create a new collection that represents a digital product. Async version.
-
-            Parameters
-            ----------
-            body: dict
-                A dict representing the details of the collection to create.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-            {
-              "class" : "NewDigitalProductRequestBody",
-              "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor" : false,
-              "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
-              "parentRelationshipTypeName" : "open metadata type name",
-              "parentAtEnd1": true,
-              "collectionProperties": {
-                "class" : "CollectionProperties",
-                "qualifiedName": "Must provide a unique name here",
-                "name" : "Add display name here",
-                "description" : "Add description of the collection here",
-                "collectionType": "Add appropriate valid value for type",
-                "collectionOrdering" : "OTHER",
-                "orderPropertyName" : "Add property name if 'collectionOrdering' is OTHER"
-              },
-              "digitalProductProperties" : {
-                "class" : "DigitalProductProperties",
-                "productStatus" : "ACTIVE",
-                "productName" : "Add name here",
-                "productType" : "Add valid value here",
-                "description" : "Add description here",
-                "introductionDate" : "date",
-                "maturity" : "Add valid value here",
-                "serviceLife" : "Add the estimated lifetime of the product",
-                "currentVersion": "V1.0",
-                "nextVersion": "V1.1",
-                "withdrawDate": "date",
-                "additionalProperties": {
-                  "property1Name" : "property1Value",
-                  "property2Name" : "property2Value"
-                }
-              }
-            }
-    """
-        if server_name is None:
-            server_name = self.server_name
-
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products"
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid", "No GUID returned")
-
-    def create_digital_product(self, body: dict, server_name: str = None) -> str:
-        """ Create a new collection that represents a digital product. Async version.
-
-            Parameters
-            ----------
-            body: dict
-                A dict representing the details of the collection to create.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-            {
-              "class" : "NewDigitalProductRequestBody",
-              "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor" : false,
-              "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
-              "parentRelationshipTypeName" : "open metadata type name",
-              "parentAtEnd1": true,
-              "collectionProperties": {
-                "class" : "CollectionProperties",
-                "qualifiedName": "Must provide a unique name here",
-                "name" : "Add display name here",
-                "description" : "Add description of the collection here",
-                "collectionType": "Add appropriate valid value for type",
-                "collectionOrdering" : "OTHER",
-                "orderPropertyName" : "Add property name if 'collectionOrdering' is OTHER"
-              },
-              "digitalProductProperties" : {
-                "class" : "DigitalProductProperties",
-                "productStatus" : "ACTIVE",
-                "productName" : "Add name here",
-                "productType" : "Add valid value here",
-                "description" : "Add description here",
-                "introductionDate" : "date",
-                "maturity" : "Add valid value here",
-                "serviceLife" : "Add the estimated lifetime of the product",
-                "currentVersion": "V1.0",
-                "nextVersion": "V1.1",
-                "withdrawDate": "date",
-                "additionalProperties": {
-                  "property1Name" : "property1Value",
-                  "property2Name" : "property2Value"
-                }
-              }
-            }
-    """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_digital_product(body, server_name))
-        return resp
-
-    #
-    # Manage collections
-    #
-    async def _async_update_collection(self, collection_guid: str, qualified_name: str = None, display_name: str = None,
-                                       description: str = None, collection_type: str = None,
-                                       collection_ordering: str = None, order_property_name: str = None,
-                                       replace_all_props: bool = False, server_name: str = None) -> None:
-        """ Update the properties of a collection.  Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                The guid of the collection to update.
-            qualified_name: str, optional, defaults to None
-                The qualified name of the collection to update.
-            display_name: str, optional, defaults to None
-               The display name of the element. Will also be used as the basis of the qualified_name.
-            description: str, optional, defaults to None
-               A description of the collection.
-            collection_type: str, optional, defaults to None
-               Add appropriate valid value for the collection type.
-            collection_ordering: str, optional, defaults to None
-               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to None
-               Property to use for sequencing if collection_ordering is "OTHER"
-            replace_all_props: bool, optional, defaults to False
-                Whether to replace all properties in the collection.
-            server_name: str, optional, defaults to None
-               The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            Nothing
-
-            Raises
-            ------
-            InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
-       """
-        if server_name is None:
-            server_name = self.server_name
-        replace_all_props_s = str(replace_all_props).lower()
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/update?"
-               f"replaceAllProperties={replace_all_props_s}")
-
-        body = {
-            "class": "CollectionProperties",
-            "qualifiedName": qualified_name,
+            "class": "ProjectProperties",
+            "qualifiedName": f"task-{display_name}-{time.asctime()}",
+            "identifier": identifier,
             "name": display_name,
             "description": description,
-            "collectionType": collection_type,
-            "collectionOrdering": collection_ordering,
-            "orderPropertyName": order_property_name
+            "status": status,
+            "startDate": start_date,
+            "plannedEndDate": planned_end_date
+        }
+        body_s = body_slimmer(body)
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("guid", "No GUID Returned")
+
+    def create_project_task(self, project_guid: str, display_name: str, identifier: str = None,
+                            description: str = None, status: str = None, start_date: str = None,
+                            planned_end_date: str = None, server_name: str = None) -> str:
+        """ Create a new project with the Task classification and link it to a project.
+
+            Parameters
+            ----------
+            project_guid: str
+                The unique identifier of the project to create the task for.
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            identifier: str
+                A project identifier.
+            description: str
+                A description of the collection.
+            status: str, optional,
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
+            server_name: str, optional, defaults to None
+                The name of the server to  configure. If not provided, the server name associated with the instance is
+                 used.
+            Returns
+            -------
+            str - the guid of the created project task
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_project_task(project_guid, display_name,
+                                                                       identifier, description, status,
+                                                                       start_date, planned_end_date,
+                                                                       server_name))
+        return resp
+
+    async def _async_create_project_from_template(self, body: dict, server_name: str = None) -> str:
+        """ Create a new metadata element to represent a project using an existing metadata element as a template.
+            The template defines additional classifications and relationships that should be added to the new project.
+            Async version.
+
+            Parameters
+            ----------
+
+            body: dict
+                A dict representing the details of the collection to create.
+            server_name: str, optional, defaults to None
+                The name of the server to  configure. If not provided, the server name associated with the instance
+                 is used.
+
+            Returns
+            -------
+            str - the guid of the created project.
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+            {
+              "class": "TemplateRequestBody",
+              "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+              "isOwnAnchor": false,
+              "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+              "parentRelationshipTypeName": "open metadata type name",
+              "parentAtEnd1": true,
+              "templateGUID": "template GUID",
+              "replacementProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap" : {
+                  "propertyName" : {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveTypeCategory" : "OM_PRIMITIVE_TYPE_STRING",
+                    "primitiveValue" : "value of property"
+                  }
+                }
+              },
+              "placeholderPropertyValues" : {
+                "placeholderProperty1Name" : "property1Value",
+                "placeholderProperty2Name" : "property2Value"
+              }
+            }
+
+
+    """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/from-template"
+        body_s = body_slimmer(body)
+        resp = await self._async_make_request("POST", url, body_s)
+        return resp.json().get("guid", "No GUID Returned")
+
+    def create_project_from_template(self, body: dict, server_name: str = None) -> str:
+        """ Create a new metadata element to represent a project using an existing metadata element as a template.
+            The template defines additional classifications and relationships that should be added to the new project.
+
+            Parameters
+            ----------
+
+            body: dict
+                A dict representing the details of the collection to create.
+            server_name: str, optional, defaults to None
+                The name of the server to  configure. If not provided, the server name associated with the instance
+                 is used.
+
+            Returns
+            -------
+            str - the guid of the created project.
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+            {
+              "class": "TemplateRequestBody",
+              "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+              "isOwnAnchor": false,
+              "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+              "parentRelationshipTypeName": "open metadata type name",
+              "parentAtEnd1": true,
+              "templateGUID": "template GUID",
+              "replacementProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap" : {
+                  "propertyName" : {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveTypeCategory" : "OM_PRIMITIVE_TYPE_STRING",
+                    "primitiveValue" : "value of property"
+                  }
+                }
+              },
+              "placeholderPropertyValues" : {
+                "placeholderProperty1Name" : "property1Value",
+                "placeholderProperty2Name" : "property2Value"
+              }
+            }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_project_from_template(body, server_name))
+        return resp
+
+    async def _async_update_project(self, project_guid: str, qualified_name: str = None, identifier: str = None,
+                                    display_name: str = None, description: str = None,
+                                    status: str = None, start_date: str = None, planned_end_date: str = None,
+                                    replace_all_props: bool = False, server_name: str = None) -> None:
+        """ Update the properties of a project. Async Version.
+
+            Parameters
+            ----------
+            project_guid: str
+                Unique identifier for the project.
+            qualified_name: str, optional, defaults to None
+                The unique identifier of the project.
+            identifier: str
+                A project identifier.
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            description: str
+                A description of the collection.
+            status: str, optional,
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
+            replace_all_props: bool, optional, defaults to False
+                If True, then all the properties of the project will be replaced with the specified properties.
+            server_name: str, optional, defaults to None
+                The name of the server to  configure. If not provided, the server name associated with the instance is
+                 used.
+            Returns
+            -------
+            str - the guid of the created project task
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+        """
+        if server_name is None:
+            server_name = self.server_name
+        replace_all_props_s = str(replace_all_props).lower()
+        url = (f"{self.platform_url}/servers/{server_name}api/open-metadata/project-manager/projects/{project_guid}/"
+               f"update?replaceAllProperties={replace_all_props_s}")
+
+        body = {
+            "class": "ProjectProperties",
+            "qualifiedName": qualified_name,
+            "identifier": identifier,
+            "name": display_name,
+            "description": description,
+            "status": status,
+            "startDate": start_date,
+            "plannedEndDate": planned_end_date
         }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
 
-    def update_collection(self, collection_guid, qualified_name: str = None, display_name: str = None,
-                          description: str = None, collection_type: str = None, collection_ordering: str = None,
-                          order_property_name: str = None, replace_all_props: bool = False,
-                          server_name: str = None) -> None:
-        """ Update the properties of a collection.
+    def update_project(self, project_guid: str, qualified_name: str = None, identifier: str = None,
+                       display_name: str = None, description: str = None,
+                       status: str = None, start_date: str = None, planned_end_date: str = None,
+                       replace_all_props: bool = False, server_name: str = None) -> None:
+        """ Update the properties of a project.
 
             Parameters
             ----------
-            collection_guid: str
-                The guid of the collection to update.
-            qualified_name: str
-                The qualified name of the collection to update.
+            project_guid: str
+                Unique identifier for the project.
+            qualified_name: str, optional, defaults to None
+                The unique identifier of the project.
+            identifier: str
+                A project identifier.
             display_name: str
-               The display name of the element. Will also be used as the basis of the qualified_name.
+                The display name of the element. Will also be used as the basis of the qualified_name.
             description: str
-               A description of the collection.
-            collection_type: str
-               Add appropriate valid value for the collection type.
-            collection_ordering: str, optional, defaults to "OTHER"
-               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-               Property to use for sequencing if collection_ordering is "OTHER"
+                A description of the collection.
+            status: str, optional,
+                The project status
+            start_date: str, optional, defaults to None
+                Start date of the project in ISO 8601 string format.
+            planned_end_date: str, optional, defaults to None
+                Planned completion date in ISO 8601 string format.
             replace_all_props: bool, optional, defaults to False
-                Whether to replace all properties in the collection.
+                If True, then all the properties of the project will be replaced with the specified properties.
             server_name: str, optional, defaults to None
-               The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
+                The name of the server to  configure. If not provided, the server name associated with the instance is
+                 used.
             Returns
             -------
-            Nothing
-
-            Raises
-            ------
-            InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection(collection_guid, qualified_name, display_name,
-                                                              description, collection_type,
-                                                              collection_ordering, order_property_name,
-                                                              replace_all_props, server_name))
-        return
-
-    async def _async_update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False,
-                                            server_name: str = None):
-        """ Update the properties of the DigitalProduct classification attached to a collection. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                The guid of the collection to update.
-            body: dict
-                A dict representing the details of the collection to create.
-            replace_all_props: bool, optional, defaults to False
-                Whether to replace all properties in the collection.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            Nothing
+            str - the guid of the created project task
 
             Raises
             ------
@@ -1673,114 +1243,24 @@ class CollectionManager(Client):
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-            {
-              "class" : "DigitalProductProperties",
-              "productStatus" : "ACTIVE",
-              "productName" : "Add name here",
-              "productType" : "Add valid value here",
-              "description" : "Add description here",
-              "introductionDate" : "date",
-              "maturity" : "Add valid value here",
-              "serviceLife" : "Add the estimated lifetime of the product",
-              "currentVersion": "V1.0",
-              "nextVersion": "V1.1",
-              "withdrawDate": "date",
-              "additionalProperties": {
-                "property1Name" : "property1Value",
-                "property2Name" : "property2Value"
-              }
-            }
-        """
-        if server_name is None:
-            server_name = self.server_name
-
-        replace_all_props_s = str(replace_all_props).lower()
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products/"
-               f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}")
-
-        await self._async_make_request("POST", url, body)
-        return
-
-    def update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False,
-                               server_name: str = None):
-        """ Update the properties of the DigitalProduct classification attached to a collection.
-
-            Parameters
-            ----------
-            collection_guid: str
-                The guid of the collection to update.
-            body: dict
-                A dict representing the details of the collection to create.
-            replace_all_props: bool, optional, defaults to False
-                Whether to replace all properties in the collection.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            Nothing
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-            {
-              "class" : "DigitalProductProperties",
-              "productStatus" : "ACTIVE",
-              "productName" : "Add name here",
-              "productType" : "Add valid value here",
-              "description" : "Add description here",
-              "introductionDate" : "date",
-              "maturity" : "Add valid value here",
-              "serviceLife" : "Add the estimated lifetime of the product",
-              "currentVersion": "V1.0",
-              "nextVersion": "V1.1",
-              "withdrawDate": "date",
-              "additionalProperties": {
-                "property1Name" : "property1Value",
-                "property2Name" : "property2Value"
-              }
-            }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection(collection_guid, body, replace_all_props, server_name))
+        loop.run_until_complete(self._async_update_project(project_guid, qualified_name, identifier,
+                                                           display_name, description, status,
+                                                           start_date, planned_end_date,
+                                                           replace_all_props, server_name))
         return
 
-    async def _async_attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-                                       resource_use_description: str = None, resource_use_props: dict = None,
-                                       watch_resources: bool = False, make_anchor: bool = False,
-                                       server_name: str = None) -> None:
-        """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
+    async def _async_delete_project(self, project_guid: str, server_name: str = None) -> None:
+        """ Delete a project.  It is detected from all parent elements. Async version
+
             Parameters
             ----------
-            collection_guid: str
-                The guid of the collection to update.
-            element_guid: str
-                The guid of the element to attach.
-            resource_use: str,
-                How the resource is being used.
-            resource_use_description: str
-                Describe how the resource is being used.
-            resource_use_props: dict, optional, defaults to None
-                The properties of the resource to be used.
-            watch_resources, bool, optional, defaults to False
-                Whether to watch for the resources to be updated.
-            make_anchor, bool, optional, defaults to False
-                Whether to make the this an anchor.
+            project_guid: str
+                The guid of the project to update.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the instance
+                 is used.
 
             Returns
             -------
@@ -1798,100 +1278,9 @@ class CollectionManager(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        watch_resources_s = str(watch_resources).lower()
-        make_anchor_s = str(make_anchor).lower()
 
-
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor}")
-
-        body = {
-            "class": "ResourceListProperties",
-            "resourceUse": resource_use,
-            "resourceUseDescription": resource_use_description,
-            "watchResource": watch_resources,
-            "resourceUseProperties": resource_use_props
-        }
-        await self._async_make_request("POST", url, body)
-        return
-
-    def attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-                          resource_use_description: str, resource_use_props: dict = None,
-                          watch_resources: bool = False, make_anchor: bool = False,
-                          server_name: str = None) -> None:
-        """ Connect an existing collection to an element using the ResourceList relationship (0019).
-            Parameters
-            ----------
-            collection_guid: str
-                The guid of the collection to update.
-            element_guid: str
-                The guid of the element to attach.
-            resource_use: str,
-                How the resource is being used.
-            resource_use_description: str
-                Describe how the resource is being used.
-            resource_use_props: dict, optional, defaults to None
-                The properties of the resource to be used.
-            watch_resources: bool, optional, defaults to False
-                Whether to watch for the resources to be updated.
-            make_anchor: bool, optional, defaults to False
-                Whether to make the this an anchor.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            Nothing
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_attach_collection(collection_guid, element_guid,
-                                                              resource_use, resource_use_description,
-                                                              resource_use_props, watch_resources,
-                                                              make_anchor, server_name))
-        return
-
-    async def _async_detach_collection(self, collection_guid: str, element_guid: str,
-                                       server_name: str = None) -> None:
-        """ Detach an existing collection from an element.  If the collection is anchored to the element, it is deleted.
-            Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                The guid of the collection to update.
-            element_guid: str
-                The guid of the element to attach.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            Nothing
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{element_guid}/collections/{collection_guid}/detach")
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+               f"{project_guid}/delete")
 
         body = {
             "class": "NullRequestBody"
@@ -1900,17 +1289,16 @@ class CollectionManager(Client):
         await self._async_make_request("POST", url, body)
         return
 
-    def detach_collection(self, collection_guid: str, element_guid: str,
-                          server_name: str = None) -> None:
-        """ Connect an existing collection to an element using the ResourceList relationship (0019).
+    def delete_project(self, project_guid: str, server_name: str = None) -> None:
+        """ Delete a project.  It is detected from all parent elements.
+
             Parameters
             ----------
-            collection_guid: str
+            project_guid: str
                 The guid of the collection to update.
-            element_guid: str
-                The guid of the element to attach.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the instance
+                 is used.
 
             Returns
             -------
@@ -1918,6 +1306,7 @@ class CollectionManager(Client):
 
             Raises
             ------
+
             InvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
             PropertyServerException
@@ -1927,28 +1316,40 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_collection(collection_guid, element_guid,
-                                                              server_name))
+        loop.run_until_complete(self._async_delete_project(project_guid, server_name))
         return
 
-    async def _async_delete_collection(self, collection_guid: str, server_name: str = None) -> None:
-        """ Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
-            then they are also deleted. Async version
-
+    async def _async_add_to_project_team(self, project_guid: str, actor_guid: str, team_role: str = None,
+                                         effective_from: str = None, effective_to: str = None,
+                                         extended_properties: dict = None, server_name: str = None) -> None:
+        """ Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
+            the actor plays in the project. Async version.
 
             Parameters
             ----------
-            collection_guid: str
-                The guid of the collection to update.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+            project_guid: str
+                identity of the project to update.
+            actor_guid: str
+                identity of the actor to add.
+            team_role: str, optional, defaults to None
+                Name of the role the actor plays in the project.
+            effective_from: str, optional, defaults to None
+                Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
+            effective_to: str, optional, defaults to None
+                Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
+            extended_properties: dict, optional, defaults to None
+                Optional extended properties of the project.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
 
             Returns
             -------
-            Nothing
+            None
 
             Raises
             ------
+
             InvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
             PropertyServerException
@@ -1959,28 +1360,50 @@ class CollectionManager(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/delete"
-        body = {
-            "class": "NullRequestBody"
-        }
 
-        await self._async_make_request("POST", url, body)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+               f"members/{actor_guid}/attach")
+        body = {
+            "class": "ProjectTeamProperties",
+            "teamRole": team_role,
+            "effectiveFrom": effective_from,
+            "effectiveTo": effective_to,
+            "extendedProperties": extended_properties
+        }
+        body_s = body_slimmer(body)
+        if body_s is None:
+            await self._async_make_request("POST", url)
+        else:
+            await self._async_make_request("POST", url, body_s)
         return
 
-    def delete_collection(self, collection_guid: str, server_name: str = None) -> None:
-        """ Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
-            then they are also deleted.
+    def add_to_project_team(self, project_guid: str, actor_guid: str, team_role: str = None,
+                            effective_from: str = None, effective_to: str = None,
+                            extended_properties: dict = None, server_name: str = None) -> None:
+        """ Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
+            the actor plays in the project.
 
             Parameters
             ----------
-            collection_guid: str
-                The guid of the collection to update.
-            server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+            project_guid: str
+                identity of the project to update.
+            actor_guid: str
+                identity of the actor to add.
+            team_role: str, optional, defaults to None
+                Name of the role the actor plays in the project.
+            effective_from: str, optional, defaults to None
+                Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
+            effective_to: str, optional, defaults to None
+                Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
+            extended_properties: dict, optional, defaults to None
+                Optional extended properties of the project.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
 
             Returns
             -------
-            Nothing
+            None
 
             Raises
             ------
@@ -1994,34 +1417,147 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_collection(collection_guid,
-                                                              server_name))
+        loop.run_until_complete(self._async_add_to_project_team(project_guid, actor_guid,
+                                                                team_role, effective_from,
+                                                                effective_to, extended_properties,
+                                                                server_name))
         return
 
-    async def _async_get_collection_members(self, collection_guid: str, effective_time: str = None,
-                                            server_name: str = None, start_from: int = 0,
-                                            page_size: int = None) -> list | str:
-        """ Return a list of elements that are a member of a collection. Async version.
+    async def _async_remove_from_project_team(self, project_guid: str, actor_guid: str,
+                                              server_name: str = None) -> None:
+        """ Remove an actor from a project. Async version.
+
+            Parameters
+            ----------
+            project_guid: str
+                identity of the project to remove members from.
+            actor_guid: str
+                identity of the actor to remove.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+               f"members/{actor_guid}/detach")
+
+        body = {
+            "class": "NullRequestBody"
+        }
+        await self._async_make_request("POST", url, body)
+        return
+
+    def remove_from_project_team(self, project_guid: str, actor_guid: str,
+                                 server_name: str = None) -> None:
+        """ Remove an actor from a project.
+
+            Parameters
+            ----------
+            project_guid: str
+                identity of the project.
+            actor_guid: str
+                identity of the actor to remove.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_remove_from_project_team(project_guid, actor_guid,
+                                                                     server_name))
+        return
+
+    async def _async_setup_project_management_role(self, project_guid: str, project_role_guid: str,
+                                                   server_name: str = None) -> None:
+        """ Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
+            the role is a member of the project. Async version.
+
+            Parameters
+            ----------
+            project_guid: str
+                identity of the project.
+            project_role_guid: str
+                guid of the role to assign to the project.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+               f"project-management-roles/{project_role_guid}/attach")
+
+        body = {
+            "class": "NullRequestBody"
+        }
+        await self._async_make_request("POST", url, body)
+        return
+
+    def setup_project_management_role(self, project_guid: str, project_role_guid: str,
+                                      server_name: str = None) -> None:
+        """ Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
+        the role is a member of the project. Async version.
 
         Parameters
         ----------
-        collection_guid: str,
-            identity of the collection to return members for.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
+        project_guid: str
+            identity of the project.
+        project_role_guid: str
+            guid of the role to assign to the project.
         server_name : str, optional
-            The name of the server to  configure.
+            The name of the server to use.
             If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
+
         Returns
         -------
-        List | str
-
-        A list of collection members in the collection.
+        None
 
         Raises
         ------
@@ -2034,389 +1570,82 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/"
-               f"members?startFrom={start_from}&pageSize={page_size}")
-
-        resp = await self._async_make_request("GET", url)
-        return resp.json().get("elements","No elements found")
-
-    def get_collection_members(self, collection_guid: str, effective_time: str = None,
-                               server_name: str = None, start_from: int = 0,
-                               page_size: int = None) -> list | str:
-        """ Return a list of elements that are a member of a collection.
-
-            Parameters
-            ----------
-            collection_guid: str,
-                identity of the collection to return members for.
-            effective_time: str, [default=None], optional
-                Effective time of the query. If not specified will default to any time.
-            server_name : str, optional
-                The name of the server to  configure.
-                If not provided, the server name associated with the instance is used.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            Returns
-            -------
-            List | str
-
-            A list of collection members in the collection.
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_collection_members(collection_guid, effective_time, server_name,
-                                                                          start_from, page_size))
-
-        return resp
-
-    async def _async_add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None,
-                                       server_name: str = None) -> None:
-        """ Add an element to a collection.  The request body is optional. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            body: dict, optional, defaults to None
-                The body of the request to add to the collection. See notes.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            Example body:
-            {
-              "class" : "CollectionMembershipProperties",
-              "membershipRationale": "xxx",
-              "createdBy": "user id here",
-              "expression": "expression that described why the element is a part of this collection",
-              "confidence": 100,
-              "status": "PROPOSED",
-              "userDefinedStatus": "Add valid value here",
-              "steward": "identifier of steward that validated this member",
-              "stewardTypeName": "type name of element identifying the steward",
-              "stewardPropertyName": "property name if the steward's identifier",
-              "source": "source of the member",
-              "notes": "Add notes here"
-            }
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
-               f"{element_guid}/attach")
-        body_s = body_slimmer(body)
-        await self._async_make_request("POST", url, body_s)
-        return
-
-    def add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None,
-                          server_name: str = None) -> None:
-        """ Add an element to a collection.  The request body is optional.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            body: dict, optional, defaults to None
-                The body of the request to add to the collection. See notes.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            Example body:
-            {
-              "class" : "CollectionMembershipProperties",
-              "membershipRationale": "xxx",
-              "createdBy": "user id here",
-              "expression": "expression that described why the element is a part of this collection",
-              "confidence": 100,
-              "status": "PROPOSED",
-              "userDefinedStatus": "Add valid value here",
-              "steward": "identifier of steward that validated this member",
-              "stewardTypeName": "type name of element identifying the steward",
-              "stewardPropertyName": "property name if the steward's identifier",
-              "source": "source of the member",
-              "notes": "Add notes here"
-            }
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid,
-                                                              body, server_name))
-        return
-
-    async def _async_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
-                                                  replace_all_props: bool = False, server_name: str = None) -> None:
-        """ Update an element's membership to a collection. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            body: dict, optional, defaults to None
-                The body of the request to add to the collection. See notes.
-            replace_all_props: bool, optional, defaults to False
-                Replace all properties or just update ones specified in body.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            Example body:
-            {
-              "class" : "CollectionMembershipProperties",
-              "membershipRationale": "xxx",
-              "createdBy": "user id here",
-              "expression": "expression that described why the element is a part of this collection",
-              "confidence": 100,
-              "status": "PROPOSED",
-              "userDefinedStatus": "Add valid value here",
-              "steward": "identifier of steward that validated this member",
-              "stewardTypeName": "type name of element identifying the steward",
-              "stewardPropertyName": "property name if the steward's identifier",
-              "source": "source of the member",
-              "notes": "Add notes here"
-            }
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-        replace_all_props_s = str(replace_all_props).lower()
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
-               f"{element_guid}/update?replaceAllProperties={replace_all_props_s}")
-        body_s = body_slimmer(body)
-        await self._async_make_request("POST", url, body_s)
-        return
-
-    def add_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
-                                         replace_all_props: bool = False, server_name: str = None) -> None:
-        """ Update an element's membership to a collection.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            body: dict, optional, defaults to None
-                The body of the request to add to the collection. See notes.
-            replace_all_props: bool, optional, defaults to False
-                Replace all properties or just update ones specified in body.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            Example body:
-            {
-              "class" : "CollectionMembershipProperties",
-              "membershipRationale": "xxx",
-              "createdBy": "user id here",
-              "expression": "expression that described why the element is a part of this collection",
-              "confidence": 100,
-              "status": "PROPOSED",
-              "userDefinedStatus": "Add valid value here",
-              "steward": "identifier of steward that validated this member",
-              "stewardTypeName": "type name of element identifying the steward",
-              "stewardPropertyName": "property name if the steward's identifier",
-              "source": "source of the member",
-              "notes": "Add notes here"
-            }
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_membership(collection_guid, element_guid,
-                                                                         body, replace_all_props, server_name))
-        return
-
-    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str,
-                                            server_name: str = None) -> None:
-        """ Remove an element from a collection. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        if server_name is None:
-            server_name = self.server_name
-
-        url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
-               f"{element_guid}/detach")
-        body = {
-             "class": "NullRequestBody"
-        }
-        await self._async_make_request("POST", url, body)
-        return
-
-    def remove_from_collection(self, collection_guid: str, element_guid: str, server_name: str = None) -> None:
-        """ Remove an element from a collection.
-
-            Parameters
-            ----------
-            collection_guid: str
-                identity of the collection to return members for.
-            element_guid: str
-                Effective time of the query. If not specified will default to any time.
-            server_name : str, optional
-                The name of the server to use.
-                If not provided, the server name associated with the instance is used.
-
-            Returns
-            -------
-            None
-
-            Raises
-            ------
-
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid,
+        loop.run_until_complete(self._async_setup_project_management_role(project_guid, project_role_guid,
                                                                           server_name))
         return
 
-    def get_member_list(self, root_collection_name:str, server_name: str = None) -> list | bool:
+    async def _async_clear_project_management_role(self, project_guid: str, project_role_guid: str,
+                                                   server_name: str = None) -> None:
+        """ Remove a ProjectManagement relationship between a project and a person role. Async version.
+
+            Parameters
+            ----------
+            project_guid: str
+                identity of the project.
+            project_role_guid: str
+                guid of the role to assign to the project.
+            server_name : str, optional
+                The name of the server to use.
+                If not provided, the server name associated with the instance is used.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
         if server_name is None:
             server_name = self.server_name
-        # first find the guid for the collection we are using as root
-        root_guids = self.get_collections_by_name(root_collection_name)
-        if type(root_guids) is str:
-            return False
-        if len(root_guids) != 1:
-            raise InvalidParameterException("root_collection_name must have exactly one root collection for this method")
-        root = root_guids[0]['elementHeader']['guid']
 
-        # now find the members of the collection
-        member_list = []
-        members = self.get_collection_members(root)
-        if type(members) is str:
-            return False
-        # finally, construct a list of  member information
-        for member_rel in members:
-            member_guid = member_rel['member']['guid']
-            member_resp = self.get_collection(member_guid)
-            member = member_resp['element']
-            # print(json.dumps(member, indent = 4))
-            member_instance = {
-                "name" : member['properties']['name'],
-                "qualifiedName" : member['properties']['qualifiedName'],
-                "guid" : member['elementHeader']['guid'],
-                "description" : member['properties']['description'],
-                "collectionType" : member['properties']['collectionType'],
-            }
-            member_list.append(member_instance)
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+               f"project-management-roles/{project_role_guid}/detach")
 
-        return member_list
+        body = {
+            "class": "NullRequestBody"
+        }
+        await self._async_make_request("POST", url, body)
+        return
+
+    def clear_project_management_role(self, project_guid: str, project_role_guid: str,
+                                      server_name: str = None) -> None:
+        """ Clear a ProjectManagement relationship between a project and a person role.
+
+        Parameters
+        ----------
+        project_guid: str
+            identity of the project.
+        project_role_guid: str
+            guid of the role to assign to the project.
+        server_name : str, optional
+            The name of the server to use.
+            If not provided, the server name associated with the instance is used.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_clear_project_management_role(project_guid, project_role_guid,
+                                                                          server_name))
+        return
