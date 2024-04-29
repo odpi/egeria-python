@@ -21,9 +21,8 @@ from pyegeria.utils import body_slimmer
 
 class ProjectManager(Client):
     """
-    Maintain and explore the contents of nested collections. These collections can be used to represent digital
-    products, or collections of resources for a particular project or team. They can be used to organize assets and
-    other resources into logical groups.
+    Create and manage projects. Projects may be organized in a hierarchy.
+    See https://egeria-project.org/types/1/0130-Projects
 
     Attributes:
 
@@ -67,7 +66,7 @@ class ProjectManager(Client):
         Parameters
         ----------
         parent_guid: str
-            The list of collections linked off the parent guid.
+            The identity of the parent to find linked projects from.
         project_status: str, optional
             Optionally, filter results by project status.
         effective_time: str, optional
@@ -121,7 +120,7 @@ class ProjectManager(Client):
         Parameters
         ----------
         parent_guid: str
-            The list of collections linked off the parent guid.
+             The identity of the parent to find linked projects from
         project_status: str, optional
             Optionally, filter results by project status.
         effective_time: str, optional
@@ -305,12 +304,12 @@ class ProjectManager(Client):
             "filter": team_role
         }
         body_s = body_slimmer(body)
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/metadata-elements/"
-               f"{project_guid}/projects/team?startFrom={start_from}&pageSize={page_size}")
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+               f"{project_guid}/team?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body_s)
 
-        result = resp.json().get("elements", "No Elements to return")
+        result = resp.json().get('elements', 'No elements found')
         return result
 
     def get_project_team(self, project_guid: str, team_role: str = None, effective_time: str = None,
@@ -370,7 +369,7 @@ class ProjectManager(Client):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+            Search string to use to find matching projects. If the search string is '*' then all projects returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
         server_name : str, optional
@@ -429,7 +428,7 @@ class ProjectManager(Client):
         resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("elements", "No elements found")
 
-    def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
+    def find_projects(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                          ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
                          start_from: int = 0, page_size: int = None) -> list | str:
         """ Returns the list of projects matching the search string.
@@ -439,7 +438,7 @@ class ProjectManager(Client):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+            Search string to use to find matching projects. If the search string is '*' then all projects returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
         server_name : str, optional
@@ -483,6 +482,7 @@ class ProjectManager(Client):
     async def _async_get_projects_by_name(self, name: str, effective_time: str = None,
                                           server_name: str = None,
                                           start_from: int = 0, page_size: int = None) -> list | str:
+
         """ Returns the list of projects with a particular name. Async version.
 
         Parameters
@@ -534,7 +534,7 @@ class ProjectManager(Client):
         resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("elements", "No elements found")
 
-    def get_project_by_name(self, name: str, effective_time: str = None, server_name: str = None,
+    def get_projects_by_name(self, name: str, effective_time: str = None, server_name: str = None,
                             start_from: int = 0, page_size: int = None) -> list | str:
         """ Returns the list of projects with a particular name.
 
@@ -575,7 +575,7 @@ class ProjectManager(Client):
 
         return resp
 
-    async def _async_get_project(self, project_guid: str,
+    async def _async_get_project(self, project_guid: str, effective_time: str = None,
                                  server_name: str = None) -> dict | str:
         """ Return the properties of a specific project. Async version.
 
@@ -583,6 +583,8 @@ class ProjectManager(Client):
         ----------
         project_guid: str,
             unique identifier of the project.
+        effective_time: str, [default=None], optional
+             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -608,10 +610,12 @@ class ProjectManager(Client):
             server_name = self.server_name
 
         validate_guid(project_guid)
-
+        body = {
+            "effective_time": effective_time,
+        }
         url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}"
 
-        resp = await self._async_make_request("GET", url)
+        resp = await self._async_make_request("GET", url, body)
         return resp.json()
 
     def get_project(self, project_guid: str, server_name: str = None) -> dict | str:
@@ -682,17 +686,19 @@ class ProjectManager(Client):
             Body structure like:
             {
               "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor" : false,
+              "isOwnAnchor" : False,
               "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
               "parentRelationshipTypeName" : "open metadata type name",
-              "parentAtEnd1": true,
+              "parentAtEnd1": True,
               "projectProperties": {
                 "class" : "ProjectProperties",
                 "qualifiedName": "Must provide a unique name here",
                 "identifier" : "Add business identifier",
                 "name" : "Add display name here",
                 "description" : "Add description of the project here",
-                "status": "Add appropriate valid value for type",
+                "projectStatus": "Add appropriate valid value for type",
+                "projectPhase" : "Add appropriate valid value for phase",
+                "projectHealth" : "Add appropriate valid value for health",
                 "startDate" : "date/time",
                 "plannedEndDate" : "date/time"
               }
@@ -741,17 +747,19 @@ class ProjectManager(Client):
             Body structure like:
             {
               "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-              "isOwnAnchor" : false,
+              "isOwnAnchor" : False,
               "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
               "parentRelationshipTypeName" : "open metadata type name",
-              "parentAtEnd1": true,
+              "parentAtEnd1": True,
               "projectProperties": {
                 "class" : "ProjectProperties",
                 "qualifiedName": "Must provide a unique name here",
                 "identifier" : "Add business identifier",
                 "name" : "Add display name here",
                 "description" : "Add description of the project here",
-                "status": "Add appropriate valid value for type",
+                "projectStatus": "Add appropriate valid value for type",
+                "projectPhase" : "Add appropriate valid value for phase",
+                "projectHealth" : "Add appropriate valid value for health",
                 "startDate" : "date/time",
                 "plannedEndDate" : "date/time"
               }
@@ -765,7 +773,8 @@ class ProjectManager(Client):
     async def _async_create_project(self, anchor_guid: str, parent_guid: str,
                                     parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
                                     description: str, classification_name: str = None, identifier: str = None,
-                                    is_own_anchor: bool = False, status: str = None, start_date: str = None,
+                                    is_own_anchor: bool = False, project_status: str = None, project_phase: str = None,
+                                    project_health: str = None, start_date: str = None,
                                     planned_end_date: str = None, server_name: str = None) -> str:
         """ Create Project: https://egeria-project.org/concepts/project Async version.
 
@@ -793,8 +802,12 @@ class ProjectManager(Client):
                 A project identifier.
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should be classified as its own anchor or not.
-            status: str, optional, defaults to "OTHER"
+            project_status: str, optional
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -841,7 +854,9 @@ class ProjectManager(Client):
                 "identifier": identifier,
                 "name": display_name,
                 "description": description,
-                "status": status,
+                "projectStatus": project_status,
+                "projectPhase": project_phase,
+                "projectHealth": project_health,
                 "startDate": start_date,
                 "plannedEndDate": planned_end_date
             }
@@ -853,8 +868,8 @@ class ProjectManager(Client):
     def create_project(self, anchor_guid: str, parent_guid: str,
                        parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
                        description: str, classification_name: str, identifier: str = None, is_own_anchor: bool = False,
-                       status: str = None, start_date: str = None,
-                       planned_end_date: str = None, server_name: str = None) -> str:
+                       project_status: str = None, project_phase: str = None, project_health: str = None,
+                       start_date: str = None, planned_end_date: str = None, server_name: str = None) -> str:
         """ Create Project: https://egeria-project.org/concepts/project
 
             Parameters
@@ -881,8 +896,12 @@ class ProjectManager(Client):
                 A project identifier.
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should be classified as its own anchor or not.
-            status: str, optional, defaults to "OTHER"
+            project_status: str, optional
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -910,27 +929,32 @@ class ProjectManager(Client):
                                                                   parent_relationship_type_name, parent_at_end1,
                                                                   display_name, description,
                                                                   classification_name, identifier, is_own_anchor,
-                                                                  status,
+                                                                  project_status, project_phase, project_health,
                                                                   start_date, planned_end_date, server_name))
         return resp
 
     async def _async_create_project_task(self, project_guid: str, display_name: str, identifier: str = None,
-                                         description: str = None, status: str = None, start_date: str = None,
+                                         description: str = None, project_status: str = None, project_phase: str = None,
+                                         project_health: str = None, start_date: str = None,
                                          planned_end_date: str = None, server_name: str = None) -> str:
         """ Create a new project with the Task classification and link it to a project. Async version.
 
             Parameters
             ----------
             project_guid: str
-                The unique identifier of the project to create the task for.
+                The unique identifier of the project to create the task for  (the parent).
             display_name: str
                 The display name of the element. Will also be used as the basis of the qualified_name.
             identifier: str
                 A project identifier.
             description: str
                 A description of the collection.
-            status: str, optional,
+            project_status: str, optional, defaults to "OTHER"
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -964,7 +988,9 @@ class ProjectManager(Client):
             "identifier": identifier,
             "name": display_name,
             "description": description,
-            "status": status,
+            "projectStatus": project_status,
+            "projectPhase": project_phase,
+            "projectHealth": project_health,
             "startDate": start_date,
             "plannedEndDate": planned_end_date
         }
@@ -973,22 +999,27 @@ class ProjectManager(Client):
         return resp.json().get("guid", "No GUID Returned")
 
     def create_project_task(self, project_guid: str, display_name: str, identifier: str = None,
-                            description: str = None, status: str = None, start_date: str = None,
-                            planned_end_date: str = None, server_name: str = None) -> str:
+                            description: str = None, project_status: str = None, project_phase: str = None,
+                            project_health: str = None,
+                            start_date: str = None, planned_end_date: str = None, server_name: str = None) -> str:
         """ Create a new project with the Task classification and link it to a project.
 
             Parameters
             ----------
             project_guid: str
-                The unique identifier of the project to create the task for.
+                The unique identifier of the project to create the task for.The parent.
             display_name: str
                 The display name of the element. Will also be used as the basis of the qualified_name.
             identifier: str
                 A project identifier.
             description: str
                 A description of the collection.
-            status: str, optional,
+            project_status: str, optional, defaults to "OTHER"
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -1012,8 +1043,9 @@ class ProjectManager(Client):
             """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_create_project_task(project_guid, display_name,
-                                                                       identifier, description, status,
-                                                                       start_date, planned_end_date,
+                                                                       identifier, description, project_status,
+                                                                       project_phase, project_health, start_date,
+                                                                       planned_end_date,
                                                                        server_name))
         return resp
 
@@ -1142,7 +1174,8 @@ class ProjectManager(Client):
 
     async def _async_update_project(self, project_guid: str, qualified_name: str = None, identifier: str = None,
                                     display_name: str = None, description: str = None,
-                                    status: str = None, start_date: str = None, planned_end_date: str = None,
+                                    project_status: str = None, project_phase: str = None, project_health: str = None,
+                                    start_date: str = None, planned_end_date: str = None,
                                     replace_all_props: bool = False, server_name: str = None) -> None:
         """ Update the properties of a project. Async Version.
 
@@ -1158,8 +1191,12 @@ class ProjectManager(Client):
                 The display name of the element. Will also be used as the basis of the qualified_name.
             description: str
                 A description of the collection.
-            status: str, optional,
+            project_status: str, optional
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -1185,7 +1222,7 @@ class ProjectManager(Client):
         if server_name is None:
             server_name = self.server_name
         replace_all_props_s = str(replace_all_props).lower()
-        url = (f"{self.platform_url}/servers/{server_name}api/open-metadata/project-manager/projects/{project_guid}/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
                f"update?replaceAllProperties={replace_all_props_s}")
 
         body = {
@@ -1194,7 +1231,9 @@ class ProjectManager(Client):
             "identifier": identifier,
             "name": display_name,
             "description": description,
-            "status": status,
+            "projectStatus": project_status,
+            "projectPhase": project_phase,
+            "projectHealth": project_health,
             "startDate": start_date,
             "plannedEndDate": planned_end_date
         }
@@ -1203,9 +1242,9 @@ class ProjectManager(Client):
         return
 
     def update_project(self, project_guid: str, qualified_name: str = None, identifier: str = None,
-                       display_name: str = None, description: str = None,
-                       status: str = None, start_date: str = None, planned_end_date: str = None,
-                       replace_all_props: bool = False, server_name: str = None) -> None:
+                       display_name: str = None, description: str = None, project_status: str = None,
+                       project_phase: str = None, project_health: str = None, start_date: str = None,
+                       planned_end_date: str = None, replace_all_props: bool = False, server_name: str = None) -> None:
         """ Update the properties of a project.
 
             Parameters
@@ -1220,8 +1259,12 @@ class ProjectManager(Client):
                 The display name of the element. Will also be used as the basis of the qualified_name.
             description: str
                 A description of the collection.
-            status: str, optional,
+            project_status: str, optional
                 The project status
+            project_phase: str, optional
+                Project phase as defined in valid values
+            project_health: str, optional
+                Project health as defined in valid values
             start_date: str, optional, defaults to None
                 Start date of the project in ISO 8601 string format.
             planned_end_date: str, optional, defaults to None
@@ -1246,8 +1289,9 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_project(project_guid, qualified_name, identifier,
-                                                           display_name, description, status,
-                                                           start_date, planned_end_date,
+                                                           display_name, description, project_status,
+                                                           project_phase, project_health, start_date,
+                                                           planned_end_date,
                                                            replace_all_props, server_name))
         return
 
@@ -1320,8 +1364,8 @@ class ProjectManager(Client):
         return
 
     async def _async_add_to_project_team(self, project_guid: str, actor_guid: str, team_role: str = None,
-                                         effective_from: str = None, effective_to: str = None,
-                                         extended_properties: dict = None, server_name: str = None) -> None:
+                                         effective_from: str = None, effective_to: str = None, server_name: str = None) \
+            -> None:
         """ Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
             the actor plays in the project. Async version.
 
@@ -1337,8 +1381,6 @@ class ProjectManager(Client):
                 Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
             effective_to: str, optional, defaults to None
                 Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
-            extended_properties: dict, optional, defaults to None
-                Optional extended properties of the project.
             server_name : str, optional
                 The name of the server to use.
                 If not provided, the server name associated with the instance is used.
@@ -1367,8 +1409,7 @@ class ProjectManager(Client):
             "class": "ProjectTeamProperties",
             "teamRole": team_role,
             "effectiveFrom": effective_from,
-            "effectiveTo": effective_to,
-            "extendedProperties": extended_properties
+            "effectiveTo": effective_to
         }
         body_s = body_slimmer(body)
         if body_s is None:
@@ -1379,7 +1420,7 @@ class ProjectManager(Client):
 
     def add_to_project_team(self, project_guid: str, actor_guid: str, team_role: str = None,
                             effective_from: str = None, effective_to: str = None,
-                            extended_properties: dict = None, server_name: str = None) -> None:
+                            server_name: str = None) -> None:
         """ Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
             the actor plays in the project.
 
@@ -1395,8 +1436,6 @@ class ProjectManager(Client):
                 Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
             effective_to: str, optional, defaults to None
                 Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
-            extended_properties: dict, optional, defaults to None
-                Optional extended properties of the project.
             server_name : str, optional
                 The name of the server to use.
                 If not provided, the server name associated with the instance is used.
@@ -1419,8 +1458,7 @@ class ProjectManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_project_team(project_guid, actor_guid,
                                                                 team_role, effective_from,
-                                                                effective_to, extended_properties,
-                                                                server_name))
+                                                                effective_to, server_name))
         return
 
     async def _async_remove_from_project_team(self, project_guid: str, actor_guid: str,
