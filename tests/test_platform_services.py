@@ -602,7 +602,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_get_active_server_instance_status(self, server: str = good_server_2):
+    def test_get_active_server_instance_status(self, server: str = good_server_3):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_server_instance_status()
@@ -735,7 +735,7 @@ class TestPlatform:
             print_exception_response(p_client.exc_val)
             assert False
 
-    def test_activate_platform(self, server:str = good_server_1):
+    def test_activate_platform(self, server:str = good_server_3):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             p_client.activate_platform("laz", ["active-metadata-store","simple-metadata-store"])

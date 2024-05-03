@@ -1226,7 +1226,7 @@ class TestCoreAdminServices:
                 server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.clear_view_service("tex")
+            o_client.clear_view_service("server-author")
             assert True
 
             print(f"\n\n\t\tServer {server}: view service cleared")

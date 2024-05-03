@@ -30,7 +30,8 @@ class Platform(Client):
     Client to operate Egeria Platforms - inherits from Server Ops
 
     Attributes:
-
+        server_name: str
+                Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -41,44 +42,6 @@ class Platform(Client):
         verify_flag: bool
             Flag to indicate if SSL Certificates should be verified in the HTTP requests.
             Defaults to False.
-
-    Methods:
-        __init__(self, platform_url: str, end_user_id: str)
-         Initializes the connection - throwing an exception if there is a problem
-
-
-
-        get_platform_origin() -> str
-
-        activate_server_stored_config(server: str = None, timeout: int = 30) -> None
-
-        activate_server_supplied_config(config_body: str, server: str = None, timeout: int = 30) -> None
-
-        get_active_server_instance_status(server: str = None)-> dict | str
-
-        get_known_servers() -> list[str] | str
-
-        is_server_known(server: str = None) -> bool
-
-        is_server_configured(server: str = None) -> bool
-
-        check_server_active(server: str = None)
-
-        get_active_server_list() -> dict | str
-
-        shutdown_platform() -> None:
-
-        shutdown_server(server: str = None) -> None:
-
-        shutdown_unregister_servers() -> None
-
-        shutdown_all_servers() -> None
-
-        activate_server_if_down(server: str) -> bool
-
-        activate_servers_on_platform(server_list: str) -> bool
-
-       activate_platform(self, platform_name: str, hosted_server_names: [str], timeout:int = 60) -> None
 
     """
 

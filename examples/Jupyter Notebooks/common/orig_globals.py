@@ -25,27 +25,25 @@ fileSystemRoot = os.environ.get('fileSystemRoot', 'data')
 # describes its location in an IntelliJ workspace.  The default value can be overridden using the "egeriaDistributionRoot"
 # environment variable.
 #
-egeriaSampleDataRoot = os.environ.get('egeriaSampleDataRoot', '')
+egeriaSampleDataRoot = os.environ.get('egeriaSampleDataRoot', '.')
 #
 # Flag to enable debug, this cases extra information to be printed including rest calls request and response details
 # Switching this flag to True produces a very large amount of output and is not recommended.
 # A targeted use of this flag is recommended, set this before and reset this after the code you would like to produce debug
 #
 isDebug = False
-disable_ssl_warnings = True
-max_paging_size = 1200
 #
 # Definitions of the Coco Pharmaceuticals Environment
 #
 
 # These are the three main platforms used to run Egeria's OMAG Servers
-corePlatformURL      = os.environ.get('corePlatformURL', 'https://laz.local:9443')
+corePlatformURL      = os.environ.get('corePlatformURL', 'https://localhost:9443')
 corePlatformName     = "Core Platform"
 
-dataLakePlatformURL  = os.environ.get('dataLakePlatformURL', 'https://laz.local:9444')
+dataLakePlatformURL  = os.environ.get('dataLakePlatformURL', 'https://localhost:9444')
 dataLakePlatformName = "Data Lake Platform"
 
-devPlatformURL       = os.environ.get('devPlatformURL', 'https://laz.local:9445')
+devPlatformURL       = os.environ.get('devPlatformURL', 'https://localhost:9445')
 devPlatformName      = "Dev Platform"
 
 

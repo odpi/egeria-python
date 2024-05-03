@@ -33,7 +33,7 @@ class GovEng(Client):
 
        Attributes:
            server_name: str
-                Name of the server to configure.
+                Name of the server to use.
            platform_url : str
                URL of the server platform to connect to
            user_id : str
@@ -44,13 +44,6 @@ class GovEng(Client):
            verify_flag: bool = enable_ssl_check
                 Set true for SSL verification to be enabled, false for disabled. Default behaviour set by the
                 enable_ssl_check attribute from _globals.py
-
-       Methods:
-           __init__(self,
-                    platform_url: str,
-                    end_user_id: str,
-                    )
-            Initializes the connection - throwing an exception if there is a problem
 
        """
 

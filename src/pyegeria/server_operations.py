@@ -19,7 +19,8 @@ class ServerOps(Platform):
     Client to issue operations on a running OMAG server.
 
     Attributes:
-
+        server_name: str
+            Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -31,7 +32,6 @@ class ServerOps(Platform):
             Flag to indicate if SSL Certificates should be verified in the HTTP requests.
             Defaults to False.
 
-    Methods:
 
     """
     def __init__(

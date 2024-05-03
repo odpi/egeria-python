@@ -9,14 +9,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyegeria"
-version = "0.3.3"
+version = "0.3.4"
 #license = 'Apache 2.0'
 authors = [
     {name ="Dan Wolfson", email= "dan.wolfson@pdr-associates.com"},
 ]
-description = "A python client for Egeria"
-readme= "README.md"
-requires-python = ">=3.10"
 dependencies = [
     "requests~=2.31.0",
     "validators~=0.22.0",
@@ -27,6 +24,11 @@ dependencies = [
     "rich~=13.7.1",
     "httpx~=0.26.0"
 ]
+optional-dependencies = { tests = ['pytest']}
+description = "A python client for Egeria"
+readme= "README.md"
+requires-python = ">=3.10"
+
 keywords = ["egeria", "metadata", "governance"]
 classifiers = [
     "License :: OSI Approved :: Apache Software License",

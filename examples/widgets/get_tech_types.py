@@ -21,7 +21,8 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    RegisteredInfo
+    RegisteredInfo,
+    AutomatedCuration
 )
 
 disable_ssl_warnings = True
@@ -47,41 +48,47 @@ bad_server_1 = "coco"
 bad_server_2 = ""
 
 
-def display_asset_types(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
-    r_client = RegisteredInfo(good_platform1_url, good_user_2, "secret",
-                              server_name=good_server_3, )
-    token = r_client.create_egeria_bearer_token(good_user_2, "secret")
-    asset_types = r_client.list_asset_types()
+def display_tech_details(search_string:str = "*", server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+    a_client = AutomatedCuration(server, url, username)
+    token = a_client.create_egeria_bearer_token(good_user_2, "secret")
+    tech_list = a_client.get_all_technology_types(search_string)
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Asset Types for: {good_platform1_url} @ {time.asctime()}",
+            title=f"Technology Types for: {good_platform1_url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Asset Types from Server '{server}' @ Platform - {url}",
+            caption=f"Technology Types from Server '{server}' @ Platform - {url}",
             expand=True
         )
 
         table.add_column("Name")
+        table.add_column("Qualified Name")
+        table.add_column("Category")
         table.add_column("Description")
-        table.add_column("SuperType")
-        table.add_column("Version")
+        table.add_column("Templates")
+        table.add_column("Placeholders")
+        table.add_column("Connector GUID")
+        table.add_column("Config Properties")
 
         name = " "
         description = " "
         version = " "
         super_type = " "
-        if len(asset_types) > 0:
-            for a_type in asset_types:
-                name = a_type.get("name", "none")
-                description = a_type.get("description", "none")
-                version = a_type.get("version", " ")
-                super_type = a_type.get("superType", "none")
+        if len(tech_list) > 0:
+            for item in tech_list:
+                qualified_name = item.get("qualifiedName", " ")
+                name = item.get("name", "none")
+                category = item.get("category", "none")
+                description = item.get("description", "none")
+                details = a_client.get_technology_type_detail(name)
+
+
                 table.add_row(
-                    name, description, str(version), super_type
+                    name, description, super_type, str(version)
                 )
         return table
 
@@ -94,7 +101,7 @@ def display_asset_types(server: str = good_server_3, url: str = good_platform1_u
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
-        r_client.close_session()
+        a_client.close_session()
 
 
 if __name__ == "__main__":

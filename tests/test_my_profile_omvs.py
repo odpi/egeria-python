@@ -39,7 +39,7 @@ disable_ssl_warnings = True
 
 class TestMyProfile:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://oak.local:9443"
+    good_platform2_url = "https://cray.local:9443"
     bad_platform1_url = "https://localhost:9443"
 
     # good_platform1_url = "https://127.0.0.1:30080"
