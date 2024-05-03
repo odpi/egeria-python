@@ -67,7 +67,7 @@ def display_my_profiles(server: str = good_server_3, url: str = good_platform1_u
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"My Profile from Server '{server}' @ Platform - {url}",
+            caption=f"My Profile from Server '{server}' @ Platform - {url}\n Press 'q' to Quit",
             expand=True
         )
 

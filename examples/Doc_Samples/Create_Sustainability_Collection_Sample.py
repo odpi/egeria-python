@@ -35,9 +35,9 @@ try:
     collection_type = "Sustainability Collection"
 
     root = c_client.create_root_collection(None, parent_guid,
-                                                parent_relationship_type_name,
-                                                False, display_name, description,
-                                                collection_type, True)
+                                           parent_relationship_type_name,
+                                           False, display_name, description,
+                                           collection_type, True)
     print(f"\n\n created a root with guid {root}")
     # create a folder for Scope 1 Emissions
     anchor_guid = root
@@ -48,11 +48,11 @@ try:
     collection_type = "Sustainability Collection"
 
     scope1_folder = c_client.create_folder_collection(anchor_guid, parent_guid,
-                                                parent_relationship_type_name,
-                                                True, display_name, description,
-                                                collection_type, False, "DATE_CREATED",
-                                                None
-                                                )
+                                                      parent_relationship_type_name,
+                                                      True, display_name, description,
+                                                      collection_type, False, "DATE_CREATED",
+                                                      None
+                                                      )
     print(f"\n\n created scope1_folder with guid {scope1_folder}")
 
     # create a folder for Scope 2 Emissions.
@@ -105,9 +105,9 @@ try:
 
 
 except (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException
 ) as e:
     console.print_exception(show_locals=True)
 

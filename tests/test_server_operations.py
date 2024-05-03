@@ -150,7 +150,7 @@ class TestServerOperations:
     def test_get_connector_config(self, server:str = good_server_2):
         try:
             server_name = server
-            connector = "FilesMonitor"
+            connector = "JDBCDatabaseCataloguer"
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_connector_config(connector,server)
             print(f"\n\n\tConnector configuration for connector {connector} is \n{json.dumps(response, indent=4)}")
@@ -165,10 +165,11 @@ class TestServerOperations:
     def test_restart_integration_connector(self, server:str = good_server_2):
         try:
             server_name = server
-            connector = "FilesMonitor"
+            # connector = "FilesMonitor"
+            connector = "DataFilesMonitorIntegrationConnector"
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             # response = s_client.restart_integration_connector(connector,server)
-            s_client.restart_integration_connector(None, server)
+            s_client.restart_integration_connector(connector, server)
 
             assert True, "Invalid URL or server"
 

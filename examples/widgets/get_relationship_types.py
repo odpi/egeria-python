@@ -4,10 +4,8 @@ SPDX-Lic
 ense-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
 
-
-A simple display for glossary terms
+Get valid relationship types.
 """
 
 import time
@@ -43,59 +41,66 @@ good_server_3 = "view-server"
 
 
 
-def display_list(standard: str, org:str, identifier:str, server: str = good_server_3, url: str = good_platform1_url,
+def display_list(type_name:str, server: str = good_server_3, url: str = good_platform1_url,
                    username: str = good_user_2,  save_output: bool = False):
 
     p_client = ValidMetadataManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, "secret")
 
-    def generate_table(standard:str, org: str, identifier: str) -> Table:
+    def generate_table(type_name: str) -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Metadata Types: {identifier}  @ {time.asctime()}",
+            title=f"Relationship types for: {type_name}  @ {time.asctime()}",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Type list for Server '{server}' @ Platform - {url}",
+            caption=f"list for Server '{server}' @ Platform - {url}",
             expand=True
         )
 
 
         table.add_column("Name")
-        table.add_column("GUID", no_wrap=True,)
+        # table.add_column("GUID", no_wrap=True,)
         table.add_column("Status")
         table.add_column("Description")
         table.add_column("Description Wiki")
         table.add_column("Attribute Name")
         table.add_column("Attribute Status")
-        table.add_column("Attribute GUID")
         table.add_column("Attribute Type")
+        # table.add_column("Attribute Type")
         table.add_column("Attribute Description")
 
-
-        types_list = p_client.find_types_by_external_id(standard, org, identifier)
-
+        types_list = p_client.get_valid_relationship_types(type_name)
+        # print(json.dumps(types_list, indent=4))
+        print(type(types_list))
         if types_list is None:
             name = " "
             guid = " "
             status = " "
 
         elif type(types_list) == str:
+            print(types_list)
             raise ValueError("-->This is not a known Type")
         else:
             for types in types_list:
 
                 name = types['name']
-                guid = types['guid']
+                # guid = types['guid']
                 status = types['initialStatus']
                 description = types['description']
-                description_wiki = types['descriptionWiki']
-                attribute_defs = types['attributeDefinitions']
-
-
-                table.add_row(
-                    name, guid, classification, qualified_name, identifier, phase, health, status, start,
-                    end,description)
+                description_wiki = types.get("descriptionWiki"," ")
+                attribute_defs = types.get("attributeDefinitions")
+                if attribute_defs:
+                    for attr in attribute_defs:
+                        attr_name = attr['attributeName']
+                        attr_desc = attr['attributeDescription']
+                        attr_status = attr['attributeStatus']
+                        attr_type = attr['attributeType']["name"]
+                        table.add_row(
+                            name, status, description, description_wiki, attr_name, attr_status, attr_type, attr_desc
+                        )
+                else:
+                    table.add_row(name,status,description,description_wiki," ", " ", " "," " )
 
         p_client.close_session()
         return table
@@ -107,7 +112,7 @@ def display_list(standard: str, org:str, identifier:str, server: str = good_serv
         #         live.update(generate_table())
         console = Console(record=True)
         with console.pager():
-            console.print(generate_table(project_name))
+            console.print(generate_table(type_name))
         if save_output:
             console.save_html("projects.html")
 
@@ -131,6 +136,6 @@ if __name__ == "__main__":
     url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'erinoverview'
     save_output = args.save_output if args.save_output is not None else False
-    project_name = Prompt.ask("Enter the Property to retrieve:", default="*")
+    type_name = Prompt.ask("Enter the Type Name to retrieve:", default="*")
 
-    display_list(project_name, server, url, userid, save_output)
+    display_list(type_name, server, url, userid, save_output)

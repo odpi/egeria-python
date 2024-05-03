@@ -6,22 +6,19 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 import asyncio
-import json
 import time
 
 # import json
 from pyegeria._client import Client
+from pyegeria._exceptions import (
+    InvalidParameterException,
+)
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import (
     validate_guid,
     validate_search_string,
 )
 from pyegeria.utils import body_slimmer
-from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, )
 
 
 class CollectionManager(Client):
@@ -70,7 +67,7 @@ class CollectionManager(Client):
         Parameters
         ----------
         parent_guid: str
-            The list of collections linked off the parent guid.
+            The identity of the parent to find linked collections from.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -105,8 +102,8 @@ class CollectionManager(Client):
 
         }
 
-        url =(f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/"
-              f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/"
+               f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json()
@@ -118,7 +115,7 @@ class CollectionManager(Client):
         Parameters
         ----------
         parent_guid: str
-            The list of collections linked off the parent guid.
+            The identity of the parent to find linked collections from.
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
@@ -197,9 +194,8 @@ class CollectionManager(Client):
 
         resp = await self._async_make_request("POST", url, body)
         # result = resp.json().get("elements","No elements found")
-        result = resp.json().get("elements","No Elements to return")
+        result = resp.json().get("elements", "No Elements to return")
         return result
-
 
     def get_classified_collections(self, classification: str, server_name: str = None,
                                    start_from: int = 0, page_size: int = None) -> list | str:
@@ -237,7 +233,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_classified_collections(classification, server_name,
-                                                                          start_from, page_size)),
+                                                                              start_from, page_size)),
         return resp
 
     async def _async_find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
@@ -251,7 +247,7 @@ class CollectionManager(Client):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+            Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
         server_name : str, optional
@@ -300,7 +296,7 @@ class CollectionManager(Client):
 
         body = {
             "filter": search_string,
-            "effective_time" : effective_time
+            "effective_time": effective_time
         }
 
         body_s = body_slimmer(body)
@@ -309,7 +305,7 @@ class CollectionManager(Client):
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements","No elements found")
+        return resp.json().get("elements", "No elements found")
 
     def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                          ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
@@ -321,7 +317,7 @@ class CollectionManager(Client):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+            Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
@@ -333,11 +329,6 @@ class CollectionManager(Client):
             Ends with the supplied string
         ignore_case : bool, [default=False], optional
             Ignore case when searching
-        for_lineage : bool, [default=False], optional
-        for_duplicate_processing : bool, [default=False], optional
-        type_name: str, [default=None], optional
-            An optional parameter indicating the subtype of the glossary to filter by.
-            Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -419,7 +410,7 @@ class CollectionManager(Client):
                f"by-name?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements","No elements found")
+        return resp.json().get("elements", "No elements found")
 
     def get_collections_by_name(self, name: str, effective_time: str = None, server_name: str = None,
                                 start_from: int = 0, page_size: int = None) -> list | str:
@@ -461,7 +452,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_collections_by_name(name, effective_time,
-                                                                    server_name, start_from, page_size))
+                                                                           server_name, start_from, page_size))
 
         return resp
 
@@ -520,7 +511,7 @@ class CollectionManager(Client):
                f"by-collection-type?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements","No elements found")
+        return resp.json().get("elements", "No elements found")
 
     def get_collections_by_type(self, collection_type: str, effective_time: str = None, server_name: str = None,
                                 start_from: int = 0, page_size: int = None) -> list | str:
@@ -530,8 +521,8 @@ class CollectionManager(Client):
 
         Parameters
         ----------
-        name: str,
-            name to use to find matching collections.
+        collection_type: str,
+            collection type to find.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         server_name : str, optional
@@ -579,11 +570,6 @@ class CollectionManager(Client):
         server_name : str, optional
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
 
         Returns
         -------
@@ -608,8 +594,10 @@ class CollectionManager(Client):
         validate_guid(collection_guid)
 
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}"
-
-        resp = await self._async_make_request("GET", url)
+        body = {
+            "effective_time": effective_time,
+        }
+        resp = await self._async_make_request("GET", url, body)
         return resp.json()
 
     def get_collection(self, collection_guid: str, effective_time: str = None, server_name: str = None) -> dict | str:
@@ -662,7 +650,8 @@ class CollectionManager(Client):
             body: dict
                 A dict representing the details of the collection to create.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
@@ -687,7 +676,7 @@ class CollectionManager(Client):
                f"classificationName={classification_name}")
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID returned")
+        return resp.json().get("guid", "No GUID returned")
 
     def create_collection_w_body(self, classification_name: str, body: dict, server_name: str = None) -> str:
         """ Create Collections: https://egeria-project.org/concepts/collection
@@ -805,7 +794,7 @@ class CollectionManager(Client):
         }
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID returned")
+        return resp.json().get("guid", "No GUID returned")
 
     def create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
                           parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
@@ -820,8 +809,8 @@ class CollectionManager(Client):
             classification_name: str
                 Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
@@ -839,11 +828,13 @@ class CollectionManager(Client):
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
             collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+                "DATE_CREATED", "OTHER"
             order_property_name: str, optional, defaults to "Something"
                 Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
@@ -880,8 +871,8 @@ class CollectionManager(Client):
             Parameters
             ----------
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
@@ -898,12 +889,8 @@ class CollectionManager(Client):
                 Add appropriate valid value for the collection type.
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If none, the server name associated with the instance is used.
 
             Returns
             -------
@@ -943,7 +930,7 @@ class CollectionManager(Client):
         }
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID Returned")
+        return resp.json().get("guid", "No GUID Returned")
 
     def create_root_collection(self, anchor_guid: str, parent_guid: str,
                                parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
@@ -956,7 +943,8 @@ class CollectionManager(Client):
             Parameters
             ----------
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor,
                 or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
@@ -974,12 +962,8 @@ class CollectionManager(Client):
                 Add appropriate valid value for the collection type.
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
-            collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-            order_property_name: str, optional, defaults to "Something"
-                Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1002,7 +986,7 @@ class CollectionManager(Client):
                                                                           parent_relationship_type_name, parent_at_end1,
                                                                           display_name, description,
                                                                           collection_type, is_own_anchor,
-                                                                           server_name))
+                                                                          server_name))
         return resp
 
     async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
@@ -1018,8 +1002,8 @@ class CollectionManager(Client):
             Parameters
             ----------
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
@@ -1037,11 +1021,12 @@ class CollectionManager(Client):
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
             collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+                "DATE_CREATED", "OTHER"
             order_property_name: str, optional, defaults to "Something"
                 Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1082,7 +1067,7 @@ class CollectionManager(Client):
         }
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID Returned")
+        return resp.json().get("guid", "No GUID Returned")
 
     def create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
                                     parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
@@ -1095,8 +1080,8 @@ class CollectionManager(Client):
         Parameters
         ----------
         anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-            or if this collection is to be its own anchor.
+            The unique identifier of the element that should be the anchor for the new element.
+            Set to null if no anchor, or if this collection is to be its own anchor.
         parent_guid: str
            The optional unique identifier for an element that should be connected to the newly created element.
            If this property is specified, parentRelationshipTypeName must also be specified
@@ -1158,8 +1143,8 @@ class CollectionManager(Client):
             Parameters
             ----------
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
@@ -1177,11 +1162,12 @@ class CollectionManager(Client):
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
             collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+                "DATE_CREATED", "OTHER"
             order_property_name: str, optional, defaults to "Something"
                 Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1236,8 +1222,8 @@ class CollectionManager(Client):
             Parameters
             ----------
             anchor_guid: str
-                The unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
-                or if this collection is to be its own anchor.
+                The unique identifier of the element that should be the anchor for the new element.
+                Set to null if no anchor, or if this collection is to be its own anchor.
             parent_guid: str
                The optional unique identifier for an element that should be connected to the newly created element.
                If this property is specified, parentRelationshipTypeName must also be specified
@@ -1255,11 +1241,12 @@ class CollectionManager(Client):
             is_own_anchor: bool, optional, defaults to False
                 Indicates if the collection should classified as its own anchor or not.
             collection_ordering: str, optional, defaults to "OTHER"
-                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+                Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+                "OTHER"
             order_property_name: str, optional, defaults to "Something"
                 Property to use for sequencing if collection_ordering is "OTHER"
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1289,7 +1276,7 @@ class CollectionManager(Client):
 
     async def _async_create_collection_from_template(self, body: dict, server_name: str = None) -> str:
         """ Create a new metadata element to represent a collection using an existing metadata element as a template.
-            The template defines additional classifications and relationships that should be added to the new collection.
+            The template defines additional classifications and relationships that are added to the new collection.
             Async version.
 
             Parameters
@@ -1298,7 +1285,7 @@ class CollectionManager(Client):
             body: dict
                 A dict representing the details of the collection to create.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1349,18 +1336,18 @@ class CollectionManager(Client):
         url = f"{self.platform_url}/servers/{server_name}{self.command_base}/from-template"
 
         resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid","No GUID Returned")
+        return resp.json().get("guid", "No GUID Returned")
 
     def create_collection_from_template(self, body: dict, server_name: str = None) -> str:
         """ Create a new metadata element to represent a collection using an existing metadata element as a template.
-            The template defines additional classifications and relationships that should be added to the new collection.
+            The template defines additional classifications and relationships that are added to the new collection.
 
             Parameters
             ----------
             body: dict
                 A dict representing the details of the collection to create.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If None, the server name associated with the instance is used.
 
             Returns
             -------
@@ -1416,7 +1403,8 @@ class CollectionManager(Client):
             body: dict
                 A dict representing the details of the collection to create.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1485,7 +1473,8 @@ class CollectionManager(Client):
             body: dict
                 A dict representing the details of the collection to create.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1564,13 +1553,15 @@ class CollectionManager(Client):
             collection_type: str, optional, defaults to None
                Add appropriate valid value for the collection type.
             collection_ordering: str, optional, defaults to None
-               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+               "DATE_CREATED", "OTHER"
             order_property_name: str, optional, defaults to None
                Property to use for sequencing if collection_ordering is "OTHER"
             replace_all_props: bool, optional, defaults to False
                 Whether to replace all properties in the collection.
             server_name: str, optional, defaults to None
-               The name of the server to  configure. If not provided, the server name associated with the instance is used.
+               The name of the server to  configure. If not provided, the server name associated
+               with the instance is used.
 
             Returns
             -------
@@ -1623,13 +1614,15 @@ class CollectionManager(Client):
             collection_type: str
                Add appropriate valid value for the collection type.
             collection_ordering: str, optional, defaults to "OTHER"
-               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+               Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+               "DATE_CREATED", "OTHER"
             order_property_name: str, optional, defaults to "Something"
                Property to use for sequencing if collection_ordering is "OTHER"
             replace_all_props: bool, optional, defaults to False
                 Whether to replace all properties in the collection.
             server_name: str, optional, defaults to None
-               The name of the server to  configure. If not provided, the server name associated with the instance is used.
+               The name of the server to  configure. If not provided, the server name associated
+               with the instance is used.
 
             Returns
             -------
@@ -1664,7 +1657,8 @@ class CollectionManager(Client):
             replace_all_props: bool, optional, defaults to False
                 Whether to replace all properties in the collection.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
@@ -1723,7 +1717,8 @@ class CollectionManager(Client):
             replace_all_props: bool, optional, defaults to False
                 Whether to replace all properties in the collection.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
@@ -1785,7 +1780,8 @@ class CollectionManager(Client):
             make_anchor, bool, optional, defaults to False
                 Whether to make the this an anchor.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated with the
+                instance is used.
 
             Returns
             -------
@@ -1806,15 +1802,14 @@ class CollectionManager(Client):
         watch_resources_s = str(watch_resources).lower()
         make_anchor_s = str(make_anchor).lower()
 
-
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor}")
+               f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor_s}")
 
         body = {
             "class": "ResourceListProperties",
             "resourceUse": resource_use,
             "resourceUseDescription": resource_use_description,
-            "watchResource": watch_resources,
+            "watchResource": watch_resources_s,
             "resourceUseProperties": resource_use_props
         }
         await self._async_make_request("POST", url, body)
@@ -1842,7 +1837,8 @@ class CollectionManager(Client):
             make_anchor: bool, optional, defaults to False
                 Whether to make the this an anchor.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1877,7 +1873,8 @@ class CollectionManager(Client):
             element_guid: str
                 The guid of the element to attach.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1915,7 +1912,8 @@ class CollectionManager(Client):
             element_guid: str
                 The guid of the element to attach.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1946,7 +1944,8 @@ class CollectionManager(Client):
             collection_guid: str
                 The guid of the collection to update.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -1981,7 +1980,8 @@ class CollectionManager(Client):
             collection_guid: str
                 The guid of the collection to update.
             server_name: str, optional, defaults to None
-                The name of the server to  configure. If not provided, the server name associated with the instance is used.
+                The name of the server to  configure. If not provided, the server name associated
+                with the instance is used.
 
             Returns
             -------
@@ -2048,7 +2048,7 @@ class CollectionManager(Client):
                f"members?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("GET", url)
-        return resp.json().get("elements","No elements found")
+        return resp.json().get("elements", "No elements found")
 
     def get_collection_members(self, collection_guid: str, effective_time: str = None,
                                server_name: str = None, start_from: int = 0,
@@ -2264,14 +2264,14 @@ class CollectionManager(Client):
         await self._async_make_request("POST", url, body_s)
         return
 
-    def add_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
-                                         replace_all_props: bool = False, server_name: str = None) -> None:
+    def update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
+                                     replace_all_props: bool = False, server_name: str = None) -> None:
         """ Update an element's membership to a collection.
 
             Parameters
             ----------
             collection_guid: str
-                identity of the collection to return members for.
+                identity of the collection to update members for.
             element_guid: str
                 Effective time of the query. If not specified will default to any time.
             body: dict, optional, defaults to None
@@ -2355,7 +2355,7 @@ class CollectionManager(Client):
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
                f"{element_guid}/detach")
         body = {
-             "class": "NullRequestBody"
+            "class": "NullRequestBody"
         }
         await self._async_make_request("POST", url, body)
         return
@@ -2390,10 +2390,10 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid,
-                                                                          server_name))
+                                                                   server_name))
         return
 
-    def get_member_list(self, root_collection_name:str, server_name: str = None) -> list | bool:
+    def get_member_list(self, root_collection_name: str, server_name: str = None) -> list | bool:
         if server_name is None:
             server_name = self.server_name
         # first find the guid for the collection we are using as root
@@ -2401,7 +2401,8 @@ class CollectionManager(Client):
         if type(root_guids) is str:
             return False
         if len(root_guids) != 1:
-            raise InvalidParameterException("root_collection_name must have exactly one root collection for this method")
+            raise InvalidParameterException(
+                "root_collection_name must have exactly one root collection for this method")
         root = root_guids[0]['elementHeader']['guid']
 
         # now find the members of the collection
@@ -2416,11 +2417,11 @@ class CollectionManager(Client):
             member = member_resp['element']
             # print(json.dumps(member, indent = 4))
             member_instance = {
-                "name" : member['properties']['name'],
-                "qualifiedName" : member['properties']['qualifiedName'],
-                "guid" : member['elementHeader']['guid'],
-                "description" : member['properties']['description'],
-                "collectionType" : member['properties']['collectionType'],
+                "name": member['properties']['name'],
+                "qualifiedName": member['properties']['qualifiedName'],
+                "guid": member['elementHeader']['guid'],
+                "description": member['properties']['description'],
+                "collectionType": member['properties']['collectionType'],
             }
             member_list.append(member_instance)
 

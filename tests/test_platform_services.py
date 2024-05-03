@@ -132,7 +132,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_activate_server_stored_config(self, server: str = "cocoMDS1"):
+    def test_activate_server_stored_config(self, server: str = "view-server"):
         """
         Need to decide if its worth it to broaden out the test cases..for instance
         in this method if there is an exception - such as invalid server name
@@ -602,7 +602,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_get_active_server_instance_status(self, server: str = good_server_3):
+    def test_get_active_server_instance_status(self, server: str = good_server_1):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_server_instance_status()

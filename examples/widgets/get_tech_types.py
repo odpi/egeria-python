@@ -10,10 +10,12 @@ A simple display for my profile
 """
 
 import argparse
+import sys
 import time
 
 from rich import box
 from rich.console import Console
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
@@ -48,10 +50,10 @@ bad_server_1 = "coco"
 bad_server_2 = ""
 
 
-def display_tech_details(search_string:str = "*", server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+def display_tech_types(search_string:str = "*", server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
     a_client = AutomatedCuration(server, url, username)
     token = a_client.create_egeria_bearer_token(good_user_2, "secret")
-    tech_list = a_client.get_all_technology_types(search_string)
+    tech_list = a_client.find_technology_types(search_string, page_size=0)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -69,28 +71,28 @@ def display_tech_details(search_string:str = "*", server: str = good_server_3, u
         table.add_column("Qualified Name")
         table.add_column("Category")
         table.add_column("Description")
-        table.add_column("Templates")
-        table.add_column("Placeholders")
-        table.add_column("Connector GUID")
-        table.add_column("Config Properties")
+
 
         name = " "
         description = " "
         version = " "
         super_type = " "
-        if len(tech_list) > 0:
+        if type(tech_list) is list:
             for item in tech_list:
+                if 'deployedImplementationType' not in item['qualifiedName']:
+                    continue
                 qualified_name = item.get("qualifiedName", " ")
                 name = item.get("name", "none")
                 category = item.get("category", "none")
                 description = item.get("description", "none")
-                details = a_client.get_technology_type_detail(name)
-
 
                 table.add_row(
-                    name, description, super_type, str(version)
+                    name, qualified_name, category, description
                 )
-        return table
+            return table
+        else:
+            print("Unknown technology type")
+            sys.exit(1)
 
     try:
         console = Console()
@@ -117,5 +119,6 @@ if __name__ == "__main__":
     userid = args.userid if args.userid is not None else 'erinoverview'
     # guid = args.guid if args.guid is not None else None
     guid = None
+    search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
 
-    display_asset_types(server, url, userid)
+    display_tech_types(search_string, server, url, userid)

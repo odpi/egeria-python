@@ -47,6 +47,7 @@ class AutomatedCuration(Client):
         Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
         self.cur_command_root = f"{platform_url}/servers/"
 
+
     async def _async_create_element_from_template(self, body: dict, server: str = None) -> str:
         """ Create a new metadata element from a template.  Async version.
              Parameters
@@ -596,7 +597,7 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/by-name?"
                f"startFrom={start_from}&pageSize={page_size}")
         body = {
-            "string": name
+            "filter": name
         }
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no actions")
@@ -816,7 +817,7 @@ class AutomatedCuration(Client):
         )
         return response
 
-    async def _async_gov_action_process_graph(self, process_guid: str, server: str = None) -> dict | str:
+    async def _async_get_gov_action_process_graph(self, process_guid: str, server: str = None) -> dict | str:
         """ Retrieve the governance action process metadata element with the supplied unique
             identifier along with the flow definition describing its implementation. Async Version.
         Parameters
@@ -848,7 +849,7 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def gov_action_process_graph(self, process_guid: str, server: str = None) -> dict | str:
+    def get_gov_action_process_graph(self, process_guid: str, server: str = None) -> dict | str:
         """ Retrieve the governance action process metadata element with the supplied unique
             identifier along with the flow definition describing its implementation.
            Parameters
@@ -915,7 +916,7 @@ class AutomatedCuration(Client):
             "class": "NameRequestBody",
             "name": name
         }
-        response = await self._async_make_request("GET", url, body)
+        response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no actions")
 
     def get_gov_action_processes_by_name(self, name: str, server: str = None, start_from: int = 0,
@@ -1009,7 +1010,7 @@ class AutomatedCuration(Client):
             "class": "SearchStringRequestBody",
             "name": search_string
         }
-        response = await self._async_make_request("GET", url, body)
+        response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no actions")
 
     def find_gov_action_processes(self, search_string: str = "*", server: str = None, starts_with: bool = False,
@@ -1110,7 +1111,7 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, new_body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_governance_action_process(self, action_type_qualified_name: str, request_source_guids: [str],
+    def initiate_gov_action_process(self, action_type_qualified_name: str, request_source_guids: [str],
                                            action_targets: [str], start_time: datetime, request_parameters: dict,
                                            orig_service_name: str, orig_engine_name: str, server: str = None) -> str:
         """ Using the named governance action process as a template, initiate a chain of engine actions.
@@ -1153,7 +1154,7 @@ class AutomatedCuration(Client):
         )
         return response
 
-    async def _async_get_gov_action_type_by_guid(self, gov_action_type_guid: str, server: str = None) -> dict | str:
+    async def _async_get_gov_action_types_by_guid(self, gov_action_type_guid: str, server: str = None) -> dict | str:
         """ Retrieve the governance action type metadata element with the supplied unique identifier. Async version.
 
         Parameters:
@@ -1182,7 +1183,7 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_gov_action_type_by_guid(self, gov_action_type_guid: str, server: str = None) -> dict | str:
+    def get_gov_action_types_by_guid(self, gov_action_type_guid: str, server: str = None) -> dict | str:
         """ Retrieve the governance action type metadata element with the supplied unique identifier.
 
         Parameters:
@@ -1276,7 +1277,7 @@ class AutomatedCuration(Client):
 
     async def _async_find_gov_action_types(self, search_string: str = "*", server: str = None,
                                            starts_with: bool = False,
-                                           ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                           ends_with: bool = False, ignore_case: bool = True, start_from: int = 0,
                                            page_size: int = max_paging_size) -> list | str:
         """ Retrieve the list of governance action type metadata elements that contain the search string.
             Async Version.
@@ -1334,7 +1335,7 @@ class AutomatedCuration(Client):
             "class": "SearchStringRequestBody",
             "name": search_string
         }
-        response = await self._async_make_request("GET", url, body)
+        response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no action types")
 
     def find_gov_action_types(self, search_string: str = "*", server: str = None, starts_with: bool = False,
@@ -1481,6 +1482,30 @@ class AutomatedCuration(Client):
         )
         return response
 
+    async def _async_initiate_postgres_database_survey(self, postgres_database_guid: str, server: str = None) -> str:
+        server = self.server_name if server is None else server
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+               f"initiate")
+
+        body = {
+            "class": "InitiateGovernanceActionTypeRequestBody",
+            "governanceActionTypeQualifiedName": "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-postgres-database",
+            "actionTargets": [{
+                "class": "NewActionTarget",
+                "actionTargetName": "serverToSurvey",
+                "actionTargetGUID": postgres_database_guid
+            }]
+        }
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("guid", "Action not initiated")
+
+    def initiate_postgres_database_survey(self, postgres_database_guid: str, server: str = None) -> str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_initiate_postgres_server_survey(postgres_database_guid, server)
+        )
+        return response
+
     async def _async_initiate_postgres_server_survey(self, postgres_server_guid: str, server: str = None) -> str:
         server = self.server_name if server is None else server
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
@@ -1508,6 +1533,8 @@ class AutomatedCuration(Client):
         )
         return response
 
+
+
     async def _async_initiate_file_folder_survey(self, file_folder_guid: str,
                                                  server: str = None) -> str:
         server = self.server_name if server is None else server
@@ -1527,10 +1554,36 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_file_folder_survey(self, file_folder_guid: str, server: str = None) -> str:
+    def initiate_file_folder_survey(self, file_folder_guid:str, server: str = None) -> str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_file_folder_survey(file_folder_guid, server)
+        )
+        return response
+
+    async def _async_initiate_file_survey(self, file_guid: str,
+                                                 server: str = None) -> str:
+        server = self.server_name if server is None else server
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+               f"initiate")
+
+        body = {
+            "class": "InitiateGovernanceActionTypeRequestBody",
+            "governanceActionTypeQualifiedName":
+                "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-folder",
+            "actionTargets": [{
+                "class": "NewActionTarget",
+                "actionTargetName": "fileToSurvey",
+                "actionTargetGUID": file_guid
+            }]
+        }
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("guid", "Action not initiated")
+
+    def initiate_file_survey(self, file_guid:str, server: str = None) -> str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_initiate_file_survey(file_guid, server)
         )
         return response
 
@@ -1810,7 +1863,7 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                        catalog_target_name: str, metadata_src_qual_name: str, config_properties: dict
+                                        catalog_target_name: str, metadata_src_qual_name: str = None, config_properties: dict = None
                                         , server: str = None) -> None:
         """ Add a catalog target to an integration connector.
             Async version.
@@ -1855,7 +1908,7 @@ class AutomatedCuration(Client):
         return
 
     def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, catalog_target_name: str,
-                           metadata_src_qual_name: str, config_properties: dict, server: str = None) -> None:
+                           metadata_src_qual_name: str = None, config_properties: dict = None, server: str = None) -> None:
         """ Add a catalog target to an integration connector.
 
             Parameters:
@@ -1892,7 +1945,7 @@ class AutomatedCuration(Client):
         return
 
     async def _async_remove_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                           catalog_target_name: str, server: str = None) -> None:
+                                            server: str = None) -> None:
         """ Remove a catalog target to an integration connector. Async version.
 
             Parameters:
@@ -1925,7 +1978,7 @@ class AutomatedCuration(Client):
         return
 
     def remove_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                              catalog_target_name: str, server: str = None) -> None:
+                               server: str = None) -> None:
         """ Remove a catalog target to an integration connector.
 
             Parameters:
@@ -1993,7 +2046,7 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/open-metadata-types/"
                f"{type_name}/technology-types?startFrom={start_from}&pageSize={page_size}")
         body = {
-            "string": tech_name
+            "filter": tech_name
         }
 
         response = await self._async_make_request("GET", url, body)
@@ -2064,7 +2117,7 @@ class AutomatedCuration(Client):
         validate_name(type_name)
         url = f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/by-name"
 
-        body = {"string": type_name}
+        body = {"filter": type_name}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("element", "no type found")
@@ -2155,12 +2208,12 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/"
                f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
-        body = {"string": search_string}
+        body = {"filter": search_string}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no tech found")
 
-    def find_technology_types(self, type_name: str = "*", server: str = None, start_from: int = 0,
+    def find_technology_types(self, search_string: str = "*", server: str = None, start_from: int = 0,
                               page_size: int = max_paging_size, starts_with: bool = False,
                               ends_with: bool = False, ignore_case: bool = True) -> list | str:
         """ Retrieve the list of technology types that contain the search string. Async version.
@@ -2189,7 +2242,7 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_technology_types(type_name, server, start_from,
+            self._async_find_technology_types(search_string, server, start_from,
                                               page_size, starts_with, ends_with, ignore_case)
         )
         return response

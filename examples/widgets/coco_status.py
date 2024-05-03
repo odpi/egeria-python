@@ -9,10 +9,15 @@ Unit tests for the Utils helper functions using the Pytest framework.
 A simple server status display
 """
 
-import time
 import argparse
+import time
 
-from rich.box import Box
+from rich import box
+from rich import print
+from rich.layout import Layout
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -20,17 +25,10 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import print
-from rich.console import Group
-from rich.panel import Panel
-from rich import box, align
-from rich.layout import Layout
-import rich
 from pyegeria.server_operations import ServerOps
 
 disable_ssl_warnings = True
+
 
 def test_display_status(server: str, url: str, username: str):
     layout = Layout()
