@@ -132,8 +132,8 @@ class TestRegisteredInfoServices:
     def test_list_asset_types(self):
         user = self.good_user_2
         try:
-            r_client = RegisteredInfo(self.good_platform1_url, user, "secret",
-                                      server_name =self.good_server_2,)
+            r_client = RegisteredInfo(self.good_server_2,self.good_platform1_url, user,
+                                      "secret")
             token = r_client.create_egeria_bearer_token(user, "secret")
             response = r_client.list_asset_types()
 

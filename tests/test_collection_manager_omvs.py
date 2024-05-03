@@ -22,7 +22,6 @@ from pyegeria import (
     print_exception_response,
     CollectionManager
 )
-from pyegeria.glossary_omvs import GlossaryBrowser
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -59,14 +58,14 @@ class TestCollectionManager:
     def test_get_linked_collections(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                         user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "d13a8a6e-e35c-4c6e-bb11-cf4f86faeac5"
+            parent_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
 
             response = c_client.get_linked_collections(parent_guid)
             duration = time.perf_counter() - start_time
-
+            print(f"response type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
                 print_json("\n\n" + json.dumps(response, indent=4))
@@ -78,9 +77,9 @@ class TestCollectionManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -132,7 +131,7 @@ class TestCollectionManager:
                                          user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Digital Products Root"
 
             response = c_client.find_collections(search_string, None, True, ignore_case=False)
             duration = time.perf_counter() - start_time
@@ -159,28 +158,27 @@ class TestCollectionManager:
     def test_get_collection_by_name(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                         user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "Product Catalog Collection"
+            collection_name = "Scope 2 Emissions"
 
             response = c_client.get_collections_by_name(collection_name)
             duration = time.perf_counter() - start_time
-
+            print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
                 print_json("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}")
+            elif type(response) is list:
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -191,10 +189,10 @@ class TestCollectionManager:
     def test_get_collections_by_type(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                         user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "Data Spec Collection"
+            collection_type = "Sustainability Collection"
 
             response = c_client.get_collections_by_type(collection_type)
             duration = time.perf_counter() - start_time
@@ -211,9 +209,9 @@ class TestCollectionManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -224,10 +222,10 @@ class TestCollectionManager:
     def test_get_collection(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                         user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d13a8a6e-e35c-4c6e-bb11-cf4f86faeac5"
+            collection_guid = "59b4d6b2-110c-488d-88d9-2975ed51506c"
 
             response = c_client.get_collection(collection_guid)
             duration = time.perf_counter() - start_time
@@ -236,7 +234,7 @@ class TestCollectionManager:
             print(f"Type of response is {type(response)}")
 
             if type(response) is dict:
-                print("dict:\n\n" )
+                print("dict:\n\n")
                 print_json(json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}\n\n")
@@ -246,9 +244,9 @@ class TestCollectionManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -274,10 +272,10 @@ class TestCollectionManager:
             collection_ordering = None
             order_property_name = None
 
-            response = c_client.create_collection("Set",anchor_guid, parent_guid,
-                                                            parent_relationship_type_name, parent_at_end1,
-                                                            display_name, description, collection_type,
-                                                            is_own_anchor, collection_ordering, order_property_name)
+            response = c_client.create_collection("Set", anchor_guid, parent_guid,
+                                                  parent_relationship_type_name, parent_at_end1,
+                                                  display_name, description, collection_type,
+                                                  is_own_anchor, collection_ordering, order_property_name)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -322,7 +320,7 @@ class TestCollectionManager:
                     "orderPropertyName": None,
                 }
             }
-            response = c_client.create_collection_w_body(classification_name, body )
+            response = c_client.create_collection_w_body(classification_name, body)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -486,7 +484,7 @@ class TestCollectionManager:
                 "parentRelationshipTypeName": parent_relationship_type_name,
                 "parentAtEnd1": True,
                 "templateGUID": "c7368217-d013-43cb-9af1-b58e3a491e77",
-                "replacementProperties" : {
+                "replacementProperties": {
                     "class": "ElementProperties",
                     "propertyValueMap": {
                         "qualifiedName": {
@@ -530,7 +528,6 @@ class TestCollectionManager:
             assert False, "Invalid request"
         finally:
             c_client.close_session()
-
 
     def test_create_digital_product(self):
         try:
@@ -596,6 +593,7 @@ class TestCollectionManager:
             assert False, "Invalid request"
         finally:
             c_client.close_session()
+
     def test_update_collection(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
@@ -603,8 +601,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "97bbfe07-6696-4550-bf8b-6b577d25bef0"
-            new_desc = " A general collection of product catalogs"
+            collection_guid = "79f43cb7-0e1b-4785-9bf4-7f8b4bb6d4f1"
+            new_desc = " A somewhat general collection of product catalogs"
             response = c_client.update_collection(collection_guid, description=new_desc)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -632,7 +630,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "4d1d9b83-9b01-4b0d-990b-fbff4256f84b"
+            collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
 
             response = c_client.get_collection_members(collection_guid)
             duration = time.perf_counter() - start_time
@@ -661,13 +659,13 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d13a8a6e-e35c-4c6e-bb11-cf4f86faeac5"
+            collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
             element_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
 
             c_client.attach_collection(collection_guid, element_guid,
-                                                  "Clinical Data Storage",
-                                                  "Clinical data storage for OAK Dene", None,
-                                                  watch_resources=True, make_anchor=False)
+                                       "Clinical Data Storage",
+                                       "Clinical data storage for OAK Dene", None,
+                                       watch_resources=True, make_anchor=False)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -721,7 +719,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "7886bb39-d600-42e0-992c-8792b8a696f8"
+            collection_guid = "d46fb553-60f5-4558-8ee8-e36fe2ed6560"
             response = c_client.delete_collection(collection_guid)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")
@@ -753,7 +751,6 @@ class TestCollectionManager:
             # collection_type = "Medical Data"
             # collection_type = "Data Product Marketplace"
             collection_type = "Digital Products Root"
-
 
             response = c_client.get_collections_by_type(collection_type)
             if type(response) is list:
@@ -791,7 +788,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d13a8a6e-e35c-4c6e-bb11-cf4f86faeac5"
+            collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
             element_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
             body = {
                 "class": "CollectionMembershipProperties",
@@ -835,7 +832,7 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            name = "Product Catalog Collection"
+            name = "Root Sustainability Collection"
             # name = "Digital Products Root"
             # name = "Land Use Classification"
 
@@ -863,6 +860,44 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
+    def test_update_collection_membership(self):
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
+                                         user_id=self.good_user_2)
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
+            element_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
+            name = "Root Sustainability Collection"
+
+            body = {
+                "class": "CollectionMembershipProperties",
+                "membershipRationale": "xxx",
+                "expression": "convenience",
+                "confidence": 100,
+                "status": "PROPOSED",
+                "userDefinedStatus": "Validation required",
+                "source": "archive",
+                "notes": "arbitrary notes"
+            }
+            c_client.update_collection_membership(collection_guid, element_guid, body,
+                                                             replace_all_props=False)
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds\n")
+            # print(f"Member List is: {response}")
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
 
     def test_sample_setup(self):
         try:
@@ -896,7 +931,7 @@ class TestCollectionManager:
             folder1 = c_client.create_folder_collection(None, parent_guid,
                                                         parent_relationship_type_name,
                                                         True, display_name, description,
-                                                        collection_type,True, "DATE_CREATED",
+                                                        collection_type, True, "DATE_CREATED",
                                                         None
                                                         )
             print(f"\n\n created a folder with guid {folder1}")
@@ -920,36 +955,36 @@ class TestCollectionManager:
             collection_type = "Digital Product"
             classification_name = "Digital Product"
             body_3 = {
-                    "class": "NewDigitalProductRequestBody",
-                    "isOwnAnchor": True,
-                    "parentGUID": parent_guid,
-                    "parentRelationshipTypeName": parent_relationship_type_name,
-                    "parentAtEnd1": True,
-                    "collectionProperties": {
-                        "class": "CollectionProperties",
-                        "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                        "name": display_name,
-                        "description": description,
-                        "collectionType": collection_type,
-                        "collectionOrdering": "DATE_CREATED",
-                    },
-                    "digitalProductProperties": {
-                        "class": "DigitalProductProperties",
-                        "productStatus": "ACTIVE",
-                        "productName": "Land Use Classifications",
-                        "productType": "Geospatial Data Assets",
-                        "description": "Land use classification assets",
-                        "introductionDate": "2023-12-01",
-                        "maturity": "Nacent",
-                        "serviceLife": "3 years",
-                        "currentVersion": "V.5",
-                        "nextVersionDate": "2024-12-01",
-                        "withdrawDate": "2030-01-01",
-                        "additionalProperties": {
-                            "thought_id": "a guid",
-                            "license": "cc-by-sa",
-                        }
+                "class": "NewDigitalProductRequestBody",
+                "isOwnAnchor": True,
+                "parentGUID": parent_guid,
+                "parentRelationshipTypeName": parent_relationship_type_name,
+                "parentAtEnd1": True,
+                "collectionProperties": {
+                    "class": "CollectionProperties",
+                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                    "name": display_name,
+                    "description": description,
+                    "collectionType": collection_type,
+                    "collectionOrdering": "DATE_CREATED",
+                },
+                "digitalProductProperties": {
+                    "class": "DigitalProductProperties",
+                    "productStatus": "ACTIVE",
+                    "productName": "Land Use Classifications",
+                    "productType": "Geospatial Data Assets",
+                    "description": "Land use classification assets",
+                    "introductionDate": "2023-12-01",
+                    "maturity": "Nacent",
+                    "serviceLife": "3 years",
+                    "currentVersion": "V.5",
+                    "nextVersionDate": "2024-12-01",
+                    "withdrawDate": "2030-01-01",
+                    "additionalProperties": {
+                        "thought_id": "a guid",
+                        "license": "cc-by-sa",
                     }
+                }
             }
             folder3 = c_client.create_digital_product(body_3)
             print(f"\n\n created a collection with guid {folder3}")
@@ -960,36 +995,36 @@ class TestCollectionManager:
             description = "Landsat 8 data products"
 
             body_4 = {
-                    "class": "NewDigitalProductRequestBody",
-                    "isOwnAnchor": True,
-                    "parentGUID": parent_guid,
-                    "parentRelationshipTypeName": parent_relationship_type_name,
-                    "parentAtEnd1": True,
-                    "collectionProperties": {
-                        "class": "CollectionProperties",
-                        "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                        "name": display_name,
-                        "description": description,
-                        "collectionType": collection_type,
-                        "collectionOrdering": "DATE_CREATED",
-                    },
-                    "digitalProductProperties": {
-                        "class": "DigitalProductProperties",
-                        "productStatus": "ACTIVE",
-                        "productName": "Landsat 8 Imagery",
-                        "productType": "Geospatial Data Assets",
-                        "description": description,
-                        "introductionDate": "2024-01-01",
-                        "maturity": "Mature",
-                        "serviceLife": "3 years",
-                        "currentVersion": "V1.5",
-                        "nextVersion": "2024-06-01",
-                        "withdrawDate": "2030-01-01",
-                        "additionalProperties": {
-                            "thought_id": "a guid",
-                            "license": "cc-by-sa",
-                        }
+                "class": "NewDigitalProductRequestBody",
+                "isOwnAnchor": True,
+                "parentGUID": parent_guid,
+                "parentRelationshipTypeName": parent_relationship_type_name,
+                "parentAtEnd1": True,
+                "collectionProperties": {
+                    "class": "CollectionProperties",
+                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                    "name": display_name,
+                    "description": description,
+                    "collectionType": collection_type,
+                    "collectionOrdering": "DATE_CREATED",
+                },
+                "digitalProductProperties": {
+                    "class": "DigitalProductProperties",
+                    "productStatus": "ACTIVE",
+                    "productName": "Landsat 8 Imagery",
+                    "productType": "Geospatial Data Assets",
+                    "description": description,
+                    "introductionDate": "2024-01-01",
+                    "maturity": "Mature",
+                    "serviceLife": "3 years",
+                    "currentVersion": "V1.5",
+                    "nextVersion": "2024-06-01",
+                    "withdrawDate": "2030-01-01",
+                    "additionalProperties": {
+                        "thought_id": "a guid",
+                        "license": "cc-by-sa",
                     }
+                }
             }
             folder4 = c_client.create_digital_product(body_4)
             print(f"\n\n created a collection with guid {folder4}")
@@ -1048,7 +1083,7 @@ class TestCollectionManager:
             folder6 = c_client.create_digital_product(body_6)
             print(f"\n\n created a collection with guid {folder6}")
 
-# now lets create a digital product for - Level - 1c
+            # now lets create a digital product for - Level - 1c
             parent_guid = folder5
             display_name = "Sentinel 2 - Level 1C"
             description = "Level 1C of Sentinel 2"
@@ -1140,3 +1175,33 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
+    def test_delete_all_collections(self):
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
+                                         user_id=self.good_user_2)
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            search_string = "*"
+
+            response = c_client.find_collections(search_string, None, True, ignore_case=False)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} collections {type(response)}\n\n")
+                for collection in response:
+                    c_client.delete_collection(collection['elementHeader']["guid"])
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            c_client.close_session()

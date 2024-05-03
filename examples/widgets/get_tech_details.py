@@ -32,7 +32,8 @@ from rich.panel import Panel
 from rich import box, align
 from rich.layout import Layout
 import rich
-from pyegeria import CollectionManager, UserNotAuthorizedException, PropertyServerException, InvalidParameterException
+from pyegeria import (CollectionManager, UserNotAuthorizedException, PropertyServerException,
+                      InvalidParameterException, AutomatedCuration)
 
 disable_ssl_warnings = True
 
@@ -41,37 +42,85 @@ user = "erinoverview"
 view_server = "view-server"
 
 
-def collection_viewer(root: str, server_name:str, platform_url:str, user:str):
+def tech_viewer(tech: str, server_name:str, platform_url:str, user:str):
 
-    def walk_collection_hierarchy(collection_client: CollectionManager, root_collection_name: str, tree: Tree) -> Tree:
-        """Recursively build a Tree with collection contents."""
-        members = collection_client.get_member_list(root_collection_name)
-        if members:
-            for member in members:
+    def view_tech_details(a_client: AutomatedCuration, root_collection_name: str, tree: Tree) -> Tree:
+        l2: Tree = None
+        tech_details = a_client.get_technology_type_detail(tech)
+        if type(tech_details) is dict:
+            style = ""
+            l2 = tree.add(Text(f"Name: {tech_details['name']}", "bold red"))
+            l2 = tree.add(Text(f"* QualifiedName: {tech_details['qualifiedName']}","bold white"))
+            l2 = tree.add(Text(f"* Category: {tech_details['category']}", "bold white"))
+            l2 = tree.add(Text(f"* Technology Description: {tech_details['description']}", "bold white"))
+            ext_ref = tech_details.get('externalReferences', None)
+            if ext_ref is not None:
+                l2 = tree.add(Text(f'* URI: {ext_ref[0]["properties"]["uri"]}', "bold white"))
 
-                style = ""
-                text_collection_name = Text(f"[bold white] Name: {member['name']}", "")
-                text_qualified_name = Text(f"* QualifiedName: {member['qualifiedName']}""yellow")
-                text_guid = Text(f"* GUID: {member['guid']}", "green")
-                text_collection_type = Text(f"* Collection Type: {member['collectionType']}", "cyan")
-                text_description = Text(f"* Description: {member['description']}", "cyan")
-                p = Panel.fit(f"[white]{text_collection_name}[green]\n{text_qualified_name}\n{text_guid}\n"
-                          f"{text_collection_type}\n{text_description}")
-                tt = tree.add(p, style=style)
+            # catalog_temp = tech_details.get("catalogTemplates", None)
+            # if catalog_temp is not None:
+            #     l2 = tree.add("Catalog Templates")
+            #     for catalog in catalog_temp:
+                    # cat_name = catalog["relatedElement"].get("name", None)
+                    # if cat_name is None:
+                    #     continue
+                    # l3 = l2.add(f'[white] Template Name: {cat_name}, style=style)')
+                    # l3 = l2.add(f'[white] Template GUID: {catalog["relatedElement"].get("guid", None)}, style=style)')
+                    # classifications = catalog["relatedElement"].get("classifications", None)
+                    # if classifications is not None:
+                    #     l4 = l3.add(f"[red]Classifications")
+                    #     for classification in classifications:
+                    #         props = classification['classificationProperties']
+                    #         c_name = Text(f'[white] Name: {props.get("name", None)}[white]')
+                    #         c_ver = Text(f'[white] Version: {props.get("versionIdentifier", None)}')
+                    #         c_desc = Text(f'[white] Description: {props.get("description", None)}')
+                    #         class_text = (f"[bold red]Classification \n"
+                    #                       f"[white] Name: {c_name} \n"
+                    #                       f"[white] Version: {c_ver} \n"
+                    #                       f"[white] Description: {c_desc}")
+                    #         c = Panel.fit(class_text)
+                    #         l4 = l3.add(c, style = style)
+            #
+            #         placeholders = catalog.get("specification", None)
+            #         if placeholders is not None:
+            #             specs = placeholders.get("placeholderProperty", None)
+            #             if specs is not None:
+            #                 l4 = l3.add(f"[red]Placeholder Properties")
+            #                 for spec in specs:
+            #                     l5 = l4.add(f'[white] Placeholder Name: {spec.get("placeholderName", None)})')
+            #                     l5 = l4.add(f'[white] Data Type: {spec["dataType"]}')
+            #                     l5 = l4.add(f'[white] Placeholder Name: {str(spec["required"])})')
+            #                     l5 = l4.add(f'[white] Example: {spec.get("example", None)})')
+            #                     l5 = l4.add(f'[white] Description: {spec.get("description", None)}[white])')
 
-                children = collection_client.get_collection_members(member['guid'])
-                if type(children) is list:
-                    branch = tt.add(f"[bold magenta]Members", style=style, guide_style=style)
-                    walk_collection_hierarchy(collection_client, member['qualifiedName'], branch),
+
+            resource_list = tech_details.get('resourceList',None)
+            if resource_list:
+                t_r = tree.add("Resource List[bold red]")
+                for resource in resource_list:
+                    resource_use = Text(f"[bold white]{resource['resourceUse']}", "")
+                    resource_use_description = Text(f"[bold white]{resource['resourceUseDescription']}", "")
+                    type_name = Text(f"[bold white]{resource['relatedElement']['type']['typeName']}", "")
+                    unique_name = Text(f"[bold white]{resource['relatedElement']['uniqueName']}", "")
+                    related_guid = Text(f"[bold white]{resource['relatedElement']['guid']}", "")
+                    resource_text = (f"[bold red]Resource\n"
+                                     f"[white]Resource use: {resource_use}[white]\nDescription: "
+                                     f"{resource_use_description}\nType Name: {type_name}\n"
+                                     f"[white]Unique Name: {unique_name}\n[white]Related GUID: {related_guid}\n")
+                    p = Panel.fit(resource_text)
+                    tt = t_r.add(p, style=style)
+
+
+            return tt
 
 
     try:
-        tree = Tree(f"[bold bright green]{root}", guide_style="bold bright_blue")
-        c_client = CollectionManager(view_server, platform,
+        tree = Tree(f"[bold bright green]{tech}", guide_style="bold bright_blue")
+        a_client = AutomatedCuration(view_server, platform,
                                      user_id=user)
 
-        token = c_client.create_egeria_bearer_token(user, "secret")
-        walk_collection_hierarchy(c_client,root,tree)
+        token = a_client.create_egeria_bearer_token(user, "secret")
+        view_tech_details(a_client,tech,tree)
         print(tree)
 
     except (
@@ -94,5 +143,5 @@ if __name__ == "__main__":
     url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'erinoverview'
 
-    root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Digital Products Root")
-    collection_viewer(root_collection,server, url, userid)
+    tech = Prompt.ask("Enter the Technology to start from:", default="PostgreSQL Server")
+    tech_viewer(tech,server, url, userid)

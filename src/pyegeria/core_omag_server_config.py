@@ -754,7 +754,8 @@ class CoreServerConfig(Client):
                f"{topic_name}")
         self.make_request("POST", url, severities)
 
-    def add_file_log_destinations(self, directory_name: str, severities: [str] = None, server_name: str = None) -> None:
+    def add_file_log_destinations(self, directory_name: str, severities=None,
+                                  server_name: str = None) -> None:
         """ Adds a file log destination to a server. Each message is a separate file in the directory
             indicated by the directory name.
 
@@ -785,6 +786,8 @@ class CoreServerConfig(Client):
             invalid or make the new call invalid.
 
         """
+        if severities is None:
+            severities = ["Error", "Exception"]
         if server_name is None:
             server_name = self.server_name
 
@@ -1718,7 +1721,7 @@ class CoreServerConfig(Client):
 
         return response.json().get("services", "No view services found")
 
-    def config_all_view_services(self, mdr_server_name: str,
+    def __config_all_view_services(self, mdr_server_name: str,
                                  mdr_server_platform_root_url: str, server_name: str = None) -> None:
         """ Enable all view services that are registered with this OMAG server platform.
 

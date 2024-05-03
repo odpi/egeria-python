@@ -48,8 +48,7 @@ bad_server_2 = ""
 
 
 def display_asset_types(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
-    r_client = RegisteredInfo(good_platform1_url, good_user_2, "secret",
-                              server_name=good_server_3, )
+    r_client = RegisteredInfo(server, url, username)
     token = r_client.create_egeria_bearer_token(good_user_2, "secret")
     asset_types = r_client.list_asset_types()
 
@@ -81,7 +80,7 @@ def display_asset_types(server: str = good_server_3, url: str = good_platform1_u
                 version = a_type.get("version", " ")
                 super_type = a_type.get("superType", "none")
                 table.add_row(
-                    name, description, str(version), super_type
+                    name, description, super_type, str(version)
                 )
         return table
 

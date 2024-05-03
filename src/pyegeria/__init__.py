@@ -41,4 +41,6 @@ from .my_profile_omvs import MyProfile
 from .full_omag_server_config import FullServerConfig
 from .server_operations import ServerOps
 from .collection_manager_omvs import CollectionManager
+from .project_manager_omvs import ProjectManager
+from .valid_metadata_omvs import ValidMetadataManager
 __version__ = "0.3"

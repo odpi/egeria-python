@@ -19,4 +19,8 @@ The functions are:
 * view_my_profile: view an Egeria profile
 * list_asset_types: list the types of assets that have been configured in Egeria
 * multi-server_status: show the status from two platforms concurrently
-* 
+* coco_statys.py: example showing the status of the Coco Pharmacutical platforms from the Jupyter Labs.
+* get_relationship_types.py: display the different types of relationships for a given Entity type.
+* get_valid_metadata_values.py: retrieve the currently defined valid metadata values for a given attribute and entity
+* open_todos.py: list the open todo items
+* project_list_viewer.py: List defined projects

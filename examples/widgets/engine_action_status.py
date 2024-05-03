@@ -16,7 +16,7 @@ import time
 from rich import box
 from rich.live import Live
 from rich.table import Table
-from rich import console
+from rich.console import Console
 
 from pyegeria import (
     InvalidParameterException,
@@ -65,7 +65,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
         )
         table.add_column("Requested Time")
         table.add_column("Start Time")
-
+        table.add_column("Action GUID", no_wrap=True)
         table.add_column("Engine Name")
         table.add_column("Request Type")
         table.add_column("Action Status")
@@ -76,7 +76,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
 
         token = g_client.create_egeria_bearer_token()
         action_status = g_client.get_engine_actions()
-        if action_status is None:
+        if "No Elements" in action_status:
             requested_time = " "
             start_time = " "
             completion_time = " "
@@ -94,7 +94,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
 
                 engine_name = action["governanceEngineName"]
                 request_type = action["requestType"]
-
+                action_guid = action["elementHeader"]["guid"]
                 if action["actionStatus"] in ("REQUESTED", "APPROVED", "WAITING", "ACTIVATING"):
                     action_status = f"[yellow]{action['actionStatus']}"
                 elif action["actionStatus"] in ("IN_PROGRESS", "ACTIONED"):
@@ -112,7 +112,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
                 completion_message = action.get("completionMessage", " ")
 
                 table.add_row(
-                    requested_time, start_time, engine_name, request_type,
+                    requested_time, start_time, action_guid,engine_name, request_type,
                     action_status, target_element, completion_time, process_name, completion_message
                 )
 
@@ -120,11 +120,9 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
         return table
 
     try:
-        with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-            while True:
-                time.sleep(2)
-                live.update(generate_table())
-                live.console.pager()
+        console = Console()
+        with console.pager():
+            console.print(generate_table())
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)

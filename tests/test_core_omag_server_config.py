@@ -463,7 +463,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_file_log_destinations(self, server: str = good_server_1):
+    def test_add_file_log_destinations(self, server: str = good_integ_1):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
