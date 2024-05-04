@@ -157,7 +157,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
-            to_do = "Make Latte"
+            to_do = "Peter will delegate the Latte to Mandy"
             to_do_desc = "Latte to go"
             to_do_type = "drink"
             body = {
@@ -230,7 +230,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do("*", starts_with=True)
+            response = m_client.find_to_do("latte")
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
@@ -260,12 +260,12 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.get_to_dos_by_type("Drink", server_name, status="OPEN")
+            response = m_client.get_to_dos_by_type("Drink", server_name, status=None)
 
             if type(response) is list | dict:
                 print_json(data=response)
             elif type(response) is str:
-                console.print("\n\n\t Response is" + response)
+                console.print("\n\n\t Response is \n" + response)
             assert True
 
         except (

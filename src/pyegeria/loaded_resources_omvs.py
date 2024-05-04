@@ -10,20 +10,17 @@ integration service, it is importregistered_info.pyant to know what companion se
 companion service is also configured and running.
 
 """
-import json
-from rich.console import Console
-from rich import print, print_json
 
 import pandas as pd
 from tabulate import tabulate
 
+from pyegeria._client import Client
 from pyegeria.utils import wrap_text
 
-from pyegeria._client import Client
 
-
-class RegisteredInfo(Client):
-    """ Client to discover Egeria services and capabilities
+class LoadedResources(Client):
+    """ Client to search and retrieve currently loaded information about connectors, templates, governance actions,
+        etc.
 
     Attributes:
     ----------
@@ -42,15 +39,7 @@ class RegisteredInfo(Client):
 
     Methods:
     -------
-        list_registered_svcs(self, kind: str = None, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30)
-            -> list | str
-            Returns information about the different kinds of services as either JSON or a printable table.
 
-        list_severity_definitions(self, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30) -> list | str
-            Returns a list of severity definitions for an OMAG Server used by the audit services.
-
-        list_asset_types(self, server: str = None) -> list | str
-            Lists the defined asset types.
     """
 
     admin_command_root: str
@@ -67,30 +56,17 @@ class RegisteredInfo(Client):
             server_name = "NA"
         Client.__init__(self, server_name, platform_url,
                         user_id, user_pwd, verify_flag)
-        self.admin_command_root = (f"{self.platform_url}/open-metadata/platform-services/users/"
-                                   f"{self.user_id}/server-platform/registered-services")
 
-    def list_registered_svcs(self, kind: str = None, fmt: str = 'json', skinny: bool = True,
-                             wrap_len: int = 30) -> list | str:
-        """ Get the registered services for the OMAG Server Platform
+    def get_all_templates(self, server: str = None, start_from: int = 0, page_size: int = 0) -> list | str:
+        """ Get Loaded templates for the Server.
 
            Parameters
            ----------
-            kind: str, optional
-                The kind of service to return information for. If None, then provide back a list of service kinds.
-            fmt: str, optional, default = 'json'
-                If fmt is 'json', then return the result as a JSON string. If fmt is 'table', then
-                return the result as a nicely formatted table string.
-            skinny: bool, optional, default = True
-                If a table is being created and `skinny` is true, then return a subset of the information,
-                if false return all columns.
-            wrap_len: int, optional, default = 30
-                If a table is being created, the width of the column to wrap text to.
+
            Returns
            -------
            dict | str
-               If fmt is 'JSON' then return a dictionary containing the registered services for the specified
-                platform. If fmt is 'table' then return the result as a nicely formatted printable table string.
+              A dictionary containing a simplified list of key template attributes.
 
            Raises
            ------
@@ -102,33 +78,15 @@ class RegisteredInfo(Client):
                The principle specified by the user_id does not have authorization for the requested action
 
            """
-        if kind is None or kind == "help":
-            return ("""
-            The kinds of services that you can get more information include:
-                all.....................lists all registered services
-                access-services.........lists all registered access services
-                common-services.........lists all registered common services
-                engine-services.........lists all registered engine services
-                governance-services.....lists all registered governance services
-                integration-services....lists all registered integration services
-                view-services...........lists all registered view services
-                
-                Pass in a parameter from the left-hand column into the function to 
-                get more details on the specified service category.
-            """)
-        if kind == "all":
-            url = f"{self.admin_command_root}"
-        else:
-            url = f"{self.admin_command_root}/{kind}"
-        response = self.make_request("GET", url)
-
-        if fmt == 'json':
-            return response.json().get("services", "No services found")
-        elif fmt == 'table':
-            df = pd.DataFrame(response.json().get("services", []))
-            if skinny:
-                df = df.drop(columns=['serviceId', 'serviceDevelopmentStatus'])
-            return tabulate(wrap_text(df, wrap_len=wrap_len), headers='keys', tablefmt='psql')
+        server = self.server_name if server is None else server
+        url = (f"{self.platform_url}/servers/{server}/open-metadata/framework-services/asset-owner/open-metadata-store/"
+               f"users/{self.user_id}/metadata-elements/by-search-string?startFrom=start_from&pageSize=page_size")
+        body = {
+                  "class" : "SearchStringRequestBody",
+                  "searchString" : ".*Template.*"
+                }
+        response = self.make_request("POST", url, body)
+        return response.json().get("elementList", "No elements")
 
     def list_severity_definitions(self, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30) -> list | str:
         """ Get the registered severities for the OMAG Server

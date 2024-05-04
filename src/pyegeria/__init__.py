@@ -43,4 +43,5 @@ from .server_operations import ServerOps
 from .collection_manager_omvs import CollectionManager
 from .project_manager_omvs import ProjectManager
 from .valid_metadata_omvs import ValidMetadataManager
-__version__ = "0.3"
+from .loaded_resources_omvs import LoadedResources
+__version__ = "0.38"

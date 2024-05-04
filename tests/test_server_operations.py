@@ -30,7 +30,7 @@ disable_ssl_warnings = True
 
 class TestServerOperations:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://oak.local:9443"
+    good_platform2_url = "https://localhost:9446"
     bad_platform1_url = "https://localhost:9443"
 
     # good_platform1_url = "https://127.0.0.1:30080"
@@ -164,12 +164,14 @@ class TestServerOperations:
 # todo - review with Mandy?
     def test_restart_integration_connector(self, server:str = good_server_2):
         try:
-            server_name = server
+            server_name = "ecosystem-monitor"
             # connector = "FilesMonitor"
-            connector = "DataFilesMonitorIntegrationConnector"
-            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            # connector = "DataFilesMonitorIntegrationConnector"
+
+            connector = None
+            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
             # response = s_client.restart_integration_connector(connector,server)
-            s_client.restart_integration_connector(connector, server)
+            s_client.restart_integration_connector(connector, server_name)
 
             assert True, "Invalid URL or server"
 
@@ -179,11 +181,11 @@ class TestServerOperations:
 
     def test_refresh_integration_connectors(self, server:str = good_server_2):
         try:
-            server_name = server
+            server_name = "ecosystem-monitor"
             connector = "FilesMonitor"
-            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
 
-            s_client.refresh_integration_connectors(None, server)
+            s_client.refresh_integration_connectors(None, server_name)
 
             assert True, "Invalid URL or server"
 

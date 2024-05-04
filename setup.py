@@ -18,6 +18,13 @@ setup(
              "examples/widgets/open_todos.py",
              "examples/widgets/server_status_widget.py",
              "examples/widgets/view_my_profile.py",
+            "examples/widgets/collection_viewer.py",
+            "examples/widgets/get_relationship_types.py",
+            "examples/widgets/get_tech_details.py",
+            "examples/widgets/get_tech_types.py",
+            "examples/widgets/list_asset_types.py",
+            "examples/widgets/project_list_viewer.py",
+
              ],
     # entry_points = {
     #     'console_scripts': [

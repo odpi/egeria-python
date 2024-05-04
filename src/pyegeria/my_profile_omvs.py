@@ -721,7 +721,7 @@ class MyProfile(Client):
         loop.run_until_complete(self._async_reassign_to_do(todo_guid, actor_guid, status, server_name))
         return
 
-    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = None,
+    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = "OPEN",
                                 starts_with: bool = False, ends_with: bool = False, ignore_case: bool = True,
                                 start_from: int = 0, page_size: int = 100) -> list | str:
         """ find To-Do items. Async version.
@@ -765,7 +765,8 @@ class MyProfile(Client):
             search_string = " "
 
         body = {
-            "status": status,
+            "class": "ToDoStatusSearchString",
+            "toDoStatus": status,
             "searchString": search_string
         }
 
@@ -777,10 +778,10 @@ class MyProfile(Client):
 
         response = await self._async_make_request("POST", url, body)
         # return response.text
-        return response.json().get("toDoElements", "No guid returned")
+        return response.json().get("toDoElements", "No ToDos found")
 
     def find_to_do(self, search_string: str, server_name: str = None, status: str = "OPEN",
-                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                   starts_with: bool = False, ends_with: bool = False, ignore_case: bool = True,
                    start_from: int = 0, page_size: int = 100) -> list | str:
         """ find To-Do items.
             Parameters
@@ -865,7 +866,7 @@ class MyProfile(Client):
                f"{todo_type}?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url, body)
-        return response.text if response is not None else "No Results"
+        return response.json().get("toDoElements","No ToDos found")
 
     def get_to_dos_by_type(self, todo_type: str,  server_name: str = None, status: str = "OPEN",
                            start_from: int = 0, page_size: int = 100) -> list | str:
