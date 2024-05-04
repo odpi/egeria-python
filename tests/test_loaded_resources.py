@@ -28,7 +28,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-from pyegeria import AutomatedCuration, GlossaryBrowser
+from pyegeria import AutomatedCuration, GlossaryBrowser, LoadedResources
 from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
@@ -36,7 +36,7 @@ from pyegeria.utils import print_json_list_as_table
 disable_ssl_warnings = True
 console = Console()
 
-class TestAutomatedCuration:
+class TestLoadedResources:
     good_platform1_url = "https://localhost:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
@@ -64,25 +64,19 @@ class TestAutomatedCuration:
     bad_server_2 = ""
 
 
-    def test_create_element_from_template(self):
+    def test_get_all_templates(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
+            l_client = LoadedResources(self.good_server_3, self.good_platform1_url,
                                          user_id=self.good_user_2, user_pwd="secret")
-            token = a_client.create_egeria_bearer_token()
-            body = {
-                "templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a",
-                "isOwnAnchor": "true",
-                "placeholderPropertyValues": {
-                    "pathName": "/Users/dwolfson/localGit/thebrain-api-quickstart-python",
-                    "deployedImplementationType": "File Folder",
-                    "folderName": "brain-api-quickstart"
-                }
-            }
+
             start_time = time.perf_counter()
-            response = a_client.create_element_from_template(body)
+            response = l_client.get_all_templates()
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            print("Guid of created element is:" + response)
+            response_t = type(response)
+            print("Type of response is: " + response_t)
+            if response is list:
+                print(f"\n\nTemplates found are:\n {json.dumps(response, indent=4)}")
             assert True
 
         except (
@@ -94,7 +88,7 @@ class TestAutomatedCuration:
             assert False, "Invalid request"
 
         finally:
-            a_client.close_session()
+            l_client.close_session()
 
     def test_create_kafka_server_element_from_template(self):
         try:

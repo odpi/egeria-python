@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module allows users to query the available (registered) capabilities of Egeria. Detailed information is returned
 to provide both insight and understanding in how to use these capabilities. For example, when configuring an Egeria
-integration service, it is important to know what companion service it depends on so that you can make sure the
+integration service, it is importregistered_info.pyant to know what companion service it depends on so that you can make sure the
 companion service is also configured and running.
 
 """

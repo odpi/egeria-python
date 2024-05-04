@@ -81,9 +81,9 @@ def display_to_dos(search_string: str, guid: str=None, server: str = good_server
         table.add_column("Status")
         table.add_column("Sponsor")
 
-        todo_items = m_client.find_to_do("*", starts_with=True)
+        todo_items = m_client.find_to_do(search_string)
 
-        if todo_items is None:
+        if type(todo_items) is str:
             name = " "
             type_name = " "
             created = " "
@@ -107,7 +107,7 @@ def display_to_dos(search_string: str, guid: str=None, server: str = good_server
                 sponsor = "erinoverview"
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"
-                elif status in ("INPROGRESS", "COMPLETE"):
+                elif status in ("IN_PROGRESS", "COMPLETE"):
                     status = f"[green]{status}"
                 else:
                     status = f"[red]{status}"

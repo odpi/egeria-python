@@ -12,6 +12,7 @@ A simple status display for Engine Actions
 import argparse
 import json
 import time
+import sys
 
 from rich import box
 from rich.live import Live
@@ -76,7 +77,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
 
         token = g_client.create_egeria_bearer_token()
         action_status = g_client.get_engine_actions()
-        if "No Elements" in action_status:
+        if type(action_status) is str:
             requested_time = " "
             start_time = " "
             completion_time = " "
@@ -86,9 +87,9 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
             target_element = " "
             process_name = " "
             completion_message = " "
-        else:
+        elif type(action_status) is list:
             for action in action_status:
-                requested_time = action["requestedTime"]
+                requested_time = action.get("requestedTime", " ")
                 start_time = action.get("startTime", " ")
                 completion_time = action.get("completionTime", " ")
 
@@ -115,7 +116,9 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
                     requested_time, start_time, action_guid,engine_name, request_type,
                     action_status, target_element, completion_time, process_name, completion_message
                 )
-
+        else:
+            print("Egeria integration daemon not running")
+            sys.exit()
         # g_client.close_session()
         return table
 

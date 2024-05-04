@@ -70,12 +70,12 @@ class TestAutomatedCuration:
                                          user_id=self.good_user_2, user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             body = {
-                "templateGUID": "5e1ff810-5418-43f7-b7c4-e6e062f9aff7",
+                "templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a",
                 "isOwnAnchor": "true",
                 "placeholderPropertyValues": {
-                    "serverName": "localKafka6",
-                    "hostIdentifier": "localhost",
-                    "portNumber": "9092"
+                    "pathName": "/Users/dwolfson/localGit/thebrain-api-quickstart-python",
+                    "deployedImplementationType": "File Folder",
+                    "folderName": "brain-api-quickstart"
                 }
             }
             start_time = time.perf_counter()
@@ -135,10 +135,10 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_postgres_server_element_from_template("egeria-pdr",
-                                                                             "egeria.com",
-                                                                             "5432", db_user="surveyor",
-                                                                             db_pwd="secret")
+            response = a_client.create_postgres_server_element_from_template("egeria-laz-postgres",
+                                                                             "localhost",
+                                                                             "5432", db_user="postgres",
+                                                                             db_pwd="notingres")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list :
@@ -855,8 +855,8 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
             # jdbc_database_connector_guid = "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa"
             # postgres_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            folder_guid = "289172e5-d5f5-4673-854c-847192f2eaef"
-            catalog_target_name = "Dan's Downloads Folder"
+            folder_guid = "aaffdb1b-269f-4a1e-9325-7a324ee0ddf4"
+            catalog_target_name = "Brain-API-Quickstart"
             file_connector_guid = "d13ba229-d406-43f7-b395-9462b7d98900"
             # element_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
             # catalog_target_name = "coco_ods_catalog_target"
@@ -913,7 +913,7 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
                                          user_id=self.good_user_2, user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
+            a_postgres_server_guid = "045d25f5-d998-44fa-b196-eaec7be7c376"
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
@@ -978,7 +978,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            file_folder_guid = "289172e5-d5f5-4673-854c-847192f2eaef"
+            file_folder_guid = "aaffdb1b-269f-4a1e-9325-7a324ee0ddf4"
             response = a_client.initiate_file_folder_survey(file_folder_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
