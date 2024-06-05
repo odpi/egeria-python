@@ -25,7 +25,6 @@ from rich import box
 from rich import console
 
 from pyegeria.server_operations import ServerOps
-from pyegeria.gov_engine import GovEng
 
 disable_ssl_warnings = True
 

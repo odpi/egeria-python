@@ -11,12 +11,6 @@ the server platform and servers.
 
 """
 
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
 from ._globals import is_debug, disable_ssl_warnings, max_paging_size
 
 if disable_ssl_warnings:
@@ -32,16 +26,18 @@ from .automated_curation_omvs import AutomatedCuration
 from .core_omag_server_config import CoreServerConfig
 from .platform_services import Platform
 from .registered_info import RegisteredInfo
-from .glossary_omvs import GlossaryBrowser
+from .glossary_browser_omvs import GlossaryBrowser
 from ._validators import (validate_user_id, validate_name, validate_guid, validate_server_name, validate_search_string,
                           validate_url, is_json, validate_public)
 # from .asset_catalog_omvs import AssetCatalog
-from .gov_engine import GovEng
+
 from .my_profile_omvs import MyProfile
 from .full_omag_server_config import FullServerConfig
 from .server_operations import ServerOps
 from .collection_manager_omvs import CollectionManager
 from .project_manager_omvs import ProjectManager
 from .valid_metadata_omvs import ValidMetadataManager
-from .loaded_resources_omvs import LoadedResources
-__version__ = "0.38"
+from .Xasset_catalog_omvs import AssetCatalog
+from .Xloaded_resources_omvs import LoadedResources
+from ._deprecated_gov_engine import GovEng
+__version__ = "0.3.9"

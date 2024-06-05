@@ -35,9 +35,6 @@ class TestCoreAdminServices:
     good_platform3_url = "https://127.0.0.1:9445"
     bad_platform1_url = "https://localhost"
 
-    # good_platform1_url = "https://127.0.0.1:30080"
-    # good_platform2_url = "https://127.0.0.1:30081"
-    # bad_platform1_url = "https://localhost:9443"
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
@@ -347,7 +344,7 @@ class TestCoreAdminServices:
     #
     #   Audit Methods
     #
-    def test_get_audit_log_destinations(self, server:str = good_server_1):
+    def test_get_audit_log_destinations(self, server:str = good_server_3):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -356,7 +353,7 @@ class TestCoreAdminServices:
 
             destinations = o_client.get_audit_log_destinations()
 
-            print(f"\n\n\tServer {server} json.dumps(destinations, indent=4)")
+            print(f"\n\n\tServer {server}:\n {json.dumps(destinations, indent=4)}")
             assert destinations is not None, "Failed to get audit log destinations"
 
         except (
@@ -463,14 +460,14 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_file_log_destinations(self, server: str = good_integ_1):
+    def test_add_file_log_destinations(self, server: str = good_server_2):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.add_file_log_destinations("./logs", [])
+            o_client.add_file_log_destinations("./logs", ["Error","Exception"])
 
             print(f"\n\n\t\tServer {server}: Added file log destinations")
             assert True

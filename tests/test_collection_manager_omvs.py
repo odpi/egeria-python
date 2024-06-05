@@ -23,37 +23,23 @@ from pyegeria import (
     CollectionManager
 )
 
-# from pyegeria.admin_services import FullServerConfig
-
 disable_ssl_warnings = True
 
 
 class TestCollectionManager:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://oak.local:9443"
-    bad_platform1_url = "https://localhost:9443"
-
-    # good_platform1_url = "https://127.0.0.1:30080"
-    # good_platform2_url = "https://127.0.0.1:30081"
-    # bad_platform1_url = "https://localhost:9443"
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
     good_user_3 = "peterprofile"
     bad_user_1 = "eviledna"
     bad_user_2 = ""
-    good_integ_1 = "fluffy_integration"
     good_server_1 = "simple-metadata-store"
     good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"
-    good_server_4 = "integration-daemon"
-    good_server_5 = "fluffy_kv"
-    good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
-    bad_server_1 = "coco"
-    bad_server_2 = ""
+
 
     def test_get_linked_collections(self):
         try:
@@ -61,7 +47,7 @@ class TestCollectionManager:
                                          user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
+            parent_guid = "a277414f-d714-452d-a805-d42bd20956dc"
 
             response = c_client.get_linked_collections(parent_guid)
             duration = time.perf_counter() - start_time
@@ -832,8 +818,8 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            name = "Root Sustainability Collection"
-            # name = "Digital Products Root"
+            # name = "Root Sustainability Collection"
+            name = "Digital Products Root"
             # name = "Land Use Classification"
 
             response = c_client.get_member_list(name)

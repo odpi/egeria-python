@@ -323,6 +323,7 @@ class EgeriaException(Exception):
 
     """
     raw_error_message = ""
+
     def __init__(self, response_body) -> None:
         response_dict = json.loads(response_body)
         self.response_class = response_dict["class"]
@@ -330,14 +331,12 @@ class EgeriaException(Exception):
         self.exception_class_name = response_dict["exceptionClassName"]
         self.action_description = response_dict["actionDescription"]
         self.exception_error_message = response_dict["exceptionErrorMessage"]
-        self.exception_error_message_id = response_dict["exceptionErrorMessageId"]
+        self.exception_error_message_id = response_dict.get("exceptionErrorMessageId", "UNKNOWN-ERROR-CODE")
 
         # self.exception_error_message_id = response_dict["exceptionErrorMessageId"]
-        self.exception_error_message_parameters = response_dict[
-            "exceptionErrorMessageParameters"
-        ]
-        self.exception_system_action = response_dict["exceptionSystemAction"]
-        self.exception_user_action = response_dict["exceptionUserAction"]
+        self.exception_error_message_parameters = response_dict.get("exceptionErrorMessageParameters", "{}")
+        self.exception_system_action = response_dict.get("exceptionSystemAction", "UNKNOWN-SYSTEM-ACTION")
+        self.exception_user_action = response_dict.get("exceptionUserAction", "UNKNOWN-USER-ACTION")
 
     def __str__(self):
         return self.exception_error_message

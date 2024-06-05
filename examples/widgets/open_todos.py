@@ -10,7 +10,6 @@ A simple status display for Open To Dos
 """
 
 import argparse
-import json
 import time
 
 from rich import box
@@ -24,39 +23,19 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.gov_engine import GovEng
+
 from pyegeria.my_profile_omvs import MyProfile
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
 
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_todos(server: str = good_server_4, url: str = good_platform1_url, user: str = good_user_1):
+def display_todos(server: str , url: str, user: str):
     m_client = MyProfile(server, url, user_id=user)
     token = m_client.create_egeria_bearer_token(user, "secret")
 
     def generate_table(search_string:str = '*') -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Open ToDos for Platform {good_platform1_url} @ {time.asctime()}",
+            title=f"Open ToDos for Platform {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,

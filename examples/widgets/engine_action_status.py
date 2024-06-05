@@ -11,52 +11,31 @@ A simple status display for Engine Actions
 
 import argparse
 import json
-import time
 import sys
+import time
 
 from rich import box
-from rich.live import Live
-from rich.table import Table
 from rich.console import Console
+from rich.table import Table
 
+from pyegeria import AutomatedCuration
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria import GovEng, AutomatedCuration
 
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
 
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_status_engine_actions(server: str = good_server_3, url: str = good_platform1_url, user: str = good_user_1):
+def display_status_engine_actions(server: str, url: str, user: str):
     g_client = AutomatedCuration(server, url, user, user_pwd="secret")
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Engine Action Status for Platform {good_platform1_url} @ {time.asctime()}",
+            title=f"Engine Action Status for Platform {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
@@ -103,7 +82,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
                 else:
                     action_status = f"[red]{action['actionStatus']}"
 
-                target= action.get("actionTargetElements","Empty")
+                target= action.get("actionTargetElements", "Empty")
                 if type(target) is list:
                     target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
                 else:
@@ -119,7 +98,7 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
         else:
             print("Egeria integration daemon not running")
             sys.exit()
-        # g_client.close_session()
+
         return table
 
     try:
@@ -130,6 +109,8 @@ def display_status_engine_actions(server: str = good_server_3, url: str = good_p
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
+    finally:
+        g_client.close_session()
 
 
 if __name__ == "__main__":

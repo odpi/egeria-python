@@ -76,9 +76,9 @@ class TestRegisteredInfoServices:
     def test_list_registered_svcs(self, service_kind):
 
         try:
-            r_client = RegisteredInfo(self.good_platform1_url, self.good_user_1)
-
-            response = r_client.list_registered_svcs(service_kind, fmt='json')
+            r_client = RegisteredInfo(self.good_server_1,self.good_platform1_url, self.good_user_1)
+            service_kind = 'all'
+            response = r_client.list_registered_svcs(service_kind)
 
             assert (type(response) is list) or (type(response) is str), "No services found"
             if type(response) is list:
@@ -98,12 +98,10 @@ class TestRegisteredInfoServices:
 
     def test_list_severity_definitions(self):
         try:
-            r_client = RegisteredInfo(self.good_platform1_url,
-                                      server_name=self.good_server_3, user_id=self.good_user_1)
+            r_client = RegisteredInfo(self.good_server_3,self.good_platform1_url,
+                                       user_id=self.good_user_1)
 
-            response = r_client.list_severity_definitions(fmt='json', skinny=False, wrap_len=20)
-            # print(json.dumps(response, indent=4))
-            # rich.inspect(response)
+            response = r_client.list_severity_definitions()
             console = Console()
 
             table = Table(

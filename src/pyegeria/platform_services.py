@@ -39,9 +39,6 @@ class Platform(Client):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
 
     """
 

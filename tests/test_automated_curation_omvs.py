@@ -10,86 +10,60 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+import json
 import time
 
-import pytest
-import asyncio
-import json
 from rich import print, print_json
+from rich.console import Console
 from rich.pretty import pprint
 
-from rich.console import Console
-from contextlib import nullcontext as does_not_raise
-
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-)
-
-from pyegeria import AutomatedCuration, GlossaryBrowser
-from pyegeria.utils import print_json_list_as_table
+from pyegeria import AutomatedCuration
+from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
+                                  print_exception_response, )
 
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
 console = Console()
 
+
 class TestAutomatedCuration:
     good_platform1_url = "https://localhost:9443"
-    good_platform2_url = "https://oak.local:9443"
-    bad_platform1_url = "https://localhost:9443"
 
-    # good_platform1_url = "https://127.0.0.1:30080"
-    # good_platform2_url = "https://127.0.0.1:30081"
-    # bad_platform1_url = "https://localhost:9443"
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
     good_user_3 = "peterprofile"
     bad_user_1 = "eviledna"
     bad_user_2 = ""
-    good_integ_1 = "fluffy_integration"
+
     good_server_1 = "simple-metadata-store"
     good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
-    good_server_5 = "fluffy_kv"
-    good_server_6 = "cocoVIew1"
+
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
     good_view_server_2 = "fluffy_view"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-
     def test_create_element_from_template(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            body = {
-                "templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a",
-                "isOwnAnchor": "true",
-                "placeholderPropertyValues": {
-                    "pathName": "/Users/dwolfson/localGit/thebrain-api-quickstart-python",
-                    "deployedImplementationType": "File Folder",
-                    "folderName": "brain-api-quickstart"
-                }
-            }
+            body = {"templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a", "isOwnAnchor": "true",
+                "placeholderPropertyValues": {"pathName": "/Users/dwolfson/localGit/datahub",
+                    "deployedImplementationType": "File Folder", "folderName": "Sample Data"}}
             start_time = time.perf_counter()
             response = a_client.create_element_from_template(body)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            print("Guid of created element is:" + response)
+            print("Guid of created element is:" + str(response))
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -98,30 +72,25 @@ class TestAutomatedCuration:
 
     def test_create_kafka_server_element_from_template(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_kafka_server_element_from_template("pdr-kafka",
-                                                                             "egeria.pdr-associates.com",
-                                                                             "9092")
+            response = a_client.create_kafka_server_element_from_template("pdr-kafka5", "egeria.pdr-associates.com",
+                                                                          "9093")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 pprint(f"Found {count} elements")
                 print_json(out)
             elif type(response) is str:
-                pprint("Kafka Server GUID create is " + response)
+                pprint("created Kafka Server with GUID: " + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -130,18 +99,16 @@ class TestAutomatedCuration:
 
     def test_create_postgres_server_element_from_template(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_postgres_server_element_from_template("egeria-laz-postgres",
-                                                                             "localhost",
-                                                                             "5432", db_user="postgres",
-                                                                             db_pwd="notingres")
+            response = a_client.create_postgres_server_element_from_template("egeria-laz-postgres", "localhost", "5432",
+                                                                             db_user="postgres", db_pwd="notingres")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 pprint(f"Found {count} elements")
@@ -150,11 +117,7 @@ class TestAutomatedCuration:
                 pprint("Database Server GUID create is " + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -163,8 +126,8 @@ class TestAutomatedCuration:
 
     def test_get_engine_actions(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
@@ -172,7 +135,7 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -181,11 +144,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -194,15 +153,15 @@ class TestAutomatedCuration:
 
     def test_get_engine_action(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             engine_action_guid = "2374f070-de61-4ba5-959c-2d5621da2a1c"
             start_time = time.perf_counter()
             response = a_client.get_engine_action(engine_action_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict :
+            if type(response) is dict:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -211,11 +170,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -224,8 +179,8 @@ class TestAutomatedCuration:
 
     def test_cancel_engine_action(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             engine_action_guid = "2374f070-de61-4ba5-959c-2d5621da2a1c"
             start_time = time.perf_counter()
@@ -235,11 +190,7 @@ class TestAutomatedCuration:
             pprint(f"Canceled engine action: {engine_action_guid}")
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -248,15 +199,15 @@ class TestAutomatedCuration:
 
     def test_get_active_engine_actions(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
             response = a_client.get_active_engine_actions()
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} elements")
@@ -265,11 +216,7 @@ class TestAutomatedCuration:
                 print("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -278,8 +225,8 @@ class TestAutomatedCuration:
 
     def test_get_engine_actions_by_name(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
@@ -287,7 +234,7 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -296,11 +243,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -309,15 +252,15 @@ class TestAutomatedCuration:
 
     def test_find_engine_actions(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
             response = a_client.find_engine_actions("Downloads")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -326,31 +269,27 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
 
-#
-#   Governance Processes
-#
+    #
+    #   Governance Processes
+    #
     def test_get_governance_action_process_by_guid(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            action_guid = "2374f070-de61-4ba5-959c-2d5621da2a1c"
+            action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
             start_time = time.perf_counter()
             response = a_client.get_governance_action_process_by_guid(action_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict :
+            if type(response) is dict:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -359,11 +298,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -372,16 +307,16 @@ class TestAutomatedCuration:
 
     def test_get_gov_action_process_graph(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            action_guid = "2374f070-de61-4ba5-959c-2d5621da2a1c"
+            action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
             start_time = time.perf_counter()
             response = a_client.get_gov_action_process_graph(action_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is dict :
+            if type(response) is dict:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -390,11 +325,89 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_summarize_graph(self):
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+            action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
+            start_time = time.perf_counter()
+            response = a_client.get_gov_action_process_graph(action_guid)
+            duration = time.perf_counter() - start_time
+
+            if type(response) is dict:
+                process_steps: [dict]
+                step_links: [dict] = []
+                gov_process_qn = response["governanceActionProcess"]["processProperties"]["qualifiedName"]
+                gov_process_dn = response["governanceActionProcess"]["processProperties"]["displayName"]
+                domain_id = response["governanceActionProcess"]["processProperties"]["domainIdentifier"]
+                # print(f"\n\n Qualified Name: {gov_process_qn} \t\t Display Name: {gov_process_dn}")
+                md = f"\n---\ntitle: {gov_process_dn}\n---\nflowchart LR\n"
+                element = response["firstProcessStep"]["element"]
+                qname = element["processStepProperties"]["qualifiedName"]
+                dname = element["processStepProperties"]["displayName"]
+                domain_id = element["processStepProperties"]["domainIdentifier"]
+                guid = element["elementHeader"]["guid"]
+                wait = element["processStepProperties"]["waitTime"]
+                ignore_mult_trig = element["processStepProperties"]["ignoreMultipleTriggers"]
+                link = response["firstProcessStep"]["linkGUID"]
+
+                # print(f"\n\n First Step: {qname}\tDisplay Name: {dname}\t Wait: {wait}\t Link: {link}")
+                md = f"{md}\nStep1([\"'**{dname}**\n* guid: {guid}\nwait_time: {wait}\ndomain: {domain_id}\nmult_trig: {ignore_mult_trig}`\"])"
+                process_steps = {qname: {"step": "Step1", "displayName": dname, "guid": guid, "domain": domain_id,
+                    "ignoreMultTrig": ignore_mult_trig, "waitTime": wait, "link_guid": link}}
+                next_steps = response.get("nextProcessSteps", None)
+                if next_steps is not None:
+                    i = 1
+                    for step in next_steps:
+                        i += 1
+                        qname = step["processStepProperties"]["qualifiedName"]
+                        dname = step["processStepProperties"]["displayName"]
+                        wait = step["processStepProperties"]["waitTime"]
+                        step = f"Step{i}"
+                        md = f"{md}\n{step}(\"`**{dname}**\nguid: {guid}\nwait_time: {wait}\ndomain: {domain_id}\nmult_trig: {ignore_mult_trig}`\")"
+                        process_steps.update({
+                            qname: {"step": step, "displayName": dname, "guid": guid, "domain": domain_id,
+                                "ignoreMultTrig": ignore_mult_trig,
+                                "waitTime": wait}})  # process_steps.append({qname: {"step": step,"displayName": dname, "waitTime": wait}})
+                # print(md)
+                # Now process the links
+                process_step_links = response.get("processStepLinks", None)
+                if process_step_links is not None:
+                    for slink in process_step_links:
+                        prev_step_name = slink["previousProcessStep"]["uniqueName"]
+                        next_step_name = slink["nextProcessStep"]["uniqueName"]
+                        next_step_link_guid = slink["nextProcessStepLinkGUID"]
+                        guard = slink["guard"]
+                        mandatory_guard = slink["mandatoryGuard"]
+                        # print(f"\n\n Links: prev_step: {prev_step_name}\t next_step: {next_step_name}\t next_step_link: {next_step_link_guid}\t Guard: {guard}\t mandatory_guard: {mandatory_guard}")
+                        step_links.append({
+                            next_step_link_guid: {"prev_step_name": prev_step_name, "next_step_name": next_step_name,
+                                "guard": guard, "mandatory_guard": mandatory_guard}})
+                        step_p = process_steps[prev_step_name]["step"]
+                        step_n = process_steps[next_step_name]["step"]
+                        if mandatory_guard:
+                            link = f"Mandatory:{guard}"
+                        else:
+                            link = guard
+                        md = f"{md}\n{step_p}-->|{link}|{step_n}"
+                    i = 1
+
+                print(md)
+
+
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -403,8 +416,8 @@ class TestAutomatedCuration:
 
     def test_get_gov_action_process_by_name(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             name = "Survey"
             start_time = time.perf_counter()
@@ -412,7 +425,7 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is dict :
+            if type(response) is dict:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -421,11 +434,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -434,16 +443,16 @@ class TestAutomatedCuration:
 
     def test_find_gov_action_processes(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            name = "Survey"
+            name = "Daily"
             start_time = time.perf_counter()
-            response = a_client.find_gov_action_processes(name)
+            response = a_client.find_gov_action_processes(name, starts_with=True, ignore_case=True)
             duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
+            print(f"n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is dict :
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -452,11 +461,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -465,8 +470,8 @@ class TestAutomatedCuration:
 
     def test_initiate_gov_action_process(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             action_type_qualified_name = ""
             start_time = time.perf_counter()
@@ -476,14 +481,14 @@ class TestAutomatedCuration:
             orig_service_name = None
             orig_engine_name = None
 
-            response = a_client.initiate_gov_action_process(action_type_qualified_name,request_source_guids,
+            response = a_client.initiate_gov_action_process(action_type_qualified_name, request_source_guids,
                                                             action_targets, start_time, request_parameters,
                                                             orig_service_name, orig_engine_name)
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
-            if type(response) is dict :
+            if type(response) is dict:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")
@@ -492,11 +497,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -505,8 +506,8 @@ class TestAutomatedCuration:
 
     def test_get_gov_action_types_by_guid(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             gov_action_guid = ""
             start_time = time.perf_counter()
@@ -523,11 +524,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -536,8 +533,8 @@ class TestAutomatedCuration:
 
     def test_get_gov_action_types_by_name(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             name = "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-folder"
             start_time = time.perf_counter()
@@ -554,11 +551,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -567,8 +560,8 @@ class TestAutomatedCuration:
 
     def test_find_gov_action_types(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             search_string = "AssetSurvey"
             start_time = time.perf_counter()
@@ -585,23 +578,20 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
-#   Get Technology types
-#
+
+    #   Get Technology types
+    #
 
     def test_get_all_technology_types(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
@@ -617,11 +607,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -630,12 +616,12 @@ class TestAutomatedCuration:
 
     def test_find_technology_types(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.find_technology_types("*", starts_with=True,ignore_case=True)
+            response = a_client.find_technology_types("PostgreSQL", starts_with=True, ignore_case=True)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"Type of response was {type(response)}")
@@ -648,11 +634,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -661,12 +643,12 @@ class TestAutomatedCuration:
 
     def test_get_technology_types_for_open_metadata_type(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_tech_types_for_open_metadata_type("SoftwareServer","PostgreSQL")
+            response = a_client.get_tech_types_for_open_metadata_type("SoftwareServer", "PostgreSQL")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -678,11 +660,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -691,12 +669,12 @@ class TestAutomatedCuration:
 
     def test_get_technology_type_detail(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("FileFolder")
+            response = a_client.get_technology_type_detail("File")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -708,24 +686,20 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
 
-#
-#   Governance Actions
-#
+    #
+    #   Governance Actions
+    #
     def test_initiate_gov_action_type(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
@@ -743,11 +717,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -756,15 +726,15 @@ class TestAutomatedCuration:
 
     def test_get_catalog_target(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
             element_guid = "852b2e56-b68d-40a1-b5ac-ef0d1c62cc7a"
             start_time = time.perf_counter()
             # gov_action_type_qn = "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-folder"
 
-            response = a_client.get_catalog_target(postgres_server_connector_guid,element_guid)
+            response = a_client.get_catalog_target(postgres_server_connector_guid, element_guid)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -777,11 +747,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -790,14 +756,15 @@ class TestAutomatedCuration:
 
     def test_get_catalog_targets(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
             folder_connector_guid = "d13ba229-d406-43f7-b395-9462b7d98900"
-            element_guid = "852b2e56-b68d-40a1-b5ac-ef0d1c62cc7a"
+            element_guid = "71b84d4f-aaa7-4a01-892c-2c60e66d31a4"
+            t = postgres_server_connector_guid
             start_time = time.perf_counter()
-            response = a_client.get_catalog_targets(folder_connector_guid)
+            response = a_client.get_catalog_targets(t)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -810,11 +777,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -823,25 +786,20 @@ class TestAutomatedCuration:
 
     def test_add_catalog_targets(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             jdbc_database_connector_guid = "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa"
             postgres_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
             element_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
             catalog_target_name = "coco_ods_catalog_target"
             start_time = time.perf_counter()
-            a_client.add_catalog_target(postgres_connector_guid,
-                                                   element_guid, catalog_target_name)
+            a_client.add_catalog_target(postgres_connector_guid, element_guid, catalog_target_name)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -850,8 +808,8 @@ class TestAutomatedCuration:
 
     def test_catalog_folder_files(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             # jdbc_database_connector_guid = "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa"
             # postgres_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
@@ -861,28 +819,22 @@ class TestAutomatedCuration:
             # element_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
             # catalog_target_name = "coco_ods_catalog_target"
             start_time = time.perf_counter()
-            a_client.add_catalog_target(file_connector_guid,
-                                                   folder_guid, catalog_target_name)
+            a_client.add_catalog_target(file_connector_guid, folder_guid, catalog_target_name)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
 
-
     def test_remove_catalog_target(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
             folder_connector_guid = "d13ba229-d406-43f7-b395-9462b7d98900"
@@ -891,17 +843,12 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
 
-            a_client.remove_catalog_target(folder_connector_guid,
-                                                   element_guid)
+            a_client.remove_catalog_target(folder_connector_guid, element_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -910,8 +857,8 @@ class TestAutomatedCuration:
 
     def test_initiate_postgres_server_survey(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             a_postgres_server_guid = "045d25f5-d998-44fa-b196-eaec7be7c376"
             start_time = time.perf_counter()
@@ -928,11 +875,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -941,8 +884,8 @@ class TestAutomatedCuration:
 
     def test_initiate_postgres_database_survey(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             a_postgres_database_guid = "78cf662f-c91d-44f9-aefe-61015d045c37"
 
@@ -960,11 +903,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -973,13 +912,15 @@ class TestAutomatedCuration:
 
     def test_initiate_file_folder_survey(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            file_folder_guid = "aaffdb1b-269f-4a1e-9325-7a324ee0ddf4"
-            response = a_client.initiate_file_folder_survey(file_folder_guid)
+            # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
+            file_folder_guid = "fba74d0f-c9b8-40f5-b5d1-64753c4cad98"
+            response = a_client.initiate_file_folder_survey(file_folder_guid,
+                                                            'Egeria:GovernanceActionType:AssetSurvey:survey-all-folders')
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -991,11 +932,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -1004,8 +941,8 @@ class TestAutomatedCuration:
 
     def test_initiate_file_survey(self):
         try:
-            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url,
-                                         user_id=self.good_user_2, user_pwd="secret")
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
@@ -1022,11 +959,7 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
-        ) as e:
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 

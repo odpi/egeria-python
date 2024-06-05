@@ -28,8 +28,8 @@ from rich.console import Console
 
 
 from pyegeria.server_operations import ServerOps
-from pyegeria.gov_engine import GovEng
-from pyegeria.glossary_omvs import GlossaryBrowser
+from pyegeria._deprecated_gov_engine import GovEng
+from pyegeria.glossary_browser_omvs import GlossaryBrowser
 disable_ssl_warnings = True
 
 good_platform1_url = "https://127.0.0.1:9443"

@@ -4,14 +4,19 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the core OMAG config class and methods
+This module is for testing the glossary manager class and methods
 The routines assume that pytest is being used as the test tool and framework.
 
 A running Egeria environment is needed to run these tests.
 
 """
-import json
 import time
+
+import pytest
+import asyncio
+import json
+
+from contextlib import nullcontext as does_not_raise
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -19,10 +24,18 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
+
+from pyegeria.core_omag_server_config import CoreServerConfig
+
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
+from pyegeria.utils import print_json_list_as_table
+
+# from pyegeria.admin_services import FullServerConfig
+
+disable_ssl_warnings = True
 
 
-class TestGlossaryBrowser:
+class TestGlossaryManager:
     good_platform1_url = "https://127.0.0.1:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
@@ -32,7 +45,6 @@ class TestGlossaryBrowser:
     good_user_3 = "peterprofile"
     bad_user_1 = "eviledna"
     bad_user_2 = ""
-    good_integ_1 = "fluffy_integration"
     good_server_1 = "simple-metadata-store"
     good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"

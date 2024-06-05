@@ -5,16 +5,13 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 """
-from datetime import time
-import pytest
-import warnings
-
 from contextlib import nullcontext as does_not_raise
-from pyegeria import Client
 
+import pytest
+
+from pyegeria import Client
 from pyegeria._exceptions import (
     InvalidParameterException,
-    PropertyServerException,
     print_exception_response, UserNotAuthorizedException,
 )
 

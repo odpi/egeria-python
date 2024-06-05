@@ -37,10 +37,6 @@ class CoreServerConfig(Client):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
-
 
      """
 
@@ -1722,7 +1718,7 @@ class CoreServerConfig(Client):
         return response.json().get("services", "No view services found")
 
     def __config_all_view_services(self, mdr_server_name: str,
-                                 mdr_server_platform_root_url: str, server_name: str = None) -> None:
+                                   mdr_server_platform_root_url: str, server_name: str = None) -> None:
         """ Enable all view services that are registered with this OMAG server platform.
 
         Parameters

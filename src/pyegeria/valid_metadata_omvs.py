@@ -6,20 +6,10 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 import asyncio
-import json
-import time
 
 # import json
 from pyegeria._client import Client
-from pyegeria._exceptions import (
-    InvalidParameterException,
-)
-from pyegeria._globals import enable_ssl_check
-from pyegeria._validators import (
-    validate_guid,
-    validate_search_string,
-)
-from pyegeria.utils import body_slimmer
+from pyegeria._globals import enable_ssl_check, max_paging_size
 
 
 class ValidMetadataManager(Client):
@@ -37,9 +27,6 @@ class ValidMetadataManager(Client):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
 
      """
 
@@ -53,6 +40,7 @@ class ValidMetadataManager(Client):
             verify_flag: bool = enable_ssl_check,
     ):
         self.command_base: str = f"/api/open-metadata/valid-metadata"
+        self.page_size = max_paging_size
         Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
 
     async def _async_get_valid_metadata_values(self, property_name: str, type_name: str = None,
@@ -134,7 +122,7 @@ class ValidMetadataManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_valid_metadata_values(property_name, type_name,
-                                                                             server_name)),
+                                                                             server_name))
         return resp
 
     async def _async_get_valid_metadata_value(self, property_name: str, type_name: str, preferred_value: str,
@@ -155,16 +143,16 @@ class ValidMetadataManager(Client):
 
         Parameters
         ----------
-        classification: str
-            The classification of the collection to inspect.
-        server_name : str, optional
+        property_name: str
+            The property name of the valid metadata value to retrieve
+        type_name: str
+            Type of the metadata value to retrieve
+        preferred_value: str
+            The preferred value of the valid metadata value to retrieve
+        server_name : str, opt
             The name of the server to  configure.
             If not provided, the server name associated with the instance is used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
+
         Returns
         -------
         List | str

@@ -29,10 +29,6 @@ class TestAdminServices:
     good_platform2_url = "https://127.0.0.1:9444"
     bad_platform1_url = "https://localhost:9443"
 
-    # good_platform1_url = "https://127.0.0.1:30080"
-    # good_platform2_url = "https://127.0.0.1:30081"
-    # bad_platform1_url = "https://localhost:9443"
-
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
     bad_user_1 = "eviledna"
@@ -305,6 +301,26 @@ class TestAdminServices:
                 self.good_user_1)
 
             o_client.clear_server_type()
+            assert True
+
+            print("\n\n\t\tService type cleared")
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+    def test_set_max_paging_size(self):
+
+        try:
+            o_client: FullServerConfig = FullServerConfig(
+                self.good_server_1, self.good_platform1_url,
+                self.good_user_1)
+
+            o_client.set_max_page_size(5000)
             assert True
 
             print("\n\n\t\tService type cleared")

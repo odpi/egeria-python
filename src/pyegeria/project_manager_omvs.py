@@ -11,7 +11,6 @@ import time
 
 # import json
 from pyegeria._client import Client
-from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import (
     validate_guid,
     validate_search_string,
@@ -35,11 +34,7 @@ class ProjectManager(Client):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
-
-     """
+    """
 
     def __init__(
             self,
@@ -48,7 +43,6 @@ class ProjectManager(Client):
             token: str = None,
             user_id: str = None,
             user_pwd: str = None,
-            verify_flag: bool = enable_ssl_check,
             sync_mode: bool = True
     ):
         self.command_base: str = f"/api/open-metadata/project-manager/metadata-elements"
@@ -153,7 +147,7 @@ class ProjectManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_linked_projects(parent_guid, project_status,
                                                                        effective_time, server_name,
-                                                                       start_from, page_size)),
+                                                                       start_from, page_size))
         return resp
 
     async def _async_get_classified_projects(self, project_classification: str, effective_time: str = None,
@@ -250,7 +244,7 @@ class ProjectManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_classified_projects(project_classification,
                                                                            effective_time, server_name,
-                                                                           start_from, page_size)),
+                                                                           start_from, page_size))
         return resp
 
     async def _async_get_project_team(self, project_guid: str, team_role: str = None, effective_time: str = None,
@@ -354,7 +348,7 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_get_project_team(project_guid, team_role, effective_time,
-                                                                    server_name, start_from, page_size)),
+                                                                    server_name, start_from, page_size))
         return resp
 
     async def _async_find_projects(self, search_string: str, effective_time: str = None, starts_with: bool = False,
@@ -429,8 +423,8 @@ class ProjectManager(Client):
         return resp.json().get("elements", "No elements found")
 
     def find_projects(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                         ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
-                         start_from: int = 0, page_size: int = None) -> list | str:
+                      ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
+                      start_from: int = 0, page_size: int = None) -> list | str:
         """ Returns the list of projects matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -535,7 +529,7 @@ class ProjectManager(Client):
         return resp.json().get("elements", "No elements found")
 
     def get_projects_by_name(self, name: str, effective_time: str = None, server_name: str = None,
-                            start_from: int = 0, page_size: int = None) -> list | str:
+                             start_from: int = 0, page_size: int = None) -> list | str:
         """ Returns the list of projects with a particular name.
 
             Parameters
@@ -1364,8 +1358,8 @@ class ProjectManager(Client):
         return
 
     async def _async_add_to_project_team(self, project_guid: str, actor_guid: str, team_role: str = None,
-                                         effective_from: str = None, effective_to: str = None, server_name: str = None) \
-            -> None:
+                                         effective_from: str = None, effective_to: str = None,
+                                         server_name: str = None) -> None:
         """ Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
             the actor plays in the project. Async version.
 

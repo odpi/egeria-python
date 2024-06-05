@@ -6,14 +6,14 @@ Copyright Contributors to the ODPi Egeria project.
  This class encompasses the full set of configuration methods.
 """
 
-from pyegeria._validators import validate_name, validate_url
-from pyegeria import (
-    InvalidParameterException
-)
-from pyegeria._globals import enable_ssl_check
-from pyegeria import Client
-from .core_omag_server_config import CoreServerConfig
 import json
+
+from pyegeria import Client
+from pyegeria import (InvalidParameterException)
+from pyegeria._globals import enable_ssl_check
+from pyegeria._validators import validate_name, validate_url
+from .core_omag_server_config import CoreServerConfig
+
 
 class FullServerConfig(CoreServerConfig):
     """
@@ -34,21 +34,11 @@ class FullServerConfig(CoreServerConfig):
 
     """
 
-    def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = enable_ssl_check,
-    ):
+    def __init__(self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None,
+            verify_flag: bool = enable_ssl_check, ):
         self.admin_command_root: str
         Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
-        self.admin_command_root = (
-                self.platform_url
-                + "/open-metadata/admin-services/users/"
-                + user_id
-        )
+        self.admin_command_root = (self.platform_url + "/open-metadata/admin-services/users/" + user_id)
 
     def get_access_services_topic_names(self, access_service_name: str, server_name: str = None) -> list[str]:
         """ Retrieve the topic names for this access service.
@@ -69,12 +59,12 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         validate_name(access_service_name)
-        url = (self.admin_command_root + "/servers/" + server_name + "/access-services/"
-               + access_service_name + "/topic-names")
+        url = (
+                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
+                    "/topic-names")
         response = self.make_request("GET", url)
 
         return response.json()  # todo fix
-
 
     def get_all_access_services_topic_names(self, server_name: str = None) -> list:
         """ Retrieve the topic names for all access services.
@@ -97,7 +87,6 @@ class FullServerConfig(CoreServerConfig):
 
         return response.json()  # todo fix
 
-
     def set_access_services_configuration(self, access_services_body: str, server_name: str = None) -> None:
         """ Set up the configuration for selected open metadata access services (OMASs).
         This overrides the current configured values.
@@ -105,7 +94,8 @@ class FullServerConfig(CoreServerConfig):
         Parameters
         ----------
         access_services_body: str
-            The body of the access services configuration. This should be a string representation of the desired configuration.
+            The body of the access services configuration. This should be a string representation of the desired
+            configuration.
 
         server_name: str, optional
             The name of the server. If not provided, the default server will be used.
@@ -128,8 +118,9 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/access-services/" +
-               access_service_name + "/topic-names/in-topic")
+        url = (
+                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
+                    "/topic-names/in-topic")
         self.make_request("POST", url, new_topic_name)
         return
 
@@ -139,8 +130,9 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/access-services/" +
-               access_service_name + "/topic-names/out-topic")
+        url = (
+                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
+                    "/topic-names/out-topic")
         self.make_request("POST", url, new_topic_name)
         return
 
@@ -204,7 +196,8 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/audit-log-destinations/connection/" + connection_name
+        url = (self.admin_command_root + "/servers/" + server_name + "/audit-log-destinations/connection/" +
+               connection_name)
         self.make_request("POST", url, audit_dest_body)
         return
 
@@ -406,7 +399,8 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/topic-name-override/instances"
+        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
+               "/topic-name-override/instances")
         self.make_request("POST", url, topic_override)
         return
 
@@ -434,7 +428,8 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/topic-name-override/registration"
+        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
+               "/topic-name-override/registration")
         self.make_request("POST", url, topic_override)
         return
 
@@ -461,7 +456,8 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/topic-name-override/types"
+        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
+               "/topic-name-override/types")
         self.make_request("POST", url, topic_override)
         return
 
@@ -474,8 +470,9 @@ class FullServerConfig(CoreServerConfig):
                 Name of the cohort to be registered.
             topic_structure : str
                 Topic structure for the cohort. This is a string from an enumerated list.
-                'Dedicated Cohort Topics', description='The cohort members use three topics to exchange information. One for
-                    registration requests, one for type validation and one for exchange of instances stored by the cohort members.
+                'Dedicated Cohort Topics', description='The cohort members use three topics to exchange information.
+                One for registration requests, one for type validation and one for exchange of instances stored by the
+                cohort members.
                     This is the preferred and optimal approach
                  'Single Topic', description='All asynchronous communication between cohort members is via a single topic.
                     This is the original design and may still be used when communicating with back level cohort members.
@@ -706,9 +703,7 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/server-url-root-for-caller"
-        body = {
-            "urlRoot" : url_root
-        }
+        body = {"urlRoot": url_root}
         response = self.make_request("POST", url, payload=body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -725,7 +720,8 @@ class FullServerConfig(CoreServerConfig):
         max_page_size : int
             The maximum page size to set.
         server_name : str, optional
-            The name of the server for which to set the maximum page size. If not specified, the default server name will be used.
+            The name of the server for which to set the maximum page size. If not specified, the default server name
+            will be used.
 
         Returns
         -------
@@ -989,6 +985,7 @@ class FullServerConfig(CoreServerConfig):
 
         url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         self.make_request("POST", url, view_service_body)
+
     # todo - this may not be used anymore - old
     def set_view_svcs_config(self, view_svcs_config_body: dict, server_name: str = None) -> None:
         """ Set up the configuration for all the open metadata integration groups. This overrides the current values.
@@ -1071,31 +1068,18 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/integration-groups/configuration/all"
         self.make_request("POST", url, integration_groups_config_body)
 
-    # def set_plug_in_repository_connection_from_provider(self, repository_connection: str, server_name: str = None) -> None:
-    #     if server_name is None:
-    #         server_name = self.server_name
-    #     url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
-    #     response = self.make_request("POST", url, json= repository_connection)
-    #     related_code = response.json().get("relatedHTTPCode")
-    #     if related_code != 200:
-    #         raise InvalidParameterException(response.content)
-    #     else:
-    #         return
-
-    #
-    #
-    # %% Repository configurations
     def set_engine_host_services(self):
         # handles an array of engine list - pass in JSON
 
         pass
+
     def set_integration_daemon_services_configuration(self):
         # pass a json list
         pass
 
-    def config_integration_service(self,  remote_omag_server: str, remote_omag_platform_url:str,
-                                      service_url_marker: str, integration_service_options: dict,
-                                      connector_configs: list, server_name: str = None) -> None:
+    def config_integration_service(self, remote_omag_server: str, remote_omag_platform_url: str,
+                                   service_url_marker: str, integration_service_options: dict, connector_configs: list,
+                                   server_name: str = None) -> None:
 
         if server_name is None:
             server_name = self.server_name
@@ -1109,13 +1093,9 @@ class FullServerConfig(CoreServerConfig):
 
         validate_name(service_url_marker)
 
-        request_body = {
-            "class": "IntegrationServiceRequestBody",
-            "omagserverPlatformRootURL": remote_omag_platform_url,
-            "omagserverName": remote_omag_server,
-            "integrationServiceOptions": integration_service_options,
-            "integrationConnectorConfigs": connector_configs
-        }
+        request_body = {"class": "IntegrationServiceRequestBody", "omagserverPlatformRootURL": remote_omag_platform_url,
+            "omagserverName": remote_omag_server, "integrationServiceOptions": integration_service_options,
+            "integrationConnectorConfigs": connector_configs}
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         # print(f"URL is : {url}")
@@ -1124,27 +1104,19 @@ class FullServerConfig(CoreServerConfig):
         self.make_request("POST", url, request_body)
         return
 
-
-    def config_all_integration_services(self,  remote_omag_server: str, remote_omag_platform_url:str,
-                                      integration_service_options: dict,
-                                      connector_configs: dict, server_name: str = None) -> None:
+    def config_all_integration_services(self, remote_omag_server: str, remote_omag_platform_url: str,
+                                        integration_service_options: dict, connector_configs: dict,
+                                        server_name: str = None) -> None:
 
         if server_name is None:
             server_name = self.server_name
         validate_name(remote_omag_server)
         validate_url(remote_omag_platform_url)
 
-        request_body = {
-            "IntegrationConnectorConfigs" : [
-                {
-                    "class": "IntegrationServiceRequestBody",
-                    "omagserverPlatformRootURL": remote_omag_platform_url,
-                    "omagserverName": remote_omag_server,
-                    "integrationServiceOptions": integration_service_options,
-                    "integrationConnectorConfigs": connector_configs
-                }
-            ]
-        }
+        request_body = {"IntegrationConnectorConfigs": [
+            {"class": "IntegrationServiceRequestBody", "omagserverPlatformRootURL": remote_omag_platform_url,
+                "omagserverName": remote_omag_server, "integrationServiceOptions": integration_service_options,
+                "integrationConnectorConfigs": connector_configs}]}
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services"
         print(f"URL is : {url}")
@@ -1152,8 +1124,7 @@ class FullServerConfig(CoreServerConfig):
 
         self.make_request("POST", url, request_body)
 
-
-    def clear_integration_service(self, service_url_marker:str, server_name:str = None)-> None:
+    def clear_integration_service(self, service_url_marker: str, server_name: str = None) -> None:
         if server_name is None:
             server_name = self.server_name
         validate_name(service_url_marker)
@@ -1161,19 +1132,18 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         self.make_request("DELETE", url)
 
-    def get_integration_service_config(self, service_url_marker:str, server_name:str = None)-> dict | str:
+    def get_integration_service_config(self, service_url_marker: str, server_name: str = None) -> dict | str:
         if server_name is None:
             server_name = self.server_name
         validate_name(service_url_marker)
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}/configuration"
         response = self.make_request("GET", url)
-        return response.json().get("config","No configuration found")
+        return response.json().get("config", "No configuration found")
 
-    def get_integration_services_configs(self, server_name: str = None)-> dict | str:
+    def get_integration_services_configs(self, server_name: str = None) -> dict | str:
         if server_name is None:
             server_name = self.server_name
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/configuration"
         response = self.make_request("GET", url)
         return response.json().get("services", "No configuration found")
-

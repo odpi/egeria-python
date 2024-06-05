@@ -6,18 +6,10 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module allows users to query the available (registered) capabilities of Egeria. Detailed information is returned
 to provide both insight and understanding in how to use these capabilities. For example, when configuring an Egeria
-integration service, it is importregistered_info.pyant to know what companion service it depends on so that you can make sure the
-companion service is also configured and running.
+integration service, it is import registered_info.pyant to know what companion service it depends on so that you can
+make sure the companion service is also configured and running.
 
 """
-import json
-from rich.console import Console
-from rich import print, print_json
-
-import pandas as pd
-from tabulate import tabulate
-
-from pyegeria.utils import wrap_text
 
 from pyegeria._client import Client
 
@@ -25,7 +17,7 @@ from pyegeria._client import Client
 class RegisteredInfo(Client):
     """ Client to discover Egeria services and capabilities
 
-    Attributes:
+    Parameters:
     ----------
         server_name: str
                 Name of the server to use.
@@ -70,28 +62,18 @@ class RegisteredInfo(Client):
         self.admin_command_root = (f"{self.platform_url}/open-metadata/platform-services/users/"
                                    f"{self.user_id}/server-platform/registered-services")
 
-    def list_registered_svcs(self, kind: str = None, fmt: str = 'json', skinny: bool = True,
-                             wrap_len: int = 30) -> list | str:
+    def list_registered_svcs(self, kind: str = None) -> list | str:
         """ Get the registered services for the OMAG Server Platform
 
            Parameters
            ----------
             kind: str, optional
                 The kind of service to return information for. If None, then provide back a list of service kinds.
-            fmt: str, optional, default = 'json'
-                If fmt is 'json', then return the result as a JSON string. If fmt is 'table', then
-                return the result as a nicely formatted table string.
-            skinny: bool, optional, default = True
-                If a table is being created and `skinny` is true, then return a subset of the information,
-                if false return all columns.
-            wrap_len: int, optional, default = 30
-                If a table is being created, the width of the column to wrap text to.
+
            Returns
            -------
            dict | str
-               If fmt is 'JSON' then return a dictionary containing the registered services for the specified
-                platform. If fmt is 'table' then return the result as a nicely formatted printable table string.
-
+               Returns JSON dict of the requested information or a help string if input is 'help'.
            Raises
            ------
            InvalidParameterException
@@ -112,7 +94,7 @@ class RegisteredInfo(Client):
                 governance-services.....lists all registered governance services
                 integration-services....lists all registered integration services
                 view-services...........lists all registered view services
-                
+
                 Pass in a parameter from the left-hand column into the function to 
                 get more details on the specified service category.
             """)
@@ -122,34 +104,18 @@ class RegisteredInfo(Client):
             url = f"{self.admin_command_root}/{kind}"
         response = self.make_request("GET", url)
 
-        if fmt == 'json':
-            return response.json().get("services", "No services found")
-        elif fmt == 'table':
-            df = pd.DataFrame(response.json().get("services", []))
-            if skinny:
-                df = df.drop(columns=['serviceId', 'serviceDevelopmentStatus'])
-            return tabulate(wrap_text(df, wrap_len=wrap_len), headers='keys', tablefmt='psql')
+        return response.json().get("services", "No services found")
 
-    def list_severity_definitions(self, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30) -> list | str:
+    def list_severity_definitions(self) -> list | str:
         """ Get the registered severities for the OMAG Server
 
           Parameters
           ----------
-           fmt: str, optional, default = 'json'
-               If fmt is 'json', then return the result as a JSON string. If fmt is 'table', then
-               return the result as a nicely formatted table string.
-           skinny: bool, optional, default = True
-               If a table is being created and `skinny` is true, then return a subset of the information,
-               if false return all columns.
-           wrap_len: int, optional, default = 30
-               If a table is being created, the width of the column to wrap text to.
 
           Returns
           -------
           dict | str
-              If fmt is 'JSON' then return a dictionary containing the registered services for the specified
-               platform. If fmt is 'table' then return the result as a nicely formatted printable table string.
-
+              Return a dictionary containing the registered services for the specified platform.
           Raises
           ------
           InvalidParameterException
@@ -164,13 +130,7 @@ class RegisteredInfo(Client):
                f"/users/{self.user_id}/audit-log/severity-definitions"
                )
         response = self.make_request("GET", url)
-        if fmt == 'json':
-            return response.json().get("severities", "No severities found")
-        elif fmt == 'table':
-            df = pd.DataFrame(response.json().get("severities", []))
-            if skinny:
-                df = df.drop(columns=['ordinal'])
-            return tabulate(wrap_text(df, wrap_len=wrap_len), headers='keys', tablefmt='psql')
+        return response.json().get("severities", "No severities found")
 
     def list_asset_types(self, server: str = None) -> list | str:
         """ Get the registered severities for the OMAG Server
@@ -195,7 +155,7 @@ class RegisteredInfo(Client):
 
         """
         server = self.server_name if server is None else server
-        url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/asset-catalog/assets/types"
+        url = f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/types"
 
         response = self.make_request("GET", url)
         return response.json().get('types', 'no types found')
