@@ -10,41 +10,27 @@ Unit tests for the Utils helper functions using the Pytest framework.
 A simple display for glossary terms
 """
 
-import time
-import json
 import argparse
+import json
+import time
+
+from rich import box
+from rich import print
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import box
-from rich.prompt import Prompt
-from rich.tree import Tree
-from rich import print
-from rich.console import Console
-from pyegeria import ValidMetadataManager, ProjectManager
-
-disable_ssl_warnings = True
-
-good_platform1_url = "https://127.0.0.1:9443"
+from pyegeria import ProjectManager
 
 
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-good_server_3 = "view-server"
-
-
-
-def display_list(project_name: str, server: str = good_server_3, url: str = good_platform1_url,
-                   username: str = good_user_2,  save_output: bool = False):
+def display_list(project_name: str, server: str, url: str,
+                   username: str,  save_output: bool):
 
     p_client = ProjectManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, "secret")

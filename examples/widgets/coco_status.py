@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 
-A simple server status display
+A simple server status display for the Coco Pharmaceuticals Configuration
 """
 
 import argparse
@@ -38,7 +38,6 @@ def test_display_status(server: str, url: str, username: str):
     p_client1 = ServerOps("Core Catalog", "https://localhost:9443", username)
     p_client2 = ServerOps('Datalake Catalog', "https://localhost:9444", username)
     p_client3 = ServerOps('DevCatalog', "https://localhost:9445", username)
-
 
     def generate_table(p_client) -> Table:
         """Make a new table."""
@@ -79,7 +78,6 @@ def test_display_status(server: str, url: str, username: str):
             while True:
                 time.sleep(2)
                 live.update(layout)
-
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)

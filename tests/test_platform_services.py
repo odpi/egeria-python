@@ -132,7 +132,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_activate_server_stored_config(self, server: str = "view-server"):
+    def test_activate_server_stored_config(self, server: str = "active-metadata-store"):
         """
         Need to decide if its worth it to broaden out the test cases..for instance
         in this method if there is an exception - such as invalid server name

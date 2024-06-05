@@ -3,6 +3,8 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
  Governance Engine functions.  These functions initiate and manage Governance Actions and Processes
+
+ This module is deprecated - please use Automated Curation.
 """
 
 from datetime import datetime
@@ -396,62 +398,3 @@ class GovEng(Client):
         response = self.make_request("POST", url, new_body)
         return response.json().get('guid')
 
-    def print_engine_action_summary(self, governance_action: dict):
-        """ print_governance_action_summary
-
-                Print all the governance actions with their status, in the server.
-
-                Parameters
-                ----------
-
-                Returns
-                -------
-
-                Raises
-                ------
-                InvalidParameterException
-                PropertyServerException
-                UserNotAuthorizedException
-                """
-        if governance_action:
-            name = governance_action.get('displayName')
-            if not name:
-                name = governance_action.get('qualifiedName')
-            action_status = governance_action.get('action_status')
-            if governance_action.get('completion_guards'):
-                completion_guards = governance_action.get('completion_guards')
-            else:
-                completion_guards = "\t"
-            if governance_action.get('process_name'):
-                process_name = governance_action.get('process_name')
-            else:
-                process_name = "\t"
-            if governance_action.get('completion_message'):
-                completion_message = governance_action.get('completion_message')
-            else:
-                completion_message = ""
-            print(action_status + "\n\t| " + name + "\t| " + process_name + "\t| " + '%s' % ', '.join(
-                map(str, completion_guards)) + "\t| " + completion_message)
-
-    def print_engine_actions(self):
-        """ print_governance_actions
-
-                Print all the governance actions with their status, in the server.
-
-                Parameters
-                ----------
-
-                Returns
-                -------
-
-                Raises
-                ------
-                InvalidParameterException
-                PropertyServerException
-                UserNotAuthorizedException
-
-        """
-        governance_actions = self.get_engine_actions(0, 0)
-        if governance_actions is not None:
-            for x in range(len(governance_actions)):
-                self.print_engine_action_summary(governance_actions[x])

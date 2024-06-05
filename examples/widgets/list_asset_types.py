@@ -24,38 +24,16 @@ from pyegeria import (
     RegisteredInfo
 )
 
-disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
-
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_asset_types(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+def display_asset_types(server: str, url: str, username: str):
     r_client = RegisteredInfo(server, url, username)
-    token = r_client.create_egeria_bearer_token(good_user_2, "secret")
+    token = r_client.create_egeria_bearer_token(username, "secret")
     asset_types = r_client.list_asset_types()
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Asset Types for: {good_platform1_url} @ {time.asctime()}",
+            title=f"Asset Types for: {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,

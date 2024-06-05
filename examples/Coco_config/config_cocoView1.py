@@ -21,7 +21,8 @@ from pyegeria.platform_services import Platform
 disable_ssl_warnings = True
 
 view_server = "cocoView1"
-platform_url = dataLakePlatformURL
+# platform_url = dataLakePlatformURL
+platform_url = corePlatformURL
 admin_user = "garygeeke"
 view_server_user_id = "cocoView1npa"
 view_server_password = "cocoView1passw0rd"

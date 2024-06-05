@@ -4,10 +4,9 @@ This module contains the MyProfile class and its methods.
 
 """
 import asyncio
-
 import json
+
 from pyegeria._client import Client
-from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_name, validate_search_string
 
 
@@ -29,9 +28,6 @@ class MyProfile(Client):
         The user ID. Default is None.
     user_pwd : str, optional
         The user password. Default is None.
-    verify_flag : bool, optional
-        The flag indicating whether to enable SSL check. Default is
-        enable_ssl_check.
     sync_mode : bool, optional
         The flag indicating whether to use synchronous mode. Default
         is True.
@@ -44,7 +40,6 @@ class MyProfile(Client):
             token: str = None,
             user_id: str = None,
             user_pwd: str = None,
-            verify_flag: bool = enable_ssl_check,
             sync_mode: bool = True
     ):
 
@@ -761,7 +756,7 @@ class MyProfile(Client):
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
 
-        if search_string is '*':
+        if search_string == '*':
             search_string = " "
 
         body = {

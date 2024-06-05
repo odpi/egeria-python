@@ -9,51 +9,25 @@ Unit tests for the Utils helper functions using the Pytest framework.
 A simple display for my profile
 """
 
-import time
-import json
 import argparse
+import time
+
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import box
-from rich.prompt import Prompt
-from rich.tree import Tree
-from rich import print
-from rich.console import Console
 from pyegeria.my_profile_omvs import MyProfile
 
-from pyegeria.server_operations import ServerOps
-from pyegeria.gov_engine import GovEng
-from pyegeria.glossary_omvs import GlossaryBrowser
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
 
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_my_profiles(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+def display_my_profiles(server: str, url: str, username: str):
 
     m_client = MyProfile(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, "secret")
@@ -62,7 +36,7 @@ def display_my_profiles(server: str = good_server_3, url: str = good_platform1_u
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"My Profile Information {good_platform1_url} @ {time.asctime()}",
+            title=f"My Profile Information {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,

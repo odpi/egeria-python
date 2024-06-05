@@ -28,10 +28,6 @@ class ServerOps(Platform):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
-
 
     """
     def __init__(
@@ -370,7 +366,7 @@ class ServerOps(Platform):
 
     def get_integration_connector_status(self, server: str = None) -> None:
         """ Get the current status of the integration connector. Async version."""
-        response = self.get_integration_daemon_status(server)
+        self.get_integration_daemon_status(server)
     # todo - finish this? (and do async)
         pass
 

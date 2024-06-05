@@ -24,7 +24,7 @@ from pyegeria import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.gov_engine import GovEng
+from pyegeria._deprecated_gov_engine import GovEng
 from pyegeria.my_profile_omvs import MyProfile
 disable_ssl_warnings = True
 

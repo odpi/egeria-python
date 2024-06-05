@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
     name='pyegeria',
@@ -18,12 +20,16 @@ setup(
              "examples/widgets/open_todos.py",
              "examples/widgets/server_status_widget.py",
              "examples/widgets/view_my_profile.py",
-            "examples/widgets/collection_viewer.py",
-            "examples/widgets/get_relationship_types.py",
-            "examples/widgets/get_tech_details.py",
-            "examples/widgets/get_tech_types.py",
-            "examples/widgets/list_asset_types.py",
-            "examples/widgets/project_list_viewer.py",
+             "examples/widgets/collection_viewer.py",
+             "examples/widgets/get_relationship_types.py",
+             "examples/widgets/get_tech_details.py",
+             "examples/widgets/get_tech_types.py",
+             "examples/widgets/list_asset_types.py",
+             "examples/widgets/project_list_viewer.py",
+             "examples/widgets/coco_status.py",
+             "examples/widgets/get_registered_services.py",
+             "examples/Doc_Samples/Create_Collection_Sample.py",
+             "examples/Doc_Samples/Create_Sustainability_Collection_Sample.py",
 
              ],
     # entry_points = {
@@ -45,7 +51,8 @@ setup(
     author='Dan Wolfson',
     author_email='dan.wolfson@pdr-associates.com',
     description='A python client to the Egeria Open Metadata System',
-    long_description=open('README.md').read(),
+    # long_description=open('README.md').read(),
+    long_description= long_description,
     long_description_content_type='text/markdown',
     keywords=["egeria", "metadata", "governance"],
     classifiers=[

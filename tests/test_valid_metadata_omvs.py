@@ -22,7 +22,6 @@ from pyegeria import (
     print_exception_response,
     ValidMetadataManager
 )
-from pyegeria.glossary_omvs import GlossaryBrowser
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -59,7 +58,7 @@ class TestValidMetadataOMVs:
     def test_get_all_entity_types(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -90,7 +89,7 @@ class TestValidMetadataOMVs:
     def test_get_all_entity_defs(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -121,7 +120,7 @@ class TestValidMetadataOMVs:
     def test_get_all_relationship_defs(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -152,7 +151,7 @@ class TestValidMetadataOMVs:
     def test_get_all_classification_defs(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -183,7 +182,7 @@ class TestValidMetadataOMVs:
     def test_get_valid_metadata_values(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = "Project"
@@ -218,7 +217,7 @@ class TestValidMetadataOMVs:
     def test_get_valid_metadata_value(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = "Project"
@@ -252,7 +251,7 @@ class TestValidMetadataOMVs:
     def test_get_valid_relationship_types(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
@@ -284,7 +283,7 @@ class TestValidMetadataOMVs:
     def test_get_valid_classification_types(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
@@ -316,7 +315,7 @@ class TestValidMetadataOMVs:
     def test_get_typedef_by_name(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                     user_id=self.good_user_2)
+                                            user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"

@@ -12,6 +12,7 @@ import json
 import os
 
 import httpx
+from httpx import AsyncClient, Response
 
 from pyegeria._exceptions import (
     OMAGCommonErrorCode,
@@ -126,9 +127,6 @@ class Client:
             self.headers["Authorization"] = f"Bearer {token}"
             self.text_headers["Authorization"] = f"Bearer {token}"
 
-        calling_frame = inspect.currentframe().f_back
-        caller_method = inspect.getframeinfo(calling_frame).function
-
         v_url = validate_url(platform_url)
 
         if v_url:
@@ -139,7 +137,7 @@ class Client:
             #     self.session = httpx.Client(verify=self.ssl_verify)
             # else:
             #     self.session = httpx.AsyncClient(verify=self.ssl_verify)
-            self.session = httpx.AsyncClient(verify=self.ssl_verify)
+            self.session = AsyncClient(verify=self.ssl_verify)
 
     def __enter__(self):
         return self
@@ -334,7 +332,7 @@ class Client:
         return self.text_headers["Authorization"]
 
     def make_request(self, request_type: str, endpoint: str, payload: str | dict = None,
-                     time_out: int = 30) -> dict | str:
+                     time_out: int = 30) -> Response | str:
         """ Make a request to the Egeria API"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_make_request(request_type, endpoint,
@@ -342,7 +340,7 @@ class Client:
         return response
 
     async def _async_make_request(self, request_type: str, endpoint: str, payload: str | dict = None,
-                                  time_out: int = 30) -> dict | str:
+                                  time_out: int = 30) -> Response | str:
         """  Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
         is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.

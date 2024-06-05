@@ -29,7 +29,7 @@ from pyegeria._exceptions import (
 
 from pyegeria.core_omag_server_config import CoreServerConfig
 
-from pyegeria.glossary_omvs import GlossaryBrowser
+from pyegeria.glossary_browser_omvs import GlossaryBrowser
 from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
