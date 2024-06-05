@@ -20,6 +20,9 @@ The code is organized to mimic the existing Egeria Java Client structure.
 
 A new examples folder holds some useful text widgets that help to visualize the status of an Egeria deployment.
 
+WARNING: files that start with "X" are in-progress placeholders that are not meant to be used..they will mature and 
+evolve.
+
 All feedback is welcome. Please engage via our [community](http://egeria-project.org/guides/community/), 
 team calls, or via github issues in this repo. If interested in contributing,
 you can engage via the community or directly reach out to

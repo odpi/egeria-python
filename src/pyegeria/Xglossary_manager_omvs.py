@@ -2,7 +2,7 @@
 PDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-This module contains an initial version of the glossary_workflow omvs module. There are additional methods that will be
+This module contains an initial version of the glossary_manager omvs module. There are additional methods that will be
 added in subsequent versions of the glossary_omvs module.
 
 """
@@ -68,7 +68,7 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-workflow/glossaries/"
+        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
         body = {
                 "class" : "ReferenceableRequestBody",
                 "elementProperties":
@@ -122,7 +122,7 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-workflow/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
               f"{glossary_guid}/remove")
 
         await self._async_make_request("POST", url)
