@@ -104,8 +104,8 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_postgres_server_element_from_template("egeria-laz-postgres", "localhost", "5432",
-                                                                             db_user="postgres", db_pwd="notingres")
+            response = a_client.create_postgres_server_element_from_template("egeria-postgres", "localhost", "5432",
+                                                                             db_user="postgres", db_pwd="secret")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
