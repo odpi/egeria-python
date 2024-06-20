@@ -302,8 +302,10 @@ class AssetCatalog(Client):
     # Engine Actions
     #
 
-    async def _async_find_assets(self, search_string: str, server: str = None, start_from: int = 0,
-                                         page_size: int = max_paging_size) -> list | str:
+    async def _async_find_assets_in_domain(self, search_string: str, start_from: int = 0,
+                                          page_size: int = max_paging_size, starts_with: bool = True,
+                                          ends_with: bool = False, ignore_case: bool = True,
+                                          server: str =  None) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -345,26 +347,28 @@ class AssetCatalog(Client):
         For more information see: https://egeria-project.org/concepts/engine-action
         """
         server = self.server_name if server is None else server
-        # validate_search_string(search_string)
-        # if search_string == "*":
-        #     search_string = None
-        # starts_with_s = str(starts_with).lower()
-        # ends_with_s = str(ends_with).lower()
-        # ignore_case_s = str(ignore_case).lower()
+        validate_search_string(search_string)
+        if search_string == "*":
+            search_string = None
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/access-services/asset-owner/users/erinoverview/"
-               f"assets/by-search-string?startFrom={start_from}&pageSize={page_size}"
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/in-domain/"
+               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+               f"endWith={ends_with_s}&ignoreCase={ignore_case_s}"
                )
         body = {
-            "class": "SearchStringRequestBody",
-            "searchString": search_string
+            "filter": search_string
         }
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("assets", "no assets")
+        return response.json().get("searchMatches", "no assets found")
 
-    def find_assets(self, search_string: str = "*", server: str = None, start_from: int = 0,
-                            page_size: int = max_paging_size) -> list | str:
-        """ Retrieve the list of engine action metadata elements that contain the search string.
+    def find_assets_in_domain(self, search_string: str, start_from: int = 0,
+                                          page_size: int = max_paging_size, starts_with: bool = True,
+                                          ends_with: bool = False, ignore_case: bool = True,
+                                          server: str =  None) -> list | str:
+        """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
         search_string : str
@@ -404,11 +408,10 @@ class AssetCatalog(Client):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_assets(search_string, server, start_from,
-                                            page_size)
+            self._async_find_assets_in_domain(search_string,  start_from,page_size,
+                                              starts_with, ends_with, ignore_case, server)
         )
         return response
 
