@@ -37,7 +37,8 @@ from .server_operations import ServerOps
 from .collection_manager_omvs import CollectionManager
 from .project_manager_omvs import ProjectManager
 from .valid_metadata_omvs import ValidMetadataManager
-from .Xasset_catalog_omvs import AssetCatalog
+from .X_asset_catalog_omvs import AssetCatalog
 from .Xloaded_resources_omvs import LoadedResources
 from ._deprecated_gov_engine import GovEng
+from .runtime_manager_omvs import RuntimeManager
 __version__ = "0.3.9"

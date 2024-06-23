@@ -55,6 +55,51 @@ class TestValidMetadataOMVs:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
+    def test_setup_valid_metadata_value(self):
+        try:
+            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
+                                            user_id=self.good_user_2)
+            token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            type_name = "Project"
+            property_name = "projectHealth"
+            body = {
+                "displayName": "Abandoned",
+                "description": "Who cares?",
+                "preferredValue": "Abandoned",
+                "dataType": "string",
+                "isCaseSensitive": False,
+                "isDeprecated": False,
+                "additionalProperties": {
+                    "colour": "black"
+                }
+            }
+
+            response = m_client.setup_valid_metadata_value(property_name, type_name, body)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}")
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+
     def test_get_all_entity_types(self):
         try:
             m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
@@ -185,8 +230,8 @@ class TestValidMetadataOMVs:
                                             user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "projectStatus"
+            type_name = "Asset"
+            property_name = "Asset"
             # type_name = None
             # property_name = "stewardTypeName"
 
@@ -194,7 +239,7 @@ class TestValidMetadataOMVs:
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
+            if type(response) is list:
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")

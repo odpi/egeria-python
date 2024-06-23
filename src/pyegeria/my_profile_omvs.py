@@ -757,7 +757,7 @@ class MyProfile(Client):
         ignore_case_s = str(ignore_case).lower()
 
         if search_string == '*':
-            search_string = " "
+            search_string = ""
 
         body = {
             "class": "ToDoStatusSearchString",

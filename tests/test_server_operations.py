@@ -66,7 +66,7 @@ class TestServerOperations:
             server = self.good_server_1
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             p_client.add_archive_file(
-                "/Users/dwolfson/localGit/egeria-v5/egeria/open-metadata-distribution/omag-server-platform/build/unpacked/egeria-platform-4.4-SNAPSHOT-distribution.tar.gz/assembly/platform/content-packs/CocoComboArchive.omarchive",
+                "content-packs/CocoComboArchive.omarchive",
                 server)
             assert True, "Should have raised an exception"
 

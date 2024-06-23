@@ -43,9 +43,185 @@ class ValidMetadataManager(Client):
         self.page_size = max_paging_size
         Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
 
+    async def _async_setup_valid_metadata_value(self, property_name: str, type_name: str, body: dict,
+                                                server: str = None):
+        """ Create or update the valid value for a particular open metadata property name. If the typeName is null,
+        this valid value applies to properties of this name from all types. The valid value is stored in the
+        preferredValue property. If a valid value is already set up for this property (with overlapping effective dates)
+        then the valid value is updated. Async Version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property for which the valid metadata value is being set up.
+        type_name : str
+            The name of the type for the valid metadata value.
+        body : dict
+            The body of the request containing the details of the valid metadata value.
+        server : str, optional
+            The name of the server where the valid metadata value is being set up.
+            If not provided, the default server name will be used.
+
+        Returns
+        -------
+
+        Notes
+        -----
+
+        Payload structure similar to:
+        {
+          "displayName": "",
+          "description": "",
+          "preferredValue": "",
+          "dataType": "",
+          "isCaseSensitive": false,
+          "isDeprecated" : false
+        }
+        """
+        server = self.server_name if server is None else server
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/valid-metadata/setup-value/{property_name}?"
+               f"typeName={type_name}")
+
+        await self._async_make_request("POST", url, body)
+        return
+
+    def setup_valid_metadata_value(self, property_name: str, type_name: str, body: dict,
+                                   server: str = None):
+        """ Create or update the valid value for a particular open metadata property name. If the typeName is null,
+        this valid value applies to properties of this name from all types. The valid value is stored in the
+        preferredValue property. If a valid value is already set up for this property (with overlapping effective dates)
+        then the valid value is updated.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property for which the valid metadata value is being set up.
+        type_name : str
+            The name of the type for the valid metadata value.
+        body : dict
+            The body of the request containing the details of the valid metadata value.
+        server : str, optional
+            The name of the server where the valid metadata value is being set up.
+            If not provided, the default server name will be used.
+
+        Returns
+        -------
+        str
+            The GUID of the valid metadata value if it was successfully set up, or "GUID failed to be returned"
+            if the GUID was not returned in the response.
+
+        Notes
+        -----
+
+        Payload structure similar to:
+        {
+          "displayName": "",
+          "description": "",
+          "preferredValue": "",
+          "dataType": "",
+          "isCaseSensitive": false,
+          "isDeprecated" : false,
+          "additionalProperties": {
+            "colour": "purple"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_setup_valid_metadata_value(property_name, type_name,
+                                                                       body, server))
+        return
+
+    async def _async_setup_valid_metadata_map_name(self, property_name: str, type_name: str, body: dict,
+                                                   server: str = None):
+        """ Create or update the valid value for a name that can be stored in a particular open metadata property name.
+            This property is of type map from name to string. The mapName is stored in the preferredValue property of
+            validMetadataValue. If the typeName is null, this valid value applies to properties of this name from any
+            open metadata type. If a valid value is already set up for this property (with overlapping effective dates)
+            then the valid value is updated. Async Version.
+
+            Parameters
+            ----------
+            property_name : str
+                The name of the property to setup metadata map.
+            type_name : str
+                The type name of the property.
+            body : dict
+                The metadata map setup data.
+            server : str, optional
+                The name of the server to setup the metadata map. If not provided, the default server name will be used.
+
+            Returns
+            -------
+            None
+                This method does not return any value.
+
+            Notes
+            -----
+
+            Body strycture similar to:
+
+            {
+              "displayName": "",
+              "description": "",
+              "preferredValue": "put mapName value here",
+              "dataType": "",
+              "isCaseSensitive": false,
+              "isDeprecated" : false
+            }
+
+        """
+        server = self.server_name if server is None else server
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/valid-metadata/setup-map-name/{property_name}?"
+               f"typeName={type_name}")
+
+        await self._async_make_request("POST", url, body)
+        return
+
+    async def _async_setup_valid_metadata_type_value(self, property_name: str, type_name: str, map_name: str,
+                                                     server: str = None):
+        pass
+
+    async def _async_clear_valid_metadata_value(self, property_name: str, type_name: str, map_name: str,
+                                                server: str = None):
+        pass
+
+    async def _async_clear_valid_metadata_map_value(self, property_name: str, type_name: str, map_name: str,
+                                                    preferred_value: str, server: str = None):
+        pass
+
+    async def _async_validate_metadata_value(self, property_name: str, type_name: str, actual_value: str,
+                                             server: str = None):
+        pass
+
+    async def _async_validate_metadata_map_name(self, property_name: str, type_name: str, map_name: str,
+                                                server: str = None):
+        pass
+
+    async def _async_validate_metadata_map_value(self, property_name: str, type_name: str, actual_value: str,
+                                                 server: str = None):
+        pass
+
+    async def _async_validate_metadata_map_name(self, property_name: str, type_name: str, map_name: str,
+                                                server: str = None):
+        pass
+
+    async def _async_get_valid_metadata_value(self, property_name: str, type_name: str, preferred_value: str,
+                                              server: str = None):
+        pass
+
+    async def _async_get_valid_metadata_map_name(self, property_name: str, type_name: str, map_name: str,
+                                                 server: str = None):
+        pass
+
+    async def _async_get_valid_metadata_map_value(self, property_name: str, type_name: str, map_name: str,
+                                                  preferred_value: str, server: str = None):
+        pass
+
     async def _async_get_valid_metadata_values(self, property_name: str, type_name: str = None,
                                                server_name: str = None,
-                                               start_value: int = 0,page_size: int = None) -> list | str:
+                                               start_value: int = 0, page_size: int = None) -> list | str:
         """ Retrieve list of values for the property. Async version.
 
             Parameters
@@ -81,15 +257,14 @@ class ValidMetadataManager(Client):
         if page_size is None:
             page_size = self.page_size
 
-
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/get-valid-metadata-values/{property_name}"
                f"?typeName={type_name}&startFrom={start_value}&pageSize={page_size}")
 
         resp = await self._async_make_request("GET", url)
-        return  resp.json().get("elementList","No elements found")
+        return resp.json().get("elementList", "No elements found")
 
     def get_valid_metadata_values(self, property_name: str, type_name: str = None,
-                                 server_name: str = None) -> list | str:
+                                  server_name: str = None) -> list | str:
         """  Retrieve list of values for the property.
 
         Parameters
@@ -129,7 +304,6 @@ class ValidMetadataManager(Client):
                                               server_name: str = None) -> list | str:
         if server_name is None:
             server_name = self.server_name
-
 
         url = (f"{self.platform_url}/servers/{server_name}{self.command_base}/get-value/{property_name}"
                f"?typeName={type_name}&preferredValue={preferred_value}")
@@ -175,8 +349,7 @@ class ValidMetadataManager(Client):
                                                                             preferred_value, server_name)),
         return resp
 
-
-    async def _async_get_consistent_metadata_values(self, property_name:str, type_name:str, map_name: str,
+    async def _async_get_consistent_metadata_values(self, property_name: str, type_name: str, map_name: str,
                                                     preferred_value: str, server_name: str = None,
                                                     start_from: int = 0, page_size: int = None) -> list | str:
         """  Retrieve all the consistent valid values for the requested property. Async version.
@@ -228,7 +401,7 @@ class ValidMetadataManager(Client):
         resp = await self._async_make_request("GET", url)
         return resp.json()
 
-    def get_consistent_metadata_values(self, property_name:str, type_name:str, map_name: str,
+    def get_consistent_metadata_values(self, property_name: str, type_name: str, map_name: str,
                                        preferred_value: str, server_name: str = None,
                                        start_from: int = 0, page_size: int = None) -> list | str:
         """  Retrieve all the consistent valid values for the requested property.
@@ -270,11 +443,12 @@ class ValidMetadataManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_consistent_metadata_values(property_name,type_name,
-                                                        map_name,preferred_value,
-                                                        server_name,start_from,page_size)
+            self._async_get_consistent_metadata_values(property_name, type_name,
+                                                       map_name, preferred_value,
+                                                       server_name, start_from, page_size)
         )
         return resp
+
     #
     # Get all ...
     #
@@ -547,7 +721,7 @@ class ValidMetadataManager(Client):
     #
     # Get valid ...
     #
-    async def _async_get_valid_relationship_types(self, entity_type:str, server_name: str = None) -> list | str:
+    async def _async_get_valid_relationship_types(self, entity_type: str, server_name: str = None) -> list | str:
         """  Returns all the TypeDefs for relationships that can be attached to the requested entity type.
             Async version.
 
@@ -585,7 +759,7 @@ class ValidMetadataManager(Client):
         resp = await self._async_make_request("GET", url)
         return resp.json().get("typeDefs", "No TypeDefs Found")
 
-    def get_valid_relationship_types(self, entity_type:str, server_name: str = None) -> list | str:
+    def get_valid_relationship_types(self, entity_type: str, server_name: str = None) -> list | str:
         """  Returns all the TypeDefs for relationships that can be attached to the requested entity type.
                     Async version.
 
@@ -617,11 +791,11 @@ class ValidMetadataManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_valid_relationship_types(entity_type,
-                                                        server_name)
+                                                     server_name)
         )
         return resp
 
-    async def _async_get_valid_classification_types(self, entity_type:str, server_name: str = None) -> list | str:
+    async def _async_get_valid_classification_types(self, entity_type: str, server_name: str = None) -> list | str:
         """ Returns all the TypeDefs for classifications that can be attached to the requested entity type.
             Async version.
 
@@ -659,7 +833,7 @@ class ValidMetadataManager(Client):
         resp = await self._async_make_request("GET", url)
         return resp.json().get("typeDefs", "No TypeDefs Found")
 
-    def get_valid_classification_types(self, entity_type:str, server_name: str = None) -> list | str:
+    def get_valid_classification_types(self, entity_type: str, server_name: str = None) -> list | str:
         """  Returns all the TypeDefs for relationships that can be attached to the requested entity type.
                     Async version.
 
@@ -691,11 +865,11 @@ class ValidMetadataManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_valid_classification_types(entity_type,
-                                                        server_name)
+                                                       server_name)
         )
         return resp
 
-    async def _async_get_typedef_by_name(self, entity_type:str, server_name: str = None) -> dict | str:
+    async def _async_get_typedef_by_name(self, entity_type: str, server_name: str = None) -> dict | str:
         """ Return the TypeDef identified by the unique name.
             Async version.
 
@@ -732,7 +906,7 @@ class ValidMetadataManager(Client):
         resp = await self._async_make_request("GET", url)
         return resp.json().get("typeDef", "No TypeDefs Found")
 
-    def get_typedef_by_name(self, entity_type:str, server_name: str = None) -> dict | str:
+    def get_typedef_by_name(self, entity_type: str, server_name: str = None) -> dict | str:
         """ Return the TypeDef identified by the unique name.
 
         Parameters
@@ -764,4 +938,3 @@ class ValidMetadataManager(Client):
         resp = loop.run_until_complete(
             self._async_get_typedef_by_name(entity_type, server_name))
         return resp
-

@@ -3,10 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
-
-
-A simple server status display
+Display the status of cataloged platforms and servers.
 """
 
 import time
@@ -20,49 +17,83 @@ from pyegeria._exceptions import (
 )
 from rich.table import Table
 from rich.live import Live
+from rich.console import Console
 
-from pyegeria.server_operations import ServerOps
-from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria import RuntimeManager
 
 disable_ssl_warnings = True
+console = Console(width=200)
 
 def display_status(server: str, url: str, username: str):
-    p_client = ServerOps(server, url, username)
-    c_client = CoreServerConfig(server, url, username)
-
+    r_client = RuntimeManager(server, url, username)
+    token = r_client.create_egeria_bearer_token(username, "secret")
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
             title=f"Server Status for Platform - {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
-            caption=f"Server Status for Platform - '{url}'",
+            caption=f"Status of Platforms - '{url}'",
             show_lines=True,
             # expand=True
         )
+        table.add_column("Platform Name")
+        # table.add_column("Platform GUID")
+        table.add_column("Platform URL")
+        table.add_column("Platform Origin")
+        table.add_column("Description")
+        table.add_column("Platform Started")
+        table.add_column("Servers")
 
-        table.add_column("Known Server")
-        table.add_column("Status")
-        table.add_column("Server Type")
-        table.add_column("Server Description")
-        known_server_list = p_client.get_known_servers()
-        active_server_list = p_client.get_active_server_list()
-        if len(known_server_list) == 0:
-            return table
+        server_types = {
+            "Metadata Access Store": "Store",
+            "View Server" : "View",
+            "Engine Host Server" : "EngineHost",
+            "Integration Daemon" : "Integration"
+        }
 
-        for server in known_server_list:
-            if server in active_server_list:
-                status = "Active"
-            else:
-                status = "Inactive"
-            server_type = c_client.get_server_type_classification(server)["serverTypeName"]
-            description = c_client.get_basic_server_properties(server).get("localServerDescription", " ")
+        platform_list = r_client.get_platforms_by_type()
+        for platform in platform_list:
+            platform_name = platform['properties']["name"]
+            platform_guid = platform['elementHeader']["guid"]
+            platform_desc = platform['properties']["description"]
+            server_list = ""
+            try:
+                platform_report = r_client.get_platform_report(platform_guid)
+                platform_url = platform_report.get('platformURLRoot'," ")
+                platform_origin = platform_report.get("platformOrigin"," ")
+                platform_started = platform_report.get("platformStartTime"," ")
 
-            table.add_row(server,
-                          "[red]Inactive" if status == "Inactive" else "[green]Active",
-                          server_type, description)
+                servers = platform_report.get("omagservers",None)
+
+                if servers is not None:
+                    for server in servers:
+                        server_name = server.get("serverName"," ")
+                        server_type = server.get("serverType"," ")
+                        server_status = server.get("serverActiveStatus","UNKNOWN")
+                        if server_status in("RUNNING", "STARTING"):
+                            status_flag = "[green]"
+                        elif server_status in ("INACTIVE", "STOPPING"):
+                            status_flag = "[red]"
+                        else:
+                            server_status = "UNKNOWN"
+                            status_flag = "[yellow]"
+
+                        serv = f"{status_flag}{server_types[server_type]}: {server_name}\n"
+                        server_list = server_list + serv
+
+            except (Exception) as e:
+                # console.print_exception(e)
+                platform_url = " "
+                platform_origin = " "
+                platform_started = " "
+
+            table.add_row(platform_name, platform_url, platform_origin, platform_desc,
+                         platform_started, server_list)
+
 
         return table
+
 
     try:
         with Live(generate_table(), refresh_per_second=4, screen=True) as live:
@@ -72,11 +103,10 @@ def display_status(server: str, url: str, username: str):
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+
 
     finally:
-        p_client.close_session()
-        c_client.close_session()
+        r_client.close_session()
 
 
 if __name__ == "__main__":
@@ -86,8 +116,8 @@ if __name__ == "__main__":
     parser.add_argument("--userid", help="User Id")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "active-metadata-store"
+    server = args.server if args.server is not None else "view-server"
     url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
+    userid = args.userid if args.userid is not None else 'erinoverview'
 
     display_status(server, url, userid)

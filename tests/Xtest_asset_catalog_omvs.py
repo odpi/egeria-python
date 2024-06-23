@@ -27,7 +27,7 @@ from pyegeria._exceptions import (
 
 from pyegeria.core_omag_server_config import CoreServerConfig
 
-from pyegeria.Xasset_catalog_omvs import AssetCatalog
+from pyegeria.X_asset_catalog_omvs import AssetCatalog
 from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
@@ -62,15 +62,16 @@ class TestAssetCatalog:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-    def test_find_asset(self):
+    def test_find_asset_in_domain(self):
         try:
-            g_client = AssetCatalog(self.good_server_3, self.good_platform1_url,
+            g_client = AssetCatalog(self.good_view_server_1, self.good_platform1_url,
                                        user_id=self.good_user_2)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "FileFolder:/Users/dwolfson/localGit/datahub"
-            response = g_client.find_assets(search_string)
+            search_string = "Bedlam"
+            response = g_client.find_assets_in_domain(search_string, starts_with=True, ends_with=False,
+                                                      ignore_case=True)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds")
@@ -95,17 +96,18 @@ class TestAssetCatalog:
         finally:
             g_client.close_session()
 
-    def test_get_asset_by_guid(self, server:str = good_view_server_1):
+    def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
+            asset_guid ="6ebd9b03-994b-466a-9ebf-170854a7cffa"
+            a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
-            response = g_client.get_glossary_by_guid(glossary_guid, server_name)
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            response = a_client.get_asset_graph(asset_guid, server_name)
             print(f"type is {type(response)}")
-            if type(response) is list:
+            if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} terms")
@@ -117,8 +119,74 @@ class TestAssetCatalog:
                 assert False, "Invalid request"
         
         finally:
-            g_client.close_session()
+            a_client.close_session()
+
+    def test_get_assets_by_metadata_collection_id(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            metadata_collection_id = "74a786b2-d6d7-401d-b8c1-7d798f752c55" # Coco Template Archive
+            a_client = AssetCatalog(server_name, self.good_platform1_url,
+                                    user_id=self.good_user_2)
+
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            response = a_client.get_assets_by_metadata_collection_id(metadata_collection_id, "SoftwareServer")
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
 
 
+    def test_create_folder_asset(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            a_client = AssetCatalog(server_name, self.good_platform1_url,
+                                    user_id=self.good_user_2)
+
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            body = {
+                    "templateGUID" : "553f51cf-3981-480e-acd8-86ed3e25329d",
+                    "isOwnAnchor" : True,
+                    "placeholderPropertyValues" : {
+                        "clinicalTrialId" : "TransMorg-1",
+                        "clinicalTrialName": "TransMorgification",
+                        "hospitalName" : "Bedlam",
+                        "deployedImplementationType": "FileFolder",
+                        "fileSystemName" : "Bedlam-Hospital-Systems",
+                        "folderName" : "TransMorg-Clinical-Trials-Weeklies",
+                        "pathName" : "Dungeon/lab" ,
+                        "fileName" : "first measures file",
+                        "contactName" : "Dr Jekyll",
+                        "contactDept" : "Pharmacology",
+                        "dateReceived" : "23-06-24",
 
 
+                    }
+            }
+
+
+            response = a_client.create_element_from_template(body)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()

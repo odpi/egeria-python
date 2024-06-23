@@ -13,7 +13,7 @@ open metadata environment from python. Details about the
 open source Egeria project can be found at [Egeria Project](https://egeria-project.org).
 
 This package is in active development. There is initial
-support for many of Egeria's services including configuraiton, operation, and use.  This client depends on 
+support for many of Egeria's services including configuration and operation.  This client depends on 
 Egeria 4.4 Snapshot and above - although most of the functions may work on earlier versions of Egeria as well. 
 
 The code is organized to mimic the existing Egeria Java Client structure.
