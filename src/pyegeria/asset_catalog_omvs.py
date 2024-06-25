@@ -592,7 +592,78 @@ class AssetCatalog(Client):
         )
         return response
 
+    async def _async_get_asset_catalog_types(self, server: str = None) -> str| dict:
+        """ Return all the elements that are anchored to an asset plus relationships between these elements and to
+            other elements. Async Version.
+           Parameters
+           ----------
+           asset_guid : str
+               The unique identity of the asset to get the graph for.
 
+           server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
+
+           start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
+
+           page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+           Returns
+           -------
+          dict or str
+               A dictionary of the asset graph.
+
+           Raises:
+           ------
+           InvalidParameterException
+           PropertyServerException
+           UserNotAuthorizedException
+
+           """
+        server = self.server_name if server is None else server
+
+        url = f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/types"
+
+        response = await self._async_make_request("GET", url)
+
+        return response.json().get('types',"No assets found")
+
+    def get_asset_catalog_types(self, server: str = None) -> str | dict:
+        """ Return all the elements that are anchored to an asset plus relationships between these elements and to
+            other elements.
+           Parameters
+           ----------
+           asset_guid : str
+               The unique identity of the asset to get the graph for.
+
+           server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
+
+           start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
+
+           page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+           Returns
+           -------
+          dict or str
+               A dictionary of the asset graph.
+
+           Raises:
+           ------
+           InvalidParameterException
+           PropertyServerException
+           UserNotAuthorizedException
+
+           """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_asset_catalog_types(server)
+        )
+        return response
 
 if __name__ == "__main__":
     p = AssetCatalog("active-metadata-store", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
