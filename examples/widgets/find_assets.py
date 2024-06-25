@@ -17,7 +17,9 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
+    AssetCatalog
 )
+# import pyegeria.X_asset_catalog_omvs
 from rich.table import Table
 from rich.live import Live
 from rich import box
@@ -53,49 +55,50 @@ bad_server_1 = "coco"
 bad_server_2 = ""
 
 
-def display_glossary_terms(search_string: str, guid: str=None, server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
+def display_assets(search_string: str, guid: str=None, server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_2):
 
-    g_client = GlossaryBrowser(server, url)
+    g_client = AssetCatalog(server, url, username)
     token = g_client.create_egeria_bearer_token(username, "secret")
 
 
     def generate_table(search_string:str = '*') -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
+            title=f"Asset Definitions for assets like  {search_string} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Glossary View Server '{server}' @ Platform - {url}",
+            caption=f"View Server '{server}' @ Platform - {url}",
             expand=True
         )
         table.add_column("Display Name")
+        table.add_column("Type Name")
+        table.add_column("GUID", no_wrap=True)
+        table.add_column("Network Address/Path")
         table.add_column("Qualified Name")
 
-        table.add_column("Abbreviation")
-        table.add_column("Summary")
-        table.add_column("Description")
 
-        terms = g_client.find_glossary_terms(search_string, guid, starts_with=True,
-                                             ends_with=False, status_filter=[], page_size=500)
-        if type(terms) is str:
+        assets = g_client.find_assets_in_domain(search_string, starts_with=False,
+                                             ends_with=False, ignore_case=True, page_size=10)
+        if type(assets) is str:
             return table
 
-        for term in terms:
-            props = term.get("glossaryTermProperties","None")
-            if props == "None":
-                return table
+        for element in assets:
+            display_name = element["displayName"]
+            qualified_name = element["qualifiedName"]
+            type_name = element["type"]["typeName"]
+            guid = element["guid"]
+            path_name = element.get("extendedProperties", None)
+            if path_name:
+                path = path_name.get("pathName"," ")
+            else:
+                path = " "
 
-            display_name = props["displayName"]
-            qualified_name = props["qualifiedName"]
-            abbrev = props.get("abbreviation"," ")
-            summary = props.get("summary", " ")
-            description = props.get("description", " ")
 
 
             table.add_row(
-                display_name,qualified_name, abbrev, summary, description
+                display_name, type_name,guid, path, qualified_name
             )
 
         g_client.close_session()
@@ -132,4 +135,4 @@ if __name__ == "__main__":
     guid = sus_guid  if args.sustainability else None
 
     search_string = Prompt.ask("Enter the term you are searching for:", default="*")
-    display_glossary_terms(search_string, guid,server, url, userid)
+    display_assets(search_string, guid,server, url, userid)

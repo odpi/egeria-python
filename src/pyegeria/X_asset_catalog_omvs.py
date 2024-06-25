@@ -10,6 +10,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 import asyncio
 from datetime import datetime
+import json
 
 from httpx import Response
 
@@ -416,127 +417,185 @@ class AssetCatalog(Client):
         return response
 
 
-    async def _async_find_engine_actions(self, search_string: str, server: str = None, starts_with: bool = False,
-                                         ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                         page_size: int = max_paging_size) -> list | str:
-        """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
+    async def _async_get_asset_graph(self, asset_guid:str, server: str = None, start_from: int = 0,
+                                     page_size: int = max_paging_size) -> str| dict:
+        """ Return all the elements that are anchored to an asset plus relationships between these elements and to
+            other elements. Async Version.
+           Parameters
+           ----------
+           asset_guid : str
+               The unique identity of the asset to get the graph for.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+           server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
 
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
+           start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
 
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
+           page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
 
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
+           Returns
+           -------
+          dict or str
+               A dictionary of the asset graph.
 
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
+           Raises:
+           ------
+           InvalidParameterException
+           PropertyServerException
+           UserNotAuthorizedException
 
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the engine actions found based on the search query.
-            If no actions are found, returns the string "no actions".
-
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
+           """
         server = self.server_name if server is None else server
-        validate_search_string(search_string)
-        if search_string == "*":
-            search_string = None
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/"
-               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
-               )
-        body = {
-            "class": "SearchStringRequestBody",
-            "name": search_string
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no actions")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
+               f"as-graph?startFrom={start_from}&pageSize={page_size}")
 
-    def find_engine_actions(self, search_string: str = "*", server: str = None, starts_with: bool = False,
-                            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                            page_size: int = max_paging_size) -> list | str:
-        """ Retrieve the list of engine action metadata elements that contain the search string.
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
+        response = await self._async_make_request("GET", url)
+        return response.json().get("assetGraph", "no asset found")
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+    def get_asset_graph(self, asset_guid: str, server: str = None, start_from: int = 0,
+                               page_size: int = max_paging_size) -> str | dict:
+        """ Return all the elements that are anchored to an asset plus relationships between these elements and to
+            other elements.
+           Parameters
+           ----------
+           asset_guid : str
+               The unique identity of the asset to get the graph for.
 
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
+           server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
 
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
+           start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
 
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
+           page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
 
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
+           Returns
+           -------
+          dict or str
+               A dictionary of the asset graph.
 
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+           Raises:
+           ------
+           InvalidParameterException
+           PropertyServerException
+           UserNotAuthorizedException
 
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the engine actions found based on the search query.
-            If no actions are found, returns the string "no actions".
-
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
+           """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_engine_actions(search_string, server, starts_with,
-                                            ends_with, ignore_case, start_from,
-                                            page_size)
+            self._async_get_asset_graph(asset_guid, server,start_from, page_size)
         )
         return response
 
-    async def _async_get_asset_by_guid(self, asset_guid:str, server: str = None) -> str| dict:
-        pass
+    async def _async_get_assets_by_metadata_collection_id(self, metadata_collection_id:str, type_name: str = None,
+                                                          effective_time: str = None, server: str = None,
+                                                          start_from: int = 0, page_size: int = max_paging_size) -> str| list:
+        """ Return a list of assets that come from the requested metadata collection. Can optionally
+            specify an type name as a filter and an effective time. Async Version.
+
+            Parameters
+            ----------
+            metadata_collection_id : str
+               The unique identity of the metadata collection to return assets from.
+
+            type_name: str, optional
+                An asset type to optionally filter on. If not specified, all assets in the collection will be returned.
+
+            effective_time: str, optional
+                The effective time to filter on. If not specified, the current time is used.
+
+            server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
+
+            start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
+
+            page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+            Returns
+            -------
+           list or str
+               A list of assets in a [dict].
+
+            Raises:
+            ------
+            InvalidParameterException
+            PropertyServerException
+            UserNotAuthorizedException
+
+       """
+        server = self.server_name if server is None else server
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/by-metadata-collection-id/"
+               f"{metadata_collection_id}?startFrom={start_from}&pageSize={page_size}")
+
+        body = {
+            "filter": type_name,
+            "effectiveTime": effective_time
+        }
+        body_s = body_slimmer(body)
+        print(json.dumps(body_s))
+        response = await self._async_make_request("POST", url, body_s)
+        return response.json().get("assets", "no assets found")
+
+    def get_assets_by_metadata_collection_id(self, metadata_collection_id: str, type_name: str = None,
+                                                    effective_time: str = None, server: str = None,
+                                                    start_from: int = 0,
+                                                    page_size: int = max_paging_size) -> str | list:
+        """ Return a list of assets that come from the requested metadata collection. Can optionally
+            specify an type name as a filter and an effective time. Async Version.
+
+            Parameters
+            ----------
+            metadata_collection_id : str
+               The unique identity of the metadata collection to return assets from.
+
+            type_name: str, optional
+                An asset type to optionally filter on. If not specified, all assets in the collection will be returned.
+
+            effective_time: str, optional
+                The effective time to filter on. If not specified, the current time is used.
+
+            server : str, optional
+               The name of the server. If None, will use the default server specified in the instance will be used.
+
+            start_from : int, optional
+               The index from which to start fetching the engine actions. Default is 0.
+
+            page_size : int, optional
+               The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+            Returns
+            -------
+           list or str
+               A list of assets in a [dict].
+
+            Raises:
+            ------
+            InvalidParameterException
+            PropertyServerException
+            UserNotAuthorizedException
+
+       """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_assets_by_metadata_collection_id(metadata_collection_id, type_name,
+                                                             effective_time,server,start_from,
+                                                             page_size)
+        )
+        return response
 
 
 
 if __name__ == "__main__":
     p = AssetCatalog("active-metadata-store", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
-    response = p.get_active_engine_actions()
+    response = p.get_assets_by_metadata_collection_id()
     out = response.json()
     print(out)

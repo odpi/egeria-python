@@ -53,9 +53,20 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            body = {"templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a", "isOwnAnchor": "true",
-                "placeholderPropertyValues": {"pathName": "/Users/dwolfson/localGit/datahub",
-                    "deployedImplementationType": "File Folder", "folderName": "Sample Data"}}
+            # body = {"templateGUID": "379e6c05-9cfa-4d31-a837-0ed4eee6482a", "isOwnAnchor": "true",
+            #     "placeholderPropertyValues": {"pathName": "/Users/dwolfson/localGit/datahub",
+            #         "deployedImplementationType": "File Folder", "folderName": "Sample Data"}}
+            # body for a omag server
+            body = {
+                "templateGUID": "1764a891-4234-45f1-8cc3-536af40c790d",
+                "isOwnAnchor": True,
+                "placeholderPropertyValues": {
+                    "userId": "garygeeke",
+                    "hostURL": "https://localhost",
+                    "portNumber": "9446",
+                    "serverName": "Survey Engine Host"
+                }
+            }
             start_time = time.perf_counter()
             response = a_client.create_element_from_template(body)
             duration = time.perf_counter() - start_time
@@ -69,6 +80,20 @@ class TestAutomatedCuration:
 
         finally:
             a_client.close_session()
+
+    def create_folder_asset(folder: str, server_name: str = self.good_view_server_1, platform_url: str = self.good_platform1_url,
+                            admin_user: str = self.good_user_2) -> str:
+        body = {
+            "class": "PathNameRequestBody",
+            "fullPath": folder
+        }
+
+        url = f"{platform_url}/servers/{server_name}/open-metadata/access-services/asset-owner/users/{admin_user}/folders"
+        response = httpx.post(url, json=body, verify=False)
+        print(f"Response code: {response.status_code}")
+        guids = response.json().get('guids')
+        print(f"GUIDS are:\n{guids}")
+        return guids[-1]
 
     def test_create_kafka_server_element_from_template(self):
         try:
@@ -674,7 +699,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("File")
+            response = a_client.get_technology_type_detail("Project Manager OMVS")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:

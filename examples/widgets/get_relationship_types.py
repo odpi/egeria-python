@@ -43,16 +43,16 @@ def display_list(type_name:str, server: str, url: str ,
             expand=True
         )
 
-
+        table.add_column("Status")
         table.add_column("Name")
         # table.add_column("GUID", no_wrap=True,)
-        table.add_column("Status")
+
         table.add_column("Description")
+        table.add_column("Attrib Name")
+        table.add_column("Attrib Status")
+        table.add_column("Attrib Type")
+        table.add_column("Attrib Description")
         table.add_column("Description Wiki", no_wrap=True)
-        table.add_column("Attribute Name")
-        table.add_column("Attribute Status")
-        table.add_column("Attribute Type")
-        table.add_column("Attribute Description")
 
         types_list = p_client.get_valid_relationship_types(type_name)
 
@@ -81,10 +81,11 @@ def display_list(type_name:str, server: str, url: str ,
                         attr_status = attr['attributeStatus']
                         attr_type = attr['attributeType']["name"]
                         table.add_row(
-                            name, status, description, description_wiki, attr_name, attr_status, attr_type, attr_desc
+                             status, name, description, attr_name, attr_status, attr_type, attr_desc,
+                            description_wiki
                         )
                 else:
-                    table.add_row(name,status,description,description_wiki," ", " ", " "," " )
+                    table.add_row(status,name,description,description_wiki," ", " ", " "," " )
 
         p_client.close_session()
         return table
