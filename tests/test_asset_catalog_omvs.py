@@ -27,7 +27,7 @@ from pyegeria._exceptions import (
 
 from pyegeria.core_omag_server_config import CoreServerConfig
 
-from pyegeria.X_asset_catalog_omvs import AssetCatalog
+from pyegeria.asset_catalog_omvs import AssetCatalog
 from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
@@ -131,6 +131,30 @@ class TestAssetCatalog:
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
             response = a_client.get_assets_by_metadata_collection_id(metadata_collection_id, "SoftwareServer")
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_get_asset_catalog_types(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            a_client = AssetCatalog(server_name, self.good_platform1_url,
+                                    user_id=self.good_user_2)
+
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            response = a_client.get_asset_catalog_types()
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))

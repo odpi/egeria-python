@@ -236,18 +236,3 @@ class FeedbackManager(Client):
         return response
 
 
-
-    async def _async_get_all_technology_types(self, server: str = None, start_from: int = 0,
-                                              page_size: int = max_paging_size) -> list | str:
-        return await self._async_find_technology_types("*", server, start_from, page_size)
-
-    def get_all_technology_types(self, server: str = None, start_from: int = 0,
-                                 page_size: int = max_paging_size) -> list | str:
-        return self.find_technology_types("*", server, start_from, page_size)
-
-
-if __name__ == "__main__":
-    p = AutomatedCuration("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
-    response = p.get_active_engine_actions()
-    out = response.json()
-    print(out)

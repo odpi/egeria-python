@@ -66,8 +66,6 @@ setup(
         "validators~=0.22.0",
         "pytest~=7.4.2",
         "urllib3~=1.26.15",
-        "tabulate~=0.9.0",
-        "pandas~=2.2.0",
         "rich~=13.7.1",
         "httpx~=0.26.0"
     ]
