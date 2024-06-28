@@ -97,8 +97,9 @@ def display_to_dos(search_string: str, guid:str, server: str, url: str, username
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console()
+        console = Console(width = 200)
         with console.pager():
+
             console.print(generate_table(search_string))
 
 

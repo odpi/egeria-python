@@ -134,5 +134,5 @@ if __name__ == "__main__":
     guid = args.guid if args.guid is not None else None
     guid = sus_guid  if args.sustainability else None
 
-    search_string = Prompt.ask("Enter the term you are searching for:", default="*")
+    search_string = Prompt.ask("Enter the asset you are searching for:", default="*")
     display_assets(search_string, guid,server, url, userid)

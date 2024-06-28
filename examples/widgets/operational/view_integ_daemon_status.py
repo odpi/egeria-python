@@ -71,8 +71,8 @@ def display_integration_daemon_status(server: str = good_server_4, url: str = go
         daemon_status = s_client.get_integration_daemon_status()
         connector_reports = daemon_status["integrationConnectorReports"]
         for connector in connector_reports:
-            connector_name = connector["connectorName"]
-            connector_status = connector["connectorStatus"]
+            connector_name = connector.get("connectorName","---")
+            connector_status = connector.get("connectorStatus","---")
             last_refresh_time = connector.get("lastRefreshTime","---")
             refresh_interval = str(connector.get("minMinutesBetweenRefresh","---"))
             target_element = " "
