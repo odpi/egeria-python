@@ -12,7 +12,7 @@ A running Egeria environment is needed to run these tests.
 """
 import json
 import time
-
+import httpx
 from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
@@ -81,19 +81,37 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def create_folder_asset(folder: str, server_name: str = self.good_view_server_1, platform_url: str = self.good_platform1_url,
-                            admin_user: str = self.good_user_2) -> str:
-        body = {
-            "class": "PathNameRequestBody",
-            "fullPath": folder
-        }
+    def test_create_folder_asset(self ) -> str:
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+            path_name = "/Users/dwolfson/localGit/databricks"
+            folder_name = "databricks"
+            file_system = "laz"
+            description = "Folder for databricks work"
+            version = "0.1"
+            start_time = time.perf_counter()
+            response = a_client.create_folder_element_from_template(path_name, folder_name, "laz.local",
+                                                                    description, version)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = ("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                pprint(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                pprint("created folder with GUID: " + response)
+            assert True
 
-        url = f"{platform_url}/servers/{server_name}/open-metadata/access-services/asset-owner/users/{admin_user}/folders"
-        response = httpx.post(url, json=body, verify=False)
-        print(f"Response code: {response.status_code}")
-        guids = response.json().get('guids')
-        print(f"GUIDS are:\n{guids}")
-        return guids[-1]
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
 
     def test_create_kafka_server_element_from_template(self):
         try:
@@ -129,7 +147,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_postgres_server_element_from_template("egeria-postgres", "localhost", "5432",
+            response = a_client.create_postgres_server_element_from_template("laz-postgres", "localhost", "5432",
                                                                              db_user="postgres", db_pwd="secret")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -699,7 +717,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("Project Manager OMVS")
+            response = a_client.get_technology_type_detail("FileFolder")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -755,11 +773,12 @@ class TestAutomatedCuration:
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            element_guid = "852b2e56-b68d-40a1-b5ac-ef0d1c62cc7a"
+            element_guid = "731eb432-e9e9-482a-86fc-0a7407ea78e6"
+            rel_guid = "2ec7af3f-1d1e-4d5d-85a4-15c62480b898"
             start_time = time.perf_counter()
             # gov_action_type_qn = "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-folder"
 
-            response = a_client.get_catalog_target(postgres_server_connector_guid, element_guid)
+            response = a_client.get_catalog_target(rel_guid)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -785,9 +804,10 @@ class TestAutomatedCuration:
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            folder_connector_guid = "d13ba229-d406-43f7-b395-9462b7d98900"
-            element_guid = "71b84d4f-aaa7-4a01-892c-2c60e66d31a4"
-            t = postgres_server_connector_guid
+            folder_connector_guid = "cd6479e1-2fe7-4426-b358-8a0cf70be117"
+            element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
+            relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
+            t = folder_connector_guid
             start_time = time.perf_counter()
             response = a_client.get_catalog_targets(t)
             duration = time.perf_counter() - start_time
@@ -809,18 +829,41 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def test_add_catalog_targets(self):
+    def test_add_catalog_target(self):
         try:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            jdbc_database_connector_guid = "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa"
-            postgres_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            element_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
-            catalog_target_name = "coco_ods_catalog_target"
+            element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
+            catalog_target_name = "deltalake experiments"
+            file_folder_integ_con = "cd6479e1-2fe7-4426-b358-8a0cf70be117"
             start_time = time.perf_counter()
-            a_client.add_catalog_target(postgres_connector_guid, element_guid, catalog_target_name)
+            guid = a_client.add_catalog_target(file_folder_integ_con, element_guid, catalog_target_name)
             duration = time.perf_counter() - start_time
+            print(f"guid returned is: {guid}")
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_update_catalog_targets(self):
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+            element_guid = "001927b1-b960-48c6-a99e-73b6957c259d"
+            catalog_target_name = "deltalake experiments on laz"
+            file_folder_integ_con = "cd6479e1-2fe7-4426-b358-8a0cf70be117"
+            relationship_guid = "2ec7af3f-1d1e-4d5d-85a4-15c62480b898"
+            start_time = time.perf_counter()
+            guid = a_client.update_catalog_target(relationship_guid, catalog_target_name)
+            duration = time.perf_counter() - start_time
+            print(f"guid returned is: {guid}")
             print(f"\n\tDuration was {duration} seconds")
             assert True
 
@@ -861,14 +904,12 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            folder_connector_guid = "d13ba229-d406-43f7-b395-9462b7d98900"
-            element_guid = "20f6827f-9e0c-4c42-9b9f-acb5894a2970"
-            catalog_target_name = "Egeria Postgres Server"
+
+            relationship_guid = "0fa9bc0d-4a1b-4d8a-8928-020fb2465eac"
 
             start_time = time.perf_counter()
 
-            a_client.remove_catalog_target(folder_connector_guid, element_guid)
+            a_client.remove_catalog_target(relationship_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             assert True
@@ -885,7 +926,7 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "045d25f5-d998-44fa-b196-eaec7be7c376"
+            a_postgres_server_guid = "8dc2cbdd-c1f3-4a45-be30-1835a8ac0453"
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
@@ -943,7 +984,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
-            file_folder_guid = "fba74d0f-c9b8-40f5-b5d1-64753c4cad98"
+            file_folder_guid = "902d806f-a908-4cef-97ee-8147659c4e9d"
             response = a_client.initiate_file_folder_survey(file_folder_guid,
                                                             'Egeria:GovernanceActionType:AssetSurvey:survey-all-folders')
             duration = time.perf_counter() - start_time
@@ -976,6 +1017,34 @@ class TestAutomatedCuration:
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
+                out = ("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_get_technology_type_elements(self):
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            filter = "CSV Data File"
+            # filter = "Apache Kafka Server"
+            response = a_client.get_technology_type_elements(filter, get_templates=False)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
                 out = ("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 console.log(f"Found {count} elements")

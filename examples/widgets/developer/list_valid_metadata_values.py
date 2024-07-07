@@ -91,7 +91,7 @@ def display_values(property_name: str, type_name: str=None, server: str = good_s
         elif type(valid_values[0]) == str:
             raise ValueError("-->This is not a known metadata property with a valid value")
         else:
-            for value in valid_values[0]:
+            for value in valid_values:
                 category = value.get("category","None")
                 display_name = value.get("displayName","None")
                 preferred_value = value.get("preferredValue", "None ")

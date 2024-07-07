@@ -13,8 +13,9 @@ from datetime import datetime, time
 from pyegeria._client import Client
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import (validate_name, validate_guid, validate_search_string, )
-from pyegeria.utils import body_slimmer
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
+from pyegeria.utils import body_slimmer
+
 
 class GlossaryManager(GlossaryBrowser):
     """
@@ -39,7 +40,7 @@ class GlossaryManager(GlossaryBrowser):
      """
 
     def __init__(self, server_name: str, platform_url: str, token: str = None, user_id: str = None,
-            user_pwd: str = None, verify_flag: bool = enable_ssl_check, sync_mode: bool = True):
+                 user_pwd: str = None, verify_flag: bool = enable_ssl_check, sync_mode: bool = True):
         self.admin_command_root: str
         Client.__init__(self, server_name, platform_url, user_id=user_id, token=token, async_mode=sync_mode)
 
@@ -70,8 +71,8 @@ class GlossaryManager(GlossaryBrowser):
 
         url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
         body = {
-                "class" : "ReferenceableRequestBody",
-                "elementProperties":
+            "class": "ReferenceableRequestBody",
+            "elementProperties":
                 {
                     "class": "GlossaryProperties",
                     "qualifiedName": f"Glossary-{display_name}-{time.asctime()}",
@@ -123,12 +124,12 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-              f"{glossary_guid}/remove")
+               f"{glossary_guid}/remove")
 
         await self._async_make_request("POST", url)
         return
 
-    def delete_glossary(self, glossary_guid: str,  server_name: str = None) -> None:
+    def delete_glossary(self, glossary_guid: str, server_name: str = None) -> None:
         """ Create a new glossary.
 
         Parameters
@@ -220,7 +221,7 @@ class GlossaryManager(GlossaryBrowser):
             search_string = None
 
         body = {"class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time,
-            "typeName": type_name}
+                "typeName": type_name}
         body = body_slimmer(body)
         # print(f"\n\nBody is: \n{body}")
 
@@ -331,7 +332,7 @@ class GlossaryManager(GlossaryBrowser):
                f"{glossary_guid}/retrieve")
         print(url)
         response = await self._async_make_request("POST", url, payload=body)
-        return response
+        return response.json()
 
     def get_glossary_by_guid(self, glossary_guid: str, server_name: str = None) -> dict:
         """ Retrieves information about a glossary
@@ -514,7 +515,7 @@ class GlossaryManager(GlossaryBrowser):
         return response.json().get("guid", None)
 
     def create_category(self, glossary_guid: str, display_name: str, description: str,
-                                     server_name: str = None) -> str:
+                        server_name: str = None) -> str:
         """ Create a new category within the specified glossary.
 
         Parameters
@@ -550,8 +551,6 @@ class GlossaryManager(GlossaryBrowser):
         response = loop.run_until_complete(
             self._async_create_category(glossary_guid, display_name, description, server_name))
         return response
-
-
 
     async def _async_get_glossary_for_category(self, glossary_category_guid: str, effective_time: str = None,
                                                server_name: str = None) -> dict | str:
@@ -977,7 +976,7 @@ class GlossaryManager(GlossaryBrowser):
                f"by-name?startFrom={start_from}&pageSize={page_size}")
 
         body = {"class": "GlossaryNameRequestBody", "name": name, "glossaryGUID": glossary_guid,
-            "limitResultsByStatus": status}
+                "limitResultsByStatus": status}
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No Categories found")
@@ -1201,7 +1200,8 @@ class GlossaryManager(GlossaryBrowser):
     #
     #  Terms
     #
-    async def _async_create_controlled_glossary_term(self, glossary_guid: str, body: dict, server_name: str = None) -> str:
+    async def _async_create_controlled_glossary_term(self, glossary_guid: str, body: dict,
+                                                     server_name: str = None) -> str:
         """ Create a term for a controlled glossary.
             See also: https://egeria-project.org/types/3/0385-Controlled-Glossary-Development/?h=controlled
             The request body also supports the specification of an effective time for the query.
@@ -1332,7 +1332,7 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
-    async def _async_create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name:str,
+    async def _async_create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name: str,
                                       version_id: str, term_status: str = "PROPOSED", server_name: str = None) -> str:
         """ Create a new term from an existing term.
 
@@ -1382,23 +1382,23 @@ class GlossaryManager(GlossaryBrowser):
                )
 
         body = {
-                "class" : "GlossaryTemplateRequestBody",
-                "elementProperties" :
-                    {
-                        "class" : "TemplateProperties",
-                        "qualifiedName" : f"Term-{new_display_name}-{time.asctime()}",
-                        "displayName" : new_display_name,
-                        "versionIdentifier" : version_id
-                    },
-                "glossaryTermStatus" : term_status
-            }
+            "class": "GlossaryTemplateRequestBody",
+            "elementProperties":
+                {
+                    "class": "TemplateProperties",
+                    "qualifiedName": f"Term-{new_display_name}-{time.asctime()}",
+                    "displayName": new_display_name,
+                    "versionIdentifier": version_id
+                },
+            "glossaryTermStatus": term_status
+        }
 
         response = await self._async_make_request("POST", url, body)
 
         return response.json().get("guid", "Term not created")
 
-    def create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name:str,
-                                      version_id: str, term_status: str = "PROPOSED", server_name: str = None) -> str:
+    def create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name: str,
+                         version_id: str, term_status: str = "PROPOSED", server_name: str = None) -> str:
         """ Create a new term from an existing term.
 
         Parameters
@@ -1437,7 +1437,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_term_copy(glossary_guid, glossary_term_guid, new_display_name,
-                                         version_id, term_status,server_name))
+                                         version_id, term_status, server_name))
 
         return response
 
@@ -1542,7 +1542,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_data_field_to_term( glossary_term_guid, body,server_name))
+            self._async_add_data_field_to_term(glossary_term_guid, body, server_name))
 
         return
 
@@ -1590,19 +1590,19 @@ class GlossaryManager(GlossaryBrowser):
                )
 
         body = {
-                    "class" : "ClassificationRequestBody",
-                    "properties" :
-                        {
-                            "class" : "GovernanceClassificationProperties",
-                            "levelIdentifier" : confidentiality_level
-                        }
+            "class": "ClassificationRequestBody",
+            "properties":
+                {
+                    "class": "GovernanceClassificationProperties",
+                    "levelIdentifier": confidentiality_level
                 }
+        }
 
         await self._async_make_request("POST", url, body)
         return
 
     def add_confidentiality_to_term(self, glossary_term_guid: str,
-                                                 confidentiality_level: int, server_name: str = None) -> str:
+                                    confidentiality_level: int, server_name: str = None) -> str:
         """ Add the confidentiality classification to a glossary term
 
         Parameters
@@ -1635,12 +1635,13 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_confidentiality_to_term( glossary_term_guid, confidentiality_level,
-                                          server_name))
+            self._async_add_confidentiality_to_term(glossary_term_guid, confidentiality_level,
+                                                    server_name))
 
         return
 
-    async def _async_add_subject_area_to_term(self, glossary_term_guid: str, subject_area: str, server_name: str = None) -> None:
+    async def _async_add_subject_area_to_term(self, glossary_term_guid: str, subject_area: str,
+                                              server_name: str = None) -> None:
         """ Add the confidentiality classification to a glossary term
 
             Async Version.
@@ -1727,13 +1728,13 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_subject_area_to_term( glossary_term_guid, subject_area,
-                                                    server_name))
+            self._async_add_subject_area_to_term(glossary_term_guid, subject_area,
+                                                 server_name))
 
         return
 
     async def _async_update_term(self, glossary_term_guid: str, body: dict, is_merge_update: bool,
-                                            server_name: str = None) -> None:
+                                 server_name: str = None) -> None:
         """ Add the data field values classification to a glossary term
 
             Async Version.
@@ -1783,15 +1784,16 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(glossary_term_guid)
         is_merge_update_s = str(is_merge_update).lower()
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
-               f"update?isMergeUpdate={is_merge_update_s}"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
+            f"update?isMergeUpdate={is_merge_update_s}"
+            )
 
         await self._async_make_request("POST", url, body)
         return
 
     def update_term(self, glossary_term_guid: str, body: dict, is_merge_update: bool,
-                                            server_name: str = None) -> None:
+                    server_name: str = None) -> None:
         """ Add the data field values classification to a glossary term
 
             Async Version.
@@ -1837,7 +1839,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term( glossary_term_guid, body,is_merge_update,server_name))
+            self._async_update_term(glossary_term_guid, body, is_merge_update, server_name))
 
         return
 
@@ -1879,23 +1881,24 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
-               f"update?isMergeUpdate=true"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
+            f"update?isMergeUpdate=true"
+            )
 
         body = {
-                "class" : "ReferenceableRequestBody",
-                "elementProperties" :
-                    {
-                        "class" : "GlossaryTermProperties",
-                        "publishVersionIdentifier" : new_version_identifier
-                    }
-              }
+            "class": "ReferenceableRequestBody",
+            "elementProperties":
+                {
+                    "class": "GlossaryTermProperties",
+                    "publishVersionIdentifier": new_version_identifier
+                }
+        }
         await self._async_make_request("POST", url, body)
         return
 
     def update_term_version_id(self, glossary_term_guid: str, new_version_identifier: str,
-                                            server_name: str = None) -> None:
+                               server_name: str = None) -> None:
         """ Update a glossary term's version identifier
 
             Async Version.
@@ -1929,11 +1932,9 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term_version_id( glossary_term_guid, new_version_identifier,server_name))
+            self._async_update_term_version_id(glossary_term_guid, new_version_identifier, server_name))
 
         return
-
-
 
     async def _async_get_terms_for_category(self, glossary_category_guid: str, server_name: str = None,
                                             effective_time: str = None, start_from: int = 0,
@@ -1993,7 +1994,7 @@ class GlossaryManager(GlossaryBrowser):
         return response.json().get("elementList", "No terms found")
 
     def get_terms_for_category(self, glossary_category_guid: str, server_name: str = None,
-                               effective_time:str = None, start_from: int = 0,
+                               effective_time: str = None, start_from: int = 0,
                                page_size: int = None) -> list | str:
         """ Retrieve ALL the glossary terms in a category.
             The request body also supports the specification of an effective time for the query.
@@ -2359,7 +2360,7 @@ class GlossaryManager(GlossaryBrowser):
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
 
         body = {"class": "GlossaryNameRequestBody", "glossaryGUID": glossary_guid, "name": term,
-            "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
+                "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
         # body = body_slimmer(body)
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
@@ -2803,7 +2804,7 @@ class GlossaryManager(GlossaryBrowser):
         # validate_search_string(search_string)
 
         body = {"class": "GlossarySearchStringRequestBody", "glossaryGUID": glossary_guid,
-            "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
+                "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
         # body = body_slimmer(body)
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
@@ -2927,7 +2928,7 @@ class GlossaryManager(GlossaryBrowser):
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
 
         body = {"class": "CommentRequestBody", "commentType": comment_type, "commentText": comment_text,
-            "isPublic": is_public}
+                "isPublic": is_public}
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
                f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
@@ -2953,7 +2954,7 @@ class GlossaryManager(GlossaryBrowser):
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
 
         body = {"class": "CommentRequestBody", "commentType": comment_type, "commentText": comment_text,
-            "isPublic": is_public}
+                "isPublic": is_public}
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
                f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
@@ -2987,7 +2988,7 @@ class GlossaryManager(GlossaryBrowser):
         # validate_search_string(search_string)
 
         body = {"class": "GlossarySearchStringRequestBody", "glossaryGUID": glossary_guid,
-            "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
+                "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
         # body = body_slimmer(body)
 
         url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"

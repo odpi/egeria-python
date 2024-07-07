@@ -42,7 +42,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
 
     def build_classifications(classification: dict) -> Markdown:
 
-        class_md = "-"
+        class_md = ("\n")
         for c in classification:
             c_type = c["classificationName"]
             if c_type == "Anchors":
@@ -52,53 +52,27 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
             if class_props is None:
                 continue
             for prop in class_props.keys():
-                class_md += f"* {prop}: {class_props[prop]}\n"
+                class_md += f"\t* {prop}: {class_props[prop]}\n"
         if class_md == "-":
             output = None
         else:
             output = class_md
         return output
 
-    # def build_tech_tree() -> Markdown:
-    #     ne_md = " "
-    #
-    #     ne_created_by = nested_element["versions"]["createdBy"]
-    #     ne_created_at = nested_element["versions"]["createTime"]
-    #     ne_guid = nested_element["guid"]
-    #     guid_list.append(ne_guid)
-    #
-    #     ne_type = nested_element["type"]["typeName"]
-    #     ne_classifications = nested_element["classifications"]
-    #     ne_class_md = build_classifications(ne_classifications)
-    #     # ne_class_md = " " if ne_class_md is None else ne_class_md
-    #     ne_props = nested_element["properties"]
-    #
-    #     ne_prop_md = ""
-    #     for prop in ne_props.keys():
-    #         ne_prop_md += f"* {prop}: {ne_props[prop]}\n"
-    #     ne_md = (f"Nested Element of Type: {ne_type} with GUID:  {ne_guid} \n "
-    #              f"* created by {ne_created_by} at time {ne_created_at}\n"
-    #              f"{ne_prop_md}\n")
-    #     if ne_class_md is not None:
-    #         ne_md += f"* {ne_class_md}"
-    #
-    #     output = Markdown(ne_md)
-    #     return output
-
     try:
 
-        console = Console(width=200)
+        console = Console()
 
         a_client = AutomatedCuration(view_server, platform,
                                      user_id=user)
 
         token = a_client.create_egeria_bearer_token(user, "secret")
-        tech_elements = a_client.get_technology_type_elements(tech_name)
-        if len(tech_elements) == 0:
+        tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=False)
+        if type(tech_elements) is str:
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)
         tree = Tree(f"Deployed Technology Type: {tech_name}", style="bold bright_white", guide_style="bold bright_blue")
-        note: str
+        note: str =" "
         for element in tech_elements:
             header = element['elementHeader']
             tech_type = header["type"]["typeName"]
@@ -112,25 +86,17 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
             referenceables = element['referenceableProperties']
             tech_qualified_name = referenceables['qualifiedName']
             extended = referenceables['extendedProperties']
-            tech_display_name = extended.get('displayName', None)
-            if tech_display_name is None:
-                tech_display_name = extended.get('name', " ")
-            note = f"Name: {tech_display_name}\n"
+            ex_md:str = ""
+            for key, value in extended.items():
+                ex_md += f"* {key}: {value}\n"
 
-            tech_provider_class_name = extended.get('connectorProviderClassName',None)
-            if tech_provider_class_name is not None:
-                note+=f"* Provider Class: {tech_provider_class_name}\n"
-
-            tech_provider_deployed = extended.get('deployedImplementationType',None)
-            if tech_provider_deployed is not None:
-                note+=f"* Deployed Implementation Type: {tech_provider_deployed}\n"
-
-            note = (f"{note}* Qualified Name: {tech_qualified_name}\n"
+            note = (f"* Qualified Name: {tech_qualified_name}\n"
                           f"* GUID: {tech_guid}\n"
                           f"* Createdy by: {tech_created_by}\n"
                           f"* Created at: {tech_created_at}\n"
                           f"* Home Collection: {tech_collection}\n"
                           f"{class_md}\n"
+                          f"{ex_md}\n"
                           )
 
             interfaces = extended.get('connectorInterfaces', None)

@@ -157,7 +157,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
-            to_do = "Peter will delegate the Latte to Mandy"
+            to_do = "Mandy will delegate the Latte to Peter"
             to_do_desc = "Latte to go"
             to_do_type = "drink"
             body = {
@@ -200,7 +200,7 @@ class TestMyProfile:
                                  user_id=self.good_user_2)
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            todo_guid = "d60adf8e-b6aa-4b59-ae80-e576f597ae96"
+            todo_guid = "97d1977e-c0d5-49a9-996b-4b73ce0517be"
             # 10a5e593-cc8a-45d0-a191-d060656363e9
             response = m_client.get_to_do(todo_guid, server_name)
 
@@ -230,7 +230,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do("latte")
+            response = m_client.find_to_do(" ")
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
@@ -260,9 +260,9 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.get_to_dos_by_type("Drink", server_name, status=None)
+            response = m_client.get_to_dos_by_type("drink", server_name, status=None)
 
-            if type(response) is list | dict:
+            if type(response) is list:
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is \n" + response)

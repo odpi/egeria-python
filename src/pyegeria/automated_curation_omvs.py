@@ -11,7 +11,12 @@ from datetime import datetime
 from httpx import Response
 
 from pyegeria import Client, max_paging_size, body_slimmer
-from pyegeria._exceptions import (InvalidParameterException, )
+from .core_guids import (FileFolder_template_GUID,
+                         PostgreSQL_Server_template_GUID,
+                         Apache_Kafka_Server_template_GUID,
+                         )
+
+from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
 from ._validators import validate_name, validate_guid, validate_search_string
 
 
@@ -139,7 +144,7 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_create_kafka_server_element_from_template(self, kafka_server: str, host_name: str, port: str,
-                                                               server: str = None) -> str:
+                                                               description: str = None, server: str = None) -> str:
         """ Create a Kafka server element from a template. Async version.
 
             Parameters
@@ -153,6 +158,9 @@ class AutomatedCuration(Client):
             port : str
                 The port number of the Kafka server.
 
+            description: str, opt
+                A description of the Kafka server.
+
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
 
@@ -162,14 +170,15 @@ class AutomatedCuration(Client):
                 The GUID of the Kafka server element.
         """
 
-        body = {"templateGUID": "5e1ff810-5418-43f7-b7c4-e6e062f9aff7", "isOwnAnchor": 'true',
+        body = {"templateGUID": Apache_Kafka_Server_template_GUID, "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": kafka_server, "hostIdentifier": host_name,
-                                              "portNumber": port}}
-        response = await self._async_create_element_from_template(body, server)
+                                              "portNumber": port, "description": description}}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
         return str(response)
 
     def create_kafka_server_element_from_template(self, kafka_server: str, host_name: str, port: str,
-                                                  server: str = None) -> str:
+                                                  description: str = None, server: str = None) -> str:
         """ Create a Kafka server element from a template.
 
             Parameters
@@ -183,6 +192,9 @@ class AutomatedCuration(Client):
             port : str
                 The port number of the Kafka server.
 
+            description: str, opt
+                A description of the Kafka server.
+
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
 
@@ -193,11 +205,13 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_kafka_server_element_from_template(kafka_server, host_name, port, server))
+            self._async_create_kafka_server_element_from_template(kafka_server, host_name, port,
+                                                                  description, server))
         return response
 
     async def _async_create_postgres_server_element_from_template(self, postgres_server: str, host_name: str, port: str,
-                                                                  db_user: str, db_pwd: str, server: str = None) -> str:
+                                                                  db_user: str, db_pwd: str, description: str = None,
+                                                                  server: str = None) -> str:
         """ Create a Postgres server element from a template. Async version.
 
             Parameters
@@ -217,23 +231,28 @@ class AutomatedCuration(Client):
             db_pwd: str
                 User password to connect to the database
 
+            description: str, opt
+                A description of the Kafka server.
+
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
 
             Returns
             -------
             str
-                The GUID of the Kafka server element.
+                The GUID of the Postgres server element.
         """
-        body = {"templateGUID": "542134e6-b9ce-4dce-8aef-22e8daf34fdb", "isOwnAnchor": 'true',
+        body = {"templateGUID": PostgreSQL_Server_template_GUID, "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": postgres_server, "hostIdentifier": host_name,
-                                              "portNumber": port, "databaseUserId": db_user,
+                                              "portNumber": port, "databaseUserId": db_user, "description": description,
                                               "databasePassword": db_pwd}}
-        response = await self._async_create_element_from_template(body, server)
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
         return str(response)
 
     def create_postgres_server_element_from_template(self, postgres_server: str, host_name: str, port: str,
-                                                     db_user: str, db_pwd: str, server: str = None) -> str:
+                                                     db_user: str, db_pwd: str, description: str = None,
+                                                     server: str = None) -> str:
         """ Create a Postgres server element from a template.
 
             Parameters
@@ -250,6 +269,9 @@ class AutomatedCuration(Client):
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
 
+            description: str, opt
+                A description of the Kafka server.
+
             db_user: str
                 User name to connect to the database
 
@@ -264,7 +286,88 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_postgres_server_element_from_template(postgres_server, host_name, port, db_user, db_pwd,
-                                                                     server))
+                                                                     description, server))
+        return response
+
+    async def _async_create_folder_element_from_template(self,path_name: str, folder_name: str, file_system: str,
+                                                         description:str = None, version:str = None,
+                                                         server: str = None) -> str:
+        """ Create a File folder element from a template. Async version.
+
+        Parameters
+        ----------
+        path_namer : str
+            The name of the fill path including the folder..
+
+        folder_name : str
+            The name of the folder to create.
+
+        file_system : str
+            The unique name for the file system that the folder belongs to. It may be a machine name or URL to a remote
+            file store.
+
+        description: str, opt
+                A description of the Kafka server.
+
+        version: str, opt
+                version of the file folder - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": FileFolder_template_GUID,
+                "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {
+                    "directoryPathName": path_name,
+                    "directoryName": folder_name,
+                    "versionIdentifier": version,
+                    "fileSystemName": file_system,
+                    "description": description,
+                }
+            }
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_folder_element_from_template(self, path_name: str, folder_name: str, file_system: str,
+                                            description: str = None, version: str = None, server: str = None) -> str:
+        """ Create a File folder element from a template.
+
+            Parameters
+            ----------
+            path_namer : str
+                The name of the fill path including the folder..
+
+           folder_name : str
+                The name of the folder to create.
+
+           file_system : str
+                The unique name for the file system that the folder belongs to. It may be a machine name or URL to a
+                remote file store.
+
+           description: str, opt
+                A description of the Kafka server.
+
+           version: str, opt
+                version of the file folder - typically of the form x.y.z
+
+           server : str, optional
+                The name of the view server to use. Default uses the client instance.
+
+            Returns
+            -------
+            str
+                The GUID of the Postgres server element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_folder_element_from_template(path_name, folder_name, file_system,
+                                                            description, version, server))
         return response
 
     #
@@ -1733,7 +1836,7 @@ class AutomatedCuration(Client):
                f"{integ_connector_guid}/catalog-targets?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("GET", url)
-        return response.json().get("elements", "no actions")
+        return response.json().get("elements", "no targets")
 
     def get_catalog_targets(self, integ_connector_guid: str, server: str = None, start_from: int = 0,
                             page_size: int = max_paging_size) -> list | str:
@@ -1762,17 +1865,14 @@ class AutomatedCuration(Client):
             self._async_get_catalog_targets(integ_connector_guid, server, start_from, page_size))
         return response
 
-    async def _async_get_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                        server: str = None) -> dict | str:
-        """ Retrieve a specific catalog target associated with an integration connector.
-            Async version.
+    async def _async_get_catalog_target(self, relationship_guid: str, server: str = None) -> dict | str:
+        """ Retrieve a specific catalog target associated with an integration connector. Further Information:
+            https://egeria-project.org/concepts/integration-connector/ .    Async version.
 
             Parameters:
             ----------
-                integ_connector_guid: str
-                    The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-                metadata_element_guid: str
-                    The specific metadata element target we want to retrieve.
+                relationship_guid: str
+                    The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
                 server: str, optional
                     The name of the server. If None, will use the default server specified in the instance will be used.
             Returns:
@@ -1787,25 +1887,23 @@ class AutomatedCuration(Client):
                 UserNotAuthorizedException:
             """
         server = self.server_name if server is None else server
-        validate_guid(integ_connector_guid)
-        validate_guid(metadata_element_guid)
+        validate_guid(relationship_guid)
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
-               f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
+               f"{relationship_guid}")
 
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
+    def get_catalog_target(self, relationship_guid: str,
                            server: str = None) -> dict | str:
-        """ Retrieve a specific catalog target associated with an integration connector.
+        """ Retrieve a specific catalog target associated with an integration connector.  Further Information:
+            https://egeria-project.org/concepts/integration-connector/ .
 
             Parameters:
             ----------
-                integ_connector_guid: str
-                    The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-                metadata_element_guid: str
-                    The specific metadata element target we want to retrieve.
+                relationship_guid: str
+                    The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
                 server: str, optional
                     The name of the server. If None, will use the default server specified in the instance will be used.
             Returns:
@@ -1822,14 +1920,55 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_target(integ_connector_guid, metadata_element_guid, server))
+            self._async_get_catalog_target(relationship_guid,  server))
         return response
 
     async def _async_add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
                                         catalog_target_name: str, metadata_src_qual_name: str = None,
-                                        config_properties: dict = None, server: str = None) -> None:
-        """ Add a catalog target to an integration connector.
+                                        config_properties: dict = None, server: str = None) -> str:
+        """ Add a catalog target to an integration connector and .
             Async version.
+
+            Parameters:
+            ----------
+            integ_connector_guid: str
+                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
+            metadata_element_guid: str
+                The specific metadata element target we want to retrieve.
+            catalog_target_name : dict
+                Name of the catalog target to add.
+            metadata_src_qual_name: str
+                The qualified name of the metadata source for the catalog target
+            config_properties: dict
+                Configuration properties for the catalog target
+            server: str, optional
+                The name of the server. If None, will use the default server specified in the instance will be used.
+            Returns:
+            -------
+                Relationship GUID for the catalog target,
+
+            Raises:
+            ------
+            InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                       this exception is raised with details from the response content.
+            PropertyServerException: If the API response indicates a server side error.
+            UserNotAuthorizedException:
+            """
+        server = self.server_name if server is None else server
+        validate_guid(integ_connector_guid)
+        validate_guid(metadata_element_guid)
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
+               f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}")
+        body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
+                "configProperties": config_properties}
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get('guid', "No Guid returned")
+
+    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, catalog_target_name: str,
+                           metadata_src_qual_name: str = None, config_properties: dict = None,
+                           server: str = None) -> str:
+        """ Add a catalog target to an integration connector.
 
             Parameters:
             ----------
@@ -1856,28 +1995,61 @@ class AutomatedCuration(Client):
             PropertyServerException: If the API response indicates a server side error.
             UserNotAuthorizedException:
             """
-        server = self.server_name if server is None else server
-        validate_guid(integ_connector_guid)
-        validate_guid(metadata_element_guid)
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+             self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
+                                           metadata_src_qual_name, config_properties, server))
+        return response
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
-               f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}")
+    async def _async_update_catalog_target(self, relationship_guid: str,
+                                        catalog_target_name: str, metadata_src_qual_name: str = None,
+                                        config_properties: dict = None, server: str = None) -> None:
+        """ Update a catalog target to an integration connector.
+            Async version.
+
+            Parameters:
+            ----------
+            relationship_guid: str
+                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
+
+            catalog_target_name : dict
+                Name of the catalog target to add.
+            metadata_src_qual_name: str
+                The qualified name of the metadata source for the catalog target
+            config_properties: dict
+                Configuration properties for the catalog target
+            server: str, optional
+                The name of the server. If None, will use the default server specified in the instance will be used.
+            Returns:
+            -------
+                None
+
+            Raises:
+            ------
+            InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                       this exception is raised with details from the response content.
+            PropertyServerException: If the API response indicates a server side error.
+            UserNotAuthorizedException:
+            """
+        server = self.server_name if server is None else server
+        validate_guid(relationship_guid)
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
+               f"{relationship_guid}/update")
         body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
                 "configProperties": config_properties}
-        await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body)
         return
 
-    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, catalog_target_name: str,
+    def update_catalog_target(self, relationship_guid: str, catalog_target_name: str,
                            metadata_src_qual_name: str = None, config_properties: dict = None,
                            server: str = None) -> None:
         """ Add a catalog target to an integration connector.
 
             Parameters:
             ----------
-            integ_connector_guid: str
+            relationship_guid: str
                 The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            metadata_element_guid: str
-                The specific metadata element target we want to retrieve.
             catalog_target_name : dict
                 Name of the catalog target to add.
             metadata_src_qual_name: str
@@ -1899,20 +2071,18 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
+             self._async_update_catalog_target(relationship_guid, catalog_target_name,
                                            metadata_src_qual_name, config_properties, server))
         return
 
-    async def _async_remove_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                           server: str = None) -> None:
+
+    async def _async_remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:
         """ Remove a catalog target to an integration connector. Async version.
 
             Parameters:
             ----------
-            integ_connector_guid: str
-                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            metadata_element_guid: str
-                The specific metadata element target we want to retrieve.
+            relationship_guid: str
+                The GUID (Globally Unique Identifier) identifying the catalog target relationship.
             server: str, optional
                 The name of the server. If None, will use the default server specified in the instance will be used.
             Returns:
@@ -1927,24 +2097,21 @@ class AutomatedCuration(Client):
             UserNotAuthorizedException:
             """
         server = self.server_name if server is None else server
-        validate_guid(integ_connector_guid)
-        validate_guid(metadata_element_guid)
+        validate_guid(relationship_guid)
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
-               f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}/remove")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
+               f"{relationship_guid}/remove")
 
         await self._async_make_request("POST", url)
         return
 
-    def remove_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, server: str = None) -> None:
+    def remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:
         """ Remove a catalog target to an integration connector.
 
             Parameters:
             ----------
-            integ_connector_guid: str
-                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            metadata_element_guid: str
-                The specific metadata element target we want to retrieve.
+            relationship_guid: str
+                The GUID (Globally Unique Identifier) identifying the catalog target relationship.
             server: str, optional
                 The name of the server. If None, will use the default server specified in the instance will be used.
             Returns:
@@ -1960,7 +2127,7 @@ class AutomatedCuration(Client):
             """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_catalog_target(integ_connector_guid, metadata_element_guid, server))
+        loop.run_until_complete(self._async_remove_catalog_target(relationship_guid,  server))
         return
 
     #
@@ -2266,3 +2433,102 @@ class AutomatedCuration(Client):
         if governance_actions is not None:
             for x in range(len(governance_actions)):
                 self.print_engine_action_summary(governance_actions[x])
+
+    async def _async_get_technology_type_elements(self, filter: str, effective_time: str = None, server: str = None,
+                                                  start_from: int = 0, page_size: int = max_paging_size,
+                                                  get_templates: bool = False) -> list | str:
+        """ Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
+        in the name. Async version.
+
+        Parameters:
+        ----------
+        filter: str
+            The name of the deployed technology implementation type to retrieve elements for.
+        server: str, optional
+            The name of the server. If None, will use the default server specified in the instance will be used.
+
+        effective_time: datetime, [default=None], optional
+            Effective time of the query. If not specified will default to any effective time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+
+        start_from : int, optional
+           The index from which to start fetching the engine actions. Default is 0.
+
+        page_size : int, optional
+           The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+        Returns:
+        -------
+            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+
+        Raises:
+        ------
+        InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                   this exception is raised with details from the response content.
+        PropertyServerException: If the API response indicates a server side error.
+        UserNotAuthorizedException:
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
+        """
+        server = self.server_name if server is None else server
+
+        get_templates_s = str(get_templates).lower()
+        validate_name(filter)
+
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/elements?"
+               f"startFrom={start_from}&pageSize={page_size}&getTemplates={get_templates_s}"
+               )
+        body = {"filter": filter,
+                "effective_time": effective_time
+                }
+
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("elements", "no tech found")
+
+    def get_technology_type_elements(self, filter: str, effective_time: str = None, server: str = None,
+                                                  start_from: int = 0, page_size: int = max_paging_size,
+                                                  get_templates: bool = False) -> list | str:
+        """ Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
+        in the name.
+
+        Parameters:
+        ----------
+        filter: str
+            The name of the deployed technology implementation type to retrieve elements for.
+        server: str, optional
+            The name of the server. If None, will use the default server specified in the instance will be used.
+
+        effective_time: datetime, [default=None], optional
+            Effective time of the query. If not specified will default to any effective time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+
+        start_from : int, optional
+           The index from which to start fetching the engine actions. Default is 0.
+
+        page_size : int, optional
+           The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+        Returns:
+        -------
+            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+
+        Raises:
+        ------
+        InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                   this exception is raised with details from the response content.
+        PropertyServerException: If the API response indicates a server side error.
+        UserNotAuthorizedException:
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_technology_type_elements(filter, effective_time,server,
+                                                     start_from, page_size, get_templates
+                                                     ))
+        return response

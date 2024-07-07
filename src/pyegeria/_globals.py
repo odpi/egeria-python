@@ -8,6 +8,7 @@ This common file is used to set some global values and enumerations used by the 
 
 """
 
+
 is_debug = False
 disable_ssl_warnings = True
 enable_ssl_check = False
@@ -29,3 +30,4 @@ star_ratings = (
     "THREE_STARS",
     "TWO_STARS",
 )
+

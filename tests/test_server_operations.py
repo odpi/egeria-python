@@ -164,12 +164,12 @@ class TestServerOperations:
 # todo - review with Mandy?
     def test_restart_integration_connector(self, server:str = good_server_2):
         try:
-            server_name = "ecosystem-monitor"
+            server_name = "integration-daemon"
             # connector = "FilesMonitor"
             # connector = "DataFilesMonitorIntegrationConnector"
 
             connector = None
-            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             # response = s_client.restart_integration_connector(connector,server)
             s_client.restart_integration_connector(connector, server_name)
 
@@ -181,9 +181,9 @@ class TestServerOperations:
 
     def test_refresh_integration_connectors(self, server:str = good_server_2):
         try:
-            server_name = "ecosystem-monitor"
+            server_name = "integration-daemon"
             connector = "FilesMonitor"
-            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
 
             s_client.refresh_integration_connectors(None, server_name)
 

@@ -134,6 +134,6 @@ if __name__ == "__main__":
     url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'erinoverview'
     save_output = args.save_output if args.save_output is not None else False
-    project_name = Prompt.ask("Enter the Property to retrieve:", default="*")
+    project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
 
     display_list(project_name, server, url, userid, save_output)
