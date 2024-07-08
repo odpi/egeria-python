@@ -70,7 +70,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Mesh"
+            search_string = "Bunge"
             response = g_client.find_assets_in_domain(search_string, starts_with=True, ends_with=False,
                                                       ignore_case=True)
             duration = time.perf_counter() - start_time
@@ -100,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="6ebd9b03-994b-466a-9ebf-170854a7cffa"
+            asset_guid ="6885d5d4-652c-43fe-bcfa-84672a58b02d"
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 

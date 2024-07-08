@@ -11,13 +11,12 @@ from datetime import datetime
 from httpx import Response
 
 from pyegeria import Client, max_paging_size, body_slimmer
+from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
+from ._validators import validate_name, validate_guid, validate_search_string
 from .core_guids import (FileFolder_template_GUID,
                          PostgreSQL_Server_template_GUID,
                          Apache_Kafka_Server_template_GUID,
                          )
-
-from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
-from ._validators import validate_name, validate_guid, validate_search_string
 
 
 class AutomatedCuration(Client):
@@ -289,14 +288,14 @@ class AutomatedCuration(Client):
                                                                      description, server))
         return response
 
-    async def _async_create_folder_element_from_template(self,path_name: str, folder_name: str, file_system: str,
-                                                         description:str = None, version:str = None,
+    async def _async_create_folder_element_from_template(self, path_name: str, folder_name: str, file_system: str,
+                                                         description: str = None, version: str = None,
                                                          server: str = None) -> str:
         """ Create a File folder element from a template. Async version.
 
         Parameters
         ----------
-        path_namer : str
+        path_name : str
             The name of the fill path including the folder..
 
         folder_name : str
@@ -329,7 +328,7 @@ class AutomatedCuration(Client):
                     "fileSystemName": file_system,
                     "description": description,
                 }
-            }
+                }
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -340,23 +339,23 @@ class AutomatedCuration(Client):
 
             Parameters
             ----------
-            path_namer : str
+            path_name : str
                 The name of the fill path including the folder..
 
-           folder_name : str
+            folder_name : str
                 The name of the folder to create.
 
-           file_system : str
+            file_system : str
                 The unique name for the file system that the folder belongs to. It may be a machine name or URL to a
                 remote file store.
 
-           description: str, opt
+            description: str, opt
                 A description of the Kafka server.
 
-           version: str, opt
+            version: str, opt
                 version of the file folder - typically of the form x.y.z
 
-           server : str, optional
+            server : str, optional
                 The name of the view server to use. Default uses the client instance.
 
             Returns
@@ -1701,7 +1700,7 @@ class AutomatedCuration(Client):
 
     async def _async_initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str,
                                             description: str, request_source_guids: str, action_targets: str,
-                                            received_guards: [str], start_time: datetime, gov_engine_name: str,
+                                            received_guards: [str], start_time: datetime,
                                             request_type: str, request_parameters: dict, process_name: str,
                                             request_src_name: str = None, originator_svc_name: str = None,
                                             originator_eng_name: str = None, server: str = None) -> str:
@@ -1719,7 +1718,6 @@ class AutomatedCuration(Client):
                 action_targets (str): Targets of the governance action.
                 received_guards (List[str]): List of guards received for the action.
                 start_time (datetime): The start time for the governance action.
-                gov_engine_name (str): The name of the governance engine associated with the action.
                 request_type (str): The type of the governance action request.
                 request_parameters (dict): Additional parameters for the governance action.
                 process_name (str): The name of the associated governance action process.
@@ -1761,7 +1759,7 @@ class AutomatedCuration(Client):
 
     def initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str, description: str,
                                request_source_guids: str, action_targets: str, received_guards: [str],
-                               start_time: datetime, gov_engine_name: str, request_type: str, request_parameters: dict,
+                               start_time: datetime, request_type: str, request_parameters: dict,
                                process_name: str, request_src_name: str = None, originator_svc_name: str = None,
                                originator_eng_name: str = None, server: str = None) -> str:
         """ Create an engine action in the metadata store that will trigger the governance service associated with
@@ -1803,7 +1801,7 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_initiate_engine_action(qualified_name, domain_identifier, display_name, description,
                                                request_source_guids, action_targets, received_guards, start_time,
-                                               gov_engine_name, request_type, request_parameters, process_name,
+                                               request_type, request_parameters, process_name,
                                                request_src_name, originator_svc_name, originator_eng_name, server))
         return response
 
@@ -1920,7 +1918,7 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid,  server))
+            self._async_get_catalog_target(relationship_guid, server))
         return response
 
     async def _async_add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
@@ -1997,13 +1995,13 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-             self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
+            self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
                                            metadata_src_qual_name, config_properties, server))
         return response
 
     async def _async_update_catalog_target(self, relationship_guid: str,
-                                        catalog_target_name: str, metadata_src_qual_name: str = None,
-                                        config_properties: dict = None, server: str = None) -> None:
+                                           catalog_target_name: str, metadata_src_qual_name: str = None,
+                                           config_properties: dict = None, server: str = None) -> None:
         """ Update a catalog target to an integration connector.
             Async version.
 
@@ -2042,8 +2040,8 @@ class AutomatedCuration(Client):
         return
 
     def update_catalog_target(self, relationship_guid: str, catalog_target_name: str,
-                           metadata_src_qual_name: str = None, config_properties: dict = None,
-                           server: str = None) -> None:
+                              metadata_src_qual_name: str = None, config_properties: dict = None,
+                              server: str = None) -> None:
         """ Add a catalog target to an integration connector.
 
             Parameters:
@@ -2071,10 +2069,9 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-             self._async_update_catalog_target(relationship_guid, catalog_target_name,
-                                           metadata_src_qual_name, config_properties, server))
+            self._async_update_catalog_target(relationship_guid, catalog_target_name,
+                                              metadata_src_qual_name, config_properties, server))
         return
-
 
     async def _async_remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:
         """ Remove a catalog target to an integration connector. Async version.
@@ -2127,7 +2124,7 @@ class AutomatedCuration(Client):
             """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_catalog_target(relationship_guid,  server))
+        loop.run_until_complete(self._async_remove_catalog_target(relationship_guid, server))
         return
 
     #
@@ -2488,8 +2485,8 @@ class AutomatedCuration(Client):
         return response.json().get("elements", "no tech found")
 
     def get_technology_type_elements(self, filter: str, effective_time: str = None, server: str = None,
-                                                  start_from: int = 0, page_size: int = max_paging_size,
-                                                  get_templates: bool = False) -> list | str:
+                                     start_from: int = 0, page_size: int = max_paging_size,
+                                     get_templates: bool = False) -> list | str:
         """ Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
         in the name.
 
@@ -2528,7 +2525,7 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_elements(filter, effective_time,server,
+            self._async_get_technology_type_elements(filter, effective_time, server,
                                                      start_from, page_size, get_templates
                                                      ))
         return response

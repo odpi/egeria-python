@@ -15,12 +15,6 @@ from ._globals import (is_debug, disable_ssl_warnings, max_paging_size,
                        )
 from .core_guids import *
 
-from .core_guids import (FileFolder_template_GUID,
-                         PostgreSQL_Server_template_GUID,
-                         Apache_Kafka_Server_template_GUID,
-                         )
-
-
 if disable_ssl_warnings:
     from urllib3.exceptions import InsecureRequestWarning
     from urllib3 import disable_warnings
@@ -50,5 +44,7 @@ from .asset_catalog_omvs import AssetCatalog
 from .Xloaded_resources_omvs import LoadedResources
 from ._deprecated_gov_engine import GovEng
 from .runtime_manager_omvs import RuntimeManager
+from .action_author_omvs import GovernanceAuthor
+from .glossary_manager_omvs import GlossaryManager
 
 __version__ = "0.4"

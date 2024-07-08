@@ -92,6 +92,10 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
 
         token = a_client.create_egeria_bearer_token(user, "secret")
         asset_info = a_client.find_assets_in_domain(asset_name)
+        if type(asset_info) is str:
+            print("\n No Assets Found - Exiting\n")
+            sys.exit(1)
+
         asset_guid = asset_info[0]['guid']
         guid_list.append(asset_guid)
 
@@ -113,7 +117,7 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
         asset_creation = asset_graph["versions"]["createTime"]
         asset_created_by = asset_graph["versions"]["createdBy"]
         asset_classifications = asset_graph["classifications"]
-        asset_nested_elements = asset_graph["anchoredElements"]
+        asset_nested_elements = asset_graph.get("anchoredElements","----")
         asset_relationships = asset_graph["relationships"]
         asset_class_md = build_classifications(asset_classifications)
 
@@ -139,11 +143,12 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
         #
         # Nested Assets
         #
-        l2 = tree.add("Nested Elements", style = "bold white")
-        for el in asset_nested_elements:
-            asset_ne_md = build_nested_elements(el)
-            p3 = Panel.fit(asset_ne_md, style = "bold bright_white", title="Nested Elements")
-            l2.add(p3)
+        if type(asset_nested_elements) is list:
+            l2 = tree.add("Nested Elements", style = "bold white")
+            for el in asset_nested_elements:
+                asset_ne_md = build_nested_elements(el)
+                p3 = Panel.fit(asset_ne_md, style = "bold bright_white", title="Nested Elements")
+                l2.add(p3)
 
         #
         # Now work on the Relationships
