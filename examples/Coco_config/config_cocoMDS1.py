@@ -32,24 +32,24 @@ print("Configuring " + mdr_server + "..." + " @ " + platform_url)
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties(metadataCollectionName,
+    o_client.set_basic_server_properties("Data lake operations",
                                          "Coco Pharmaceuticals",
                                          platform_url,
                                          mdr_server_user_id, mdr_server_password,
-                                         max_page_size)
+                                         max_page_size, mdr_server)
 
     # Can also inherit event bus config from application properties
 
-    event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "localhost:9092"
-        },
-        "consumer": {
-            "bootstrap.servers": "localhost:9092"
-        }
-    }
+    # event_bus_config = {
+    #     "producer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     },
+    #     "consumer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     }
+    # }
 
-    o_client.set_event_bus(event_bus_config)
+    # o_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",
@@ -75,7 +75,7 @@ try:
         "SupportedZones": ["quarantine", "clinical-trials", "research", "data-lake", "trash-can"]
     }
 
-    o_client.configure_access_service("asset-catalog", access_service_options)
+    # o_client.configure_access_service("asset-catalog", access_service_options)
     o_client.configure_access_service("asset-consumer", access_service_options)
 
     access_service_options["DefaultZones"] = ["quarantine"]
@@ -87,9 +87,8 @@ try:
     o_client.configure_access_service("asset-owner", access_service_options)
     o_client.configure_access_service("community-profile",
                                       {"KarmaPointPlateau": "500"})
-    o_client.configure_access_service("glossary-view", {})
-    o_client.configure_access_service("asset-owner", access_service_options)
-    o_client.configure_access_service("data-engine", access_service_options)
+    # o_client.configure_access_service("glossary-view", {})
+    # o_client.configure_access_service("data-engine", access_service_options)
     o_client.configure_access_service("data-manager", access_service_options)
     o_client.configure_access_service("digital-architecture", access_service_options)
     o_client.configure_access_service("governance-engine", access_service_options)

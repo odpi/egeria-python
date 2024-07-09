@@ -13,7 +13,7 @@ This script creates and configures the cocoMDS4 - Data Lake Users
 
 import json
 
-from globals import (cocoMDS4Name, corePlatformURL, cocoCohort, max_paging_size)
+from globals import (cocoMDS4Name, dataLakePlatformURL, cocoCohort, max_paging_size)
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,
@@ -22,7 +22,7 @@ from pyegeria import (
 disable_ssl_warnings = True
 
 mdr_server = cocoMDS4Name
-platform_url = corePlatformURL
+platform_url = dataLakePlatformURL
 admin_user = "garygeeke"
 mdr_server_user_id = "cocoMDS4npa"
 mdr_server_password = "cocoMDS4passw0rd"
@@ -34,7 +34,7 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties(metadataCollectionName,
+    o_client.set_basic_server_properties("Data Lake Users",
                                          "Coco Pharmaceuticals",
                                          platform_url,
                                          mdr_server_user_id, mdr_server_password,
@@ -42,16 +42,16 @@ try:
 
     # Inherit event bus config
 
-    event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "localhost:9092"
-        },
-        "consumer": {
-            "bootstrap.servers": "localhost:9092"
-        }
-    }
-
-    o_client.set_event_bus(event_bus_config)
+    # event_bus_config = {
+    #     "producer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     },
+    #     "consumer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     }
+    # }
+    #
+    # o_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",
@@ -75,12 +75,12 @@ try:
         "SupportedZones": ["data-lake"]
     }
 
-    o_client.configure_access_service("asset-catalog", accessServiceOptions)
+    # o_client.configure_access_service("asset-catalog", accessServiceOptions)
     o_client.configure_access_service("asset-consumer", accessServiceOptions)
     o_client.configure_access_service("asset-owner", {})
     o_client.configure_access_service("community-profile",
                                       {"KarmaPointPlateau": "500"})
-    o_client.configure_access_service("glossary-view", {})
+    # o_client.configure_access_service("glossary-view", {})
     o_client.configure_access_service("data-science", accessServiceOptions)
 
     p_client = Platform(mdr_server, platform_url, admin_user)

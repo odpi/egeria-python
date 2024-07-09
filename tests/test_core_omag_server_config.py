@@ -1278,14 +1278,14 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_add_cohort_registration(self, server:str = good_server_1):
+    def test_add_cohort_registration(self, server:str = good_server_3):
 
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 server, self.good_platform1_url,
                 self.good_user_1)
 
-            o_client.add_cohort_registration("pdr-cohort")
+            o_client.add_cohort_registration("cocoCohort")
             assert True
 
             print(f"\n\n\t\tServer {server}: added to cohort")

@@ -13,7 +13,7 @@ This script creates and configures the exchangeDL01 integration daemon.
 
 import json
 
-from globals import (corePlatformURL, max_paging_size,
+from globals import (corePlatformURL, dataLakePlatformURL, max_paging_size,
                      fileSystemRoot, adminUserId)
 from pyegeria import (
     print_exception_response,
@@ -24,18 +24,18 @@ from pyegeria.platform_services import Platform
 
 daemon_server_name        = "exchangeDL01"
 #
-daemon_server_platform    = corePlatformURL
+daemon_server_platform    = dataLakePlatformURL
 daemon_server_user_id     = "exchangeDL01npa"
 daemon_server_password    = "exchangeDL01passw0rd"
 
 mdr_server                = "cocoMDS1"
 
-platform_url = corePlatformURL
+platform_url = dataLakePlatformURL
 folder_connector_name       = "DropFootClinicalTrialResultsFolderMonitor"
 folder_connector_user_id     = "monitorDL01npa"
 folder_connector_source_name = "DropFootClinicalTrialResults"
 folder_connector_folder     = fileSystemRoot + '/data-lake/research/clinical-trials/drop-foot/weekly-measurements'
-folder_connector_connection =  { 
+folder_connector_connection = {
       "class": "Connection",
       "connectorType":
       {
@@ -91,7 +91,7 @@ try:
     f_client.config_integration_service(mdr_server, platform_url, "files-integrator",
                                         {}, connector_configs)
 
-    f_client.config_integration_group(daemon_server_name, daemon_server_platform,
+    f_client.config_integration_group(mdr_server, daemon_server_platform,
                                       integration_group_name)
 
     p_client = Platform(daemon_server_name, daemon_server_platform, adminUserId)

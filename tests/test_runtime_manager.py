@@ -29,6 +29,7 @@ console = Console()
 
 class TestAutomatedCuration:
     good_platform1_url = "https://localhost:9443"
+    good_platform2_url = "https://localhost:9444"
 
 
     good_user_1 = "garygeeke"
@@ -44,13 +45,13 @@ class TestAutomatedCuration:
 
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "cocoView1"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
     def test_get_platforms_by_name(self):
         try:
-            r_client = RuntimeManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+            r_client = RuntimeManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = r_client.create_egeria_bearer_token()
 
@@ -72,7 +73,7 @@ class TestAutomatedCuration:
 
     def test_get_platforms_by_type(self):
         try:
-            r_client = RuntimeManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+            r_client = RuntimeManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = r_client.create_egeria_bearer_token()
 
@@ -83,6 +84,8 @@ class TestAutomatedCuration:
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            else:
+                print(f"--> response was {response}")
             assert True
 
         except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:

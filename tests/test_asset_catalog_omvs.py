@@ -100,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="6885d5d4-652c-43fe-bcfa-84672a58b02d"
+            asset_guid ="8e35b39e-6ee7-4d60-aff5-4b09406c5e79"
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 

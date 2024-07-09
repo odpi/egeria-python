@@ -1717,7 +1717,7 @@ class CoreServerConfig(Client):
 
         return response.json().get("services", "No view services found")
 
-    def __config_all_view_services(self, mdr_server_name: str,
+    def config_all_view_services(self, mdr_server_name: str,
                                    mdr_server_platform_root_url: str, server_name: str = None) -> None:
         """ Enable all view services that are registered with this OMAG server platform.
 

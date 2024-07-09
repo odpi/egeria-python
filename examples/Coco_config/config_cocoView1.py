@@ -21,7 +21,7 @@ from pyegeria.platform_services import Platform
 disable_ssl_warnings = True
 
 view_server = "cocoView1"
-# platform_url = dataLakePlatformURL
+
 platform_url = corePlatformURL
 admin_user = "garygeeke"
 view_server_user_id = "cocoView1npa"
@@ -43,17 +43,17 @@ try:
     f_client.set_server_url_root(platform_url)
 
     # Can inherit event bus config
-
-    event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "localhost:9092"
-        },
-        "consumer": {
-            "bootstrap.servers": "localhost:9092"
-        }
-    }
-
-    f_client.set_event_bus(event_bus_config)
+    #
+    # event_bus_config = {
+    #     "producer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     },
+    #     "consumer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     }
+    # }
+    #
+    # f_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",
@@ -66,85 +66,85 @@ try:
     f_client.set_server_security_connection(security_connection_body)
 
     f_client.add_default_log_destinations()
+    #
+    # view_server_config = {
+    #     "class": "ViewServiceRequestBody",
+    #     "omagserverPlatformRootURL": remote_platform_url,
+    #     "omagserverName": remote_server_name,
+    #     "resourceEndpoints": [
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Platform",
+    #             "description": "Core Platform",
+    #             "platformName": "Core",
+    #             "platformRootURL": corePlatformURL
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Platform",
+    #             "description": "DataLake Platform",
+    #             "platformName": "DataLake",
+    #             "platformRootURL": dataLakePlatformURL
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Platform",
+    #             "description": "Development Platform",
+    #             "platformName": "Development",
+    #             "platformRootURL": devPlatformURL
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDS1",
+    #             "description": "Data Lake Operations",
+    #             "platformName": "DataLake",
+    #             "serverName": "cocoMDS1"
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDS2",
+    #             "description": "Governance",
+    #             "platformName": "Core",
+    #             "serverName": "cocoMDS2"
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDS3",
+    #             "description": "Research",
+    #             "platformName": "Core",
+    #             "serverName": "cocoMDS3"
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDS5",
+    #             "description": "Business Systems",
+    #             "platformName": "Core",
+    #             "serverName": "cocoMDS5"
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDS6",
+    #             "description": "Manufacturing",
+    #             "platformName": "Core",
+    #             "serverName": "cocoMDS6"
+    #         },
+    #         {
+    #             "class": "ResourceEndpointConfig",
+    #             "resourceCategory": "Server",
+    #             "serverInstanceName": "cocoMDSx",
+    #             "description": "Development",
+    #             "platformName": "Development",
+    #             "serverName": "cocoMDSx"
+    #         },
+    #     ]
+    # }
 
-    view_server_config = {
-        "class": "ViewServiceRequestBody",
-        "omagserverPlatformRootURL": remote_platform_url,
-        "omagserverName": remote_server_name,
-        "resourceEndpoints": [
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Platform",
-                "description": "Core Platform",
-                "platformName": "Core",
-                "platformRootURL": corePlatformURL
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Platform",
-                "description": "DataLake Platform",
-                "platformName": "DataLake",
-                "platformRootURL": dataLakePlatformURL
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Platform",
-                "description": "Development Platform",
-                "platformName": "Development",
-                "platformRootURL": devPlatformURL
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDS1",
-                "description": "Data Lake Operations",
-                "platformName": "DataLake",
-                "serverName": "cocoMDS1"
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDS2",
-                "description": "Governance",
-                "platformName": "Core",
-                "serverName": "cocoMDS2"
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDS3",
-                "description": "Research",
-                "platformName": "Core",
-                "serverName": "cocoMDS3"
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDS5",
-                "description": "Business Systems",
-                "platformName": "Core",
-                "serverName": "cocoMDS5"
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDS6",
-                "description": "Manufacturing",
-                "platformName": "Core",
-                "serverName": "cocoMDS6"
-            },
-            {
-                "class": "ResourceEndpointConfig",
-                "resourceCategory": "Server",
-                "serverInstanceName": "cocoMDSx",
-                "description": "Development",
-                "platformName": "Development",
-                "serverName": "cocoMDSx"
-            },
-        ]
-    }
-
-    f_client.config_all_view_services_w_body(view_server_config)
+    f_client.config_all_view_services(remote_server_name, platform_url)
 
     p_client = Platform(view_server, platform_url, admin_user)
     p_client.activate_server_stored_config()

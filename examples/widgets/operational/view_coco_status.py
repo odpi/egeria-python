@@ -30,11 +30,9 @@ from pyegeria.server_operations import ServerOps
 disable_ssl_warnings = True
 
 
-def test_display_status(server: str, url: str, username: str):
+def display_status(server: str, url: str, username: str):
     layout = Layout()
-    print(layout)
 
-    print(layout)
     p_client1 = ServerOps("Core Catalog", "https://localhost:9443", username)
     p_client2 = ServerOps('Datalake Catalog', "https://localhost:9444", username)
     p_client3 = ServerOps('DevCatalog', "https://localhost:9445", username)
@@ -42,19 +40,18 @@ def test_display_status(server: str, url: str, username: str):
     def generate_table(p_client) -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Server Status for Platform - {time.asctime()}",
+            title=f"Server Status for {p_client.server_name}- {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
-            caption=f"Server Status for Platform - '{url}'",
+            caption=f"Server Status for Platform - '{p_client.platform_url}'",
             # show_lines=True,
         )
 
         table.add_column("Known Server")
         table.add_column("Status")
-
         known_server_list = p_client.get_known_servers()
         active_server_list = p_client.get_active_server_list()
-        if len(known_server_list) == 0:
+        if type(known_server_list) is str:
             return table
 
         for server in known_server_list:
@@ -83,6 +80,10 @@ def test_display_status(server: str, url: str, username: str):
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
 
+    finally:
+        p_client1.close_session()
+        p_client2.close_session()
+        p_client3.close_session()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     server = args.server if args.server is not None else "active-metadata-store"
-    url = args.url if args.url is not None else "https://cray.local:9443"
+    url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'garygeeke'
 
-    test_display_status(server, url, userid)
+    display_status(server, url, userid)

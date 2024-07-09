@@ -38,11 +38,11 @@ view_server = "view-server"
 
 guid_list = []
 
-def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
+def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
 
     def build_classifications(classification: dict) -> Markdown:
 
-        class_md = "-"
+        class_md = ""
         for c in classification:
             c_type = c["classificationName"]
             if c_type == "Anchors":
@@ -50,8 +50,8 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
             class_md += f"* Classification: {c_type}\n"
             class_props = c["classificationProperties"]
             for prop in class_props.keys():
-                class_md += f"* {prop}: {class_props[prop]}\n"
-        if class_md == "-":
+                class_md += f"\t* {prop}: {class_props[prop]}\n"
+        if class_md == "":
             output = None
         else:
             output = class_md
@@ -91,26 +91,29 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
                                      user_id=user)
 
         token = a_client.create_egeria_bearer_token(user, "secret")
-        asset_info = a_client.find_assets_in_domain(asset_name)
-        if type(asset_info) is str:
-            print("\n No Assets Found - Exiting\n")
-            sys.exit(1)
+        # asset_info = a_client.find_assets_in_domain(asset_name)
+        # if type(asset_info) is str:
+        #     print("\n No Assets Found - Exiting\n")
+        #     sys.exit(1)
+        #
+        # asset_guid = asset_info[0]['guid']
 
-        asset_guid = asset_info[0]['guid']
         guid_list.append(asset_guid)
 
         asset_graph = a_client.get_asset_graph(asset_guid)
         if type(asset_graph) is not dict:
-            print(f"\n No Asset found for {asset_name}")
+            print(f"\n No Asset found for {asset_guid}")
             sys.exit(1)
 
         # print(f"\n{json.dumps(asset_graph, indent =2)}\n")
-        tree = Tree(f"{asset_name} ({asset_guid})", style = "bold bright_white",guide_style="bold bright_blue")
-        style = ""
+
 
         asset_name = asset_graph["displayName"]
         qualified_name = asset_graph["qualifiedName"]
         resource_name = asset_graph["resourceName"]
+
+        tree = Tree(f"{asset_name} ({asset_guid})", style="bold bright_white", guide_style="bold bright_blue")
+        style = ""
 
         asset_type = asset_graph["type"]["typeName"]
         asset_origin = asset_graph["origin"]["homeMetadataCollectionName"]
@@ -123,21 +126,21 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
 
 
         asset_properties = asset_graph["extendedProperties"]
-        prop_md = ""
+        prop_md = "\n* Extended Properties:\n"
         for prop in asset_properties:
-            prop_md = f"{prop_md}* {prop}: {asset_properties[prop]}\n"
+            prop_md = f"{prop_md}\n\t* {prop}: {asset_properties[prop]}\n"
 
-        core_md = (f"**Type: {asset_type} Created by: {asset_created_by} on {asset_creation}**\n"
+        core_md = (f"**Type: {asset_type}  Created by: {asset_created_by} on {asset_creation}**\n"
                f"* Qualified Name: {qualified_name}\n "
                f"* Resource Name: {resource_name}\n"
                f"* Display Name: {asset_name}\n"
-               f"* Asset Origin: {asset_origin}\n{prop_md}"
+               f"* Asset Origin: {asset_origin}\n{prop_md}\n"
                )
         core_md = Markdown(core_md)
         p1 = Panel.fit(core_md, style = "bold bright_white")
         l2 = tree.add(p1)
         if asset_class_md is not None:
-            p2 = Panel.fit(Markdown(asset_class_md), style = "bold bright_white")
+            p2 = Panel.fit(Markdown(asset_class_md), style = "bold bright_white", title = "Classifications")
             l2 = tree.add(p2)
 
         #
@@ -173,7 +176,7 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
                 relationship_type = relationship["type"]["typeName"]
                 relationship_created_by = relationship["versions"]["createdBy"]
                 relationship_creation_time = relationship["versions"]["createTime"]
-                relationship_properties = relationship.get("properties"," ")
+                relationship_properties = relationship.get("properties","--- ")
                 relationship_md = (f"Relationship Type {relationship_type}\n"
                                    f"* GUID: {relationship_guid}\n* Created by: {relationship_created_by} \n"
                                    f"* Creation Time: {relationship_creation_time}\n"
@@ -193,24 +196,24 @@ def asset_viewer(asset_name: str, server_name:str, platform_url:str, user:str):
                     )
 
                 if rel_end1_class_md is not None:
-                    rel_end1_md = rel_end1_md + rel_end1_class_md
+                    rel_end1_md = rel_end1_class_md + rel_end1_md
 
                 rel_end2_md = (
-                    f"* End1:\n"
+                    f"* End2:\n"
                     f"\t* Type: {rel_end2_type}\n"
                     f"\t* GUID: {rel_end2_guid}\n"
                     f"\t* Unique Name: {rel_end2_unique_name}\n"
                 )
 
                 if rel_end2_class_md is not None:
-                    rel_end1_md = rel_end2_md + rel_end2_class_md
+                    rel_end1_md = rel_end2_class_md + rel_end1_md
                 #
                 # for prop in relationship_properties.keys():
                 #     relationship_md += f"* {prop}: {relationship_properties[prop]}\n"
 
                 relationship_md += rel_end1_md + rel_end2_md
 
-                relationship_panel = Panel.fit(Markdown(relationship_md), style="bold bright_white")
+                relationship_panel = Panel.fit(Markdown(relationship_md), style="bold bright_white", title = "Asset Relationships")
                 tree.add(relationship_panel)
 
 
@@ -237,5 +240,5 @@ if __name__ == "__main__":
     url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'erinoverview'
 
-    asset_name = Prompt.ask("Enter the Asset Name to view:", default="TransMorg-Clinical-Trials-Weeklies")
-    asset_viewer(asset_name,server, url, userid)
+    asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="8e35b39e-6ee7-4d60-aff5-4b09406c5e79")
+    asset_viewer(asset_guid,server, url, userid)

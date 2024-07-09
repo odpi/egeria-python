@@ -36,7 +36,7 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties(metadataCollectionName,
+    o_client.set_basic_server_properties("Manufacturing",
                                          "Coco Pharmaceuticals",
                                          platform_url,
                                          mdr_server_user_id, mdr_server_password,
@@ -44,16 +44,16 @@ try:
 
     # Can inherit event bus config
 
-    event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "localhost:9092"
-        },
-        "consumer": {
-            "bootstrap.servers": "localhost:9092"
-        }
-    }
-
-    o_client.set_event_bus(event_bus_config)
+    # event_bus_config = {
+    #     "producer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     },
+    #     "consumer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     }
+    # }
+    #
+    # o_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",
@@ -83,19 +83,19 @@ try:
         "DefaultZones": ["manufacturing"]
     }
 
-    o_client.configure_access_service("asset-catalog", access_service_options)
+    # o_client.configure_access_service("asset-catalog", access_service_options)
     o_client.configure_access_service("asset-consumer", access_service_options)
     o_client.configure_access_service("asset-owner", access_service_options)
     o_client.configure_access_service("community-profile",
                                       {"KarmaPointPlateau": "500"})
-    o_client.configure_access_service("glossary-view", {})
+    # o_client.configure_access_service("glossary-view", {})
     o_client.configure_access_service("data-science", access_service_options)
-    o_client.configure_access_service("subject-area", {})
+    # o_client.configure_access_service("subject-area", {})
     o_client.configure_access_service("asset-manager", access_service_options)
     o_client.configure_access_service("governance-engine", access_service_options)
     o_client.configure_access_service("governance-server", access_service_options)
     o_client.configure_access_service("asset-owner", access_service_options)
-    o_client.configure_access_service("data-engine", access_service_options)
+    # o_client.configure_access_service("data-engine", access_service_options)
     o_client.configure_access_service("data-manager", access_service_options)
     o_client.configure_access_service("it-infrastructure", access_service_options)
     o_client.configure_access_service("project-management", access_service_options)

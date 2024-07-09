@@ -19,6 +19,7 @@ from rich import box
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.table import Table
+from rich.text import Text
 
 from pyegeria import ServerOps, AutomatedCuration
 from pyegeria._exceptions import (
@@ -31,9 +32,10 @@ from pyegeria._exceptions import (
 disable_ssl_warnings = True
 
 
-def display_integration_daemon_status(server: str, url: str, user: str):
-    s_client = ServerOps(server, url, user)
-    a_client = AutomatedCuration("view-server", url, user, "secret")
+def display_integration_daemon_status(integ_server: str, integ_url: str,
+                                      view_server:str, view_url: str, user: str):
+    s_client = ServerOps(integ_server, integ_url, user)
+    a_client = AutomatedCuration(view_server, view_url, user, "secret")
     token = a_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
@@ -44,14 +46,14 @@ def display_integration_daemon_status(server: str, url: str, user: str):
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Integration Daemon Status for Server '{server}' @ Platform - {url}",
+            caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
             expand=True
         )
         table.add_column("Connector Name")
         table.add_column("Connector Status")
 
         table.add_column("Last Refresh Time")
-        table.add_column("Minimum Refresh Interval (min)")
+        table.add_column("Min Refresh (min)")
         table.add_column("Target Element")
         table.add_column("Exception Message")
 
@@ -60,22 +62,35 @@ def display_integration_daemon_status(server: str, url: str, user: str):
         for connector in connector_reports:
             connector_name = connector.get("connectorName", "---")
             connector_status = connector.get("connectorStatus", "---")
-            connector_guid = connector["connectorGUID"]
+            connector_guid = connector.get("connectorGUID","---")
             last_refresh_time = connector.get("lastRefreshTime", "---")
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = " "
+            if connector_guid != '---':
+                targets = a_client.get_catalog_targets(connector_guid)
+                tgt_tab = Table()
+                tgt_tab.add_column("Target")
+                tgt_tab.add_column("UniqueName")
+                tgt_tab.add_column("Relationship GUID", no_wrap=True)
 
-            targets = a_client.get_catalog_targets(connector_guid)
-            if type(targets) == list:
-                targets_m = "\n"
-                for target in targets:
-                    t_name = target["catalogTargetName"]
-                    t_sync = target["permittedSynchronization"]
-                    t_unique_name = target["catalogTargetElement"]["uniqueName"]
-                    targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
-                targets_md = Markdown(targets_m)
+                if type(targets) == list:
+                    targets_md = True
+                    for target in targets:
+                        t_name = target["catalogTargetName"]
+                        # t_sync = target["permittedSynchronization"]
+                        t_unique_name = target["catalogTargetElement"]["uniqueName"]
+                        t_rel_guid = target["relationshipGUID"]
+                        # targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
+                        tgt_tab.add_row(t_name,t_unique_name, t_rel_guid)
+                    # targets_md = Markdown(targets_m)
+                else:
+                    targets_md = False
             else:
-                targets_md = " "
+                targets_md = False
+            if targets_md is False:
+                targets_out = ""
+            else:
+                targets_out = tgt_tab
 
             if connector_status in ("RUNNING", "REFRESHING", "WAITING"):
                 connector_status = f"[green]{connector_status}"
@@ -86,7 +101,7 @@ def display_integration_daemon_status(server: str, url: str, user: str):
 
             table.add_row(
                 connector_name, connector_status, last_refresh_time, refresh_interval,
-                targets_md, exception_msg
+                targets_out, exception_msg
             )
         return table
 
@@ -103,16 +118,23 @@ def display_integration_daemon_status(server: str, url: str, user: str):
 
     finally:
         s_client.close_session()
+        a_client.close_session()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the integration server to display status for")
-    parser.add_argument("--url", help="URL Platform to connect to")
+    parser.add_argument("--integ_server", help="Name of the integration server to display status for")
+    parser.add_argument("--integ_url", help="URL Platform to connect to")
+    parser.add_argument("--view_server", help="Name of the integration server to display status for")
+    parser.add_argument("--view_url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "integration-daemon"
-    url = args.url if args.url is not None else "https://localhost:9443"
+    integ_server = args.integ_server if args.integ_server is not None else "integration-daemon"
+    integ_url = args.integ_url if args.integ_url is not None else "https://localhost:9443"
+    view_server = args.view_server if args.view_server is not None else "view-server"
+    view_url = args.view_url if args.view_url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'garygeeke'
-    display_integration_daemon_status(server=server, url=url, user=userid)
+    display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
+                                      view_server = view_server, view_url = view_url,
+                                      user=userid)
