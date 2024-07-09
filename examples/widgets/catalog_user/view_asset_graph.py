@@ -48,9 +48,10 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
             if c_type == "Anchors":
                 continue
             class_md += f"* Classification: {c_type}\n"
-            class_props = c["classificationProperties"]
-            for prop in class_props.keys():
-                class_md += f"\t* {prop}: {class_props[prop]}\n"
+            class_props = c.get("classificationProperties","---")
+            if type(class_props) is list:
+                for prop in class_props.keys():
+                    class_md += f"\t* {prop}: {class_props[prop]}\n"
         if class_md == "":
             output = None
         else:
