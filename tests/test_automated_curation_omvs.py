@@ -17,7 +17,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import AutomatedCuration
+from pyegeria import AutomatedCuration, PostgreSQL_Server_Integration_Connector_GUID
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                                   print_exception_response, )
 
@@ -834,11 +834,12 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
-            catalog_target_name = "deltalake experiments"
-            file_folder_integ_con = "cd6479e1-2fe7-4426-b358-8a0cf70be117"
+            element_guid = "c155848f-60db-4265-aeb7-75cd7124806f"
+            catalog_target_name = "laz postgres server"
+
             start_time = time.perf_counter()
-            guid = a_client.add_catalog_target(file_folder_integ_con, element_guid, catalog_target_name)
+            guid = a_client.add_catalog_target(PostgreSQL_Server_Integration_Connector_GUID,
+                                               element_guid, catalog_target_name)
             duration = time.perf_counter() - start_time
             print(f"guid returned is: {guid}")
             print(f"\n\tDuration was {duration} seconds")

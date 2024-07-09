@@ -10,8 +10,8 @@ import sys
 import time
 import argparse
 from confluent_kafka import Consumer, KafkaException
-
-
+from datetime import datetime
+from rich.prompt import Prompt
 from rich.table import Table
 from rich.live import Live
 from rich.console import Console
@@ -21,15 +21,18 @@ from pyegeria import RuntimeManager
 
 disable_ssl_warnings = True
 console = Console(width=200)
-
+now = datetime.now()
+current_time = now.strftime("%H:%M:%S")
 
 from confluent_kafka import Consumer, KafkaException
+
+earliest_latest = Prompt.ask("Msgs from earliest or latest:", default="earliest")
 
 # Define the Kafka consumer configuration.
 config = {
     'bootstrap.servers': 'localhost:9092',  # replace with your Kafka broker(s)
-    'group.id': "w4",  # replace with your consumer group
-    'auto.offset.reset': 'earliest'  # can be set to 'earliest' or 'latest'
+    'group.id': f"view_asset_events:{current_time}",  # replace with your consumer group
+    'auto.offset.reset': earliest_latest  # can be set to 'earliest' or 'latest'
 }
 
 # Initialize a Kafka consumer.
@@ -54,14 +57,6 @@ try:
 
             type_name = event["elementHeader"]["type"]["typeName"]
             origin = event["elementHeader"]["origin"]["sourceServer"]
-            # classifications = event['elementHeader']["classifications"]
-            # classification_md = ""
-            # for c in classifications:
-            #     cp = c.get("classificationProperties", None)
-            #     if cp is not None:
-            #         cl_name = c["classificationProperties"].get("name", None)
-            #         cl = cl_name if not None else c["classificationName"]
-            #         classification_md += f"* classifications: {cl}\n"
 
             element_properties = event["elementProperties"]
             element_properties_keys = element_properties.keys()
@@ -72,10 +67,10 @@ try:
             console.rule(style= "[bold red]")
             console.rule(f"\tMessage TimeStamp: {event_time}\t eventType: {event_type}\t typeName: {type_name}\t guid: {guid}")
             msg = (
-                      # f"classifications: \n{classification_md}\n"
+
                       f"properties: \n{props}\n\n")
             msg = Markdown(msg)
-            # msg = json.dumps(event, indent=4)
+
             console.print(msg)
 finally:
     # Close down consumer to commit final offsets.

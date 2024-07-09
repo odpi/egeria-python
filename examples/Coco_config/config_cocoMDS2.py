@@ -44,16 +44,16 @@ try:
 
 #   Inherit event bus config
 
-    # event_bus_config = {
-    #     "producer": {
-    #         "bootstrap.servers": "localhost:9092"
-    #     },
-    #     "consumer": {
-    #         "bootstrap.servers": "localhost:9092"
-    #     }
-    # }
-    #
-    # o_client.set_event_bus(event_bus_config)
+    event_bus_config = {
+        "producer": {
+            "bootstrap.servers": "{{kafkaEndpoint}}"
+        },
+        "consumer": {
+            "bootstrap.servers": "{{kafkaEndpoint}}"
+        }
+    }
+
+    o_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",

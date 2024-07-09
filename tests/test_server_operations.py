@@ -179,7 +179,7 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-    def test_refresh_integration_connectors(self, server:str = good_server_2):
+    def test_refresh_integration_connectors(self, server:str = good_server_3):
         try:
             server_name = "integration-daemon"
             connector = "FilesMonitor"
