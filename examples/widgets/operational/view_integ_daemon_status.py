@@ -3,51 +3,40 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
 
+A simple status display for the Integration Daemon.
 
-A simple status display for Engine Actions
+Note that there are a couple of assumptions currently being made that need to get resolved in future
+versions. First, we assume that the view-server used by AutomatedCuration is called "view-server". Second, we
+assume that the user password is always "secret".
+
 """
 
 import argparse
-import json
 import time
 
 from rich import box
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.table import Table
-from rich import console
+from rich.text import Text
 
+from pyegeria import ServerOps, AutomatedCuration
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.server_operations import ServerOps
 
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
 
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_integration_daemon_status(server: str = good_server_4, url: str = good_platform1_url,
-                                      user: str = good_user_1):
-    s_client = ServerOps(server, url, user)
+def display_integration_daemon_status(integ_server: str, integ_url: str,
+                                      view_server:str, view_url: str, user: str):
+    s_client = ServerOps(integ_server, integ_url, user)
+    a_client = AutomatedCuration(view_server, view_url, user, "secret")
+    token = a_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -57,48 +46,62 @@ def display_integration_daemon_status(server: str = good_server_4, url: str = go
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Integration Daemon Status for Server '{server}' @ Platform - {url}",
+            caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
             expand=True
         )
         table.add_column("Connector Name")
         table.add_column("Connector Status")
 
         table.add_column("Last Refresh Time")
-        table.add_column("Minimum Refresh Interval (min)")
+        table.add_column("Min Refresh (min)")
         table.add_column("Target Element")
         table.add_column("Exception Message")
 
         daemon_status = s_client.get_integration_daemon_status()
         connector_reports = daemon_status["integrationConnectorReports"]
         for connector in connector_reports:
-            connector_name = connector.get("connectorName","---")
-            connector_status = connector.get("connectorStatus","---")
-            last_refresh_time = connector.get("lastRefreshTime","---")
-            refresh_interval = str(connector.get("minMinutesBetweenRefresh","---"))
-            target_element = " "
+            connector_name = connector.get("connectorName", "---")
+            connector_status = connector.get("connectorStatus", "---")
+            connector_guid = connector.get("connectorGUID","---")
+            last_refresh_time = connector.get("lastRefreshTime", "---")
+            refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = " "
+            if connector_guid != '---':
+                targets = a_client.get_catalog_targets(connector_guid)
+                tgt_tab = Table()
+                tgt_tab.add_column("Target")
+                tgt_tab.add_column("UniqueName")
+                tgt_tab.add_column("Relationship GUID", no_wrap=True)
 
-            if connector_name is None:
-                connector_name = "connector name"
-            if connector_status is None:
-                connector_status = "connector status"
+                if type(targets) == list:
+                    targets_md = True
+                    for target in targets:
+                        t_name = target["catalogTargetName"]
+                        # t_sync = target["permittedSynchronization"]
+                        t_unique_name = target["catalogTargetElement"]["uniqueName"]
+                        t_rel_guid = target["relationshipGUID"]
+                        # targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
+                        tgt_tab.add_row(t_name,t_unique_name, t_rel_guid)
+                    # targets_md = Markdown(targets_m)
+                else:
+                    targets_md = False
+            else:
+                targets_md = False
+            if targets_md is False:
+                targets_out = ""
+            else:
+                targets_out = tgt_tab
 
             if connector_status in ("RUNNING", "REFRESHING", "WAITING"):
                 connector_status = f"[green]{connector_status}"
-            elif connector_status in ("INITIALIZE FAILED","CONFIG_FAILED","FAILED"):
+            elif connector_status in ("INITIALIZE FAILED", "CONFIG_FAILED", "FAILED"):
                 connector_status = f"[red]{connector_status}"
             else:
                 connector_status = f"[yellow]{connector_status}"
 
-            # target= action.get("actionTargetElements","Empty")
-            # if type(target) is list:
-            #     target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
-            # else:
-            #     target_element = " "
-
             table.add_row(
-                connector_name,connector_status,last_refresh_time,refresh_interval,
-                target_element, exception_msg
+                connector_name, connector_status, last_refresh_time, refresh_interval,
+                targets_out, exception_msg
             )
         return table
 
@@ -115,16 +118,23 @@ def display_integration_daemon_status(server: str = good_server_4, url: str = go
 
     finally:
         s_client.close_session()
+        a_client.close_session()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the server to display status for")
-    parser.add_argument("--url", help="URL Platform to connect to")
+    parser.add_argument("--integ_server", help="Name of the integration server to display status for")
+    parser.add_argument("--integ_url", help="URL Platform to connect to")
+    parser.add_argument("--view_server", help="Name of the integration server to display status for")
+    parser.add_argument("--view_url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "integration-daemon"
-    url = args.url if args.url is not None else "https://localhost:9443"
+    integ_server = args.integ_server if args.integ_server is not None else "integration-daemon"
+    integ_url = args.integ_url if args.integ_url is not None else "https://localhost:9443"
+    view_server = args.view_server if args.view_server is not None else "view-server"
+    view_url = args.view_url if args.view_url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'garygeeke'
-    display_integration_daemon_status(server=server, url=url, user=userid)
+    display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
+                                      view_server = view_server, view_url = view_url,
+                                      user=userid)

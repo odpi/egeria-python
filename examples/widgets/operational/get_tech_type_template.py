@@ -42,7 +42,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
 
     def build_classifications(classification: dict) -> Markdown:
 
-        class_md = "-"
+        class_md = ("\n")
         for c in classification:
             c_type = c["classificationName"]
             if c_type == "Anchors":
@@ -52,7 +52,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
             if class_props is None:
                 continue
             for prop in class_props.keys():
-                class_md += f"* {prop}: {class_props[prop]}\n"
+                class_md += f"\t* {prop}: {class_props[prop]}\n"
         if class_md == "-":
             output = None
         else:
@@ -68,7 +68,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
 
         token = a_client.create_egeria_bearer_token(user, "secret")
         tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=True)
-        if len(tech_elements) == 0:
+        if len(tech_elements) <= 1:
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)
         tree = Tree(f"Deployed Technology Type: {tech_name}", style="bold bright_white", guide_style="bold bright_blue")

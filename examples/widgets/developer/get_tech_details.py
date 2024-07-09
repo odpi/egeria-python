@@ -49,49 +49,13 @@ def tech_viewer(tech: str, server_name:str, platform_url:str, user:str):
         tech_details = a_client.get_technology_type_detail(tech)
         if type(tech_details) is dict:
             style = ""
-            l2 = tree.add(Text(f"Name: {tech_details['name']}", "bold red"))
+            l2 = tree.add(Text(f"Name: {tech_details.get('name',' ')}", "bold red"))
             l2 = tree.add(Text(f"* QualifiedName: {tech_details['qualifiedName']}","bold white"))
             l2 = tree.add(Text(f"* Category: {tech_details['category']}", "bold white"))
             l2 = tree.add(Text(f"* Technology Description: {tech_details['description']}", "bold white"))
             ext_ref = tech_details.get('externalReferences', None)
             if ext_ref is not None:
                 l2 = tree.add(Text(f'* URI: {ext_ref[0]["properties"]["uri"]}', "bold white"))
-
-            # catalog_temp = tech_details.get("catalogTemplates", None)
-            # if catalog_temp is not None:
-            #     l2 = tree.add("Catalog Templates")
-            #     for catalog in catalog_temp:
-                    # cat_name = catalog["relatedElement"].get("name", None)
-                    # if cat_name is None:
-                    #     continue
-                    # l3 = l2.add(f'[white] Template Name: {cat_name}, style=style)')
-                    # l3 = l2.add(f'[white] Template GUID: {catalog["relatedElement"].get("guid", None)}, style=style)')
-                    # classifications = catalog["relatedElement"].get("classifications", None)
-                    # if classifications is not None:
-                    #     l4 = l3.add(f"[red]Classifications")
-                    #     for classification in classifications:
-                    #         props = classification['classificationProperties']
-                    #         c_name = Text(f'[white] Name: {props.get("name", None)}[white]')
-                    #         c_ver = Text(f'[white] Version: {props.get("versionIdentifier", None)}')
-                    #         c_desc = Text(f'[white] Description: {props.get("description", None)}')
-                    #         class_text = (f"[bold red]Classification \n"
-                    #                       f"[white] Name: {c_name} \n"
-                    #                       f"[white] Version: {c_ver} \n"
-                    #                       f"[white] Description: {c_desc}")
-                    #         c = Panel.fit(class_text)
-                    #         l4 = l3.add(c, style = style)
-            #
-            #         placeholders = catalog.get("specification", None)
-            #         if placeholders is not None:
-            #             specs = placeholders.get("placeholderProperty", None)
-            #             if specs is not None:
-            #                 l4 = l3.add(f"[red]Placeholder Properties")
-            #                 for spec in specs:
-            #                     l5 = l4.add(f'[white] Placeholder Name: {spec.get("placeholderName", None)})')
-            #                     l5 = l4.add(f'[white] Data Type: {spec["dataType"]}')
-            #                     l5 = l4.add(f'[white] Placeholder Name: {str(spec["required"])})')
-            #                     l5 = l4.add(f'[white] Example: {spec.get("example", None)})')
-            #                     l5 = l4.add(f'[white] Description: {spec.get("description", None)}[white])')
 
 
             resource_list = tech_details.get('resourceList',None)

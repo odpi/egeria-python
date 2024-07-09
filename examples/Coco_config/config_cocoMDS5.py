@@ -43,7 +43,7 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties(metadataCollectionName,
+    o_client.set_basic_server_properties("Business Systems",
                                          "Coco Pharmaceuticals",
                                          platform_url,
                                          mdr_server_user_id, mdr_server_password,
@@ -51,16 +51,16 @@ try:
 
     # Inherit event bus config
 
-    event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "localhost:9092"
-        },
-        "consumer": {
-            "bootstrap.servers": "localhost:9092"
-        }
-    }
-
-    o_client.set_event_bus(event_bus_config)
+    # event_bus_config = {
+    #     "producer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     },
+    #     "consumer": {
+    #         "bootstrap.servers": "localhost:9092"
+    #     }
+    # }
+    #
+    # o_client.set_event_bus(event_bus_config)
 
     security_connection_body = {
         "class": "Connection",

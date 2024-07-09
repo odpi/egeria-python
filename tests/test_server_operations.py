@@ -30,7 +30,7 @@ disable_ssl_warnings = True
 
 class TestServerOperations:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://localhost:9446"
+    good_platform2_url = "https://localhost:9444"
     bad_platform1_url = "https://localhost:9443"
 
     # good_platform1_url = "https://127.0.0.1:30080"
@@ -44,7 +44,7 @@ class TestServerOperations:
 
     good_server_1 = "active-metadata-store"
     good_server_2 = "integration-daemon"
-    good_server_3 = "engine-host"
+    good_server_3 = "exchangeDL01"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -128,10 +128,10 @@ class TestServerOperations:
     #   Integration Daemon Ops
     #
 
-    def test_get_integration_daemon_status(self, server:str = good_server_2):
+    def test_get_integration_daemon_status(self, server:str = good_server_3):
         try:
             server_name = server
-            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
             response = s_client.get_integration_daemon_status(server)
 
             if type(response) is dict:
@@ -164,12 +164,12 @@ class TestServerOperations:
 # todo - review with Mandy?
     def test_restart_integration_connector(self, server:str = good_server_2):
         try:
-            server_name = "ecosystem-monitor"
+            server_name = "integration-daemon"
             # connector = "FilesMonitor"
             # connector = "DataFilesMonitorIntegrationConnector"
 
             connector = None
-            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             # response = s_client.restart_integration_connector(connector,server)
             s_client.restart_integration_connector(connector, server_name)
 
@@ -181,9 +181,9 @@ class TestServerOperations:
 
     def test_refresh_integration_connectors(self, server:str = good_server_2):
         try:
-            server_name = "ecosystem-monitor"
+            server_name = "integration-daemon"
             connector = "FilesMonitor"
-            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
 
             s_client.refresh_integration_connectors(None, server_name)
 

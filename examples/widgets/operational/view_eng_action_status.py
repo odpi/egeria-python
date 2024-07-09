@@ -17,6 +17,7 @@ import time
 from rich import box
 from rich.console import Console
 from rich.table import Table
+from rich.live import Live
 
 from pyegeria import AutomatedCuration
 from pyegeria import (
@@ -102,9 +103,13 @@ def display_status_engine_actions(server: str, url: str, user: str):
         return table
 
     try:
-        console = Console()
-        with console.pager():
-            console.print(generate_table())
+        # console = Console()
+        # with console.pager():
+        #     console.print(generate_table())
+        with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
+            while True:
+                time.sleep(2)
+                live.update(generate_table())
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)

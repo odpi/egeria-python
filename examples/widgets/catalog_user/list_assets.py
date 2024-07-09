@@ -79,7 +79,7 @@ def display_assets(search_string: str, guid: str=None, server: str = good_server
         table.add_column("Qualified Name")
 
 
-        assets = g_client.find_assets_in_domain(search_string, starts_with=False,
+        assets = g_client.find_assets_in_domain(search_string, starts_with=True,
                                              ends_with=False, ignore_case=True, page_size=10)
         if type(assets) is str:
             return table

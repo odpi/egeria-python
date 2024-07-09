@@ -25,7 +25,8 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria import FileFolder_template_GUID, PostgreSQL_Server_template_GUID, Apache_Kafka_Server_template_GUID
+
 
 from pyegeria.asset_catalog_omvs import AssetCatalog
 from pyegeria.utils import print_json_list_as_table
@@ -69,7 +70,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Bedlam"
+            search_string = "Bunge"
             response = g_client.find_assets_in_domain(search_string, starts_with=True, ends_with=False,
                                                       ignore_case=True)
             duration = time.perf_counter() - start_time
@@ -99,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="6ebd9b03-994b-466a-9ebf-170854a7cffa"
+            asset_guid ="8e35b39e-6ee7-4d60-aff5-4b09406c5e79"
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 
@@ -170,8 +171,37 @@ class TestAssetCatalog:
         finally:
             a_client.close_session()
 
+    # def test_create_folder_asset(self, server: str = good_view_server_1):
+    #     try:
+    #         server_name = server
+    #         a_client = AssetCatalog(server_name, self.good_platform1_url,
+    #                                 user_id=self.good_user_2)
+    #
+    #         token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+    #
+    #         path_name = "/Users/dwolfson/localGit/databricks"
+    #         folder_name = "databricks"
+    #         file_system = "laz"
+    #         description = "Folder for databricks work"
+    #
+    #         response = a_client.create_folder_element_from_template()
+    #         print(f"type is {type(response)}")
+    #         if type(response) is list:
+    #             print("\n\n" + json.dumps(response, indent=4))
+    #             count = len(response)
+    #             print(f"Found {count} terms")
+    #         elif type(response) is str:
+    #             print("\n\n" + response)
+    #         assert True
+    #     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    #         print_exception_response(e)
+    #         assert False, "Invalid request"
+    #
+    #     finally:
+    #         a_client.close_session()
 
-    def test_create_folder_asset(self, server: str = good_view_server_1):
+
+    def test_create_folder_asset_body(self, server: str = good_view_server_1):
         try:
             server_name = server
             a_client = AssetCatalog(server_name, self.good_platform1_url,
@@ -179,7 +209,7 @@ class TestAssetCatalog:
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
             body = {
-                    "templateGUID" : "553f51cf-3981-480e-acd8-86ed3e25329d",
+                    "templateGUID" : FileFolder_template_GUID,
                     "isOwnAnchor" : True,
                     "placeholderPropertyValues" : {
                         "clinicalTrialId" : "TransMorg-1",
@@ -187,12 +217,12 @@ class TestAssetCatalog:
                         "hospitalName" : "Bedlam",
                         "deployedImplementationType": "FileFolder",
                         "fileSystemName" : "Bedlam-Hospital-Systems",
-                        "folderName" : "TransMorg-Clinical-Trials-Weeklies",
-                        "pathName" : "Dungeon/lab" ,
-                        "fileName" : "first measures file",
+                        "directoryName" : "TransMorg-Clinical-Trials-Weeklies",
+                        "directoryPathName" : "Dungeon/lab" ,
                         "contactName" : "Dr Jekyll",
                         "contactDept" : "Pharmacology",
                         "dateReceived" : "23-06-24",
+                        "description" : "Clinical trial data folder"
 
 
                     }
@@ -214,3 +244,4 @@ class TestAssetCatalog:
 
         finally:
             a_client.close_session()
+

@@ -39,13 +39,13 @@ max_paging_size = 1200
 #
 
 # These are the three main platforms used to run Egeria's OMAG Servers
-corePlatformURL      = os.environ.get('corePlatformURL', 'https://laz.local:9443')
+corePlatformURL      = os.environ.get('corePlatformURL', 'https://localhost:9443')
 corePlatformName     = "Core Platform"
 
-dataLakePlatformURL  = os.environ.get('dataLakePlatformURL', 'https://laz.local:9444')
+dataLakePlatformURL  = os.environ.get('dataLakePlatformURL', 'https://localhost:9444')
 dataLakePlatformName = "Data Lake Platform"
 
-devPlatformURL       = os.environ.get('devPlatformURL', 'https://laz.local:9445')
+devPlatformURL       = os.environ.get('devPlatformURL', 'https://localhost:9445')
 devPlatformName      = "Dev Platform"
 
 

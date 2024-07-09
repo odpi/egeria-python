@@ -1,32 +1,22 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
 
-The example applications in this directory provide some simple but useful visualization of the Egeria environment. They 
-are built with the **Rich** python package and demonstrate the use of **pyegeria** .
+# Developer
 
-The applications are invoked using the python3 command - for instance:
-`python3 server_status_widget -h` would display the help information for the server_status_widget.
-Running them requires that you have pyegeria installed. pyegeria can be installed using:
-'pip install pyegeria'
+These widgets display different kinds of information useful to developers. Widgets
+will continue to be added over time to cover more facets. Useful developer information
+can also be found on [Egeria Project](https://egeria-project.org) and in [Egeria Explorers](https://egeria-project.org/release-notes/june-2024/?h=brain#egeria-explorers).
 
-Once pyegeria is installed, the scripts may also be run as commands from any directory without having to specify python3 in front such as:
-`view_platform_status.py
+* get_guid_info.py - lists information about the metadata element specified by the Egeria guid.
+* get_tech_details.py - shows a tree view showing the Egeria support for a particular technology (e.g PostgreSQL Server).
+* list_asset_types.py - provides a tree view of a collection with all nested collections and items within the collection.
+* list_registered_services.py - lists the services available on an Egeria platform.
+* list_relationship_types.py - list the relationships details for a specified Egeria type.
+* list_tech_templates.py - list template details for technology types
+* list_tech_types.py - list the technology types that Egeria currently supports
+* list_valid_metadata_values.py - list valid metadata values for a particular property and category.
 
-Some of the widgets are "live" - that is running continuously until ctrl-c is issued to interrupt it.
 
-As the number of widgets has grown, they have been organized by role into different sub-directories:
-
-* catalog_user - for users of the Egeria environment
-* developer - for those building with, or working on Egeria
-* operational - for visualizing the current state of Egeria - typically for administrators
-* personal_organizer - for visualizing work and individual items
-
-The naming convention for the widgets helps to understand their behaviour:
-Here is a list - if the widget starts with:
-
-* get - it will return details about a single item
-* list - lists elements through a paging interface like "more" - use q to quit.
-* view - provides a live view - typically of a status - use control-c to quit
 
 
 ----
