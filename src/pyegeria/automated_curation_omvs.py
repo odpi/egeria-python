@@ -13,9 +13,9 @@ from httpx import Response
 from pyegeria import Client, max_paging_size, body_slimmer
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
 from ._validators import validate_name, validate_guid, validate_search_string
-from .core_guids import (FileFolder_template_GUID,
-                         PostgreSQL_Server_template_GUID,
-                         Apache_Kafka_Server_template_GUID,
+from .core_guids import (FILEFOLDER_TEMPLATE_GUID,
+                        POSTGRESQL_SERVER_TEMPLATE_GUID,
+                        APACHE_KAFKA_SERVER_TEMPLATE_GUID,
                          )
 
 
@@ -169,7 +169,7 @@ class AutomatedCuration(Client):
                 The GUID of the Kafka server element.
         """
 
-        body = {"templateGUID": Apache_Kafka_Server_template_GUID, "isOwnAnchor": 'true',
+        body = {"templateGUID":APACHE_KAFKA_SERVER_TEMPLATE_GUID, "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": kafka_server, "hostIdentifier": host_name,
                                               "portNumber": port, "description": description}}
         body_s = body_slimmer(body)
@@ -241,7 +241,7 @@ class AutomatedCuration(Client):
             str
                 The GUID of the Postgres server element.
         """
-        body = {"templateGUID": PostgreSQL_Server_template_GUID, "isOwnAnchor": 'true',
+        body = {"templateGUID":POSTGRESQL_SERVER_TEMPLATE_GUID, "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": postgres_server, "hostIdentifier": host_name,
                                               "portNumber": port, "databaseUserId": db_user, "description": description,
                                               "databasePassword": db_pwd}}
@@ -319,7 +319,7 @@ class AutomatedCuration(Client):
         str
             The GUID of the File Folder element.
         """
-        body = {"templateGUID": FileFolder_template_GUID,
+        body = {"templateGUID": FILEFOLDER_TEMPLATE_GUID,
                 "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {
                     "directoryPathName": path_name,

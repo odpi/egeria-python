@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyegeria"
-version = "0.4.0"
+version = "0.4.1"
 #license = 'Apache 2.0'
 authors = [
     {name ="Dan Wolfson", email= "dan.wolfson@pdr-associates.com"},
@@ -33,6 +33,12 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
  ]
+
+#[project.scripts]
+#    view_server_status = "examples.widgets.operational.view_server_status:main"
+#    view_my_todos = "examples.widgets.personal_organizer.view_my_todos:main"
+#    list_asset_types = "examples.widgets.developer.list_asset_types:main"
+
 
 
 [project.urls]

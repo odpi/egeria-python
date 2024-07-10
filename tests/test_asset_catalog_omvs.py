@@ -25,7 +25,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-from pyegeria import FileFolder_template_GUID, PostgreSQL_Server_template_GUID, Apache_Kafka_Server_template_GUID
+from pyegeria import FILEFOLDER_TEMPLATE_GUID, POSTGRESQL_SERVER_TEMPLATE_GUID, APACHE_KAFKA_SERVER_TEMPLATE_GUID
 
 
 from pyegeria.asset_catalog_omvs import AssetCatalog
@@ -70,7 +70,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Bunge"
+            search_string = "Location"
             response = g_client.find_assets_in_domain(search_string, starts_with=True, ends_with=False,
                                                       ignore_case=True)
             duration = time.perf_counter() - start_time
@@ -100,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="8e35b39e-6ee7-4d60-aff5-4b09406c5e79"
+            asset_guid ="bc2931d4-5837-47e5-ba8b-c4dbdf26512d"
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 
@@ -209,7 +209,7 @@ class TestAssetCatalog:
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
             body = {
-                    "templateGUID" : FileFolder_template_GUID,
+                    "templateGUID" : FILEFOLDER_TEMPLATE_GUID,
                     "isOwnAnchor" : True,
                     "placeholderPropertyValues" : {
                         "clinicalTrialId" : "TransMorg-1",
