@@ -195,8 +195,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                     f"\t* Unique Name: {rel_end1_unique_name}\n"
                     )
 
-                if rel_end1_class_md is not None:
-                    rel_end1_md =  rel_end1_md + rel_end1_class_md
+                # if rel_end1_class_md is not None:
+                #     rel_end1_md =  rel_end1_md + rel_end1_class_md
 
                 rel_end2_md = (
                     f"\n**End2:**\n"
@@ -205,8 +205,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                     f"\t* Unique Name: {rel_end2_unique_name}\n"
                 )
 
-                if rel_end2_class_md is not None:
-                    rel_end1_md = rel_end1_md + rel_end2_class_md
+                # if rel_end2_class_md is not None:
+                #     rel_end1_md = rel_end1_md + rel_end2_class_md
                 #
                 # for prop in relationship_properties.keys():
                 #     relationship_md += f"* {prop}: {relationship_properties[prop]}\n"
