@@ -40,7 +40,7 @@ guid_list = []
 
 def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
 
-    def build_classifications(classification: dict) -> str:
+    def build_classifications(classification: dict) -> Markdown:
 
         class_md = ""
         for c in classification:
@@ -49,7 +49,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                 continue
             class_md += f"* Classification: {c_type}\n"
             class_props = c.get("classificationProperties","---")
-            if type(class_props) is dict:
+            if type(class_props) is list:
                 for prop in class_props.keys():
                     class_md += f"\t* {prop}: {class_props[prop]}\n"
         if class_md == "":
@@ -125,6 +125,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         asset_relationships = asset_graph["relationships"]
         asset_class_md = build_classifications(asset_classifications)
 
+
         asset_properties = asset_graph["extendedProperties"]
         prop_md = "\n* Extended Properties:\n"
         for prop in asset_properties:
@@ -189,24 +190,24 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                     f"* Created by: {relationship_created_by} at time {relationship_creation_time}\n"
                 )
                 rel_end1_md = (
-                    f"\n**End1:**\n"
-                    f"\n\t* Type: {rel_end1_type}\n"
+                    f"* End1:\n"
+                    f"\t* Type: {rel_end1_type}\n"
                     f"\t* GUID: {rel_end1_guid}\n"
                     f"\t* Unique Name: {rel_end1_unique_name}\n"
                     )
 
-                # if rel_end1_class_md is not None:
-                #     rel_end1_md =  rel_end1_md + rel_end1_class_md
+                if rel_end1_class_md is not None:
+                    rel_end1_md = rel_end1_class_md + rel_end1_md
 
                 rel_end2_md = (
-                    f"\n**End2:**\n"
-                    f"\n\t* Type: {rel_end2_type}\n"
+                    f"* End2:\n"
+                    f"\t* Type: {rel_end2_type}\n"
                     f"\t* GUID: {rel_end2_guid}\n"
                     f"\t* Unique Name: {rel_end2_unique_name}\n"
                 )
 
-                # if rel_end2_class_md is not None:
-                #     rel_end1_md = rel_end1_md + rel_end2_class_md
+                if rel_end2_class_md is not None:
+                    rel_end1_md = rel_end2_class_md + rel_end1_md
                 #
                 # for prop in relationship_properties.keys():
                 #     relationship_md += f"* {prop}: {relationship_properties[prop]}\n"
@@ -228,7 +229,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -242,3 +243,6 @@ if __name__ == "__main__":
 
     asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="8e35b39e-6ee7-4d60-aff5-4b09406c5e79")
     asset_viewer(asset_guid,server, url, userid)
+
+if __name__ == "__main__":
+    main()

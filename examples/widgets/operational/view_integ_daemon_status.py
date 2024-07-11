@@ -17,9 +17,7 @@ import time
 
 from rich import box
 from rich.live import Live
-from rich.markdown import Markdown
 from rich.table import Table
-from rich.text import Text
 
 from pyegeria import ServerOps, AutomatedCuration
 from pyegeria._exceptions import (
@@ -121,7 +119,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         a_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integ_server", help="Name of the integration server to display status for")
     parser.add_argument("--integ_url", help="URL Platform to connect to")
@@ -138,3 +136,6 @@ if __name__ == "__main__":
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
                                       view_server = view_server, view_url = view_url,
                                       user=userid)
+
+if __name__ == "__main__":
+    main()

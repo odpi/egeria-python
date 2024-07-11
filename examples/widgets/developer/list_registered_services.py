@@ -116,7 +116,7 @@ def display_registered_svcs(service: str, server: str , url: str,
         a_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -133,3 +133,6 @@ if __name__ == "__main__":
     svc_kind = Prompt.ask("Enter the service type you are searching for:", default="all")
 
     display_registered_svcs(svc_kind, server, url, userid, password=password)
+
+if __name__ == "__main__":
+    main()

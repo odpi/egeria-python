@@ -23,7 +23,6 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    RegisteredInfo,
     AutomatedCuration
 )
 
@@ -106,7 +105,7 @@ def display_tech_types(search_string:str = "*", server: str = good_server_3, url
         a_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -122,3 +121,6 @@ if __name__ == "__main__":
     search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
 
     display_tech_types(search_string, server, url, userid)
+
+if __name__ == "__main__":
+    main()

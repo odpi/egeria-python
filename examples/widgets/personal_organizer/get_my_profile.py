@@ -97,7 +97,7 @@ def display_my_profiles(server: str, url: str, username: str):
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -112,3 +112,6 @@ if __name__ == "__main__":
     guid = None
 
     display_my_profiles(server, url, userid)
+
+if __name__ == "__main__":
+    main()

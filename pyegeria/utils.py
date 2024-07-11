@@ -6,71 +6,69 @@ General utility functions in support of the Egeria Python Client package.
 
 """
 import json
-import textwrap
 from rich import print, print_json
-import pandas as pd
-from tabulate import tabulate
 
 
-def wrap_text(df: pd.DataFrame, wrap_len: int = 30) -> pd.DataFrame:
-    """ Wrap the text in a dataframe
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        The DataFrame to wrap the text in.
-    wrap_len : int, optional
-        The maximum length of each cell's contents to wrap. Defaults to 30.
 
-    Returns
-    -------
-    pandas.DataFrame
-        A new DataFrame with the wrapped text.
-
-    """
-
-    # Helper function to wrap text in a particular cell
-    def wrap_cell_contents(cell_contents: str, wrap: int = 30) -> str:
-        """ Wrap the text in a cell
-        Parameters
-        ----------
-        cell_contents : str or any
-            The contents of a cell in a dataframe.
-        wrap : int, optional
-            The maximum width at which to wrap the cell contents. Default is 30.
-
-        Returns
-        -------
-        str or any
-            If the cell_contents is a string and its length is greater than wrap_len,
-            the contents are wrapped at wrap_len width using textwrap.
-            Otherwise, the original cell_contents are returned as is.
-        """
-        if isinstance(cell_contents, str) and len(cell_contents) > wrap:
-            return textwrap.fill(cell_contents, width=wrap)
-        else:
-            return cell_contents
-
-    # Apply the helper function to each element in the DataFrame
-    return df.map(lambda x: wrap_cell_contents(x, wrap_len))
-
-
-def print_nice_table(df, wrap_len: int = 20, tablefmt: str = "grid") -> None:
-    """ Print a nice table from the data frame"""
-    print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
-
-
-def get_json_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> str:
-    """ return the input json as a table"""
-    data = json.loads(json.dumps(input_json))
-    df = pd.json_normalize(data)
-    return tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt)
-
-
-def print_json_list_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> None:
-    """ print a json list as a table"""
-    data = json.loads(json.dumps(input_json))
-    df = pd.json_normalize(data)
-    print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
+# def wrap_text(df: pd.DataFrame, wrap_len: int = 30) -> pd.DataFrame:
+#     """ Wrap the text in a dataframe
+#     Parameters
+#     ----------
+#     df : pandas.DataFrame
+#         The DataFrame to wrap the text in.
+#     wrap_len : int, optional
+#         The maximum length of each cell's contents to wrap. Defaults to 30.
+#
+#     Returns
+#     -------
+#     pandas.DataFrame
+#         A new DataFrame with the wrapped text.
+#
+#     """
+#
+#     # Helper function to wrap text in a particular cell
+#     def wrap_cell_contents(cell_contents: str, wrap: int = 30) -> str:
+#         """ Wrap the text in a cell
+#         Parameters
+#         ----------
+#         cell_contents : str or any
+#             The contents of a cell in a dataframe.
+#         wrap : int, optional
+#             The maximum width at which to wrap the cell contents. Default is 30.
+#
+#         Returns
+#         -------
+#         str or any
+#             If the cell_contents is a string and its length is greater than wrap_len,
+#             the contents are wrapped at wrap_len width using textwrap.
+#             Otherwise, the original cell_contents are returned as is.
+#         """
+#         if isinstance(cell_contents, str) and len(cell_contents) > wrap:
+#             return textwrap.fill(cell_contents, width=wrap)
+#         else:
+#             return cell_contents
+#
+#     # Apply the helper function to each element in the DataFrame
+#     return df.map(lambda x: wrap_cell_contents(x, wrap_len))
+#
+#
+# def print_nice_table(df, wrap_len: int = 20, tablefmt: str = "grid") -> None:
+#     """ Print a nice table from the data frame"""
+#     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
+#
+#
+# def get_json_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> str:
+#     """ return the input json as a table"""
+#     data = json.loads(json.dumps(input_json))
+#     df = pd.json_normalize(data)
+#     return tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt)
+#
+#
+# def print_json_list_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> None:
+#     """ print a json list as a table"""
+#     data = json.loads(json.dumps(input_json))
+#     df = pd.json_normalize(data)
+#     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
 
 
 def print_rest_request_body(body):

@@ -120,8 +120,7 @@ def display_list(project_name: str, server: str, url: str,
         else:
             print_exception_response(e)
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -137,3 +136,6 @@ if __name__ == "__main__":
     project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
 
     display_list(project_name, server, url, userid, save_output)
+
+if __name__ == "__main__":
+    main()

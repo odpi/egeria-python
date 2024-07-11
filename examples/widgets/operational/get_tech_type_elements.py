@@ -121,7 +121,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -135,3 +135,6 @@ if __name__ == "__main__":
 
     tech_name = Prompt.ask("Enter the Asset Name to view:", default="Apache Kafka Server")
     tech_viewer(tech_name,server, url, userid)
+
+if __name__ == "__main__":
+    main()

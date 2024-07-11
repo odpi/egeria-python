@@ -115,7 +115,7 @@ def display_glossary_terms(search_string: str, guid: str=None, server: str = goo
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
 
-if __name__ == "__main__":
+def main():
     sus_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -133,3 +133,6 @@ if __name__ == "__main__":
 
     search_string = Prompt.ask("Enter the term you are searching for:", default="*")
     display_glossary_terms(search_string, guid,server, url, userid)
+
+if __name__ == "__main__":
+    main()
