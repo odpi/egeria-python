@@ -118,7 +118,7 @@ def display_status_engine_actions(server: str, url: str, user: str):
         g_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -130,3 +130,6 @@ if __name__ == "__main__":
     userid = args.userid if args.userid is not None else 'garygeeke'
     print(f"Starting display_status_engine_actions with {server}, {url}, {userid}")
     display_status_engine_actions(server=server, url=url, user=userid)
+
+if __name__ == "__main__":
+    main()

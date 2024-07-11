@@ -229,7 +229,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -243,3 +243,6 @@ if __name__ == "__main__":
 
     asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="8e35b39e-6ee7-4d60-aff5-4b09406c5e79")
     asset_viewer(asset_guid,server, url, userid)
+
+if __name__ == "__main__":
+    main()

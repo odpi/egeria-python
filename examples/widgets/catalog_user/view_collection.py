@@ -63,7 +63,7 @@ def collection_viewer(root: str, server_name: str, platform_url: str, user: str)
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -77,3 +77,6 @@ if __name__ == "__main__":
 
     root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Digital Products Root")
     collection_viewer(root_collection, server, url, userid)
+
+if __name__ == "__main__":
+    main()

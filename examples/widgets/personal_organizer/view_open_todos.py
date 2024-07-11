@@ -105,7 +105,7 @@ def display_todos(server: str , url: str, user: str):
         m_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the view server to connect to")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -117,3 +117,7 @@ if __name__ == "__main__":
     userid = args.userid if args.userid is not None else 'erinoverview'
     print(f"Starting display_todos with {server}, {url}, {userid}")
     display_todos(server=server, url=url, user=userid)
+
+
+if __name__ == "__main__":
+    main()

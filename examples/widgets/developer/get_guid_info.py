@@ -11,17 +11,13 @@ A simple display for glossary terms
 """
 
 import argparse
-import httpx
 import json
-import time
 
-from rich import box
 from rich import print
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.text import Text
 from rich.tree import Tree
-from rich.json import JSON
 
 from pyegeria import (
     InvalidParameterException,
@@ -30,7 +26,6 @@ from pyegeria import (
     print_exception_response,
     Client
 )
-from pyegeria import ProjectManager
 
 
 def display_guid(guid: str, server: str, url: str, username: str):
@@ -63,11 +58,12 @@ def display_guid(guid: str, server: str, url: str, username: str):
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException, ValueError) as e:
         if type(e) is str:
-            print(e)
+           print(e)
         else:
+            console.print(f"\n Looks like the GUID isn't know...detailed message follows\n")
             print_exception_response(e)
 
-if __name__ == "__main__":
+def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -84,3 +80,6 @@ if __name__ == "__main__":
     guid = Prompt.ask("Enter the GUID to retrieve:", default=None)
 
     display_guid(guid, server, url, userid)
+
+if __name__ == "__main__":
+    main()

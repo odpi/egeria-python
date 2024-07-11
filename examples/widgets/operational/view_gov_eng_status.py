@@ -106,7 +106,7 @@ def display_gov_actions_status(server: str = good_server_3, url: str = good_plat
         s_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -117,3 +117,6 @@ if __name__ == "__main__":
     url = args.url if args.url is not None else "https://localhost:9443"
     userid = args.userid if args.userid is not None else 'garygeeke'
     display_gov_actions_status(server=server, url=url, username=userid)
+
+if __name__ == "__main__":
+    main()

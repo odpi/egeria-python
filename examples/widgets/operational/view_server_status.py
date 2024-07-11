@@ -12,16 +12,16 @@ A simple server status display
 import time
 import argparse
 
-from pyegeria._exceptions import (
+from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
+    ServerOps
 )
 from rich.table import Table
 from rich.live import Live
 
-from pyegeria.server_operations import ServerOps
 
 
 def test_display_status(server: str, url: str , username: str ):
@@ -72,7 +72,7 @@ def test_display_status(server: str, url: str , username: str ):
         assert e.related_http_code != "200", "Invalid parameters"
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -84,3 +84,6 @@ if __name__ == "__main__":
     userid = args.userid if args.userid is not None else 'garygeeke'
 
     test_display_status(server, url, userid)
+
+if __name__ == "__main__":
+    main()

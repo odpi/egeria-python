@@ -23,7 +23,8 @@ if disable_ssl_warnings:
 
 from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                           print_exception_response)
-from .utils import print_response, body_slimmer, wrap_text
+# from .utils import print_response, body_slimmer, wrap_text
+from .utils import print_response, body_slimmer
 from ._client import Client
 from .automated_curation_omvs import AutomatedCuration
 from .core_omag_server_config import CoreServerConfig
@@ -47,4 +48,4 @@ from .runtime_manager_omvs import RuntimeManager
 from .action_author_omvs import GovernanceAuthor
 from .glossary_manager_omvs import GlossaryManager
 
-__version__ = "0.4"
+__version__ = "0.5.1"

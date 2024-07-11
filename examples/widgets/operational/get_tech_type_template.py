@@ -5,12 +5,15 @@ Copyright Contributors to the ODPi Egeria project.
 
 Display the status of cataloged platforms and servers.
 """
-import sys
-import time
 import argparse
+import sys
 
-from rich import json
+from rich import print
+from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.tree import Tree
 
 from pyegeria import (
     InvalidParameterException,
@@ -19,15 +22,6 @@ from pyegeria import (
     print_exception_response,
     AutomatedCuration
 )
-from rich.table import Table
-from rich.live import Live
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.tree import Tree
-from rich.prompt import Prompt
-from rich.panel import Panel
-from rich.text import Text
-from rich import print
 
 disable_ssl_warnings = True
 console = Console(width=200)
@@ -121,7 +115,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -135,3 +129,6 @@ if __name__ == "__main__":
 
     tech_name = Prompt.ask("Enter the Asset Name to view:", default="Apache Kafka Server")
     tech_viewer(tech_name,server, url, userid)
+
+if __name__ == "__main__":
+    main()

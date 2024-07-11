@@ -74,7 +74,7 @@ def display_asset_types(server: str, url: str, username: str):
         r_client.close_session()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -89,3 +89,6 @@ if __name__ == "__main__":
     guid = None
 
     display_asset_types(server, url, userid)
+
+if __name__ == "__main__":
+    main()

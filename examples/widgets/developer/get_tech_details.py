@@ -7,33 +7,19 @@ A simple viewer for collections - provide the root and we display the hierarchy
 
 """
 
-import time
 import argparse
 
-from rich.box import Box
-from rich.markdown import Markdown
+from rich import print
+from rich.panel import Panel
 from rich.prompt import Prompt
-
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-)
-from rich.table import Table
-from rich.live import Live
 from rich.text import Text
 from rich.tree import Tree
-from rich.markdown import Markdown
 
-from rich import print
-from rich.console import Group
-from rich.panel import Panel
-from rich import box, align
-from rich.layout import Layout
-import rich
-from pyegeria import (CollectionManager, UserNotAuthorizedException, PropertyServerException,
+from pyegeria import (UserNotAuthorizedException, PropertyServerException,
                       InvalidParameterException, AutomatedCuration)
+from pyegeria._exceptions import (
+    print_exception_response,
+)
 
 disable_ssl_warnings = True
 
@@ -95,7 +81,7 @@ def tech_viewer(tech: str, server_name:str, platform_url:str, user:str):
         print_exception_response(e)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -109,3 +95,6 @@ if __name__ == "__main__":
 
     tech = Prompt.ask("Enter the Technology to start from:", default="PostgreSQL Server")
     tech_viewer(tech,server, url, userid)
+
+if __name__ == "__main__":
+    main()

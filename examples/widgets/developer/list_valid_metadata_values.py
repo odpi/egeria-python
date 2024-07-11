@@ -10,22 +10,22 @@ Unit tests for the Utils helper functions using the Pytest framework.
 A simple display for glossary terms
 """
 
-import time
-import json
 import argparse
+import json
+import time
+
+from rich import box
+from rich import print
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import box
-from rich.prompt import Prompt
-from rich.tree import Tree
-from rich import print
-from rich.console import Console
 from pyegeria import ValidMetadataManager
 
 disable_ssl_warnings = True
@@ -125,8 +125,7 @@ def display_values(property_name: str, type_name: str=None, server: str = good_s
         else:
             print_exception_response(e)
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -142,3 +141,6 @@ if __name__ == "__main__":
     property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
     type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
     display_values(property_name, type_name,server, url, userid, save_output)
+
+    if __name__ == "__main__":
+        main()

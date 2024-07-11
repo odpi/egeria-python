@@ -16,7 +16,7 @@ from pyegeria import CollectionManager, InvalidParameterException, PropertyServe
 view_server = 'view-server'
 platform_url = 'https://localhost:9443'
 user = 'erinoverview'
-console = Console()
+console = Console(width=200)
 
 try:
     c_client = CollectionManager(view_server, platform_url,
@@ -40,7 +40,7 @@ try:
                                                display_name, description, collection_type,
                                                is_own_anchor)
     # Create first folder for Agriculture Insights
-    parent_guid = "97bbfe07-6696-4550-bf8b-6b577d25bef0"
+    parent_guid = "f53ea7c8-3107-4477-8459-9bc63f9e69af"
     parent_relationship_type_name = "CollectionMembership"
     display_name = "Agriculture Insights Collection"
     description = "A folder for agricultural insights data product collections"

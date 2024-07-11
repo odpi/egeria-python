@@ -10,13 +10,11 @@ A simple status display of a user's todos
 """
 
 import argparse
-import json
 import time
 
 from rich import box
 from rich.live import Live
 from rich.table import Table
-from rich import console
 
 from pyegeria import (
     InvalidParameterException,
@@ -24,17 +22,13 @@ from pyegeria import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria._deprecated_gov_engine import GovEng
 from pyegeria.my_profile_omvs import MyProfile
+
 disable_ssl_warnings = True
 
 good_platform1_url = "https://127.0.0.1:9443"
 good_platform2_url = "https://egeria.pdr-associates.com:7443"
 bad_platform1_url = "https://localhost:9443"
-
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
 
 good_user_1 = "garygeeke"
 good_user_2 = "erinoverview"
@@ -74,7 +68,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
                 props = item["properties"]
                 name = props["name"]
                 todo_type_name = props.get("toDoType", " ")
-                todo_guid = item["elementHeader"]["guid"]
+                todo_guid = item["elementHeader"].get("guid", "---")
                 created = props.get("creationTime", " ")
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", " ")
@@ -118,7 +112,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
         table.add_column("Sponsor")
 
         my_profile = m_client.get_my_profile()
-        my_guid = my_profile["elementHeader"]["guid"]
+        my_guid = my_profile["elementHeader"].get("guid","---")
         my_ids = my_profile["userIdentities"]
         my_title = my_profile["profileProperties"].get("jobTitle", "No Title")
         user_ids = []
@@ -148,7 +142,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
         assert e.related_http_code != "200", "Invalid parameters"
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the view server to connect to")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -160,3 +154,6 @@ if __name__ == "__main__":
     userid = args.userid if args.userid is not None else 'erinoverview'
     print(f"Starting display_todos with {server}, {url}, {userid}")
     display_todos(server=server, url=url, user=userid)
+
+if __name__ == "__main__":
+    main()
