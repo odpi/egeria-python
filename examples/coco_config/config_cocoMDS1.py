@@ -11,7 +11,7 @@ Configuring cocoMDS1 - Data Lake Operations metadata server
 
 import json
 
-from globals import (adminUserId, cocoMDS1Name, dataLakePlatformURL, cocoCohort)
+from globals import (adminUserId, cocoMDS1Name, dataLakePlatformURL, cocoCohort, adminUserId)
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,

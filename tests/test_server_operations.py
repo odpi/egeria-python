@@ -128,10 +128,10 @@ class TestServerOperations:
     #   Integration Daemon Ops
     #
 
-    def test_get_integration_daemon_status(self, server:str = good_server_3):
+    def test_get_integration_daemon_status(self, server:str = good_server_2):
         try:
             server_name = server
-            s_client = ServerOps(server_name, self.good_platform2_url, self.good_user_1)
+            s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_integration_daemon_status(server)
 
             if type(response) is dict:

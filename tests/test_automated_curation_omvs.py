@@ -13,6 +13,8 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 import httpx
+import pytest
+
 from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
