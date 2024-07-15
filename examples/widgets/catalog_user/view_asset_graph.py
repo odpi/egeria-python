@@ -117,6 +117,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         style = ""
 
         asset_type = asset_graph["type"]["typeName"]
+        asset_deployed_imp_type = asset_graph.get("deployedImplementationType","---")
+
         asset_origin = asset_graph["origin"]["homeMetadataCollectionName"]
         asset_creation = asset_graph["versions"]["createTime"]
         asset_created_by = asset_graph["versions"]["createdBy"]
@@ -126,12 +128,15 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         asset_class_md = build_classifications(asset_classifications)
 
 
-        asset_properties = asset_graph["extendedProperties"]
-        prop_md = "\n* Extended Properties:\n"
-        for prop in asset_properties:
-            prop_md = f"{prop_md}\n\t* {prop}: {asset_properties[prop]}\n"
-
+        asset_properties = asset_graph.get("extendedProperties",None)
+        if asset_properties is not None:
+            prop_md = "\n* Extended Properties:\n"
+            for prop in asset_properties:
+                prop_md = f"{prop_md}\n\t* {prop}: {asset_properties[prop]}\n"
+        else:
+            prop_md = ""
         core_md = (f"**Type: {asset_type}  Created by: {asset_created_by} on {asset_creation}**\n"
+               f"* Deployed Implementation Type: {asset_deployed_imp_type}\n"
                f"* Qualified Name: {qualified_name}\n "
                f"* Resource Name: {resource_name}\n"
                f"* Display Name: {asset_name}\n"
