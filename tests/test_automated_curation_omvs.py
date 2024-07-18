@@ -19,7 +19,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import AutomatedCuration, PostgreSQL_Server_Integration_Connector_GUID
+from pyegeria import AutomatedCuration, POSTGRESQL_SERVER_INTEGRATION_CONNECTOR_GUID
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                                   print_exception_response, )
 

@@ -86,7 +86,7 @@ class ServerOps(Platform):
 #
 #   Archive Files
 #
-    async def _async_add_archive_file(self, archive_file: str, server: str = None) -> None:
+    async def _async_add_archive_file(self, archive_file: str, server: str = None, timeout: int = 30) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -95,7 +95,7 @@ class ServerOps(Platform):
         archive_file: the name of the archive file to load
                 - note that the path is relative to the working directory of the platform.
         server : Use the server if specified. If None, use the default server associated with the Platform object.
-
+        timeout: Timeout in seconds. Defaults to 30 seconds.
         Returns
         -------
         Response object.  Also throws exceptions if no viable server or endpoint errors
@@ -110,9 +110,9 @@ class ServerOps(Platform):
                 + "/instance/open-metadata-archives/file"
         )
 
-        await self._async_make_request("POST-DATA", url, archive_file)
+        await self._async_make_request("POST-DATA", url, archive_file, time_out=timeout)
 
-    def add_archive_file(self, archive_file: str, server: str = None) -> None:
+    def add_archive_file(self, archive_file: str, server: str = None, timeout:int = 30) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -121,6 +121,7 @@ class ServerOps(Platform):
         archive_file: the name of the archive file to load
                 - note that the path is relative to the working directory of the platform.
         server : Use the server if specified. If None, use the default server associated with the Platform object.
+        timeout: Timeout in seconds. Defaults to 30 seconds.
 
         Returns
         -------
@@ -128,7 +129,7 @@ class ServerOps(Platform):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_archive_file(archive_file, server))
+        loop.run_until_complete(self._async_add_archive_file(archive_file, server, timeout))
 
     async def _async_add_archive(self, archive_connection: str, server: str = None) -> None:
         """ Load the server with the contents of the indicated archive file.

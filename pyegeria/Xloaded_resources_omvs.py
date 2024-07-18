@@ -57,7 +57,7 @@ class LoadedResources(Client):
         Client.__init__(self, server_name, platform_url,
                         user_id, user_pwd, verify_flag)
 
-    def get_all_templates(self, server: str = None, start_from: int = 0, page_size: int = 0) -> list | str:
+    def get_all_templates(self, server: str = None, start_from: int = 0, page_size: int = max_paging_size) -> list | str:
         """ Get Loaded templates for the Server.
 
            Parameters
@@ -89,3 +89,4 @@ class LoadedResources(Client):
         return response.json().get("elementList", "No elements")
 
     # def get_all_assets_in_archives(self, asset_type: str = None, archive_id: str = None, server: str= None, page_start:int = 0, page_size = max_paging_size):
+
