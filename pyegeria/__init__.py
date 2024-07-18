@@ -48,4 +48,4 @@ from .runtime_manager_omvs import RuntimeManager
 from .action_author_omvs import GovernanceAuthor
 from .glossary_manager_omvs import GlossaryManager
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"

@@ -47,9 +47,9 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
             c_type = c["classificationName"]
             if c_type == "Anchors":
                 continue
-            class_md += f"* Classification: {c_type}\n"
+            class_md += f"\n* Classification: {c_type}\n"
             class_props = c.get("classificationProperties","---")
-            if type(class_props) is list:
+            if type(class_props) is dict:
                 for prop in class_props.keys():
                     class_md += f"\t* {prop}: {class_props[prop]}\n"
         if class_md == "":
@@ -70,14 +70,15 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         ne_classifications = nested_element["classifications"]
         ne_class_md = build_classifications(ne_classifications)
         # ne_class_md = " " if ne_class_md is None else ne_class_md
-        ne_props = nested_element["properties"]
-
-        ne_prop_md = ""
-        for prop in ne_props.keys():
-            ne_prop_md += f"* {prop}: {ne_props[prop]}\n"
+        ne_props = nested_element.get("properties","---")
+        ne_prop_md = "\n"
+        if type(ne_props) is dict:
+            for prop in ne_props.keys():
+                ne_prop_md += f"\t* {prop}: {ne_props[prop]}\n"
         ne_md = (f"Nested Element of Type: {ne_type} with GUID:  {ne_guid} \n "
                  f"* created by {ne_created_by} at time {ne_created_at}\n"
-                 f"{ne_prop_md}\n")
+                 f"\n* Properties:\n{ne_prop_md}\n")
+
         if ne_class_md is not None:
             ne_md += f"* {ne_class_md}"
 
@@ -117,6 +118,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         style = ""
 
         asset_type = asset_graph["type"]["typeName"]
+        asset_deployed_imp_type = asset_graph.get("deployedImplementationType","---")
+
         asset_origin = asset_graph["origin"]["homeMetadataCollectionName"]
         asset_creation = asset_graph["versions"]["createTime"]
         asset_created_by = asset_graph["versions"]["createdBy"]
@@ -126,12 +129,15 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         asset_class_md = build_classifications(asset_classifications)
 
 
-        asset_properties = asset_graph["extendedProperties"]
-        prop_md = "\n* Extended Properties:\n"
-        for prop in asset_properties:
-            prop_md = f"{prop_md}\n\t* {prop}: {asset_properties[prop]}\n"
-
+        asset_properties = asset_graph.get("extendedProperties",None)
+        if asset_properties is not None:
+            prop_md = "\n* Extended Properties:\n"
+            for prop in asset_properties:
+                prop_md = f"{prop_md}\n\t* {prop}: {asset_properties[prop]}\n"
+        else:
+            prop_md = ""
         core_md = (f"**Type: {asset_type}  Created by: {asset_created_by} on {asset_creation}**\n"
+               f"* Deployed Implementation Type: {asset_deployed_imp_type}\n"
                f"* Qualified Name: {qualified_name}\n "
                f"* Resource Name: {resource_name}\n"
                f"* Display Name: {asset_name}\n"
@@ -162,16 +168,16 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
             rel_end1 = relationship["end1"]
             rel_end1_type = rel_end1["type"]["typeName"]
             rel_end1_guid = rel_end1["guid"]
-            rel_end1_unique_name = rel_end1["uniqueName"]
+            rel_end1_unique_name = rel_end1.get("uniqueName","---")
 
             rel_end2 = relationship["end2"]
             rel_end2_type = rel_end2["type"]["typeName"]
             rel_end2_guid = rel_end2["guid"]
-            rel_end2_unique_name = rel_end2["uniqueName"]
+            rel_end2_unique_name = rel_end2.get("uniqueName", "---")
 
             if (rel_end1_guid not in guid_list) or (rel_end2_guid not in guid_list):
-                rel_end1_class_md = build_classifications(rel_end1["classifications"])
-                rel_end2_class_md = build_classifications(rel_end2["classifications"])
+                # rel_end1_class_md = build_classifications(rel_end1["classifications"])
+                # rel_end2_class_md = build_classifications(rel_end2["classifications"])
 
                 relationship_guid = relationship["guid"]
                 relationship_type = relationship["type"]["typeName"]
@@ -196,8 +202,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                     f"\t* Unique Name: {rel_end1_unique_name}\n"
                     )
 
-                if rel_end1_class_md is not None:
-                    rel_end1_md = rel_end1_class_md + rel_end1_md
+                # if rel_end1_class_md is not None:
+                #     rel_end1_md = rel_end1_class_md + rel_end1_md
 
                 rel_end2_md = (
                     f"* End2:\n"
@@ -206,8 +212,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
                     f"\t* Unique Name: {rel_end2_unique_name}\n"
                 )
 
-                if rel_end2_class_md is not None:
-                    rel_end1_md = rel_end2_class_md + rel_end1_md
+                # if rel_end2_class_md is not None:
+                #     rel_end1_md = rel_end2_class_md + rel_end1_md
                 #
                 # for prop in relationship_properties.keys():
                 #     relationship_md += f"* {prop}: {relationship_properties[prop]}\n"

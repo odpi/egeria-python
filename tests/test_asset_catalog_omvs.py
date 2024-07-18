@@ -29,7 +29,7 @@ from pyegeria import FILEFOLDER_TEMPLATE_GUID, POSTGRESQL_SERVER_TEMPLATE_GUID, 
 
 
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.utils import print_json_list_as_table
+# from pyegeria.utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -100,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="bc2931d4-5837-47e5-ba8b-c4dbdf26512d"
+            asset_guid ="91ac7e96-b40e-4c94-a7e2-b92aec9b74fe"
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 

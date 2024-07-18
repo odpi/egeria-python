@@ -1147,3 +1147,11 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/configuration"
         response = self.make_request("GET", url)
         return response.json().get("services", "No configuration found")
+
+    def set_lineage_warehouse_services(self, body: dict, lineage_server: str) -> None:
+        url = f"{self.admin_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
+        self.make_request("POST", url, body)
+
+    def remove_lineage_warehouse_services(self, lineage_server: str = None) -> None:
+        url = f"{self.admin_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
+        self.make_request("DELETE", url)
