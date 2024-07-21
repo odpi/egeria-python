@@ -8,6 +8,7 @@ Display the status of cataloged platforms and servers.
 import sys
 import time
 import argparse
+import os
 
 from rich import json
 from rich.panel import Panel
@@ -29,16 +30,23 @@ from rich.panel import Panel
 from rich.text import Text
 from rich import print
 
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+
 disable_ssl_warnings = True
 console = Console(width=200)
 
-platform = "https://127.0.0.1:9443"
-user = "erinoverview"
-view_server = "view-server"
-
 guid_list = []
 
-def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
+def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, user_pass:str):
 
     def build_classifications(classification: dict) -> Markdown:
 
@@ -63,10 +71,10 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str):
 
         console = Console()
 
-        a_client = AutomatedCuration(view_server, platform,
+        a_client = AutomatedCuration(server_name, platform_url,
                                      user_id=user)
 
-        token = a_client.create_egeria_bearer_token(user, "secret")
+        token = a_client.create_egeria_bearer_token(user, user_pass)
         tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=False)
         if type(tech_elements) is str:
             console.print(f"No elements found for {tech_name}")
@@ -127,14 +135,16 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     tech_name = Prompt.ask("Enter the Asset Name to view:", default="Apache Kafka Server")
-    tech_viewer(tech_name,server, url, userid)
+    tech_viewer(tech_name,server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

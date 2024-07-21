@@ -9,7 +9,7 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-
+import os
 import argparse
 import json
 import time
@@ -27,35 +27,22 @@ from pyegeria import (
     print_exception_response,
 )
 from pyegeria import ValidMetadataManager
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
-disable_ssl_warnings = True
-
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
-
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_values(property_name: str, type_name: str=None, server: str = good_server_3, url: str = good_platform1_url,
-                   username: str = good_user_2,  save_output: bool = False):
+def display_values(property_name: str, type_name: str, server: str, url: str,
+                   username: str,  user_pass:str, save_output: bool):
 
     m_client = ValidMetadataManager(server, url, user_id=username)
-    token = m_client.create_egeria_bearer_token(username, "secret")
+    token = m_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table(property_name: str, type_name: str) -> Table:
         """Make a new table."""
@@ -131,16 +118,18 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--save-output", help="Save output to file?")
+    parser.add_argument("--password", help="User Password")
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     save_output = args.save_output if args.save_output is not None else False
     property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
     type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
-    display_values(property_name, type_name,server, url, userid, save_output)
+    display_values(property_name, type_name,server, url, userid, user_pass, save_output)
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()

@@ -5,40 +5,42 @@ Copyright Contributors to the ODPi Egeria project.
 
 Display the status of cataloged platforms and servers.
 """
-import sys
-import time
 import argparse
+import os
+import sys
 
-from rich import json
+from rich import print
+from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.tree import Tree
 
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    print_exception_response,
     AssetCatalog
 )
-from rich.table import Table
-from rich.live import Live
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.tree import Tree
-from rich.prompt import Prompt
-from rich.panel import Panel
-from rich.text import Text
-from rich import print
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 console = Console(width=200)
 
-platform = "https://127.0.0.1:9443"
-user = "erinoverview"
-view_server = "view-server"
 
 guid_list = []
 
-def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
+def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, user_pass:str):
 
     def build_classifications(classification: dict) -> Markdown:
 
@@ -89,10 +91,10 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
 
         console = Console(width=200)
 
-        a_client = AssetCatalog(view_server, platform,
+        a_client = AssetCatalog(server_name, platform_url,
                                      user_id=user)
 
-        token = a_client.create_egeria_bearer_token(user, "secret")
+        token = a_client.create_egeria_bearer_token(user, user_pass)
         # asset_info = a_client.find_assets_in_domain(asset_name)
         # if type(asset_info) is str:
         #     print("\n No Assets Found - Exiting\n")
@@ -232,8 +234,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str):
         PropertyServerException,
         UserNotAuthorizedException
     ) as e:
-        print_exception_response(e)
-
+        console.print_exception()
+        console.print("\n\n ======> Most likely the GUID you provided is either incorrect or not an asset\n[red bold]")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -241,14 +243,16 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="8e35b39e-6ee7-4d60-aff5-4b09406c5e79")
-    asset_viewer(asset_guid,server, url, userid)
+    asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
+    asset_viewer(asset_guid,server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

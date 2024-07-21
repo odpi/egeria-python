@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 Display the status of cataloged platforms and servers.
 """
 import json
-import sys
+import os
 import time
 import argparse
 from datetime import datetime
@@ -16,6 +16,18 @@ from rich.live import Live
 from rich.console import Console
 from rich.markdown import Markdown
 from confluent_kafka import Consumer, KafkaException
+
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+
 
 def main():
 
@@ -28,7 +40,7 @@ def main():
 
     # Define the Kafka consumer configuration.
     config = {
-        'bootstrap.servers': 'localhost:9092',  # replace with your Kafka broker(s)
+        'bootstrap.servers': EGERIA_KAFKA_ENDPOINT,  # replace with your Kafka broker(s)
         'group.id': f"view_asset_events:{current_time}",  # replace with your consumer group
         'auto.offset.reset': earliest_latest  # can be set to 'earliest' or 'latest'
     }

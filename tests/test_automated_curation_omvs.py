@@ -19,7 +19,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import AutomatedCuration, POSTGRESQL_SERVER_INTEGRATION_CONNECTOR_GUID
+from pyegeria import AutomatedCuration, integration_guids, template_guids
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                                   print_exception_response, )
 
@@ -88,7 +88,7 @@ class TestAutomatedCuration:
             a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
-            path_name = "/Users/dwolfson/localGit/databricks"
+            path_name = "/deployments/landing-area"
             folder_name = "databricks"
             file_system = "laz"
             description = "Folder for databricks work"
@@ -719,7 +719,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("FileFolder")
+            response = a_client.get_technology_type_detail("OSS Unity Catalog (UC) Server")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -838,9 +838,9 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
             element_guid = "c155848f-60db-4265-aeb7-75cd7124806f"
             catalog_target_name = "laz postgres server"
-
+            postgres_con_guid = ""
             start_time = time.perf_counter()
-            guid = a_client.add_catalog_target(PostgreSQL_Server_Integration_Connector_GUID,
+            guid = a_client.add_catalog_target(postgres_con_guid,
                                                element_guid, catalog_target_name)
             duration = time.perf_counter() - start_time
             print(f"guid returned is: {guid}")
@@ -987,9 +987,9 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
-            file_folder_guid = "902d806f-a908-4cef-97ee-8147659c4e9d"
+            file_folder_guid = "54ae2c1c-49c7-43b8-b12f-a135334f2b8a"
             response = a_client.initiate_file_folder_survey(file_folder_guid,
-                                                            'Egeria:GovernanceActionType:AssetSurvey:survey-all-folders')
+                                                            'AssetSurvey:survey-all-folders')
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -1042,8 +1042,8 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "CSV Data File"
-            # filter = "Apache Kafka Server"
+            # filter = "CSV Data File"
+            filter = "OSS Unity Catalog (UC) Server:Unity Catalog 1"
             response = a_client.get_technology_type_elements(filter, get_templates=False)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1055,6 +1055,42 @@ class TestAutomatedCuration:
             elif type(response) is str:
                 console.log("\n\n" + response)
             assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_guids(self):
+        try:
+            start_time = time.perf_counter()
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+
+            print(f" Length is {len(integration_guids)}")
+            print(integration_guids.keys())
+
+            start_time = time.perf_counter()
+            b_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            b_client.build_global_guid_lists()
+            token = a_client.create_egeria_bearer_token()
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f" Length is {len(integration_guids)}")
+            print(integration_guids["OSS Unity Catalog (UC) Volume"])
+
+            # for key in integration_guids.keys():
+            #     print(f"Key: {key}\t\tValue: {integration_guids[key]}")
+
+            for key in template_guids.keys():
+                print(f"{key}\t\t{template_guids[key]}")
 
         except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
             print_exception_response(e)

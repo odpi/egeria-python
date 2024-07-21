@@ -10,7 +10,7 @@ A simple widget to retrieve the registered services.
 import argparse
 import sys
 import time
-
+import os
 from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
@@ -22,7 +22,16 @@ from pyegeria import (
     UserNotAuthorizedException,
     RegisteredInfo,
 )
-
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 def display_registered_svcs(service: str, server: str , url: str,
                             username: str, password: str ):
@@ -125,10 +134,10 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "active-metadata-store"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
-    password = args.password if args.password is not None else 'secret'
+    server = args.server if args.server is not None else EGERIA_METADATA_STORE
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
+    password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     svc_kind = Prompt.ask("Enter the service type you are searching for:", default="all")
 

@@ -11,13 +11,13 @@ A simple status display for Engine Actions
 
 import argparse
 import json
+import os
 import sys
 import time
 
 from rich import box
-from rich.console import Console
-from rich.table import Table
 from rich.live import Live
+from rich.table import Table
 
 from pyegeria import AutomatedCuration
 from pyegeria import (
@@ -27,11 +27,23 @@ from pyegeria import (
     print_exception_response,
 )
 
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_ENGINE_HOST = os.environ.get('INTEGRATION_ENGINE_HOST', 'engine-host')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+
 disable_ssl_warnings = True
 
 
-def display_status_engine_actions(server: str, url: str, user: str):
-    g_client = AutomatedCuration(server, url, user, user_pwd="secret")
+def display_status_engine_actions(server: str, url: str, user: str, user_pass:str):
+    g_client = AutomatedCuration(server, url, user, user_pwd=user_pass)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -123,13 +135,15 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
-    print(f"Starting display_status_engine_actions with {server}, {url}, {userid}")
-    display_status_engine_actions(server=server, url=url, user=userid)
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    # print(f"Starting display_status_engine_actions with {server}, {url}, {userid}")
+    display_status_engine_actions(server=server, url=url, user=userid, user_pass=user_pass)
 
 if __name__ == "__main__":
     main()

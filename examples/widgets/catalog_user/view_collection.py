@@ -8,7 +8,7 @@ A simple viewer for collections - provide the root and we display the hierarchy
 """
 
 import argparse
-
+import os
 from rich import print
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -21,16 +21,25 @@ from pyegeria._exceptions import (
 )
 
 disable_ssl_warnings = True
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 
-def collection_viewer(root: str, server_name: str, platform_url: str, user: str):
+def collection_viewer(root: str, server_name: str, platform_url: str, user: str, user_password: str):
     """ A simple collection viewer"""
     def walk_collection_hierarchy(collection_client: CollectionManager, root_collection_name: str, tree: Tree) -> None:
         """Recursively build a Tree with collection contents."""
         members = collection_client.get_member_list(root_collection_name)
         if members:
             for member in members:
-
                 style = ""
                 text_collection_name = Text(f"[bold white] Name: {member['name']}", "")
                 text_qualified_name = Text(f"* QualifiedName: {member['qualifiedName']}""yellow")
@@ -45,13 +54,14 @@ def collection_viewer(root: str, server_name: str, platform_url: str, user: str)
                 if type(children) is list:
                     branch = tt.add(f"[bold magenta]Members", style=style, guide_style=style)
                     walk_collection_hierarchy(collection_client, member['qualifiedName'], branch),
-
+        else:
+            tt = tree.add(f"[bold magenta]No collections match {root_collection_name}", style="bold red")
     try:
         tree = Tree(f"[bold bright green]{root}", guide_style="bold bright_blue")
         c_client = CollectionManager(server_name, platform_url,
                                      user_id=user)
 
-        token = c_client.create_egeria_bearer_token(user, "secret")
+        token = c_client.create_egeria_bearer_token(user, user_password)
         walk_collection_hierarchy(c_client, root, tree)
         print(tree)
 
@@ -69,14 +79,16 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Digital Products Root")
-    collection_viewer(root_collection, server, url, userid)
+    collection_viewer(root_collection, server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()
