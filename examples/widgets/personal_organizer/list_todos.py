@@ -9,7 +9,7 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-
+import os
 import argparse
 import time
 
@@ -26,11 +26,23 @@ from pyegeria import (
 )
 from pyegeria.my_profile_omvs import MyProfile
 
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
-def display_to_dos(search_string: str, guid:str, server: str, url: str, username: str):
+
+def display_to_dos(search_string: str, guid:str, server: str, url: str, username: str, user_pass:str):
 
     m_client = MyProfile(server, url, user_id=username)
-    token = m_client.create_egeria_bearer_token(username, "secret")
+    token = m_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table(search_string:str = '*') -> Table:
         """Make a new table."""
@@ -112,16 +124,18 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = None
 
     search_string = Prompt.ask("Enter the ToDo you are searching for:", default="*")
-    display_to_dos(search_string, guid,server, url, userid)
+    display_to_dos(search_string, guid,server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

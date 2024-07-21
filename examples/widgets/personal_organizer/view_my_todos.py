@@ -8,7 +8,7 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple status display of a user's todos
 """
-
+import os
 import argparse
 import time
 
@@ -24,28 +24,24 @@ from pyegeria import (
 )
 from pyegeria.my_profile_omvs import MyProfile
 
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
 
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "view-server"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_todos(server: str = good_server_4, url: str = good_platform1_url, user: str = good_user_1):
+def display_todos(server: str, url: str, user: str, user_pass:str):
     m_client = MyProfile(server, url, user_id=user)
-    token = m_client.create_egeria_bearer_token(user, "secret")
+    token = m_client.create_egeria_bearer_token(user, user_pass)
 
     def add_rows(table: Table, guid: str, identity: str) -> None:
         todo_items = m_client.get_assigned_actions(guid)
@@ -92,7 +88,7 @@ def display_todos(server: str = good_server_4, url: str = good_platform1_url, us
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Open ToDos for Platform {good_platform1_url} @ {time.asctime()}",
+            title=f"Open ToDos for Platform {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
@@ -147,13 +143,16 @@ def main():
     parser.add_argument("--server", help="Name of the view server to connect to")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+
     print(f"Starting display_todos with {server}, {url}, {userid}")
-    display_todos(server=server, url=url, user=userid)
+    display_todos(server=server, url=url, user=userid, user_pass=user_pass)
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple status display for Governance Actions
 """
-
+import os
 import time
 import json
 import argparse
@@ -25,33 +25,23 @@ from rich import box
 from rich import console
 
 from pyegeria.server_operations import ServerOps
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ENGINE_HOST = os.environ.get('INTEGRATION_ENGINE_HOST', 'engine-host')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 
-good_platform1_url = "https://127.0.0.1:9443"
-good_platform2_url = "https://egeria.pdr-associates.com:7443"
-bad_platform1_url = "https://localhost:9443"
-
-# good_platform1_url = "https://127.0.0.1:30080"
-# good_platform2_url = "https://127.0.0.1:30081"
-# bad_platform1_url = "https://localhost:9443"
-
-good_user_1 = "garygeeke"
-good_user_2 = "erinoverview"
-bad_user_1 = "eviledna"
-bad_user_2 = ""
-
-good_server_1 = "active-metadata-store"
-good_server_2 = "simple-metadata-store"
-good_server_3 = "engine-host"
-good_server_4 = "engine-host"
-bad_server_1 = "coco"
-bad_server_2 = ""
-
-
-def display_gov_actions_status(server: str = good_server_3, url: str = good_platform1_url, username: str = good_user_1):
+def display_gov_actions_status(server: str, url: str, username: str, user_pass:str):
     server_name = server
-    s_client = ServerOps(server_name, url, username)
+    s_client = ServerOps(server_name, url, username, user_pass)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -111,12 +101,14 @@ def main():
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "engine-host"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
-    display_gov_actions_status(server=server, url=url, username=userid)
+    server = args.server if args.server is not None else EGERIA_ENGINE_HOST
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass)
 
 if __name__ == "__main__":
     main()

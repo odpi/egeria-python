@@ -1,7 +1,7 @@
 """This creates a templates guid file from the core metadata archive"""
 from rich.markdown import Markdown
 from rich.prompt import Prompt
-
+import os
 from pyegeria import AutomatedCuration
 from datetime import datetime
 import argparse
@@ -21,16 +21,23 @@ from pyegeria import (
 
 
 console = Console()
-server = "active-metadata-server"
-platform = "https://localhost:9443"
-user = "erinoverview"
-password = "secret"
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
-def display_tech_types(search_string:str = "*", server: str = server,
-                       url: str = platform, username: str = user, password: str = password,):
+
+def display_tech_types(search_string:str, server: str,
+                       url: str, username: str, password: str):
 
     a_client = AutomatedCuration(server, url, username)
-    token = a_client.create_egeria_bearer_token(user, password)
+    token = a_client.create_egeria_bearer_token(username, password)
     tech_list = a_client.find_technology_types(search_string, page_size=0)
 
     def generate_table() -> Table:
@@ -118,10 +125,10 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
-    password = args.password if args.password is not None else 'secret'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    password = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = None
 
     search_string = Prompt.ask("Enter the technology you are searching for:", default="*")

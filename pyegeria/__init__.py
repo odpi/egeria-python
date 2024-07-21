@@ -11,7 +11,7 @@ the server platform and servers.
 
 """
 
-from ._globals import (is_debug, disable_ssl_warnings, max_paging_size,
+from ._globals import (is_debug, disable_ssl_warnings, max_paging_size, template_guids, integration_guids
                        )
 from .core_guids import *
 
@@ -48,4 +48,6 @@ from .runtime_manager_omvs import RuntimeManager
 from .action_author_omvs import GovernanceAuthor
 from .glossary_manager_omvs import GlossaryManager
 
-__version__ = "0.5.2"
+
+
+

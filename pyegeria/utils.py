@@ -70,6 +70,8 @@ from rich import print, print_json
 #     df = pd.json_normalize(data)
 #     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
 
+template_guids: dict = None
+integration_guids: dict = None
 
 def print_rest_request_body(body):
     """
@@ -189,3 +191,4 @@ def body_slimmer(body: dict) -> dict:
     """
     slimmed = {key: value for key, value in body.items() if value}
     return slimmed
+

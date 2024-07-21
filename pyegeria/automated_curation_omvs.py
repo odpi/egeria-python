@@ -1546,7 +1546,7 @@ class AutomatedCuration(Client):
 
     async def _async_initiate_file_folder_survey(self, file_folder_guid: str,
                                                  survey_name: str =
-                                                 "Egeria:GovernanceActionType:AssetSurvey:survey-folder",
+                                                 "AssetSurvey:survey-folder",
                                                  server: str = None) -> str:
         """ Initiate a file folder survey - async version
 
@@ -1639,7 +1639,7 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "Egeria:GovernanceActionType:AssetSurvey:survey-data-file",
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-data-file",
                 "actionTargets": [
                     {"class": "NewActionTarget", "actionTargetName": "fileToSurvey", "actionTargetGUID": file_guid}]}
         response = await self._async_make_request("POST", url, body)

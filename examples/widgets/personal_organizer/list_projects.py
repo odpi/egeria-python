@@ -9,7 +9,7 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-
+import os
 import argparse
 import json
 import time
@@ -28,12 +28,24 @@ from pyegeria import (
 )
 from pyegeria import ProjectManager
 
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+
 
 def display_list(project_name: str, server: str, url: str,
-                   username: str,  save_output: bool):
+                   username: str,  user_pass: str, save_output: bool):
 
     p_client = ProjectManager(server, url, user_id=username)
-    token = p_client.create_egeria_bearer_token(username, "secret")
+    token = p_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table(project_name: str) -> Table:
         """Make a new table."""
@@ -126,16 +138,19 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--save-output", help="Save output to file?")
+    parser.add_argument("--password", help="User Password")
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else "view-server"
-    url = args.url if args.url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'erinoverview'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+
     save_output = args.save_output if args.save_output is not None else False
     project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
 
-    display_list(project_name, server, url, userid, save_output)
+    display_list(project_name, server, url, userid, user_pass, save_output)
 
 if __name__ == "__main__":
     main()

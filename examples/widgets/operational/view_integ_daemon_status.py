@@ -11,7 +11,7 @@ versions. First, we assume that the view-server used by AutomatedCuration is cal
 assume that the user password is always "secret".
 
 """
-
+import os
 import argparse
 import time
 
@@ -26,14 +26,25 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 
 
 def display_integration_daemon_status(integ_server: str, integ_url: str,
-                                      view_server:str, view_url: str, user: str):
+                                      view_server:str, view_url: str, user: str, user_pass:str):
     s_client = ServerOps(integ_server, integ_url, user)
-    a_client = AutomatedCuration(view_server, view_url, user, "secret")
+    a_client = AutomatedCuration(view_server, view_url, user, user_pass)
     token = a_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
@@ -51,7 +62,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         table.add_column("Connector Status")
 
         table.add_column("Last Refresh Time")
-        table.add_column("Min Refresh (min)")
+        table.add_column("Min Refresh (mins)")
         table.add_column("Target Element")
         table.add_column("Exception Message")
 
@@ -123,19 +134,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integ_server", help="Name of the integration server to display status for")
     parser.add_argument("--integ_url", help="URL Platform to connect to")
-    parser.add_argument("--view_server", help="Name of the integration server to display status for")
-    parser.add_argument("--view_url", help="URL Platform to connect to")
+    parser.add_argument("--view_server", help="Name of the view server to use")
+    parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    integ_server = args.integ_server if args.integ_server is not None else "integration-daemon"
-    integ_url = args.integ_url if args.integ_url is not None else "https://localhost:9443"
-    view_server = args.view_server if args.view_server is not None else "view-server"
-    view_url = args.view_url if args.view_url is not None else "https://localhost:9443"
-    userid = args.userid if args.userid is not None else 'garygeeke'
+    integ_server = args.integ_server if args.integ_server is not None else EGERIA_INTEGRATION_DAEMON
+    integ_url = args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
+    view_server = args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
                                       view_server = view_server, view_url = view_url,
-                                      user=userid)
+                                      user=userid, user_pass = user_pass)
 
 if __name__ == "__main__":
     main()

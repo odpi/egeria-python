@@ -10,7 +10,6 @@ import asyncio
 import inspect
 import json
 import os
-
 import httpx
 from httpx import AsyncClient, Response
 
@@ -18,8 +17,8 @@ from pyegeria._exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException, )
-from pyegeria._globals import max_paging_size
+    UserNotAuthorizedException )
+from pyegeria._globals import max_paging_size, template_guids, integration_guids
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
@@ -138,6 +137,10 @@ class Client:
             # else:
             #     self.session = httpx.AsyncClient(verify=self.ssl_verify)
             self.session = AsyncClient(verify=self.ssl_verify)
+        # if (len(template_guids) == 0) or (len(integration_guids) == 0):
+        #     self.build_global_guid_lists()
+        #     self.template_guids = template_guids
+        #     self.integration_guids = integration_guids
 
     def __enter__(self):
         return self
@@ -202,7 +205,7 @@ class Client:
             "userId": user_id,
             "password": password
         }
-        async with httpx.AsyncClient(verify=self.ssl_verify) as client:
+        async with AsyncClient(verify=self.ssl_verify) as client:
             try:
                 response = await client.post(url, json=data, headers=self.headers)
                 token = response.text
@@ -564,6 +567,53 @@ class Client:
                 }
             )
             raise InvalidParameterException(exc_msg)
+
+    def build_global_guid_lists(self) -> None:
+        global template_guids, integration_guids
+
+        self.create_egeria_bearer_token(self.user_id, self.user_pwd)
+        # get all technology types
+        url = (f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/automated-curation/technology-types/"
+               f"by-search-string?startFrom=0&pageSize=0&startsWith=false&"
+               f"endsWith=false&ignoreCase=true")
+        body = {"filter": ""}
+
+        response = self.make_request("POST", url, body)
+        tech_types = response.json().get("elements", "no tech found")
+        if type(tech_types) is list:
+            for tech_type in tech_types:
+                # get tech type details
+                display_name = tech_type["name"]
+
+                url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/automated-curation/technology-types/by-name"
+                body = {"filter": display_name}
+                response = self.make_request("POST", url, body)
+                details = response.json().get("element","no type found")
+                if type(details) is str:
+                    continue
+                # get templates and update the template_guids global
+                templates = details.get("catalogTemplates", "Not Found")
+                if type(templates) is str:
+                    template_guids[display_name]= None
+                else:
+                    for template in templates:
+                        template_name = template.get("name", None)
+                        template_guid = template["relatedElement"]["guid"]
+                        template_guids[template_name] = template_guid
+                        # print(f"Added {template_name} template with GUID {template_guids[template_name]}")
+
+                # Now find the integration connector guids
+                resource_list = details.get('resourceList', ' ')
+                if type(resource_list) is str:
+                    integration_guids[display_name] = None
+                else:
+                    for resource in resource_list:
+                        resource_guid = resource['relatedElement']['guid']
+                        resource_type = resource['relatedElement']['type']['typeName']
+                        if resource_type == "IntegrationConnector":
+                            integration_guids[display_name] = resource_guid
+                            # print(f"Added {display_name} integration connector with GUID {integration_guids[display_name]}")
+
 
 
 if __name__ == "__main__":
