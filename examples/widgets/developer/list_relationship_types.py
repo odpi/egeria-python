@@ -46,7 +46,11 @@ def display_list(type_name:str, server: str, url: str ,
         """Make a new table."""
         table = Table(
             title=f"Relationship types for: {type_name}  @ {time.asctime()}",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"list for Server '{server}' @ Platform - {url}",
@@ -103,7 +107,7 @@ def display_list(type_name:str, server: str, url: str ,
     try:
 
         console = Console(record=True)
-        with console.pager():
+        with console.pager(styles=True):
             console.print(generate_table(type_name))
         if save_output:
             console.save_html("projects.html")

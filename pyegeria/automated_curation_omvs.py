@@ -10,13 +10,9 @@ from datetime import datetime
 
 from httpx import Response
 
-from pyegeria import Client, max_paging_size, body_slimmer
+from pyegeria import Client, max_paging_size, body_slimmer, INTEGRATION_GUIDS, TEMPLATE_GUIDS
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
 from ._validators import validate_name, validate_guid, validate_search_string
-from .core_guids import (FILEFOLDER_TEMPLATE_GUID,
-                        POSTGRESQL_SERVER_TEMPLATE_GUID,
-                        APACHE_KAFKA_SERVER_TEMPLATE_GUID,
-                         )
 
 
 class AutomatedCuration(Client):
@@ -169,7 +165,7 @@ class AutomatedCuration(Client):
                 The GUID of the Kafka server element.
         """
 
-        body = {"templateGUID":APACHE_KAFKA_SERVER_TEMPLATE_GUID, "isOwnAnchor": 'true',
+        body = {"templateGUID":TEMPLATE_GUIDS['Apache Kafka Server template'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": kafka_server, "hostIdentifier": host_name,
                                               "portNumber": port, "description": description}}
         body_s = body_slimmer(body)
@@ -241,7 +237,7 @@ class AutomatedCuration(Client):
             str
                 The GUID of the Postgres server element.
         """
-        body = {"templateGUID":POSTGRESQL_SERVER_TEMPLATE_GUID, "isOwnAnchor": 'true',
+        body = {"templateGUID":TEMPLATE_GUIDS['PostgreSQL Server template'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": postgres_server, "hostIdentifier": host_name,
                                               "portNumber": port, "databaseUserId": db_user, "description": description,
                                               "databasePassword": db_pwd}}
@@ -319,7 +315,7 @@ class AutomatedCuration(Client):
         str
             The GUID of the File Folder element.
         """
-        body = {"templateGUID": FILEFOLDER_TEMPLATE_GUID,
+        body = {"templateGUID": TEMPLATE_GUIDS['FileFolder template'],
                 "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {
                     "directoryPathName": path_name,
@@ -965,7 +961,7 @@ class AutomatedCuration(Client):
 
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-processes/"
                f"by-name?startFrom={start_from}&pageSize={page_size}")
-        body = {"class": "NameRequestBody", "name": name}
+        body = {"filter": name}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no actions")
 
@@ -1278,7 +1274,7 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/"
                f"governance-action-types/by-name?startFrom={start_from}&pageSize={page_size}")
 
-        body = {"class": "NameRequestBody", "name": action_type_name}
+        body = {"filter": action_type_name}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no actions")
@@ -1364,7 +1360,7 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
                f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
-        body = {"class": "SearchStringRequestBody", "name": search_string}
+        body = {"filter": search_string}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no action types")
 
@@ -1429,8 +1425,8 @@ class AutomatedCuration(Client):
             - request source elements for the resulting governance action service
         action_targets: [str]
             -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime
-            - time to start the process
+        start_time: datetime, default = None
+            - time to start the process, no earlier than start time. None means now.
         request_parameters: [str]
             - parameters passed into the process
         orig_service_name: str
@@ -1454,10 +1450,11 @@ class AutomatedCuration(Client):
         server = self.server_name if server is None else server
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
                f"initiate")
+        start = int(start_time.timestamp() *1000) if start_time else None
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
                 "governanceActionTypeQualifiedName": action_type_qualified_name,
                 "requestSourceGUIDs": request_source_guids,
-                "actionTargets": action_targets, "startDate": int(start_time.timestamp() * 1000),
+                "actionTargets": action_targets, "startDate": start,
                 "requestParameters": request_parameters, "originatorServiceName": orig_service_name,
                 "originatorEngineName": orig_engine_name}
         new_body = body_slimmer(body)
@@ -1465,8 +1462,8 @@ class AutomatedCuration(Client):
         return response.json().get("guid", "Action not initiated")
 
     def initiate_gov_action_type(self, action_type_qualified_name: str, request_source_guids: [str],
-                                 action_targets: list, start_time: datetime, request_parameters: dict,
-                                 orig_service_name: str, orig_engine_name: str, server: str = None) -> str:
+                                 action_targets: list, start_time: datetime = None, request_parameters: dict = None,
+                                 orig_service_name: str = None, orig_engine_name: str = None, server: str = None) -> str:
         """ Using the named governance action type as a template, initiate an engine action.
 
         Parameters
@@ -1477,8 +1474,8 @@ class AutomatedCuration(Client):
             - request source elements for the resulting governance action service
         action_targets: [str]
             -list of action target names to GUIDs for the resulting governance action service
-        start_time: datetime
-            - time to start the process
+        start_time: datetime, default = None
+            - time to start the process, no earlier than start time. None means now.
         request_parameters: [str]
             - parameters passed into the process
         orig_service_name: str
@@ -1513,7 +1510,7 @@ class AutomatedCuration(Client):
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
                 "governanceActionTypeQualifiedName":
-                    "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-postgres-database",
+                    "AssetSurvey-postgres-database",
                 "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
                                    "actionTargetGUID": postgres_database_guid}]}
         response = await self._async_make_request("POST", url, body)
@@ -1532,7 +1529,7 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "Egeria:GovernanceActionType:AssetSurvey:survey-postgres-server",
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-server",
                 "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
                                    "actionTargetGUID": postgres_server_guid}]}
         response = await self._async_make_request("POST", url, body)
@@ -1575,10 +1572,10 @@ class AutomatedCuration(Client):
             in the Core Content Brain.
 
             File Folder Survey Names currently include::
-            - Egeria:GovernanceActionType:AssetSurvey:survey-folders
-            - Egeria:GovernanceActionType:AssetSurvey:survey-folder-and-files
-            - Egeria:GovernanceActionType:AssetSurvey:survey-all-folders
-            - Egeria:GovernanceActionType:AssetSurvey:survey-all-folders-and-files
+            - AssetSurvey:survey-folders
+            - AssetSurvey:survey-folder-and-files
+            - AssetSurvey:survey-all-folders
+            - AssetSurvey:survey-all-folders-and-files
         """
         server = self.server_name if server is None else server
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
@@ -1591,7 +1588,7 @@ class AutomatedCuration(Client):
         return response.json().get("guid", "Action not initiated")
 
     def initiate_file_folder_survey(self, file_folder_guid: str,
-                                    survey_name: str = "Egeria:GovernanceActionType:AssetSurvey:survey-folder",
+                                    survey_name: str = "AssetSurvey:survey-folder",
                                     server: str = None) -> str:
         """ Initiate a file folder survey - async version
 
@@ -1672,7 +1669,7 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "Egeria:GovernanceActionType:AssetSurvey:survey-kafka-server",
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-kafka-server",
                 "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
                                    "actionTargetGUID": kafka_server_guid}]}
         response = await self._async_make_request("POST", url, body)
@@ -1922,8 +1919,11 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                        catalog_target_name: str, metadata_src_qual_name: str = None,
-                                        config_properties: dict = None, server: str = None) -> str:
+                                        catalog_target_name: str, connection_name: str= None,
+                                        metadata_src_qual_name: str = None,
+                                        config_properties: dict = None, template_properties: dict = None,
+                                        permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
+                                        server: str = None) -> str:
         """ Add a catalog target to an integration connector and .
             Async version.
 
@@ -1935,12 +1935,21 @@ class AutomatedCuration(Client):
                 The specific metadata element target we want to retrieve.
             catalog_target_name : dict
                 Name of the catalog target to add.
+            connection_name: str, default = None
+                Optional name of connection to use for this catalog target when multiple connections defined.
             metadata_src_qual_name: str
                 The qualified name of the metadata source for the catalog target
             config_properties: dict
                 Configuration properties for the catalog target
+            template_properties: dict
+                Template properties to pass
+            permitted_sync: str, default = BOTH_DIRECTIONS
+                Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
+            delete_method: str, default = ARCHIVE
+                Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
             server: str, optional
                 The name of the server. If None, will use the default server specified in the instance will be used.
+
             Returns:
             -------
                 Relationship GUID for the catalog target,
@@ -1959,14 +1968,21 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
                f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}")
         body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
-                "configProperties": config_properties}
+                "configProperties": config_properties, "templateProperties": template_properties,
+                "connectionName": connection_name, "permittedSynchronization": permitted_sync,
+                "deleteMethod": delete_method
+                }
+
         response = await self._async_make_request("POST", url, body)
         return response.json().get('guid', "No Guid returned")
 
-    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, catalog_target_name: str,
-                           metadata_src_qual_name: str = None, config_properties: dict = None,
-                           server: str = None) -> str:
-        """ Add a catalog target to an integration connector.
+    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
+                            catalog_target_name: str, connection_name: str= None,
+                            metadata_src_qual_name: str = None,
+                            config_properties: dict = None, template_properties: dict = None,
+                            permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
+                            server: str = None) -> str:
+        """ Add a catalog target to an integration connector and .
 
             Parameters:
             ----------
@@ -1976,15 +1992,24 @@ class AutomatedCuration(Client):
                 The specific metadata element target we want to retrieve.
             catalog_target_name : dict
                 Name of the catalog target to add.
+            connection_name: str, default = None
+                Optional name of connection to use for this catalog target when multiple connections defined.
             metadata_src_qual_name: str
                 The qualified name of the metadata source for the catalog target
             config_properties: dict
                 Configuration properties for the catalog target
+            template_properties: dict
+                Template properties to pass
+            permitted_sync: str, default = BOTH_DIRECTIONS
+                Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
+            delete_method: str, default = ARCHIVE
+                Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
             server: str, optional
                 The name of the server. If None, will use the default server specified in the instance will be used.
+
             Returns:
             -------
-                None
+                Relationship GUID for the catalog target,
 
             Raises:
             ------
@@ -1996,28 +2021,42 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
-                                           metadata_src_qual_name, config_properties, server))
+                                           connection_name, metadata_src_qual_name, config_properties,
+                                           template_properties, permitted_sync, delete_method,
+                                           server))
         return response
 
     async def _async_update_catalog_target(self, relationship_guid: str,
-                                           catalog_target_name: str, metadata_src_qual_name: str = None,
-                                           config_properties: dict = None, server: str = None) -> None:
+                                           catalog_target_name: str, connection_name: str = None,
+                                           metadata_src_qual_name: str = None,
+                                           config_properties: dict = None, template_properties: dict = None,
+                                           permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
+                                           server: str = None
+                                           ) -> None:
         """ Update a catalog target to an integration connector.
             Async version.
 
             Parameters:
             ----------
             relationship_guid: str
-                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-
+                The GUID (Globally Unique Identifier) of the relationship used to retrieve catalog targets.
             catalog_target_name : dict
                 Name of the catalog target to add.
+            connection_name: str, default = None
+                Optional name of connection to use for this catalog target when multiple connections defined.
             metadata_src_qual_name: str
                 The qualified name of the metadata source for the catalog target
             config_properties: dict
                 Configuration properties for the catalog target
+            template_properties: dict
+                Template properties to pass
+            permitted_sync: str, default = BOTH_DIRECTIONS
+                Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
+            delete_method: str, default = ARCHIVE
+                Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
             server: str, optional
                 The name of the server. If None, will use the default server specified in the instance will be used.
+
             Returns:
             -------
                 None
@@ -2035,42 +2074,49 @@ class AutomatedCuration(Client):
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
                f"{relationship_guid}/update")
         body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
-                "configProperties": config_properties}
-        response = await self._async_make_request("POST", url, body)
+                "configProperties": config_properties, "templateProperties": template_properties,
+                "connectionName": connection_name, "permittedSynchronization": permitted_sync,
+                "deleteMethod": delete_method
+                }
+        await self._async_make_request("POST", url, body)
         return
 
-    def update_catalog_target(self, relationship_guid: str, catalog_target_name: str,
-                              metadata_src_qual_name: str = None, config_properties: dict = None,
-                              server: str = None) -> None:
-        """ Add a catalog target to an integration connector.
+    def update_catalog_target(self, relationship_guid: str,
+                           catalog_target_name: str, connection_name: str = None,
+                           metadata_src_qual_name: str = None,
+                           config_properties: dict = None, template_properties: dict = None,
+                           permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
+                           server: str = None
+                           ) -> None:
+        """ Update a catalog target to an integration connector.
 
-            Parameters:
-            ----------
-            relationship_guid: str
-                The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            catalog_target_name : dict
-                Name of the catalog target to add.
-            metadata_src_qual_name: str
-                The qualified name of the metadata source for the catalog target
-            config_properties: dict
-                Configuration properties for the catalog target
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
-            Returns:
-            -------
-                None
+        Parameters:
+        ----------
+        relationship_guid: str
+            The GUID (Globally Unique Identifier) of the relationship used to retrieve catalog targets.
+        catalog_target_name : dict
+            Name of the catalog target to add.
+        connection_name: str, default = None
+            Optional name of connection to use for this catalog target when multiple connections defined.
+        metadata_src_qual_name: str
+            The qualified name of the metadata source for the catalog target
+        config_properties: dict
+            Configuration properties for the catalog target
+        template_properties: dict
+            Template properties to pass
+        permitted_sync: str, default = BOTH_DIRECTIONS
+            Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
+        delete_method: str, default = ARCHIVE
+            Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
+        server: str, optional
+    """
 
-            Raises:
-            ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-            """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_catalog_target(relationship_guid, catalog_target_name,
-                                              metadata_src_qual_name, config_properties, server))
+                                              connection_name,metadata_src_qual_name,
+                                              config_properties, template_properties,permitted_sync,
+                                              delete_method,server))
         return
 
     async def _async_remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:

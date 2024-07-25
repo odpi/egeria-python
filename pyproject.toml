@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.5.5.18"
+version = "0.5.6.1"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -62,6 +62,7 @@ pytest = "^8.2.2"
     view_platform_status = "examples.widgets.operational.view_platform_status:main"
     view_server_list = "examples.widgets.operational.view_server_list:main"
     view_server_status = "examples.widgets.operational.view_server_status:main"
+    refresh_integration_daemon = "examples.widgets.operational.refresh_integration_daemon:main"
 
     get_my_profile = "examples.widgets.personal_organizer.get_my_profile:main"
     list_projects = "examples.widgets.personal_organizer.list_projects:main"

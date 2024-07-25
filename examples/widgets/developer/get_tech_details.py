@@ -82,7 +82,7 @@ def tech_viewer(tech: str, server_name:str, platform_url:str, user:str, user_pas
         return tt
 
     try:
-        tree = Tree(f"[bold bright green]{tech}", guide_style="bold bright_blue")
+        tree = Tree(f"{tech}", style = "bold bright_white on black", guide_style="bold bright_blue")
         a_client = AutomatedCuration(server_name, platform_url,
                                      user_id=user)
 

@@ -41,8 +41,11 @@ def test_display_status(server: str, url: str , username: str , user_pass:str):
         """Make a new table."""
         table = Table(
             title=f"Server Status for Platform - {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             caption=f"Server Status for Platform - '{url}'",
             # show_lines=True,
         )

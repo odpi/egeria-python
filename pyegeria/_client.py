@@ -18,7 +18,7 @@ from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException )
-from pyegeria._globals import max_paging_size, template_guids, integration_guids
+from pyegeria._globals import max_paging_size, TEMPLATE_GUIDS, INTEGRATION_GUIDS
 from pyegeria._validators import (
     validate_name,
     validate_server_name,

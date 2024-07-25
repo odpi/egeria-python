@@ -15,7 +15,7 @@ import time
 from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
-# import pyegeria.X_asset_catalog_omvs
+
 from rich.table import Table
 
 from pyegeria import (
@@ -38,7 +38,7 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 
-def display_assets(search_string: str, guid: str, server: str, url: str, username: str, user_password: str):
+def display_assets(search_string: str, server: str, url: str, username: str, user_password: str, time_out: int = 60):
 
     g_client = AssetCatalog(server, url, username)
     token = g_client.create_egeria_bearer_token(username, user_password)
@@ -47,9 +47,12 @@ def display_assets(search_string: str, guid: str, server: str, url: str, usernam
     def generate_table(search_string:str = 'Enter Your Tech Type') -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Asset Definitions contining the string  {search_string} @ {time.asctime()}",
-            # style = "black on grey66",
+            title=f"Assets containing the string  {search_string} @ {time.asctime()}",
             header_style="white on dark_blue",
+            style="bold white on black",
+            row_styles=["bold white on black"],
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"View Server '{server}' @ Platform - {url}",
@@ -59,31 +62,48 @@ def display_assets(search_string: str, guid: str, server: str, url: str, usernam
         table.add_column("Type Name")
         table.add_column("GUID", no_wrap=True)
         table.add_column("Technology Type")
-        table.add_column("Path")
-        table.add_column("Qualified Name")
+        # table.add_column("Qualified Name",max_width=15)
+        table.add_column("Matching Elements")
 
 
         assets = g_client.find_assets_in_domain(search_string, starts_with=True,
-                                             ends_with=False, ignore_case=True, page_size=10)
+                                             ends_with=False, ignore_case=True, page_size=100, time_out=time_out)
         if type(assets) is str:
             return table
 
         for element in assets:
             display_name = element.get("resourceName",'---')
-            qualified_name = element["qualifiedName"]
+            # qualified_name = element["qualifiedName"] # we decided that qualified name wasn't useful
             type_name = element["type"]["typeName"]
             tech_type = element.get("deployedImplementationType",'---')
             guid = element["guid"]
-            path_name = element.get("extendedProperties", None)
-            if path_name:
-                path = path_name.get("pathName"," ")
-            else:
-                path = " "
+            #### We decided that path wasn't useful
+            # path_name = element.get("extendedProperties", None)
+            # if path_name:
+            #     path = path_name.get("pathName"," ")
+            # else:
+            #     path = " "
+            matches = element['matchingElements']
+            match_md = ""
 
+            match_tab = Table(expand=True)
+            match_tab.add_column("Type Name")
+            match_tab.add_column("GUID", no_wrap=True, width=36)
+            match_tab.add_column("Properties")
+
+            for match in matches:
+                match_type_name = match['type']['typeName']
+                matching_guid = match['guid']
+                match_props = match['properties']
+                match_details_md = ""
+                for key in match_props.keys():
+                    match_details_md += f"{key}: {match_props[key]}\n"
+
+                match_tab.add_row(match_type_name, matching_guid, match_details_md)
 
 
             table.add_row(
-                display_name, type_name,guid, tech_type, path, qualified_name
+                display_name, type_name,guid, tech_type, match_tab
             )
 
         g_client.close_session()
@@ -95,7 +115,7 @@ def display_assets(search_string: str, guid: str, server: str, url: str, usernam
         #         time.sleep(2)
         #         live.update(generate_table())
         console = Console()
-        with console.pager():
+        with console.pager(styles=True):
             console.print(generate_table(search_string))
 
 
@@ -105,24 +125,23 @@ def display_assets(search_string: str, guid: str, server: str, url: str, usernam
 
 
 def main():
-    sus_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+    parser.add_argument("--time_out", help="Time Out")
 
-    parser.add_argument("--guid", help="GUID of glossary to search")
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    guid = args.guid if args.guid is not None else None
+    time_out = args.time_out if args.time_out is not None else 60
 
-    search_string = Prompt.ask("Enter a search string:", default="")
-    display_assets(search_string, guid,server, url, userid, user_pass)
+    search_string = Prompt.ask("Enter an asset search string:", default="")
+    display_assets(search_string, server, url, userid, user_pass, time_out)
 
 if __name__ == "__main__":
     main()

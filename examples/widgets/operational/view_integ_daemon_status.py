@@ -14,6 +14,7 @@ assume that the user password is always "secret".
 import os
 import argparse
 import time
+from datetime import datetime
 
 from rich import box
 from rich.live import Live
@@ -51,20 +52,23 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         """Make a new table."""
         table = Table(
             title=f"Integration Daemon Status @ {time.asctime()}",
-            # style = "black on grey66",
+            style = "bold white on black",
+            row_styles = ["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
             expand=True
         )
-        table.add_column("Connector Name")
-        table.add_column("Connector Status")
+        table.add_column("Connector Name", min_width = 15)
+        table.add_column("Status", max_width=6)
 
-        table.add_column("Last Refresh Time")
-        table.add_column("Min Refresh (mins)")
-        table.add_column("Target Element")
-        table.add_column("Exception Message")
+        table.add_column("Last Refresh Time", min_width = 12)
+        table.add_column("Min Refresh (mins)", max_width=6)
+        table.add_column("Target Element", min_width=20)
+        table.add_column("Exception Message",min_width=10)
 
         daemon_status = s_client.get_integration_daemon_status()
         connector_reports = daemon_status["integrationConnectorReports"]
@@ -72,7 +76,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
             connector_name = connector.get("connectorName", "---")
             connector_status = connector.get("connectorStatus", "---")
             connector_guid = connector.get("connectorGUID","---")
-            last_refresh_time = connector.get("lastRefreshTime", "---")
+            last_refresh_time = connector.get("lastRefreshTime", "---")[:-10]
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = " "
             if connector_guid != '---':

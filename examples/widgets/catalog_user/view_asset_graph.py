@@ -116,7 +116,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
         qualified_name = asset_graph["qualifiedName"]
         resource_name = asset_graph["resourceName"]
 
-        tree = Tree(f"{asset_name} ({asset_guid})", style="bold bright_white", guide_style="bold bright_blue")
+        tree = Tree(f"{asset_name} ({asset_guid})", style="bold bright_white on black", guide_style="bold bright_blue")
         style = ""
 
         asset_type = asset_graph["type"]["typeName"]

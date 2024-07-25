@@ -46,7 +46,7 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
 
 
     try:
-        console = Console(width = 180)
+        console = Console(width = 180, style="bold white on black")
         r = c.make_request("GET", url)
         if r.status_code == 200:
             pass
@@ -58,7 +58,7 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
         created = Text(f"Created at: {e['createTime']}")
         details = Text(f"Details: {json.dumps(p, indent=2)}")
 
-        tree = Tree(f"[bold bright green]{guid}", guide_style="bold bright_blue")
+        tree = Tree(f"{guid}", style = "bold bright_white on black", guide_style="bold bright_blue")
 
         tree = tree.add(type_name)
         tree.add(metadataCollection)

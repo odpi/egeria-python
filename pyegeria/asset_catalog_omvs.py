@@ -14,7 +14,7 @@ import json
 
 from httpx import Response
 
-from pyegeria import Client, max_paging_size, body_slimmer
+from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS, INTEGRATION_GUIDS
 from pyegeria._exceptions import (
     InvalidParameterException,
 )
@@ -180,7 +180,7 @@ class AssetCatalog(Client):
         """
 
         body = {
-            "templateGUID": "5e1ff810-5418-43f7-b7c4-e6e062f9aff7",
+            "templateGUID": TEMPLATE_GUIDS['Apache Kafka Server template'],
             "isOwnAnchor": 'true',
             "placeholderPropertyValues": {
                 "serverName": kafka_server,
@@ -250,7 +250,7 @@ class AssetCatalog(Client):
                 The GUID of the Kafka server element.
         """
         body = {
-            "templateGUID": "542134e6-b9ce-4dce-8aef-22e8daf34fdb",
+            "templateGUID": TEMPLATE_GUIDS['PostgreSQL Server template'],
             "isOwnAnchor": 'true',
             "placeholderPropertyValues": {
                 "serverName": postgres_server,
@@ -306,7 +306,7 @@ class AssetCatalog(Client):
     async def _async_find_assets_in_domain(self, search_string: str, start_from: int = 0,
                                           page_size: int = max_paging_size, starts_with: bool = True,
                                           ends_with: bool = False, ignore_case: bool = True,
-                                          server: str =  None) -> list | str:
+                                          server: str =  None, time_out:int = 60) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -362,13 +362,13 @@ class AssetCatalog(Client):
         body = {
             "filter": search_string
         }
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body, time_out=time_out)
         return response.json().get("searchMatches", "no assets found")
 
     def find_assets_in_domain(self, search_string: str, start_from: int = 0,
                                           page_size: int = max_paging_size, starts_with: bool = True,
                                           ends_with: bool = False, ignore_case: bool = True,
-                                          server: str =  None) -> list | str:
+                                          server: str =  None, time_out:int = 60) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -412,7 +412,7 @@ class AssetCatalog(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_assets_in_domain(search_string,  start_from,page_size,
-                                              starts_with, ends_with, ignore_case, server)
+                                              starts_with, ends_with, ignore_case, server, time_out)
         )
         return response
 

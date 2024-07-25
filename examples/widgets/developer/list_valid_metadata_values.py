@@ -48,7 +48,11 @@ def display_values(property_name: str, type_name: str, server: str, url: str,
         """Make a new table."""
         table = Table(
             title=f"Valid Metadata Values for Property: {property_name} of type {type_name} @ {time.asctime()}",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Valid Metadata Values for Server '{server}' @ Platform - {url}",
@@ -101,7 +105,7 @@ def display_values(property_name: str, type_name: str, server: str, url: str,
         #         time.sleep(2)
         #         live.update(generate_table())
         console = Console(record=True)
-        with console.pager():
+        with console.pager(styles=True):
             console.print(generate_table(property_name, type_name))
         if save_output:
             console.save_html("valid-metadata-values.html")

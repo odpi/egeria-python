@@ -25,7 +25,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-from pyegeria import FILEFOLDER_TEMPLATE_GUID, POSTGRESQL_SERVER_TEMPLATE_GUID, APACHE_KAFKA_SERVER_TEMPLATE_GUID
+from pyegeria import TEMPLATE_GUIDS, INTEGRATION_GUIDS
 
 
 from pyegeria.asset_catalog_omvs import AssetCatalog
@@ -70,7 +70,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Unity"
+            search_string = "procurement"
             response = g_client.find_assets_in_domain(search_string, starts_with=True, ends_with=False,
                                                       ignore_case=True)
             duration = time.perf_counter() - start_time
@@ -100,7 +100,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server:str = good_view_server_1):
         try:
             server_name = server
-            asset_guid ="91ac7e96-b40e-4c94-a7e2-b92aec9b74fe"
+            asset_guid =""
             a_client = AssetCatalog(server_name, self.good_platform1_url,
                                        user_id=self.good_user_2)
 
@@ -171,35 +171,6 @@ class TestAssetCatalog:
         finally:
             a_client.close_session()
 
-    # def test_create_folder_asset(self, server: str = good_view_server_1):
-    #     try:
-    #         server_name = server
-    #         a_client = AssetCatalog(server_name, self.good_platform1_url,
-    #                                 user_id=self.good_user_2)
-    #
-    #         token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
-    #
-    #         path_name = "/Users/dwolfson/localGit/databricks"
-    #         folder_name = "databricks"
-    #         file_system = "laz"
-    #         description = "Folder for databricks work"
-    #
-    #         response = a_client.create_folder_element_from_template()
-    #         print(f"type is {type(response)}")
-    #         if type(response) is list:
-    #             print("\n\n" + json.dumps(response, indent=4))
-    #             count = len(response)
-    #             print(f"Found {count} terms")
-    #         elif type(response) is str:
-    #             print("\n\n" + response)
-    #         assert True
-    #     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
-    #         print_exception_response(e)
-    #         assert False, "Invalid request"
-    #
-    #     finally:
-    #         a_client.close_session()
-
 
     def test_create_folder_asset_body(self, server: str = good_view_server_1):
         try:
@@ -209,7 +180,7 @@ class TestAssetCatalog:
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
             body = {
-                    "templateGUID" : FILEFOLDER_TEMPLATE_GUID,
+                    "templateGUID" : TEMPLATE_GUIDS['FileFolder template'],
                     "isOwnAnchor" : True,
                     "placeholderPropertyValues" : {
                         "clinicalTrialId" : "TransMorg-1",

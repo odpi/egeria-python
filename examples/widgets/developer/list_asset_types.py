@@ -45,8 +45,10 @@ def display_asset_types(server: str, url: str, username: str, user_password: str
         """Make a new table."""
         table = Table(
             title=f"Asset Types for: {url} @ {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Asset Types from Server '{server}' @ Platform - {url}",
@@ -75,7 +77,7 @@ def display_asset_types(server: str, url: str, username: str, user_password: str
 
     try:
         console = Console()
-        with console.pager():
+        with console.pager(styles=True):
             console.print(generate_table())
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:

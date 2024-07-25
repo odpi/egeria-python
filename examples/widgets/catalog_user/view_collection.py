@@ -40,24 +40,24 @@ def collection_viewer(root: str, server_name: str, platform_url: str, user: str,
         members = collection_client.get_member_list(root_collection_name)
         if members:
             for member in members:
-                style = ""
-                text_collection_name = Text(f"[bold white] Name: {member['name']}", "")
-                text_qualified_name = Text(f"* QualifiedName: {member['qualifiedName']}""yellow")
+                style = "bold white on black"
+                text_collection_name = Text(f"[bold white on black]Name: {member['name']}", style=style)
+                text_qualified_name = Text(f"* QualifiedName: {member['qualifiedName']}")
                 text_guid = Text(f"* GUID: {member['guid']}", "green")
-                text_collection_type = Text(f"* Collection Type: {member['collectionType']}", "cyan")
-                text_description = Text(f"* Description: {member['description']}", "cyan")
-                p = Panel.fit(f"[white]{text_collection_name}[green]\n{text_qualified_name}\n{text_guid}\n"
+                text_collection_type = Text(f"* Collection Type: {member['collectionType']}")
+                text_description = Text(f"* Description: {member['description']}")
+                p = Panel.fit(f"{text_collection_name}[green]\n{text_qualified_name}\n{text_guid}\n"
                               f"{text_collection_type}\n{text_description}")
                 tt = tree.add(p, style=style)
 
                 children = collection_client.get_collection_members(member['guid'])
                 if type(children) is list:
-                    branch = tt.add(f"[bold magenta]Members", style=style, guide_style=style)
+                    branch = tt.add(f"[bold magenta on black]Members", style=style, guide_style=style)
                     walk_collection_hierarchy(collection_client, member['qualifiedName'], branch),
         else:
-            tt = tree.add(f"[bold magenta]No collections match {root_collection_name}", style="bold red")
+            tt = tree.add(f"[bold magenta on black]No collections match {root_collection_name}")
     try:
-        tree = Tree(f"[bold bright green]{root}", guide_style="bold bright_blue")
+        tree = Tree(f"[bold bright green on black]{root}",guide_style="bold bright_blue")
         c_client = CollectionManager(server_name, platform_url,
                                      user_id=user)
 
@@ -87,7 +87,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Digital Products Root")
+    root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Root Sustainability Collection")
     collection_viewer(root_collection, server, url, userid, user_pass)
 
 if __name__ == "__main__":

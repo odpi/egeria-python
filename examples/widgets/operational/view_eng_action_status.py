@@ -49,8 +49,11 @@ def display_status_engine_actions(server: str, url: str, user: str, user_pass:st
         """Make a new table."""
         table = Table(
             title=f"Engine Action Status for Platform {url} @ {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Engine Status for Server '{server}' @ Platform - {url}",
