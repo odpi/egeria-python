@@ -7,8 +7,10 @@ General utility functions in support of the Egeria Python Client package.
 """
 import json
 from rich import print, print_json
+from datetime import datetime
+from rich.console import Console
 
-
+console = Console(width=200)
 
 # def wrap_text(df: pd.DataFrame, wrap_len: int = 30) -> pd.DataFrame:
 #     """ Wrap the text in a dataframe

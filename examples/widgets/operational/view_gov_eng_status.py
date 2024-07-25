@@ -47,8 +47,11 @@ def display_gov_actions_status(server: str, url: str, username: str, user_pass:s
         """Make a new table."""
         table = Table(
             title=f"Governance Engine Status @ {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Server: '{server_name}' running on {url}",

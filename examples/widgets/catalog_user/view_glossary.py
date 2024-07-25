@@ -49,13 +49,15 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
     g_client = GlossaryBrowser(server, url)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
-
     def generate_table(search_string:str = '*') -> Table:
         """Make a new table."""
         table = Table(
             title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Glossary View Server '{server}' @ Platform - {url}",
@@ -86,7 +88,7 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
 
 
             table.add_row(
-                display_name,qualified_name, abbrev, summary, description
+                display_name,qualified_name, abbrev, summary, description, style="bold white on black"
             )
 
         g_client.close_session()
@@ -96,9 +98,9 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
         # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
         #     while True:
         #         time.sleep(2)
-        #         live.update(generate_table())
-        console = Console()
-        with console.pager():
+        #         live.update(generate_table(search_string))
+        console = Console(style="bold white on black")
+        with console.pager(styles=True):
             console.print(generate_table(search_string))
 
 

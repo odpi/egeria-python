@@ -107,7 +107,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, use
                         note += (f"\t* Type: {interfaces['arrayValues']['propertyValueMap'][str(i)]['typeName']}"
                                 f"\tName: {interfaces['arrayValues']['propertiesAsStrings'][str(i)]}\n"
                                 )
-                note_md = Panel.fit(Markdown(note), style = 'bold bright_white')
+                note_md = Panel.fit(Markdown(note), style = 'bold bright_white on black')
                 t = tree.add(note_md)
 
         else:

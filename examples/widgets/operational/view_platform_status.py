@@ -44,8 +44,11 @@ def display_status(server: str, url: str, username: str, user_pass:str):
         """Make a new table."""
         table = Table(
             title=f"Server Status for Platform - {time.asctime()}",
-            # style = "black on grey66",
+            # style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             caption=f"Status of Platforms - '{url}'",
             show_lines=True,
             # expand=True
@@ -85,24 +88,23 @@ def display_status(server: str, url: str, username: str, user_pass:str):
                         server_type = server.get("serverType"," ")
                         server_status = server.get("serverActiveStatus","UNKNOWN")
                         if server_status in("RUNNING", "STARTING"):
-                            status_flag = "[green]"
+                            status_flag = "[bright green]"
                         elif server_status in ("INACTIVE", "STOPPING"):
-                            status_flag = "[red]"
+                            status_flag = "[bright red]"
                         else:
                             server_status = "UNKNOWN"
-                            status_flag = "[yellow]"
+                            status_flag = "[bright yellow]"
 
                         serv = f"{status_flag}{server_types[server_type]}: {server_name}\n"
                         server_list = server_list + serv
 
+                table.add_row(platform_name, platform_url, platform_origin, platform_desc,
+                              platform_started, server_list, style = "bold white on black")
             except (Exception) as e:
                 # console.print_exception(e)
                 platform_url = " "
                 platform_origin = " "
                 platform_started = " "
-
-            table.add_row(platform_name, platform_url, platform_origin, platform_desc,
-                         platform_started, server_list)
 
 
         return table

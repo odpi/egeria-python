@@ -49,8 +49,11 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
         """Make a new table."""
         table = Table(
             title=f"Technology Types for: {url} @ {time.asctime()}",
-            # style = "black on grey66",
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Technology Types from Server '{server}' @ Platform - {url}",
@@ -86,7 +89,7 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
 
     try:
         console = Console()
-        with console.pager():
+        with console.pager(styles=True):
             console.print(generate_table())
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:

@@ -79,7 +79,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, use
         if type(tech_elements) is str:
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)
-        tree = Tree(f"Deployed Technology Type: {tech_name}", style="bold bright_white", guide_style="bold bright_blue")
+        tree = Tree(f"Deployed Technology Type: {tech_name}", style="bold bright_white on black", guide_style="bold bright_blue")
         note: str =" "
         for element in tech_elements:
             header = element['elementHeader']
@@ -100,7 +100,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, use
 
             note = (f"* Qualified Name: {tech_qualified_name}\n"
                           f"* GUID: {tech_guid}\n"
-                          f"* Createdy by: {tech_created_by}\n"
+                          f"* Created by: {tech_created_by}\n"
                           f"* Created at: {tech_created_at}\n"
                           f"* Home Collection: {tech_collection}\n"
                           f"{class_md}\n"

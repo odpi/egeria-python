@@ -393,7 +393,8 @@ class ServerOps(Platform):
                                                                                      server))
         return response
 
-    async def _async_refresh_integration_connectors(self, connector_name: str = None, server: str = None) -> None:
+    async def _async_refresh_integration_connectors(self, connector_name: str = None, server: str = None,
+                                                    time_out: int = 60) -> None:
         """ Issue a refresh request to all connectors running in the integration daemon, or a specific connector
         if one is specified - async version"""
         if server is None:
@@ -406,16 +407,17 @@ class ServerOps(Platform):
                 "class": "NameRequestBody",
                 "name": connector_name
             }
-            await self._async_make_request("POST", url, body)
+            await self._async_make_request("POST", url, body, time_out=time_out
+                                           )
         else:
-            await self._async_make_request("POST", url)
+            await self._async_make_request("POST", url, time_out= time_out)
 
         return
 
-    def refresh_integration_connectors(self, connector_name: str, server: str = None) -> None:
+    def refresh_integration_connectors(self, connector_name: str, server: str = None, time_out: int = 60) -> None:
         """ Restart the integration Connector specified by connector_name"""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_refresh_integration_connectors(connector_name, server))
+        loop.run_until_complete(self._async_refresh_integration_connectors(connector_name, server, time_out))
 
 
 if __name__ == "__main__":

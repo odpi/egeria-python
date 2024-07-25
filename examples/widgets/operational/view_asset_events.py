@@ -18,7 +18,7 @@ from rich.markdown import Markdown
 from confluent_kafka import Consumer, KafkaException
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9192')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
 EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
 EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
@@ -29,7 +29,7 @@ EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 
-def main():
+def main(ep: str = EGERIA_KAFKA_ENDPOINT):
 
     disable_ssl_warnings = True
     console = Console(width=200)
@@ -40,11 +40,11 @@ def main():
 
     # Define the Kafka consumer configuration.
     config = {
-        'bootstrap.servers': EGERIA_KAFKA_ENDPOINT,  # replace with your Kafka broker(s)
+        'bootstrap.servers': ep,  # replace with your Kafka broker(s)
         'group.id': f"view_asset_events:{current_time}",  # replace with your consumer group
         'auto.offset.reset': earliest_latest  # can be set to 'earliest' or 'latest'
     }
-
+    print(f"Kafka config is {json.dumps(config)}")
     # Initialize a Kafka consumer.
     consumer = Consumer(config)
 
@@ -53,7 +53,7 @@ def main():
 
     try:
         while True:
-            msg = consumer.poll(1.0)  # timeout set to 1 second
+            msg = consumer.poll(2.0)  # timeout set to 1 second
 
             if msg is None:
                 continue
@@ -78,7 +78,7 @@ def main():
                 console.rule(f"\tMessage TimeStamp: {event_time}\t eventType: {event_type}\t typeName: {type_name}\t guid: {guid}")
                 msg = (
 
-                          f"properties: \n{props}\n\n")
+                          f"properties: \n[bright white on black]{props}\n\n")
                 msg = Markdown(msg)
 
                 console.print(msg)
@@ -87,4 +87,11 @@ def main():
         consumer.close()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--ep", help="Endpoint to connect to")
+    args = parser.parse_args()
+
+    ep = args.ep if args.ep is not None else EGERIA_KAFKA_ENDPOINT
+
+    main(ep)

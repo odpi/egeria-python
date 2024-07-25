@@ -31,5 +31,6 @@ star_ratings = (
     "TWO_STARS",
 )
 
-template_guids: dict = {}
-integration_guids: dict = {}
+TEMPLATE_GUIDS: dict = {}
+INTEGRATION_GUIDS: dict = {}
+
