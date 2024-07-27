@@ -43,7 +43,7 @@ def build_global_guid_lists(server:str = "view-server",url: str = "https://local
 
                 if type(templates) is list:
                     for template in templates:
-                        template_name = template.get("name", None)
+                        template_name = template.get("name", None).replace(' template', '')
                         template_guid = template["relatedElement"]["guid"]
                         out = f"TEMPLATE_GUIDS['{template_name}'] = '{template_guid}'\n"
                         console.print(f"Added {template_name} template with GUID {template_guid}")
@@ -57,9 +57,13 @@ def build_global_guid_lists(server:str = "view-server",url: str = "https://local
                         resource_guid = resource['relatedElement']['guid']
                         resource_type = resource['relatedElement']['type']['typeName']
                         if resource_type == "IntegrationConnector":
-                            out = f"INTEGRATION_GUIDS['{display_name}'] = '{resource_guid}'\n"
-                            console.print(f"Added {display_name} integration connector with GUID {resource_guid}")
-                            f.write(out)
+                            if resource['resourceUse'] == "Catalog Resource":
+                                int_con = resource['relatedElement']['uniqueName']
+                                int_con_name = int_con.split(':')[-1].replace('IntegrationConnector', '')
+
+                                out = f"INTEGRATION_GUIDS['{int_con_name}'] = '{resource_guid}'\n"
+                                console.print(f"Added {int_con_name} integration connector with GUID {resource_guid}")
+                                f.write(out)
                 else:
                     console.print(f"{display_name} technology type has no integration connectors")
 

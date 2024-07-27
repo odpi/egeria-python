@@ -180,7 +180,7 @@ class AssetCatalog(Client):
         """
 
         body = {
-            "templateGUID": TEMPLATE_GUIDS['Apache Kafka Server template'],
+            "templateGUID": TEMPLATE_GUIDS['Apache Kafka Server'],
             "isOwnAnchor": 'true',
             "placeholderPropertyValues": {
                 "serverName": kafka_server,
@@ -250,7 +250,7 @@ class AssetCatalog(Client):
                 The GUID of the Kafka server element.
         """
         body = {
-            "templateGUID": TEMPLATE_GUIDS['PostgreSQL Server template'],
+            "templateGUID": TEMPLATE_GUIDS['PostgreSQL Server'],
             "isOwnAnchor": 'true',
             "placeholderPropertyValues": {
                 "serverName": postgres_server,

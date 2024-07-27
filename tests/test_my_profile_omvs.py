@@ -12,27 +12,16 @@ A running Egeria environment is needed to run these tests.
 """
 import time
 
-import pytest
-import asyncio
-import json
-import rich
-from rich import console, print_json
+from rich import print_json
 from rich.console import Console
-from contextlib import nullcontext as does_not_raise
-from pyegeria.my_profile_omvs import MyProfile
+
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-
-from pyegeria.core_omag_server_config import CoreServerConfig
-
-from pyegeria.glossary_browser_omvs import GlossaryBrowser
-from pyegeria.utils import print_json_list_as_table
-
-# from pyegeria.admin_services import FullServerConfig
+from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 

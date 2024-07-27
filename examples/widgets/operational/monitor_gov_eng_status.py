@@ -22,7 +22,8 @@ from pyegeria import (
 from rich.table import Table
 from rich.live import Live
 from rich import box
-from rich import console
+from rich.console import Console
+
 
 from pyegeria.server_operations import ServerOps
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -39,7 +40,7 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 
-def display_gov_actions_status(server: str, url: str, username: str, user_pass:str):
+def display_gov_actions_status(server: str, url: str, username: str, user_pass:str, paging:bool):
     server_name = server
     s_client = ServerOps(server_name, url, username, user_pass)
 
@@ -86,10 +87,15 @@ def display_gov_actions_status(server: str, url: str, username: str, user_pass:s
         return table
 
     try:
-        with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
-            while True:
-                time.sleep(2)
-                live.update(generate_table())
+        if paging is True:
+            console = Console()
+            with console.pager():
+                console.print(generate_table())
+        else:
+            with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
+                while True:
+                    time.sleep(2)
+                    live.update(generate_table())
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
@@ -99,7 +105,7 @@ def display_gov_actions_status(server: str, url: str, username: str, user_pass:s
         s_client.close_session()
 
 
-def main():
+def main_live():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -111,7 +117,25 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass)
+    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass, paging=False)
 
-if __name__ == "__main__":
-    main()
+def main_paging():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--server", help="Name of the server to display status for")
+    parser.add_argument("--url", help="URL Platform to connect to")
+    parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
+    args = parser.parse_args()
+
+    server = args.server if args.server is not None else EGERIA_ENGINE_HOST
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass, paging=True)
+
+if __name__ == "__main_live__":
+    main_live()
+
+
+if __name__ == "__main_paging__":
+    main_paging()

@@ -165,7 +165,7 @@ class AutomatedCuration(Client):
                 The GUID of the Kafka server element.
         """
 
-        body = {"templateGUID":TEMPLATE_GUIDS['Apache Kafka Server template'], "isOwnAnchor": 'true',
+        body = {"templateGUID":TEMPLATE_GUIDS['Apache Kafka Server'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": kafka_server, "hostIdentifier": host_name,
                                               "portNumber": port, "description": description}}
         body_s = body_slimmer(body)
@@ -237,7 +237,7 @@ class AutomatedCuration(Client):
             str
                 The GUID of the Postgres server element.
         """
-        body = {"templateGUID":TEMPLATE_GUIDS['PostgreSQL Server template'], "isOwnAnchor": 'true',
+        body = {"templateGUID":TEMPLATE_GUIDS['PostgreSQL Server'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": postgres_server, "hostIdentifier": host_name,
                                               "portNumber": port, "databaseUserId": db_user, "description": description,
                                               "databasePassword": db_pwd}}
@@ -315,7 +315,7 @@ class AutomatedCuration(Client):
         str
             The GUID of the File Folder element.
         """
-        body = {"templateGUID": TEMPLATE_GUIDS['FileFolder template'],
+        body = {"templateGUID": TEMPLATE_GUIDS['FileFolder'],
                 "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {
                     "directoryPathName": path_name,

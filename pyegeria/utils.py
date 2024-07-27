@@ -72,8 +72,6 @@ console = Console(width=200)
 #     df = pd.json_normalize(data)
 #     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
 
-template_guids: dict = None
-integration_guids: dict = None
 
 def print_rest_request_body(body):
     """
