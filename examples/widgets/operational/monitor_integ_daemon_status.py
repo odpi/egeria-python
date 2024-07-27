@@ -17,6 +17,7 @@ import time
 from datetime import datetime
 
 from rich import box
+from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
@@ -43,7 +44,7 @@ disable_ssl_warnings = True
 
 
 def display_integration_daemon_status(integ_server: str, integ_url: str,
-                                      view_server:str, view_url: str, user: str, user_pass:str):
+                                      view_server:str, view_url: str, user: str, user_pass:str, paging: bool):
     s_client = ServerOps(integ_server, integ_url, user)
     a_client = AutomatedCuration(view_server, view_url, user, user_pass)
     token = a_client.create_egeria_bearer_token()
@@ -119,11 +120,16 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         return table
 
     try:
-        with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-            while True:
-                time.sleep(2)
-                live.update(generate_table())
-                live.console.pager()
+        if paging is True:
+            console = Console()
+            with console.pager():
+                console.print(generate_table())
+        else:
+            with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
+                while True:
+                    time.sleep(2)
+                    live.update(generate_table())
+
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
@@ -134,7 +140,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         a_client.close_session()
 
 
-def main():
+def main_live():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integ_server", help="Name of the integration server to display status for")
     parser.add_argument("--integ_url", help="URL Platform to connect to")
@@ -152,7 +158,29 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
                                       view_server = view_server, view_url = view_url,
-                                      user=userid, user_pass = user_pass)
+                                      user=userid, user_pass = user_pass, paging = False)
 
-if __name__ == "__main__":
-    main()
+def main_paging():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--integ_server", help="Name of the integration server to display status for")
+    parser.add_argument("--integ_url", help="URL Platform to connect to")
+    parser.add_argument("--view_server", help="Name of the view server to use")
+    parser.add_argument("--view_url", help="view server URL Platform to connect to")
+    parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
+    args = parser.parse_args()
+
+    integ_server = args.integ_server if args.integ_server is not None else EGERIA_INTEGRATION_DAEMON
+    integ_url = args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
+    view_server = args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
+                                      view_server = view_server, view_url = view_url,
+                                      user=userid, user_pass = user_pass, paging = True)
+if __name__ == "__main_live__":
+    main_live()
+
+if __name__ == "__main_paging__":
+    main_paging()

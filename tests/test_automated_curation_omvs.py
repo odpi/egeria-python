@@ -717,7 +717,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("OSS Unity Catalog Server")
+            response = a_client.get_technology_type_detail("Unity Catalog Server")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
