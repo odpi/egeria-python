@@ -111,9 +111,12 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    try:
+        tech = Prompt.ask("Enter the Technology to start from:", default="PostgreSQL Server")
+        tech_viewer(tech,server, url, userid, user_pass)
+    except(KeyboardInterrupt):
+        pass
 
-    tech = Prompt.ask("Enter the Technology to start from:", default="PostgreSQL Server")
-    tech_viewer(tech,server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

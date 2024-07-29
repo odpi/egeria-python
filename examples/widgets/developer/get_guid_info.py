@@ -18,6 +18,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.text import Text
 from rich.tree import Tree
+from rich.panel import Panel
 
 from pyegeria import (
     InvalidParameterException,
@@ -46,7 +47,7 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
 
 
     try:
-        console = Console(width = 180, style="bold white on black")
+        console = Console(width = 160, style="bold white on black")
         r = c.make_request("GET", url)
         if r.status_code == 200:
             pass
@@ -63,7 +64,7 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
         tree = tree.add(type_name)
         tree.add(metadataCollection)
         tree.add(created)
-        tree.add(details)
+        tree.add(Panel(details,title="Element Details", expand=False))
         print(tree)
 
         c.close_session()
@@ -72,8 +73,7 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
         if type(e) is str:
            console.print_exception()
         else:
-            console.print(f"\n Looks like the GUID isn't known...detailed message follows\n")
-            console.print_exception()
+            console.print(f"\n Looks like the GUID isn't known...\n")
 
 def main():
 
@@ -90,9 +90,11 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    guid = Prompt.ask("Enter the GUID to retrieve:", default=None)
 
-    display_guid(guid, server, url, userid, user_pass)
-
+    try:
+        guid = Prompt.ask("Enter the GUID to retrieve", default=None)
+        display_guid(guid, server, url, userid, user_pass)
+    except (KeyboardInterrupt):
+        pass
 if __name__ == "__main__":
     main()

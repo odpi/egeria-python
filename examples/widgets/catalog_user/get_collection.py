@@ -87,8 +87,10 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Root Sustainability Collection")
-    collection_viewer(root_collection, server, url, userid, user_pass)
-
+    try:
+        root_collection = Prompt.ask("Enter the Root Collection to start from:", default="Root Sustainability Collection")
+        collection_viewer(root_collection, server, url, userid, user_pass)
+    except (KeyboardInterrupt):
+        pass
 if __name__ == "__main__":
     main()

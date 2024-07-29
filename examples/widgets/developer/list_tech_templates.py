@@ -134,9 +134,12 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = None
 
-    search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
+    try:
+        search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
+        display_tech_types(search_string, server, url, userid, password)
+    except(KeyboardInterrupt):
+        pass
 
-    display_tech_types(search_string, server, url, userid, password)
 
 if __name__ == "__main__":
     main()

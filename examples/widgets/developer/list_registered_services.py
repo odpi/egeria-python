@@ -142,9 +142,12 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    svc_kind = Prompt.ask("Enter the service type you are searching for:", default="all")
+    try:
+        svc_kind = Prompt.ask("Enter the service type you are searching for:", default="all")
+        display_registered_svcs(svc_kind, server, url, userid, password=password)
+    except(KeyboardInterrupt):
+        pass
 
-    display_registered_svcs(svc_kind, server, url, userid, password=password)
 
 if __name__ == "__main__":
     main()

@@ -6,15 +6,13 @@ Copyright Contributors to the ODPi Egeria project.
 
 A simple status display for the Integration Daemon.
 
-Note that there are a couple of assumptions currently being made that need to get resolved in future
-versions. First, we assume that the view-server used by AutomatedCuration is called "view-server". Second, we
-assume that the user password is always "secret".
 
 """
 import os
 import argparse
 import time
 from datetime import datetime
+from ops_config import Config
 
 from rich import box
 from rich.console import Console
@@ -179,6 +177,8 @@ def main_paging():
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
                                       view_server = view_server, view_url = view_url,
                                       user=userid, user_pass = user_pass, paging = True)
+
+
 if __name__ == "__main_live__":
     main_live()
 

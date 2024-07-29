@@ -12,6 +12,9 @@ import os
 import time
 import json
 import argparse
+import click
+from ops_config import Config, pass_config
+
 
 from pyegeria import (
     InvalidParameterException,
@@ -40,7 +43,9 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
 
-def display_gov_actions_status(server: str, url: str, username: str, user_pass:str, paging:bool):
+
+
+def display_gov_eng_status(server: str , url: str, username: str, user_pass:str, paging:bool):
     server_name = server
     s_client = ServerOps(server_name, url, username, user_pass)
 
@@ -117,7 +122,7 @@ def main_live():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass, paging=False)
+    display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=False)
 
 def main_paging():
     parser = argparse.ArgumentParser()
@@ -131,7 +136,9 @@ def main_paging():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    display_gov_actions_status(server=server, url=url, username=userid, user_pass=user_pass, paging=True)
+    display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=True)
+
+
 
 if __name__ == "__main_live__":
     main_live()

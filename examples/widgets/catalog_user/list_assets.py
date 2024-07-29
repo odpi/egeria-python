@@ -139,9 +139,10 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     time_out = args.time_out if args.time_out is not None else 60
-
-    search_string = Prompt.ask("Enter an asset search string:", default="")
-    display_assets(search_string, server, url, userid, user_pass, time_out)
-
+    try:
+        search_string = Prompt.ask("Enter an asset search string:", default="")
+        display_assets(search_string, server, url, userid, user_pass, time_out)
+    except(KeyboardInterrupt):
+        pass
 if __name__ == "__main__":
     main()
