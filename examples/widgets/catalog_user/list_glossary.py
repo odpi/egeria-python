@@ -125,8 +125,10 @@ def main():
     guid = args.guid if args.guid is not None else None
     guid = sus_guid  if args.sustainability else None
 
-    search_string = Prompt.ask("Enter the term you are searching for:", default="*")
-    display_glossary_terms(search_string, guid,server, url, userid, user_pass)
-
+    try:
+        search_string = Prompt.ask("Enter the term you are searching for:", default="*")
+        display_glossary_terms(search_string, guid,server, url, userid, user_pass)
+    except(KeyboardInterrupt):
+        pass
 if __name__ == "__main__":
     main()

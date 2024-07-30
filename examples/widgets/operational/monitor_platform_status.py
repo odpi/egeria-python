@@ -119,7 +119,8 @@ def display_status(server: str, url: str, username: str, user_pass:str):
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
 
-
+    except KeyboardInterrupt:
+        pass
     finally:
         r_client.close_session()
 

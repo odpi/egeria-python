@@ -132,8 +132,13 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     save_output = args.save_output if args.save_output is not None else False
     property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
-    type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
-    display_values(property_name, type_name,server, url, userid, user_pass, save_output)
+
+    try:
+        type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
+        display_values(property_name, type_name,server, url, userid, user_pass, save_output)
+    except(KeyboardInterrupt):
+        pass
+
 
 if __name__ == "__main__":
     main()

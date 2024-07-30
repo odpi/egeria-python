@@ -43,7 +43,7 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 disable_ssl_warnings = True
 
 
-def display_status_engine_actions(server: str, url: str, user: str, user_pass:str, paging: bool):
+def display_engine_activity(server: str, url: str, user: str, user_pass:str, paging: bool):
     g_client = AutomatedCuration(server, url, user, user_pwd=user_pass)
 
     def generate_table() -> Table:
@@ -131,7 +131,8 @@ def display_status_engine_actions(server: str, url: str, user: str, user_pass:st
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    except KeyboardInterrupt:
+        pass
     finally:
         g_client.close_session()
 
@@ -150,7 +151,7 @@ def main_live():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_status_engine_actions(server=server, url=url, user=userid, user_pass=user_pass, paging=False)
+    display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=False)
 
 def main_paging():
     parser = argparse.ArgumentParser()
@@ -166,9 +167,9 @@ def main_paging():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_status_engine_actions(server=server, url=url, user=userid, user_pass=user_pass, paging=True)
+    display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=True)
 
-if __name__ == "__main_live__":
+if __name__ == "__main__":
     main_live()
 
 if __name__ == "__main_paging__":

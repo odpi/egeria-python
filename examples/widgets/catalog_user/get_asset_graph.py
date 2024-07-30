@@ -9,7 +9,6 @@ import argparse
 import os
 import sys
 
-from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -35,6 +34,7 @@ EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 disable_ssl_warnings = True
+
 console = Console(width=200)
 
 
@@ -88,8 +88,6 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
         return output
 
     try:
-
-        console = Console(width=200)
 
         a_client = AssetCatalog(server_name, platform_url,
                                      user_id=user)
@@ -146,6 +144,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
                f"* Asset Origin: {asset_origin}\n{prop_md}\n"
                )
         core_md = Markdown(core_md)
+
         p1 = Panel.fit(core_md, style = "bold bright_white")
         l2 = tree.add(p1)
         if asset_class_md is not None:
@@ -225,9 +224,9 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
                 relationship_panel = Panel.fit(Markdown(relationship_md), style="bold bright_white", title = "Asset Relationships")
                 tree.add(relationship_panel)
 
-
-        print("\n\n")
-        print(tree)
+        with console.screen():
+            print("\n\n")
+            print(tree)
 
     except (
         InvalidParameterException,
@@ -250,9 +249,12 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-
-    asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
-    asset_viewer(asset_guid,server, url, userid, user_pass)
+    try:
+        asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
+        asset_viewer(asset_guid,server, url, userid, user_pass)
+    except (KeyboardInterrupt) as e:
+        # console.print_exception()
+        pass
 
 if __name__ == "__main__":
     main()

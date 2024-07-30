@@ -11,7 +11,8 @@ This script refreshed an integration daemon.
 import os
 import argparse
 import time
-
+import click
+from trogon import tui
 from pyegeria import ServerOps, AutomatedCuration
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -31,43 +32,29 @@ EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
+@tui()
+@click.command()
+@click.option('--file', prompt= "Path to the archive file to load", help='Full path to the archive file to load')
+@click.option('--server', default = EGERIA_METADATA_STORE, help='Egeria metadata store to load')
+@click.option('--url', default = EGERIA_PLATFORM_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default = EGERIA_ADMIN_USER, help='Egeria admin user')
+@click.option('--password', default = EGERIA_ADMIN_PASSWORD, help='Egeria admin password')
+@click.option('--timeout', default = 60, help = 'Number of seconds to wait')
 
+def load_archive(file, server, url, userid, password, timeout):
 
-def refresh_connector(connector: str, server:str, url:str, userid:str, password:str):
     try:
 
-        s_client = ServerOps(server, url, userid)
-        if connector == 'all':
-            connector = None
-            statement = "ALL connectors"
-        else:
-            statement = f"the {connector} "
+        s_client = ServerOps(server, url, userid, password)
 
-        s_client.refresh_integration_connectors(connector, server, time_out = 60)
+        s_client.add_archive_file(file, server, timeout = timeout)
 
-        print(f"\n===> Integration Daemon \'{server}\' refreshed {statement}.")
+        click.echo(f"Loaded archive: {file}")
 
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the integration daemon to refresh")
-    parser.add_argument("--url", help="URL Platform to connect to")
-    parser.add_argument("--userid", help="User Id")
-    parser.add_argument("--password", help="User Password")
-    parser.add_argument("--connector", default='all', help="Name of the connector to refresh")
-    args = parser.parse_args()
-
-    server = args.server if args.server is not None else EGERIA_INTEGRATION_DAEMON
-    url = args.url if args.url is not None else EGERIA_INTEGRATION_DAEMON_URL
-    userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
-    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    refresh_connector(args.connector, server, url, userid, user_pass)
-
 if __name__ == "__main__":
-    main()
+    load_archive()

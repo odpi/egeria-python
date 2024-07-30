@@ -34,7 +34,7 @@ EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
-def test_display_status(server: str, url: str , username: str , user_pass:str):
+def display_status(server: str, url: str , username: str , user_pass:str):
     p_client = ServerOps(server, url, username, user_pass)
 
     def generate_table() -> Table:
@@ -82,7 +82,10 @@ def test_display_status(server: str, url: str , username: str , user_pass:str):
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    except KeyboardInterrupt:
+        pass
+    finally:
+        p_client.close_session()
 
 
 def main():
@@ -98,7 +101,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    test_display_status(server, url, userid, user_pass)
+    display_status(server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

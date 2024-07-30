@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.5.6.4"
+version = "0.5.8.10"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -20,7 +20,8 @@ packages = [
     { include = "examples/widgets/developer" },
     { include = "examples/widgets/operational"},
     { include = "examples/widgets/personal_organizer"},
-    { include = "examples/doc_samples"}
+    { include = "examples/doc_samples"},
+    { include = "examples/widgets/cli"}
     ]
 
 [tool.poetry.dependencies]
@@ -33,6 +34,8 @@ requests = "^2.32.3"
 confluent-kafka = "^2.5.0"
 pytest = "^8.2.2"
 jupyter = "^1.0.0"
+click = "^8.1.7"
+trogon = "^0.5.0"
 
 
 [build-system]
@@ -66,12 +69,19 @@ pytest = "^8.2.2"
     monitor_server_list = "examples.widgets.operational.monitor_server_list:main"
     monitor_server_status = "examples.widgets.operational.monitor_server_status:main"
     refresh_integration_daemon = "examples.widgets.operational.refresh_integration_daemon:main"
+    restart_integration_daemon = "examples.widgets.operational.restart_integration_daemon:main"
+    load_archive = "examples.widgets.operational.load_archive:load_archive"
+    load_archive_tui = "examples.widgets.operational.load_archive:tui"
+    list_catalog_targets = "examples.widgets.operational.list_catalog_targets:main"
 
     list_my_profile = "examples.widgets.personal_organizer.list_my_profile:main"
     list_projects = "examples.widgets.personal_organizer.list_projects:main"
     list_todos = "examples.widgets.personal_organizer.list_todos:main"
     monitor_open_todos = "examples.widgets.personal_organizer.monitor_open_todos:main"
     monitor_my_todos = "examples.widgets.personal_organizer.monitor_my_todos:main"
+
+    egeria_ops = "examples.widgets.cli.egeria_ops:cli"
+    egeria_ops_tui = "examples.widgets.cli.egeria_ops:tui"
 
     get_guid_info = "examples.widgets.developer.get_guid_info:main"
     get_tech_details = "examples.widgets.developer.get_tech_details:main"

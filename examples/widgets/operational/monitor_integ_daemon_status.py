@@ -6,9 +6,6 @@ Copyright Contributors to the ODPi Egeria project.
 
 A simple status display for the Integration Daemon.
 
-Note that there are a couple of assumptions currently being made that need to get resolved in future
-versions. First, we assume that the view-server used by AutomatedCuration is called "view-server". Second, we
-assume that the user password is always "secret".
 
 """
 import os
@@ -133,7 +130,9 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+
+    except KeyboardInterrupt:
+        pass
 
     finally:
         s_client.close_session()
@@ -179,7 +178,9 @@ def main_paging():
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
                                       view_server = view_server, view_url = view_url,
                                       user=userid, user_pass = user_pass, paging = True)
-if __name__ == "__main_live__":
+
+
+if __name__ == "__main__":
     main_live()
 
 if __name__ == "__main_paging__":

@@ -774,9 +774,8 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
             element_guid = "731eb432-e9e9-482a-86fc-0a7407ea78e6"
-            rel_guid = "2ec7af3f-1d1e-4d5d-85a4-15c62480b898"
+            rel_guid = "19a5fc39-f928-4a78-8637-ade37e0c5598"
             start_time = time.perf_counter()
-            # gov_action_type_qn = "Egeria:GovernanceActionType:2adeb8f1-0f59-4970-b6f2-6cc25d4d2402survey-folder"
 
             response = a_client.get_catalog_target(rel_guid)
             duration = time.perf_counter() - start_time
@@ -804,10 +803,11 @@ class TestAutomatedCuration:
                                          user_pwd="secret")
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            folder_connector_guid = INTEGRATION_GUIDS['FileFolder']
+
             element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
-            t = folder_connector_guid
+            # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
+            t = INTEGRATION_GUIDS['UnityCatalogInsideCatalogSynchronizer']
             start_time = time.perf_counter()
             response = a_client.get_catalog_targets(t)
             duration = time.perf_counter() - start_time

@@ -117,7 +117,11 @@ def display_to_dos(search_string: str, guid:str, server: str, url: str, username
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    except KeyboardInterrupt:
+        pass
+    finally:
+        m_client.close_session()
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -133,9 +137,12 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = None
+    try:
+        search_string = Prompt.ask("Enter the ToDo you are searching for:", default="*")
+        display_to_dos(search_string, guid,server, url, userid, user_pass)
+    except KeyboardInterrupt:
+        pass
 
-    search_string = Prompt.ask("Enter the ToDo you are searching for:", default="*")
-    display_to_dos(search_string, guid,server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

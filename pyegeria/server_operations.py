@@ -86,7 +86,7 @@ class ServerOps(Platform):
 #
 #   Archive Files
 #
-    async def _async_add_archive_file(self, archive_file: str, server: str = None, timeout: int = 30) -> None:
+    async def _async_add_archive_file(self, archive_file: str, server: str = None, timeout: int = 60) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
