@@ -11,18 +11,20 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 """
 import click
 from trogon import tui
-from pyegeria import ServerOps
-from ops_config import Config, pass_config
-import monitor_gov_eng_status
-import monitor_server_status
-import monitor_server_list
-import monitor_integ_daemon_status
-import monitor_platform_status
-import monitor_engine_activity
-import refresh_integration_daemon
-import restart_integration_daemon
-import integration_daemon_actions
+# from pyegeria import ServerOps
+from examples.widgets.cli.ops_config import Config
+from examples.widgets.operational.monitor_gov_eng_status import display_gov_eng_status
+from examples.widgets.operational.monitor_server_status import display_status as s_display_status
+from examples.widgets.operational.monitor_server_list import display_status as display_list
+from examples.widgets.operational.monitor_integ_daemon_status import display_integration_daemon_status
+from examples.widgets.operational.monitor_platform_status import display_status as p_display_status
+from examples.widgets.operational.monitor_engine_activity import display_engine_activity
+from examples.widgets.operational.refresh_integration_daemon import refresh_connector
+from examples.widgets.operational.restart_integration_daemon import restart_connector
+from examples.widgets.operational.integration_daemon_actions import (add_catalog_target,remove_catalog_target,
+                                                                     update_catalog_target, stop_server, start_server)
 
+from examples.widgets.operational.list_catalog_targets import display_catalog_targets
 # class Config(object):
 #     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
 #                  timeout:int = 30, paging: bool = False):
@@ -96,7 +98,7 @@ def show_platform(ctx):
 def show_platform_status(ctx):
     """Display a live status view of known platforms"""
     c = ctx.obj
-    monitor_platform_status.display_status(c.view_server,c.view_server_url,
+    p_display_status(c.view_server,c.view_server_url,
                                            c.admin_user,c.admin_user_password)
 
 
@@ -113,9 +115,9 @@ def show_server_status(ctx, full):
     """Display a live status view of Egeria servers for the specified Egeria platform"""
     c = ctx.obj
     if full:
-        monitor_server_list.display_status(c.metadata_store, c.metadata_store_url, c.admin_user,c.admin_user_password)
+        display_list(c.metadata_store, c.metadata_store_url, c.admin_user,c.admin_user_password)
     else:
-        monitor_server_status.display_status(c.metadata_store, c.metadata_store_url, c.admin_user,c.admin_user_password)
+        s_display_status(c.metadata_store, c.metadata_store_url, c.admin_user,c.admin_user_password)
 
 @show.group("engines")
 @click.pass_context
@@ -129,7 +131,7 @@ def engine_host(ctx):
 def gov_eng_status(ctx,list):
     """Display engine-host status information"""
     c = ctx.obj
-    monitor_gov_eng_status.display_gov_eng_status(c.engine_host, c.engine_host_url,
+    display_gov_eng_status(c.engine_host, c.engine_host_url,
                                                                   c.userid, c.password,
                                                   list)
 
@@ -139,7 +141,7 @@ def gov_eng_status(ctx,list):
 def eng_activity_status(ctx,list):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
-    monitor_engine_activity.display_engine_activity(c.view_server, c.view_server_url,
+    display_engine_activity(c.view_server, c.view_server_url,
                                                       c.userid, c.password,
                                                       list)
 
@@ -156,9 +158,18 @@ def integrations(ctx):
 def integrations_status(ctx,list):
     """Display integration-daemon status information"""
     c = ctx.obj
-    monitor_integ_daemon_status.display_integration_daemon_status(c.integration_daemon, c.integration_daemon_url,
+    display_integration_daemon_status(c.integration_daemon, c.integration_daemon_url,
                                                                       c.view_server, c.view_server_url,
                                                                  c.userid, c.password, list)
+
+@integrations.command("targets")
+@click.pass_context
+@click.argument('connector',nargs=1)
+def integrations_status(ctx,connector):
+    """Display Catalog Targets for a connector"""
+    c = ctx.obj
+    display_catalog_targets(connector, c.view_server, c.view_server_url,
+                                                                      c.userid, c.password)
 
 #
 #  Tell
@@ -182,8 +193,8 @@ def integration_daemon(ctx):
 def refresh_connectors(ctx,connector):
     """Refresh the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
-    refresh_integration_daemon.refresh_connector(connector,c.integration_daemon, c.integration_daemon_url,
-                                   c.userid, c.passwordcatalog_target_actions.py )
+    refresh_connector(connector,c.integration_daemon, c.integration_daemon_url,
+                                   c.userid, c.password)
 
 @integration_daemon.command('restart')
 @click.pass_context
@@ -191,14 +202,15 @@ def refresh_connectors(ctx,connector):
 def restart_connectors(ctx,connector):
     """Restart the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
-    restart_integration_daemon.restart_connector(connector,c.integration_daemon, c.integration_daemon_url,
+    restart_connector(connector,c.integration_daemon, c.integration_daemon_url,
                                    c.userid, c.password)
 
-integration_daemon.add_command(integration_daemon_actions.add_catalog_target)
-integration_daemon.add_command(integration_daemon_actions.remove_catalog_target)
-integration_daemon.add_command(integration_daemon_actions.update_catalog_target)
-integration_daemon.add_command(integration_daemon_actions.stop_server)
-integration_daemon.add_command(integration_daemon_actions.start_server)
+
+integration_daemon.add_command(add_catalog_target)
+integration_daemon.add_command(remove_catalog_target)
+integration_daemon.add_command(update_catalog_target)
+integration_daemon.add_command(stop_server)
+integration_daemon.add_command(start_server)
 
 
 if __name__ == '__main__':

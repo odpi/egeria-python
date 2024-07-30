@@ -12,8 +12,6 @@ import os
 import time
 import json
 import argparse
-import click
-from ops_config import Config, pass_config
 
 
 from pyegeria import (
@@ -104,7 +102,9 @@ def display_gov_eng_status(server: str , url: str, username: str, user_pass:str,
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+
+    except KeyboardInterrupt:
+        pass
 
     finally:
         s_client.close_session()
@@ -140,7 +140,7 @@ def main_paging():
 
 
 
-if __name__ == "__main_live__":
+if __name__ == "__main__":
     main_live()
 
 

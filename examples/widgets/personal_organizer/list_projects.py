@@ -131,6 +131,10 @@ def display_list(project_name: str, server: str, url: str,
             print(e)
         else:
             print_exception_response(e)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        p_client.close_session()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -147,10 +151,14 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    save_output = args.save_output if args.save_output is not None else False
-    project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
+    try:
+        save_output = args.save_output if args.save_output is not None else False
+        project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
+        display_list(project_name, server, url, userid, user_pass, save_output)
 
-    display_list(project_name, server, url, userid, user_pass, save_output)
+    except KeyboardInterrupt:
+        pass
+
 
 if __name__ == "__main__":
     main()

@@ -82,6 +82,10 @@ def main(ep: str = EGERIA_KAFKA_ENDPOINT):
                 msg = Markdown(msg)
 
                 console.print(msg)
+
+    except KeyboardInterrupt:
+        pass
+
     finally:
         # Close down consumer to commit final offsets.
         consumer.close()

@@ -12,7 +12,6 @@ import os
 import argparse
 import time
 from datetime import datetime
-from ops_config import Config
 
 from rich import box
 from rich.console import Console
@@ -131,7 +130,9 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+
+    except KeyboardInterrupt:
+        pass
 
     finally:
         s_client.close_session()
@@ -179,7 +180,7 @@ def main_paging():
                                       user=userid, user_pass = user_pass, paging = True)
 
 
-if __name__ == "__main_live__":
+if __name__ == "__main__":
     main_live()
 
 if __name__ == "__main_paging__":

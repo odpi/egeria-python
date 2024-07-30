@@ -14,7 +14,7 @@ from rich.console import Console
 
 import time
 import click
-from ops_config import Config, pass_config
+# from ops_config import Config, pass_config
 from pyegeria import ServerOps, AutomatedCuration, INTEGRATION_GUIDS
 from pyegeria._exceptions import (
     InvalidParameterException,

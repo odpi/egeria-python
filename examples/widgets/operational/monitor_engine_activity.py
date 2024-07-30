@@ -131,7 +131,8 @@ def display_engine_activity(server: str, url: str, user: str, user_pass:str, pag
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    except KeyboardInterrupt:
+        pass
     finally:
         g_client.close_session()
 

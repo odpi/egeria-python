@@ -87,7 +87,8 @@ def display_status(server: str, url: str, username: str, user_pass:str):
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    except KeyboardInterrupt:
+        pass
 
     finally:
         p_client.close_session()

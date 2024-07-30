@@ -12,9 +12,7 @@ import os
 from rich import print, print_json
 from rich.console import Console
 
-import time
 import click
-from ops_config import Config, pass_config
 from pyegeria import ServerOps, AutomatedCuration, INTEGRATION_GUIDS, Platform
 from pyegeria._exceptions import (
     InvalidParameterException,
