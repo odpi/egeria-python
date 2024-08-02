@@ -144,7 +144,7 @@ def gov_eng_status(ctx, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(c.engine_host, c.engine_host_url,
-                           c.userid, c.password,
+                           c.admin_user, c.admin_user_password,
                            list, c.jupyter, c.width)
 
 
@@ -155,7 +155,7 @@ def eng_activity_status(ctx, list):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
     display_engine_activity(c.view_server, c.view_server_url,
-                            c.userid, c.password,
+                            c.admin_user, c.admin_user_password,
                             list, c.jupyter, c.width)
 
 

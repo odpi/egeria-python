@@ -8,10 +8,9 @@ A simple status display for the Integration Daemon.
 
 
 """
-import os
 import argparse
+import os
 import time
-from datetime import datetime
 
 from rich import box
 from rich.console import Console
@@ -25,6 +24,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -36,12 +36,16 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = os.environ.get('EGERIA_JUPYTER', False)
+EGERIA_WIDTH = os.environ.get('EGERIA_WIDTH', 200)
 
 disable_ssl_warnings = True
 
 
 def display_integration_daemon_status(integ_server: str, integ_url: str,
-                                      view_server:str, view_url: str, user: str, user_pass:str, paging: bool):
+                                      view_server: str, view_url: str, user: str, user_pass: str, paging: bool,
+                                      jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH
+                                      ):
     s_client = ServerOps(integ_server, integ_url, user)
     a_client = AutomatedCuration(view_server, view_url, user, user_pass)
     token = a_client.create_egeria_bearer_token()
@@ -50,8 +54,8 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
         """Make a new table."""
         table = Table(
             title=f"Integration Daemon Status @ {time.asctime()}",
-            style = "bold white on black",
-            row_styles = ["bold white on black"],
+            style="bold white on black",
+            row_styles=["bold white on black"],
             header_style="white on dark_blue",
             title_style="bold white on black",
             caption_style="white on black",
@@ -60,20 +64,20 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
             caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
             expand=True
         )
-        table.add_column("Connector Name", min_width = 15)
+        table.add_column("Connector Name", min_width=15)
         table.add_column("Status", max_width=6)
 
-        table.add_column("Last Refresh Time", min_width = 12)
+        table.add_column("Last Refresh Time", min_width=12)
         table.add_column("Min Refresh (mins)", max_width=6)
         table.add_column("Target Element", min_width=20)
-        table.add_column("Exception Message",min_width=10)
+        table.add_column("Exception Message", min_width=10)
 
         daemon_status = s_client.get_integration_daemon_status()
         connector_reports = daemon_status["integrationConnectorReports"]
         for connector in connector_reports:
             connector_name = connector.get("connectorName", "---")
             connector_status = connector.get("connectorStatus", "---")
-            connector_guid = connector.get("connectorGUID","---")
+            connector_guid = connector.get("connectorGUID", "---")
             last_refresh_time = connector.get("lastRefreshTime", "---")[:-10]
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = " "
@@ -92,7 +96,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
                         t_unique_name = target["catalogTargetElement"]["uniqueName"]
                         t_rel_guid = target["relationshipGUID"]
                         # targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
-                        tgt_tab.add_row(t_name,t_unique_name, t_rel_guid)
+                        tgt_tab.add_row(t_name, t_unique_name, t_rel_guid)
                     # targets_md = Markdown(targets_m)
                 else:
                     targets_md = False
@@ -118,7 +122,7 @@ def display_integration_daemon_status(integ_server: str, integ_url: str,
 
     try:
         if paging is True:
-            console = Console()
+            console = Console(width=width, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table())
         else:
@@ -156,8 +160,9 @@ def main_live():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
-                                      view_server = view_server, view_url = view_url,
-                                      user=userid, user_pass = user_pass, paging = False)
+                                      view_server=view_server, view_url=view_url,
+                                      user=userid, user_pass=user_pass, paging=False)
+
 
 def main_paging():
     parser = argparse.ArgumentParser()
@@ -176,8 +181,8 @@ def main_paging():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     display_integration_daemon_status(integ_server=integ_server, integ_url=integ_url,
-                                      view_server = view_server, view_url = view_url,
-                                      user=userid, user_pass = user_pass, paging = True)
+                                      view_server=view_server, view_url=view_url,
+                                      user=userid, user_pass=user_pass, paging=True)
 
 
 if __name__ == "__main__":

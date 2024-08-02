@@ -37,8 +37,11 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_my_profiles(server: str, url: str, username: str, user_pass:str):
+def display_my_profiles(server: str, url: str, username: str, user_pass:str,
+                        jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
     m_client = MyProfile(server, url, user_id=username, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token(username, user_pass)
@@ -102,7 +105,7 @@ def display_my_profiles(server: str, url: str, username: str, user_pass:str):
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console()
+        console = Console(width=width, force_terminal=not jupyter)
         with console.pager():
             console.print(generate_table())
 

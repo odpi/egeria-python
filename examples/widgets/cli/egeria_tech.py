@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-A command line interface for Egeria operations.
+A command line interface for Egeria Data Engineers.
 
 This is an emerging capability based on the **click** package. Feedback welcome!
 
@@ -14,17 +14,17 @@ from trogon import tui
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
-from examples.widgets.operational.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
-                                                                     update_catalog_target, stop_server, start_server)
-from examples.widgets.operational.list_catalog_targets import display_catalog_targets
-from examples.widgets.operational.monitor_engine_activity import display_engine_activity
-from examples.widgets.operational.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.operational.monitor_integ_daemon_status import display_integration_daemon_status
-from examples.widgets.operational.monitor_platform_status import display_status as p_display_status
-from examples.widgets.operational.monitor_server_list import display_status as display_list
-from examples.widgets.operational.monitor_server_status import display_status as s_display_status
-from examples.widgets.operational.refresh_integration_daemon import refresh_connector
-from examples.widgets.operational.restart_integration_daemon import restart_connector
+
+from examples.widgets.engineer.list_catalog_targets import display_catalog_targets
+from examples.widgets.engineer.load_archive import load_archive
+from examples.widgets.engineer.monitor_engine_activity import display_engine_activity
+from examples.widgets.engineer.monitor_gov_eng_status import display_gov_eng_status
+from examples.widgets.engineer.monitor_integ_daemon_status import display_integration_daemon_status
+from examples.widgets.engineer.monitor_platform_status import display_status as p_display_status
+from examples.widgets.engineer.monitor_server_list import display_status as display_list
+from examples.widgets.engineer.monitor_server_status import display_status as s_display_status
+from examples.widgets.engineer.refresh_integration_daemon import refresh_connector
+from examples.widgets.engineer.restart_integration_daemon import restart_connector
 
 
 # class Config(object):
@@ -41,7 +41,7 @@ from examples.widgets.operational.restart_integration_daemon import restart_conn
 # pass_config = click.make_pass_decorator(Config)
 
 # @tui
-@tui()
+@tui('cli', 'cli', 'A textual command line interface')
 @click.version_option("0.0.1", prog_name="egeria_ops")
 @click.group()
 @click.option('--server', default='active-metadata-store', envvar='EGERIA_METADATA_STORE',
@@ -155,7 +155,7 @@ def eng_activity_status(ctx, list):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
     display_engine_activity(c.view_server, c.view_server_url,
-                            c.userid, c.password,
+                            c.admin_user, c.admin_user_password,
                             list, c.jupyter, c.width)
 
 
@@ -198,7 +198,7 @@ def tell(ctx):
     pass
 
 
-@tell.group('integration_daemon')
+@tell.group('integration-daemon')
 @click.pass_context
 def integration_daemon(ctx):
     """Group of commands to an integration-daemon"""
@@ -230,6 +230,19 @@ integration_daemon.add_command(remove_catalog_target)
 integration_daemon.add_command(update_catalog_target)
 integration_daemon.add_command(stop_server)
 integration_daemon.add_command(start_server)
+
+
+@tell.group('engine-host')
+@click.pass_context
+def engine_host(ctx):
+    """Group of commands to an engine-host"""
+    pass
+
+
+engine_host.add_command(start_engine_host)
+engine_host.add_command(stop_engine_host)
+
+tell.add_command(load_archive)
 
 if __name__ == '__main__':
     cli()
