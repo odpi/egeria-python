@@ -146,9 +146,9 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
-            to_do = "Mandy will delegate the Latte to Peter"
-            to_do_desc = "Latte to go"
-            to_do_type = "drink"
+            to_do = "Mandy will book a holiday"
+            to_do_desc = "Another holiday is always good"
+            to_do_type = "holiday"
             body = {
                         "properties": {
                             "class" : "ToDoProperties",
@@ -189,14 +189,14 @@ class TestMyProfile:
                                  user_id=self.good_user_2)
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            todo_guid = "97d1977e-c0d5-49a9-996b-4b73ce0517be"
+            todo_guid = "766e5ac5-ba62-4210-803c-45acdaf12b32"
             # 10a5e593-cc8a-45d0-a191-d060656363e9
             response = m_client.get_to_do(todo_guid, server_name)
 
             if type(response) is dict:
                 print_json(data=response)
             elif type(response) is str:
-                console.print("\n\n\t Response is" + response)
+                console.print("\n\n\t Response is "  + response)
             assert True
 
         except (

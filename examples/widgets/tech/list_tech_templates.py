@@ -31,10 +31,14 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_tech_types(search_string:str, server: str,
-                       url: str, username: str, password: str):
+
+def display_templates_spec(search_string:str, server: str,
+                       url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
+):
 
     a_client = AutomatedCuration(server, url, username)
     token = a_client.create_egeria_bearer_token(username, password)
@@ -44,10 +48,10 @@ def display_tech_types(search_string:str, server: str,
         """Make a new table."""
         table = Table(
             title=f"Technology Templates for: {url} @ {time.asctime()}",
-            style="bold white on black",
-            row_styles=["bold white on black"],
+            style="bold bright_white on black",
+            row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",
-            title_style="bold white on black",
+            title_style="bold bright_white on black",
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
@@ -108,7 +112,8 @@ def display_tech_types(search_string:str, server: str,
             sys.exit(1)
 
     try:
-        console = Console()
+        console = Console(width=width, force_terminal=not jupyter)
+
         with console.pager(styles=True):
             console.print(generate_table())
 
@@ -136,7 +141,7 @@ def main():
 
     try:
         search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
-        display_tech_types(search_string, server, url, userid, password)
+        display_templates_spec(search_string, server, url, userid, password)
     except(KeyboardInterrupt):
         pass
 

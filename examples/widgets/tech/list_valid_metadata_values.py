@@ -37,9 +37,13 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_values(property_name: str, type_name: str, server: str, url: str,
-                   username: str,  user_pass:str, save_output: bool):
+
+def display_metadata_values(property_name: str, type_name: str, server: str, url: str,
+                   username: str,  user_pass:str, save_output: bool, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
+):
 
     m_client = ValidMetadataManager(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, user_pass)
@@ -48,8 +52,8 @@ def display_values(property_name: str, type_name: str, server: str, url: str,
         """Make a new table."""
         table = Table(
             title=f"Valid Metadata Values for Property: {property_name} of type {type_name} @ {time.asctime()}",
-            style="bold white on black",
-            row_styles=["bold white on black"],
+            style="bold bright_white on black",
+            row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",
             title_style="bold white on black",
             caption_style="white on black",
@@ -104,7 +108,7 @@ def display_values(property_name: str, type_name: str, server: str, url: str,
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console(record=True)
+        console = Console(width=width, force_terminal=not jupyter, record=True)
         with console.pager(styles=True):
             console.print(generate_table(property_name, type_name))
         if save_output:
@@ -131,11 +135,12 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     save_output = args.save_output if args.save_output is not None else False
-    property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
+
 
     try:
+        property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
         type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
-        display_values(property_name, type_name,server, url, userid, user_pass, save_output)
+        display_metadata_values(property_name, type_name,server, url, userid, user_pass, save_output)
     except(KeyboardInterrupt):
         pass
 

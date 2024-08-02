@@ -26,6 +26,8 @@ class Config(object):
         self.verbose = verbose
         self.jupyter = jupyter
         self.width = width
+        self.server = server
+        self.url = url
 
 
 pass_config = click.make_pass_decorator(Config)

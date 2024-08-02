@@ -9,24 +9,25 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-import os
 import argparse
 import json
+import os
 
 from rich import print
 from rich.console import Console
+from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 from rich.tree import Tree
-from rich.panel import Panel
 
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    print_exception_response,
     Client
 )
+
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -37,17 +38,19 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_guid(guid: str, server: str, url: str, username: str, user_password: str):
-
+def display_guid(guid: str, server: str, url: str, username: str, user_password: str,
+                 jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH
+                 ):
     c = Client(server, url, user_id=username)
     url = (f"{url}/servers/{server}/open-metadata/repository-services/users/{username}/"
            f"instances/entity/{guid}")
 
-
     try:
-        console = Console(width = 160, style="bold white on black")
+        console = Console(width=width, force_terminal=not jupyter, style="bold white on black")
         r = c.make_request("GET", url)
         if r.status_code == 200:
             pass
@@ -59,24 +62,26 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
         created = Text(f"Created at: {e['createTime']}")
         details = Text(f"Details: {json.dumps(p, indent=2)}")
 
-        tree = Tree(f"{guid}", style = "bold bright_white on black", guide_style="bold bright_blue")
+        tree = Tree(f"{guid}", style="bold bright_white on black", guide_style="bold bright_blue")
 
         tree = tree.add(type_name)
         tree.add(metadataCollection)
         tree.add(created)
-        tree.add(Panel(details,title="Element Details", expand=False))
+        tree.add(Panel(details, title="Element Details", expand=False))
         print(tree)
 
         c.close_session()
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException, ValueError) as e:
         if type(e) is str:
-           console.print_exception()
+            console.print_exception()
         else:
-            console.print(f"\n Looks like the GUID isn't known...\n")
+            # console.print_exception(show_locals=True)
+            console.print(f"\n ===> Looks like the GUID isn't known...\n")
+
+
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
@@ -96,5 +101,7 @@ def main():
         display_guid(guid, server, url, userid, user_pass)
     except (KeyboardInterrupt):
         pass
+
+
 if __name__ == "__main__":
     main()

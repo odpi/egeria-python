@@ -2328,7 +2328,7 @@ class CollectionManager(Client):
             return False
         # finally, construct a list of  member information
         for member_rel in members:
-            member_guid = member_rel['member']['guid']
+            member_guid = member_rel['elementHeader']['guid']
             member_resp = await self._async_get_collection(member_guid)
             member = member_resp['element']
             # print(json.dumps(member, indent = 4))

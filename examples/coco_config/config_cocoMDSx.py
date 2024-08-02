@@ -97,7 +97,7 @@ try:
     # o_client.configure_access_service("data-manager", access_service_options)
     o_client.configure_access_service("it-infrastructure", access_service_options)
     o_client.configure_access_service("project-management", access_service_options)
-    o_client.configure_access_service("software-developer", access_service_options)
+    o_client.configure_access_service("software-tech", access_service_options)
     # o_client.configure_access_service("devops", access_service_options)
     o_client.configure_access_service("digital-architecture", access_service_options)
     o_client.configure_access_service("design-model", access_service_options)

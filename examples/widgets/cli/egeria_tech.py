@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-A command line interface for Egeria Data Engineers.
+A command line interface for Egeria Data techs.
 
 This is an emerging capability based on the **click** package. Feedback welcome!
 
@@ -12,19 +12,19 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-# from pyegeria import ServerOps
+from examples.widgets.catalog_user.list_tech_types import display_tech_types
 from examples.widgets.cli.ops_config import Config
+from examples.widgets.tech.get_guid_info import display_guid
+from examples.widgets.tech.get_tech_details import tech_details_viewer
+from examples.widgets.tech.list_asset_types import display_asset_types
+from examples.widgets.tech.list_registered_services import display_registered_svcs
+from examples.widgets.tech.list_relationship_types import display_relationship_types
+from examples.widgets.tech.list_tech_templates import display_templates_spec
+from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
+from examples.widgets.catalog_user.get_tech_type_template import template_viewer
 
-from examples.widgets.engineer.list_catalog_targets import display_catalog_targets
-from examples.widgets.engineer.load_archive import load_archive
-from examples.widgets.engineer.monitor_engine_activity import display_engine_activity
-from examples.widgets.engineer.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.engineer.monitor_integ_daemon_status import display_integration_daemon_status
-from examples.widgets.engineer.monitor_platform_status import display_status as p_display_status
-from examples.widgets.engineer.monitor_server_list import display_status as display_list
-from examples.widgets.engineer.monitor_server_status import display_status as s_display_status
-from examples.widgets.engineer.refresh_integration_daemon import refresh_connector
-from examples.widgets.engineer.restart_integration_daemon import restart_connector
+
+# from pyegeria import ServerOps
 
 
 # class Config(object):
@@ -41,7 +41,8 @@ from examples.widgets.engineer.restart_integration_daemon import restart_connect
 # pass_config = click.make_pass_decorator(Config)
 
 # @tui
-@tui('cli', 'cli', 'A textual command line interface')
+# @tui('menu', 'menu', 'A textual command line interface')
+@tui()
 @click.version_option("0.0.1", prog_name="egeria_ops")
 @click.group()
 @click.option('--server', default='active-metadata-store', envvar='EGERIA_METADATA_STORE',
@@ -63,7 +64,7 @@ from examples.widgets.engineer.restart_integration_daemon import restart_connect
 @click.option('--admin_user', default='garygeeke', envvar='EGERIA_ADMIN_USER', help='Egeria admin user')
 @click.option('--admin_user_password', default='secret', envvar='EGERIA_ADMIN_PASSWORD',
               help='Egeria admin password')
-@click.option('--userid', default='garygeeke', envvar='EGERIA_USER', help='Egeria user')
+@click.option('--userid', default='erinoverview', envvar='EGERIA_USER', help='Egeria user')
 @click.option('--password', default='secret', envvar='EGERIA_PASSWORD',
               help='Egeria user password')
 @click.option('--timeout', default=60, help='Number of seconds to wait')
@@ -94,97 +95,114 @@ def show(ctx):
     pass
 
 
-@show.group('platforms')
+@show.command('guid-info')
+@click.argument('guid', nargs=1)
 @click.pass_context
-def show_platform(ctx):
-    """Group of commands to show information about Egeria platforms"""
-    pass
+def show_guid_infos(ctx, guid):
+    """Display a live status view of known platforms
 
+    Usage: show guid-info <a guid>
 
-@show_platform.command('status')
-@click.pass_context
-def show_platform_status(ctx):
-    """Display a live status view of known platforms"""
+    """
     c = ctx.obj
-    p_display_status(c.view_server, c.view_server_url,
-                     c.admin_user, c.admin_user_password)
+    display_guid(guid, c.server, c.url,
+                 c.userid, c.password, c.jupyter, c.width)
 
 
-@show.group("servers")
+@show.command('tech-types')
+@click.option('--search-string', default='*', help='Tech type to search for')
 @click.pass_context
-def show_server(ctx):
-    """Group of commands to show information about Egeria servers"""
-    pass
+def show_tech_types(ctx, search_string):
+    """List deployed technology types
+
+    Usage: show tech-types <optional search-string>
+
+    All tech-types will be returned if no search-string is specified.
+
+    """
 
 
-@show_server.command('status')
-@click.option('--full', is_flag=True, default=False, help='If True, full server descriptions will be shown')
-@click.pass_context
-def show_server_status(ctx, full):
-    """Display a live status view of Egeria servers for the specified Egeria platform"""
     c = ctx.obj
-    if full:
-        display_list(c.metadata_store, c.metadata_store_url, c.admin_user, c.admin_user_password, c.jupyter, c.width)
-    else:
-        s_display_status(c.metadata_store, c.metadata_store_url, c.admin_user, c.admin_user_password, c.jupyter,
-                         c.width)
+    display_tech_types(search_string, c.view_server, c.view_server_url,
+                       c.userid, c.password)
 
 
-@show.group("engines")
+@show.command('tech-details')
+@click.argument('tech-name')
 @click.pass_context
-def engine_host(ctx):
-    """Group of commands to show information about Egeria engines"""
-    pass
+def show_tech_details(ctx, tech_name):
+    """Display a live status view of Egeria servers for the specified Egeria platform
+
+    Usage: show tech-details <tech-name>
+
+           tech-name is a valid technology name (see 'show tech-types')
+    """
+    c = ctx.obj
+    tech_details_viewer(tech_name, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
-@engine_host.command("status")
-@click.option('--list', is_flag=True, default=False, help='If True, a paged list will be shown')
+@show.command("asset-types")
 @click.pass_context
-def gov_eng_status(ctx, list):
+def show_asset_types(ctx):
     """Display engine-host status information"""
     c = ctx.obj
-    display_gov_eng_status(c.engine_host, c.engine_host_url,
-                           c.userid, c.password,
-                           list, c.jupyter, c.width)
+    display_asset_types(c.view_server, c.view_server_url,
+                        c.userid, c.password,
+                        c.jupyter, c.width)
 
 
-@engine_host.command('activity')
-@click.option('--list', is_flag=True, default=False, help='If True, a paged list will be shown')
+@show.command('registered-services')
+@click.option('--services',
+              type=click.Choice(['all', 'access-services', 'common-services', 'engine-services',
+                                 'governance-services', 'integration-services', 'view-services'],
+                                case_sensitive=False), default='all', help='Which service group to display')
 @click.pass_context
-def eng_activity_status(ctx, list):
-    """Show Governance Activity in engine-host"""
+def show_registered_services(ctx, services):
+    """Show information about a registered services"""
     c = ctx.obj
-    display_engine_activity(c.view_server, c.view_server_url,
-                            c.admin_user, c.admin_user_password,
-                            list, c.jupyter, c.width)
-
-
-@show.group('integrations')
-@click.pass_context
-def integrations(ctx):
-    """Group of commands to show information about Egeria integrations"""
-    pass
-
-
-@integrations.command("status")
-@click.option('--list', is_flag=True, default=False, help='If True, a paged list will be shown')
-@click.pass_context
-def integrations_status(ctx, list):
-    """Display integration-daemon status information"""
-    c = ctx.obj
-    display_integration_daemon_status(c.integration_daemon, c.integration_daemon_url,
-                                      c.view_server, c.view_server_url,
-                                      c.userid, c.password, list, c.jupyter, c.width)
-
-
-@integrations.command("targets")
-@click.pass_context
-@click.argument('connector', nargs=1)
-def integrations_status(ctx, connector):
-    """Display Catalog Targets for a connector"""
-    c = ctx.obj
-    display_catalog_targets(connector, c.view_server, c.view_server_url,
+    display_registered_svcs(services, c.view_server, c.view_server_url,
                             c.userid, c.password, c.jupyter, c.width)
+
+
+@show.command('relationship-types')
+@click.option('--rel-type', default='AssetOwner', help='Relationship type to get information about')
+@click.pass_context
+def show_relationship_types(ctx, rel_type):
+    """Show information about the specified relationship type"""
+    c = ctx.obj
+    display_relationship_types(rel_type, c.view_server, c.view_server_url,
+
+                               c.userid, c.password, False, c.jupyter, c.width)
+
+
+@show.command("tech-templates")
+@click.pass_context
+@click.option('--search-string', default='*', help='Technology type to get information about')
+def tech_templates(ctx, search_string):
+    """Display template information about the specified technology."""
+    c = ctx.obj
+    template_viewer(search_string, c.view_server, c.view_server_url,
+                           c.userid, c.password, c.jupyter, c.width)
+
+@show.command("tech-template-spec")
+@click.pass_context
+@click.option('--search-string', default='*', help='Technology type to get information about')
+def tech_template_spec(ctx, search_string):
+    """Display template specification information about the specified technology."""
+    c = ctx.obj
+    display_templates_spec(search_string, c.view_server, c.view_server_url,
+                           c.userid, c.password, c.jupyter, c.width)
+
+
+@show.command("valid-metadata-values")
+@click.pass_context
+@click.option('--property', default='projectHealth', help='Metadata property to query')
+@click.option('--type-name', default='Project', help='Metadata type to query')
+def valid_metadata_values(ctx, property, type_name):
+    """Display the valid metadata values for a property and type"""
+    c = ctx.obj
+    display_metadata_values(property, type_name, c.view_server, c.view_server_url,
+                            c.userid, c.password, False, c.jupyter, c.width)
 
 
 #
@@ -197,52 +215,6 @@ def tell(ctx):
     """Perform actions an Egeria Objects"""
     pass
 
-
-@tell.group('integration-daemon')
-@click.pass_context
-def integration_daemon(ctx):
-    """Group of commands to an integration-daemon"""
-    pass
-
-
-@integration_daemon.command('refresh')
-@click.pass_context
-@click.option('--connector', default='all', help="Name of connector to refresh or 'all' to refresh all")
-def refresh_connectors(ctx, connector):
-    """Refresh the specified integration connector or ALL connectors if not specified"""
-    c = ctx.obj
-    refresh_connector(connector, c.integration_daemon, c.integration_daemon_url,
-                      c.userid, c.password)
-
-
-@integration_daemon.command('restart')
-@click.pass_context
-@click.option('--connector', default='all', help="Name of connector to restart or 'all' to restart all")
-def restart_connectors(ctx, connector):
-    """Restart the specified integration connector or ALL connectors if not specified"""
-    c = ctx.obj
-    restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
-                      c.userid, c.password)
-
-
-integration_daemon.add_command(add_catalog_target)
-integration_daemon.add_command(remove_catalog_target)
-integration_daemon.add_command(update_catalog_target)
-integration_daemon.add_command(stop_server)
-integration_daemon.add_command(start_server)
-
-
-@tell.group('engine-host')
-@click.pass_context
-def engine_host(ctx):
-    """Group of commands to an engine-host"""
-    pass
-
-
-engine_host.add_command(start_engine_host)
-engine_host.add_command(stop_engine_host)
-
-tell.add_command(load_archive)
 
 if __name__ == '__main__':
     cli()
