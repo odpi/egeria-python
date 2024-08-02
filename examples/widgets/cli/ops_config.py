@@ -8,7 +8,7 @@ class Config(object):
                  engine_host: str = 'engine-host', engine_host_url: str = 'https://localhost:9443',
                  admin_user: str = 'garygeeke', admin_user_password: str = 'secret',
                  userid: str = None, password: str = None,
-                 timeout: int = 30, paging: bool = False, verbose: bool = False):
+                 timeout: int = 30, paging: bool = False, verbose: bool = False, jupyter: bool = False, width:int = 200):
         self.metadata_store = server
         self.metadata_store_url = url
         self.view_server = view_server
@@ -24,6 +24,8 @@ class Config(object):
         self.timeout = timeout
         self.paging = paging
         self.verbose = verbose
+        self.jupyter = jupyter
+        self.width = width
 
 
 pass_config = click.make_pass_decorator(Config)

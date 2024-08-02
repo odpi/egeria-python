@@ -8,9 +8,12 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple server status display
 """
+import argparse
 import os
 import time
-import argparse
+
+from rich.live import Live
+from rich.table import Table
 
 from pyegeria import (
     InvalidParameterException,
@@ -19,8 +22,6 @@ from pyegeria import (
     print_exception_response,
     ServerOps
 )
-from rich.table import Table
-from rich.live import Live
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
@@ -33,8 +34,12 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_status(server: str, url: str , username: str , user_pass:str):
+
+def display_status(server: str, url: str, username: str, user_pass: str, jupyter: bool = EGERIA_JUPYTER,
+                   width: int = EGERIA_WIDTH):
     p_client = ServerOps(server, url, username, user_pass)
 
     def generate_table() -> Table:
@@ -75,10 +80,6 @@ def display_status(server: str, url: str , username: str , user_pass:str):
             while True:
                 time.sleep(2)
                 live.update(generate_table())
-                # services = p_client.get_server_status(server)['serverStatus']['services']
-                # for service in services:
-                #     service_name = service['serviceName']
-                #     service_status = service['serviceStatus']
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
@@ -102,6 +103,7 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     display_status(server, url, userid, user_pass)
+
 
 if __name__ == "__main__":
     main()

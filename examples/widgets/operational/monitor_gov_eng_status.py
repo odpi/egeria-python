@@ -8,11 +8,15 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple status display for Governance Actions
 """
+import argparse
+import json
 import os
 import time
-import json
-import argparse
 
+from rich import box
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
 
 from pyegeria import (
     InvalidParameterException,
@@ -20,13 +24,8 @@ from pyegeria import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import box
-from rich.console import Console
-
-
 from pyegeria.server_operations import ServerOps
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -38,12 +37,15 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+
 
 disable_ssl_warnings = True
 
 
-
-def display_gov_eng_status(server: str , url: str, username: str, user_pass:str, paging:bool):
+def display_gov_eng_status(server: str, url: str, username: str, user_pass: str, paging: bool,
+                           jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     server_name = server
     s_client = ServerOps(server_name, url, username, user_pass)
 
@@ -74,16 +76,17 @@ def display_gov_eng_status(server: str , url: str, username: str, user_pass:str,
             eng_type = engine["governanceEngineTypeName"]
 
             eng_desc = engine["governanceEngineDescription"]
-            eng_req_type = json.dumps(engine["governanceRequestTypes"], indent = 2)
+            eng_req_type = json.dumps(engine["governanceRequestTypes"], indent=2)
             status = engine["governanceEngineStatus"]
             if status in ("RUNNING"):
                 eng_status = f"[green]{status}"
             elif status in ("FAILED"):
                 eng_status = f"[red]{status}"
-            else: eng_status = f"[yellow]{status}"
+            else:
+                eng_status = f"[yellow]{status}"
 
             table.add_row(
-                gov_eng, eng_type, eng_desc, eng_status,eng_req_type
+                gov_eng, eng_type, eng_desc, eng_status, eng_req_type
             )
 
         table.caption = f"Server {server_name} running on {url}"
@@ -91,7 +94,7 @@ def display_gov_eng_status(server: str , url: str, username: str, user_pass:str,
 
     try:
         if paging is True:
-            console = Console()
+            console = Console(width=width, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table())
         else:
@@ -124,6 +127,7 @@ def main_live():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=False)
 
+
 def main_paging():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -139,10 +143,8 @@ def main_paging():
     display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=True)
 
 
-
 if __name__ == "__main__":
     main_live()
-
 
 if __name__ == "__main_paging__":
     main_paging()

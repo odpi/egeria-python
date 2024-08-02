@@ -14,11 +14,11 @@ import json
 import os
 import sys
 import time
-from rich import box
 
+from rich import box
+from rich.console import Console
 from rich.live import Live
 from rich.table import Table
-from rich.console import Console
 
 from pyegeria import AutomatedCuration
 from pyegeria import (
@@ -39,11 +39,14 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 disable_ssl_warnings = True
 
 
-def display_engine_activity(server: str, url: str, user: str, user_pass:str, paging: bool):
+def display_engine_activity(server: str, url: str, user: str, user_pass: str, paging: bool,
+                            jupyter: bool = EGERIA_JUPYTER, width=EGERIA_WIDTH):
     g_client = AutomatedCuration(server, url, user, user_pwd=user_pass)
 
     def generate_table() -> Table:
@@ -99,7 +102,7 @@ def display_engine_activity(server: str, url: str, user: str, user_pass:str, pag
                 else:
                     action_status = f"[red]{action['actionStatus']}"
 
-                target= action.get("actionTargetElements", "Empty")
+                target = action.get("actionTargetElements", "Empty")
                 if type(target) is list:
                     target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
                 else:
@@ -109,7 +112,7 @@ def display_engine_activity(server: str, url: str, user: str, user_pass:str, pag
                 completion_message = action.get("completionMessage", " ")
 
                 table.add_row(
-                    requested_time, start_time, action_guid,engine_name, request_type,
+                    requested_time, start_time, action_guid, engine_name, request_type,
                     action_status, target_element, completion_time, process_name, completion_message
                 )
         else:
@@ -120,7 +123,7 @@ def display_engine_activity(server: str, url: str, user: str, user_pass:str, pag
 
     try:
         if paging is True:
-            console = Console()
+            console = Console(width=width, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table())
         else:
@@ -153,6 +156,7 @@ def main_live():
 
     display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=False)
 
+
 def main_paging():
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="Name of the server to display status for")
@@ -168,6 +172,7 @@ def main_paging():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=True)
+
 
 if __name__ == "__main__":
     main_live()

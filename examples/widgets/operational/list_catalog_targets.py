@@ -8,15 +8,15 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 List catalog targets
 """
-import os
 import argparse
+import os
 import time
 
 from rich import box
 from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
 from rich.markdown import Markdown
+from rich.prompt import Prompt
+from rich.table import Table
 
 from pyegeria import (
     InvalidParameterException,
@@ -37,11 +37,12 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_catalog_targets(connector:str, server: str, url: str, username: str, user_password: str):
-
-
+def display_catalog_targets(connector: str, server: str, url: str, username: str, user_password: str,
+                            jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
@@ -56,36 +57,35 @@ def display_catalog_targets(connector:str, server: str, url: str, username: str,
             expand=True,
             # width = 200
         )
-        table.add_column("Name of Target")
-        table.add_column("Catalog Target Name")
+        table.add_column("Name of Target", max_width=15)
+        table.add_column("Catalog Target Name", max_width=15)
         table.add_column('Metadata Source Qualified Name')
         table.add_column("Relationship GUID", no_wrap=True)
         table.add_column('Configuration Properties')
         table.add_column('Template Properties')
-        table.add_column("Operational Instructions")
+        table.add_column("Operational Instructions", max_width=15)
         # table.add_column("Delete Method")
-
 
         if type(cat_targets) is list:
             for target in cat_targets:
-                target_name = target.get('catalogTargetName','---')
+                target_name = target.get('catalogTargetName', '---')
                 target_source = target.get('metadataSourceQualifiedName', '---')
-                target_rel = target.get('relationshipGUID','---')
+                target_rel = target.get('relationshipGUID', '---')
                 target_sync = target.get('permittedSynchronization')
-                target_delete = target.get('deleteMethod','---')
+                target_delete = target.get('deleteMethod', '---')
                 op_instruct = f"* {target_sync}\n* {target_delete}"
                 op_instruct_out = Markdown(op_instruct)
                 # target_guid = target['catalogTargetElement']['guid']
                 connector_unique = target['catalogTargetElement']['uniqueName']
 
-                config_props = target.get('configurationProperties','---')
+                config_props = target.get('configurationProperties', '---')
                 if type(config_props) is dict:
                     config_props_md = ''
                     for prop in config_props:
                         config_props_md += f"* {prop}: {config_props[prop]}\n"
                     config_props_out = Markdown(config_props_md)
 
-                template_props = target.get('templateProperties','---')
+                template_props = target.get('templateProperties', '---')
                 if type(template_props) is dict:
                     template_props_md = ''
                     for prop in template_props:
@@ -106,7 +106,7 @@ def display_catalog_targets(connector:str, server: str, url: str, username: str,
 
         connector_guid = INTEGRATION_GUIDS[connector]
         cat_targets = a_client.get_catalog_targets(connector_guid)
-        console = Console()
+        console = Console(force_terminal=not jupyter, width=width)
         with console.pager(styles=True):
             console.print(generate_table())
 
@@ -124,6 +124,8 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+    parser.add_argument("--jupyter", help="Enable for Jupyter terminal compatibility")
+    parser.add_argument("--width", help="Screen width, in characters, to use")
 
     args = parser.parse_args()
 
@@ -131,13 +133,16 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    jupyter = args.jupyter if args.jupyter is not None else EGERIA_JUPYTER
+    width = args.width if args.width is not None else EGERIA_WIDTH
 
     try:
         connector = Prompt.ask("Enter the Integration Connector to list catalog targets for")
-        display_catalog_targets(connector, server, url, userid, user_pass)
+        display_catalog_targets(connector, server, url, userid, user_pass, jupyter)
 
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == "__main__":
     main()

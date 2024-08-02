@@ -27,7 +27,8 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-
+EGERIA_JUPYTER = os.environ.get('EGERIA_JUPYTER', False)
+EGERIA_WIDTH = os.environ.get('EGERIA_WIDTH', 200)
 
 def main(ep: str = EGERIA_KAFKA_ENDPOINT):
 
