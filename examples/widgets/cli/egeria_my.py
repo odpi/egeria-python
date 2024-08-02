@@ -14,10 +14,10 @@ from trogon import tui
 
 from examples.widgets.cli.ops_config import Config
 
-from examples.widgets.personal.monitor_open_todos import display_todos
-from examples.widgets.personal.monitor_my_todos import display_my_todos
-from examples.widgets.personal.list_my_profile import display_my_profile
-from examples.widgets.personal.list_my_roles import display_my_roles
+from examples.widgets.my.monitor_open_todos import display_todos
+from examples.widgets.my.monitor_my_todos import display_my_todos
+from examples.widgets.my.list_my_profile import display_my_profile
+from examples.widgets.my.list_my_roles import display_my_roles
 
 
 

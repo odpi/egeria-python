@@ -106,7 +106,7 @@ def show_guid_infos(ctx, guid):
     """
     c = ctx.obj
     display_guid(guid, c.server, c.url,
-                 c.user_id, c.password, c.jupyter, c.width)
+                 c.userid, c.password, c.jupyter, c.width)
 
 
 @show.command('tech-types')

@@ -177,16 +177,16 @@ def tell(ctx):
 
 
 #
-#  Technical User: Show
+#  tech User: Show
 #
-@cli.group("technical")
+@cli.group("tech")
 @click.pass_context
-def technical(ctx):
-    """Commands for Technical Users"""
+def tech(ctx):
+    """Commands for tech Users"""
     pass
 
 
-@technical.group("show")
+@tech.group("show")
 @click.pass_context
 def show(ctx):
     """Display an Egeria Object"""
@@ -204,7 +204,7 @@ def show_guid_infos(ctx, guid):
     """
     c = ctx.obj
     display_guid(guid, c.server, c.url,
-                 c.user_id, c.password, c.jupyter, c.width)
+                 c.userid, c.password, c.jupyter, c.width)
 
 
 @show.command('tech-types')
@@ -304,10 +304,10 @@ def valid_metadata_values(ctx, property, type_name):
 
 
 #
-#  Technical Users: Tell
+#  tech Users: Tell
 #
 
-@technical.group('tell')
+@tech.group('tell')
 @click.pass_context
 def tell(ctx):
     """Perform actions an Egeria Objects"""
@@ -321,7 +321,7 @@ def tell(ctx):
 @cli.group('catalog_user')
 @click.pass_context
 def catalog_user(ctx):
-    """Commands for the more technical user"""
+    """Commands for the more tech user"""
     pass
 
 
