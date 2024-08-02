@@ -10,12 +10,13 @@ A simple display for glossary terms
 """
 import argparse
 import os
+import sys
 import time
 
 from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
-
+from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import (
@@ -35,16 +36,23 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+
 
 disable_ssl_warnings = True
 
-def display_assets(search_string: str, server: str, url: str, username: str, user_password: str, time_out: int = 60):
 
+def display_assets(search_string: str, server: str, url: str, username: str, user_password: str, time_out: int = 60,
+                   jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+    console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
+    if (search_string is None) or (len(search_string) < 3):
+        raise ValueError("Invalid Search String - must be greater than four characters long")
     g_client = AssetCatalog(server, url, username)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
 
-    def generate_table(search_string:str = 'Enter Your Tech Type') -> Table:
+    def generate_table(search_string:str = None) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Assets containing the string  {search_string} @ {time.asctime()}",
@@ -58,7 +66,7 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             caption=f"View Server '{server}' @ Platform - {url}",
             expand=True
         )
-        table.add_column("Display Name")
+        table.add_column("Display Name", max_width=15)
         table.add_column("Type Name")
         table.add_column("GUID", no_wrap=True)
         table.add_column("Technology Type")
@@ -72,18 +80,21 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             return table
 
         for element in assets:
-            display_name = element.get("resourceName",'---')
-            # qualified_name = element["qualifiedName"] # we decided that qualified name wasn't useful
-            type_name = element["type"]["typeName"]
-            tech_type = element.get("deployedImplementationType",'---')
-            guid = element["guid"]
+            properties = element['properties']
+            header = element['elementHeader']
+            nested = element.get('matchingElements','---')
+
+            display_name = properties.get("displayName",'---')
+            # qualified_name = properties["qualifiedName"] # we decided that qualified name wasn't useful
+            type_name = header["type"]["typeName"]
+            tech_type = properties.get("deployedImplementationType",'---')
+            guid = header["guid"]
             #### We decided that path wasn't useful
             # path_name = element.get("extendedProperties", None)
             # if path_name:
             #     path = path_name.get("pathName"," ")
             # else:
             #     path = " "
-            matches = element['matchingElements']
             match_md = ""
 
             match_tab = Table(expand=True)
@@ -91,15 +102,15 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             match_tab.add_column("GUID", no_wrap=True, width=36)
             match_tab.add_column("Properties")
 
-            for match in matches:
+            for match in nested:
                 match_type_name = match['type']['typeName']
                 matching_guid = match['guid']
                 match_props = match['properties']
                 match_details_md = ""
                 for key in match_props.keys():
-                    match_details_md += f"{key}: {match_props[key]}\n"
-
-                match_tab.add_row(match_type_name, matching_guid, match_details_md)
+                    match_details_md += f"* {key}: {match_props[key]}\n"
+                match_details_out = Markdown(match_details_md)
+                match_tab.add_row(match_type_name, matching_guid, match_details_out)
 
 
             table.add_row(
@@ -114,14 +125,18 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console()
+
         with console.pager(styles=True):
-            console.print(generate_table(search_string))
+            console.print(generate_table(search_string), soft_wrap=True)
 
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         console.print_exception()
+        sys.exit(1)
 
+    except ValueError as e:
+        console.print(f"\n\n====> Invalid Search String - must be greater than four characters long")
+        sys.exit(1)
 
 
 def main():

@@ -13,9 +13,12 @@ import argparse
 import time
 import sys
 
-from rich import box
+from rich import box, print
 from rich.console import Console
 from rich.table import Table
+from rich.tree import Tree
+from rich.panel import Panel
+from rich.markdown import Markdown
 
 from pyegeria import (
     InvalidParameterException,
@@ -40,79 +43,76 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
 EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_my_profiles(server: str, url: str, username: str, user_pass:str,
+def display_my_profile(server: str, url: str, username: str, user_pass:str,
                         jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
-    m_client = MyProfile(server, url, user_id=username, user_pwd=user_pass)
-    token = m_client.create_egeria_bearer_token(username, user_pass)
-    my_profiles = m_client.get_my_profile()
-    if type(my_profiles) is str:
-        print(f"No profiles found for {username}")
-        sys.exit(1)
+    try:
+        m_client = MyProfile(server, url, user_id=username, user_pwd=user_pass)
+        token = m_client.create_egeria_bearer_token(username, user_pass)
+        my_profiles = m_client.get_my_profile()
+        if type(my_profiles) is str:
+            print(f"No profiles found for {username}")
+            sys.exit(1)
 
-    def generate_table() -> Table:
-        """Make a new table."""
+        console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
+
+        profile_props = my_profiles.get('profileProperties','---')
+        name = profile_props["fullName"]
+        tree = Tree(Panel(f"Profile of {name}",title = "Personal Profile"),
+                    expanded=True,style="bright_white on black", guide_style="bold bright_blue")
+
+        profile_props_md = f"\n* GUID: {my_profiles['elementHeader']['guid']}\n"
+        if type(profile_props) is dict:
+            for key in profile_props.keys():
+                if type(profile_props[key]) is str:
+                    profile_props_md += f"* {key}: {profile_props[key]}\n"
+                elif type(profile_props[key]) is dict:
+                    p_md = '\n* Additional Details:\n'
+                    for k in profile_props[key].keys():
+                        p_md += f"\t* {k}: {profile_props[key][k]}\n"
+                    profile_props_md += p_md
+            t1 = tree.add(Panel(Markdown(profile_props_md),title="Profile Properties"))
+
+
+        id_list_md=""
+        for identities in my_profiles["userIdentities"]:
+            id_list_md += f"* {identities['userIdentity']['properties']['userId']}\n"
+        t2 = tree.add(Panel(Markdown(id_list_md), title="Identities"))
+
+        contact_methods = my_profiles['contactMethods']
+        for method in contact_methods:
+            contact = method['properties']
+            contact_methods_md = ""
+            for key in contact.keys():
+                contact_methods_md += f"* {key}: {contact[key]}\n"
+            t3 = tree.add(Panel(Markdown(contact_methods_md), title="Contact Methods"))
+
+        my_roles = my_profiles["roles"]
         table = Table(
-            title=f"My Profile Information {url} @ {time.asctime()}",
-            # style = "black on grey66",
-            header_style="white on dark_blue",
-            show_lines=True,
+            title = f" Roles of {name}",
+            show_lines= True,
             box=box.ROUNDED,
-            caption=f"My Profile from Server '{server}' @ Platform - {url}\n Press 'q' to Quit",
-            expand=True
+            expand= True,
         )
-
-        table.add_column("Name")
-        table.add_column("Job Title")
-        table.add_column("userId")
-        table.add_column("myGUID")
         table.add_column("Role Type")
         table.add_column("Role")
         table.add_column("Role GUID")
+        for a_role in my_roles:
+            my_role_props = a_role["properties"]
+            role_type = my_role_props["typeName"]
+            role = my_role_props.get("title"," ")
+            role_guid = a_role["elementHeader"]["guid"]
+            table.add_row(
+                role_type, role, role_guid
+            )
+        t4 = tree.add(Panel(table, title="Roles" ),expanded=True)
 
-        if len(my_profiles) == 0:
-            name = " "
-            job_title = " "
-            user_id = " "
-            my_guid = " "
-            role_type = " "
-            role = " "
-            role_guid = " "
-        else:
-            name = my_profiles["profileProperties"]["fullName"]
-            job_title = my_profiles["profileProperties"]["jobTitle"]
-            id_list=" "
-            for identities in my_profiles["userIdentities"]:
-                id_list = f"{identities['userIdentity']['properties']['userId']} {id_list}"
-
-            my_guid = my_profiles["elementHeader"]["guid"]
-
-            my_roles = my_profiles["roles"]
-            for a_role in my_roles:
-                my_role_props = a_role["properties"]
-                role_type = my_role_props["typeName"]
-                role = my_role_props.get("title"," ")
-                role_guid = a_role["elementHeader"]["guid"]
-                table.add_row(
-                    name, job_title, str(id_list), my_guid, role_type, role, role_guid
-                )
-
-        m_client.close_session()
-        return table
-
-    try:
-        # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-        #     while True:
-        #         time.sleep(2)
-        #         live.update(generate_table())
-        console = Console(width=width, force_terminal=not jupyter)
-        with console.pager():
-            console.print(generate_table())
-
+        print(tree)
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+    finally:
+        m_client.close_session()
 
 def main():
     parser = argparse.ArgumentParser()
@@ -128,7 +128,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_my_profiles(server, url, userid, user_pass)
+    display_my_profile(server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

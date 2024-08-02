@@ -34,6 +34,7 @@ EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9
 EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
 EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
 EGERIA_ENGINE_HOST = os.environ.get('INTEGRATION_ENGINE_HOST', 'engine-host')
+EGERIA_ENGINE_HOST_URL = os.environ.get('INTEGRATION_ENGINE_HOST_URL', 'https://localhost:9443')
 EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
 EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
@@ -150,7 +151,7 @@ def main_live():
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
@@ -167,7 +168,7 @@ def main_paging():
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 

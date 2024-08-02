@@ -7,7 +7,7 @@ Display the status of cataloged platforms and servers.
 """
 
 import argparse
-import os
+import os, sys
 import time
 
 from rich.console import Console
@@ -72,14 +72,18 @@ def display_status(server: str, url: str, username: str, user_pass: str, jupyter
             "Engine Host Server": "EngineHost",
             "Integration Daemon": "Integration"
         }
+        try:
+            platform_list = r_client.get_platforms_by_type()
+            if type(platform_list) is str:
+                print("No OMAG Server Platforms found?")
+                sys.exit(1)
 
-        platform_list = r_client.get_platforms_by_type()
-        for platform in platform_list:
-            platform_name = platform['properties']["name"]
-            platform_guid = platform['elementHeader']["guid"]
-            platform_desc = platform['properties']["description"]
-            server_list = ""
-            try:
+            for platform in platform_list:
+                platform_name = platform['properties'].get("displayName", '---')
+                platform_guid = platform['elementHeader']["guid"]
+                platform_desc = platform['properties'].get("resourceDescription",'---')
+                server_list = ""
+
                 platform_report = r_client.get_platform_report(platform_guid)
                 platform_url = platform_report.get('platformURLRoot', " ")
                 platform_origin = platform_report.get("platformOrigin", " ")
@@ -103,13 +107,14 @@ def display_status(server: str, url: str, username: str, user_pass: str, jupyter
                         serv = f"{status_flag}{server_types[server_type]}: {server_name}\n"
                         server_list = server_list + serv
 
-                table.add_row(platform_name, platform_url, platform_origin, platform_desc,
-                              platform_started, server_list, style="bold white on black")
-            except (Exception) as e:
-                # console.print_exception(e)
-                platform_url = " "
-                platform_origin = " "
-                platform_started = " "
+                    table.add_row(platform_name, platform_url, platform_origin, platform_desc,
+                                  platform_started, server_list, style="bold white on black")
+
+        except (Exception) as e:
+        # console.print_exception(e)
+            platform_url = " "
+            platform_origin = " "
+            platform_started = " "
 
         return table
 

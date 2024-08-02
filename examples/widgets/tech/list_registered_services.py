@@ -8,9 +8,10 @@ A simple widget to retrieve the registered services.
 """
 
 import argparse
+import os
 import sys
 import time
-import os
+
 from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
@@ -22,6 +23,7 @@ from pyegeria import (
     UserNotAuthorizedException,
     RegisteredInfo,
 )
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -32,9 +34,13 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_registered_svcs(service: str, server: str , url: str,
-                            username: str, password: str ):
+
+def display_registered_svcs(service: str, server: str, url: str,
+                            username: str, password: str, jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH
+                            ):
     """ Display the registered services list
     Parameters
     ----------
@@ -53,12 +59,13 @@ def display_registered_svcs(service: str, server: str , url: str,
     password : str, optional
         The password for authentication. Default is `default_password`.
     """
+
     def generate_table(svc_list) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Technology Types for: {url} @ {time.asctime()}",
-            style="bold white on black",
-            row_styles=["bold white on black"],
+            style="bold bright_white on black",
+            row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",
             title_style="bold white on black",
             caption_style="white on black",
@@ -72,7 +79,7 @@ def display_registered_svcs(service: str, server: str , url: str,
         table.add_column("Service  Development Status")
         table.add_column("URL Marker")
         table.add_column("Description")
-        table.add_column("Wiki")
+        table.add_column("Wiki",no_wrap=True)
         table.add_column("Server Type")
         table.add_column("Partner Service Name")
         table.add_column("Partner Service Type")
@@ -113,7 +120,7 @@ def display_registered_svcs(service: str, server: str , url: str,
             print("Unknown service type")
             sys.exit(1)
 
-    console = Console()
+    console = Console(width=width, force_terminal=not jupyter)
     try:
         a_client = RegisteredInfo(server, url, username)
         # token = a_client.create_egeria_bearer_token(username, password)

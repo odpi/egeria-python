@@ -14,9 +14,12 @@ from trogon import tui
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
+from examples.widgets.operational.engine_actions import start_server as start_engine_host, \
+    stop_server as stop_engine_host
 from examples.widgets.operational.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
                                                                      update_catalog_target, stop_server, start_server)
 from examples.widgets.operational.list_catalog_targets import display_catalog_targets
+from examples.widgets.operational.load_archive import load_archive
 from examples.widgets.operational.monitor_engine_activity import display_engine_activity
 from examples.widgets.operational.monitor_gov_eng_status import display_gov_eng_status
 from examples.widgets.operational.monitor_integ_daemon_status import display_integration_daemon_status
@@ -40,8 +43,8 @@ from examples.widgets.operational.restart_integration_daemon import restart_conn
 #
 # pass_config = click.make_pass_decorator(Config)
 
-# @tui
 @tui()
+# @tui('menu', 'menu', 'A textual command line interface')
 @click.version_option("0.0.1", prog_name="egeria_ops")
 @click.group()
 @click.option('--server', default='active-metadata-store', envvar='EGERIA_METADATA_STORE',
@@ -63,7 +66,7 @@ from examples.widgets.operational.restart_integration_daemon import restart_conn
 @click.option('--admin_user', default='garygeeke', envvar='EGERIA_ADMIN_USER', help='Egeria admin user')
 @click.option('--admin_user_password', default='secret', envvar='EGERIA_ADMIN_PASSWORD',
               help='Egeria admin password')
-@click.option('--userid', default='garygeeke', envvar='EGERIA_USER', help='Egeria user')
+@click.option('--userid', default='erinoverview', envvar='EGERIA_USER', help='Egeria user')
 @click.option('--password', default='secret', envvar='EGERIA_PASSWORD',
               help='Egeria user password')
 @click.option('--timeout', default=60, help='Number of seconds to wait')
@@ -155,7 +158,7 @@ def eng_activity_status(ctx, list):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
     display_engine_activity(c.view_server, c.view_server_url,
-                            c.userid, c.password,
+                            c.admin_user, c.admin_user_password,
                             list, c.jupyter, c.width)
 
 
@@ -198,7 +201,7 @@ def tell(ctx):
     pass
 
 
-@tell.group('integration_daemon')
+@tell.group('integration-daemon')
 @click.pass_context
 def integration_daemon(ctx):
     """Group of commands to an integration-daemon"""
@@ -230,6 +233,19 @@ integration_daemon.add_command(remove_catalog_target)
 integration_daemon.add_command(update_catalog_target)
 integration_daemon.add_command(stop_server)
 integration_daemon.add_command(start_server)
+
+
+@tell.group('engine-host')
+@click.pass_context
+def engine_host(ctx):
+    """Group of commands to an engine-host"""
+    pass
+
+
+engine_host.add_command(start_engine_host)
+engine_host.add_command(stop_engine_host)
+
+tell.add_command(load_archive)
 
 if __name__ == '__main__':
     cli()

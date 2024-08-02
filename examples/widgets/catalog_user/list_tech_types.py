@@ -36,11 +36,15 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+
 
 disable_ssl_warnings = True
 
 
-def display_tech_types(search_string:str, server: str, url: str, username: str, user_pass: str):
+def display_tech_types(search_string:str, server: str, url: str, username: str, user_pass: str,
+                       jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     a_client = AutomatedCuration(server, url, username)
     token = a_client.create_egeria_bearer_token(username, user_pass)
     tech_list = a_client.find_technology_types(search_string, page_size=0)
@@ -88,7 +92,7 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
             sys.exit(1)
 
     try:
-        console = Console()
+        console = Console(width=width, force_terminal=not jupyter)
         with console.pager(styles=True):
             console.print(generate_table())
 

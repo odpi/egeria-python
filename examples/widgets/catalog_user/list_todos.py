@@ -37,9 +37,11 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-
-def display_to_dos(search_string: str, guid:str, server: str, url: str, username: str, user_pass:str):
+def display_to_dos(search_string: str, server: str, url: str, username: str, user_pass:str,
+                   jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
     m_client = MyProfile(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, user_pass)
@@ -75,6 +77,7 @@ def display_to_dos(search_string: str, guid:str, server: str, url: str, username
             priority = " "
             due = " "
             completed = " "
+
             status = " "
             sponsor = " "
         else:
@@ -109,7 +112,7 @@ def display_to_dos(search_string: str, guid:str, server: str, url: str, username
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console(width = 200)
+        console = Console(width=width, force_terminal=not jupyter)
         with console.pager():
 
             console.print(generate_table(search_string))
@@ -136,10 +139,9 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    guid = None
     try:
         search_string = Prompt.ask("Enter the ToDo you are searching for:", default="*")
-        display_to_dos(search_string, guid,server, url, userid, user_pass)
+        display_to_dos(search_string, server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

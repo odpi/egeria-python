@@ -9,9 +9,9 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-import os
 import argparse
 import json
+import os
 import time
 
 from rich import box
@@ -39,11 +39,13 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_list(project_name: str, server: str, url: str,
-                   username: str,  user_pass: str, save_output: bool):
-
+def display_project_list(project_name: str, server: str, url: str,
+                         username: str, user_pass: str, save_output: bool, jupyter: bool = EGERIA_JUPYTER,
+                         width: int = EGERIA_WIDTH):
     p_client = ProjectManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
 
@@ -58,9 +60,9 @@ def display_list(project_name: str, server: str, url: str,
             expand=True
         )
 
-
         table.add_column("Display Name")
-        table.add_column("Project GUID", no_wrap=True,)
+        table.add_column("Description")
+
         table.add_column("Classifications")
         table.add_column("Qualified Name")
         table.add_column("Identifier")
@@ -69,7 +71,8 @@ def display_list(project_name: str, server: str, url: str,
         table.add_column("Status")
         table.add_column("Start Date")
         table.add_column("End Date")
-        table.add_column("Description")
+        table.add_column("Contracts")
+
 
         projects = p_client.find_projects(project_name)
 
@@ -79,7 +82,7 @@ def display_list(project_name: str, server: str, url: str,
             classification = " "
             qualified_name = " "
             identifier = " "
-            phase= " "
+            phase = " "
             health = " "
             status = " "
             start = " "
@@ -92,25 +95,25 @@ def display_list(project_name: str, server: str, url: str,
                 classification = ""
                 guid = project['elementHeader']['guid']
                 props = project["properties"]
-                name = props.get("name","None")
+                name = props.get("name", "None")
                 p_class = project['elementHeader'].get("classifications")
                 if p_class:
                     for classif in p_class:
-                        classification = f"{classif.get('classificationName')}, {classification}"
-                qualified_name = props.get("qualifiedName"," ")
+                        classification += f"* {classif.get('classificationName')}\n"
+                qualified_name = props.get("qualifiedName", " ")
                 identifier = props.get("identifier", " ")
                 phase = props.get("projectPhase", " ")
                 health = props.get("projectHealth", " ")
                 status = props.get("projectStatus", " ")
                 description = props.get("description", " ")
-                start = props.get("startDate"," ")
+                start = props.get("startDate", " ")[0:10]
                 end = props.get("plannedEndDate", " ")
                 additional_properties = project.get('additionalProperties')
                 if additional_properties is not None:
                     props = json.dumps(additional_properties)
                 table.add_row(
-                    name, guid, classification, qualified_name, identifier, phase, health, status, start,
-                    end,description)
+                    name, description, classification, qualified_name, identifier, phase, health, status, start,
+                    end, '---')
 
         p_client.close_session()
         return table
@@ -120,9 +123,9 @@ def display_list(project_name: str, server: str, url: str,
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console(record=True)
+        console = Console(record=True,width=width, force_terminal=not jupyter, soft_wrap=True)
         with console.pager():
-            console.print(generate_table(project_name))
+            console.print(generate_table(project_name), soft_wrap=True)
         if save_output:
             console.save_html("projects.html")
 
@@ -135,6 +138,7 @@ def display_list(project_name: str, server: str, url: str,
         pass
     finally:
         p_client.close_session()
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -154,7 +158,7 @@ def main():
     try:
         save_output = args.save_output if args.save_output is not None else False
         project_name = Prompt.ask("Enter the Project to retrieve:", default="*")
-        display_list(project_name, server, url, userid, user_pass, save_output)
+        display_project_list(project_name, server, url, userid, user_pass, save_output)
 
     except KeyboardInterrupt:
         pass

@@ -40,7 +40,7 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
 EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_my_profiles(server: str, url: str, username: str, user_pass:str,
+def display_my_roles(server: str, url: str, username: str, user_pass:str,
                         jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
     m_client = MyProfile(server, url, user_id=username, user_pwd=user_pass)
@@ -128,7 +128,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_my_profiles(server, url, userid, user_pass)
+    display_my_roles(server, url, userid, user_pass)
 
 if __name__ == "__main__":
     main()

@@ -349,8 +349,8 @@ class AssetCatalog(Client):
         """
         server = self.server_name if server is None else server
         validate_search_string(search_string)
-        if search_string == "*":
-            search_string = None
+        # if search_string == "*":
+        #     search_string = None
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()

@@ -58,7 +58,7 @@ from examples.widgets.personal.list_my_roles import display_my_roles
 @click.option('--admin_user', default='garygeeke', envvar='EGERIA_ADMIN_USER', help='Egeria admin user')
 @click.option('--admin_user_password', default='secret', envvar='EGERIA_ADMIN_PASSWORD',
               help='Egeria admin password')
-@click.option('--userid', default='garygeeke', envvar='EGERIA_USER', help='Egeria user')
+@click.option('--userid', default='erinoverview', envvar='EGERIA_USER', help='Egeria user')
 @click.option('--password', default='secret', envvar='EGERIA_PASSWORD',
               help='Egeria user password')
 @click.option('--timeout', default=60, help='Number of seconds to wait')

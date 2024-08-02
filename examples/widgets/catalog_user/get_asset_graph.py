@@ -14,6 +14,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.tree import Tree
+from rich import print
 
 from pyegeria import (
     InvalidParameterException,
@@ -21,6 +22,7 @@ from pyegeria import (
     UserNotAuthorizedException,
     AssetCatalog
 )
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -32,16 +34,17 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 disable_ssl_warnings = True
 
-console = Console(width=200)
-
-
 guid_list = []
 
-def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, user_pass:str):
+console = Console(width=EGERIA_WIDTH, force_terminal=(not EGERIA_JUPYTER))
 
+def asset_viewer(asset_guid: str, server_name: str, platform_url: str, user: str, user_pass: str,
+                 jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     def build_classifications(classification: dict) -> Markdown:
 
         class_md = ""
@@ -50,7 +53,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
             if c_type == "Anchors":
                 continue
             class_md += f"\n* Classification: {c_type}\n"
-            class_props = c.get("classificationProperties","---")
+            class_props = c.get("classificationProperties", "---")
             if type(class_props) is dict:
                 for prop in class_props.keys():
                     class_md += f"\t* {prop}: {class_props[prop]}\n"
@@ -72,7 +75,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
         ne_classifications = nested_element["classifications"]
         ne_class_md = build_classifications(ne_classifications)
         # ne_class_md = " " if ne_class_md is None else ne_class_md
-        ne_props = nested_element.get("properties","---")
+        ne_props = nested_element.get("properties", "---")
         ne_prop_md = "\n"
         if type(ne_props) is dict:
             for prop in ne_props.keys():
@@ -88,9 +91,8 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
         return output
 
     try:
-
         a_client = AssetCatalog(server_name, platform_url,
-                                     user_id=user)
+                                user_id=user)
 
         token = a_client.create_egeria_bearer_token(user, user_pass)
         # asset_info = a_client.find_assets_in_domain(asset_name)
@@ -109,27 +111,25 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
 
         # print(f"\n{json.dumps(asset_graph, indent =2)}\n")
 
-
-        asset_name = asset_graph["displayName"]
-        qualified_name = asset_graph["qualifiedName"]
-        resource_name = asset_graph["resourceName"]
+        asset_name = asset_graph["properties"].get("displayName",'---')
+        qualified_name = asset_graph["properties"]["qualifiedName"]
+        resource_name = asset_graph['properties'].get("resourceName","---")
 
         tree = Tree(f"{asset_name} ({asset_guid})", style="bold bright_white on black", guide_style="bold bright_blue")
         style = ""
+        asset_elements = asset_graph['elementHeader']
+        asset_type = asset_elements["type"]["typeName"]
+        asset_deployed_imp_type = asset_graph.get("deployedImplementationType", "---")
 
-        asset_type = asset_graph["type"]["typeName"]
-        asset_deployed_imp_type = asset_graph.get("deployedImplementationType","---")
-
-        asset_origin = asset_graph["origin"]["homeMetadataCollectionName"]
-        asset_creation = asset_graph["versions"]["createTime"]
-        asset_created_by = asset_graph["versions"]["createdBy"]
-        asset_classifications = asset_graph["classifications"]
-        asset_nested_elements = asset_graph.get("anchoredElements","----")
+        asset_origin = asset_elements["origin"]["homeMetadataCollectionName"]
+        asset_creation = asset_elements["versions"]["createTime"]
+        asset_created_by = asset_elements["versions"]["createdBy"]
+        asset_classifications = asset_elements["classifications"]
+        asset_nested_elements = asset_graph.get("anchoredElements", "----")
         asset_relationships = asset_graph["relationships"]
         asset_class_md = build_classifications(asset_classifications)
 
-
-        asset_properties = asset_graph.get("extendedProperties",None)
+        asset_properties = asset_graph.get("extendedProperties", None)
         if asset_properties is not None:
             prop_md = "\n* Extended Properties:\n"
             for prop in asset_properties:
@@ -137,28 +137,28 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
         else:
             prop_md = ""
         core_md = (f"**Type: {asset_type}  Created by: {asset_created_by} on {asset_creation}**\n"
-               f"* Deployed Implementation Type: {asset_deployed_imp_type}\n"
-               f"* Qualified Name: {qualified_name}\n "
-               f"* Resource Name: {resource_name}\n"
-               f"* Display Name: {asset_name}\n"
-               f"* Asset Origin: {asset_origin}\n{prop_md}\n"
-               )
+                   f"* Deployed Implementation Type: {asset_deployed_imp_type}\n"
+                   f"* Qualified Name: {qualified_name}\n "
+                   f"* Resource Name: {resource_name}\n"
+                   f"* Display Name: {asset_name}\n"
+                   f"* Asset Origin: {asset_origin}\n{prop_md}\n"
+                   )
         core_md = Markdown(core_md)
 
-        p1 = Panel.fit(core_md, style = "bold bright_white")
+        p1 = Panel.fit(core_md, style="bold bright_white")
         l2 = tree.add(p1)
         if asset_class_md is not None:
-            p2 = Panel.fit(Markdown(asset_class_md), style = "bold bright_white", title = "Classifications")
+            p2 = Panel.fit(Markdown(asset_class_md), style="bold bright_white", title="Classifications")
             l2 = tree.add(p2)
 
         #
         # Nested Assets
         #
         if type(asset_nested_elements) is list:
-            l2 = tree.add("Nested Elements", style = "bold white")
+            l2 = tree.add("Nested Elements", style="bold white")
             for el in asset_nested_elements:
                 asset_ne_md = build_nested_elements(el)
-                p3 = Panel.fit(asset_ne_md, style = "bold bright_white", title="Nested Elements")
+                p3 = Panel.fit(asset_ne_md, style="bold bright_white", title="Nested Elements")
                 l2.add(p3)
 
         #
@@ -169,7 +169,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
             rel_end1 = relationship["end1"]
             rel_end1_type = rel_end1["type"]["typeName"]
             rel_end1_guid = rel_end1["guid"]
-            rel_end1_unique_name = rel_end1.get("uniqueName","---")
+            rel_end1_unique_name = rel_end1.get("uniqueName", "---")
 
             rel_end2 = relationship["end2"]
             rel_end2_type = rel_end2["type"]["typeName"]
@@ -184,12 +184,11 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
                 relationship_type = relationship["type"]["typeName"]
                 relationship_created_by = relationship["versions"]["createdBy"]
                 relationship_creation_time = relationship["versions"]["createTime"]
-                relationship_properties = relationship.get("properties","--- ")
+                relationship_properties = relationship.get("properties", "--- ")
                 relationship_md = (f"Relationship Type {relationship_type}\n"
                                    f"* GUID: {relationship_guid}\n* Created by: {relationship_created_by} \n"
                                    f"* Creation Time: {relationship_creation_time}\n"
                                    f"* Properties: {relationship_properties}\n")
-
 
                 rel_md = (
                     f"* Relationship Type: {relationship_type}\n"
@@ -201,7 +200,7 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
                     f"\t* Type: {rel_end1_type}\n"
                     f"\t* GUID: {rel_end1_guid}\n"
                     f"\t* Unique Name: {rel_end1_unique_name}\n"
-                    )
+                )
 
                 # if rel_end1_class_md is not None:
                 #     rel_end1_md = rel_end1_class_md + rel_end1_md
@@ -221,20 +220,21 @@ def asset_viewer(asset_guid: str, server_name:str, platform_url:str, user:str, u
 
                 relationship_md += rel_end1_md + rel_end2_md
 
-                relationship_panel = Panel.fit(Markdown(relationship_md), style="bold bright_white", title = "Asset Relationships")
+                relationship_panel = Panel.fit(Markdown(relationship_md), style="bold bright_white",
+                                               title="Asset Relationships")
                 tree.add(relationship_panel)
-
         with console.screen():
             print("\n\n")
-            print(tree)
+        print(tree)
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException
     ) as e:
         console.print_exception()
         console.print("\n\n ======> Most likely the GUID you provided is either incorrect or not an asset\n[red bold]")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -251,10 +251,13 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
         asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
-        asset_viewer(asset_guid,server, url, userid, user_pass)
+        asset_viewer(asset_guid, server, url, userid, user_pass)
     except (KeyboardInterrupt) as e:
         # console.print_exception()
         pass
+    except Exception as e:
+        console.print_exception()
+
 
 if __name__ == "__main__":
     main()

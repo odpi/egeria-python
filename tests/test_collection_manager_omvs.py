@@ -117,7 +117,7 @@ class TestCollectionManager:
                                          user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Digital Products Root"
+            search_string = "Root Sustainability Collection"
 
             response = c_client.find_collections(search_string, None, True, ignore_case=False)
             duration = time.perf_counter() - start_time
@@ -819,7 +819,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
 
             # name = "Root Sustainability Collection"
-            name = "Digital Products Root"
+            name = "Root Sustainability Collection"
             # name = "Land Use Classification"
 
             response = c_client.get_member_list(name)

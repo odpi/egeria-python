@@ -44,6 +44,7 @@ EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 def display_todos(server: str , url: str, user: str, user_pass:str,
                   jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
+
     console = Console(width=width, force_terminal=not jupyter)
 
     m_client = MyProfile(server, url, user_id=user)

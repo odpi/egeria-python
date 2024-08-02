@@ -8,28 +8,23 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
+import argparse
 import os
 import time
-import json
-import argparse
+
+from rich import box
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.text import Text
+
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    print_exception_response,
 )
-from rich.table import Table
-from rich.live import Live
-from rich import box
-from rich.prompt import Prompt
-from rich.tree import Tree
-from rich import print
-from rich.console import Console
-
-
-from pyegeria.server_operations import ServerOps
-from pyegeria._deprecated_gov_engine import GovEng
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
+
 disable_ssl_warnings = True
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -42,20 +37,22 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_glossary_terms(search_string: str, guid: str, server: str, url: str, username: str, user_password: str):
-
+def display_glossary_terms(search_string: str, guid: str, server: str, url: str, username: str, user_password: str,
+                           jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     g_client = GlossaryBrowser(server, url)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
-    def generate_table(search_string:str = '*') -> Table:
+    def generate_table(search_string: str = '*') -> Table:
         """Make a new table."""
         table = Table(
             title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
-            style="bold white on black",
-            row_styles=["bold white on black"],
-            header_style="white on dark_blue",
+            style="bright_white on black",
+            # row_styles="bright_white on black",
+            header_style="bright_white on dark_blue",
             title_style="bold white on black",
             caption_style="white on black",
             show_lines=True,
@@ -70,25 +67,25 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
         table.add_column("Summary")
         table.add_column("Description")
 
-        terms = g_client.find_glossary_terms(search_string, guid, starts_with=True,
+        terms = g_client.find_glossary_terms(search_string, guid, starts_with=False,
                                              ends_with=False, status_filter=[], page_size=500)
+        style = "bright_white on black"
         if type(terms) is str:
             return table
 
         for term in terms:
-            props = term.get("glossaryTermProperties","None")
+            props = term.get("glossaryTermProperties", "None")
             if props == "None":
                 return table
 
-            display_name = props["displayName"]
-            qualified_name = props["qualifiedName"]
-            abbrev = props.get("abbreviation"," ")
-            summary = props.get("summary", " ")
-            description = props.get("description", " ")
-
+            display_name = Text(props["displayName"], style=style)
+            qualified_name = Text(props["qualifiedName"], style=style)
+            abbrev = Text(props.get("abbreviation", " "), style=style)
+            summary = Text(props.get("summary", " "), style=style)
+            description = Text(props.get("description", " "), style=style)
 
             table.add_row(
-                display_name,qualified_name, abbrev, summary, description, style="bold white on black"
+                display_name, qualified_name, abbrev, summary, description, style="bold white on black"
             )
 
         g_client.close_session()
@@ -99,13 +96,14 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table(search_string))
-        console = Console(style="bold white on black")
+        console = Console(style="bold bright_white on black", width=width, force_terminal=not jupyter)
         with console.pager(styles=True):
             console.print(generate_table(search_string))
 
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         console.print_exception()
+
 
 def main():
     sus_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
@@ -123,12 +121,14 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = args.guid if args.guid is not None else None
-    guid = sus_guid  if args.sustainability else None
+    guid = sus_guid if args.sustainability else None
 
     try:
         search_string = Prompt.ask("Enter the term you are searching for:", default="*")
-        display_glossary_terms(search_string, guid,server, url, userid, user_pass)
+        display_glossary_terms(search_string, guid, server, url, userid, user_pass)
     except(KeyboardInterrupt):
         pass
+
+
 if __name__ == "__main__":
     main()

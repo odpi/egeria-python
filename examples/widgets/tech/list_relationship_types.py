@@ -7,8 +7,8 @@ Copyright Contributors to the ODPi Egeria project.
 
 Get valid relationship types.
 """
-import os
 import argparse
+import os
 import time
 
 from rich import box
@@ -24,6 +24,7 @@ from pyegeria import (
     print_exception_response,
 )
 from pyegeria import ValidMetadataManager
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
 EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
@@ -34,11 +35,14 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def display_list(type_name:str, server: str, url: str ,
-                   username: str, user_pass:str, save_output: bool = False):
-
+def display_relationship_types(type_name: str, server: str, url: str,
+                 username: str, user_pass: str, save_output: bool = False, jupyter: bool = EGERIA_JUPYTER,
+                 width: int = EGERIA_WIDTH
+                 ):
     p_client = ValidMetadataManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
 
@@ -86,7 +90,7 @@ def display_list(type_name:str, server: str, url: str ,
                 # guid = types['guid']
                 status = types['initialStatus']
                 description = types['description']
-                description_wiki = types.get("descriptionWiki"," ")
+                description_wiki = types.get("descriptionWiki", " ")
                 attribute_defs = types.get("attributeDefinitions")
                 if attribute_defs:
                     for attr in attribute_defs:
@@ -95,18 +99,18 @@ def display_list(type_name:str, server: str, url: str ,
                         attr_status = attr['attributeStatus']
                         attr_type = attr['attributeType']["name"]
                         table.add_row(
-                             status, name, description, attr_name, attr_status, attr_type, attr_desc,
+                            status, name, description, attr_name, attr_status, attr_type, attr_desc,
                             description_wiki
                         )
                 else:
-                    table.add_row(status,name,description,description_wiki," ", " ", " "," " )
+                    table.add_row(status, name, description, description_wiki, " ", " ", " ", " ")
 
         p_client.close_session()
         return table
 
     try:
 
-        console = Console(record=True)
+        console = Console(width=width, force_terminal=not jupyter, record=True)
         with console.pager(styles=True):
             console.print(generate_table(type_name))
         if save_output:
@@ -117,6 +121,7 @@ def display_list(type_name:str, server: str, url: str ,
             print(e)
         else:
             print_exception_response(e)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -135,7 +140,8 @@ def main():
     save_output = args.save_output if args.save_output is not None else False
     type_name = Prompt.ask("Enter the Type Name to retrieve:", default="AssetOwner")
 
-    display_list(type_name, server, url, userid, user_pass,save_output)
+    display_relationship_types(type_name, server, url, userid, user_pass, save_output)
+
 
 if __name__ == "__main__":
     main()

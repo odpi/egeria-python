@@ -198,7 +198,7 @@ class RuntimeManager(Client):
             }
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
     def get_platforms_by_type(self, filter: str = None, server:str = None, effective_time: str = None,
                               start_from: int = 0, page_size: int = max_paging_size ) -> str | list:
@@ -293,7 +293,7 @@ class RuntimeManager(Client):
             }
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
 
     def get_platform_templates_by_type(self, filter: str = None, server:str = None, effective_time: str = None,
@@ -438,7 +438,7 @@ class RuntimeManager(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
     def get_platform_by_guid(self, platform_guid: str = None, server: str = None,
                                 effective_time: str = None) -> str | list:
@@ -506,7 +506,7 @@ class RuntimeManager(Client):
         if server is None:
            server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/{server_guid}")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/{server_guid}")
 
         if effective_time is not None:
             body = {
@@ -517,7 +517,7 @@ class RuntimeManager(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get('elementList','No server found')
+        return response.json().get('elements','No server found')
 
     def get_server_by_guid(self, server_guid: str, server: str = None,
                                 effective_time: str = None) -> str | dict:
@@ -585,7 +585,7 @@ class RuntimeManager(Client):
         if server is None:
            server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/by-name?"
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/by-name?"
                f"startFrom={start_from}&pageSize={page_size}")
 
         if effective_time is None:
@@ -599,7 +599,7 @@ class RuntimeManager(Client):
             }
         response = await self._async_make_request("POST", url, body)
 
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
     def get_servers_by_name(self, filter: str, server: str = None) -> str | list:
         """ Returns the list of servers with a particular name.  The name is specified in the filter.
@@ -678,14 +678,14 @@ class RuntimeManager(Client):
         if filter == '*':
             filter = None
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/"
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/"
                f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}")
 
         body = body_slimmer({ "filter": filter, "effective_time": effective_time})
 
         response = await self._async_make_request("POST", url, body)
 
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
     def get_servers_by_dep_impl_type(self, filter: str = "*", server:str = None, effective_time: str = None,
                                      start_from: int = 0, page_size: int = max_paging_size ) -> str | list:
@@ -768,14 +768,14 @@ class RuntimeManager(Client):
         if filter == '*':
             filter = None
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/"
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/"
                f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true")
 
         body = body_slimmer({ "filter": filter, "effective_time": effective_time})
 
         response = await self._async_make_request("POST", url, body)
 
-        return response.json().get('elementList','No platforms found')
+        return response.json().get('elements','No platforms found')
 
     def get_server_templates_by_dep_impl_type(self, filter: str = "*", server:str = None, effective_time: str = None,
                                      start_from: int = 0, page_size: int = max_paging_size ) -> str | list:
@@ -854,7 +854,7 @@ class RuntimeManager(Client):
         if server is None:
            server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/{server_guid}")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/{server_guid}")
 
         if effective_time is not None:
             body = {
@@ -929,11 +929,11 @@ class RuntimeManager(Client):
         if server is None:
             server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/servers/{server_guid}/report")
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/runtime-manager/software-servers/{server_guid}/report")
 
         response = await self._async_make_request("GET", url)
 
-        return response.json().get('elementList', 'No server found')
+        return response.json().get('elements', 'No server found')
 
 
     def get_server_report(self, server_guid: str = None, server: str = None) -> str | list:

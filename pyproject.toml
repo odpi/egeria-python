@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.5.8.10"
+version = "0.6.1"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -17,9 +17,9 @@ classifiers = [
 packages = [
     { include = "pyegeria"},
     { include = "examples/widgets/catalog_user" },
-    { include = "examples/widgets/developer" },
+    { include = "examples/widgets/tech" },
     { include = "examples/widgets/operational"},
-    { include = "examples/widgets/personal_organizer"},
+    { include = "examples/widgets/personal"},
     { include = "examples/doc_samples"},
     { include = "examples/widgets/cli"}
     ]
@@ -51,16 +51,19 @@ pytest = "^8.2.2"
 
 [tool.poetry.scripts]
     list_assets = "examples.widgets.catalog_user.list_assets:main"
+    list_tech_types = "examples.widgets.catalog_user.list_tech_types:main"
     get_asset_graph = "examples.widgets.catalog_user.get_asset_graph:main"
     get_collection = "examples.widgets.catalog_user.get_collection:main"
     list_glossary = "examples.widgets.catalog_user.list_glossary:main"
+    get_tech_type_elements = "examples.widgets.catalog_user.get_tech_type_elements:main"
+    get_tech_type_template = "examples.widgets.catalog_user.get_tech_type_template:main"
+    list_projects = "examples.widgets.catalog_user.list_projects:main"
+    list_todos = "examples.widgets.catalog_user.list_todos:main"
 
-    get_tech_type_elements = "examples.widgets.operational.get_tech_type_elements:main"
-    get_tech_type_template = "examples.widgets.operational.get_tech_type_template:main"
     monitor_asset_events = "examples.widgets.operational.monitor_asset_events:main"
     monitor_coco_status = "examples.widgets.operational.monitor_coco_status:main"
-    monitor_eng_action_status = "examples.widgets.operational.monitor_eng_action_status:main_live"
-    list_eng_action_status = "examples.widgets.operational.monitor_eng_action_status:main_paging "
+    monitor_engine_activity = "examples.widgets.operational.monitor_engine_activity:main_live"
+    list_engine_activity = "examples.widgets.operational.monitor_engine_activity:main_paging "
     monitor_gov_eng_status = "examples.widgets.operational.monitor_gov_eng_status:main_live"
     list_gov_eng_status = "examples.widgets.operational.monitor_gov_eng_status:main_paging"
     monitor_integ_daemon_status = "examples.widgets.operational.monitor_integ_daemon_status:main_live"
@@ -74,20 +77,24 @@ pytest = "^8.2.2"
     load_archive_tui = "examples.widgets.operational.load_archive:tui"
     list_catalog_targets = "examples.widgets.operational.list_catalog_targets:main"
 
-    list_my_profile = "examples.widgets.personal_organizer.list_my_profile:main"
-    list_projects = "examples.widgets.personal_organizer.list_projects:main"
-    list_todos = "examples.widgets.personal_organizer.list_todos:main"
-    monitor_open_todos = "examples.widgets.personal_organizer.monitor_open_todos:main"
-    monitor_my_todos = "examples.widgets.personal_organizer.monitor_my_todos:main"
+    list_my_profile = "examples.widgets.personal.list_my_profile:main"
+    monitor_open_todos = "examples.widgets.personal.monitor_open_todos:main"
+    monitor_my_todos = "examples.widgets.personal.monitor_my_todos:main"
 
     egeria_ops = "examples.widgets.cli.egeria_ops:cli"
-    egeria_ops_tui = "examples.widgets.cli.egeria_ops:tui"
+#    egeria_ops_menu = "examples.widgets.cli.egeria_ops:menu"
+    egeria_cat = "examples.widgets.cli.egeria_cat:cli"
+#    egeria_cat_menu = "examples.widgets.cli.egeria_cat:menu"
+    egeria_tech = "examples.widgets.cli.egeria_cat:cli"
+#    egeria_tech_menu = "examples.widgets.cli.egeria_cat:menu"
+    egeria_per = "examples.widgets.cli.egeria_per:cli"
+    egeria = "examples.widgets.cli.egeria:cli"
 
-    get_guid_info = "examples.widgets.developer.get_guid_info:main"
-    get_tech_details = "examples.widgets.developer.get_tech_details:main"
-    list_asset_types = "examples.widgets.developer.list_asset_types:main"
-    list_registered_services = "examples.widgets.developer.list_registered_services:main"
-    list_relationship_types = "examples.widgets.developer.list_relationship_types:main"
-    list_tech_templates = "examples.widgets.developer.list_tech_templates:main"
-    list_tech_types = "examples.widgets.developer.list_tech_types:main"
-    list_valid_metadata_values = "examples.widgets.developer.list_valid_metadata_values:main"
+    get_guid_info = "examples.widgets.tech.get_guid_info:main"
+    get_tech_details = "examples.widgets.tech.get_tech_details:main"
+    list_asset_types = "examples.widgets.tech.list_asset_types:main"
+    list_registered_services = "examples.widgets.tech.list_registered_services:main"
+    list_relationship_types = "examples.widgets.tech.list_relationship_types:main"
+    list_tech_templates = "examples.widgets.tech.list_tech_templates:main"
+
+    list_valid_metadata_values = "examples.widgets.tech.list_valid_metadata_values:main"

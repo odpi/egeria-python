@@ -51,7 +51,7 @@ class TestAutomatedCuration:
 
     def test_get_platforms_by_name(self):
         try:
-            r_client = RuntimeManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+            r_client = RuntimeManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = r_client.create_egeria_bearer_token()
 
@@ -73,7 +73,7 @@ class TestAutomatedCuration:
 
     def test_get_platforms_by_type(self):
         try:
-            r_client = RuntimeManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+            r_client = RuntimeManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
                                          user_pwd="secret")
             token = r_client.create_egeria_bearer_token()
 

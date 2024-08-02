@@ -42,7 +42,7 @@ EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 disable_ssl_warnings = True
 
 
-def display_todos(server: str, url: str, user: str, user_pass:str,
+def display_my_todos(server: str, url: str, user: str, user_pass:str,
                   jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
     console = Console(width=width, force_terminal=not jupyter)
@@ -72,10 +72,10 @@ def display_todos(server: str, url: str, user: str, user_pass:str,
                 name = props["name"]
                 todo_type_name = props.get("toDoType", " ")
                 todo_guid = item["elementHeader"].get("guid", "---")
-                created = props.get("creationTime", " ")
-                priority = str(props.get("priority", " "))
+                created = props.get("creationTime", "---")
+                priority = str(props.get("priority", "---"))
                 due = props.get("dueTime", " ")
-                completed = props.get("completionTime", " ")
+                completed = props.get("completionTime", "---")
                 status = props.get("status")
 
                 for actor in item["assignedActors"]:
@@ -162,7 +162,7 @@ def main():
 
     try:
         print(f"Starting display_todos with {server}, {url}, {userid}")
-        display_todos(server=server, url=url, user=userid, user_pass=user_pass)
+        display_my_todos(server=server, url=url, user=userid, user_pass=user_pass)
     except KeyboardInterrupt:
         pass
 

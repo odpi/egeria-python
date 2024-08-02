@@ -31,9 +31,11 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-
-def collection_viewer(root: str, server_name: str, platform_url: str, user: str, user_password: str):
+def collection_viewer(root: str, server_name: str, platform_url: str, user: str, user_password: str,
+                      jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
     """ A simple collection viewer"""
     def walk_collection_hierarchy(collection_client: CollectionManager, root_collection_name: str, tree: Tree) -> None:
         """Recursively build a Tree with collection contents."""

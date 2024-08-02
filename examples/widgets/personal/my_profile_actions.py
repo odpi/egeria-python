@@ -22,7 +22,7 @@ from pyegeria._exceptions import (
 )
 
 
-@click.command('add-target')
+@click.command('add-todo')
 @click.argument('integration-connector')
 @click.argument('metadata-element-guid')
 @click.argument('catalog-target-name')

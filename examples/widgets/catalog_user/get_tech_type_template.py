@@ -33,13 +33,17 @@ EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
 EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
+EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+
 
 disable_ssl_warnings = True
 console = Console(width=200)
 
 guid_list = []
 
-def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, user_pass:str):
+def template_viewer(tech_name: str, server_name:str, platform_url:str, user:str, user_pass:str,
+                jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
 
     def build_classifications(classification: dict) -> Markdown:
 
@@ -62,7 +66,7 @@ def tech_viewer(tech_name: str, server_name:str, platform_url:str, user:str, use
 
     try:
 
-        console = Console()
+        console = Console(width=width, force_terminal=not jupyter)
 
         a_client = AutomatedCuration(server_name, platform_url,
                                      user_id=user)
@@ -137,7 +141,7 @@ def main():
 
     try:
         tech_name = Prompt.ask("Enter the Asset Name to view:", default="Apache Kafka Server")
-        tech_viewer(tech_name,server, url, userid, user_pass)
+        template_viewer(tech_name,server, url, userid, user_pass)
     except(KeyboardInterrupt):
         pass
 

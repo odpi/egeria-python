@@ -32,16 +32,18 @@ EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
-@tui()
-@click.command()
-@click.option('--file', prompt= "Path to the archive file to load", help='Full path to the archive file to load')
+
+@click.command('load-archive')
+@click.option('--file', prompt= "Path on the Metadata Server of the archive file to load",
+              default='content-packs/CocoComboArchive.omarchive',
+              help='Full path on the Metadata Server to the archive file to load')
 @click.option('--server', default = EGERIA_METADATA_STORE, help='Egeria metadata store to load')
 @click.option('--url', default = EGERIA_PLATFORM_URL, help='URL of Egeria platform to connect to')
 @click.option('--userid', default = EGERIA_ADMIN_USER, help='Egeria admin user')
 @click.option('--password', default = EGERIA_ADMIN_PASSWORD, help='Egeria admin password')
 @click.option('--timeout', default = 60, help = 'Number of seconds to wait')
-
 def load_archive(file, server, url, userid, password, timeout):
+    """Load an Open Metadata Archive"""
 
     try:
 

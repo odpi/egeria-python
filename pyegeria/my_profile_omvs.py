@@ -156,7 +156,7 @@ class MyProfile(Client):
 
         response = await self._async_make_request("POST", url, body)
 
-        return response.json().get("toDoElements", "No entries found")
+        return response.json().get("elements", "No entries found")
 
     def get_assigned_actions(self, actor_guid: str, status: str = "OPEN", server_name: str = None, start_from: int = 0,
                              page_size: int = 100) -> list | str:
@@ -472,7 +472,7 @@ class MyProfile(Client):
 
         response = await self._async_make_request("GET", url)
         # return response.text if response is not None else "No Results"
-        return json.loads(response.text).get("toDoElement", "No TODO returned")
+        return json.loads(response.text).get("elements", "No TODO returned")
 
     def get_to_do(self, todo_guid: str, server_name: str = None) -> dict | str:
         """ Get a To-Do item. Async version.
@@ -773,7 +773,7 @@ class MyProfile(Client):
 
         response = await self._async_make_request("POST", url, body)
         # return response.text
-        return response.json().get("toDoElements", "No ToDos found")
+        return response.json().get("elements", "No ToDos found")
 
     def find_to_do(self, search_string: str, server_name: str = None, status: str = "OPEN",
                    starts_with: bool = False, ends_with: bool = False, ignore_case: bool = True,
@@ -861,7 +861,7 @@ class MyProfile(Client):
                f"{todo_type}?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("toDoElements","No ToDos found")
+        return response.json().get("elements","No ToDos found")
 
     def get_to_dos_by_type(self, todo_type: str,  server_name: str = None, status: str = "OPEN",
                            start_from: int = 0, page_size: int = 100) -> list | str:

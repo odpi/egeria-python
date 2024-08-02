@@ -54,16 +54,15 @@ def display_catalog_targets(connector: str, server: str, url: str, username: str
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Catalog Targets for '{server}' @ Platform - {url}",
-            expand=True,
-            # width = 200
+            expand=True
         )
-        table.add_column("Name of Target", max_width=15)
-        table.add_column("Catalog Target Name", max_width=15)
-        table.add_column('Metadata Source Qualified Name')
-        table.add_column("Relationship GUID", no_wrap=True)
+        table.add_column("Name of Target")
+        table.add_column("Catalog Target")
+
+        # table.add_column("Relationship GUID", no_wrap=True)
         table.add_column('Configuration Properties')
         table.add_column('Template Properties')
-        table.add_column("Operational Instructions", max_width=15)
+        table.add_column("Operational Instructions", max_width=20)
         # table.add_column("Delete Method")
 
         if type(cat_targets) is list:
@@ -78,12 +77,17 @@ def display_catalog_targets(connector: str, server: str, url: str, username: str
                 # target_guid = target['catalogTargetElement']['guid']
                 connector_unique = target['catalogTargetElement']['uniqueName']
 
+                cat_target_out = Markdown(f"* Target Name: {target_name}\n* Target Source: {target_source}\n"
+                                          f"* Relationship Guid: {target_rel}")
+
                 config_props = target.get('configurationProperties', '---')
                 if type(config_props) is dict:
                     config_props_md = ''
                     for prop in config_props:
                         config_props_md += f"* {prop}: {config_props[prop]}\n"
                     config_props_out = Markdown(config_props_md)
+                else:
+                    config_props_out = '---'
 
                 template_props = target.get('templateProperties', '---')
                 if type(template_props) is dict:
@@ -91,9 +95,11 @@ def display_catalog_targets(connector: str, server: str, url: str, username: str
                     for prop in template_props:
                         template_props_md += f"* {prop}: {template_props[prop]}\n"
                     template_props_out = Markdown(template_props_md)
+                else:
+                    template_props_out = '---'
 
                 table.add_row(
-                    connector_unique, target_name, target_source, target_rel,
+                    connector_unique, cat_target_out,
                     config_props_out, template_props_out, op_instruct_out)
 
         return table
@@ -106,14 +112,15 @@ def display_catalog_targets(connector: str, server: str, url: str, username: str
 
         connector_guid = INTEGRATION_GUIDS[connector]
         cat_targets = a_client.get_catalog_targets(connector_guid)
-        console = Console(force_terminal=not jupyter, width=width)
+        console = Console(force_terminal=not jupyter, width=width, soft_wrap=True)
         with console.pager(styles=True):
-            console.print(generate_table())
+            console.print(generate_table(), soft_wrap=True)
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-    except Exception:
+    except Exception as e:
         print(f"\n\n===> Perhaps integration connector {connector} is not known?\n\n")
+        console.print_exception()
     finally:
         a_client.close_session()
 
@@ -130,7 +137,7 @@ def main():
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     jupyter = args.jupyter if args.jupyter is not None else EGERIA_JUPYTER
@@ -138,7 +145,7 @@ def main():
 
     try:
         connector = Prompt.ask("Enter the Integration Connector to list catalog targets for")
-        display_catalog_targets(connector, server, url, userid, user_pass, jupyter)
+        display_catalog_targets(connector, server, url, userid, user_pass, jupyter, width=width)
 
     except KeyboardInterrupt:
         pass

@@ -91,7 +91,7 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name:str):
 @click.command('stop')
 @click.pass_context
 def stop_server(ctx):
-    """Stop the integration daemon"""
+    """Stop an integration daemon"""
     try:
         c = ctx.obj
         p_client = Platform(c.integration_daemon, c.integration_daemon_url, c.userid, c.password)
@@ -106,7 +106,7 @@ def stop_server(ctx):
 @click.command('start')
 @click.pass_context
 def start_server(ctx):
-    """Start the integration daemon from its known configuration """
+    """Start or restart an integration daemon from its known configuration """
     try:
         c = ctx.obj
         p_client = Platform(c.integration_daemon, c.integration_daemon_url, c.userid, c.password)
