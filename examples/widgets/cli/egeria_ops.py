@@ -14,20 +14,20 @@ from trogon import tui
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
-from examples.widgets.operational.engine_actions import start_server as start_engine_host, \
+from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
     stop_server as stop_engine_host
-from examples.widgets.operational.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
-                                                                     update_catalog_target, stop_server, start_server)
-from examples.widgets.operational.list_catalog_targets import display_catalog_targets
-from examples.widgets.operational.load_archive import load_archive
-from examples.widgets.operational.monitor_engine_activity import display_engine_activity
-from examples.widgets.operational.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.operational.monitor_integ_daemon_status import display_integration_daemon_status
-from examples.widgets.operational.monitor_platform_status import display_status as p_display_status
-from examples.widgets.operational.monitor_server_list import display_status as display_list
-from examples.widgets.operational.monitor_server_status import display_status as s_display_status
-from examples.widgets.operational.refresh_integration_daemon import refresh_connector
-from examples.widgets.operational.restart_integration_daemon import restart_connector
+from examples.widgets.ops.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
+                                                             update_catalog_target, stop_server, start_server)
+from examples.widgets.ops.list_catalog_targets import display_catalog_targets
+from examples.widgets.ops.load_archive import load_archive
+from examples.widgets.ops.monitor_engine_activity import display_engine_activity
+from examples.widgets.ops.monitor_gov_eng_status import display_gov_eng_status
+from examples.widgets.ops.monitor_integ_daemon_status import display_integration_daemon_status
+from examples.widgets.ops.monitor_platform_status import display_status as p_display_status
+from examples.widgets.ops.monitor_server_list import display_status as display_list
+from examples.widgets.ops.monitor_server_status import display_status as s_display_status
+from examples.widgets.ops.refresh_integration_daemon import refresh_connector
+from examples.widgets.ops.restart_integration_daemon import restart_connector
 
 
 # class Config(object):

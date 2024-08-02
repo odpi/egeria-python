@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.6.2"
+version = "0.6.3"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -16,10 +16,10 @@ classifiers = [
  ]
 packages = [
     { include = "pyegeria"},
-    { include = "examples/widgets/catalog_user" },
+    { include = "examples/widgets/cat" },
     { include = "examples/widgets/tech" },
-    { include = "examples/widgets/operational"},
-    { include = "examples/widgets/personal"},
+    { include = "examples/widgets/ops"},
+    { include = "examples/widgets/my"},
     { include = "examples/doc_samples"},
     { include = "examples/widgets/cli"}
     ]
@@ -50,36 +50,36 @@ pytest = "^8.2.2"
 
 
 [tool.poetry.scripts]
-    list_assets = "examples.widgets.catalog_user.list_assets:main"
-    list_tech_types = "examples.widgets.catalog_user.list_tech_types:main"
-    get_asset_graph = "examples.widgets.catalog_user.get_asset_graph:main"
-    get_collection = "examples.widgets.catalog_user.get_collection:main"
-    list_glossary = "examples.widgets.catalog_user.list_glossary:main"
-    get_tech_type_elements = "examples.widgets.catalog_user.get_tech_type_elements:main"
-    get_tech_type_template = "examples.widgets.catalog_user.get_tech_type_template:main"
-    list_projects = "examples.widgets.catalog_user.list_projects:main"
-    list_todos = "examples.widgets.catalog_user.list_todos:main"
+    list_assets = "examples.widgets.cat.list_assets:main"
+    list_tech_types = "examples.widgets.cat.list_tech_types:main"
+    get_asset_graph = "examples.widgets.cat.get_asset_graph:main"
+    get_collection = "examples.widgets.cat.get_collection:main"
+    list_glossary = "examples.widgets.cat.list_glossary:main"
+    get_tech_type_elements = "examples.widgets.cat.get_tech_type_elements:main"
+    get_tech_type_template = "examples.widgets.cat.get_tech_type_template:main"
+    list_projects = "examples.widgets.cat.list_projects:main"
+    list_todos = "examples.widgets.cat.list_todos:main"
 
-    monitor_asset_events = "examples.widgets.operational.monitor_asset_events:main"
-    monitor_coco_status = "examples.widgets.operational.monitor_coco_status:main"
-    monitor_engine_activity = "examples.widgets.operational.monitor_engine_activity:main_live"
-    list_engine_activity = "examples.widgets.operational.monitor_engine_activity:main_paging "
-    monitor_gov_eng_status = "examples.widgets.operational.monitor_gov_eng_status:main_live"
-    list_gov_eng_status = "examples.widgets.operational.monitor_gov_eng_status:main_paging"
-    monitor_integ_daemon_status = "examples.widgets.operational.monitor_integ_daemon_status:main_live"
-    list_integ_daemon_status = "examples.widgets.operational.monitor_integ_daemon_status:main_paging"
-    monitor_platform_status = "examples.widgets.operational.monitor_platform_status:main"
-    monitor_server_list = "examples.widgets.operational.monitor_server_list:main"
-    monitor_server_status = "examples.widgets.operational.monitor_server_status:main"
-    refresh_integration_daemon = "examples.widgets.operational.refresh_integration_daemon:main"
-    restart_integration_daemon = "examples.widgets.operational.restart_integration_daemon:main"
-    load_archive = "examples.widgets.operational.load_archive:load_archive"
-    load_archive_tui = "examples.widgets.operational.load_archive:tui"
-    list_catalog_targets = "examples.widgets.operational.list_catalog_targets:main"
+    monitor_asset_events = "examples.widgets.ops.monitor_asset_events:main"
+    monitor_coco_status = "examples.widgets.ops.monitor_coco_status:main"
+    monitor_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_live"
+    list_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_paging "
+    monitor_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_live"
+    list_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_paging"
+    monitor_integ_daemon_status = "examples.widgets.ops.monitor_integ_daemon_status:main_live"
+    list_integ_daemon_status = "examples.widgets.ops.monitor_integ_daemon_status:main_paging"
+    monitor_platform_status = "examples.widgets.ops.monitor_platform_status:main"
+    monitor_server_list = "examples.widgets.ops.monitor_server_list:main"
+    monitor_server_status = "examples.widgets.ops.monitor_server_status:main"
+    refresh_integration_daemon = "examples.widgets.ops.refresh_integration_daemon:main"
+    restart_integration_daemon = "examples.widgets.ops.restart_integration_daemon:main"
+    load_archive = "examples.widgets.ops.load_archive:load_archive"
+    load_archive_tui = "examples.widgets.ops.load_archive:tui"
+    list_catalog_targets = "examples.widgets.ops.list_catalog_targets:main"
 
-    list_my_profile = "examples.widgets.personal.list_my_profile:main"
-    monitor_open_todos = "examples.widgets.personal.monitor_open_todos:main"
-    monitor_my_todos = "examples.widgets.personal.monitor_my_todos:main"
+    list_my_profile = "examples.widgets.my.list_my_profile:main"
+    monitor_open_todos = "examples.widgets.my.monitor_open_todos:main"
+    monitor_my_todos = "examples.widgets.my.monitor_my_todos:main"
 
     egeria_ops = "examples.widgets.cli.egeria_ops:cli"
 #    egeria_ops_menu = "examples.widgets.cli.egeria_ops:menu"

@@ -6,20 +6,12 @@ module.
 
 """
 
-import json
-from datetime import datetime
 import asyncio
+import json
 
 # import json
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import enable_ssl_check
-from pyegeria._validators import (
-    validate_name,
-    validate_guid,
-    validate_url,
-    validate_search_string,
-)
-from pyegeria.utils import body_slimmer
 
 
 def jprint(info, comment=None):
@@ -119,14 +111,14 @@ class FeedbackManager(Client):
     """
 
     def __init__(
-        self,
-        server_name: str,
-        platform_url: str,
-        token: str = None,
-        user_id: str = None,
-        user_pwd: str = None,
-        verify_flag: bool = enable_ssl_check,
-        sync_mode: bool = True,
+            self,
+            server_name: str,
+            platform_url: str,
+            token: str = None,
+            user_id: str = None,
+            user_pwd: str = None,
+            verify_flag: bool = enable_ssl_check,
+            sync_mode: bool = True,
     ):
         self.admin_command_root: str
         Client.__init__(
@@ -134,19 +126,20 @@ class FeedbackManager(Client):
             server_name,
             platform_url,
             user_id=user_id,
+            user_pwd=user_pwd,
             token=token,
             async_mode=sync_mode,
         )
 
     async def _async_add_comment_reply(
-        self,
-        element_guid: str,
-        comment_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            comment_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds a reply to a comment.
@@ -191,19 +184,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/comments/{comment_guid}/replies{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments/{comment_guid}/replies{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def add_comment_reply(
-        self,
-        element_guid: str,
-        comment_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            comment_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds a reply to a comment.
@@ -263,13 +256,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_add_comment_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a comment and attaches it to an element.
@@ -312,19 +305,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/comments{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def add_comment_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a comment and attaches it to an element.
@@ -376,13 +369,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_add_like_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a "like" object and attaches it to an element.
@@ -426,19 +419,19 @@ class FeedbackManager(Client):
             ]
         )
 
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/likes{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def add_like_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a "like" object and attaches it to an element.
@@ -489,13 +482,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_add_rating_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds a star rating and optional review text to the element.
@@ -538,19 +531,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/ratings{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def add_rating_to_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds a star rating and optional review text to the element.
@@ -601,14 +594,14 @@ class FeedbackManager(Client):
     #
 
     async def _async_add_tag_to_element(
-        self,
-        element_guid: str,
-        tag_guid: str,
-        server_name: str = None,
-        is_public: bool = False,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            tag_guid: str,
+            server_name: str = None,
+            is_public: bool = False,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds an informal tag (either private of public) to an element.
@@ -651,19 +644,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/tags/{tag_guid}{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/{tag_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def add_tag_to_element(
-        self,
-        element_guid: str,
-        tag_guid: str,
-        server_name: str = None,
-        is_public: bool = False,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            tag_guid: str,
+            server_name: str = None,
+            is_public: bool = False,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Adds an informal tag (either private of public) to an element.
@@ -717,13 +710,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_clear_accepted_answer(
-        self,
-        question_comment_guid: str,
-        answer_comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Unlink a comment that contains an answer to a question posed in another comment.
@@ -765,18 +758,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def clear_accepted_answer(
-        self,
-        question_comment_guid: str,
-        answer_comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Unlink a comment that contains an answer to a question posed in another comment.
@@ -827,11 +820,11 @@ class FeedbackManager(Client):
     #
 
     async def _async_create_informal_tag(
-        self,
-        body: dict,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            body: dict,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new informal tag and returns the unique identifier for it.
@@ -881,17 +874,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def create_informal_tag(
-        self,
-        body: dict,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            body: dict,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new informal tag and returns the unique identifier for it.
@@ -943,12 +936,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_create_note(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
@@ -989,17 +982,17 @@ class FeedbackManager(Client):
             ]
         )
 
-        url = f"{base_path(self,server_name)}/note-logs/{note_log_guid}/notes{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/notes{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def create_note(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
@@ -1047,13 +1040,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_create_note_log(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new noteLog and returns the unique identifier for it.
@@ -1096,18 +1089,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/note-logs{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/note-logs{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def create_note_log(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Creates a new noteLog and returns the unique identifier for it.
@@ -1158,12 +1151,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_delete_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes an informal tag from the repository.
@@ -1229,12 +1222,12 @@ class FeedbackManager(Client):
         return response.json()
 
     def delete_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes an informal tag from the repository.
@@ -1302,17 +1295,17 @@ class FeedbackManager(Client):
     #
 
     async def _async_find_my_tags(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of the calling user's private tags containing the supplied string in either the name or description. The search string is a regular expression (RegEx).
@@ -1366,22 +1359,22 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags/by-search-string{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def find_my_tags(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of the calling user's private tags containing the supplied string in either the name or description. The search string is a regular expression (RegEx).
@@ -1443,17 +1436,17 @@ class FeedbackManager(Client):
     #
 
     async def _async_find_note_logs(
-        self,
-        body: dict,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements that contain the search string.
@@ -1506,22 +1499,22 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/by-search-string{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_note_logs(
-        self,
-        body: dict,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements that contain the search string.
@@ -1582,17 +1575,17 @@ class FeedbackManager(Client):
     #
 
     async def _async_find_notes(
-        self,
-        body: dict,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note metadata elements that contain the search string.
@@ -1645,22 +1638,22 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/notes/by-search-string{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/notes/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_notes(
-        self,
-        body: dict,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note metadata elements that contain the search string.
@@ -1721,17 +1714,17 @@ class FeedbackManager(Client):
     #
 
     async def _async_find_tags(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        detailed_response: bool = False,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            detailed_response: bool = False,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Return the list of tags containing the supplied string in the text. The search string is a regular expression (RegEx).
@@ -1784,22 +1777,22 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags/by-search-string{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def find_tags(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of tags containing the supplied string in the text. The search string is a regular expression (RegEx).
@@ -1860,17 +1853,17 @@ class FeedbackManager(Client):
     #
 
     async def _async_find_comments(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string.
@@ -1923,22 +1916,22 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/by-search-string{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_comments(
-        self,
-        body: str,
-        server_name: str = None,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string.
@@ -1999,15 +1992,15 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_attached_comments(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the comments attached to an element.
@@ -2053,20 +2046,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/comments/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_comments(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the comments attached to an element.
@@ -2121,13 +2114,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_comment(
-        self,
-        comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the requested comment.
@@ -2167,18 +2160,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/{comment_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/{comment_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_comment(
-        self,
-        comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the requested comment.
@@ -2226,15 +2219,15 @@ class FeedbackManager(Client):
     ## get_attached_likes implementation
     #
     async def _async_get_attached_likes(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the likes attached to an element
@@ -2281,20 +2274,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_likes(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the likes attached to an element
@@ -2350,15 +2343,15 @@ class FeedbackManager(Client):
     ## get_attached_ratings implementation
     #
     async def _async_get_attached_ratings(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the ratings attached to an element.
@@ -2404,20 +2397,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/ratings/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_ratings(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the ratings attached to an element.
@@ -2471,15 +2464,15 @@ class FeedbackManager(Client):
     ## get_attached_tags implementation
     #
     async def _async_get_attached_tags(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the informal tags attached to an element.
@@ -2525,20 +2518,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def get_attached_tags(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the informal tags attached to an element.
@@ -2593,15 +2586,15 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_elements_by_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
@@ -2647,20 +2640,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/by-tag/{tag_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/by-tag/{tag_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return related_elements_response(response.json(), detailed_response)
 
     def get_elements_by_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
@@ -2715,13 +2708,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_note_by_guid(
-        self,
-        note_guid: str,
-        server_name: str = None,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_guid: str,
+            server_name: str = None,
+            body: str = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
@@ -2759,18 +2752,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/notes/{note_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/notes/{note_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_note_by_guid(
-        self,
-        note_guid: str,
-        server_name: str = None,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_guid: str,
+            server_name: str = None,
+            body: str = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
@@ -2817,13 +2810,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_note_log_by_guid(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: str = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the note log metadata element with the supplied unique identifier.
@@ -2863,18 +2856,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/{note_log_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_note_log_by_guid(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: str = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the note log metadata element with the supplied unique identifier.
@@ -2923,14 +2916,14 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_note_logs_by_name(
-        self,
-        body: dict,
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements with a matching qualified or display name.
@@ -2976,19 +2969,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/by-name{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/by-name{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_note_logs_by_name(
-        self,
-        body: dict,
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: dict,
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements with a matching qualified or display name.
@@ -3042,15 +3035,15 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_note_logs_for_element(
-        self,
-        element_guid: str,
-        body: dict = {},
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            body: dict = {},
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements attached to the element.
@@ -3096,20 +3089,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/note-logs/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/note-logs/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_note_logs_for_element(
-        self,
-        element_guid: str,
-        body: dict = {},
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            element_guid: str,
+            body: dict = {},
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of note log metadata elements attached to the element.
@@ -3164,15 +3157,15 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_notes_for_note_log(
-        self,
-        note_log_guid: str,
-        body: dict = {},
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_log_guid: str,
+            body: dict = {},
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of notes associated with a note log.
@@ -3218,20 +3211,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/{note_log_guid}/notes/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/notes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_notes_for_note_log(
-        self,
-        note_log_guid: str,
-        body: dict = {},
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            note_log_guid: str,
+            body: dict = {},
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Retrieve the list of notes associated with a note log.
@@ -3286,12 +3279,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the informal tag for the supplied unique identifier (tagGUID).
@@ -3332,18 +3325,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags/{tag_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags/{tag_guid}/retrieve{possible_query_params}"
 
         response = await self._async_make_request("POST", url, {})
         return element_response(response.json(), "tag", detailed_response)
 
     def get_tag(
-        self,
-        tag_guid: str,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            tag_guid: str,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the informal tag for the supplied unique identifier (tagGUID).
@@ -3391,14 +3384,14 @@ class FeedbackManager(Client):
     #
 
     async def _async_get_tags_by_name(
-        self,
-        body: str,
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name.
@@ -3442,20 +3435,20 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags/by-name{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags/by-name{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def get_tags_by_name(
-        self,
-        body: str,
-        server_name: str = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
+            self,
+            body: str,
+            server_name: str = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
+            detailed_response: bool = False,
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name.
@@ -3507,12 +3500,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_comment_from_element(
-        self,
-        comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a comment added to the element by this user.
@@ -3554,17 +3547,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/{comment_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/{comment_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_comment_from_element(
-        self,
-        comment_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            comment_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a comment added to the element by this user.
@@ -3614,12 +3607,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_like_from_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a "Like" added to the element by this user.
@@ -3659,17 +3652,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/likes/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_like_from_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a "Like" added to the element by this user.
@@ -3717,12 +3710,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_note(
-        self,
-        note_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a note from the repository.
@@ -3765,17 +3758,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/notes/{note_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/notes/{note_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_note(
-        self,
-        note_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a note from the repository.
@@ -3826,12 +3819,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_note_log(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a note log from the repository.
@@ -3873,17 +3866,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/{note_log_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_note_log(
-        self,
-        note_log_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a note log from the repository.
@@ -3933,12 +3926,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_rating_from_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes of a star rating/review that was added to the element by this user.
@@ -3978,17 +3971,17 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/ratings/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_rating_from_element(
-        self,
-        element_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes of a star rating/review that was added to the element by this user.
@@ -4036,13 +4029,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_remove_tag_from_element(
-        self,
-        element_guid: str,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a link between a tag and an element that was added by this user.
@@ -4085,18 +4078,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/elements/{element_guid}/tags/{tag_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/{tag_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_tag_from_element(
-        self,
-        element_guid: str,
-        tag_guid: str,
-        server_name: str = None,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            element_guid: str,
+            tag_guid: str,
+            server_name: str = None,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Removes a link between a tag and an element that was added by this user.
@@ -4148,14 +4141,14 @@ class FeedbackManager(Client):
     #
 
     async def _async_setup_accepted_answer(
-        self,
-        question_comment_guid: str,
-        answer_comment_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Link a comment that contains the best answer to a question posed in another comment.
@@ -4200,19 +4193,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def setup_accepted_answer(
-        self,
-        question_comment_guid: str,
-        answer_comment_guid: str,
-        server_name: str = None,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+            server_name: str = None,
+            is_public: bool = True,
+            body: dict = {},
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Link a comment that contains the best answer to a question posed in another comment.
@@ -4266,13 +4259,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_update_comment(
-        self,
-        comment_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            comment_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing comment.
@@ -4315,18 +4308,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/comments/{comment_guid}/update{possible_query_params}"
+        url = f"{base_path(self, server_name)}/comments/{comment_guid}/update{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def update_comment(
-        self,
-        comment_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            comment_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing comment.
@@ -4377,14 +4370,14 @@ class FeedbackManager(Client):
     #
 
     async def _async_update_comment_visibility(
-        self,
-        parent_guid: str,
-        comment_guid: str,
-        is_public: bool,
-        body: dict = {},
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            parent_guid: str,
+            comment_guid: str,
+            is_public: bool,
+            body: dict = {},
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing comment's visibility.
@@ -4427,19 +4420,19 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/parents/{parent_guid}/comments/{comment_guid}/update-visibility{possible_query_params}"
+        url = f"{base_path(self, server_name)}/parents/{parent_guid}/comments/{comment_guid}/update-visibility{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def update_comment_visibility(
-        self,
-        parent_guid: str,
-        comment_guid: str,
-        is_public: bool,
-        body: dict = {},
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            parent_guid: str,
+            comment_guid: str,
+            is_public: bool,
+            body: dict = {},
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing comment's visibility.
@@ -4491,13 +4484,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_update_note(
-        self,
-        note_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing note.
@@ -4540,18 +4533,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/notes/{note_guid}{possible_query_params}"
+        url = f"{base_path(self, server_name)}/notes/{note_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def update_note(
-        self,
-        note_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing note.
@@ -4602,13 +4595,13 @@ class FeedbackManager(Client):
     #
 
     async def _async_update_note_log(
-        self,
-        note_log_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing note log.
@@ -4651,18 +4644,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/note-logs/{note_log_guid}{possible_query_params}"
+        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def update_note_log(
-        self,
-        note_log_guid: str,
-        body: dict,
-        server_name: str = None,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            note_log_guid: str,
+            body: dict,
+            server_name: str = None,
+            is_merge_update: bool = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Update an existing note log.
@@ -4713,12 +4706,12 @@ class FeedbackManager(Client):
     #
 
     async def _async_update_tag_description(
-        self,
-        tag_guid: str,
-        body: str,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            tag_guid: str,
+            body: str,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Updates the description of an existing tag (either private or public).
@@ -4758,18 +4751,18 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self,server_name)}/tags/{tag_guid}/update{possible_query_params}"
+        url = f"{base_path(self, server_name)}/tags/{tag_guid}/update{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def update_tag_description(
-        self,
-        tag_guid: str,
-        body: str,
-        server_name: str = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+            self,
+            tag_guid: str,
+            body: str,
+            server_name: str = None,
+            view_service_url_marker: str = None,
+            access_service_url_marker: str = None,
     ) -> dict | str:
         """
         Updates the description of an existing tag (either private or public).

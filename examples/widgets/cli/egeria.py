@@ -12,34 +12,34 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.catalog_user.get_asset_graph import asset_viewer
-from examples.widgets.catalog_user.get_collection import collection_viewer
-from examples.widgets.catalog_user.get_tech_type_elements import tech_viewer
-from examples.widgets.catalog_user.get_tech_type_template import template_viewer
-from examples.widgets.catalog_user.list_assets import display_assets
-from examples.widgets.catalog_user.list_glossary import display_glossary_terms
-from examples.widgets.catalog_user.list_projects import display_project_list
-from examples.widgets.catalog_user.list_tech_types import display_tech_types
-from examples.widgets.catalog_user.list_todos import display_to_dos
+from examples.widgets.cat.get_asset_graph import asset_viewer
+from examples.widgets.cat.get_collection import collection_viewer
+from examples.widgets.cat.get_tech_type_elements import tech_viewer
+from examples.widgets.cat.get_tech_type_template import template_viewer
+from examples.widgets.cat.list_assets import display_assets
+from examples.widgets.cat.list_glossary import display_glossary_terms
+from examples.widgets.cat.list_projects import display_project_list
+from examples.widgets.cat.list_tech_types import display_tech_types
+from examples.widgets.cat.list_todos import display_to_dos
 from examples.widgets.cli.ops_config import Config
-from examples.widgets.operational.engine_actions import start_server as start_engine_host, \
+from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
     stop_server as stop_engine_host
-from examples.widgets.operational.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
-                                                                     update_catalog_target, stop_server, start_server)
-from examples.widgets.operational.list_catalog_targets import display_catalog_targets
-from examples.widgets.operational.load_archive import load_archive
-from examples.widgets.operational.monitor_engine_activity import display_engine_activity
-from examples.widgets.operational.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.operational.monitor_integ_daemon_status import display_integration_daemon_status
-from examples.widgets.operational.monitor_platform_status import display_status as p_display_status
-from examples.widgets.operational.monitor_server_list import display_status as display_list
-from examples.widgets.operational.monitor_server_status import display_status as s_display_status
-from examples.widgets.operational.refresh_integration_daemon import refresh_connector
-from examples.widgets.operational.restart_integration_daemon import restart_connector
-from examples.widgets.personal.list_my_profile import display_my_profile
-from examples.widgets.personal.list_my_roles import display_my_roles
-from examples.widgets.personal.monitor_my_todos import display_my_todos
-from examples.widgets.personal.monitor_open_todos import display_todos
+from examples.widgets.ops.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
+                                                             update_catalog_target, stop_server, start_server)
+from examples.widgets.ops.list_catalog_targets import display_catalog_targets
+from examples.widgets.ops.load_archive import load_archive
+from examples.widgets.ops.monitor_engine_activity import display_engine_activity
+from examples.widgets.ops.monitor_gov_eng_status import display_gov_eng_status
+from examples.widgets.ops.monitor_integ_daemon_status import display_integration_daemon_status
+from examples.widgets.ops.monitor_platform_status import display_status as p_display_status
+from examples.widgets.ops.monitor_server_list import display_status as display_list
+from examples.widgets.ops.monitor_server_status import display_status as s_display_status
+from examples.widgets.ops.refresh_integration_daemon import refresh_connector
+from examples.widgets.ops.restart_integration_daemon import restart_connector
+from examples.widgets.my.list_my_profile import display_my_profile
+from examples.widgets.my.list_my_roles import display_my_roles
+from examples.widgets.my.monitor_my_todos import display_my_todos
+from examples.widgets.my.monitor_open_todos import display_todos
 from examples.widgets.tech.get_guid_info import display_guid
 from examples.widgets.tech.get_tech_details import tech_details_viewer
 from examples.widgets.tech.list_asset_types import display_asset_types
@@ -97,16 +97,16 @@ def cli(ctx, server, url, view_server, view_server_url, integration_daemon, inte
 
 
 #
-#  Personal: Show
+#  my: Show
 #
-@cli.group('personal')
+@cli.group('my')
 @click.pass_context
-def personal(ctx):
+def my(ctx):
     "Work with my information"
     pass
 
 
-@personal.group("show")
+@my.group("show")
 @click.pass_context
 def show(ctx):
     """Display an Egeria Object"""
@@ -166,10 +166,10 @@ def show_open_todos(ctx):
 
 
 #
-#  Personal: Tell
+#  my: Tell
 #
 
-@personal.group('tell')
+@my.group('tell')
 @click.pass_context
 def tell(ctx):
     """Perform actions an Egeria Objects"""
@@ -318,14 +318,14 @@ def tell(ctx):
 #   Catalog User: Show
 #
 
-@cli.group('catalog_user')
+@cli.group('cat')
 @click.pass_context
-def catalog_user(ctx):
+def cat(ctx):
     """Commands for the more tech user"""
     pass
 
 
-@catalog_user.group("show")
+@cat.group("show")
 @click.pass_context
 def show(ctx):
     """Display an Egeria Object"""
@@ -442,7 +442,7 @@ def show_todos(ctx, search_string):
 #  Catalog User: Tell
 #
 
-@catalog_user.group('tell')
+@cat.group('tell')
 @click.pass_context
 def tell(ctx):
     """Perform actions an Egeria Objects"""

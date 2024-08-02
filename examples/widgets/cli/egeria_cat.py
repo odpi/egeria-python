@@ -12,15 +12,15 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.catalog_user.get_asset_graph import asset_viewer
-from examples.widgets.catalog_user.get_collection import collection_viewer
-from examples.widgets.catalog_user.get_tech_type_elements import tech_viewer
-from examples.widgets.catalog_user.get_tech_type_template import template_viewer
-from examples.widgets.catalog_user.list_assets import display_assets
-from examples.widgets.catalog_user.list_glossary import display_glossary_terms
-from examples.widgets.catalog_user.list_tech_types import display_tech_types
-from examples.widgets.catalog_user.list_projects import display_project_list
-from examples.widgets.catalog_user.list_todos import display_to_dos
+from examples.widgets.cat.get_asset_graph import asset_viewer
+from examples.widgets.cat.get_collection import collection_viewer
+from examples.widgets.cat.get_tech_type_elements import tech_viewer
+from examples.widgets.cat.get_tech_type_template import template_viewer
+from examples.widgets.cat.list_assets import display_assets
+from examples.widgets.cat.list_glossary import display_glossary_terms
+from examples.widgets.cat.list_tech_types import display_tech_types
+from examples.widgets.cat.list_projects import display_project_list
+from examples.widgets.cat.list_todos import display_to_dos
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
