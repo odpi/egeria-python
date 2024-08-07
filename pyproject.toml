@@ -36,6 +36,8 @@ pytest = "^8.2.2"
 jupyter = "^1.0.0"
 click = "^8.1.7"
 trogon = "^0.5.0"
+textual-forms = "^0.3.0"
+textual = "^0.75.1"
 
 
 [build-system]

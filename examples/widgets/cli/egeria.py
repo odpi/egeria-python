@@ -12,6 +12,8 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
+from examples.widgets.cat.get_project_structure import project_structure_viewer
+from examples.widgets.cat.list_cert_types import display_certifications
 from examples.widgets.cat.get_asset_graph import asset_viewer
 from examples.widgets.cat.get_collection import collection_viewer
 from examples.widgets.cat.get_tech_type_elements import tech_viewer
@@ -22,6 +24,7 @@ from examples.widgets.cat.list_projects import display_project_list
 from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cat.list_todos import display_to_dos
 from examples.widgets.cli.ops_config import Config
+
 from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
     stop_server as stop_engine_host
 from examples.widgets.ops.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
@@ -360,6 +363,29 @@ def show_tech_type_templates(ctx, tech_type):
     c = ctx.obj
     template_viewer(tech_type, c.view_server, c.view_server_url, c.userid,
                     c.password, c.jupyter, c.width)
+
+@show.command('certification-types')
+@click.option('--search-string', default = 'CertificationType', help="")
+@click.pass_context
+def show_certification_types(ctx, search_string):
+    """Show certification types
+        - generally stay with the default..
+    """
+    c = ctx.obj
+    display_certifications(search_string, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.timeout, c.jupyter, c.width)
+
+@show.command('project-structure')
+@click.option('--project', default = 'Clinical Trials Management',
+              help="Enter the root project to start from")
+@click.pass_context
+def show_project_structure(ctx, project):
+    """Show the structure of the project starting from a root project"""
+    c = ctx.obj
+    project_structure_viewer(project, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.jupyter, c.width, c.timeout)
+
+
 
 
 @show.command('assets')

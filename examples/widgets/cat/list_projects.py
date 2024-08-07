@@ -26,7 +26,7 @@ from pyegeria import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria import ProjectManager
+from pyegeria import ProjectManager, ClassificationManager
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
@@ -48,6 +48,7 @@ def display_project_list(project_name: str, server: str, url: str,
                          width: int = EGERIA_WIDTH):
     p_client = ProjectManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
+    c_client = ClassificationManager(server, url, token)
 
     def generate_table(project_name: str) -> Table:
         """Make a new table."""
@@ -60,7 +61,7 @@ def display_project_list(project_name: str, server: str, url: str,
             expand=True
         )
 
-        table.add_column("Display Name")
+        table.add_column("Project Name")
         table.add_column("Description")
 
         table.add_column("Classifications")
@@ -111,9 +112,25 @@ def display_project_list(project_name: str, server: str, url: str,
                 additional_properties = project.get('additionalProperties')
                 if additional_properties is not None:
                     props = json.dumps(additional_properties)
+
+                governed_by = c_client.get_related_elements(guid,'GovernedBy')
+                if type(governed_by) is list:
+                    for gov in governed_by:
+                        rel_guid = gov['relatedElement']['elementHeader']['guid']
+                        rel_title = gov['relatedElement']['properties'].get('title','---')
+                        certified_partner= f"{rel_title}: \n"
+                        certified = c_client.get_related_elements(rel_guid, "Certification")
+                        if type(certified) is list:
+                           for rel_elem in certified:
+                                p_name = rel_elem['relatedElement']['properties']['name']
+                                certified_partner += f"* {p_name}\n"
+                else:
+                    certified_partner = "---"
+
+
                 table.add_row(
                     name, description, classification, qualified_name, identifier, phase, health, status, start,
-                    end, '---')
+                    end, certified_partner)
 
         p_client.close_session()
         return table

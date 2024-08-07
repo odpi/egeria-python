@@ -13,6 +13,7 @@ is_debug = False
 disable_ssl_warnings = True
 enable_ssl_check = False
 max_paging_size = 500
+default_time_out = 30
 
 comment_types = (
     "ANSWER",

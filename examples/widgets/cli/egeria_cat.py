@@ -21,6 +21,8 @@ from examples.widgets.cat.list_glossary import display_glossary_terms
 from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cat.list_projects import display_project_list
 from examples.widgets.cat.list_todos import display_to_dos
+from examples.widgets.cat.get_project_structure import project_structure_viewer
+from examples.widgets.cat.list_cert_types import display_certifications
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
@@ -187,6 +189,28 @@ def show_projects(ctx, search_string):
     c = ctx.obj
     display_project_list(search_string, c.view_server, c.view_server_url, c.userid,
                       c.password, False,c.jupyter, c.width)
+
+@show.command('certification-types')
+@click.option('--search-string', default = 'CertificationType', help="")
+@click.pass_context
+def show_certification_types(ctx, search_string):
+    """Show certification types
+        - generally stay with the default..
+    """
+    c = ctx.obj
+    display_certifications(search_string, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.timeout, c.jupyter, c.width)
+
+@show.command('project-structure')
+@click.option('--project', default = 'Clinical Trials Management',
+              help="Enter the root project to start from")
+@click.pass_context
+def show_project_structure(ctx, project):
+    """Show the structure of the project starting from a root project"""
+    c = ctx.obj
+    project_structure_viewer(project, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.jupyter, c.width, c.timeout)
+
 
 
 @show.command('to-dos')

@@ -43,7 +43,8 @@ class MyProfile(Client):
             sync_mode: bool = True
     ):
 
-        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token, async_mode=sync_mode)
+        Client.__init__(self, server_name, platform_url, user_id=user_id, user_pwd=user_pwd,
+                        token=token, async_mode=sync_mode)
         self.my_profile_command_root: str = f"{platform_url}/servers"
 
     #
@@ -818,7 +819,7 @@ class MyProfile(Client):
                                                                   ends_with, ignore_case, start_from, page_size))
         return response
 
-    async def _async_get_to_dos_by_type(self, todo_type: str,  server_name: str = None, status: str = "OPEN",
+    async def _async_get_to_dos_by_type(self, todo_type: str, server_name: str = None, status: str = "OPEN",
                                         start_from: int = 0, page_size: int = 100) -> list | str:
         """ Get To-Do items by type. Async version
             Parameters
@@ -861,9 +862,9 @@ class MyProfile(Client):
                f"{todo_type}?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements","No ToDos found")
+        return response.json().get("elements", "No ToDos found")
 
-    def get_to_dos_by_type(self, todo_type: str,  server_name: str = None, status: str = "OPEN",
+    def get_to_dos_by_type(self, todo_type: str, server_name: str = None, status: str = "OPEN",
                            start_from: int = 0, page_size: int = 100) -> list | str:
         """ Get To-Do items by type.
             Parameters
@@ -894,7 +895,7 @@ class MyProfile(Client):
             The principle specified by the user_id does not have authorization for the requested action
             """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_to_dos_by_type(todo_type,  server_name, status,
+        response = loop.run_until_complete(self._async_get_to_dos_by_type(todo_type, server_name, status,
                                                                           start_from, page_size))
         return response
 

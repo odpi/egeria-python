@@ -11,8 +11,9 @@ the server platform and servers.
 
 """
 
-from ._globals import (is_debug, disable_ssl_warnings, max_paging_size, TEMPLATE_GUIDS, INTEGRATION_GUIDS
-                       )
+from ._globals import (is_debug, disable_ssl_warnings, max_paging_size, TEMPLATE_GUIDS, INTEGRATION_GUIDS,
+                       default_time_out
+                      )
 
 if disable_ssl_warnings:
     from urllib3.exceptions import InsecureRequestWarning
@@ -47,6 +48,7 @@ from .runtime_manager_omvs import RuntimeManager
 from .action_author_omvs import GovernanceAuthor
 from .glossary_manager_omvs import GlossaryManager
 from .create_tech_guid_lists import build_global_guid_lists
+from .classification_manager_omvs import ClassificationManager
 
 
 #

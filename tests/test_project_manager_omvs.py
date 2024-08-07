@@ -61,13 +61,14 @@ class TestProjectManager:
                                       user_id=self.good_user_2)
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "4fe24e34-490a-43f0-a0d4-fe45ac45c663"
+            parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7"
+            # parent_guid = "994283c2-deaf-42dc-adf9-ce87cdee0d1f"
 
             response = p_client.get_linked_projects(parent_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
+            if type(response) is list:
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")
@@ -131,7 +132,7 @@ class TestProjectManager:
                                       user_id=self.good_user_2)
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "ErinOverview"
+            search_string = "Sustainability"
 
             response = p_client.find_projects(search_string, None, True, ignore_case=True)
             duration = time.perf_counter() - start_time
@@ -161,7 +162,7 @@ class TestProjectManager:
                                       user_id=self.good_user_2)
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_name = "PersonalProject-FIRST_TEST-Mon Apr 22 07:12:17 2024"
+            project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
 
             response = p_client.get_projects_by_name(project_name)
             duration = time.perf_counter() - start_time
@@ -193,7 +194,7 @@ class TestProjectManager:
                                       user_id=self.good_user_2)
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_classification = "StudyProject"
+            project_classification = "Campaign"
 
             response = p_client.get_classified_projects(project_classification)
             duration = time.perf_counter() - start_time
@@ -263,11 +264,11 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "e53f75c3-c18e-4883-afa4-b25f2f190a3d"
+            parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7"
             parent_relationship_type_name = "ProjectHierarchy"
             parent_at_end1 = True
-            display_name = "First Child Project"
-            description = "A first sub-project"
+            display_name = "another Child Project"
+            description = "A sub-project"
             identifier = "Project 1a"
             is_own_anchor = False
             status = "Defined"
@@ -474,7 +475,7 @@ class TestProjectManager:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "be04abf9-9bd9-411a-b4a4-bbad682c5c35"
+            project_guid = "456cacde-a891-4e5a-bd3f-9fa0eeaa792c"
 
             response = p_client.get_project_team(project_guid)
             duration = time.perf_counter() - start_time
@@ -506,7 +507,7 @@ class TestProjectManager:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "be04abf9-9bd9-411a-b4a4-bbad682c5c35"
+            project_guid = "456cacde-a891-4e5a-bd3f-9fa0eeaa792c"
             actor_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
 
             p_client.add_to_project_team(project_guid, actor_guid)
