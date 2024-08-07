@@ -17,11 +17,6 @@ from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import enable_ssl_check, default_time_out
 
 
-def jprint(info, comment=None):
-    if comment:
-        print(comment)
-    print(json.dumps(info, indent=2))
-
 
 def query_seperator(current_string):
     if current_string == "":
@@ -2030,7 +2025,8 @@ class ClassificationManager(Client):
                                                       server_name, time_out))
 
     async def _async_clear_confidence_classification(self, element_guid: str, for_lineage: bool = None,
-                                                     for_duplicate_processing: bool = None, server_name: str = None,
+                                                     for_duplicate_processing: bool = None, effective_time: str = None,
+                                                     server_name: str = None,
                                                      time_out: int = default_time_out) -> None:
         """
         Remove the confidence classification from the element.  This normally occurs when the organization has lost 
@@ -2046,6 +2042,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2075,11 +2073,16 @@ class ClassificationManager(Client):
 
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/confidence/remove"
                f"{possible_query_params}")
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_confidence_classification(self, element_guid: str, for_lineage: bool = None,
-                                        for_duplicate_processing: bool = None, server_name: str = None,
+                                        for_duplicate_processing: bool = None, effective_time: str = None,
+                                        server_name: str = None,
                                         time_out: int = default_time_out) -> None:
         """
         Remove the confidence classification from the element.  This normally occurs when the organization has lost 
@@ -2095,6 +2098,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2120,7 +2125,7 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_confidence_classification(element_guid, for_lineage, for_duplicate_processing,
-                                                        server_name, time_out))
+                                                        effective_time, server_name, time_out))
 
     async def _async_set_confidentiality_classification(self, element_guid: str, body: dict, for_lineage: bool = None,
                                                         for_duplicate_processing: bool = None, server_name: str = None,
@@ -2265,6 +2270,7 @@ class ClassificationManager(Client):
 
     async def _async_clear_confidentiality_classification(self, element_guid: str, for_lineage: bool = None,
                                                           for_duplicate_processing: bool = None,
+                                                          effective_time: str = None,
                                                           server_name: str = None,
                                                           time_out: int = default_time_out) -> None:
         """
@@ -2281,6 +2287,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2311,11 +2319,17 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/confidentiality/remove"
                f"{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_confidentiality_classification(self, element_guid: str, for_lineage: bool = None,
-                                             for_duplicate_processing: bool = None, server_name: str = None,
-                                             time_out: int = default_time_out) -> list | str:
+                                             for_duplicate_processing: bool = None, effective_time: str = None,
+                                             server_name: str = None,
+                                             time_out: int = default_time_out) -> None:
         """
         Remove the confidentiality classification from the element.  This normally occurs when the organization has lost 
         track of the level of confidentiality to assign to the element. 
@@ -2330,6 +2344,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2355,7 +2371,7 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_confidentiality_classification(element_guid, for_lineage, for_duplicate_processing,
-                                                             server_name, time_out))
+                                                             effective_time, server_name, time_out))
 
     async def _async_set_criticality_classification(self, element_guid: str, body: dict, for_lineage: bool = None,
                                                     for_duplicate_processing: bool = None, server_name: str = None,
@@ -2495,7 +2511,8 @@ class ClassificationManager(Client):
                                                        server_name, time_out))
 
     async def _async_clear_criticality_classification(self, element_guid: str, for_lineage: bool = None,
-                                                      for_duplicate_processing: bool = None, server_name: str = None,
+                                                      for_duplicate_processing: bool = None, effective_time: str = None,
+                                                      server_name: str = None,
                                                       time_out: int = default_time_out) -> None:
         """
         Remove the criticality classification from the element.  This normally occurs when the organization has lost
@@ -2511,6 +2528,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2541,11 +2560,17 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/criticality/remove"
                f"{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_criticality_classification(self, element_guid: str, for_lineage: bool = None,
-                                         for_duplicate_processing: bool = None, server_name: str = None,
-                                         time_out: int = default_time_out) -> list | str:
+                                         for_duplicate_processing: bool = None, effective_time: str = None,
+                                         server_name: str = None,
+                                         time_out: int = default_time_out) -> None:
         """
         Remove the criticality classification from the element.  This normally occurs when the organization has lost
         track of the level of criticality to assign to the element.
@@ -2560,6 +2585,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2585,7 +2612,7 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_criticality_classification(element_guid, for_lineage, for_duplicate_processing,
-                                                         server_name, time_out))
+                                                         effective_time, server_name, time_out))
 
     async def _async_add_gov_definition_to_element(self, definition_guid: str, element_guid: str,
                                                    effective_time: str = None, for_lineage: bool = None,
@@ -2687,7 +2714,7 @@ class ClassificationManager(Client):
 
     async def _async_clear_gov_definition_from_element(self, definition_guid, element_guid: str,
                                                        for_lineage: bool = None, for_duplicate_processing: bool = None,
-                                                       server_name: str = None,
+                                                       effective_time: str = None, server_name: str = None,
                                                        time_out: int = default_time_out) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -2704,6 +2731,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2734,10 +2763,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/governed-by/definition/"
                f"{definition_guid}/remove{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_gov_definition_from_element(self, definition_guid, element_guid: str, for_lineage: bool = None,
-                                          for_duplicate_processing: bool = None, server_name: str = None,
+                                          for_duplicate_processing: bool = None, effective_time: str = None,
+                                          server_name: str = None,
                                           time_out: int = default_time_out) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -2754,6 +2789,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2779,7 +2816,7 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_criticality_classification(element_guid, for_lineage, for_duplicate_processing,
-                                                         server_name, time_out))
+                                                         effective_time, server_name, time_out))
 
     async def _async_add_ownership_to_element(self, element_guid: str, body: dict, for_lineage: bool = None,
                                               for_duplicate_processing: bool = None, server_name: str = None,
@@ -2901,7 +2938,8 @@ class ClassificationManager(Client):
                                                  time_out))
 
     async def _async_clear_ownership_from_element(self, element_guid: str, for_lineage: bool = None,
-                                                  for_duplicate_processing: bool = None, server_name: str = None,
+                                                  for_duplicate_processing: bool = None, effective_time: str = None,
+                                                  server_name: str = None,
                                                   time_out: int = default_time_out) -> None:
         """
         Remove the ownership classification from an element. Async version.
@@ -2916,6 +2954,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2945,10 +2985,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/ownership/remove"
                f"{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_ownership_from_element(self, element_guid: str, for_lineage: bool = None,
-                                     for_duplicate_processing: bool = None, server_name: str = None,
+                                     for_duplicate_processing: bool = None, effective_time: str = None,
+                                     server_name: str = None,
                                      time_out: int = default_time_out) -> None:
         """
         Remove the ownership classification from an element.
@@ -2963,6 +3009,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -2986,7 +3034,8 @@ class ClassificationManager(Client):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_clear_ownership_from_element(element_guid, for_lineage, for_duplicate_processing, server_name,
+            self._async_clear_ownership_from_element(element_guid, for_lineage, for_duplicate_processing,
+                                                     effective_time, server_name,
                                                      time_out))
 
     async def _async_set_retention_classification(self, element_guid: str, body: dict, for_lineage: bool = None,
@@ -3134,7 +3183,8 @@ class ClassificationManager(Client):
                                                      server_name, time_out))
 
     async def _async_clear_retention_classification(self, element_guid: str, for_lineage: bool = None,
-                                                    for_duplicate_processing: bool = None, server_name: str = None,
+                                                    for_duplicate_processing: bool = None, effective_time: str = None,
+                                                    server_name: str = None,
                                                     time_out: int = default_time_out) -> None:
         """
          Remove the retention classification from the element.  This normally occurs when the organization has lost
@@ -3150,6 +3200,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3180,10 +3232,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/retention/remove"
                f"{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_retention_classification(self, element_guid: str, for_lineage: bool = None,
-                                       for_duplicate_processing: bool = None, server_name: str = None,
+                                       for_duplicate_processing: bool = None, effective_time: str = None,
+                                       server_name: str = None,
                                        time_out: int = default_time_out) -> None:
         """
         Remove the retention classification from the element.  This normally occurs when the organization has lost
@@ -3199,6 +3257,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         server_name: str, default = None
             - name of the server instances for this request.
         time_out: int, default = default_time_out
@@ -3223,7 +3283,8 @@ class ClassificationManager(Client):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_clear_retention_classification(element_guid, for_lineage, for_duplicate_processing, server_name,
+            self._async_clear_retention_classification(element_guid, for_lineage, for_duplicate_processing,
+                                                       effective_time, server_name,
                                                        time_out))
 
     async def _async_set_security_tags_classification(self, element_guid: str, body: dict, for_lineage: bool = None,
@@ -3364,7 +3425,8 @@ class ClassificationManager(Client):
                                                          server_name, time_out))
 
     async def _async_clear_security_tags_classification(self, element_guid: str, for_lineage: bool = None,
-                                                        for_duplicate_processing: bool = None, server_name: str = None,
+                                                        for_duplicate_processing: bool = None,
+                                                        effective_time: str = None, server_name: str = None,
                                                         time_out: int = default_time_out) -> None:
         """
          Remove the security-tags classification from the element.
@@ -3408,10 +3470,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/security-tags/remove"
                f"{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_security_tags_classification(self, element_guid: str, for_lineage: bool = None,
-                                           for_duplicate_processing: bool = None, server_name: str = None,
+                                           for_duplicate_processing: bool = None, effective_time: str = None,
+                                           server_name: str = None,
                                            time_out: int = default_time_out) -> None:
         """
          Remove the security-tags classification from the element.
@@ -3426,6 +3494,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3450,7 +3520,7 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_security_tags_classification(element_guid, for_lineage, for_duplicate_processing,
-                                                           server_name, time_out))
+                                                           effective_time, server_name, time_out))
 
     async def _async_setup_semantic_assignment(self, glossary_term_guid: str, element_guid: str, body: dict,
                                                for_lineage: bool = None, for_duplicate_processing: bool = None,
@@ -3593,6 +3663,7 @@ class ClassificationManager(Client):
     async def _async_clear_semantic_assignment_classification(self, glossary_term_guid: str, element_guid: str,
                                                               for_lineage: bool = None,
                                                               for_duplicate_processing: bool = None,
+                                                              effective_time: str = None,
                                                               server_name: str = None,
                                                               time_out: int = default_time_out) -> None:
         """
@@ -3610,6 +3681,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3628,7 +3701,6 @@ class ClassificationManager(Client):
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
 
-
          """
         if server_name is None:
             server_name = self.server_name
@@ -3639,10 +3711,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/semantic-assignment/terms/"
                f"{glossary_term_guid}/remove{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def clear_semantic_assignment_classification(self, glossary_term_guid: str, element_guid: str,
                                                  for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                                 effective_time: str = None,
                                                  server_name: str = None, time_out: int = default_time_out) -> None:
         """
          Remove the semantic_assignment classification from the element.
@@ -3659,6 +3737,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3683,7 +3763,8 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_semantic_assignment_classification(glossary_term_guid, element_guid, for_lineage,
-                                                                 for_duplicate_processing, server_name, time_out))
+                                                                 for_duplicate_processing, effective_time, server_name,
+                                                                 time_out))
 
     async def _async_add_element_to_subject_area(self, element_guid: str, body: dict, for_lineage: bool = None,
                                                  for_duplicate_processing: bool = None, server_name: str = None,
@@ -3805,7 +3886,8 @@ class ClassificationManager(Client):
                                                     server_name, time_out))
 
     async def _async_remove_element_from_subject_area(self, element_guid: str, for_lineage: bool = None,
-                                                      for_duplicate_processing: bool = None, server_name: str = None,
+                                                      for_duplicate_processing: bool = None, effective_time: str = None,
+                                                      server_name: str = None,
                                                       time_out: int = default_time_out) -> None:
         """
         Remove the subject area designation from the identified element. Async version.
@@ -3820,6 +3902,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3849,10 +3933,16 @@ class ClassificationManager(Client):
         url = (f"{base_path(self, server_name)}/elements/{element_guid}/subject-area-member"
                f"/remove{possible_query_params}")
 
-        await self._async_make_request("POST", url, time_out=time_out)
+        body = {
+            "class": "ClassificationRequestBody",
+            "effectiveTime": effective_time
+        }
+
+        await self._async_make_request("POST", url, body_slimmer(body), time_out=time_out)
 
     def remove_element_from_subject_area(self, element_guid: str, for_lineage: bool = None,
-                                         for_duplicate_processing: bool = None, server_name: str = None,
+                                         for_duplicate_processing: bool = None, effective_time: str = None,
+                                         server_name: str = None,
                                          time_out: int = default_time_out) -> None:
         """
         Remove the subject area designation from the identified element.
@@ -3867,6 +3957,8 @@ class ClassificationManager(Client):
              - determines if elements classified as Memento should be returned - normally false
          for_duplicate_processing: bool, default is set by server
              - Normally false. Set true when the caller is part of a deduplication function
+         effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          server_name: str, default = None
              - name of the server instances for this request.
          time_out: int, default = default_time_out
@@ -3891,4 +3983,4 @@ class ClassificationManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_remove_element_from_subject_area(element_guid, for_lineage, for_duplicate_processing,
-                                                         server_name, time_out))
+                                                         effective_time, server_name, time_out))

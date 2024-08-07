@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.6.3"
+version = "0.7.0git s"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -61,6 +61,9 @@ pytest = "^8.2.2"
     get_tech_type_template = "examples.widgets.cat.get_tech_type_template:main"
     list_projects = "examples.widgets.cat.list_projects:main"
     list_todos = "examples.widgets.cat.list_todos:main"
+    list_cert_types = "examples.widgets.cat.list_cert_types:main"
+    get_project_structure = "examples.widgets.cat.get_project_structure:main"
+
 
     monitor_asset_events = "examples.widgets.ops.monitor_asset_events:main"
     monitor_coco_status = "examples.widgets.ops.monitor_coco_status:main"
