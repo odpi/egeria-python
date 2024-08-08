@@ -117,7 +117,7 @@ class TestCollectionManager:
                                          user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Root Sustainability Collection"
+            search_string = "Digital Products"
 
             response = c_client.find_collections(search_string, None, True, ignore_case=False)
             duration = time.perf_counter() - start_time
@@ -705,7 +705,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d46fb553-60f5-4558-8ee8-e36fe2ed6560"
+            collection_guid = "d2fc48a5-85bb-41b3-a902-48ad91b1efad"
             response = c_client.delete_collection(collection_guid)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")

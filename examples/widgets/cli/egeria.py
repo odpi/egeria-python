@@ -499,14 +499,14 @@ def survey_uc_server(ctx, uc_endpoint):
 #  Operations: Show
 #
 
-@cli.group('operations')
+@cli.group('ops')
 @click.pass_context
-def operations(ctx):
+def ops(ctx):
     """ Commands to understand and manage operations"""
     pass
 
 
-@operations.group("show")
+@ops.group("show")
 @click.pass_context
 def show(ctx):
     """Display an Egeria Object"""
@@ -610,7 +610,7 @@ def integrations_status(ctx, connector):
 #  Operations: Tell
 #
 
-@operations.group('tell')
+@ops.group('tell')
 @click.pass_context
 def tell(ctx):
     """Perform actions an Egeria Objects"""

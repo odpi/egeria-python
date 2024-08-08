@@ -41,8 +41,10 @@ EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
 EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
+
 def display_catalog_targets(connector: str, server: str, url: str, username: str, user_password: str,
                             jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+    console = Console(force_terminal=not jupyter, width=width, soft_wrap=True)
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(

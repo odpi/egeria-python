@@ -40,7 +40,7 @@ try:
                                                display_name, description, collection_type,
                                                is_own_anchor)
     # Create first folder for Agriculture Insights
-    parent_guid = "f53ea7c8-3107-4477-8459-9bc63f9e69af"
+    parent_guid = response
     parent_relationship_type_name = "CollectionMembership"
     display_name = "Agriculture Insights Collection"
     description = "A folder for agricultural insights data product collections"

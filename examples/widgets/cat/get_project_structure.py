@@ -79,7 +79,7 @@ def project_structure_viewer(root: str, server_name: str, platform_url: str, use
             proj_props_md += f"\n### Team Members\n {member_md}"
 
         proj_props_out = Markdown(proj_props_md)
-        p = Panel(proj_props_out, style=style, title=project_name)
+        p = Panel.fit(proj_props_out, style=style, title=project_name)
         t = tree.add(p)
 
         linked_projects = project_client.get_linked_projects(proj_guid)

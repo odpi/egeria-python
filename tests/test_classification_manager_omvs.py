@@ -389,7 +389,7 @@ def test_retrieve_instance_for_guid():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    element_guid = "456cacde-a891-4e5a-bd3f-9fa0eeaa792c"
+    element_guid = "abb234ab-712f-48d3-b083-244029cd8d2b"
     response = c_client.retrieve_instance_for_guid(
         element_guid
     )

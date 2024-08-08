@@ -65,14 +65,14 @@ def asset_viewer(asset_guid: str, server_name: str, platform_url: str, user: str
 
     def build_nested_elements(nested_element: dict) -> Markdown:
         ne_md = " "
-
-        ne_created_by = nested_element["versions"]["createdBy"]
-        ne_created_at = nested_element["versions"]["createTime"]
-        ne_guid = nested_element["guid"]
+        ne_header = nested_element['elementHeader']
+        ne_created_by = ne_header["versions"]["createdBy"]
+        ne_created_at = ne_header["versions"]["createTime"]
+        ne_guid = ne_header["guid"]
         guid_list.append(ne_guid)
 
-        ne_type = nested_element["type"]["typeName"]
-        ne_classifications = nested_element["classifications"]
+        ne_type = ne_header["type"]["typeName"]
+        ne_classifications = ne_header["classifications"]
         ne_class_md = build_classifications(ne_classifications)
         # ne_class_md = " " if ne_class_md is None else ne_class_md
         ne_props = nested_element.get("properties", "---")

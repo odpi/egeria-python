@@ -102,10 +102,11 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             match_tab.add_column("GUID", no_wrap=True, width=36)
             match_tab.add_column("Properties")
 
-            for match in nested:
+            for match_t in nested:
+                match = match_t['elementHeader']
                 match_type_name = match['type']['typeName']
                 matching_guid = match['guid']
-                match_props = match['properties']
+                match_props = match_t['properties']
                 match_details_md = ""
                 for key in match_props.keys():
                     match_details_md += f"* {key}: {match_props[key]}\n"

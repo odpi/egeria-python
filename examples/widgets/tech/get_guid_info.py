@@ -24,7 +24,7 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    Client
+    Client, ClassificationManager
 )
 
 
@@ -48,12 +48,16 @@ def display_guid(guid: str, server: str, url: str, username: str, user_password:
     c = Client(server, url, user_id=username)
     url = (f"{url}/servers/{server}/open-metadata/repository-services/users/{username}/"
            f"instances/entity/{guid}")
+    # c =  ClassificationManager(server, url)
+
+    bearer_token = c.create_egeria_bearer_token(username, user_password)
 
     try:
         console = Console(width=width, force_terminal=not jupyter, style="bold white on black")
         r = c.make_request("GET", url)
         if r.status_code == 200:
             pass
+        # r = c.retrieve_instance_for_guid(guid)
         e = r.json()['entity']
         p = e['properties']['instanceProperties']
 
