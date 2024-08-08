@@ -104,7 +104,7 @@ class ProjectManager(Client):
                f"metadata-elements/{parent_guid}/projects?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json()
+        return resp.json().get('elements','No linked projects found')
 
     def get_linked_projects(self, parent_guid: str, project_status: str = None, effective_time: str = None,
                             server_name: str = None, start_from: int = 0, page_size: int = None) -> list | str:

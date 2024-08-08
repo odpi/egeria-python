@@ -12,7 +12,7 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.catalog_user.list_tech_types import display_tech_types
+from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cli.ops_config import Config
 from examples.widgets.tech.get_guid_info import display_guid
 from examples.widgets.tech.get_tech_details import tech_details_viewer
@@ -21,7 +21,7 @@ from examples.widgets.tech.list_registered_services import display_registered_sv
 from examples.widgets.tech.list_relationship_types import display_relationship_types
 from examples.widgets.tech.list_tech_templates import display_templates_spec
 from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
-from examples.widgets.catalog_user.get_tech_type_template import template_viewer
+from examples.widgets.cat.get_tech_type_template import template_viewer
 
 
 # from pyegeria import ServerOps

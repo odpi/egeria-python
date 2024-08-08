@@ -41,7 +41,7 @@ EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
 EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
 EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '150'))
 
 def display_my_profile(server: str, url: str, username: str, user_pass:str,
                         jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
@@ -71,13 +71,13 @@ def display_my_profile(server: str, url: str, username: str, user_pass:str,
                     for k in profile_props[key].keys():
                         p_md += f"\t* {k}: {profile_props[key][k]}\n"
                     profile_props_md += p_md
-            t1 = tree.add(Panel(Markdown(profile_props_md),title="Profile Properties"))
+            t1 = tree.add(Panel(Markdown(profile_props_md),title="Profile Properties", expand=False))
 
 
         id_list_md=""
         for identities in my_profiles["userIdentities"]:
             id_list_md += f"* {identities['userIdentity']['properties']['userId']}\n"
-        t2 = tree.add(Panel(Markdown(id_list_md), title="Identities"))
+        t2 = tree.add(Panel(Markdown(id_list_md), title="Identities", expand=False))
 
         contact_methods = my_profiles['contactMethods']
         for method in contact_methods:
@@ -85,7 +85,7 @@ def display_my_profile(server: str, url: str, username: str, user_pass:str,
             contact_methods_md = ""
             for key in contact.keys():
                 contact_methods_md += f"* {key}: {contact[key]}\n"
-            t3 = tree.add(Panel(Markdown(contact_methods_md), title="Contact Methods"))
+            t3 = tree.add(Panel(Markdown(contact_methods_md), title="Contact Methods", expand=False))
 
         my_roles = my_profiles["roles"]
         table = Table(
@@ -105,7 +105,7 @@ def display_my_profile(server: str, url: str, username: str, user_pass:str,
             table.add_row(
                 role_type, role, role_guid
             )
-        t4 = tree.add(Panel(table, title="Roles" ),expanded=True)
+        t4 = tree.add(Panel(table, title="Roles", expand=False ),expanded=True)
 
         print(tree)
 

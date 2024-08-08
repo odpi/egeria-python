@@ -9,16 +9,15 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 import asyncio
-from datetime import datetime
 import json
 
 from httpx import Response
 
-from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS, INTEGRATION_GUIDS
+from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS
 from pyegeria._exceptions import (
     InvalidParameterException,
 )
-from ._validators import validate_name, validate_guid, validate_search_string
+from ._validators import validate_search_string
 
 
 class AssetCatalog(Client):
@@ -34,9 +33,6 @@ class AssetCatalog(Client):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
 
     """
 
@@ -46,11 +42,9 @@ class AssetCatalog(Client):
             platform_url: str,
             user_id: str,
             user_pwd: str = None,
-            verify_flag: bool = False,
     ):
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.cur_command_root = f"{platform_url}/servers/"
-
 
     async def _async_create_element_from_template(self, body: dict, server: str = None) -> str:
         """ Create a new metadata element from a template.  Async version.
@@ -304,9 +298,9 @@ class AssetCatalog(Client):
     #
 
     async def _async_find_assets_in_domain(self, search_string: str, start_from: int = 0,
-                                          page_size: int = max_paging_size, starts_with: bool = True,
-                                          ends_with: bool = False, ignore_case: bool = True,
-                                          server: str =  None, time_out:int = 60) -> list | str:
+                                           page_size: int = max_paging_size, starts_with: bool = True,
+                                           ends_with: bool = False, ignore_case: bool = True,
+                                           server: str = None, time_out: int = 60) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -366,9 +360,9 @@ class AssetCatalog(Client):
         return response.json().get("searchMatches", "no assets found")
 
     def find_assets_in_domain(self, search_string: str, start_from: int = 0,
-                                          page_size: int = max_paging_size, starts_with: bool = True,
-                                          ends_with: bool = False, ignore_case: bool = True,
-                                          server: str =  None, time_out:int = 60) -> list | str:
+                              page_size: int = max_paging_size, starts_with: bool = True,
+                              ends_with: bool = False, ignore_case: bool = True,
+                              server: str = None, time_out: int = 60) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -411,14 +405,13 @@ class AssetCatalog(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_assets_in_domain(search_string,  start_from,page_size,
+            self._async_find_assets_in_domain(search_string, start_from, page_size,
                                               starts_with, ends_with, ignore_case, server, time_out)
         )
         return response
 
-
-    async def _async_get_asset_graph(self, asset_guid:str, server: str = None, start_from: int = 0,
-                                     page_size: int = max_paging_size) -> str| dict:
+    async def _async_get_asset_graph(self, asset_guid: str, server: str = None, start_from: int = 0,
+                                     page_size: int = max_paging_size) -> str | dict:
         """ Return all the elements that are anchored to an asset plus relationships between these elements and to
             other elements. Async Version.
            Parameters
@@ -456,7 +449,7 @@ class AssetCatalog(Client):
         return response.json().get("assetGraph", "no asset found")
 
     def get_asset_graph(self, asset_guid: str, server: str = None, start_from: int = 0,
-                               page_size: int = max_paging_size) -> str | dict:
+                        page_size: int = max_paging_size) -> str | dict:
         """ Return all the elements that are anchored to an asset plus relationships between these elements and to
             other elements.
            Parameters
@@ -488,13 +481,14 @@ class AssetCatalog(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_graph(asset_guid, server,start_from, page_size)
+            self._async_get_asset_graph(asset_guid, server, start_from, page_size)
         )
         return response
 
-    async def _async_get_assets_by_metadata_collection_id(self, metadata_collection_id:str, type_name: str = None,
+    async def _async_get_assets_by_metadata_collection_id(self, metadata_collection_id: str, type_name: str = None,
                                                           effective_time: str = None, server: str = None,
-                                                          start_from: int = 0, page_size: int = max_paging_size) -> str| list:
+                                                          start_from: int = 0,
+                                                          page_size: int = max_paging_size) -> str | list:
         """ Return a list of assets that come from the requested metadata collection. Can optionally
             specify an type name as a filter and an effective time. Async Version.
 
@@ -545,9 +539,9 @@ class AssetCatalog(Client):
         return response.json().get("assets", "no assets found")
 
     def get_assets_by_metadata_collection_id(self, metadata_collection_id: str, type_name: str = None,
-                                                    effective_time: str = None, server: str = None,
-                                                    start_from: int = 0,
-                                                    page_size: int = max_paging_size) -> str | list:
+                                             effective_time: str = None, server: str = None,
+                                             start_from: int = 0,
+                                             page_size: int = max_paging_size) -> str | list:
         """ Return a list of assets that come from the requested metadata collection. Can optionally
             specify an type name as a filter and an effective time. Async Version.
 
@@ -587,12 +581,12 @@ class AssetCatalog(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_assets_by_metadata_collection_id(metadata_collection_id, type_name,
-                                                             effective_time,server,start_from,
+                                                             effective_time, server, start_from,
                                                              page_size)
         )
         return response
 
-    async def _async_get_asset_catalog_types(self, server: str = None) -> str| dict:
+    async def _async_get_asset_catalog_types(self, server: str = None) -> str | dict:
         """ Return all the elements that are anchored to an asset plus relationships between these elements and to
             other elements. Async Version.
            Parameters
@@ -627,7 +621,7 @@ class AssetCatalog(Client):
 
         response = await self._async_make_request("GET", url)
 
-        return response.json().get('types',"No assets found")
+        return response.json().get('types', "No assets found")
 
     def get_asset_catalog_types(self, server: str = None) -> str | dict:
         """ Return all the elements that are anchored to an asset plus relationships between these elements and to
@@ -664,6 +658,7 @@ class AssetCatalog(Client):
             self._async_get_asset_catalog_types(server)
         )
         return response
+
 
 if __name__ == "__main__":
     p = AssetCatalog("active-metadata-store", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)

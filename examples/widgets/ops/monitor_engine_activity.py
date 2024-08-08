@@ -103,9 +103,20 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
                 else:
                     action_status = f"[red]{action['actionStatus']}"
 
-                target = action.get("actionTargetElements", "Empty")
-                if type(target) is list:
-                    target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
+                targets = action.get("actionTargetElements", "Empty")
+                if type(targets) is list:
+                    tgt_tab = Table()
+                    tgt_tab.add_column('name')
+                    tgt_tab.add_column('guid', no_wrap=True)
+                    tgt_tab.add_column('type_name')
+                    targets_md = ""
+                    for target in targets:
+                        t_name = target['actionTargetName']
+                        t_guid = target['actionTargetGUID']
+                        t_type = target['targetElement']['type']['typeName']
+                        tgt_tab.add_row(t_name, t_guid, t_type)
+                    # target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
+                    target_element = tgt_tab
                 else:
                     target_element = " "
 
