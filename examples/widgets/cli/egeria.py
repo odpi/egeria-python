@@ -50,7 +50,8 @@ from examples.widgets.tech.list_registered_services import display_registered_sv
 from examples.widgets.tech.list_relationship_types import display_relationship_types
 from examples.widgets.tech.list_tech_templates import display_templates_spec
 from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
-
+from examples.widgets.tech.get_element_info import display_elements
+from examples.widgets.tech.list_elements import list_elements
 
 @tui()
 # @tui('menu', 'menu', 'A textual command line interface')
@@ -194,6 +195,25 @@ def tech(ctx):
 def show(ctx):
     """Display an Egeria Object"""
     pass
+
+@show.command("get-element-info")
+@click.pass_context
+@click.option('--om_type', default='Project', help='Metadata type to query')
+def get_element_info(ctx, om_type):
+    """Display the valid metadata values for a property and type"""
+    c = ctx.obj
+    display_elements(om_type, c.view_server, c.view_server_url,
+                            c.userid, c.password,  c.jupyter, c.width)
+
+@show.command("list-elements")
+@click.pass_context
+@click.option('--om_type', default='Project', help='Metadata type to query')
+def get_element_info(ctx, om_type):
+    """Display the valid metadata values for a property and type"""
+    c = ctx.obj
+    list_elements(om_type, c.view_server, c.view_server_url,
+                            c.userid, c.password,  c.jupyter, c.width)
+
 
 
 @show.command('guid-info')

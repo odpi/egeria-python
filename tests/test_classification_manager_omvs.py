@@ -69,7 +69,7 @@ def valid_guid(guid):
 ##
 #
 def test_get_elements():
-    open_metadata_type_name = 'CertificationType'
+    open_metadata_type_name = 'GlossaryTerm'
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
