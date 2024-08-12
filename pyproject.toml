@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.7.18"
+version = "0.7.19"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -63,6 +63,7 @@ pytest = "^8.2.2"
     list_todos = "examples.widgets.cat.list_todos:main"
     list_cert_types = "examples.widgets.cat.list_cert_types:main"
     get_project_structure = "examples.widgets.cat.get_project_structure:main"
+    get_project_dependencies = "examples.widgets.cat.get_project_dependencies:main"
     list_relationships = "examples.widgets.cat.list_relationships:main"
 
     monitor_asset_events = "examples.widgets.ops.monitor_asset_events:main"
@@ -85,6 +86,11 @@ pytest = "^8.2.2"
     list_my_profile = "examples.widgets.my.list_my_profile:main"
     monitor_open_todos = "examples.widgets.my.monitor_open_todos:main"
     monitor_my_todos = "examples.widgets.my.monitor_my_todos:main"
+    create_todo = "examples.widgets.my.todo_actions:create_todo"
+    delete_todo = "examples.widgets.my.todo_actions:delete_todo"
+    change_todo_status = "examples.widgets.my.todo_actions:change_todo_status"
+    mark_todo_complete = "examples.widgets.my.todo_actions:mark_todo_complete"
+    reassign_todo = "examples.widgets.my.todo_actions:reassign_todo"
 
     hey_egeria_ops = "examples.widgets.cli.egeria_ops:cli"
     hey_egeria_cat = "examples.widgets.cli.egeria_cat:cli"

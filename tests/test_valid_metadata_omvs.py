@@ -230,8 +230,8 @@ class TestValidMetadataOMVs:
                                             user_id=self.good_user_2)
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "projectHealth"
+            type_name = "ToDoStatus"
+            property_name = "toDoStatus"
             # type_name = None
             # property_name = "stewardTypeName"
 

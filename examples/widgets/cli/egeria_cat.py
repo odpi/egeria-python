@@ -20,8 +20,9 @@ from examples.widgets.cat.list_assets import display_assets
 from examples.widgets.cat.list_glossary import display_glossary_terms
 from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cat.list_projects import display_project_list
-from examples.widgets.cat.list_todos import display_to_dos
+from examples.widgets.cat.list_todos import display_to_dos as list_todos
 from examples.widgets.cat.get_project_structure import project_structure_viewer
+from examples.widgets.cat.get_project_dependencies import project_dependency_viewer
 from examples.widgets.cat.list_cert_types import display_certifications
 from examples.widgets.cat.list_relationships import list_relationships
 
@@ -207,10 +208,22 @@ def show_certification_types(ctx, search_string):
               help="Enter the root project to start from")
 @click.pass_context
 def show_project_structure(ctx, project):
-    """Show the structure of the project starting from a root project"""
+    """Show the organization structure of the project starting from a root project"""
     c = ctx.obj
     project_structure_viewer(project, c.view_server, c.view_server_url, c.userid,
                            c.password, c.jupyter, c.width, c.timeout)
+
+@show.command('project-dependencies')
+@click.option('--project', default = 'Clinical Trials Management',
+              help="Enter the root project to start from")
+@click.pass_context
+def show_project_dependencies(ctx, project):
+    """Show the dependencies of a project starting from a root project"""
+    c = ctx.obj
+    project_dependency_viewer(project, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.jupyter, c.width, c.timeout)
+
+
 
 @show.command('relationships')
 @click.option('--relationship', default = 'Certification',
@@ -227,12 +240,14 @@ def show_relationships(ctx, relationship):
 @show.command('to-dos')
 @click.option('--search-string', default='*',
               help='View the list of To-Do items')
+@click.option('--status', type=click.Choice(['OPEN','IN_PROGRESS','WAITING','COMPLETE', 'ABANDONED', 'None'],
+               case_sensitive='False'), help = 'Enter an optional status filter', required=False, default=None)
 @click.pass_context
-def show_todos(ctx, search_string):
+def show_todos(ctx, search_string, status):
     """Display a tree graph of information about an asset """
     c = ctx.obj
-    display_to_dos(search_string, c.view_server, c.view_server_url, c.userid,
-                      c.password, c.jupyter, c.width)
+    list_todos(search_string, status, c.view_server, c.view_server_url, c.userid,
+                   c.password, c.jupyter, c.width)
 
 #
 #  Tell

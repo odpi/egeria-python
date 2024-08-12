@@ -61,9 +61,11 @@ class TestProjectManager:
                                       user_id=self.good_user_2)
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7"
+            # parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7" # management
             # parent_guid = "994283c2-deaf-42dc-adf9-ce87cdee0d1f"
-
+            # parent_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
+            # parent_guid = 'cae1c8c4-92e2-4598-b898-f3ee3252dff1' # trial
+            parent_guid = '25452b45-942d-47af-90b6-3fa9df4a5df7' # proj template
             response = p_client.get_linked_projects(parent_guid)
             duration = time.perf_counter() - start_time
 
@@ -228,6 +230,7 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
+            project_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
 
             response = p_client.get_project(project_guid)
             duration = time.perf_counter() - start_time
