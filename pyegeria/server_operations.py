@@ -393,12 +393,14 @@ class ServerOps(Platform):
                                                                                      server))
         return response
 
-    async def _async_refresh_integration_connectors(self, connector_name: str = None, server: str = None,
+    async def _async_refresh_integration_connectors(self, connector_name: str = 'all', server: str = None,
                                                     time_out: int = 60) -> None:
         """ Issue a refresh request to all connectors running in the integration daemon, or a specific connector
         if one is specified - async version"""
         if server is None:
             server = self.server_name
+        if connector_name == 'all':
+            connector_name = None
 
         url = (f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
                f"{self.user_id}/integration-connectors/refresh")

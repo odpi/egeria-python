@@ -7,10 +7,11 @@ A simple viewer for collections - provide the root and we display the hierarchy
 
 """
 import argparse
-import os
+import os, sys
 
 from rich import print
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
@@ -43,7 +44,8 @@ disable_ssl_warnings = True
 def tech_details_viewer(tech: str, server_name: str, platform_url: str, user: str, user_password: str,
                         jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
     console = Console(width=width, force_terminal=not jupyter)
-
+    # print(f"tech is {tech} of type {type(tech)}")
+    # sys.exit(0)
     def view_tech_details(a_client: AutomatedCuration, root_collection_name: str, tree: Tree) -> Tree:
         l2: Tree = None
         tech_details = a_client.get_technology_type_detail(tech)
@@ -54,20 +56,25 @@ def tech_details_viewer(tech: str, server_name: str, platform_url: str, user: st
             description = tech_details.get('description', '---')
 
             style = "bold bright_white on black"
-            l2 = tree.add(Text(f"Name: {name}", "bold red"))
-            l2 = tree.add(Text(f"* QualifiedName: {qualified_name}", style))
-            l2 = tree.add(Text(f"* Category: {category}", style))
-            l2 = tree.add(Text(f"* Technology Description: {description}", style))
+
+            bas_md =  f"* **Name**: {name}\n"
+            bas_md += f"* **QualifiedName**: {qualified_name}\n"
+            bas_md += f"* **Category**: {category}\n"
+            bas_md += f"* **Technology Description**: {description}\n"
+
+            bas_out = Markdown(bas_md)
+
+            l2 = tree.add(Panel(bas_out))
             ext_ref = tech_details.get('externalReferences', None)
 
             if ext_ref is not None:
                 uri = ext_ref[0]["properties"].get("uri", "---")
                 # console.print(f" {type(ext_ref)}, {len(ext_ref)}")
-                l2 = tree.add(Text(f'* URI: {uri}', style))
+                l2 = tree.add(Panel(Markdown(f'* URI: {uri}', style)))
 
             resource_list = tech_details.get('resourceList', None)
             if resource_list:
-                t_r = tree.add("Resource List[bold red]")
+                t_r = tree.add(Panel("Resource List[bold red]"))
                 for resource in resource_list:
                     resource_use = Text(f"[bold bright_white]{resource.get('resourceUse', '---')}")
                     resource_use_description = Text(f"[bold bright_white]{resource.get('resourceUseDescription', '---')}")
@@ -80,9 +87,11 @@ def tech_details_viewer(tech: str, server_name: str, platform_url: str, user: st
                                      f"[white]Unique Name: {unique_name}\n[white]Related GUID: {related_guid}\n")
                     p = Panel.fit(resource_text)
                     tt = t_r.add(p, style=style)
+            else:
+                tt = tree.add(Panel(f"Resource details for {tech} where not found"))
 
         else:
-            tt = tree.add(f"Tech type {tech} was not found - please check the tech type name")
+            tt = tree.add(Panel(f"Tech type {tech} was not found - please check the tech type name"))
 
         return tt
 

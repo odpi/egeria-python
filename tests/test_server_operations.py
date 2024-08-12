@@ -185,7 +185,7 @@ class TestServerOperations:
             connector = "FilesMonitor"
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
 
-            s_client.refresh_integration_connectors(None, server_name)
+            s_client.refresh_integration_connectors('all', server_name)
 
             assert True, "Invalid URL or server"
 

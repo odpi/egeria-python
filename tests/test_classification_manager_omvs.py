@@ -122,8 +122,8 @@ def test_get_elements_by_property_value():
 
 
 def test_find_elements_by_property_value():
-    open_metadata_type_name = 'CertificationType'
-    property_value = 'Approved Hospital'
+    open_metadata_type_name = 'GovernanceActionType'
+    property_value = 'AssetSurvey:survey-folder'
     property_names = ["name", "qualifiedName", "title"]
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -239,7 +239,8 @@ def test_get_related_elements():
 
     # open_metadata_type_name = "Organization"
     open_metadata_type_name = None
-    relationship_type = "Certification"
+    element_guid = "b846e2d3-832b-4880-969e-00065960f506"
+    relationship_type = "SpecificationPropertyAssignment"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -322,6 +323,7 @@ def test_get_relationships():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    relationship_type = "Certification"
     response = c_client.get_relationships(relationship_type)
 
     if type(response) is list:

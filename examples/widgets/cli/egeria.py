@@ -24,6 +24,7 @@ from examples.widgets.cat.list_projects import display_project_list
 from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cat.list_todos import display_to_dos
 from examples.widgets.cli.ops_config import Config
+from examples.widgets.cat.list_relationships import list_relationships
 
 from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
     stop_server as stop_engine_host
@@ -50,6 +51,9 @@ from examples.widgets.tech.list_registered_services import display_registered_sv
 from examples.widgets.tech.list_relationship_types import display_relationship_types
 from examples.widgets.tech.list_tech_templates import display_templates_spec
 from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
+from examples.widgets.tech.list_elements import list_elements
+from examples.widgets.tech.get_element_info import display_elements
+from examples.widgets.tech.list_related_specification import display_related_specification
 
 
 @tui()
@@ -196,6 +200,26 @@ def show(ctx):
     pass
 
 
+@show.command("get-elements")
+@click.pass_context
+@click.option('--om_type', default='Project', help='Metadata type to query')
+def get_element_info(ctx, om_type):
+    """Display the elements for an Open Metadata Type"""
+    c = ctx.obj
+    display_elements(om_type, c.view_server, c.view_server_url,
+                            c.userid, c.password,  c.jupyter, c.width)
+
+@show.command("list-elements")
+@click.pass_context
+@click.option('--om_type', default='Project', help='Metadata type to query')
+def list_element_info(ctx, om_type):
+    """Display the elements for an Open Metadata Type"""
+    c = ctx.obj
+    list_elements(om_type, c.view_server, c.view_server_url,
+                            c.userid, c.password,  c.jupyter, c.width)
+
+
+
 @show.command('guid-info')
 @click.argument('guid', nargs=1)
 @click.pass_context
@@ -262,6 +286,17 @@ def show_registered_services(ctx, services):
     c = ctx.obj
     display_registered_svcs(services, c.view_server, c.view_server_url,
                             c.userid, c.password, c.jupyter, c.width)
+
+@show.command('related-specifications')
+@click.pass_context
+@click.argument('element-guid')
+def show_related_specifications(ctx, element_guid):
+    """List specifications related to the given Element"""
+    c = ctx.obj
+    display_related_specification(element_guid, c.view_server, c.view_server_url,
+                            c.userid, c.password, c.jupyter, c.width)
+
+
 
 
 @show.command('relationship-types')
@@ -385,6 +420,15 @@ def show_project_structure(ctx, project):
     project_structure_viewer(project, c.view_server, c.view_server_url, c.userid,
                            c.password, c.jupyter, c.width, c.timeout)
 
+@show.command('relationships')
+@click.option('--relationship', default = 'Certification',
+              help="Relationship type name to search for.")
+@click.pass_context
+def show_relationships(ctx, relationship):
+    """Show the structure of the project starting from a root project"""
+    c = ctx.obj
+    list_relationships(relationship, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.timeout, c.jupyter, c.width)
 
 
 
@@ -661,7 +705,13 @@ def engine_host(ctx):
 engine_host.add_command(start_engine_host)
 engine_host.add_command(stop_engine_host)
 
-tell.add_command(load_archive)
+@tell.group('repository')
+@click.pass_context
+def repository(ctx):
+    """Group of commands to a repository"""
+    pass
+
+repository.add_command(load_archive)
 
 if __name__ == '__main__':
     cli()

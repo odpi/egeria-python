@@ -23,6 +23,7 @@ from examples.widgets.cat.list_projects import display_project_list
 from examples.widgets.cat.list_todos import display_to_dos
 from examples.widgets.cat.get_project_structure import project_structure_viewer
 from examples.widgets.cat.list_cert_types import display_certifications
+from examples.widgets.cat.list_relationships import list_relationships
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
@@ -210,6 +211,16 @@ def show_project_structure(ctx, project):
     c = ctx.obj
     project_structure_viewer(project, c.view_server, c.view_server_url, c.userid,
                            c.password, c.jupyter, c.width, c.timeout)
+
+@show.command('relationships')
+@click.option('--relationship', default = 'Certification',
+              help="Relationship type name to search for.")
+@click.pass_context
+def show_relationships(ctx, relationship):
+    """Show the structure of the project starting from a root project"""
+    c = ctx.obj
+    list_relationships(relationship, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.timeout, c.jupyter, c.width)
 
 
 

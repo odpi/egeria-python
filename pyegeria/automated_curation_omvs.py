@@ -10,7 +10,7 @@ from datetime import datetime
 
 from httpx import Response
 
-from pyegeria import Client, max_paging_size, body_slimmer, INTEGRATION_GUIDS, TEMPLATE_GUIDS
+from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException)
 from ._validators import validate_name, validate_guid, validate_search_string
 
@@ -165,7 +165,7 @@ class AutomatedCuration(Client):
                 The GUID of the Kafka server element.
         """
 
-        body = {"templateGUID":TEMPLATE_GUIDS['Apache Kafka Server'], "isOwnAnchor": 'true',
+        body = {"templateGUID": TEMPLATE_GUIDS['Apache Kafka Server'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": kafka_server, "hostIdentifier": host_name,
                                               "portNumber": port, "description": description}}
         body_s = body_slimmer(body)
@@ -200,8 +200,7 @@ class AutomatedCuration(Client):
             """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_kafka_server_element_from_template(kafka_server, host_name, port,
-                                                                  description, server))
+            self._async_create_kafka_server_element_from_template(kafka_server, host_name, port, description, server))
         return response
 
     async def _async_create_postgres_server_element_from_template(self, postgres_server: str, host_name: str, port: str,
@@ -227,7 +226,7 @@ class AutomatedCuration(Client):
                 User password to connect to the database
 
             description: str, opt
-                A description of the Kafka server.
+                A description of the element.
 
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
@@ -237,7 +236,7 @@ class AutomatedCuration(Client):
             str
                 The GUID of the Postgres server element.
         """
-        body = {"templateGUID":TEMPLATE_GUIDS['PostgreSQL Server'], "isOwnAnchor": 'true',
+        body = {"templateGUID": TEMPLATE_GUIDS['PostgreSQL Server'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": postgres_server, "hostIdentifier": host_name,
                                               "portNumber": port, "databaseUserId": db_user, "description": description,
                                               "databasePassword": db_pwd}}
@@ -265,7 +264,7 @@ class AutomatedCuration(Client):
                 The name of the view server to use. Default uses the client instance.
 
             description: str, opt
-                A description of the Kafka server.
+                A description of the elementr.
 
             db_user: str
                 User name to connect to the database
@@ -287,44 +286,38 @@ class AutomatedCuration(Client):
     async def _async_create_folder_element_from_template(self, path_name: str, folder_name: str, file_system: str,
                                                          description: str = None, version: str = None,
                                                          server: str = None) -> str:
-        """ Create a File folder element from a template. Async version.
+        """ Create a File folder element from a template.
+            Async version.
 
-        Parameters
-        ----------
-        path_name : str
-            The name of the fill path including the folder..
+            Parameters
+            ----------
+            path_name : str
+                The path including the folder..
 
-        folder_name : str
-            The name of the folder to create.
+            folder_name : str
+                The name of the folder to create.
 
-        file_system : str
-            The unique name for the file system that the folder belongs to. It may be a machine name or URL to a remote
-            file store.
+            file_system : str
+                The unique name for the file system that the folder belongs to. It may be a machine name or URL to a
+                remote file store.
 
-        description: str, opt
-                A description of the Kafka server.
+            description: str, opt
+                A description of the element.
 
-        version: str, opt
-                version of the file folder - typically of the form x.y.z
+            version: str, opt
+                version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+            server : str, optional
+                The name of the view server to use. Default uses the client instance.
 
-        Returns
-        -------
-        str
-            The GUID of the File Folder element.
+            Returns
+            -------
+            str
+                The GUID of the Postgres server element.
         """
-        body = {"templateGUID": TEMPLATE_GUIDS['FileFolder'],
-                "isOwnAnchor": 'true',
-                "placeholderPropertyValues": {
-                    "directoryPathName": path_name,
-                    "directoryName": folder_name,
-                    "versionIdentifier": version,
-                    "fileSystemName": file_system,
-                    "description": description,
-                }
-                }
+        body = {"templateGUID": TEMPLATE_GUIDS['FileFolder'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"directoryPathName": path_name, "directoryName": folder_name,
+                    "versionIdentifier": version, "fileSystemName": file_system, "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -336,7 +329,7 @@ class AutomatedCuration(Client):
             Parameters
             ----------
             path_name : str
-                The name of the fill path including the folder..
+                The path including the folder..
 
             folder_name : str
                 The name of the folder to create.
@@ -346,10 +339,10 @@ class AutomatedCuration(Client):
                 remote file store.
 
             description: str, opt
-                A description of the Kafka server.
+                A description of the element.
 
             version: str, opt
-                version of the file folder - typically of the form x.y.z
+                version of the element - typically of the form x.y.z
 
             server : str, optional
                 The name of the view server to use. Default uses the client instance.
@@ -361,8 +354,488 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_folder_element_from_template(path_name, folder_name, file_system,
-                                                            description, version, server))
+            self._async_create_folder_element_from_template(path_name, folder_name, file_system, description, version,
+                                                            server))
+        return response
+
+    async def _async_create_uc_server_element_from_template(self, server_name: str, host_url: str, port: str,
+                                                            description: str = None, version: str = None,
+                                                            server: str = None) -> str:
+        """ Create a Unity Catalog Server element from a template. Async version.
+
+        Parameters
+        ----------
+        server_name : str
+            The name of the Unity Catalog server we are configuring.
+
+        host_url : str
+            The URL of the server.
+
+        port : str
+            The port number of the server.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Server'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"serverName": server_name, "hostURL": host_url,
+                    "versionIdentifier": version, "portNumber": port, "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_server_element_from_template(self, server_name: str, host_url: str, port: str,
+                                               description: str = None, version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog Server element from a template. Async version.
+
+        Parameters
+        ----------
+        server_name : str
+            The name of the Unity Catalog server we are configuring.
+
+        host_url : str
+            The URL of the server.
+
+        port : str
+            The port number of the server.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_server_element_from_template(server_name, host_url, port, description, version,
+                                                               server))
+        return response
+
+    async def _async_create_uc_catalog_element_from_template(self, uc_catalog: str, network_address: str,
+                                                             description: str = None, version: str = None,
+                                                             server: str = None) -> str:
+        """ Create a Unity Catalog Catalog element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Catalog'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "serverNetworkAddress": network_address,
+                    "versionIdentifier": version, "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_catalog_element_from_template(self, uc_catalog: str, network_address: str, description: str = None,
+                                                version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog Catalog element from a template.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_catalog_element_from_template(uc_catalog, network_address, description, version,
+                                                                server))
+        return response
+
+    async def _async_create_uc_schema_element_from_template(self, uc_catalog: str, uc_schema: str, network_address: str,
+                                                            description: str = None, version: str = None,
+                                                            server: str = None) -> str:
+        """ Create a Unity Catalog schema element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Schema'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
+                    "serverNetworkAddress": network_address, "versionIdentifier": version,
+                    "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_schema_element_from_template(self, uc_catalog: str, uc_schema: str, network_address: str,
+                                               description: str = None, version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog schema element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_schema_element_from_template(uc_catalog, uc_schema, network_address, description,
+                                                               version, server))
+        return response
+
+    async def _async_create_uc_table_element_from_template(self, uc_catalog: str, uc_schema: str, uc_table: str,
+                                                           uc_table_type: str, uc_storage_loc: str,
+                                                           uc_data_source_format: str, network_address: str,
+                                                           description: str = None, version: str = None,
+                                                           server: str = None) -> str:
+        """ Create a Unity Catalog table element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_table: str
+            The name of the UC table we are configuring.
+        uc_table_type: str
+            The type of table - expect either Managed or External.
+        uc_storage_loc: str
+            The location where the data associated with this element is stored.
+        uc_data_source_format: str
+            The format of the data source - currently DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Table'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
+                    "ucTableName": uc_table, "ucTableType": uc_table_type, "ucStorageLocation": uc_storage_loc,
+                    "ucDataSourceFormat": uc_data_source_format, "serverNetworkAddress": network_address,
+                    "versionIdentifier": version, "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_table_element_from_template(self, uc_catalog: str, uc_schema: str, uc_table: str, uc_table_type: str,
+                                              uc_storage_loc: str, uc_data_source_format: str, network_address: str,
+                                              description: str = None, version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog table element from a template.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_table: str
+            The name of the UC table we are configuring.
+        uc_table_type: str
+            The type of table - expect either Managed or External.
+        uc_storage_loc: str
+            The location where the data associated with this element is stored.
+        uc_data_source_format: str
+            The format of the data source - currently DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_table_element_from_template(uc_catalog, uc_schema, uc_table, uc_table_type,
+                                                              uc_storage_loc, uc_data_source_format, network_address,
+                                                              description, version, server))
+        return response
+
+    async def _async_create_uc_function_element_from_template(self, uc_catalog: str, uc_schema: str, uc_function: str,
+                                                              network_address: str, description: str = None,
+                                                              version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog function element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_function: str
+            The name of the UC function we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Function'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
+                    "ucFunctionName": uc_function, "serverNetworkAddress": network_address,
+                    "versionIdentifier": version, "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_function_element_from_template(self, uc_catalog: str, uc_schema: str, uc_function: str,
+                                                 network_address: str, description: str = None, version: str = None,
+                                                 server: str = None) -> str:
+        """ Create a Unity Catalog function element from a template.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_function: str
+            The name of the UC function we are configuring.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_function_element_from_template(uc_catalog, uc_schema, uc_function, network_address,
+                                                                 description, version, server))
+        return response
+
+    async def _async_create_uc_volume_element_from_template(self, uc_catalog: str, uc_schema: str, uc_volume: str,
+                                                            uc_vol_type: str, uc_storage_loc: str, network_address: str,
+                                                            description: str = None, version: str = None,
+                                                            server: str = None) -> str:
+        """ Create a Unity Catalog volume element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_volume: str
+            The name of the UC volume we are configuring.
+
+        uc_vol_type: str
+            The volume type of the UC volume we are configuring. Currently Managed or External.
+        uc_storage_locL str
+            The location with the data associated with this element is stored.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Volume'], "isOwnAnchor": 'true',
+                "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
+                    "ucVolumeName": uc_volume, "ucVolumeType": uc_vol_type, "ucStorageLocation": uc_storage_loc,
+                    "serverNetworkAddress": network_address, "versionIdentifier": version,
+                    "description": description, }}
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s, server)
+        return str(response)
+
+    def create_uc_volume_element_from_template(self, uc_catalog: str, uc_schema: str, uc_volume: str, uc_vol_type: str,
+                                               uc_storage_loc: str, network_address: str, description: str = None,
+                                               version: str = None, server: str = None) -> str:
+        """ Create a Unity Catalog volume element from a template. Async version.
+
+        Parameters
+        ----------
+        uc_catalog : str
+            The name of the UC catalog we are configuring.
+
+        uc_schema: str
+            The name of the UC schema we are configuring.
+
+        uc_volume: str
+            The name of the UC volume we are configuring.
+
+        uc_vol_type: str
+            The volume type of the UC volume we are configuring. Currently Managed or External.
+        uc_storage_locL str
+            The location with the data associated with this element is stored.
+
+        network_address : str
+            The endpoint of the catalog.
+
+        description: str, opt
+                A description of the server.
+
+        version: str, opt
+                version of the element - typically of the form x.y.z
+
+        server : str, optional
+            The name of the view server to use. Default uses the client instance.
+
+        Returns
+        -------
+        str
+            The GUID of the File Folder element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_uc_volume_element_from_template(uc_catalog, uc_schema, uc_volume, uc_vol_type,
+                                                               uc_storage_loc, network_address, description, version,
+                                                               server))
         return response
 
     #
@@ -1450,11 +1923,10 @@ class AutomatedCuration(Client):
         server = self.server_name if server is None else server
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
                f"initiate")
-        start = int(start_time.timestamp() *1000) if start_time else None
+        start = int(start_time.timestamp() * 1000) if start_time else None
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
                 "governanceActionTypeQualifiedName": action_type_qualified_name,
-                "requestSourceGUIDs": request_source_guids,
-                "actionTargets": action_targets, "startDate": start,
+                "requestSourceGUIDs": request_source_guids, "actionTargets": action_targets, "startDate": start,
                 "requestParameters": request_parameters, "originatorServiceName": orig_service_name,
                 "originatorEngineName": orig_engine_name}
         new_body = body_slimmer(body)
@@ -1463,7 +1935,8 @@ class AutomatedCuration(Client):
 
     def initiate_gov_action_type(self, action_type_qualified_name: str, request_source_guids: [str],
                                  action_targets: list, start_time: datetime = None, request_parameters: dict = None,
-                                 orig_service_name: str = None, orig_engine_name: str = None, server: str = None) -> str:
+                                 orig_service_name: str = None, orig_engine_name: str = None,
+                                 server: str = None) -> str:
         """ Using the named governance action type as a template, initiate an engine action.
 
         Parameters
@@ -1502,6 +1975,10 @@ class AutomatedCuration(Client):
                                                  server))
         return response
 
+    #
+    #   Initiate surveys
+    #
+
     async def _async_initiate_postgres_database_survey(self, postgres_database_guid: str, server: str = None) -> str:
         """ Initiate a postgres database survey"""
         server = self.server_name if server is None else server
@@ -1509,10 +1986,9 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName":
-                    "AssetSurvey-postgres-database",
-                "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
-                                   "actionTargetGUID": postgres_database_guid}]}
+                "governanceActionTypeQualifiedName": "AssetSurvey-postgres-database", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
+                 "actionTargetGUID": postgres_database_guid}]}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
@@ -1529,9 +2005,9 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-server",
-                "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
-                                   "actionTargetGUID": postgres_server_guid}]}
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-server", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
+                 "actionTargetGUID": postgres_server_guid}]}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
@@ -1542,8 +2018,7 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_initiate_file_folder_survey(self, file_folder_guid: str,
-                                                 survey_name: str =
-                                                 "AssetSurvey:survey-folder",
+                                                 survey_name: str = "AssetSurvey:survey-folder",
                                                  server: str = None) -> str:
         """ Initiate a file folder survey - async version
 
@@ -1587,8 +2062,7 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_file_folder_survey(self, file_folder_guid: str,
-                                    survey_name: str = "AssetSurvey:survey-folder",
+    def initiate_file_folder_survey(self, file_folder_guid: str, survey_name: str = "AssetSurvey:survey-folder",
                                     server: str = None) -> str:
         """ Initiate a file folder survey - async version
 
@@ -1636,9 +2110,8 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "AssetSurvey:survey-data-file",
-                "actionTargets": [
-                    {"class": "NewActionTarget", "actionTargetName": "fileToSurvey", "actionTargetGUID": file_guid}]}
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-data-file", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "fileToSurvey", "actionTargetGUID": file_guid}]}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
@@ -1669,9 +2142,9 @@ class AutomatedCuration(Client):
                f"initiate")
 
         body = {"class": "InitiateGovernanceActionTypeRequestBody",
-                "governanceActionTypeQualifiedName": "AssetSurvey:survey-kafka-server",
-                "actionTargets": [{"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
-                                   "actionTargetGUID": kafka_server_guid}]}
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-kafka-server", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "serverToSurvey",
+                 "actionTargetGUID": kafka_server_guid}]}
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
@@ -1692,15 +2165,252 @@ class AutomatedCuration(Client):
 
                 """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_initiate_file_folder_survey(kafka_server_guid, server))
+        response = loop.run_until_complete(self._async_initiate_kafka_server_survey(kafka_server_guid, server))
         return response
+
+    async def _async_initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+        """ Initiate survey of a Unity Catalog server. Async Version.
+        Parameters
+        ----------
+        uc_server_guid : str
+            The GUID of the Kafka server to be surveyed.
+
+        server : str, optional
+            The name of the server. If not provided, the default server name is used.
+
+        Returns
+        -------
+        str
+            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+
+        """
+        server = self.server_name if server is None else server
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+               f"initiate")
+
+        body = {"class": "InitiateGovernanceActionTypeRequestBody",
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-server", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "serverToSurvey", "actionTargetGUID": uc_server_guid}]}
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("guid", "Action not initiated")
+
+    def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+        """ Initiate survey of a Unity Catalog server. Async Version.
+        Parameters
+        ----------
+        uc_server_guid : str
+            The GUID of the Kafka server to be surveyed.
+
+        server : str, optional
+            The name of the server. If not provided, the default server name is used.
+
+        Returns
+        -------
+        str
+            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+        return response
+
+    async def _async_initiate_uc_schema_survey(self, uc_schema_guid: str, server: str = None) -> str:
+        """ Initiate survey of a Unity Catalog schema. Async Version.
+        Parameters
+        ----------
+        uc_schema_guid : str
+            The GUID of the Kafka server to be surveyed.
+
+        server : str, optional
+            The name of the server. If not provided, the default server name is used.
+
+        Returns
+        -------
+        str
+            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+
+        """
+        server = self.server_name if server is None else server
+        url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+               f"initiate")
+
+        body = {"class": "InitiateGovernanceActionTypeRequestBody",
+                "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-schema", "actionTargets": [
+                {"class": "NewActionTarget", "actionTargetName": "serverToSurvey", "actionTargetGUID": uc_schema_guid}]}
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("guid", "Action not initiated")
+
+    def initiate_uc_schema_survey(self, uc_schema_guid: str, server: str = None) -> str:
+        """ Initiate survey of a Unity Catalog schema. Async Version.
+        Parameters
+        ----------
+        uc_schema_guid : str
+            The GUID of the Kafka server to be surveyed.
+
+        server : str, optional
+            The name of the server. If not provided, the default server name is used.
+
+        Returns
+        -------
+        str
+            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_initiate_uc_schema_survey(uc_schema_guid, server))
+        return response
+
+    # async def _async_initiate_uc_function_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     server = self.server_name if server is None else server
+    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #            f"initiate")
+    #
+    #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
+    #             "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-server", "actionTargets": [
+    #             {"class": "NewActionTarget", "actionTargetName": "serverToSurvey", "actionTargetGUID": uc_server_guid}]}
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("guid", "Action not initiated")
+    #
+    # def initiate_uc_function_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     return response
+    #
+    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     server = self.server_name if server is None else server
+    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #            f"initiate")
+    #
+    #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
+    #             "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-server", "actionTargets": [
+    #             {"class": "NewActionTarget", "actionTargetName": "serverToSurvey", "actionTargetGUID": uc_server_guid}]}
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("guid", "Action not initiated")
+    #
+    # def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     return response
+    #
+    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     server = self.server_name if server is None else server
+    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #            f"initiate")
+    #
+    #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
+    #             "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-server", "actionTargets": [
+    #             {"class": "NewActionTarget", "actionTargetName": "serverToSurvey", "actionTargetGUID": uc_server_guid}]}
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("guid", "Action not initiated")
+    #
+    # def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    #     """ Initiate survey of a Unity Catalog server. Async Version.
+    #     Parameters
+    #     ----------
+    #     Unity Catalog_server_guid : str
+    #         The GUID of the Kafka server to be surveyed.
+    #
+    #     server : str, optional
+    #         The name of the server. If not provided, the default server name is used.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     return response
+
+
+
+
+    #
+    #   Initiate general engine action
+    #
 
     async def _async_initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str,
                                             description: str, request_source_guids: str, action_targets: str,
-                                            received_guards: [str], start_time: datetime,
-                                            request_type: str, request_parameters: dict, process_name: str,
-                                            request_src_name: str = None, originator_svc_name: str = None,
-                                            originator_eng_name: str = None, server: str = None) -> str:
+                                            received_guards: [str], start_time: datetime, request_type: str,
+                                            request_parameters: dict, process_name: str, request_src_name: str = None,
+                                            originator_svc_name: str = None, originator_eng_name: str = None,
+                                            server: str = None) -> str:
         """ Create an engine action in the metadata store that will trigger the governance service associated with
             the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
             Async version.
@@ -1743,21 +2453,20 @@ class AutomatedCuration(Client):
                f"engine-actions/initiate")
         body = {"class": "GovernanceActionRequestBody",
                 "qualifiedName": qualified_name + str(int(start_time.timestamp())),
-                "domainIdentifier": domain_identifier,
-                "displayName": display_name, "description": description, "requestSourceGUIDs": request_source_guids,
-                "actionTargets": action_targets, "receivedGuards": received_guards,
-                "startTime": int(start_time.timestamp() * 1000), "requestType": request_type,
-                "requestParameters": request_parameters, "processName": process_name,
-                "requestSourceName": request_src_name,
-                "originatorServiceName": originator_svc_name, "originatorEngineName": originator_eng_name}
+                "domainIdentifier": domain_identifier, "displayName": display_name, "description": description,
+                "requestSourceGUIDs": request_source_guids, "actionTargets": action_targets,
+                "receivedGuards": received_guards, "startTime": int(start_time.timestamp() * 1000),
+                "requestType": request_type, "requestParameters": request_parameters, "processName": process_name,
+                "requestSourceName": request_src_name, "originatorServiceName": originator_svc_name,
+                "originatorEngineName": originator_eng_name}
         new_body = body_slimmer(body)
         response = await self._async_make_request("POST", url, new_body)
         return response.json().get("guid", "Action not initiated")
 
     def initiate_engine_action(self, qualified_name: str, domain_identifier: int, display_name: str, description: str,
                                request_source_guids: str, action_targets: str, received_guards: [str],
-                               start_time: datetime, request_type: str, request_parameters: dict,
-                               process_name: str, request_src_name: str = None, originator_svc_name: str = None,
+                               start_time: datetime, request_type: str, request_parameters: dict, process_name: str,
+                               request_src_name: str = None, originator_svc_name: str = None,
                                originator_eng_name: str = None, server: str = None) -> str:
         """ Create an engine action in the metadata store that will trigger the governance service associated with
             the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
@@ -1798,8 +2507,8 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_initiate_engine_action(qualified_name, domain_identifier, display_name, description,
                                                request_source_guids, action_targets, received_guards, start_time,
-                                               request_type, request_parameters, process_name,
-                                               request_src_name, originator_svc_name, originator_eng_name, server))
+                                               request_type, request_parameters, process_name, request_src_name,
+                                               originator_svc_name, originator_eng_name, server))
         return response
 
     async def _async_get_catalog_targets(self, integ_connector_guid: str, server: str = None, start_from: int = 0,
@@ -1890,8 +2599,7 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_catalog_target(self, relationship_guid: str,
-                           server: str = None) -> dict | str:
+    def get_catalog_target(self, relationship_guid: str, server: str = None) -> dict | str:
         """ Retrieve a specific catalog target associated with an integration connector.  Further Information:
             https://egeria-project.org/concepts/integration-connector/ .
 
@@ -1914,16 +2622,14 @@ class AutomatedCuration(Client):
             """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid, server))
+        response = loop.run_until_complete(self._async_get_catalog_target(relationship_guid, server))
         return response
 
     async def _async_add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                                        catalog_target_name: str, connection_name: str= None,
-                                        metadata_src_qual_name: str = None,
-                                        config_properties: dict = None, template_properties: dict = None,
-                                        permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
-                                        server: str = None) -> str:
+                                        catalog_target_name: str, connection_name: str = None,
+                                        metadata_src_qual_name: str = None, config_properties: dict = None,
+                                        template_properties: dict = None, permitted_sync: str = "BOTH_DIRECTIONS",
+                                        delete_method: str = "ARCHIVE", server: str = None) -> str:
         """ Add a catalog target to an integration connector and .
             Async version.
 
@@ -1970,18 +2676,16 @@ class AutomatedCuration(Client):
         body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
                 "configProperties": config_properties, "templateProperties": template_properties,
                 "connectionName": connection_name, "permittedSynchronization": permitted_sync,
-                "deleteMethod": delete_method
-                }
+                "deleteMethod": delete_method}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get('guid', "No Guid returned")
 
-    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str,
-                            catalog_target_name: str, connection_name: str= None,
-                            metadata_src_qual_name: str = None,
-                            config_properties: dict = None, template_properties: dict = None,
-                            permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
-                            server: str = None) -> str:
+    def add_catalog_target(self, integ_connector_guid: str, metadata_element_guid: str, catalog_target_name: str,
+                           connection_name: str = None, metadata_src_qual_name: str = None,
+                           config_properties: dict = None, template_properties: dict = None,
+                           permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
+                           server: str = None) -> str:
         """ Add a catalog target to an integration connector and .
 
             Parameters:
@@ -2022,17 +2726,14 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_add_catalog_target(integ_connector_guid, metadata_element_guid, catalog_target_name,
                                            connection_name, metadata_src_qual_name, config_properties,
-                                           template_properties, permitted_sync, delete_method,
-                                           server))
+                                           template_properties, permitted_sync, delete_method, server))
         return response
 
-    async def _async_update_catalog_target(self, relationship_guid: str,
-                                           catalog_target_name: str, connection_name: str = None,
-                                           metadata_src_qual_name: str = None,
+    async def _async_update_catalog_target(self, relationship_guid: str, catalog_target_name: str,
+                                           connection_name: str = None, metadata_src_qual_name: str = None,
                                            config_properties: dict = None, template_properties: dict = None,
                                            permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
-                                           server: str = None
-                                           ) -> None:
+                                           server: str = None) -> None:
         """ Update a catalog target to an integration connector.
             Async version.
 
@@ -2076,18 +2777,14 @@ class AutomatedCuration(Client):
         body = {"catalogTargetName": catalog_target_name, "metadataSourceQualifiedName": metadata_src_qual_name,
                 "configProperties": config_properties, "templateProperties": template_properties,
                 "connectionName": connection_name, "permittedSynchronization": permitted_sync,
-                "deleteMethod": delete_method
-                }
+                "deleteMethod": delete_method}
         await self._async_make_request("POST", url, body)
         return
 
-    def update_catalog_target(self, relationship_guid: str,
-                           catalog_target_name: str, connection_name: str = None,
-                           metadata_src_qual_name: str = None,
-                           config_properties: dict = None, template_properties: dict = None,
-                           permitted_sync: str = "BOTH_DIRECTIONS", delete_method: str = "ARCHIVE",
-                           server: str = None
-                           ) -> None:
+    def update_catalog_target(self, relationship_guid: str, catalog_target_name: str, connection_name: str = None,
+                              metadata_src_qual_name: str = None, config_properties: dict = None,
+                              template_properties: dict = None, permitted_sync: str = "BOTH_DIRECTIONS",
+                              delete_method: str = "ARCHIVE", server: str = None) -> None:
         """ Update a catalog target to an integration connector.
 
         Parameters:
@@ -2113,10 +2810,9 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_catalog_target(relationship_guid, catalog_target_name,
-                                              connection_name,metadata_src_qual_name,
-                                              config_properties, template_properties,permitted_sync,
-                                              delete_method,server))
+            self._async_update_catalog_target(relationship_guid, catalog_target_name, connection_name,
+                                              metadata_src_qual_name, config_properties, template_properties,
+                                              permitted_sync, delete_method, server))
         return
 
     async def _async_remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:
@@ -2521,11 +3217,8 @@ class AutomatedCuration(Client):
         validate_name(filter)
 
         url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/elements?"
-               f"startFrom={start_from}&pageSize={page_size}&getTemplates={get_templates_s}"
-               )
-        body = {"filter": filter,
-                "effective_time": effective_time
-                }
+               f"startFrom={start_from}&pageSize={page_size}&getTemplates={get_templates_s}")
+        body = {"filter": filter, "effective_time": effective_time}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "no tech found")
@@ -2571,7 +3264,6 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_elements(filter, effective_time, server,
-                                                     start_from, page_size, get_templates
-                                                     ))
+            self._async_get_technology_type_elements(filter, effective_time, server, start_from, page_size,
+                                                     get_templates))
         return response
