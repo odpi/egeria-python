@@ -122,8 +122,6 @@ webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.10
 zipp==3.18.1
-
-pyegeria~=0.5.6.4
 click~=8.1.7
 trogon~=0.5.0
 textual~=0.75.1

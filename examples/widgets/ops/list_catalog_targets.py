@@ -3,10 +3,10 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
 
 
 List catalog targets
+
 """
 import argparse
 import os

@@ -4,10 +4,8 @@ SPDX-Lic
 ense-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
 
-
-A simple display for glossary terms
+A simple display of elements for an Open Metadata Type in tree form.
 """
 import argparse
 import json

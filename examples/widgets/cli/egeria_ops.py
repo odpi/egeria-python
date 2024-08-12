@@ -245,7 +245,14 @@ def engine_host(ctx):
 engine_host.add_command(start_engine_host)
 engine_host.add_command(stop_engine_host)
 
-tell.add_command(load_archive)
+@tell.group('repository')
+@click.pass_context
+def repository(ctx):
+    """Group of commands to a repository"""
+    pass
+
+repository.add_command(load_archive)
+
 
 if __name__ == '__main__':
     cli()

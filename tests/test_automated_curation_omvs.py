@@ -4,7 +4,9 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the Automated Curation View Service module.
+This module is for testing the Automated Curation View Service module. We assume that the Core Content Pack
+has been loaded.
+
 The routines assume that pytest is being used as the test tool and framework.
 
 A running Egeria environment is needed to run these tests.
@@ -158,6 +160,33 @@ class TestAutomatedCuration:
                 print_json(out)
             elif type(response) is str:
                 pprint("Database Server GUID create is " + response)
+            assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_create_uc_server_element_from_template(self):
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            response = a_client.create_uc_server_element_from_template("laz3", "http://host.docker.internal", "8080",
+                                                                        "my test uc", "0.1")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = ("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                pprint(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                pprint("UC Server GUID create is " + response)
             assert True
 
         except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
@@ -717,7 +746,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("Unity Catalog Server")
+            response = a_client.get_technology_type_detail("Unity Catalog Volume")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -985,7 +1014,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
-            file_folder_guid = "67d947be-d942-42ed-9c69-b0feeb5992a3"
+            file_folder_guid = "42d5bbaa-9454-40ad-832c-82cbfd1d0ee2"
             response = a_client.initiate_file_folder_survey(file_folder_guid,
                                                             'AssetSurvey:survey-all-folders')
             duration = time.perf_counter() - start_time
@@ -1015,6 +1044,33 @@ class TestAutomatedCuration:
             start_time = time.perf_counter()
             file_guid = "9dbb47d9-4ca9-404e-b02d-2e049e6e6c6e"
             response = a_client.initiate_file_survey(file_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                out = ("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_initiate_uc_server_survey(self):
+        try:
+            a_client = AutomatedCuration(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2,
+                                         user_pwd="secret")
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            uc_server_guid = "61ec007a-4fa3-49ec-b7b8-527efbfd1076"
+            response = a_client.initiate_uc_server_survey(uc_server_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:

@@ -4,15 +4,9 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This script restarts an integration daemon.
+Execute engine actions.
 
 """
-
-import os
-from rich import print, print_json
-from rich.console import Console
-
-import time
 import click
 # from ops_config import Config, pass_config
 from pyegeria import ServerOps, AutomatedCuration, INTEGRATION_GUIDS, Platform

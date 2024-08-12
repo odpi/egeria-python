@@ -59,6 +59,7 @@ def list_elements(om_type:str, server: str,
         )
 
         table.add_column("Qualified Name")
+        table.add_column("Type")
         table.add_column("Created")
         table.add_column("Home Store")
         table.add_column("GUID", width = 38,no_wrap=True)
@@ -68,7 +69,7 @@ def list_elements(om_type:str, server: str,
         if type(elements) is list:
             for element in elements:
                 header = element['elementHeader']
-                el_q_name = element['properties']['qualifiedName']
+                el_q_name = element['properties'].get('qualifiedName',"---")
                 el_type = header["type"]['typeName']
                 el_home = header['origin']['homeMetadataCollectionName']
                 el_create_time = header['versions']['createTime'][:-10]
@@ -79,11 +80,11 @@ def list_elements(om_type:str, server: str,
                     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
 
                 el_props_out = Markdown(el_props_md)
-                table.add_row(el_q_name, el_create_time, el_home, el_guid, el_props_out)
+                table.add_row(el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out)
 
             return table
         else:
-            print("Unknown Open Metadata type")
+            print("No instances found")
             sys.exit(1)
 
     try:
@@ -94,7 +95,7 @@ def list_elements(om_type:str, server: str,
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        assert e.related_http_code != "200", "Invalid parameters"
+        print("Perhaps the type name isn't known")
     finally:
         c_client.close_session()
 
