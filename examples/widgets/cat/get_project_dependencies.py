@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-A simple viewer for project structure - provide the root and we display the hierarchy
+A simple viewer for project dependencies - provide the root and we display the dependency tree
 
 """
 
@@ -35,7 +35,7 @@ EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
 EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
-def project_structure_viewer(root: str, server_name: str, platform_url: str, user: str, user_password: str,
+def project_dependency_viewer(root: str, server_name: str, platform_url: str, user: str, user_password: str,
                              jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH, timeout: int = 30):
     """ A simple collection viewer"""
 
@@ -89,7 +89,7 @@ def project_structure_viewer(root: str, server_name: str, platform_url: str, use
                 child_guid = proj['elementHeader']['guid']
                 child_name = proj['properties']['name']
                 relationship = proj['relatedElement']['relationshipHeader']['type']['typeName']
-                if relationship != 'ProjectHierarchy':
+                if relationship != 'ProjectDependency':
                     continue
                 walk_project_hierarchy(project_client, child_name, t)
 
@@ -126,7 +126,7 @@ def main():
 
     try:
         root_project = Prompt.ask("Enter the Root Project to start from:", default="Sustainability Campaign")
-        project_structure_viewer(root_project, server, url, userid, user_pass)
+        project_dependency_viewer(root_project, server, url, userid, user_pass)
     except (KeyboardInterrupt):
         pass
 

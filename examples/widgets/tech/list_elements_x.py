@@ -14,7 +14,7 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-   ClassificationManager
+    ClassificationManager, FeedbackManager
 )
 
 
@@ -34,12 +34,14 @@ EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
 
-def list_elements(om_type:str, server: str,
+def list_elements_x(om_type:str, server: str,
                        url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
 ):
 
     c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
+    f_client = FeedbackManager(server, url, user_id=username, user_pwd=password, token=token)
+
     elements = c_client.get_elements(om_type)
 
     def generate_table() -> Table:
@@ -55,7 +57,7 @@ def list_elements(om_type:str, server: str,
             box=box.ROUNDED,
             title=f"Elements for Open Metadata Type: '{om_type}' ",
             expand=True,
-            # width=500
+            width=width
         )
 
         table.add_column("Qualified Name")
@@ -64,6 +66,8 @@ def list_elements(om_type:str, server: str,
         table.add_column("Home Store")
         table.add_column("GUID", width = 38,no_wrap=True)
         table.add_column("Properties")
+        table.add_column('Feedback', min_width=30)
+        table.add_column('Public Comments')
 
 
         if type(elements) is list:
@@ -72,7 +76,7 @@ def list_elements(om_type:str, server: str,
                 el_q_name = element['properties'].get('qualifiedName',"---")
                 el_type = header["type"]['typeName']
                 el_home = header['origin']['homeMetadataCollectionName']
-                el_create_time = header['versions']['createTime'][:-10]
+                el_create_time = header['versions']['createTime'][:-18]
                 el_guid = header['guid']
 
                 el_props_md = ""
@@ -80,7 +84,39 @@ def list_elements(om_type:str, server: str,
                     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
 
                 el_props_out = Markdown(el_props_md)
-                table.add_row(el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out)
+
+                tags = f_client.get_attached_tags(el_guid)
+                tags_md = "Tags:\n"
+                if type(tags) is list:
+                    for tag in tags:
+                        tags_md += (f"* tag: {tag.get('name','---')}\n"
+                                    f"\t description: {tag.get('description','---')}\n"
+                                    f"\t assigned by: {tag.get('user','---')}\n"
+                                    )
+
+                else:
+                    tags_md = "---"
+
+
+                likes = f_client.get_attached_likes(el_guid)
+                likes_md = "Likes:\b"
+                if type(likes) is list:
+                    for like in likes:
+                        likes_md += (f"* tag: {like['name']}\n"
+                                    f"* description: {like['description']}\n"
+                                    f"* assigned by: {like['user']}\n"
+                                    f"\n")
+
+                else:
+                    likes_md = "---"
+
+
+                feedback_out = f"{tags_md}\n --- \n{likes_md}"
+
+                comments_out = " "
+
+
+                table.add_row(el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out, feedback_out, comments_out)
 
             return table
         else:
@@ -116,7 +152,7 @@ def main():
 
     try:
         om_type = Prompt.ask("Enter the Open Metadata Type to find elements of:", default="GlossaryTerm")
-        list_elements(om_type, server, url, userid, password)
+        list_elements_x(om_type, server, url, userid, password)
     except(KeyboardInterrupt):
         pass
 

@@ -76,7 +76,7 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
                 priority = str(props.get("priority", "---"))
                 due = props.get("dueTime", " ")
                 completed = props.get("completionTime", "---")
-                status = props.get("status")
+                status = props.get("toDoStatus")
 
                 for actor in item["assignedActors"]:
                     assigned_actors.append(actor.get("uniqueName", "NoOne"))

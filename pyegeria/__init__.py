@@ -49,6 +49,7 @@ from .action_author_omvs import GovernanceAuthor
 from .glossary_manager_omvs import GlossaryManager
 from .create_tech_guid_lists import build_global_guid_lists
 from .classification_manager_omvs import ClassificationManager
+from .feedback_manager_omvs import FeedbackManager
 
 
 #

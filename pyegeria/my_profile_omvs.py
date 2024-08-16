@@ -6,6 +6,7 @@ This module contains the MyProfile class and its methods.
 import asyncio
 import json
 
+from pyegeria import body_slimmer
 from pyegeria._client import Client
 from pyegeria._validators import validate_name, validate_search_string
 
@@ -392,7 +393,7 @@ class MyProfile(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "No guid returned")
 
-    def create_to_do(self, body: dict, server_name: str = None) -> None:
+    def create_to_do(self, body: dict, server_name: str = None) -> str:
         """ Create a To-Do item.
             Parameters
             ----------
@@ -534,10 +535,12 @@ class MyProfile(Client):
         if server_name is None:
             server_name = self.server_name
 
+        is_merge_update_t = str(is_merge_update).lower()
+
         validate_name(todo_guid)
 
         url = (f"{self.my_profile_command_root}/{server_name}/api/open-metadata/my-profile/to-dos/"
-               f"{todo_guid}?merge-update={is_merge_update}")
+               f"{todo_guid}?isMergeUpdate={is_merge_update_t}")
 
         await self._async_make_request("POST", url, body)
         return
@@ -576,14 +579,12 @@ class MyProfile(Client):
         loop.run_until_complete(self._async_update_to_do(todo_guid, body, is_merge_update, server_name))
         return
 
-    async def _async_delete_to_do(self, todo_guid: str, status: str = "OPEN", server_name: str = None) -> None:
+    async def _async_delete_to_do(self, todo_guid: str, server_name: str = None) -> None:
         """ Delete a To-Do item. Async version.
             Parameters
             ----------
             todo_guid: str
               Identifier of the To-Do item.
-            status: str
-                Filter items to match this status. Defaults to "OPEN"
             server_name : str, optional
              The name of the server where the to-do item will be created. If not provided,
              the default server name associated with the instance of the class will be used.
@@ -606,21 +607,19 @@ class MyProfile(Client):
             server_name = self.server_name
 
         validate_name(todo_guid)
-        body = {"status": status}
 
-        url = f"{self.my_profile_command_root}/{server_name}/api/open-metadata/my-profile/to-dos/{todo_guid}"
 
-        await self._async_make_request("POST", url, body)
+        url = f"{self.my_profile_command_root}/{server_name}/api/open-metadata/my-profile/to-dos/{todo_guid}/delete"
+
+        await self._async_make_request("POST", url)
         return
 
-    def delete_to_do(self, todo_guid: str, status: str = "OPEN", server_name: str = None) -> None:
+    def delete_to_do(self, todo_guid: str, server_name: str = None) -> None:
         """ Delete a To-Do item.
             Parameters
             ----------
             todo_guid: str
               Identifier of the To-Do item.
-            status: str
-                Filter items to match this status. Defaults to "OPEN"
             server_name : str, optional
              The name of the server where the to-do item will be created. If not provided,
              the default server name associated with the instance of the class will be used.
@@ -640,7 +639,7 @@ class MyProfile(Client):
             The principle specified by the user_id does not have authorization for the requested action
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_to_do(todo_guid, status, server_name))
+        loop.run_until_complete(self._async_delete_to_do(todo_guid, server_name))
         return
 
     async def _async_reassign_to_do(self, todo_guid: str, actor_guid: str, status: str = "OPEN",
@@ -717,7 +716,7 @@ class MyProfile(Client):
         loop.run_until_complete(self._async_reassign_to_do(todo_guid, actor_guid, status, server_name))
         return
 
-    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = "OPEN",
+    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = None,
                                 starts_with: bool = False, ends_with: bool = False, ignore_case: bool = True,
                                 start_from: int = 0, page_size: int = 100) -> list | str:
         """ find To-Do items. Async version.
@@ -772,7 +771,7 @@ class MyProfile(Client):
                f"find-by-search-string?startFrom={start_from}&pageSize={page_size}&"
                f"startsWith={starts_with_s}&endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         # return response.text
         return response.json().get("elements", "No ToDos found")
 
@@ -934,7 +933,7 @@ class MyProfile(Client):
         validate_name(action_target_guid)
 
         url = (f"{self.my_profile_command_root}/{server_name}/api/open-metadata/my-profile/to-dos/"
-               f"action-targets/{action_target_guid}?is_merge_update={is_merge_update_t}")
+               f"action-targets/{action_target_guid}?isMergeUpdate={is_merge_update_t}")
 
         await self._async_make_request("POST", url, body)
         return
@@ -971,3 +970,4 @@ class MyProfile(Client):
                                                                             body, is_merge_update,
                                                                             server_name))
         return
+

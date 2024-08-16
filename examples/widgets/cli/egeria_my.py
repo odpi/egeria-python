@@ -12,13 +12,15 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
+from examples.widgets.cat import list_todos
 from examples.widgets.cli.ops_config import Config
 
 from examples.widgets.my.monitor_open_todos import display_todos
 from examples.widgets.my.monitor_my_todos import display_my_todos
 from examples.widgets.my.list_my_profile import display_my_profile
 from examples.widgets.my.list_my_roles import display_my_roles
-
+from examples.widgets.my.todo_actions import create_todo, delete_todo, change_todo_status, mark_todo_complete, \
+    reassign_todo
 
 
 # class Config(object):
@@ -148,6 +150,11 @@ def show_open_todos(ctx):
 def tell(ctx):
     """Perform actions an Egeria Objects"""
     pass
+tell.add_command(create_todo)
+tell.add_command(delete_todo)
+tell.add_command(change_todo_status)
+tell.add_command(mark_todo_complete)
+tell.add_command(reassign_todo)
 
 
 if __name__ == '__main__':

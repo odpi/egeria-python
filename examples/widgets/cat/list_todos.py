@@ -15,6 +15,7 @@ import time
 
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 
@@ -40,7 +41,7 @@ EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
 EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
-def display_to_dos(search_string: str, server: str, url: str, username: str, user_pass:str,
+def display_to_dos(search_string: str, status_filter: str, server: str, url: str, username: str, user_pass:str,
                    jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
     m_client = MyProfile(server, url, user_id=username)
@@ -60,15 +61,16 @@ def display_to_dos(search_string: str, server: str, url: str, username: str, use
 
         table.add_column("Name")
         table.add_column("Type Name")
-
+        table.add_column("GUID", no_wrap=True)
         table.add_column("Created")
         table.add_column("Priority")
         table.add_column("Due")
         table.add_column("Completion")
         table.add_column("Status")
         table.add_column("Sponsor")
+        table.add_column("Assigned")
 
-        todo_items = m_client.find_to_do(search_string)
+        todo_items = m_client.find_to_do(search_string,status = status_filter)
 
         if type(todo_items) is str:
             name = " "
@@ -80,18 +82,27 @@ def display_to_dos(search_string: str, server: str, url: str, username: str, use
 
             status = " "
             sponsor = " "
+            assigned_out = ''
         else:
             for item in todo_items:
+                guid = item['elementHeader']['guid']
                 props = item["properties"]
                 name = props["name"]
                 type_name = props.get("toDoType", " ")
-                created = props.get("creationTime", " ")
+                created = props.get("creationTime", " ")[:-19]
                 priority = str(props.get("priority", " "))
-                due = props.get("dueTime", " ")
-                completed = props.get("completionTime", " ")
-                status = props.get("status")
-                # assigned_actors = item["assignedActors"]
-                # sponsor = assigned_actors[0].get("uniqueName", " ")
+                due = props.get("dueTime", "          ")[:-19]
+                completed = props.get("completionTime", "           ")[:-10]
+                status = props.get("toDoStatus", '---')
+
+                assigned_out = ''
+                assigned_actors = item.get("assignedActors",'---')
+                if type(assigned_actors) is list:
+                    assigned_md = ''
+                    for actor in assigned_actors:
+                        assigned_md += f"* {actor['uniqueName'].split(',')[0]}\n"
+                    assigned_out = Markdown(assigned_md)
+
                 sponsor = "erinoverview"
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"
@@ -101,7 +112,7 @@ def display_to_dos(search_string: str, server: str, url: str, username: str, use
                     status = f"[red]{status}"
 
                 table.add_row(
-                    name, type_name, created, priority, due, completed, status, sponsor
+                    name, type_name, guid, created, priority, due, completed, status, sponsor, assigned_out
                 )
 
         m_client.close_session()
@@ -140,8 +151,10 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
-        search_string = Prompt.ask("Enter the ToDo you are searching for:", default="*")
-        display_to_dos(search_string, server, url, userid, user_pass)
+        search_string = Prompt.ask("Enter the ToDo you are searching for", default="*")
+        status_filter = Prompt.ask("Enter an optional status filter ['OPEN','IN_PROGRESS','WAITING','COMPLETE',"
+                                   "'ABANDONED', 'None']", default=None)
+        display_to_dos(search_string, status_filter,server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

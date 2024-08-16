@@ -95,7 +95,7 @@ def display_todos(server: str , url: str, user: str, user_pass:str,
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", " ")
                 completed = props.get("completionTime", " ")
-                status = props.get("status")
+                status = props.get("toDoStatus", '---')
                 # assigned_actors = item["assignedActors"]
                 # sponsor = assigned_actors[0].get("uniqueName", " ")
                 sponsor = "erinoverview"

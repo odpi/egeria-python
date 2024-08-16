@@ -7,7 +7,8 @@ added in subsequent versions of the glossary_omvs module.
 
 """
 import asyncio
-from datetime import datetime, time
+from datetime import datetime
+import time
 
 # import json
 from pyegeria._client import Client
@@ -48,7 +49,8 @@ class GlossaryManager(GlossaryBrowser):
     #       Get Valid Values for Enumerations
     #
 
-    async def _async_create_glossary(self, display_name: str, description: str, server_name: str = None) -> str:
+    async def _async_create_glossary(self, display_name: str, description: str, language: str = "English",
+                                     usage: str = None, server_name: str = None) -> str:
         """ Create a new glossary. Async version.
 
         Parameters
@@ -57,6 +59,10 @@ class GlossaryManager(GlossaryBrowser):
             The name of the new glossary. This will be used to produce a unique qualified name for the glossary.
         description: str
             A description of the glossary.
+        language: str, optional, default = "English"
+            The language the used for the glossary
+        usage: str, optional, default = None
+            How the glossary is intended to be used
         server_name : str, optional
             The name of the server to query. If not provided, the server name associated with the instance is used.
 
@@ -69,7 +75,7 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries"
         body = {
             "class": "ReferenceableRequestBody",
             "elementProperties":
@@ -77,13 +83,16 @@ class GlossaryManager(GlossaryBrowser):
                     "class": "GlossaryProperties",
                     "qualifiedName": f"Glossary-{display_name}-{time.asctime()}",
                     "displayName": display_name,
-                    "description": description
+                    "description": description,
+                    "language" : language,
+                    "usage" : usage
                 }
         }
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get("guid", None)
 
-    def create_glossary(self, display_name: str, description: str, server_name: str = None) -> str:
+    def create_glossary(self, display_name: str, description: str, language: str = "English", usage: str= None,
+                        server_name: str = None) -> str:
         """ Create a new glossary.
 
         Parameters
@@ -92,6 +101,10 @@ class GlossaryManager(GlossaryBrowser):
             The name of the new glossary. This will be used to produce a unique qualified name for the glossary.
         description: str
             A description of the glossary.
+        language: str, optional, default = "English"
+            The language the used for the glossary
+        usage: str, optional, default = None
+            How the glossary is intended to be used
         server_name : str, optional
             The name of the server to query. If not provided, the server name associated with the instance is used.
 
@@ -102,7 +115,8 @@ class GlossaryManager(GlossaryBrowser):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_glossary(display_name, description, server_name))
+        response = loop.run_until_complete(self._async_create_glossary(display_name, description, language,
+                                                                       usage, server_name))
         return response
 
     async def _async_delete_glossary(self, glossary_guid: str, server_name: str = None) -> None:
@@ -499,7 +513,7 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"{glossary_guid}/categories")
         body = {
             "class": "ReferenceableRequestBody",
@@ -590,7 +604,7 @@ class GlossaryManager(GlossaryBrowser):
 
         body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"for-category/{glossary_category_guid}/retrieve")
 
         response = await self._async_make_request("POST", url, body)
@@ -698,7 +712,7 @@ class GlossaryManager(GlossaryBrowser):
         body = {"class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time}
         body = body_slimmer(body)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
                f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
@@ -797,7 +811,7 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url)
@@ -880,7 +894,7 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/terms/"
                f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url)
@@ -1263,7 +1277,7 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"{glossary_guid}/terms/new-controlled"
                )
 
@@ -1377,7 +1391,7 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(glossary_guid)
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"{glossary_guid}/terms/from-template/{glossary_term_guid}"
                )
 
@@ -1492,7 +1506,7 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
                f"terms/{glossary_term_guid}/is-data-field"
                )
 
@@ -1585,7 +1599,7 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
                f"{glossary_term_guid}/confidentiality"
                )
 
@@ -1679,7 +1693,7 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
+        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
                f"{glossary_term_guid}/subject-area-member"
                )
 
@@ -1785,7 +1799,7 @@ class GlossaryManager(GlossaryBrowser):
         is_merge_update_s = str(is_merge_update).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate={is_merge_update_s}"
             )
 
@@ -1882,7 +1896,7 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/terms/{glossary_term_guid}/"
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate=true"
             )
 
@@ -2884,119 +2898,3 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
-    #
-    #   Feedback
-    #
-    async def _async_get_comment(self, commemtGUID: str, effective_time: str, server_name: str = None,
-                                 for_lineage: bool = False, for_duplicate_processing: bool = False) -> dict | list:
-        """ Retrieve the comment specified by the comment GUID """
-        if server_name is None:
-            server_name = self.server_name
-
-        validate_guid(commemtGUID)
-
-        if effective_time is None:
-            effective_time = datetime.now().isoformat()
-
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-
-        body = {"effective_time": effective_time}
-
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
-               f"{commemtGUID}?forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
-
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
-
-    async def _async_add_comment_reply(self, commentGUID: str, is_public: bool, comment_type: str, comment_text: str,
-                                       server_name: str = None, for_lineage: bool = False,
-                                       for_duplicate_processing: bool = False) -> str:
-        """ Reply to a comment """
-
-        if server_name is None:
-            server_name = self.server_name
-
-        validate_guid(commentGUID)
-        validate_name(comment_type)
-
-        is_public_s = str(is_public).lower()
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-
-        body = {"class": "CommentRequestBody", "commentType": comment_type, "commentText": comment_text,
-                "isPublic": is_public}
-
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
-               f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
-
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
-        response = await self._async_make_request("POST", url, body)
-        return response
-
-    async def _async_update_comment(self, commentGUID: str, is_public: bool, comment_type: str, comment_text: str,
-                                    server_name: str = None, is_merge_update: bool = False, for_lineage: bool = False,
-                                    for_duplicate_processing: bool = False) -> str:
-        """ Update the specified comment"""
-        if server_name is None:
-            server_name = self.server_name
-
-        validate_guid(commentGUID)
-        validate_name(comment_type)
-
-        is_public_s = str(is_public).lower()
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-
-        body = {"class": "CommentRequestBody", "commentType": comment_type, "commentText": comment_text,
-                "isPublic": is_public}
-
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
-               f"{commentGUID}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
-
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
-        response = await self._async_make_request("POST", url, body)
-        return response
-
-    async def _async_find_comment(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-                                  effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
-                                  ignore_case: bool = False, for_lineage: bool = False,
-                                  for_duplicate_processing: bool = False, server_name: str = None, start_from: int = 0,
-                                  page_size: int = None):
-        """Find comments by search string"""
-        if server_name is None:
-            server_name = self.server_name
-        if page_size is None:
-            page_size = self.page_size
-        if effective_time is None:
-            effective_time = datetime.now().isoformat()
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-        if search_string == '*':
-            search_string = None
-
-        # validate_search_string(search_string)
-
-        body = {"class": "GlossarySearchStringRequestBody", "glossaryGUID": glossary_guid,
-                "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
-        # body = body_slimmer(body)
-
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
-
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No terms found")

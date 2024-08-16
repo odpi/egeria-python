@@ -25,6 +25,7 @@ from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 
+console = Console(width = 200)
 
 class TestMyProfile:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -219,7 +220,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do(" ")
+            response = m_client.find_to_do("*", status="COMPLETE")
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
@@ -268,3 +269,57 @@ class TestMyProfile:
 
         finally:
             m_client.close_session()
+
+    def test_update_todo_status(self, server_name: str = good_view_server_1):
+        m_client = MyProfile(server_name, self.good_platform1_url,
+                                 user_id=self.good_user_2, user_pwd='secret')
+        console = Console(width=150)
+        token = m_client.create_egeria_bearer_token()
+        new_status = "WAITING"
+        todo_guid = "d6d4f540-a28f-4312-9c24-d3774b3f06a1"
+
+        try:
+
+            body = {
+                    "class": "ToDoProperties",
+                    "toDoStatus": new_status,
+                    "priority": 1
+                }
+
+            m_client.update_to_do(todo_guid, body, is_merge_update=True)
+
+            print(f"Marked todo item {todo_guid} as complete.")
+
+        except (InvalidParameterException, PropertyServerException) as e:
+            # print_exception_response(e)
+            console.print_exception(show_locals=True, width=200)
+        finally:
+            m_client.close_session()
+
+    # def test_update_todo_status(self, server_name: str = good_view_server_1):
+    #     m_client = MyProfile(server_name, self.good_platform1_url,
+    #                          user_id=self.good_user_2, user_pwd='secret')
+    #
+    #     token = m_client.create_egeria_bearer_token()
+    #     new_status = "Waiting"
+    #     todo_guid = " 766e5ac5-ba62-4210-803c-45acdaf12b32"
+    #
+    #     try:
+    #
+    #         body = {
+    #             "properties": {
+    #                 "class": "ToDoProperties",
+    #                 "toDoStatus": new_status
+    #             },
+    #         }
+    #         m_client.update_to_do(todo_guid, body, is_merge_update=True)
+    #
+    #         print(f"Marked todo item {todo_guid} as complete.")
+    #
+    #     except (InvalidParameterException, PropertyServerException) as e:
+    #         print_exception_response(e)
+    #         console.print_exception(show_locals=True)
+    #     finally:
+    #         m_client.close_session()
+    #
+    #

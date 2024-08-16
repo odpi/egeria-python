@@ -80,11 +80,13 @@ def element_response(response: dict, element_type: str, detailed_response: bool)
 
 
 def elements_response(response: dict, element_type: str, detailed_response: bool):
+    if type(response) != dict:
+        return('---')
     if detailed_response:
         return response
     else:
-        return element_property_plus_list(response[element_type])
-
+        return element_property_plus_list(response.get(element_type,'---'))
+# Todo - review with Kevin...
 
 class FeedbackManager(Client):
     """FeedbackManager is a class that extends the Client class. It
@@ -2276,7 +2278,8 @@ class FeedbackManager(Client):
         )
         url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
-        return elements_response(response.json(), "elementList", detailed_response)
+        # return elements_response(response.json(), "elementList", detailed_response)
+        return response.json().get('ratings','---')
 
     def get_attached_likes(
             self,
@@ -2520,7 +2523,8 @@ class FeedbackManager(Client):
         )
         url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
-        return elements_response(response.json(), "tags", detailed_response)
+        return response.json().get('tags', '---')
+        # return elements_response(response.json(), "tags", detailed_response)
 
     def get_attached_tags(
             self,
