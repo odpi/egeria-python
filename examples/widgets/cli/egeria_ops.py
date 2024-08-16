@@ -14,8 +14,8 @@ from trogon import tui
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
-from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
-    stop_server as stop_engine_host
+from examples.widgets.ops.engine_actions import start_daemon as start_engine_host, \
+    stop_daemon as stop_engine_host
 from examples.widgets.ops.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
                                                              update_catalog_target, stop_server, start_server)
 from examples.widgets.ops.list_catalog_targets import display_catalog_targets

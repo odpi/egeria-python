@@ -6,6 +6,7 @@ This module contains the MyProfile class and its methods.
 import asyncio
 import json
 
+from pyegeria import body_slimmer
 from pyegeria._client import Client
 from pyegeria._validators import validate_name, validate_search_string
 
@@ -715,7 +716,7 @@ class MyProfile(Client):
         loop.run_until_complete(self._async_reassign_to_do(todo_guid, actor_guid, status, server_name))
         return
 
-    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = "OPEN",
+    async def _async_find_to_do(self, search_string: str = "*", server_name: str = "None", status: str = None,
                                 starts_with: bool = False, ends_with: bool = False, ignore_case: bool = True,
                                 start_from: int = 0, page_size: int = 100) -> list | str:
         """ find To-Do items. Async version.
@@ -770,7 +771,7 @@ class MyProfile(Client):
                f"find-by-search-string?startFrom={start_from}&pageSize={page_size}&"
                f"startsWith={starts_with_s}&endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         # return response.text
         return response.json().get("elements", "No ToDos found")
 

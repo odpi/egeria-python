@@ -220,7 +220,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do(" ")
+            response = m_client.find_to_do("*", status="COMPLETE")
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
@@ -273,7 +273,7 @@ class TestMyProfile:
     def test_update_todo_status(self, server_name: str = good_view_server_1):
         m_client = MyProfile(server_name, self.good_platform1_url,
                                  user_id=self.good_user_2, user_pwd='secret')
-        console = Console(width=200)
+        console = Console(width=150)
         token = m_client.create_egeria_bearer_token()
         new_status = "WAITING"
         todo_guid = "d6d4f540-a28f-4312-9c24-d3774b3f06a1"
@@ -281,12 +281,11 @@ class TestMyProfile:
         try:
 
             body = {
-                "properties": {
                     "class": "ToDoProperties",
                     "toDoStatus": new_status,
                     "priority": 1
-                },
-            }
+                }
+
             m_client.update_to_do(todo_guid, body, is_merge_update=True)
 
             print(f"Marked todo item {todo_guid} as complete.")

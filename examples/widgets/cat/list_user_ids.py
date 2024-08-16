@@ -34,13 +34,13 @@ EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
 
 
 
-def list_elements(om_type:str, server: str,
+def list_user_ids(server: str,
                        url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
 ):
 
     c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
-    elements = c_client.get_elements(om_type)
+    elements = c_client.get_elements('UserIdentity')
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -53,34 +53,35 @@ def list_elements(om_type:str, server: str,
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            title=f"Elements for Open Metadata Type: '{om_type}' ",
+            title=f"Elements for Open Metadata Type: 'User Identities' ",
             expand=True,
             # width=500
         )
-
-        table.add_column("Qualified Name")
-        table.add_column("Type")
+        table.add_column("Name")
+        table.add_column("Job Title")
+        table.add_column("UserId")
         table.add_column("Created")
-        table.add_column("Home Store")
         table.add_column("GUID", width = 38,no_wrap=True)
-        table.add_column("Properties")
+        table.add_column("Qualified Name")
 
 
         if type(elements) is list:
             for element in elements:
                 header = element['elementHeader']
                 el_q_name = element['properties'].get('qualifiedName',"---")
-                el_type = header["type"]['typeName']
-                el_home = header['origin']['homeMetadataCollectionName']
                 el_create_time = header['versions']['createTime'][:-10]
                 el_guid = header['guid']
+                el_user_id = element['properties'].get('userId',"---")
+                full_name = ''
+                job = ''
 
-                el_props_md = ""
-                for prop in element['properties'].keys():
-                    el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
+                profile = c_client.get_related_elements(el_guid, 'ProfileIdentity')
+                if type(profile) is list:
+                    for rel in profile:
+                        full_name = rel['relatedElement']['properties'].get('fullName','---')
+                        job = rel['relatedElement']['properties'].get('jobTitle','---')
 
-                el_props_out = Markdown(el_props_md)
-                table.add_row(el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out)
+                table.add_row(full_name, job, el_user_id, el_create_time, el_guid, el_q_name,)
 
             return table
         else:
@@ -95,7 +96,7 @@ def list_elements(om_type:str, server: str,
 
     except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
         print_exception_response(e)
-        print("\n\nPerhaps the type name isn't known")
+        print("Perhaps the type name isn't known")
     finally:
         c_client.close_session()
 
@@ -115,8 +116,7 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        om_type = Prompt.ask("Enter the Open Metadata Type to find elements of:", default="GlossaryTerm")
-        list_elements(om_type, server, url, userid, password)
+        list_user_ids(server, url, userid, password)
     except(KeyboardInterrupt):
         pass
 

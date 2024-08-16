@@ -317,7 +317,8 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['FileFolder'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"directoryPathName": path_name, "directoryName": folder_name,
-                    "versionIdentifier": version, "fileSystemName": file_system, "description": description, }}
+                                              "versionIdentifier": version, "fileSystemName": file_system,
+                                              "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -390,7 +391,8 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Server'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"serverName": server_name, "hostURL": host_url,
-                    "versionIdentifier": version, "portNumber": port, "description": description, }}
+                                              "versionIdentifier": version, "portNumber": port,
+                                              "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -459,7 +461,7 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Catalog'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "serverNetworkAddress": network_address,
-                    "versionIdentifier": version, "description": description, }}
+                                              "versionIdentifier": version, "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -528,8 +530,8 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Schema'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
-                    "serverNetworkAddress": network_address, "versionIdentifier": version,
-                    "description": description, }}
+                                              "serverNetworkAddress": network_address, "versionIdentifier": version,
+                                              "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -612,9 +614,11 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Table'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
-                    "ucTableName": uc_table, "ucTableType": uc_table_type, "ucStorageLocation": uc_storage_loc,
-                    "ucDataSourceFormat": uc_data_source_format, "serverNetworkAddress": network_address,
-                    "versionIdentifier": version, "description": description, }}
+                                              "ucTableName": uc_table, "ucTableType": uc_table_type,
+                                              "ucStorageLocation": uc_storage_loc,
+                                              "ucDataSourceFormat": uc_data_source_format,
+                                              "serverNetworkAddress": network_address,
+                                              "versionIdentifier": version, "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -700,8 +704,8 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Function'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
-                    "ucFunctionName": uc_function, "serverNetworkAddress": network_address,
-                    "versionIdentifier": version, "description": description, }}
+                                              "ucFunctionName": uc_function, "serverNetworkAddress": network_address,
+                                              "versionIdentifier": version, "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -786,9 +790,10 @@ class AutomatedCuration(Client):
         """
         body = {"templateGUID": TEMPLATE_GUIDS['Unity Catalog Volume'], "isOwnAnchor": 'true',
                 "placeholderPropertyValues": {"ucCatalogName": uc_catalog, "ucSchemaName": uc_schema,
-                    "ucVolumeName": uc_volume, "ucVolumeType": uc_vol_type, "ucStorageLocation": uc_storage_loc,
-                    "serverNetworkAddress": network_address, "versionIdentifier": version,
-                    "description": description, }}
+                                              "ucVolumeName": uc_volume, "ucVolumeType": uc_vol_type,
+                                              "ucStorageLocation": uc_storage_loc,
+                                              "serverNetworkAddress": network_address, "versionIdentifier": version,
+                                              "description": description, }}
         body_s = body_slimmer(body)
         response = await self._async_create_element_from_template(body_s, server)
         return str(response)
@@ -2397,9 +2402,6 @@ class AutomatedCuration(Client):
     #     loop = asyncio.get_event_loop()
     #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
     #     return response
-
-
-
 
     #
     #   Initiate general engine action

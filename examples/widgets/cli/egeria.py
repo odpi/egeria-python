@@ -26,9 +26,10 @@ from examples.widgets.cat.list_tech_types import display_tech_types
 from examples.widgets.cat.list_todos import display_to_dos as list_todos
 from examples.widgets.cli.ops_config import Config
 from examples.widgets.cat.list_relationships import list_relationships
+from examples.widgets.cat.list_user_ids import list_user_ids
 
-from examples.widgets.ops.engine_actions import start_server as start_engine_host, \
-    stop_server as stop_engine_host
+from examples.widgets.ops.engine_actions import start_daemon as start_engine_host, \
+    stop_daemon as stop_engine_host
 from examples.widgets.ops.integration_daemon_actions import (add_catalog_target, remove_catalog_target,
                                                              update_catalog_target, stop_server, start_server)
 from examples.widgets.ops.list_catalog_targets import display_catalog_targets
@@ -520,6 +521,14 @@ def show_todos(ctx, search_string, status):
     """Display a tree graph of information about an asset """
     c = ctx.obj
     list_todos(search_string, status, c.view_server, c.view_server_url, c.userid,
+                   c.password, c.jupyter, c.width)
+
+@show.command('user-ids')
+@click.pass_context
+def show_todos(ctx):
+    """Display a tree graph of information about an asset """
+    c = ctx.obj
+    list_user_ids( c.view_server, c.view_server_url, c.userid,
                    c.password, c.jupyter, c.width)
 
 

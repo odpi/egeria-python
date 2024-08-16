@@ -93,10 +93,10 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", "          ")[:-19]
                 completed = props.get("completionTime", "           ")[:-10]
-                status = props.get("toDoStatus")
+                status = props.get("toDoStatus", '---')
 
                 assigned_out = ''
-                assigned_actors = item["assignedActors"]
+                assigned_actors = item.get("assignedActors",'---')
                 if type(assigned_actors) is list:
                     assigned_md = ''
                     for actor in assigned_actors:

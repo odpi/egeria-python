@@ -25,6 +25,7 @@ from examples.widgets.cat.get_project_structure import project_structure_viewer
 from examples.widgets.cat.get_project_dependencies import project_dependency_viewer
 from examples.widgets.cat.list_cert_types import display_certifications
 from examples.widgets.cat.list_relationships import list_relationships
+from examples.widgets.cat.list_user_ids import list_user_ids
 
 # from pyegeria import ServerOps
 from examples.widgets.cli.ops_config import Config
@@ -247,6 +248,14 @@ def show_todos(ctx, search_string, status):
     """Display a tree graph of information about an asset """
     c = ctx.obj
     list_todos(search_string, status, c.view_server, c.view_server_url, c.userid,
+                   c.password, c.jupyter, c.width)
+
+@show.command('user-ids')
+@click.pass_context
+def show_todos(ctx):
+    """Display a tree graph of information about an asset """
+    c = ctx.obj
+    list_user_ids( c.view_server, c.view_server_url, c.userid,
                    c.password, c.jupyter, c.width)
 
 #

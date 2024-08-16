@@ -7,37 +7,54 @@ Copyright Contributors to the ODPi Egeria project.
 Execute ToDo actions.
 
 """
-import json
+import os
 import time
+from datetime import datetime
 
 import click
+
 # from ops_config import Config, pass_config
-from pyegeria import ServerOps, AutomatedCuration, INTEGRATION_GUIDS, MyProfile
+from pyegeria import MyProfile
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
     print_exception_response,
 )
 
 erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
-peter_guid	="a187bc48-8154-491f-97b4-a2f3c3f1a00e"
-tanya_guid	="26ec1614-bede-4b25-a2a3-f8ed26db3aaa"
+peter_guid = "a187bc48-8154-491f-97b4-a2f3c3f1a00e"
+tanya_guid = "26ec1614-bede-4b25-a2a3-f8ed26db3aaa"
+
+ERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
+EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
+EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
+EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
+EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
+EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
+EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
+EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
+EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
 
 
 @click.command('create-todo')
-@click.option('--name',prompt='Todo Name',help='Name of Todo', required=True)
-@click.option('--description',prompt='Description',help='Brief description of To Do item', required=True)
-@click.option('--type',prompt='Todo Type',help='Type of Todo', required=True, default = 'forMe')
-@click.option('--priority',prompt='Todo Priority',type = int, help='Priority of Todo', required=True, default= 0)
-@click.option('--due',prompt='Due Date',help='Due date of Todo (yyyy-mm-dd)', required=True)
-@click.option('--assigned-to',prompt='Assigned to',help='Party the Todo is assigned to', required=True,
-              default = 'Peter')
-@click.pass_context
-def create_todo(ctx,name,description,type,priority,due,assigned_to):
+@click.option('--server', default=EGERIA_VIEW_SERVER, help='Egeria metadata store to load')
+@click.option('--url', default=EGERIA_VIEW_SERVER_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default=EGERIA_USER, help='Egeria user')
+@click.option('--password', default=EGERIA_USER_PASSWORD, help='Egeria user password')
+@click.option('--timeout', default=60, help='Number of seconds to wait')
+@click.option('--name', prompt='Todo Name', help='Name of Todo', required=True)
+@click.option('--description', prompt='Description', help='Brief description of To Do item', required=True)
+@click.option('--type', prompt='Todo Type', help='Type of Todo', required=True, default='forMe')
+@click.option('--priority', prompt='Todo Priority', type=int, help='Priority of Todo', required=True, default=0)
+@click.option('--due', prompt='Due Date', help='Due date of Todo (yyyy-mm-dd)',
+              default = datetime.now().strftime("%Y-%m-%d"), required=True)
+@click.option('--assigned-to', prompt='Assigned to', help='Party the Todo is assigned to', required=True,
+              default=peter_guid)
+def create_todo(server, url, userid, password, timeout, name, description, type, priority, due, assigned_to):
     """Create a new ToDo item"""
-    c = ctx.obj
-    m_client = MyProfile(c.view_server, c.view_server_url, user_id=c.userid, user_pwd=c.password)
+    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
         body = {
@@ -51,7 +68,7 @@ def create_todo(ctx,name,description,type,priority,due,assigned_to):
                 "dueTime": due,
                 "status": "OPEN"
             },
-            "assignToActorGUID": peter_guid
+            "assignToActorGUID": assigned_to
         }
 
         resp = m_client.create_to_do(body)
@@ -66,14 +83,16 @@ def create_todo(ctx,name,description,type,priority,due,assigned_to):
         m_client.close_session()
 
 
-
 @click.command('delete-todo')
+@click.option('--server', default=EGERIA_VIEW_SERVER, help='Egeria metadata store to load')
+@click.option('--url', default=EGERIA_VIEW_SERVER_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default=EGERIA_USER, help='Egeria user')
+@click.option('--password', default=EGERIA_USER_PASSWORD, help='Egeria user password')
+@click.option('--timeout', default=60, help='Number of seconds to wait')
 @click.argument('todo-guid')
-@click.pass_context
-def delete_todo(ctx, todo_guid):
+def delete_todo(server, url, userid, password, timeout, todo_guid):
     """Delete the todo item specified """
-    c = ctx.obj
-    m_client = MyProfile(c.view_server, c.view_server_url, user_id=c.userid, user_pwd=c.password)
+    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
         m_client.delete_to_do(todo_guid)
@@ -85,50 +104,56 @@ def delete_todo(ctx, todo_guid):
     finally:
         m_client.close_session()
 
+
 @click.command('change-todo-status')
 @click.argument('todo-guid')
-@click.option('--new-status', type=click.Choice(['OPEN','IN_PROGRESS','WAITING','COMPLETE', 'ABANDONED'],
-               case_sensitive='False'), help = 'Enter the new ToDo item status', required=True)
-@click.pass_context
-def change_todo_status(ctx, todo_guid, new_status):
+@click.option('--server', default=EGERIA_VIEW_SERVER, help='Egeria metadata store to load')
+@click.option('--url', default=EGERIA_VIEW_SERVER_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default=EGERIA_USER, help='Egeria user')
+@click.option('--password', default=EGERIA_USER_PASSWORD, help='Egeria user password')
+@click.option('--timeout', default=60, help='Number of seconds to wait')
+@click.option('--new-status', type=click.Choice(['OPEN', 'IN_PROGRESS', 'WAITING', 'COMPLETE', 'ABANDONED'],
+                                                case_sensitive='False'), help='Enter the new ToDo item status',
+              required=True)
+def change_todo_status(server, url, userid, password, timeout, todo_guid, new_status):
     """Update a ToDo item status"""
-    c = ctx.obj
-    m_client = MyProfile(c.view_server, c.view_server_url, user_id=c.userid, user_pwd=c.password)
+    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
 
-
         body = {
-            "properties": {
                 "class": "ToDoProperties",
                 "toDoStatus": new_status
-            },
         }
+
         m_client.update_to_do(todo_guid, body, is_merge_update=True)
 
-        click.echo(f"Marked todo item {todo_guid} as complete.")
+        click.echo(f"Changed todo item {todo_guid} status to {new_status}.")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()
+
 
 @click.command('mark-todo-complete')
+@click.option('--server', default=EGERIA_VIEW_SERVER, help='Egeria metadata store to load')
+@click.option('--url', default=EGERIA_VIEW_SERVER_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default=EGERIA_USER, help='Egeria user')
+@click.option('--password', default=EGERIA_USER_PASSWORD, help='Egeria user password')
+@click.option('--timeout', default=60, help='Number of seconds to wait')
 @click.argument('todo-guid')
-@click.pass_context
-def mark_todo_complete(ctx, todo_guid):
+def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
     """Mark the specified todo as complete"""
+    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     try:
-        c = ctx.obj
-        m_client = MyProfile(c.view_server, c.view_server_url, user_id=c.userid, user_pwd=c.password)
         token = m_client.create_egeria_bearer_token()
         body = {
-            "properties": {
                 "class": "ToDoProperties",
-                "completionTime" : time.asctime(),
+                "completionTime": time.asctime(),
                 "toDoStatus": "COMPLETE"
-            },
         }
+
         m_client.update_to_do(todo_guid, body, is_merge_update=True)
 
         click.echo(f"Marked todo item {todo_guid} as complete.")
@@ -137,16 +162,19 @@ def mark_todo_complete(ctx, todo_guid):
         print_exception_response(e)
     finally:
         m_client.close_session()
-        
+
 
 @click.command('reassign-todo')
+@click.option('--server', default=EGERIA_VIEW_SERVER, help='Egeria metadata store to load')
+@click.option('--url', default=EGERIA_VIEW_SERVER_URL, help='URL of Egeria platform to connect to')
+@click.option('--userid', default=EGERIA_USER, help='Egeria user')
+@click.option('--password', default=EGERIA_USER_PASSWORD, help='Egeria user password')
+@click.option('--timeout', default=60, help='Number of seconds to wait')
 @click.argument('todo-guid')
 @click.argument('new-actor-guid')
-@click.pass_context
-def reassign_todo(ctx, todo_guid, new_actor_guid):
+def reassign_todo(server, url, userid, password, timeout, todo_guid, new_actor_guid):
     """Reassign ToDo item to new actor"""
-    c = ctx.obj
-    m_client = MyProfile(c.view_server, c.view_server_url, user_id=c.userid, user_pwd=c.password)
+    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
 

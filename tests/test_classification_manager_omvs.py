@@ -87,8 +87,11 @@ def test_get_elements():
 
 
 def test_get_elements_by_property_value():
-    open_metadata_type_name = 'Project'
-    property_value = "Campaign:Clinical Trials Management"
+    # open_metadata_type_name = 'Project'
+    # property_value = "Campaign:Clinical Trials Management"
+    open_metadata_type_name = 'ValidValueDefinition'
+    # open_metadata_type_name = None
+    property_value = "Unity Catalog Catalog"
     property_names = ["name", "qualifiedName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -222,7 +225,7 @@ def test_get_all_related_elements():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
-
+    element_guid = "25385e7b-4718-4bed-b9ac-cb99679d68db"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_all_related_elements(element_guid,open_metadata_type_name)
 
@@ -239,8 +242,8 @@ def test_get_related_elements():
 
     # open_metadata_type_name = "Organization"
     open_metadata_type_name = None
-    element_guid = "b846e2d3-832b-4880-969e-00065960f506"
-    relationship_type = "SpecificationPropertyAssignment"
+    element_guid = "25385e7b-4718-4bed-b9ac-cb99679d68db"
+    relationship_type = "ProfileIdentity"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
