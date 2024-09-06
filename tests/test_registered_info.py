@@ -65,22 +65,23 @@ class TestRegisteredInfoServices:
             # (
             #     "governance-services"
             # ),
-            (
-                 "integration-services"
-            ),
+            ("integration-services"),
             # (
             #         "view-services"
             # ),
         ],
     )
     def test_list_registered_svcs(self, service_kind):
-
         try:
-            r_client = RegisteredInfo(self.good_server_1,self.good_platform1_url, self.good_user_1)
-            service_kind = 'all'
+            r_client = RegisteredInfo(
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
+            service_kind = "all"
             response = r_client.list_registered_svcs(service_kind)
 
-            assert (type(response) is list) or (type(response) is str), "No services found"
+            assert (type(response) is list) or (
+                type(response) is str
+            ), "No services found"
             if type(response) is list:
                 print(f"\n\nView services configuration for {service_kind}: \n\n")
                 # print(json.dumps(response, indent=4))
@@ -89,40 +90,45 @@ class TestRegisteredInfoServices:
                 print(f"\n\n{response}: \n\n")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
     def test_list_severity_definitions(self):
         try:
-            r_client = RegisteredInfo(self.good_server_3,self.good_platform1_url,
-                                       user_id=self.good_user_1)
+            r_client = RegisteredInfo(
+                self.good_server_3, self.good_platform1_url, user_id=self.good_user_1
+            )
 
             response = r_client.list_severity_definitions()
             console = Console()
 
             table = Table(
                 title="Severity Codes",
-                style = "black on grey66",
-                header_style= "white on dark_blue"
+                style="black on grey66",
+                header_style="white on dark_blue",
             )
             table.add_column("Number")
-            table.add_column("Name", width = 30)
+            table.add_column("Name", width=30)
             table.add_column("Description")
 
             for code in response:
-                ordinal, name, description = (str(code['ordinal']), code['name'], code['description'])
+                ordinal, name, description = (
+                    str(code["ordinal"]),
+                    code["name"],
+                    code["description"],
+                )
                 table.add_row(ordinal, name, description)
             console.print(table)
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -130,8 +136,9 @@ class TestRegisteredInfoServices:
     def test_list_asset_types(self):
         user = self.good_user_2
         try:
-            r_client = RegisteredInfo(self.good_server_2,self.good_platform1_url, user,
-                                      "secret")
+            r_client = RegisteredInfo(
+                self.good_server_2, self.good_platform1_url, user, "secret"
+            )
             token = r_client.create_egeria_bearer_token(user, "secret")
             response = r_client.list_asset_types()
 
@@ -143,9 +150,9 @@ class TestRegisteredInfoServices:
                 print(f"\n\n{response}: \n\n")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

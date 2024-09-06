@@ -25,32 +25,42 @@ from pyegeria._exceptions import (
 )
 
 from pyegeria.my_profile_omvs import MyProfile
+
 disable_ssl_warnings = True
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_todos(server: str , url: str, user: str, user_pass:str,
-                  jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
-
+def display_todos(
+    server: str,
+    url: str,
+    user: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     console = Console(width=width, force_terminal=not jupyter)
 
     m_client = MyProfile(server, url, user_id=user)
     token = m_client.create_egeria_bearer_token(user, user_pass)
 
-    def generate_table(search_string:str = '*') -> Table:
+    def generate_table(search_string: str = "*") -> Table:
         """Make a new table."""
         table = Table(
             header_style="bright_white on dark_blue",
@@ -60,7 +70,7 @@ def display_todos(server: str , url: str, user: str, user_pass:str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"ToDos for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Name")
@@ -95,7 +105,7 @@ def display_todos(server: str , url: str, user: str, user_pass:str,
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", " ")
                 completed = props.get("completionTime", " ")
-                status = props.get("toDoStatus", '---')
+                status = props.get("toDoStatus", "---")
                 # assigned_actors = item["assignedActors"]
                 # sponsor = assigned_actors[0].get("uniqueName", " ")
                 sponsor = "erinoverview"
@@ -119,7 +129,11 @@ def display_todos(server: str , url: str, user: str, user_pass:str,
                 live.update(generate_table())
                 live.console.pager()
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
     except KeyboardInterrupt:
         pass

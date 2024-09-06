@@ -11,7 +11,7 @@ This script creates and configures the cocoView1 server.
 
 import json
 
-from globals import (cocoMDS2Name, corePlatformURL, dataLakePlatformURL, devPlatformURL)
+from globals import cocoMDS2Name, corePlatformURL, dataLakePlatformURL, devPlatformURL
 from pyegeria import (
     print_exception_response,
 )
@@ -59,9 +59,8 @@ try:
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
     f_client.set_server_security_connection(security_connection_body)
 

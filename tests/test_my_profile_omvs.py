@@ -25,7 +25,8 @@ from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 
-console = Console(width = 200)
+console = Console(width=200)
+
 
 class TestMyProfile:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -56,8 +57,11 @@ class TestMyProfile:
 
     def test_get_my_profile(self):
         try:
-            m_client = MyProfile(self.good_view_server_1, self.good_platform1_url,
-                                       user_id=self.good_user_2)
+            m_client = MyProfile(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
@@ -66,26 +70,27 @@ class TestMyProfile:
             # resp_str = json.loads(response)
             id_list = []
             if type(response) is dict:
-                print_json(data = response)
+                print_json(data=response)
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
         finally:
             m_client.close_session()
 
-    def test_get_assigned_actions(self, server_name:str= good_view_server_1):
+    def test_get_assigned_actions(self, server_name: str = good_view_server_1):
         console = Console()
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             actor = "a588fb08-ae09-4415-bd5d-991882ceacba"
@@ -102,20 +107,21 @@ class TestMyProfile:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
-            console.print_exception(show_locals= True)
+            console.print_exception(show_locals=True)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
-    def test_get_actions_for_sponsor(self, server_name:str= good_view_server_1):
+    def test_get_actions_for_sponsor(self, server_name: str = good_view_server_1):
         console = Console()
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             element_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
@@ -131,19 +137,20 @@ class TestMyProfile:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
-            console.print_exception(show_locals= True)
+            console.print_exception(show_locals=True)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
-    def test_create_to_do(self, server_name:str = good_view_server_1):
+    def test_create_to_do(self, server_name: str = good_view_server_1):
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
@@ -151,17 +158,17 @@ class TestMyProfile:
             to_do_desc = "Another holiday is always good"
             to_do_type = "holiday"
             body = {
-                        "properties": {
-                            "class" : "ToDoProperties",
-                            "qualifiedName": f"Test-To-Do-{time.asctime()}",
-                            "name": to_do,
-                            "description": to_do_desc,
-                            "toDoType": to_do_type,
-                            "priority": 0,
-                            "dueTime": "2024-03-11T15:42:11.307Z",
-                            "status": "OPEN"
-                        },
-                    "assignToActorGUID": erins_guid
+                "properties": {
+                    "class": "ToDoProperties",
+                    "qualifiedName": f"Test-To-Do-{time.asctime()}",
+                    "name": to_do,
+                    "description": to_do_desc,
+                    "toDoType": to_do_type,
+                    "priority": 0,
+                    "dueTime": "2024-03-11T15:42:11.307Z",
+                    "status": "OPEN",
+                },
+                "assignToActorGUID": erins_guid,
             }
             # print(json.dumps(body,indent=4))
             response = m_client.create_to_do(body)
@@ -169,13 +176,14 @@ class TestMyProfile:
             print(f"\n\n\t To-Do {to_do} created successfully with response:")
             if type(response) is dict:
                 print_json(data=response, indent=4)
-            else: print(response)
+            else:
+                print(response)
             assert True
 
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -186,8 +194,9 @@ class TestMyProfile:
     def test_get_to_do(self, server_name: str = good_view_server_1):
         console = Console()
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             todo_guid = "766e5ac5-ba62-4210-803c-45acdaf12b32"
@@ -197,13 +206,13 @@ class TestMyProfile:
             if type(response) is dict:
                 print_json(data=response)
             elif type(response) is str:
-                console.print("\n\n\t Response is "  + response)
+                console.print("\n\n\t Response is " + response)
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -215,8 +224,9 @@ class TestMyProfile:
     def test_find_to_do(self, server_name: str = good_view_server_1):
         console = Console()
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
@@ -231,9 +241,9 @@ class TestMyProfile:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -245,8 +255,9 @@ class TestMyProfile:
     def test_get_to_dos_by_type(self, server_name: str = good_view_server_1):
         console = Console()
         try:
-            m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2)
+            m_client = MyProfile(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
@@ -259,9 +270,9 @@ class TestMyProfile:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -271,20 +282,19 @@ class TestMyProfile:
             m_client.close_session()
 
     def test_update_todo_status(self, server_name: str = good_view_server_1):
-        m_client = MyProfile(server_name, self.good_platform1_url,
-                                 user_id=self.good_user_2, user_pwd='secret')
+        m_client = MyProfile(
+            server_name,
+            self.good_platform1_url,
+            user_id=self.good_user_2,
+            user_pwd="secret",
+        )
         console = Console(width=150)
         token = m_client.create_egeria_bearer_token()
         new_status = "WAITING"
         todo_guid = "d6d4f540-a28f-4312-9c24-d3774b3f06a1"
 
         try:
-
-            body = {
-                    "class": "ToDoProperties",
-                    "toDoStatus": new_status,
-                    "priority": 1
-                }
+            body = {"class": "ToDoProperties", "toDoStatus": new_status, "priority": 1}
 
             m_client.update_to_do(todo_guid, body, is_merge_update=True)
 

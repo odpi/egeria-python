@@ -23,10 +23,28 @@ from pyegeria import (
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.platform_services import Platform
 
-from globals import (adminUserId, cocoMDS1Name, cocoMDS2Name, cocoMDS3Name, cocoMDS4Name, cocoMDS5Name, cocoMDS6Name,
-                     cocoView1Name, cocoOLS1Name, cocoMDSxName, devPlatformName, dataLakePlatformName, corePlatformName,
-                     corePlatformURL, dataLakePlatformURL, devPlatformURL, cocoCohort, devCohort, iotCohort,
-                     max_paging_size)
+from globals import (
+    adminUserId,
+    cocoMDS1Name,
+    cocoMDS2Name,
+    cocoMDS3Name,
+    cocoMDS4Name,
+    cocoMDS5Name,
+    cocoMDS6Name,
+    cocoView1Name,
+    cocoOLS1Name,
+    cocoMDSxName,
+    devPlatformName,
+    dataLakePlatformName,
+    corePlatformName,
+    corePlatformURL,
+    dataLakePlatformURL,
+    devPlatformURL,
+    cocoCohort,
+    devCohort,
+    iotCohort,
+    max_paging_size,
+)
 
 
 disable_ssl_warnings = True
@@ -43,11 +61,14 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties("Business Systems",
-                                         "Coco Pharmaceuticals",
-                                         platform_url,
-                                         mdr_server_user_id, mdr_server_password,
-                                         max_paging_size)
+    o_client.set_basic_server_properties(
+        "Business Systems",
+        "Coco Pharmaceuticals",
+        platform_url,
+        mdr_server_user_id,
+        mdr_server_password,
+        max_paging_size,
+    )
 
     # Inherit event bus config
 
@@ -66,9 +87,8 @@ try:
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
     o_client.set_server_security_connection(security_connection_body)
     o_client.add_default_log_destinations()
@@ -81,8 +101,10 @@ try:
 
     o_client.add_cohort_registration(cocoCohort)
 
-    proxy_details = ("org.odpi.openmetadata.adapters.repositoryservices.readonly.repositoryconnector." +
-                     "ReadOnlyOMRSRepositoryConnectorProvider")
+    proxy_details = (
+        "org.odpi.openmetadata.adapters.repositoryservices.readonly.repositoryconnector."
+        + "ReadOnlyOMRSRepositoryConnectorProvider"
+    )
     o_client.set_repository_proxy_details(proxy_details)
 
     p_client = Platform(mdr_server, platform_url, admin_user)

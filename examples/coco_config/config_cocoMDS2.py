@@ -14,7 +14,14 @@ This script creates and configures the cocoMDS2 - Governance metadata server
 
 import json
 
-from globals import (cocoMDS2Name, corePlatformURL, cocoCohort, devCohort, iotCohort, max_paging_size)
+from globals import (
+    cocoMDS2Name,
+    corePlatformURL,
+    cocoCohort,
+    devCohort,
+    iotCohort,
+    max_paging_size,
+)
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,
@@ -36,21 +43,20 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties("Governance Server",
-                                         "Coco Pharmaceuticals",
-                                         platform_url,
-                                         mdr_server_user_id, mdr_server_password,
-                                         max_paging_size)
+    o_client.set_basic_server_properties(
+        "Governance Server",
+        "Coco Pharmaceuticals",
+        platform_url,
+        mdr_server_user_id,
+        mdr_server_password,
+        max_paging_size,
+    )
 
-#   Inherit event bus config
+    #   Inherit event bus config
 
     event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "{{kafkaEndpoint}}"
-        },
-        "consumer": {
-            "bootstrap.servers": "{{kafkaEndpoint}}"
-        }
+        "producer": {"bootstrap.servers": "{{kafkaEndpoint}}"},
+        "consumer": {"bootstrap.servers": "{{kafkaEndpoint}}"},
     }
 
     o_client.set_event_bus(event_bus_config)
@@ -59,9 +65,8 @@ try:
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
 
     o_client.set_server_security_connection(security_connection_body)
@@ -83,8 +88,7 @@ try:
     o_client.configure_access_service("asset-consumer", {})
 
     o_client.configure_access_service("asset-owner", {})
-    o_client.configure_access_service("community-profile",
-                                      {"KarmaPointPlateau": "500"})
+    o_client.configure_access_service("community-profile", {"KarmaPointPlateau": "500"})
     # o_client.configure_access_service("glossary-view", {})
     # o_client.configure_access_service("subject-area", {})
     o_client.configure_access_service("governance-engine", {})

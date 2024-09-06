@@ -45,8 +45,8 @@ password = "secret"
 # element_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663'
 # element_guid = "a2915132-9d9a-4449-846f-43a871b5a6a0"
 # element_guid = "b359e297-a565-414a-8213-fa423312ab36" # clinical trials management
-element_guid = "25b1791f-c2fb-4b93-b236-cad53739a9a2" # Approved Hospital
-relationship_type= "GovernedBy"
+element_guid = "25b1791f-c2fb-4b93-b236-cad53739a9a2"  # Approved Hospital
+relationship_type = "GovernedBy"
 
 # bearer_token = c_client.create_egeria_bearer_token(user, password)
 console = Console()
@@ -69,13 +69,12 @@ def valid_guid(guid):
 ##
 #
 def test_get_elements():
-    open_metadata_type_name = 'CertificationType'
+    # open_metadata_type_name = 'CertificationType'
+    open_metadata_type_name = "ArchiveFile"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_elements(
-        open_metadata_type_name
-    )
+    response = c_client.get_elements(open_metadata_type_name)
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -89,18 +88,19 @@ def test_get_elements():
 def test_get_elements_by_property_value():
     # open_metadata_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
-    open_metadata_type_name = 'ValidValueDefinition'
+    # open_metadata_type_name = "ValidValueDefinition"
     # open_metadata_type_name = None
-    property_value = "Unity Catalog Catalog"
+    # property_value = "Unity Catalog Catalog"
+    # property_names = ["name", "qualifiedName"]
+    open_metadata_type_name = None
+    property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     property_names = ["name", "qualifiedName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_elements_by_property_value(
-            property_value,
-            property_names,
-            open_metadata_type_name
+            property_value, property_names, open_metadata_type_name
         )
 
         if type(result) is list:
@@ -113,9 +113,9 @@ def test_get_elements_by_property_value():
         assert True
 
     except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
     ) as e:
         print_exception_response(e)
         console.print_exception(show_locals=True)
@@ -124,36 +124,71 @@ def test_get_elements_by_property_value():
         c_client.close_session()
 
 
-def test_find_elements_by_property_value():
-    open_metadata_type_name = 'GovernanceActionType'
-    property_value = 'AssetSurvey:survey-folder'
-    property_names = ["name", "qualifiedName", "title"]
+def test_get_elements_by_property_value():
+    # open_metadata_type_name = 'Project'
+    # property_value = "Campaign:Clinical Trials Management"
+    # open_metadata_type_name = "ValidValueDefinition"
+    # open_metadata_type_name = None
+    # property_value = "Unity Catalog Catalog"
+    # property_names = ["name", "qualifiedName"]
+    open_metadata_type_name = None
+    property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
+    property_names = ["name", "qualifiedName"]
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        result = c_client.get_elements_by_property_value(
+            property_value, property_names, open_metadata_type_name
+        )
+
+        if type(result) is list:
+            print(f"\n\tElement count is: {len(result)}")
+
+            print_json(data=result)
+        elif type(result) is str:
+            console.print("\n\n\t Response is: " + result)
+
+        assert True
+
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
+        print_exception_response(e)
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+
+def test_get_guid_for_name():
+    open_metadata_type_name = None
+    property_value = "Dr Tessa Tube"
+
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    result = c_client.find_elements_by_property_value(
-        property_value,
-        property_names,
-        open_metadata_type_name
-    )
+    result = c_client.get_guid_for_name(property_value)
 
     if type(result) is list:
         print(f"\n\tElement count is: {len(result)}")
         print_json(data=result)
     elif type(result) is str:
-        console.print("\n\n\t Response is" + result)
+        console.print("\n\n\t Response is " + result)
 
     assert True
 
 
 def test_get_elements_by_classification():
-    open_metadata_type_name = 'Project'
+    open_metadata_type_name = "Project"
     classification = "GovernanceProject"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_elements_by_classification(classification,
-        open_metadata_type_name
+    response = c_client.get_elements_by_classification(
+        classification, open_metadata_type_name
     )
 
     if type(response) is list:
@@ -165,7 +200,7 @@ def test_get_elements_by_classification():
 
 
 def test_get_elements_by_classification_with_property_value():
-    open_metadata_type_name = 'Project'
+    open_metadata_type_name = "Project"
     classification = "GovernanceProject"
     property_value = "Clinical Trials"
     property_names = ["name", "qualifiedName"]
@@ -174,10 +209,7 @@ def test_get_elements_by_classification_with_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_elements_by_classification_with_property_value(
-            classification,
-            property_value,
-            property_names,
-            open_metadata_type_name
+            classification, property_value, property_names, open_metadata_type_name
         )
 
         if type(result) is list:
@@ -188,9 +220,9 @@ def test_get_elements_by_classification_with_property_value():
         assert True
 
     except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
     ) as e:
         print_exception_response(e)
         console.print_exception(show_locals=True)
@@ -201,17 +233,14 @@ def test_get_elements_by_classification_with_property_value():
 
 def test_find_elements_by_classification_with_property_value():
     classification = "GovernanceProject"
-    open_metadata_type_name = 'Project'
-    property_value = 'Clinical Trials'
+    open_metadata_type_name = "Project"
+    property_value = "Clinical Trials"
     property_names = ["name", "qualifiedName"]
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_elements_by_classification_with_property_value(
-        classification,
-        property_value,
-        property_names,
-        open_metadata_type_name
+        classification, property_value, property_names, open_metadata_type_name
     )
 
     if type(response) is list:
@@ -221,13 +250,14 @@ def test_find_elements_by_classification_with_property_value():
 
     assert True
 
+
 def test_get_all_related_elements():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
     element_guid = "25385e7b-4718-4bed-b9ac-cb99679d68db"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_all_related_elements(element_guid,open_metadata_type_name)
+    response = c_client.get_all_related_elements(element_guid, open_metadata_type_name)
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -236,6 +266,7 @@ def test_get_all_related_elements():
         console.print("\n\n\t Response is" + response)
 
     assert True
+
 
 def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
@@ -247,7 +278,9 @@ def test_get_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_related_elements(element_guid,relationship_type,open_metadata_type_name)
+    response = c_client.get_related_elements(
+        element_guid, relationship_type, open_metadata_type_name
+    )
 
     if type(response) is list:
         print_json(data=response)
@@ -256,22 +289,26 @@ def test_get_related_elements():
 
     assert True
 
+
 def test_get_related_elements_with_property_value():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
     relationship_type = "Certification"
     property_value = "Partner"
-    property_names = ["teamType", ]
+    property_names = [
+        "teamType",
+    ]
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_related_elements_with_property_value(
-            element_guid,relationship_type,
+            element_guid,
+            relationship_type,
             property_value,
             property_names,
-            open_metadata_type_name
+            open_metadata_type_name,
         )
 
         if type(result) is list:
@@ -284,9 +321,9 @@ def test_get_related_elements_with_property_value():
         assert True
 
     except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
     ) as e:
         print_exception_response(e)
         console.print_exception(show_locals=True)
@@ -301,7 +338,7 @@ def test_find_related_elements_with_property_value():
     # property_value = 'Clinical Trials Management'
     # property_names = ["name", "qualifiedName"]
     property_value = "Partner"
-    property_names = ["teamType" ]
+    property_names = ["teamType"]
 
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -311,7 +348,7 @@ def test_find_related_elements_with_property_value():
         relationship_type,
         property_value,
         property_names,
-        open_metadata_type_name
+        open_metadata_type_name,
     )
 
     if type(response) is list:
@@ -337,6 +374,7 @@ def test_get_relationships():
 
     assert True
 
+
 def test_get_relationships_with_property_value():
     property_value = "Organization:Hampton Hospital"
     property_names = ["name", "qualifiedName"]
@@ -345,9 +383,7 @@ def test_get_relationships_with_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_relationships_with_property_value(
-            relationship_type,
-            property_value,
-            property_names
+            relationship_type, property_value, property_names
         )
 
         if type(result) is list:
@@ -360,9 +396,9 @@ def test_get_relationships_with_property_value():
         assert True
 
     except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
     ) as e:
         print_exception_response(e)
         console.print_exception(show_locals=True)
@@ -372,15 +408,13 @@ def test_get_relationships_with_property_value():
 
 
 def test_find_relationships_with_property_value():
-    property_value = 'Clinical Trials'
+    property_value = "Clinical Trials"
     property_names = ["name", "qualifiedName"]
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_relationships_with_property_value(
-        relationship_type,
-        property_value,
-        property_names
+        relationship_type, property_value, property_names
     )
 
     if type(response) is list:
@@ -390,14 +424,13 @@ def test_find_relationships_with_property_value():
 
     assert True
 
+
 def test_retrieve_instance_for_guid():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     element_guid = "abb234ab-712f-48d3-b083-244029cd8d2b"
-    response = c_client.retrieve_instance_for_guid(
-        element_guid
-    )
+    response = c_client.retrieve_instance_for_guid(element_guid)
 
     if type(response) is dict:
         print_json(data=response)

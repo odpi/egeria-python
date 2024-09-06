@@ -14,30 +14,36 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-   ClassificationManager
+    ClassificationManager,
 )
 
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-
-def list_elements(om_type:str, server: str,
-                       url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
+def list_elements(
+    om_type: str,
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
 ):
-
     c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
     elements = c_client.get_elements(om_type)
@@ -62,25 +68,26 @@ def list_elements(om_type:str, server: str,
         table.add_column("Type")
         table.add_column("Created")
         table.add_column("Home Store")
-        table.add_column("GUID", width = 38,no_wrap=True)
+        table.add_column("GUID", width=38, no_wrap=True)
         table.add_column("Properties")
-
 
         if type(elements) is list:
             for element in elements:
-                header = element['elementHeader']
-                el_q_name = element['properties'].get('qualifiedName',"---")
-                el_type = header["type"]['typeName']
-                el_home = header['origin']['homeMetadataCollectionName']
-                el_create_time = header['versions']['createTime'][:-10]
-                el_guid = header['guid']
+                header = element["elementHeader"]
+                el_q_name = element["properties"].get("qualifiedName", "---")
+                el_type = header["type"]["typeName"]
+                el_home = header["origin"]["homeMetadataCollectionName"]
+                el_create_time = header["versions"]["createTime"][:-10]
+                el_guid = header["guid"]
 
                 el_props_md = ""
-                for prop in element['properties'].keys():
+                for prop in element["properties"].keys():
                     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
 
                 el_props_out = Markdown(el_props_md)
-                table.add_row(el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out)
+                table.add_row(
+                    el_q_name, el_type, el_create_time, el_home, el_guid, el_props_out
+                )
 
             return table
         else:
@@ -93,7 +100,11 @@ def list_elements(om_type:str, server: str,
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         print("\n\nPerhaps the type name isn't known")
     finally:
@@ -115,14 +126,13 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        om_type = Prompt.ask("Enter the Open Metadata Type to find elements of:", default="GlossaryTerm")
+        om_type = Prompt.ask(
+            "Enter the Open Metadata Type to find elements of:", default="GlossaryTerm"
+        )
         list_elements(om_type, server, url, userid, password)
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
 
 
 if __name__ == "__main__":
     main()
-
-
-

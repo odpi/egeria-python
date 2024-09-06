@@ -28,25 +28,35 @@ from pyegeria.glossary_browser_omvs import GlossaryBrowser
 disable_ssl_warnings = True
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_glossary_terms(search_string: str, guid: str, server: str, url: str, username: str, user_password: str,
-                           jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+def display_glossary_terms(
+    search_string: str,
+    guid: str,
+    server: str,
+    url: str,
+    username: str,
+    user_password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     g_client = GlossaryBrowser(server, url)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
-    def generate_table(search_string: str = '*') -> Table:
+    def generate_table(search_string: str = "*") -> Table:
         """Make a new table."""
         table = Table(
             title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
@@ -58,7 +68,7 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Glossary View Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
         table.add_column("Display Name")
         table.add_column("Qualified Name")
@@ -67,13 +77,23 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
         table.add_column("Summary")
         table.add_column("Description")
 
-        terms = g_client.find_glossary_terms(search_string, guid, starts_with=False,
-                                             ends_with=False, status_filter=[], page_size=500)
+        terms = g_client.find_glossary_terms(
+            search_string,
+            guid,
+            starts_with=False,
+            ends_with=False,
+            status_filter=[],
+            page_size=500,
+        )
+
+        sorted_terms = sorted(
+            terms, key=lambda k: k["glossaryTermProperties"]["displayName"]
+        )
         style = "bright_white on black"
         if type(terms) is str:
             return table
 
-        for term in terms:
+        for term in sorted_terms:
             props = term.get("glossaryTermProperties", "None")
             if props == "None":
                 return table
@@ -85,7 +105,12 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
             description = Text(props.get("description", " "), style=style)
 
             table.add_row(
-                display_name, qualified_name, abbrev, summary, description, style="bold white on black"
+                display_name,
+                qualified_name,
+                abbrev,
+                summary,
+                description,
+                style="bold white on black",
             )
 
         g_client.close_session()
@@ -96,12 +121,17 @@ def display_glossary_terms(search_string: str, guid: str, server: str, url: str,
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table(search_string))
-        console = Console(style="bold bright_white on black", width=width, force_terminal=not jupyter)
+        console = Console(
+            style="bold bright_white on black", width=width, force_terminal=not jupyter
+        )
         with console.pager(styles=True):
             console.print(generate_table(search_string))
 
-
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         console.print_exception()
 
 
@@ -126,7 +156,7 @@ def main():
     try:
         search_string = Prompt.ask("Enter the term you are searching for:", default="*")
         display_glossary_terms(search_string, guid, server, url, userid, user_pass)
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
 
 

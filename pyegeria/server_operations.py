@@ -30,16 +30,18 @@ class ServerOps(Platform):
             The password associated with the user_id. Defaults to None
 
     """
+
     def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = False,
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
     ):
-        Platform.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
-        self.ops_command_root = f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+        Platform.__init__(self, server_name, platform_url, user_id, user_pwd)
+        self.ops_command_root = (
+            f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+        )
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
         """
@@ -83,10 +85,12 @@ class ServerOps(Platform):
         response = loop.run_until_complete(self._async_get_active_configuration(server))
         return response
 
-#
-#   Archive Files
-#
-    async def _async_add_archive_file(self, archive_file: str, server: str = None, timeout: int = 60) -> None:
+    #
+    #   Archive Files
+    #
+    async def _async_add_archive_file(
+        self, archive_file: str, server: str = None, timeout: int = 60
+    ) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -105,14 +109,17 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-                self.ops_command_root
-                + "/servers/" + server
-                + "/instance/open-metadata-archives/file"
+            self.ops_command_root
+            + "/servers/"
+            + server
+            + "/instance/open-metadata-archives/file"
         )
 
         await self._async_make_request("POST-DATA", url, archive_file, time_out=timeout)
 
-    def add_archive_file(self, archive_file: str, server: str = None, timeout:int = 30) -> None:
+    def add_archive_file(
+        self, archive_file: str, server: str = None, timeout: int = 30
+    ) -> None:
         """
         Load the server with the contents of the indicated archive file.
 
@@ -129,10 +136,14 @@ class ServerOps(Platform):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_archive_file(archive_file, server, timeout))
+        loop.run_until_complete(
+            self._async_add_archive_file(archive_file, server, timeout)
+        )
 
-    async def _async_add_archive(self, archive_connection: str, server: str = None) -> None:
-        """ Load the server with the contents of the indicated archive file.
+    async def _async_add_archive(
+        self, archive_connection: str, server: str = None
+    ) -> None:
+        """Load the server with the contents of the indicated archive file.
 
         /open-metadata/server-operations/users/{userId}/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
 
@@ -153,9 +164,10 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-                self.ops_command_root
-                + "/servers/" + server
-                + "/instance/open-metadata-archives/connection"
+            self.ops_command_root
+            + "/servers/"
+            + server
+            + "/instance/open-metadata-archives/connection"
         )
         await self._async_make_request("POST-DATA", url, archive_connection)
 
@@ -178,13 +190,16 @@ class ServerOps(Platform):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_archive_file(archive_connection, server))
-#
-#   Server Ops
-#
+        loop.run_until_complete(
+            self._async_add_archive_file(archive_connection, server)
+        )
+
+    #
+    #   Server Ops
+    #
 
     async def _async_get_active_server_status(self, server: str = None) -> dict:
-        """  Get the status for the specified server.
+        """Get the status for the specified server.
 
         Parameters
         ----------
@@ -237,7 +252,9 @@ class ServerOps(Platform):
         response = loop.run_until_complete(self._async_get_active_server_status(server))
         return response.json()
 
-    async def _async_get_active_service_list_for_server(self, server: str = None) -> Response:
+    async def _async_get_active_service_list_for_server(
+        self, server: str = None
+    ) -> Response:
         """
         List all known active servers on the associated platform.
 
@@ -275,14 +292,16 @@ class ServerOps(Platform):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_service_list_for_server(server))
+        response = loop.run_until_complete(
+            self._async_get_active_service_list_for_server(server)
+        )
         return response
 
-#
-#   Governance Engine Ops
-#
+    #
+    #   Governance Engine Ops
+    #
     async def _async_get_governance_engine_summaries(self, server: str = None) -> dict:
-        """ Get Governance Engine Summaries. Async version.
+        """Get Governance Engine Summaries. Async version.
         Parameters
         ----------
         server : str, optional
@@ -298,8 +317,10 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/engine-host/users/{self.user_id}"
-               f"/governance-engines/summary")
+        url = (
+            f"{self.platform_url}/servers/{server}/open-metadata/engine-host/users/{self.user_id}"
+            f"/governance-engines/summary"
+        )
         response = await self._async_make_request("GET", url)
         return response.json().get("governanceEngineSummaries")
 
@@ -318,16 +339,18 @@ class ServerOps(Platform):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_governance_engine_summaries(server))
+        response = loop.run_until_complete(
+            self._async_get_governance_engine_summaries(server)
+        )
         return response
 
-#
-# Integration Daemon Ops
-#
-    async def _async_get_integration_daemon_status(self, server: str = None) -> dict | str:
-        """ Get the current status of the integration daemon. Async version.
-
-        """
+    #
+    # Integration Daemon Ops
+    #
+    async def _async_get_integration_daemon_status(
+        self, server: str = None
+    ) -> dict | str:
+        """Get the current status of the integration daemon. Async version."""
         if server is None:
             server = self.server_name
 
@@ -337,89 +360,104 @@ class ServerOps(Platform):
         # return response.json()
 
     def get_integration_daemon_status(self, server: str = None) -> dict | str:
-        """ Get the current status of the integration daemon. Async version.
-
-        """
+        """Get the current status of the integration daemon. Async version."""
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_integration_daemon_status(server))
+        response = loop.run_until_complete(
+            self._async_get_integration_daemon_status(server)
+        )
         return response
 
-    async def _async_get_connector_config(self, connector_name: str, server: str = None) -> dict | str:
-        """ Retrieve the configuration properties of the named integration connector running in the integration daemon
-         - async version"""
+    async def _async_get_connector_config(
+        self, connector_name: str, server: str = None
+    ) -> dict | str:
+        """Retrieve the configuration properties of the named integration connector running in the integration daemon
+        - async version"""
         if server is None:
             server = self.server_name
         validate_name(connector_name)
 
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/{self.user_id}/"
-               f"integration-connectors/{connector_name}/configuration-properties")
+        url = (
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/{self.user_id}/"
+            f"integration-connectors/{connector_name}/configuration-properties"
+        )
 
         response = await self._async_make_request("GET", url)
         return response.json()
 
-    def get_connector_config(self, connector_name: str, server: str = None) -> dict | str:
-        """ Retrieve the configuration properties of the named integration connector running in the integration
+    def get_connector_config(
+        self, connector_name: str, server: str = None
+    ) -> dict | str:
+        """Retrieve the configuration properties of the named integration connector running in the integration
         daemon"""
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_connector_config(connector_name, server))
+        response = loop.run_until_complete(
+            self._async_get_connector_config(connector_name, server)
+        )
         return response
 
     def get_integration_connector_status(self, server: str = None) -> None:
-        """ Get the current status of the integration connector. Async version."""
+        """Get the current status of the integration connector. Async version."""
         self.get_integration_daemon_status(server)
-    # todo - finish this? (and do async)
+        # todo - finish this? (and do async)
         pass
 
-    async def _async_restart_integration_connector(self, connector_name: str, server: str = None) -> str:
-        """ Restart the integration Connector specified by connector_name or all if not specified - async"""
+    async def _async_restart_integration_connector(
+        self, connector_name: str, server: str = None
+    ) -> str:
+        """Restart the integration Connector specified by connector_name or all if not specified - async"""
 
         if server is None:
             server = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
-               f"{self.user_id}/integration-connectors/restart")
-        body = {
-            "class": "NameRequestBody",
-            "name": connector_name
-        }
+        url = (
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
+            f"{self.user_id}/integration-connectors/restart"
+        )
+        body = {"class": "NameRequestBody", "name": connector_name}
         response = await self._async_make_request("POST", url, body)
         return response
 
-    def restart_integration_connector(self, connector_name: str, server: str = None) -> str:
-        """ Restart the integration Connector specified by connector_name or all if not specified"""
+    def restart_integration_connector(
+        self, connector_name: str, server: str = None
+    ) -> str:
+        """Restart the integration Connector specified by connector_name or all if not specified"""
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_restart_integration_connector(connector_name,
-                                                                                     server))
+        response = loop.run_until_complete(
+            self._async_restart_integration_connector(connector_name, server)
+        )
         return response
 
-    async def _async_refresh_integration_connectors(self, connector_name: str = 'all', server: str = None,
-                                                    time_out: int = 60) -> None:
-        """ Issue a refresh request to all connectors running in the integration daemon, or a specific connector
+    async def _async_refresh_integration_connectors(
+        self, connector_name: str = "all", server: str = None, time_out: int = 60
+    ) -> None:
+        """Issue a refresh request to all connectors running in the integration daemon, or a specific connector
         if one is specified - async version"""
         if server is None:
             server = self.server_name
-        if connector_name == 'all':
+        if connector_name == "all":
             connector_name = None
 
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
-               f"{self.user_id}/integration-connectors/refresh")
+        url = (
+            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
+            f"{self.user_id}/integration-connectors/refresh"
+        )
         if connector_name:
-            body = {
-                "class": "NameRequestBody",
-                "name": connector_name
-            }
-            await self._async_make_request("POST", url, body, time_out=time_out
-                                           )
+            body = {"class": "NameRequestBody", "name": connector_name}
+            await self._async_make_request("POST", url, body, time_out=time_out)
         else:
-            await self._async_make_request("POST", url, time_out= time_out)
+            await self._async_make_request("POST", url, time_out=time_out)
 
         return
 
-    def refresh_integration_connectors(self, connector_name: str, server: str = None, time_out: int = 60) -> None:
-        """ Restart the integration Connector specified by connector_name"""
+    def refresh_integration_connectors(
+        self, connector_name: str, server: str = None, time_out: int = 60
+    ) -> None:
+        """Restart the integration Connector specified by connector_name"""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_refresh_integration_connectors(connector_name, server, time_out))
+        loop.run_until_complete(
+            self._async_refresh_integration_connectors(connector_name, server, time_out)
+        )
 
 
 if __name__ == "__main__":

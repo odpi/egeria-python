@@ -57,15 +57,18 @@ class TestProjectManager:
 
     def test_get_linked_projects(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7" # management
             # parent_guid = "994283c2-deaf-42dc-adf9-ce87cdee0d1f"
             # parent_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
             # parent_guid = 'cae1c8c4-92e2-4598-b898-f3ee3252dff1' # trial
-            parent_guid = '25452b45-942d-47af-90b6-3fa9df4a5df7' # proj template
+            parent_guid = "25452b45-942d-47af-90b6-3fa9df4a5df7"  # proj template
             response = p_client.get_linked_projects(parent_guid)
             duration = time.perf_counter() - start_time
 
@@ -80,9 +83,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -92,8 +95,11 @@ class TestProjectManager:
 
     def test_get_classified_projects(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
@@ -118,9 +124,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -130,13 +136,18 @@ class TestProjectManager:
 
     def test_find_projects(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             search_string = "Sustainability"
 
-            response = p_client.find_projects(search_string, None, True, ignore_case=True)
+            response = p_client.find_projects(
+                search_string, None, True, ignore_case=True
+            )
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -148,9 +159,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -160,8 +171,11 @@ class TestProjectManager:
 
     def test_get_projects_by_name(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
@@ -180,9 +194,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -192,8 +206,11 @@ class TestProjectManager:
 
     def test_get_classified_projects(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             project_classification = "Campaign"
@@ -213,9 +230,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -225,12 +242,15 @@ class TestProjectManager:
 
     def test_get_project(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
-            project_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
+            project_guid = "4fe24e34-490a-43f0-a0d4-fe45ac45c663"  # it setup
 
             response = p_client.get_project(project_guid)
             duration = time.perf_counter() - start_time
@@ -249,9 +269,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -261,8 +281,11 @@ class TestProjectManager:
 
     def test_create_project(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -279,10 +302,20 @@ class TestProjectManager:
             planned_end_date = "2025-04-01"
             classification_name = "PersonalProject"
 
-            response = p_client.create_project(parent_guid, parent_guid, parent_relationship_type_name,
-                                               True, display_name,
-                                               description, classification_name, identifier,
-                                               is_own_anchor, status, start_date, planned_end_date)
+            response = p_client.create_project(
+                parent_guid,
+                parent_guid,
+                parent_relationship_type_name,
+                True,
+                display_name,
+                description,
+                classification_name,
+                identifier,
+                is_own_anchor,
+                status,
+                start_date,
+                planned_end_date,
+            )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -293,9 +326,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -303,10 +336,12 @@ class TestProjectManager:
             p_client.close_session()
 
     def test_create_project_w_body(self):
-
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -325,7 +360,7 @@ class TestProjectManager:
                     "projectStatus": "DEFINED",
                     "startDate": "2021-01-01",
                     "plannedEndDate": "2028-01-01",
-                }
+                },
             }
             response = p_client.create_project_w_body(body, classification_name)
             duration = time.perf_counter() - start_time
@@ -338,9 +373,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -349,8 +384,11 @@ class TestProjectManager:
 
     def test_create_project_from_template(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -377,22 +415,22 @@ class TestProjectManager:
                             "class": "PrimitiveTypePropertyValue",
                             "typeName": "string",
                             "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": f"templated-{display_name}-{time.asctime()}"
+                            "primitiveValue": f"templated-{display_name}-{time.asctime()}",
                         },
                         "name": {
                             "class": "PrimitiveTypePropertyValue",
                             "typeName": "string",
                             "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": display_name
+                            "primitiveValue": display_name,
                         },
                         "description": {
                             "class": "PrimitiveTypePropertyValue",
                             "typeName": "string",
                             "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": description
-                        }
-                    }
-                }
+                            "primitiveValue": description,
+                        },
+                    },
+                },
             }
 
             response = p_client.create_project_from_template(body)
@@ -406,9 +444,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -417,15 +455,19 @@ class TestProjectManager:
 
     def test_update_project(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             project_guid = "7ab4f441-83e2-4e3f-8b63-2ed3946a5dd7"
-            qualified_name = "PersonalProject-First Child Project-Mon Apr 22 07:53:13 2024"
-            response = p_client.update_project(project_guid,
-                                               project_status="Active")
+            qualified_name = (
+                "PersonalProject-First Child Project-Mon Apr 22 07:53:13 2024"
+            )
+            response = p_client.update_project(project_guid, project_status="Active")
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -436,9 +478,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -447,8 +489,11 @@ class TestProjectManager:
 
     def test_delete_project(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -462,9 +507,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -473,8 +518,11 @@ class TestProjectManager:
 
     def test_get_project_team(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -494,9 +542,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -505,8 +553,11 @@ class TestProjectManager:
 
     def test_add_to_project_team(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -521,9 +572,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -532,8 +583,11 @@ class TestProjectManager:
 
     def test_remove_from_project_team(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -548,9 +602,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -559,8 +613,11 @@ class TestProjectManager:
 
     def test_setup_proj_mgmt_role(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -575,9 +632,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -586,8 +643,11 @@ class TestProjectManager:
 
     def test_clear_proj_mgmt_role(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -602,9 +662,9 @@ class TestProjectManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -613,8 +673,11 @@ class TestProjectManager:
 
     def test_sustainability_sample_setup(self):
         try:
-            p_client = ProjectManager(self.good_view_server_1, self.good_platform1_url,
-                                      user_id=self.good_user_2)
+            p_client = ProjectManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -635,12 +698,22 @@ class TestProjectManager:
             start_date = "2024-05-01"
             planned_end_date = "2025-04-01"
 
-            response = p_client.create_project(anchor_guid, parent_guid,
-                                               parent_relationship_type_name,
-                                               parent_at_end1, display_name,
-                                               description, classification_name, identifier,
-                                               is_own_anchor, status, phase, health,
-                                               start_date, planned_end_date)
+            response = p_client.create_project(
+                anchor_guid,
+                parent_guid,
+                parent_relationship_type_name,
+                parent_at_end1,
+                display_name,
+                description,
+                classification_name,
+                identifier,
+                is_own_anchor,
+                status,
+                phase,
+                health,
+                start_date,
+                planned_end_date,
+            )
             campaign_guid = response
 
             # Now lets create some tasks
@@ -655,10 +728,17 @@ class TestProjectManager:
             start_date = "2024-05-01"
             planned_end_date = "2025-04-01"
 
-            plan_task_guid = p_client.create_project_task(parent_guid, display_name,
-                                                          identifier, description
-                                                          , status, phase, health,
-                                                          start_date, planned_end_date)
+            plan_task_guid = p_client.create_project_task(
+                parent_guid,
+                display_name,
+                identifier,
+                description,
+                status,
+                phase,
+                health,
+                start_date,
+                planned_end_date,
+            )
             print(f"\n\n created a task with guid {plan_task_guid}")
 
             # Now a task to set up a communications plan
@@ -672,10 +752,17 @@ class TestProjectManager:
             start_date = "2024-05-01"
             planned_end_date = "2025-04-01"
 
-            comm_task_guid = p_client.create_project_task(parent_guid, display_name,
-                                                          identifier, description
-                                                          , status, phase, health,
-                                                          start_date, planned_end_date)
+            comm_task_guid = p_client.create_project_task(
+                parent_guid,
+                display_name,
+                identifier,
+                description,
+                status,
+                phase,
+                health,
+                start_date,
+                planned_end_date,
+            )
             print(f"\n\n created a task with guid {comm_task_guid}")
 
             # Now a task to set up glossary to facilitate communications and understanding
@@ -689,18 +776,25 @@ class TestProjectManager:
             start_date = "2024-05-01"
             planned_end_date = "2025-04-01"
 
-            gloss_task_guid = p_client.create_project_task(parent_guid, display_name,
-                                                           identifier, description
-                                                           , status, phase, health,
-                                                           start_date, planned_end_date)
+            gloss_task_guid = p_client.create_project_task(
+                parent_guid,
+                display_name,
+                identifier,
+                description,
+                status,
+                phase,
+                health,
+                start_date,
+                planned_end_date,
+            )
             print(f"\n\n created a task with guid {gloss_task_guid}")
 
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import json
 
 from pyegeria import Client
-from pyegeria import (InvalidParameterException)
+from pyegeria import InvalidParameterException
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_name, validate_url
 from .core_omag_server_config import CoreServerConfig
@@ -34,14 +34,23 @@ class FullServerConfig(CoreServerConfig):
 
     """
 
-    def __init__(self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None,
-            verify_flag: bool = enable_ssl_check, ):
+    def __init__(
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
+    ):
         self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
-        self.admin_command_root = (self.platform_url + "/open-metadata/admin-services/users/" + user_id)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        self.admin_command_root = (
+            self.platform_url + "/open-metadata/admin-services/users/" + user_id
+        )
 
-    def get_access_services_topic_names(self, access_service_name: str, server_name: str = None) -> list[str]:
-        """ Retrieve the topic names for this access service.
+    def get_access_services_topic_names(
+        self, access_service_name: str, server_name: str = None
+    ) -> list[str]:
+        """Retrieve the topic names for this access service.
         Parameters
         ----------
         access_service_name : str
@@ -60,14 +69,19 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(access_service_name)
         url = (
-                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
-                    "/topic-names")
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/access-services/"
+            + access_service_name
+            + "/topic-names"
+        )
         response = self.make_request("GET", url)
 
         return response.json()  # todo fix
 
     def get_all_access_services_topic_names(self, server_name: str = None) -> list:
-        """ Retrieve the topic names for all access services.
+        """Retrieve the topic names for all access services.
         Parameters
         ----------
         server_name : str, optional
@@ -82,13 +96,20 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/access-services/topic-names")
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/access-services/topic-names"
+        )
         response = self.make_request("GET", url)
 
         return response.json()  # todo fix
 
-    def set_access_services_configuration(self, access_services_body: str, server_name: str = None) -> None:
-        """ Set up the configuration for selected open metadata access services (OMASs).
+    def set_access_services_configuration(
+        self, access_services_body: str, server_name: str = None
+    ) -> None:
+        """Set up the configuration for selected open metadata access services (OMASs).
         This overrides the current configured values.
 
         Parameters
@@ -108,36 +129,55 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/access-services/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/access-services/configuration"
+        )
         self.make_request("POST", url, access_services_body)
         return
 
-    def override_access_service_in_topic_name(self, access_service_name: str, new_topic_name: str,
-                                              server_name: str = None) -> None:
+    def override_access_service_in_topic_name(
+        self, access_service_name: str, new_topic_name: str, server_name: str = None
+    ) -> None:
         """override the in topic for the access service"""
         if server_name is None:
             server_name = self.server_name
 
         url = (
-                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
-                    "/topic-names/in-topic")
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/access-services/"
+            + access_service_name
+            + "/topic-names/in-topic"
+        )
         self.make_request("POST", url, new_topic_name)
         return
 
-    def override_access_service_out_topic_name(self, access_service_name: str, new_topic_name: str,
-                                               server_name: str = None) -> None:
-        """ override the out topic for the access service"""
+    def override_access_service_out_topic_name(
+        self, access_service_name: str, new_topic_name: str, server_name: str = None
+    ) -> None:
+        """override the out topic for the access service"""
         if server_name is None:
             server_name = self.server_name
 
         url = (
-                    self.admin_command_root + "/servers/" + server_name + "/access-services/" + access_service_name +
-                    "/topic-names/out-topic")
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/access-services/"
+            + access_service_name
+            + "/topic-names/out-topic"
+        )
         self.make_request("POST", url, new_topic_name)
         return
 
-    def set_audit_log_destinations(self, audit_dest_body: str, server_name: str = None) -> None:
-        """ Sets the audit log destinations for a server
+    def set_audit_log_destinations(
+        self, audit_dest_body: str, server_name: str = None
+    ) -> None:
+        """Sets the audit log destinations for a server
 
         /open-metadata/admin-services/users/{userId}/servers/{serverName}/audit-log-destinations
 
@@ -167,12 +207,19 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/audit-log-destinations"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/audit-log-destinations"
+        )
         self.make_request("POST", url, audit_dest_body)
         return
 
-    def update_audit_log_destination(self, connection_name: str, audit_dest_body: str, server_name: str = None) -> None:
-        """ Update an audit log destination that is identified with the supplied destination name
+    def update_audit_log_destination(
+        self, connection_name: str, audit_dest_body: str, server_name: str = None
+    ) -> None:
+        """Update an audit log destination that is identified with the supplied destination name
             with the supplied connection object.
         Parameters
         ----------
@@ -196,13 +243,20 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/audit-log-destinations/connection/" +
-               connection_name)
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/audit-log-destinations/connection/"
+            + connection_name
+        )
         self.make_request("POST", url, audit_dest_body)
         return
 
-    def add_audit_log_destination(self, connection_body: str, server_name: str = None) -> None:
-        """ Adds an audit log destination to a server.
+    def add_audit_log_destination(
+        self, connection_body: str, server_name: str = None
+    ) -> None:
+        """Adds an audit log destination to a server.
 
         /open-metadata/admin-services/users/{userId}/servers/{serverName}/audit-log-destinations/connection
 
@@ -233,12 +287,19 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/audit-log-destinations/connection"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/audit-log-destinations/connection"
+        )
         self.make_request("POST", url, connection_body)
         return
 
-    def set_cohort_config(self, cohort_name: str, cohort_config_body: str, server_name: str = None) -> None:
-        """ Set up the configuration properties for a cohort. This may reconfigure an existing cohort or
+    def set_cohort_config(
+        self, cohort_name: str, cohort_config_body: str, server_name: str = None
+    ) -> None:
+        """Set up the configuration properties for a cohort. This may reconfigure an existing cohort or
             create a cohort. Use setCohortMode to delete a cohort.
         Parameters
         ----------
@@ -265,12 +326,21 @@ class FullServerConfig(CoreServerConfig):
         if cohort_config_body is None:
             raise InvalidParameterException(cohort_config_body)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/configuration"
+        )
         self.make_request("POST", url, cohort_config_body)
         return
 
-    def clear_cohort_configuration(self, cohort_name: str, server_name: str = None) -> None:
-        """ Retrieves the stored configurations for a server
+    def clear_cohort_configuration(
+        self, cohort_name: str, server_name: str = None
+    ) -> None:
+        """Retrieves the stored configurations for a server
         Parameters
         ----------
         cohort_name : str
@@ -297,8 +367,10 @@ class FullServerConfig(CoreServerConfig):
 
         self.make_request("DELETE", url)
 
-    def get_dedicated_cohort_topic_names(self, cohort_name: str, server_name: str = None) -> list:
-        """ Retrieve the current topic name for the cohort. This call can only be made once the cohort is set up with
+    def get_dedicated_cohort_topic_names(
+        self, cohort_name: str, server_name: str = None
+    ) -> list:
+        """Retrieve the current topic name for the cohort. This call can only be made once the cohort is set up with
             add_cohort_registration().
 
         Parameters
@@ -320,12 +392,19 @@ class FullServerConfig(CoreServerConfig):
 
         validate_name(cohort_name)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/dedicated-topic-names"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/dedicated-topic-names"
+        )
         response = self.make_request("POST", url)
         return response.json().get("topicNames")
 
     def get_cohort_topic_name(self, cohort_name: str, server_name: str = None) -> str:
-        """ Retrieve the current topic name for the cohort. This call can only be made once the
+        """Retrieve the current topic name for the cohort. This call can only be made once the
             cohort is set up with add_cohort_registration().
         Parameters
         ----------
@@ -353,8 +432,10 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("GET", url)
         return response.json().get("topicName")
 
-    def override_cohort_topic_name(self, cohort_name: str, topic_override: str, server_name: str = None) -> None:
-        """ Override the current name for the single topic for the cohort. This call can only be made once the
+    def override_cohort_topic_name(
+        self, cohort_name: str, topic_override: str, server_name: str = None
+    ) -> None:
+        """Override the current name for the single topic for the cohort. This call can only be made once the
             cohort is set up with add_cohort_registration().
         Parameters
         ----------
@@ -373,13 +454,21 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name + "/topic-name-override"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/topic-name-override"
+        )
         self.make_request("POST", url, topic_override)
         return
 
-    def override_instances_cohort_topic_name(self, cohort_name: str, topic_override: str,
-                                             server_name: str = None) -> None:
-        """ Override the current name for the "instances" topic for the cohort. This call can only be made once
+    def override_instances_cohort_topic_name(
+        self, cohort_name: str, topic_override: str, server_name: str = None
+    ) -> None:
+        """Override the current name for the "instances" topic for the cohort. This call can only be made once
             the cohort is set up with add_cohort_registration().
         Parameters
         ----------
@@ -399,14 +488,21 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
-               "/topic-name-override/instances")
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/topic-name-override/instances"
+        )
         self.make_request("POST", url, topic_override)
         return
 
-    def override_registration_cohort_topic_name(self, cohort_name: str, topic_override: str,
-                                                server_name: str = None) -> None:
-        """ Override the current name for the registration topic for the cohort. This call can only be made once
+    def override_registration_cohort_topic_name(
+        self, cohort_name: str, topic_override: str, server_name: str = None
+    ) -> None:
+        """Override the current name for the registration topic for the cohort. This call can only be made once
             the cohort is set up with add_cohort_registration().
         Parameters
         ----------
@@ -428,13 +524,21 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
-               "/topic-name-override/registration")
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/topic-name-override/registration"
+        )
         self.make_request("POST", url, topic_override)
         return
 
-    def override_types_cohort_topic_name(self, cohort_name: str, topic_override: str, server_name: str = None) -> None:
-        """ Override the current name for the "types" topic for the cohort. This call can only be made once
+    def override_types_cohort_topic_name(
+        self, cohort_name: str, topic_override: str, server_name: str = None
+    ) -> None:
+        """Override the current name for the "types" topic for the cohort. This call can only be made once
             the cohort is set up with add_cohort_registration().
         Parameters
         ----------
@@ -456,42 +560,50 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
         validate_name(topic_override)
 
-        url = (self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name +
-               "/topic-name-override/types")
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+            + "/topic-name-override/types"
+        )
         self.make_request("POST", url, topic_override)
         return
 
-    def add_full_cohort_registration(self, cohort_name: str, topic_structure: str, server_name: str = None) -> None:
-        """  add a full cohort registration
+    def add_full_cohort_registration(
+        self, cohort_name: str, topic_structure: str, server_name: str = None
+    ) -> None:
+        """add a full cohort registration
 
-            Parameters
-            ----------
-            cohort_name : str
-                Name of the cohort to be registered.
-            topic_structure : str
-                Topic structure for the cohort. This is a string from an enumerated list.
-                'Dedicated Cohort Topics', description='The cohort members use three topics to exchange information.
-                One for registration requests, one for type validation and one for exchange of instances stored by the
-                cohort members.
-                    This is the preferred and optimal approach
-                 'Single Topic', description='All asynchronous communication between cohort members is via a single topic.
-                    This is the original design and may still be used when communicating with back level cohort members.
-                'Both Single and Dedicated Topics', description='Both the single cohort topic and the dedicated topics are
-                    set up and used. This is necessary when the cohort has members with different capabilities.
-                     This configuration may cause some events to be processed twice.'
-            server_name : str, optional
-                Name of the server to which the cohort should be added. Defaults to None.
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to be registered.
+        topic_structure : str
+            Topic structure for the cohort. This is a string from an enumerated list.
+            'Dedicated Cohort Topics', description='The cohort members use three topics to exchange information.
+            One for registration requests, one for type validation and one for exchange of instances stored by the
+            cohort members.
+                This is the preferred and optimal approach
+             'Single Topic', description='All asynchronous communication between cohort members is via a single topic.
+                This is the original design and may still be used when communicating with back level cohort members.
+            'Both Single and Dedicated Topics', description='Both the single cohort topic and the dedicated topics are
+                set up and used. This is necessary when the cohort has members with different capabilities.
+                 This configuration may cause some events to be processed twice.'
+        server_name : str, optional
+            Name of the server to which the cohort should be added. Defaults to None.
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
 
-            Raises
-            ------
-            InvalidParameterException
-                If the response code is not 200 after making the POST request.
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200 after making the POST request.
 
-            """
+        """
         if server_name is None:
             server_name = self.server_name
         validate_name(cohort_name)
@@ -499,8 +611,10 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/cohorts/{cohort_name}/topic-structure/{topic_structure}"
         self.make_request("POST", url)
 
-    def set_server_configuration(self, config_body: str, server_name: str = None) -> None | str:
-        """ Sets the configurations for a server
+    def set_server_configuration(
+        self, config_body: str, server_name: str = None
+    ) -> None | str:
+        """Sets the configurations for a server
         Parameters
         ----------
 
@@ -536,7 +650,7 @@ class FullServerConfig(CoreServerConfig):
             raise InvalidParameterException(response.content)
 
     def clear_stored_configuration(self, server_name: str = None) -> None | str:
-        """ Retrieves the stored configurations for a server
+        """Retrieves the stored configurations for a server
         Parameters
         ----------
 
@@ -571,8 +685,10 @@ class FullServerConfig(CoreServerConfig):
         else:
             raise InvalidParameterException(response.content)
 
-    def deploy_stored_configurations(self, target_url_root: str, server_name: str = None) -> None:
-        """ Push the configuration for the server to another OMAG Server Platform.
+    def deploy_stored_configurations(
+        self, target_url_root: str, server_name: str = None
+    ) -> None:
+        """Push the configuration for the server to another OMAG Server Platform.
         Parameters
         ----------
         target_url_root : str
@@ -599,7 +715,7 @@ class FullServerConfig(CoreServerConfig):
         self.make_request("POST", url, target_url_root)
 
     def get_event_bus(self, server_name: str = None) -> dict:
-        """ Returns the event bus configuration for the specified server
+        """Returns the event bus configuration for the specified server
 
         Parameters
         ----------
@@ -628,7 +744,9 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("GET", url)
         return response.json().get("config")
 
-    def set_event_bus_detailed(self, connector_provider: str, topic_url_root: str, server_name: str = None) -> None:
+    def set_event_bus_detailed(
+        self, connector_provider: str, topic_url_root: str, server_name: str = None
+    ) -> None:
         """
         Parameters
         ----------
@@ -665,12 +783,14 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.admin_command_root}/servers/{server_name}/event-bus?connectorProvider="
-               f"{connector_provider}&topicURLRoot={topic_url_root}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/event-bus?connectorProvider="
+            f"{connector_provider}&topicURLRoot={topic_url_root}"
+        )
         self.make_request("POST", url)
 
     def delete_event_bus(self, server_name: str = None) -> None:
-        """ Delete the event bus configuration for the given server.
+        """Delete the event bus configuration for the given server.
 
         Parameters
         ----------
@@ -755,7 +875,9 @@ class FullServerConfig(CoreServerConfig):
         else:
             return
 
-    def set_server_user_password(self, server_user_pwd: str, server_name: str = None) -> None:
+    def set_server_user_password(
+        self, server_user_pwd: str, server_name: str = None
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/server-user-password?password={server_user_pwd}"
@@ -777,10 +899,17 @@ class FullServerConfig(CoreServerConfig):
         else:
             return
 
-    def set_local_repository_config(self, repository_body: str, server_name: str = None) -> None:
+    def set_local_repository_config(
+        self, repository_body: str, server_name: str = None
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/local-repository/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/local-repository/configuration"
+        )
         response = self.make_request("POST", url, payload=repository_body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -788,15 +917,18 @@ class FullServerConfig(CoreServerConfig):
         else:
             return
 
-    def set_plug_in_repository_connection(self, repository_connection_body: str, server_name: str = None) -> None:
+    def set_plug_in_repository_connection(
+        self, repository_connection_body: str, server_name: str = None
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
         self.make_request("POST", url, payload=repository_connection_body)
 
-    def set_plug_in_repository_connection_provider(self, repository_connection_provider: str,
-                                                   server_name: str = None) -> None:
-        """ Set the local repository connection with a user specified connection provider
+    def set_plug_in_repository_connection_provider(
+        self, repository_connection_provider: str, server_name: str = None
+    ) -> None:
+        """Set the local repository connection with a user specified connection provider
 
         Parameters
         ----------
@@ -822,11 +954,15 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = (f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/"
-               f"details?connectionProvider={repository_connection_provider}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/"
+            f"details?connectionProvider={repository_connection_provider}"
+        )
         self.make_request("POST", url)
 
-    def set_open_metadata_archives(self, archives_list_body: str, server_name: str = None) -> None:
+    def set_open_metadata_archives(
+        self, archives_list_body: str, server_name: str = None
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives"
@@ -837,32 +973,34 @@ class FullServerConfig(CoreServerConfig):
         else:
             return
 
-    def set_descriptive_server_type(self, type_name: str, server_name: str = None) -> None:
-        """ Set descriptiveServerType for this OMAG server
+    def set_descriptive_server_type(
+        self, type_name: str, server_name: str = None
+    ) -> None:
+        """Set descriptiveServerType for this OMAG server
 
-            Parameters
-            ----------
-            type_name : str
-                The name of the descriptive server type to set.
+        Parameters
+        ----------
+        type_name : str
+            The name of the descriptive server type to set.
 
-            server_name : str, optional
-                The name of the server for which the descriptive server type is being set. If not provided, the
-                default server name associated with the object is used.
+        server_name : str, optional
+            The name of the server for which the descriptive server type is being set. If not provided, the
+            default server name associated with the object is used.
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
 
-            Raises
-            ------
-            InvalidParameterException
-                If the response code is not 200.
-            PropertyServerException:
-                Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException:
-                The principle specified by the user_id does not have authorization for the requested action
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
-            """
+        """
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/server-type?typeName={type_name}"
@@ -880,7 +1018,7 @@ class FullServerConfig(CoreServerConfig):
             return
 
     def set_server_type(self, server_type: str, server_name: str = None) -> None:
-        """ Sets the server type for the given server
+        """Sets the server type for the given server
 
         Parameters
         ----------
@@ -912,12 +1050,14 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.admin_command_root}/servers/{server_name}/"
-               f"server-type?typename={server_type}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/"
+            f"server-type?typename={server_type}"
+        )
         self.make_request("POST", url)
 
         def clear_server_type(self, server_name: str = None) -> None:
-            """ Clears the server type for the given server
+            """Clears the server type for the given server
 
             Parameters
             ----------
@@ -940,11 +1080,15 @@ class FullServerConfig(CoreServerConfig):
             """
             if server_name is None:
                 server_name = self.server_name
-            url = f"{self.admin_command_root}/servers/{server_name}/server-type?typeName="
+            url = (
+                f"{self.admin_command_root}/servers/{server_name}/server-type?typeName="
+            )
             self.make_request("POST", url)
 
-    def config_view_service(self, service_url_marker: str, view_service_body: dict, server_name: str = None) -> None:
-        """ Configure a the view service specified by the service_url_marker using the view_service_body.
+    def config_view_service(
+        self, service_url_marker: str, view_service_body: dict, server_name: str = None
+    ) -> None:
+        """Configure a the view service specified by the service_url_marker using the view_service_body.
 
         Parameters
         ----------
@@ -987,8 +1131,10 @@ class FullServerConfig(CoreServerConfig):
         self.make_request("POST", url, view_service_body)
 
     # todo - this may not be used anymore - old
-    def set_view_svcs_config(self, view_svcs_config_body: dict, server_name: str = None) -> None:
-        """ Set up the configuration for all the open metadata integration groups. This overrides the current values.
+    def set_view_svcs_config(
+        self, view_svcs_config_body: dict, server_name: str = None
+    ) -> None:
+        """Set up the configuration for all the open metadata integration groups. This overrides the current values.
 
         Parameters
         ----------
@@ -1024,8 +1170,10 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/view-services/configuration"
         self.make_request("POST", url, view_svcs_config_body)
 
-    def set_integration_groups_config(self, integration_groups_config_body: dict, server_name: str = None) -> None:
-        """ Set up the configuration for all the open metadata integration groups. This overrides the current values.
+    def set_integration_groups_config(
+        self, integration_groups_config_body: dict, server_name: str = None
+    ) -> None:
+        """Set up the configuration for all the open metadata integration groups. This overrides the current values.
         Parameters
         ----------
         integration_groups_config_body : dict
@@ -1077,15 +1225,20 @@ class FullServerConfig(CoreServerConfig):
         # pass a json list
         pass
 
-    def config_integration_service(self, remote_omag_server: str, remote_omag_platform_url: str,
-                                   service_url_marker: str, integration_service_options: dict, connector_configs: list,
-                                   server_name: str = None) -> None:
-
+    def config_integration_service(
+        self,
+        remote_omag_server: str,
+        remote_omag_platform_url: str,
+        service_url_marker: str,
+        integration_service_options: dict,
+        connector_configs: list,
+        server_name: str = None,
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
 
         if not isinstance(connector_configs, list):
-            exc_msg = ' ==> connector_configs must be a list of dictionaries'
+            exc_msg = " ==> connector_configs must be a list of dictionaries"
             raise Exception(exc_msg)
 
         validate_name(remote_omag_server)
@@ -1093,9 +1246,13 @@ class FullServerConfig(CoreServerConfig):
 
         validate_name(service_url_marker)
 
-        request_body = {"class": "IntegrationServiceRequestBody", "omagserverPlatformRootURL": remote_omag_platform_url,
-            "omagserverName": remote_omag_server, "integrationServiceOptions": integration_service_options,
-            "integrationConnectorConfigs": connector_configs}
+        request_body = {
+            "class": "IntegrationServiceRequestBody",
+            "omagserverPlatformRootURL": remote_omag_platform_url,
+            "omagserverName": remote_omag_server,
+            "integrationServiceOptions": integration_service_options,
+            "integrationConnectorConfigs": connector_configs,
+        }
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         # print(f"URL is : {url}")
@@ -1104,19 +1261,30 @@ class FullServerConfig(CoreServerConfig):
         self.make_request("POST", url, request_body)
         return
 
-    def config_all_integration_services(self, remote_omag_server: str, remote_omag_platform_url: str,
-                                        integration_service_options: dict, connector_configs: dict,
-                                        server_name: str = None) -> None:
-
+    def config_all_integration_services(
+        self,
+        remote_omag_server: str,
+        remote_omag_platform_url: str,
+        integration_service_options: dict,
+        connector_configs: dict,
+        server_name: str = None,
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
         validate_name(remote_omag_server)
         validate_url(remote_omag_platform_url)
 
-        request_body = {"IntegrationConnectorConfigs": [
-            {"class": "IntegrationServiceRequestBody", "omagserverPlatformRootURL": remote_omag_platform_url,
-                "omagserverName": remote_omag_server, "integrationServiceOptions": integration_service_options,
-                "integrationConnectorConfigs": connector_configs}]}
+        request_body = {
+            "IntegrationConnectorConfigs": [
+                {
+                    "class": "IntegrationServiceRequestBody",
+                    "omagserverPlatformRootURL": remote_omag_platform_url,
+                    "omagserverName": remote_omag_server,
+                    "integrationServiceOptions": integration_service_options,
+                    "integrationConnectorConfigs": connector_configs,
+                }
+            ]
+        }
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services"
         print(f"URL is : {url}")
@@ -1124,7 +1292,9 @@ class FullServerConfig(CoreServerConfig):
 
         self.make_request("POST", url, request_body)
 
-    def clear_integration_service(self, service_url_marker: str, server_name: str = None) -> None:
+    def clear_integration_service(
+        self, service_url_marker: str, server_name: str = None
+    ) -> None:
         if server_name is None:
             server_name = self.server_name
         validate_name(service_url_marker)
@@ -1132,7 +1302,9 @@ class FullServerConfig(CoreServerConfig):
         url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         self.make_request("DELETE", url)
 
-    def get_integration_service_config(self, service_url_marker: str, server_name: str = None) -> dict | str:
+    def get_integration_service_config(
+        self, service_url_marker: str, server_name: str = None
+    ) -> dict | str:
         if server_name is None:
             server_name = self.server_name
         validate_name(service_url_marker)

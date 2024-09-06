@@ -15,7 +15,7 @@ from pyegeria._client import Client
 
 
 class RegisteredInfo(Client):
-    """ Client to discover Egeria services and capabilities
+    """Client to discover Egeria services and capabilities
 
     Parameters:
     ----------
@@ -48,44 +48,45 @@ class RegisteredInfo(Client):
     admin_command_root: str
 
     def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = False,
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
+        token: str = None,
     ):
         if server_name is None:
             server_name = "NA"
-        Client.__init__(self, server_name, platform_url,
-                        user_id, user_pwd, verify_flag)
-        self.admin_command_root = (f"{self.platform_url}/open-metadata/platform-services/users/"
-                                   f"{self.user_id}/server-platform/registered-services")
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        self.admin_command_root = (
+            f"{self.platform_url}/open-metadata/platform-services/users/"
+            f"{self.user_id}/server-platform/registered-services"
+        )
 
     def list_registered_svcs(self, kind: str = None) -> list | str:
-        """ Get the registered services for the OMAG Server Platform
+        """Get the registered services for the OMAG Server Platform
 
-           Parameters
-           ----------
-            kind: str, optional
-                The kind of service to return information for. If None, then provide back a list of service kinds.
+        Parameters
+        ----------
+         kind: str, optional
+             The kind of service to return information for. If None, then provide back a list of service kinds.
 
-           Returns
-           -------
-           dict | str
-               Returns JSON dict of the requested information or a help string if input is 'help'.
-           Raises
-           ------
-           InvalidParameterException
-               If the response code is not 200.
-           PropertyServerException:
-               Raised by the server when an issue arises in processing a valid request
-           NotAuthorizedException:
-               The principle specified by the user_id does not have authorization for the requested action
+        Returns
+        -------
+        dict | str
+            Returns JSON dict of the requested information or a help string if input is 'help'.
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
-           """
+        """
         if kind is None or kind == "help":
-            return ("""
+            return """
             The kinds of services that you can get more information include:
                 all.....................lists all registered services
                 access-services.........lists all registered access services
@@ -97,7 +98,7 @@ class RegisteredInfo(Client):
 
                 Pass in a parameter from the left-hand column into the function to 
                 get more details on the specified service category.
-            """)
+            """
         if kind == "all":
             url = f"{self.admin_command_root}"
         else:
@@ -107,55 +108,56 @@ class RegisteredInfo(Client):
         return response.json().get("services", "No services found")
 
     def list_severity_definitions(self) -> list | str:
-        """ Get the registered severities for the OMAG Server
+        """Get the registered severities for the OMAG Server
 
-          Parameters
-          ----------
+        Parameters
+        ----------
 
-          Returns
-          -------
-          dict | str
-              Return a dictionary containing the registered services for the specified platform.
-          Raises
-          ------
-          InvalidParameterException
-              If the response code is not 200.
-          PropertyServerException:
-              Raised by the server when an issue arises in processing a valid request
-          NotAuthorizedException:
-              The principle specified by the user_id does not have authorization for the requested action
+        Returns
+        -------
+        dict | str
+            Return a dictionary containing the registered services for the specified platform.
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
         """
-        url = (f"{self.platform_url}/servers/{self.server_name}/open-metadata/repository-services"
-               f"/users/{self.user_id}/audit-log/severity-definitions"
-               )
+        url = (
+            f"{self.platform_url}/servers/{self.server_name}/open-metadata/repository-services"
+            f"/users/{self.user_id}/audit-log/severity-definitions"
+        )
         response = self.make_request("GET", url)
         return response.json().get("severities", "No severities found")
 
     def list_asset_types(self, server: str = None) -> list | str:
-        """ Get the registered severities for the OMAG Server
+        """Get the registered severities for the OMAG Server
 
-          Parameters
-          ----------
-           server: str, optional, default = None
+        Parameters
+        ----------
+         server: str, optional, default = None
 
-          Returns
-          -------
-          dict | str
-              Returns a list of the asset types.
+        Returns
+        -------
+        dict | str
+            Returns a list of the asset types.
 
-          Raises
-          ------
-          InvalidParameterException
-              If the response code is not 200.
-          PropertyServerException:
-              Raised by the server when an issue arises in processing a valid request
-          NotAuthorizedException:
-              The principle specified by the user_id does not have authorization for the requested action
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
         """
         server = self.server_name if server is None else server
         url = f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/types"
 
         response = self.make_request("GET", url)
-        return response.json().get('types', 'no types found')
+        return response.json().get("types", "no types found")

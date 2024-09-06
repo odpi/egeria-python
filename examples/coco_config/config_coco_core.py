@@ -17,8 +17,17 @@ import json
 import argparse
 from datetime import datetime
 
-from globals import (cocoMDS2Name, corePlatformURL, cocoCohort, devCohort, iotCohort, max_paging_size, adminUserId,
-                     cocoMDS5Name, cocoMDS6Name)
+from globals import (
+    cocoMDS2Name,
+    corePlatformURL,
+    cocoCohort,
+    devCohort,
+    iotCohort,
+    max_paging_size,
+    adminUserId,
+    cocoMDS5Name,
+    cocoMDS6Name,
+)
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,
@@ -40,21 +49,16 @@ def config_coco_core(url: str, userid: str):
     #     }
     # }
     event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "host.docker.internal:9192"
-        },
-        "consumer": {
-            "bootstrap.servers": "host.docker.internal:9192"
-        }
+        "producer": {"bootstrap.servers": "host.docker.internal:9192"},
+        "consumer": {"bootstrap.servers": "host.docker.internal:9192"},
     }
 
     security_connection_body = {
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
 
     #
@@ -66,15 +70,17 @@ def config_coco_core(url: str, userid: str):
     metadataCollectionId = f"{mdr_server}-e915f2fa-aa3g-4396-8bde-bcd65e642b1d"
     metadataCollectionName = "Governance Catalog"
 
-
     try:
         o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-        o_client.set_basic_server_properties("Governance Server",
-                                             "Coco Pharmaceuticals",
-                                             platform_url,
-                                             mdr_server_user_id, mdr_server_password,
-                                             max_paging_size)
+        o_client.set_basic_server_properties(
+            "Governance Server",
+            "Coco Pharmaceuticals",
+            platform_url,
+            mdr_server_user_id,
+            mdr_server_password,
+            max_paging_size,
+        )
 
         o_client.set_event_bus(event_bus_config)
         o_client.set_server_security_connection(security_connection_body)
@@ -94,8 +100,9 @@ def config_coco_core(url: str, userid: str):
         o_client.configure_access_service("asset-consumer", {})
 
         o_client.configure_access_service("asset-owner", {})
-        o_client.configure_access_service("community-profile",
-                                          {"KarmaPointPlateau": "500"})
+        o_client.configure_access_service(
+            "community-profile", {"KarmaPointPlateau": "500"}
+        )
         # o_client.configure_access_service("glossary-view", {})
         # o_client.configure_access_service("subject-area", {})
         o_client.configure_access_service("governance-engine", {})
@@ -128,11 +135,14 @@ def config_coco_core(url: str, userid: str):
     try:
         o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-        o_client.set_basic_server_properties("Business Systems",
-                                             "Coco Pharmaceuticals",
-                                             platform_url,
-                                             mdr_server_user_id, mdr_server_password,
-                                             max_paging_size)
+        o_client.set_basic_server_properties(
+            "Business Systems",
+            "Coco Pharmaceuticals",
+            platform_url,
+            mdr_server_user_id,
+            mdr_server_password,
+            max_paging_size,
+        )
 
         o_client.set_event_bus(event_bus_config)
         o_client.set_server_security_connection(security_connection_body)
@@ -146,8 +156,10 @@ def config_coco_core(url: str, userid: str):
 
         o_client.add_cohort_registration(cocoCohort)
 
-        proxy_details = ("org.odpi.openmetadata.adapters.repositoryservices.readonly.repositoryconnector." +
-                         "ReadOnlyOMRSRepositoryConnectorProvider")
+        proxy_details = (
+            "org.odpi.openmetadata.adapters.repositoryservices.readonly.repositoryconnector."
+            + "ReadOnlyOMRSRepositoryConnectorProvider"
+        )
         o_client.set_repository_proxy_details(proxy_details)
         print(f"Activating {mdr_server}")
         p_client = Platform(mdr_server, platform_url, admin_user)
@@ -174,11 +186,14 @@ def config_coco_core(url: str, userid: str):
     try:
         o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-        o_client.set_basic_server_properties("Manufacturing",
-                                             "Coco Pharmaceuticals",
-                                             platform_url,
-                                             mdr_server_user_id, mdr_server_password,
-                                             max_paging_size)
+        o_client.set_basic_server_properties(
+            "Manufacturing",
+            "Coco Pharmaceuticals",
+            platform_url,
+            mdr_server_user_id,
+            mdr_server_password,
+            max_paging_size,
+        )
 
         o_client.set_event_bus(event_bus_config)
 
@@ -196,14 +211,15 @@ def config_coco_core(url: str, userid: str):
 
         access_service_options = {
             "SupportedZones": ["manufacturing"],
-            "DefaultZones": ["manufacturing"]
+            "DefaultZones": ["manufacturing"],
         }
 
         # o_client.configure_access_service("asset-catalog", access_service_options)
         o_client.configure_access_service("asset-consumer", access_service_options)
         o_client.configure_access_service("asset-owner", access_service_options)
-        o_client.configure_access_service("community-profile",
-                                          {"KarmaPointPlateau": "500"})
+        o_client.configure_access_service(
+            "community-profile", {"KarmaPointPlateau": "500"}
+        )
         # o_client.configure_access_service("glossary-view", {})
         o_client.configure_access_service("data-science", access_service_options)
         # o_client.configure_access_service("subject-area", {})
@@ -223,6 +239,7 @@ def config_coco_core(url: str, userid: str):
     except Exception as e:
         print_exception_response(e)
 
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -234,6 +251,7 @@ def main():
     userid = args.userid if args.userid is not None else adminUserId
 
     config_coco_core(url, userid)
+
 
 if __name__ == "__main__":
     main()

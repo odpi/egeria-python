@@ -16,6 +16,7 @@ import time
 from rich import box
 from rich.console import Console
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import (
@@ -27,26 +28,40 @@ from pyegeria import (
 from pyegeria.server_operations import ServerOps
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ENGINE_HOST = os.environ.get('INTEGRATION_ENGINE_HOST', 'engine-host')
-EGERIA_ENGINE_HOST_URL = os.environ.get('INTEGRATION_ENGINE_HOST_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
+)
+EGERIA_ENGINE_HOST = os.environ.get("EGERIA_ENGINE_HOST", "engine-host")
+EGERIA_ENGINE_HOST_URL = os.environ.get(
+    "EGERIA_ENGINE_HOST_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("EGERIA_ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("EGERIA_ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
 disable_ssl_warnings = True
 
 
-def display_gov_eng_status(server: str, url: str, username: str, user_pass: str, paging: bool,
-                           jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+def display_gov_eng_status(
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    paging: bool,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
+    console = Console(width=EGERIA_WIDTH)
     server_name = server
     s_client = ServerOps(server_name, url, username, user_pass)
 
@@ -62,7 +77,7 @@ def display_gov_eng_status(server: str, url: str, username: str, user_pass: str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Server: '{server_name}' running on {url}",
-            expand=True
+            expand=True,
         )
         # table.footer: f"Server {server_name} on Platform {good_platform1_url}"
         table.add_column("Gov Engine")
@@ -72,12 +87,22 @@ def display_gov_eng_status(server: str, url: str, username: str, user_pass: str,
         table.add_column("Request Types")
 
         gov_eng_status = s_client.get_governance_engine_summaries()
-        for engine in gov_eng_status:
+        sorted_gov_eng_status = sorted(
+            gov_eng_status, key=lambda k: k.get("governanceEngineName", " ")
+        )
+        for engine in sorted_gov_eng_status:
             gov_eng = engine["governanceEngineName"]
-            eng_type = engine["governanceEngineTypeName"]
+            eng_type = engine.get("governanceEngineTypeName", " ")
 
-            eng_desc = engine["governanceEngineDescription"]
-            eng_req_type = json.dumps(engine["governanceRequestTypes"], indent=2)
+            eng_desc = engine.get("governanceEngineDescription", " ")
+            eng_req_types = engine.get("governanceRequestTypes", " ")
+            eng_req_type_md = " "
+            if type(eng_req_types) is list:
+                for i in eng_req_types:
+                    eng_req_type_md += f"* {i}\n"
+                eng_req_type_out = Markdown(eng_req_type_md)
+            else:
+                eng_req_type_out = " "
             status = engine["governanceEngineStatus"]
             if status in ("RUNNING"):
                 eng_status = f"[green]{status}"
@@ -86,9 +111,7 @@ def display_gov_eng_status(server: str, url: str, username: str, user_pass: str,
             else:
                 eng_status = f"[yellow]{status}"
 
-            table.add_row(
-                gov_eng, eng_type, eng_desc, eng_status, eng_req_type
-            )
+            table.add_row(gov_eng, eng_type, eng_desc, eng_status, eng_req_type_out)
 
         table.caption = f"Server {server_name} running on {url}"
         return table
@@ -99,13 +122,22 @@ def display_gov_eng_status(server: str, url: str, username: str, user_pass: str,
             with console.pager():
                 console.print(generate_table())
         else:
-            with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
+            with Live(
+                generate_table(),
+                refresh_per_second=1,
+                screen=True,
+                vertical_overflow="visible",
+            ) as live:
                 while True:
                     time.sleep(2)
                     live.update(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
-        print_exception_response(e)
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
+        console.print_exception(show_locals=True)
 
     except KeyboardInterrupt:
         pass
@@ -120,13 +152,15 @@ def main_live():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+    parser.add_argument("--paging", help="Paging")
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_ENGINE_HOST
     url = args.url if args.url is not None else EGERIA_ENGINE_HOST_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=False)
+    paging = args.paging if args.paging is not None else False
+    display_gov_eng_status(server, url, userid, user_pass, paging)
 
 
 def main_paging():
@@ -141,7 +175,10 @@ def main_paging():
     url = args.url if args.url is not None else EGERIA_ENGINE_HOST_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    display_gov_eng_status(server=server, url=url, username=userid, user_pass=user_pass, paging=True)
+
+    display_gov_eng_status(
+        server=server, url=url, username=userid, user_pass=user_pass, paging=True
+    )
 
 
 if __name__ == "__main__":

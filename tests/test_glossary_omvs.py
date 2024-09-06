@@ -47,13 +47,22 @@ class TestGlossaryBrowser:
 
     def test_find_glossaries(self):
         try:
-            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url,
-                                       user_id=self.good_user_2)
+            g_client = GlossaryBrowser(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            response = g_client.find_glossaries('*', starts_with=False, ends_with=False,
-                                                ignore_case=True,page_size=0, effective_time=None)
+            response = g_client.find_glossaries(
+                "*",
+                starts_with=False,
+                ends_with=False,
+                ignore_case=True,
+                page_size=0,
+                effective_time=None,
+            )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds")
@@ -62,27 +71,30 @@ class TestGlossaryBrowser:
                 count = len(response)
                 print(f"Found {count} glossaries")
                 for i in range(count):
-                    print(f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}")
+                    print(
+                        f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
+                    )
                     # print(json.dumps(response[i],indent = 4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
 
-    def test_get_glossary_by_guid(self, server:str = good_view_server_1):
+    def test_get_glossary_by_guid(self, server: str = good_view_server_1):
         try:
             server_name = server
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
-                                       user_id=self.good_user_2)
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
@@ -95,19 +107,23 @@ class TestGlossaryBrowser:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
-                print_exception_response(e)
-                assert False, "Invalid request"
-        
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
         finally:
             g_client.close_session()
-
 
     def test_get_glossaries_by_name(self, server: str = good_view_server_1):
         try:
             server_name = server
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
-                                       user_id=self.good_user_2)
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             glossary_name = "Sustainability Glossary"
@@ -121,27 +137,35 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
-                print_exception_response(e)
-                assert False, "Invalid request"
-        
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
         finally:
             g_client.close_session()
 
-
-    def test_get_terms_for_glossary(self, server:str = good_view_server_1):
+    def test_get_terms_for_glossary(self, server: str = good_view_server_1):
         server_name = server
         try:
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
-                                       user_id="erinoverview")
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
             # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
-            glossary_guid = "c13e22d5-756a-4b54-b784-14037ee3dfc4" # larger sustainability glossary
+            glossary_guid = (
+                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
+            )
 
             start_time = time.perf_counter()
-            response = g_client.get_terms_for_glossary(glossary_guid, page_size=500, effective_time=None)
+            response = g_client.get_terms_for_glossary(
+                glossary_guid, page_size=500, effective_time=None
+            )
             print(f"Duration is {time.perf_counter()-start_time} seconds")
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -153,23 +177,23 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
-            
+
         finally:
             g_client.close_session()
 
-
-    def test_get_glossary_for_term(self, server:str = good_view_server_1):
+    def test_get_glossary_for_term(self, server: str = good_view_server_1):
         server_name = server
 
         try:
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
-                                       user_id="erinoverview")
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             term_guid = "ae936fe7-88d7-4f00-a888-d5fcd637fd02"
@@ -183,23 +207,23 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
-            
+
         finally:
             g_client.close_session()
 
-
-    def test_get_terms_by_name(self, server:str = good_view_server_1):
+    def test_get_terms_by_name(self, server: str = good_view_server_1):
         server_name = server
 
         try:
-            g_client = GlossaryBrowser(server_name, self.good_platform1_url,
-                                       user_id="erinoverview")
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             term_name = "Facility"
@@ -214,30 +238,39 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
-            
+
         finally:
             g_client.close_session()
 
-
     def test_find_glossary_terms(self):
         try:
-            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url,sync_mode=True)
+            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url)
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+            glossary_guid = (
+                "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+            )
             start_time = time.perf_counter()
-            response = g_client.find_glossary_terms('*', glossary_guid=glossary_guid, starts_with=True,
-                                                    ends_with= False, for_lineage=False, for_duplicate_processing=True,
-                                                    status_filter=[], page_size=10, effective_time=None)
+            response = g_client.find_glossary_terms(
+                "*",
+                glossary_guid=glossary_guid,
+                starts_with=True,
+                ends_with=False,
+                for_lineage=False,
+                for_duplicate_processing=True,
+                status_filter=[],
+                page_size=10,
+                effective_time=None,
+            )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
-            if type(response) is list :
+            if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
                 # print_json_list_as_table(response)
                 count = len(response)
@@ -247,15 +280,12 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
-            
+
         finally:
             g_client.close_session()
-
-
-

@@ -29,26 +29,37 @@ from pyegeria import (
 from pyegeria import ProjectManager, ClassificationManager
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_project_list(project_name: str, server: str, url: str,
-                         username: str, user_pass: str, save_output: bool, jupyter: bool = EGERIA_JUPYTER,
-                         width: int = EGERIA_WIDTH):
+def display_project_list(
+    project_name: str,
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    save_output: bool,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     p_client = ProjectManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
-    c_client = ClassificationManager(server, url, token)
+    c_client = ClassificationManager(server, url, token=token)
 
     def generate_table(project_name: str) -> Table:
         """Make a new table."""
@@ -58,7 +69,7 @@ def display_project_list(project_name: str, server: str, url: str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Project list for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Project Name")
@@ -73,7 +84,6 @@ def display_project_list(project_name: str, server: str, url: str,
         table.add_column("Start Date")
         table.add_column("End Date")
         table.add_column("Contracts")
-
 
         projects = p_client.find_projects(project_name)
 
@@ -92,12 +102,16 @@ def display_project_list(project_name: str, server: str, url: str,
         elif type(projects) == str:
             raise ValueError("-->This is not a known project")
         else:
-            for project in projects:
+            sorted_projects = sorted(
+                projects, key=lambda k: k["properties"].get("name", "---")
+            )
+
+            for project in sorted_projects:
                 classification = ""
-                guid = project['elementHeader']['guid']
+                guid = project["elementHeader"]["guid"]
                 props = project["properties"]
                 name = props.get("name", "None")
-                p_class = project['elementHeader'].get("classifications")
+                p_class = project["elementHeader"].get("classifications")
                 if p_class:
                     for classif in p_class:
                         classification += f"* {classif.get('classificationName')}\n"
@@ -109,28 +123,43 @@ def display_project_list(project_name: str, server: str, url: str,
                 description = props.get("description", " ")
                 start = props.get("startDate", " ")[0:10]
                 end = props.get("plannedEndDate", " ")
-                additional_properties = project.get('additionalProperties')
+                additional_properties = project.get("additionalProperties")
                 if additional_properties is not None:
                     props = json.dumps(additional_properties)
 
-                governed_by = c_client.get_related_elements(guid,'GovernedBy')
+                governed_by = c_client.get_related_elements(guid, "GovernedBy")
                 if type(governed_by) is list:
                     for gov in governed_by:
-                        rel_guid = gov['relatedElement']['elementHeader']['guid']
-                        rel_title = gov['relatedElement']['properties'].get('title','---')
-                        certified_partner= f"{rel_title}: \n"
-                        certified = c_client.get_related_elements(rel_guid, "Certification")
+                        rel_guid = gov["relatedElement"]["elementHeader"]["guid"]
+                        rel_title = gov["relatedElement"]["properties"].get(
+                            "title", "---"
+                        )
+                        certified_partner = f"{rel_title}: \n"
+                        certified = c_client.get_related_elements(
+                            rel_guid, "Certification"
+                        )
                         if type(certified) is list:
-                           for rel_elem in certified:
-                                p_name = rel_elem['relatedElement']['properties']['name']
+                            for rel_elem in certified:
+                                p_name = rel_elem["relatedElement"]["properties"][
+                                    "name"
+                                ]
                                 certified_partner += f"* {p_name}\n"
                 else:
                     certified_partner = "---"
 
-
                 table.add_row(
-                    name, description, classification, qualified_name, identifier, phase, health, status, start,
-                    end, certified_partner)
+                    name,
+                    description,
+                    classification,
+                    qualified_name,
+                    identifier,
+                    phase,
+                    health,
+                    status,
+                    start,
+                    end,
+                    certified_partner,
+                )
 
         p_client.close_session()
         return table
@@ -140,13 +169,20 @@ def display_project_list(project_name: str, server: str, url: str,
         #     while True:
         #         time.sleep(2)
         #         live.update(generate_table())
-        console = Console(record=True,width=width, force_terminal=not jupyter, soft_wrap=True)
+        console = Console(
+            record=True, width=width, force_terminal=not jupyter, soft_wrap=True
+        )
         with console.pager():
             console.print(generate_table(project_name), soft_wrap=True)
         if save_output:
             console.save_html("projects.html")
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException, ValueError) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+        ValueError,
+    ) as e:
         if type(e) is str:
             print(e)
         else:

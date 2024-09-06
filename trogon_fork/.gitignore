@@ -1,4 +1,0 @@
-*.pyc
-.vscode
-.DS_store
-dist/*

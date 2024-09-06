@@ -18,11 +18,9 @@ from pyegeria._exceptions import (
     OMAGCommonErrorCode,
     InvalidParameterException,
     UserNotAuthorizedException,
-    PropertyServerException, print_exception_response,
+    PropertyServerException,
+    print_exception_response,
 )
-
-
-# import requests
 
 
 class Platform(Client):
@@ -45,24 +43,22 @@ class Platform(Client):
     admin_command_root: str
 
     def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = False,
-
+        self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None
     ):
-        validate_user_id(user_id)  # add this check since we aren't using bearer tokens in this class
+        validate_user_id(
+            user_id
+        )  # add this check since we aren't using bearer tokens in this class
 
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
-        self.admin_command_root = (self.platform_url +
-                                   "/open-metadata/platform-services/users/" +
-                                   user_id +
-                                   "/server-platform")
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        self.admin_command_root = (
+            self.platform_url
+            + "/open-metadata/platform-services/users/"
+            + user_id
+            + "/server-platform"
+        )
 
     def get_platform_origin(self) -> str:
-        """ Get the version and origin of the platform software
+        """Get the version and origin of the platform software
 
          /open-metadata/platform-services/users/{userId}/server-platform/origin
          Response from this call is a string not JSON..
@@ -97,15 +93,22 @@ class Platform(Client):
         try:
             response = local_session.get(url)
             if response.status_code != 200:
-                msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                    "message_template"
-                ].format(
-                    response.status_code,
-                    caller_method,
-                    class_name,
-                    url,
-                    OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value["message_id"],
-                ) + "==>System reports:'" + response.reason_phrase + "'"
+                msg = (
+                    OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
+                        "message_template"
+                    ].format(
+                        response.status_code,
+                        caller_method,
+                        class_name,
+                        url,
+                        OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
+                            "message_id"
+                        ],
+                    )
+                    + "==>System reports:'"
+                    + response.reason_phrase
+                    + "'"
+                )
                 exc_msg = json.dumps(
                     {
                         "class": "VoidResponse",
@@ -141,20 +144,25 @@ class Platform(Client):
             raise
 
         except (
-                httpx.NetworkError,
-                httpx.ProtocolError,
-                httpx.HTTPStatusError,
-                httpx.TimeoutException,
+            httpx.NetworkError,
+            httpx.ProtocolError,
+            httpx.HTTPStatusError,
+            httpx.TimeoutException,
         ) as e:
-            msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                "message_template"
-            ].format(
-                e.args[0],
-                caller_method,
-                class_name,
-                url,
-                OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value["message_id"],
-            ) + "==>System reports:'" + response.reason_phrase + "'"
+            msg = (
+                OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
+                    "message_template"
+                ].format(
+                    e.args[0],
+                    caller_method,
+                    class_name,
+                    url,
+                    OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value["message_id"],
+                )
+                + "==>System reports:'"
+                + response.reason_phrase
+                + "'"
+            )
             exc_msg = json.dumps(
                 {
                     "class": "VoidResponse",
@@ -185,8 +193,10 @@ class Platform(Client):
             )
             raise InvalidParameterException(exc_msg)
 
-    async def _async_activate_server_stored_config(self, server: str = None, timeout: int = 60) -> None:
-        """ Activate a server on the associated platform with the stored configuration. Async version.
+    async def _async_activate_server_stored_config(
+        self, server: str = None, timeout: int = 60
+    ) -> None:
+        """Activate a server on the associated platform with the stored configuration. Async version.
 
         Parameters
         ----------
@@ -212,8 +222,10 @@ class Platform(Client):
 
         await self._async_make_request("POST", url, time_out=timeout)
 
-    def activate_server_stored_config(self, server: str = None, timeout: int = 90) -> None:
-        """ Activate a server on the associated platform with the stored configuration.
+    def activate_server_stored_config(
+        self, server: str = None, timeout: int = 90
+    ) -> None:
+        """Activate a server on the associated platform with the stored configuration.
 
         Parameters
         ----------
@@ -234,12 +246,15 @@ class Platform(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_activate_server_stored_config(server, timeout))
+        response = loop.run_until_complete(
+            self._async_activate_server_stored_config(server, timeout)
+        )
         return response
 
-    async def _async_activate_server_supplied_config(self, config_body: dict, server: str = None, timeout: int = 60)\
-            -> None:
-        """ Activate a server on the associated platform with the stored configuration. Async version.
+    async def _async_activate_server_supplied_config(
+        self, config_body: dict, server: str = None, timeout: int = 60
+    ) -> None:
+        """Activate a server on the associated platform with the stored configuration. Async version.
 
         Parameters
         ----------
@@ -269,55 +284,61 @@ class Platform(Client):
         url = self.admin_command_root + "/servers/" + server + "/instance/configuration"
         await self._async_make_request("POST", url, config_body, time_out=timeout)
 
-    def activate_server_supplied_config(self, config_body: dict, server: str = None, timeout: int = 60) -> None:
-        """ Activate a server on the associated platform with the stored configuration.
+    def activate_server_supplied_config(
+        self, config_body: dict, server: str = None, timeout: int = 60
+    ) -> None:
+        """Activate a server on the associated platform with the stored configuration.
 
-            Parameters
-            ----------
-            config_body: str
-                Server configuration to use for activation.
-            server : str, optional
-                Use the server if specified. If None, use the default server associated with the Platform object.
-            timeout: int, optional
-                A request timeout in seconds
+        Parameters
+        ----------
+        config_body: str
+            Server configuration to use for activation.
+        server : str, optional
+            Use the server if specified. If None, use the default server associated with the Platform object.
+        timeout: int, optional
+            A request timeout in seconds
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
 
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-            """
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_activate_server_supplied_config(config_body, server, timeout))
+        loop.run_until_complete(
+            self._async_activate_server_supplied_config(config_body, server, timeout)
+        )
 
-    async def _async_get_active_server_instance_status(self, server: str = None) -> dict | str:
-        """ Get the current status of all services running in the specified active server. Async version.
+    async def _async_get_active_server_instance_status(
+        self, server: str = None
+    ) -> dict | str:
+        """Get the current status of all services running in the specified active server. Async version.
 
-                Parameters
-                ----------
-                server : str, optional
-                    The current active server we want to get status from.
-                    If None, use the default server associated with the Platform object.
-                Returns
-                -------
-                List of server status.
+        Parameters
+        ----------
+        server : str, optional
+            The current active server we want to get status from.
+            If None, use the default server associated with the Platform object.
+        Returns
+        -------
+        List of server status.
 
-                Raises
-                ------
-                InvalidParameterException
-                  If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-                PropertyServerException
-                  Raised by the server when an issue arises in processing a valid request
-                NotAuthorizedException
-                  The principle specified by the user_id does not have authorization for the requested action
-                """
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
         if server is None:
             server = self.server_name
 
@@ -326,32 +347,34 @@ class Platform(Client):
         return response.json().get("serverStatus", "No status found")
 
     def get_active_server_instance_status(self, server: str = None) -> dict | str:
-        """ Get the current status of all services running in the specified active server.
+        """Get the current status of all services running in the specified active server.
 
-                        Parameters
-                        ----------
-                        server : str, optional
-                            The current active server we want to get status from.
-                            If None, use the default server associated with the Platform object.
-                        Returns
-                        -------
-                        List of server status.
+        Parameters
+        ----------
+        server : str, optional
+            The current active server we want to get status from.
+            If None, use the default server associated with the Platform object.
+        Returns
+        -------
+        List of server status.
 
-                        Raises
-                        ------
-                        InvalidParameterException
-                          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-                        PropertyServerException
-                          Raised by the server when an issue arises in processing a valid request
-                        NotAuthorizedException
-                          The principle specified by the user_id does not have authorization for the requested action
-                        """
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_active_server_instance_status(server))
+        response = loop.run_until_complete(
+            self._async_get_active_server_instance_status(server)
+        )
         return response
 
     async def _async_get_known_servers(self) -> list[str] | str:
-        """ List all known servers on the associated platform. Async version.
+        """List all known servers on the associated platform. Async version.
 
         Parameters
         ----------
@@ -374,7 +397,7 @@ class Platform(Client):
         return response.json().get("serverList", "No servers found")
 
     def get_known_servers(self) -> list[str] | str:
-        """ List all known servers on the associated platform.
+        """List all known servers on the associated platform.
 
         Parameters
         ----------
@@ -397,7 +420,7 @@ class Platform(Client):
         return response
 
     async def _async_is_server_known(self, server: str = None) -> bool:
-        """ Is the server known? Async version.
+        """Is the server known? Async version.
 
         Parameters
         ----------
@@ -424,31 +447,31 @@ class Platform(Client):
         return response.json().get("flag")
 
     def is_server_known(self, server: str = None) -> bool:
-        """ Is the server known?
+        """Is the server known?
 
-             Parameters
-             ----------
-             server : Use the server if specified. If None, use the default server associated with the Platform object.
+        Parameters
+        ----------
+        server : Use the server if specified. If None, use the default server associated with the Platform object.
 
-             Returns
-             -------
-             bool: Returns True if the server is known, False otherwise.
+        Returns
+        -------
+        bool: Returns True if the server is known, False otherwise.
 
-             Raises
-             ------
-             InvalidParameterException
-               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-             PropertyServerException
-               Raised by the server when an issue arises in processing a valid request
-             NotAuthorizedException
-               The principle specified by the user_id does not have authorization for the requested action
-             """
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_is_server_known(server))
         return response
 
     async def _async_is_server_configured(self, server: str = None) -> bool:
-        """ is a server known and configured? Async version.
+        """is a server known and configured? Async version.
         Parameters
         ----------
         server : str, optional
@@ -466,13 +489,13 @@ class Platform(Client):
 
         response = await self._async_make_request("GET", url)
         config = response.json().get("omagserverConfig", "No configuration found")
-        if 'auditTrail' in config:
+        if "auditTrail" in config:
             return True
         else:
             return False
 
     def is_server_configured(self, server: str = None) -> bool:
-        """ is a server known and configured?
+        """is a server known and configured?
         Parameters
         ----------
         server : str, optional
@@ -489,7 +512,7 @@ class Platform(Client):
         return response
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
-        """  Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+        """Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
              Async version.
 
         Parameters
@@ -514,7 +537,7 @@ class Platform(Client):
         return response.json().get("omagserverConfig", "No active configuration found")
 
     def get_active_configuration(self, server: str = None) -> dict | str:
-        """ Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
+        """Return the configuration of the server if it is running. Return invalidParameter Exception if not running.
 
         Parameters
         ----------
@@ -530,7 +553,7 @@ class Platform(Client):
         return response
 
     async def _async_check_server_active(self, server: str = None):
-        """ Get status of the server specified. Async version.
+        """Get status of the server specified. Async version.
 
         Parameters
         ----------
@@ -550,7 +573,7 @@ class Platform(Client):
         return response.json().get("active")
 
     def check_server_active(self, server: str = None):
-        """ Get status of the server specified.
+        """Get status of the server specified.
 
         Parameters
         ----------
@@ -588,7 +611,7 @@ class Platform(Client):
         url = self.admin_command_root + "/servers/active"
 
         response = await self._async_make_request("GET", url)
-        return response.json().get('serverList', "No servers active")
+        return response.json().get("serverList", "No servers active")
 
     def get_active_server_list(self) -> list:
         """
@@ -615,7 +638,7 @@ class Platform(Client):
         return response
 
     async def _async_shutdown_platform(self) -> None:
-        """ Shutdown the platform. Async version.
+        """Shutdown the platform. Async version.
 
         An exception is thrown if a problem occurs during the request.
 
@@ -641,7 +664,7 @@ class Platform(Client):
         await self._async_make_request("DELETE", url)
 
     def shutdown_platform(self) -> None:
-        """ Shutdown the platform.
+        """Shutdown the platform.
 
         An exception is thrown if a problem occurs during the request.
 
@@ -665,7 +688,7 @@ class Platform(Client):
         loop.run_until_complete(self._async_shutdown_platform())
 
     async def _async_shutdown_server(self, server: str = None) -> None:
-        """ Shutdown a server on the associated platform. Async version.
+        """Shutdown a server on the associated platform. Async version.
 
         Parameters
         ----------
@@ -691,7 +714,7 @@ class Platform(Client):
         await self._async_make_request("DELETE", url)
 
     def shutdown_server(self, server: str = None) -> None:
-        """ Shutdown a server on the associated platform.
+        """Shutdown a server on the associated platform.
 
         Parameters
         ----------
@@ -812,8 +835,10 @@ class Platform(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_shutdown_all_servers())
 
-    async def _async_activate_server_if_down(self, server: str, verbose: bool = True, timeout: int = 60) -> bool:
-        """ Activate server if it is down. Async version.
+    async def _async_activate_server_if_down(
+        self, server: str, verbose: bool = True, timeout: int = 60
+    ) -> bool:
+        """Activate server if it is down. Async version.
 
         Parameters
         ----------
@@ -863,13 +888,19 @@ class Platform(Client):
                     print(f"      OMAG Server {server} needs to be configured")
                 return False
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             if verbose:
                 print_exception_response(e)
             raise e
 
-    def activate_server_if_down(self, server: str, verbose: bool = True, timeout: int = 60) -> bool:
-        """ Activate server if it is down.
+    def activate_server_if_down(
+        self, server: str, verbose: bool = True, timeout: int = 60
+    ) -> bool:
+        """Activate server if it is down.
 
         Parameters
         ----------
@@ -894,11 +925,15 @@ class Platform(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_activate_server_if_down(server, verbose, timeout))
+        response = loop.run_until_complete(
+            self._async_activate_server_if_down(server, verbose, timeout)
+        )
         return response
 
-    async def _async_activate_servers_on_platform(self, server_list: [str], verbose=False, timeout: int = 60) -> bool:
-        """ Activate the servers from the list provided. Async version.
+    async def _async_activate_servers_on_platform(
+        self, server_list: [str], verbose=False, timeout: int = 60
+    ) -> bool:
+        """Activate the servers from the list provided. Async version.
         Parameters
         ----------
         server_list : str
@@ -948,8 +983,10 @@ class Platform(Client):
                 print(f"\t\tServer list empty")
             return False
 
-    def activate_servers_on_platform(self, server_list: [str], verbose=False, timeout: int = 60) -> bool:
-        """ Activate the servers from the list provided.
+    def activate_servers_on_platform(
+        self, server_list: [str], verbose=False, timeout: int = 60
+    ) -> bool:
+        """Activate the servers from the list provided.
         Parameters
         ----------
         server_list : str
@@ -981,12 +1018,17 @@ class Platform(Client):
         is successfully activated, otherwise it returns False.
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_activate_servers_on_platform(server_list,
-                                                                                    verbose, timeout=timeout))
+        response = loop.run_until_complete(
+            self._async_activate_servers_on_platform(
+                server_list, verbose, timeout=timeout
+            )
+        )
         return response
 
-    async def _async_activate_platform(self, platform_name: str, hosted_server_names: [str], timeout: int = 60) -> None:
-        """ Activate an OMAG Server Platform and start the servers requested. Async version.
+    async def _async_activate_platform(
+        self, platform_name: str, hosted_server_names: [str], timeout: int = 60
+    ) -> None:
+        """Activate an OMAG Server Platform and start the servers requested. Async version.
 
         Parameters
         ----------
@@ -1017,25 +1059,33 @@ class Platform(Client):
         try:
             status = self.get_platform_origin()
             if status:
-                print(f"\n\n\t Platform {platform_name} is active and running: \n\t\t{status}")
-                print(f"\tWill start the following servers if configured: {hosted_server_names}")
+                print(
+                    f"\n\n\t Platform {platform_name} is active and running: \n\t\t{status}"
+                )
+                print(
+                    f"\tWill start the following servers if configured: {hosted_server_names}"
+                )
                 for server in hosted_server_names:
-                    activated = await self._async_activate_server_if_down(server, timeout=timeout)
+                    activated = await self._async_activate_server_if_down(
+                        server, timeout=timeout
+                    )
                     if activated:
                         print(f"\t Started server: {server}")
                 return
             else:
                 print(f"   {platform_name}, is down - start it before proceeding")
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print(f"   {platform_name}, is down - start it before proceeding")
             print_exception_response(e)
 
-    def activate_platform(self, platform_name: str, hosted_server_names: [str], timeout: int = 60) -> None:
-        """ Activate an OMAG Server Platform and start the servers requested
+    def activate_platform(
+        self, platform_name: str, hosted_server_names: [str], timeout: int = 60
+    ) -> None:
+        """Activate an OMAG Server Platform and start the servers requested
 
         Parameters
         ----------
@@ -1064,11 +1114,13 @@ class Platform(Client):
         while activating the platform or starting the servers, it prints an error message and the exception response.
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_activate_platform(platform_name, hosted_server_names, timeout))
+        loop.run_until_complete(
+            self._async_activate_platform(platform_name, hosted_server_names, timeout)
+        )
 
 
 if __name__ == "__main__":
-    p = Platform("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
+    p = Platform("meow", "https://127.0.0.1:9443", "garygeeke")
     response = p.get_known_servers()
 
     print(response)
