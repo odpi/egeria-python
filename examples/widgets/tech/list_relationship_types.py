@@ -26,23 +26,31 @@ from pyegeria import (
 from pyegeria import ValidMetadataManager
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_relationship_types(type_name: str, server: str, url: str,
-                 username: str, user_pass: str, save_output: bool = False, jupyter: bool = EGERIA_JUPYTER,
-                 width: int = EGERIA_WIDTH
-                 ):
+def display_relationship_types(
+    type_name: str,
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    save_output: bool = False,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     p_client = ValidMetadataManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
 
@@ -58,7 +66,7 @@ def display_relationship_types(type_name: str, server: str, url: str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"list for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Status")
@@ -85,38 +93,49 @@ def display_relationship_types(type_name: str, server: str, url: str,
             raise ValueError("-->This is not a known Type")
         else:
             for types in types_list:
-
-                name = types['name']
+                name = types["name"]
                 # guid = types['guid']
-                status = types['initialStatus']
-                description = types['description']
+                status = types["initialStatus"]
+                description = types["description"]
                 description_wiki = types.get("descriptionWiki", " ")
                 attribute_defs = types.get("attributeDefinitions")
                 if attribute_defs:
                     for attr in attribute_defs:
-                        attr_name = attr['attributeName']
-                        attr_desc = attr['attributeDescription']
-                        attr_status = attr['attributeStatus']
-                        attr_type = attr['attributeType']["name"]
+                        attr_name = attr["attributeName"]
+                        attr_desc = attr["attributeDescription"]
+                        attr_status = attr["attributeStatus"]
+                        attr_type = attr["attributeType"]["name"]
                         table.add_row(
-                            status, name, description, attr_name, attr_status, attr_type, attr_desc,
-                            description_wiki
+                            status,
+                            name,
+                            description,
+                            attr_name,
+                            attr_status,
+                            attr_type,
+                            attr_desc,
+                            description_wiki,
                         )
                 else:
-                    table.add_row(status, name, description, description_wiki, " ", " ", " ", " ")
+                    table.add_row(
+                        status, name, description, description_wiki, " ", " ", " ", " "
+                    )
 
         p_client.close_session()
         return table
 
     try:
-
         console = Console(width=width, force_terminal=not jupyter, record=True)
         with console.pager(styles=True):
             console.print(generate_table(type_name))
         if save_output:
             console.save_html("projects.html")
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException, ValueError) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+        ValueError,
+    ) as e:
         if type(e) is str:
             print(e)
         else:

@@ -20,7 +20,7 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ValidMetadataManager
+    ValidMetadataManager,
 )
 
 # from pyegeria.admin_services import FullServerConfig
@@ -57,8 +57,11 @@ class TestValidMetadataOMVs:
 
     def test_setup_valid_metadata_value(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = "Project"
@@ -70,12 +73,12 @@ class TestValidMetadataOMVs:
                 "dataType": "string",
                 "isCaseSensitive": False,
                 "isDeprecated": False,
-                "additionalProperties": {
-                    "colour": "black"
-                }
+                "additionalProperties": {"colour": "black"},
             }
 
-            response = m_client.setup_valid_metadata_value(property_name, type_name, body)
+            response = m_client.setup_valid_metadata_value(
+                property_name, type_name, body
+            )
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -91,7 +94,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -99,11 +102,13 @@ class TestValidMetadataOMVs:
         finally:
             m_client.close_session()
 
-
     def test_get_all_entity_types(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -123,7 +128,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -133,8 +138,11 @@ class TestValidMetadataOMVs:
 
     def test_get_all_entity_defs(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -154,7 +162,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -164,8 +172,11 @@ class TestValidMetadataOMVs:
 
     def test_get_all_relationship_defs(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -185,7 +196,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -195,8 +206,11 @@ class TestValidMetadataOMVs:
 
     def test_get_all_classification_defs(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -216,7 +230,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -226,8 +240,11 @@ class TestValidMetadataOMVs:
 
     def test_get_valid_metadata_values(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = "ToDoStatus"
@@ -251,7 +268,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -261,15 +278,20 @@ class TestValidMetadataOMVs:
 
     def test_get_valid_metadata_value(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = "Project"
             property_name = "projectHealth"
             preferred_value = "At Risk"
 
-            response = m_client.get_valid_metadata_value(property_name, type_name, preferred_value)
+            response = m_client.get_valid_metadata_value(
+                property_name, type_name, preferred_value
+            )
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -285,7 +307,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -295,8 +317,11 @@ class TestValidMetadataOMVs:
 
     def test_get_valid_relationship_types(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
@@ -317,7 +342,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -327,8 +352,11 @@ class TestValidMetadataOMVs:
 
     def test_get_valid_classification_types(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
@@ -349,7 +377,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -359,8 +387,11 @@ class TestValidMetadataOMVs:
 
     def test_get_typedef_by_name(self):
         try:
-            m_client = ValidMetadataManager(self.good_view_server_1, self.good_platform1_url,
-                                            user_id=self.good_user_2)
+            m_client = ValidMetadataManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
@@ -381,7 +412,7 @@ class TestValidMetadataOMVs:
         except (
             InvalidParameterException,
             PropertyServerException,
-            UserNotAuthorizedException
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

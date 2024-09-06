@@ -12,7 +12,8 @@ import pytest
 from pyegeria import Client
 from pyegeria._exceptions import (
     InvalidParameterException,
-    print_exception_response, UserNotAuthorizedException,
+    print_exception_response,
+    UserNotAuthorizedException,
 )
 
 
@@ -49,13 +50,12 @@ class TestClient:
                 "garygeeke",
                 200,
                 does_not_raise(),
-
             ),
             (
                 "https://127.0.0.1:9443/open-metadata/admin-services/users/meow/servers/active-metadata-store",
                 "meow",
                 401,
-                pytest.raises(UserNotAuthorizedException)
+                pytest.raises(UserNotAuthorizedException),
             ),
             (
                 "https://cray.local:9443/open-metadata/admin-services/users/woof/servers/active-metadata-store",
@@ -71,9 +71,7 @@ class TestClient:
         user_pwd = "nonesuch"
         response = ""
         with expectation as excinfo:
-            t_client = Client(
-                server, url, user_id, user_pwd, False, async_mode=True
-            )
+            t_client = Client(server, url, user_id, user_pwd)
             endpoint = (
                 url
                 + "/open-metadata/admin-services/users/"

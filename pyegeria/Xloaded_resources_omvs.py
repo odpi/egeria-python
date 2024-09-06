@@ -12,14 +12,17 @@ companion service is also configured and running.
 """
 
 from pyegeria import (
-    Client, max_paging_size, InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
-    print_exception_response
+    Client,
+    max_paging_size,
+    InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException,
+    print_exception_response,
 )
 
 
-
 class LoadedResources(Client):
-    """ Client to search and retrieve currently loaded information about connectors, templates, governance actions,
+    """Client to search and retrieve currently loaded information about connectors, templates, governance actions,
         etc.
 
     Attributes:
@@ -45,48 +48,47 @@ class LoadedResources(Client):
     admin_command_root: str
 
     def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = False,
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
+        verify_flag: bool = False,
     ):
         if server_name is None:
             server_name = "NA"
-        Client.__init__(self, server_name, platform_url,
-                        user_id, user_pwd, verify_flag)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
 
-    def get_all_templates(self, server: str = None, start_from: int = 0, page_size: int = max_paging_size) -> list | str:
-        """ Get Loaded templates for the Server.
+    def get_all_templates(
+        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+    ) -> list | str:
+        """Get Loaded templates for the Server.
 
-           Parameters
-           ----------
+        Parameters
+        ----------
 
-           Returns
-           -------
-           dict | str
-              A dictionary containing a simplified list of key template attributes.
+        Returns
+        -------
+        dict | str
+           A dictionary containing a simplified list of key template attributes.
 
-           Raises
-           ------
-           InvalidParameterException
-               If the response code is not 200.
-           PropertyServerException:
-               Raised by the server when an issue arises in processing a valid request
-           NotAuthorizedException:
-               The principle specified by the user_id does not have authorization for the requested action
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
-           """
+        """
         server = self.server_name if server is None else server
-        url = (f"{self.platform_url}/servers/{server}/open-metadata/framework-services/asset-owner/open-metadata-store/"
-               f"users/{self.user_id}/metadata-elements/by-search-string?startFrom=start_from&pageSize=page_size")
-        body = {
-                  "class" : "SearchStringRequestBody",
-                  "searchString" : ".*Template.*"
-                }
+        url = (
+            f"{self.platform_url}/servers/{server}/open-metadata/framework-services/asset-owner/open-metadata-store/"
+            f"users/{self.user_id}/metadata-elements/by-search-string?startFrom=start_from&pageSize=page_size"
+        )
+        body = {"class": "SearchStringRequestBody", "searchString": ".*Template.*"}
         response = self.make_request("POST", url, body)
         return response.json().get("elementList", "No elements")
 
     # def get_all_assets_in_archives(self, asset_type: str = None, archive_id: str = None, server: str= None, page_start:int = 0, page_size = max_paging_size):
-

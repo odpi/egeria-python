@@ -27,24 +27,34 @@ from pyegeria import (
     print_exception_response,
 )
 from pyegeria import ValidMetadataManager
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_metadata_values(property_name: str, type_name: str, server: str, url: str,
-                   username: str,  user_pass:str, save_output: bool, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
+def display_metadata_values(
+    property_name: str,
+    type_name: str,
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    save_output: bool,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
 ):
-
     m_client = ValidMetadataManager(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, user_pass)
 
@@ -60,7 +70,7 @@ def display_metadata_values(property_name: str, type_name: str, server: str, url
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Valid Metadata Values for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Category")
@@ -84,20 +94,28 @@ def display_metadata_values(property_name: str, type_name: str, server: str, url
             status = " "
             sponsor = " "
         elif type(valid_values[0]) == str:
-            raise ValueError("-->This is not a known metadata property with a valid value")
+            raise ValueError(
+                "-->This is not a known metadata property with a valid value"
+            )
         else:
             for value in valid_values:
-                category = value.get("category","None")
-                display_name = value.get("displayName","None")
+                category = value.get("category", "None")
+                display_name = value.get("displayName", "None")
                 preferred_value = value.get("preferredValue", "None ")
                 deprecated = str(value.get("isDeprecated", "None "))
                 case_sensitive = str(value.get("isCaseSensitive", "None"))
                 description = value.get("description", "None")
-                additional_properties = value.get('additionalProperties',"None")
+                additional_properties = value.get("additionalProperties", "None")
                 if additional_properties is not None:
                     props = json.dumps(additional_properties)
                 table.add_row(
-                    category, display_name, preferred_value, deprecated, case_sensitive, props,description
+                    category,
+                    display_name,
+                    preferred_value,
+                    deprecated,
+                    case_sensitive,
+                    props,
+                    description,
                 )
 
         m_client.close_session()
@@ -114,11 +132,17 @@ def display_metadata_values(property_name: str, type_name: str, server: str, url
         if save_output:
             console.save_html("valid-metadata-values.html")
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException, ValueError) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+        ValueError,
+    ) as e:
         if type(e) is str:
             print(e)
         else:
             print_exception_response(e)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -136,12 +160,17 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     save_output = args.save_output if args.save_output is not None else False
 
-
     try:
-        property_name = Prompt.ask("Enter the Property to retrieve:", default="projectHealth")
-        type_name = Prompt.ask("Enter the Metadata Type to filter on:", default="Project")
-        display_metadata_values(property_name, type_name,server, url, userid, user_pass, save_output)
-    except(KeyboardInterrupt):
+        property_name = Prompt.ask(
+            "Enter the Property to retrieve:", default="projectHealth"
+        )
+        type_name = Prompt.ask(
+            "Enter the Metadata Type to filter on:", default="Project"
+        )
+        display_metadata_values(
+            property_name, type_name, server, url, userid, user_pass, save_output
+        )
+    except KeyboardInterrupt:
         pass
 
 

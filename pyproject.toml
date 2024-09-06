@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.7.25"
+version = "0.8.4.1"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -38,7 +38,7 @@ click = "^8.1.7"
 trogon = "^0.5.0"
 textual-forms = "^0.3.0"
 textual = "^0.75.1"
-
+mermaid-py = "^0.5.3"
 
 [build-system]
 requires = ["poetry-core"]
@@ -66,11 +66,15 @@ pytest = "^8.2.2"
     get_project_dependencies = "examples.widgets.cat.get_project_dependencies:main"
     list_relationships = "examples.widgets.cat.list_relationships:main"
     list_user_ids = "examples.widgets.cat.list_user_ids:main"
+    list_archives = "examples.widgets.cat.list_archives:main"
 
     monitor_asset_events = "examples.widgets.ops.monitor_asset_events:main"
     monitor_coco_status = "examples.widgets.ops.monitor_coco_status:main"
     monitor_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_live"
     list_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_paging "
+    list_engine_activity_compressed = "examples.widgets.ops.monitor_engine_activity_c:main_paging "
+    monitor_engine_activity_compressed = "examples.widgets.ops.monitor_engine_activity_c:main_live"
+
     monitor_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_live"
     list_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_paging"
     monitor_integ_daemon_status = "examples.widgets.ops.monitor_integ_daemon_status:main_live"

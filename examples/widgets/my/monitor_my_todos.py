@@ -26,25 +26,34 @@ from pyegeria import (
 from pyegeria.my_profile_omvs import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 disable_ssl_warnings = True
 
 
-def display_my_todos(server: str, url: str, user: str, user_pass:str,
-                  jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
-
+def display_my_todos(
+    server: str,
+    url: str,
+    user: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     console = Console(width=width, force_terminal=not jupyter)
 
     m_client = MyProfile(server, url, user_id=user)
@@ -88,8 +97,16 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
                     status = f"[red]{status}"
 
             table.add_row(
-                str(identity), name, todo_type_name, todo_guid, created, priority, due,
-                completed, status, str(assigned_actors)
+                str(identity),
+                name,
+                todo_type_name,
+                todo_guid,
+                created,
+                priority,
+                due,
+                completed,
+                status,
+                str(assigned_actors),
             )
 
     def generate_table() -> Table:
@@ -101,7 +118,7 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"ToDos for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
         table.add_column("Actor")
         table.add_column("ToDo Name")
@@ -115,7 +132,7 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
         table.add_column("Sponsor")
 
         my_profile = m_client.get_my_profile()
-        my_guid = my_profile["elementHeader"].get("guid","---")
+        my_guid = my_profile["elementHeader"].get("guid", "---")
         my_ids = my_profile["userIdentities"]
         my_title = my_profile["profileProperties"].get("jobTitle", "No Title")
         user_ids = []
@@ -127,8 +144,8 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
         if type(my_roles) is list:
             for role in my_roles:
                 role_guid = role["elementHeader"]["guid"]
-                role_title = role["properties"].get("title","No Title")
-                add_rows(table,role_guid,role_title)
+                role_title = role["properties"].get("title", "No Title")
+                add_rows(table, role_guid, role_title)
 
         # m_client.close_session()
         return table
@@ -139,13 +156,18 @@ def display_my_todos(server: str, url: str, user: str, user_pass:str,
                 time.sleep(2)
                 live.update(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
 
     except KeyboardInterrupt:
         pass
     finally:
         m_client.close_session()
+
 
 def main():
     parser = argparse.ArgumentParser()

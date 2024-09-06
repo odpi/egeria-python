@@ -14,11 +14,7 @@ import json
 # import json
 from pyegeria._client import Client
 from pyegeria._globals import enable_ssl_check
-from pyegeria._validators import (
-    validate_name,
-    validate_guid,
-    validate_url
-)
+from pyegeria._validators import validate_name, validate_guid, validate_url
 
 
 class CoreServerConfig(Client):
@@ -38,29 +34,27 @@ class CoreServerConfig(Client):
         user_pwd: str
             The password associated with the user_id. Defaults to None
 
-     """
+    """
 
     def __init__(
-            self,
-            server_name: str,
-            platform_url: str,
-            user_id: str,
-            user_pwd: str = None,
-            verify_flag: bool = enable_ssl_check,
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
+        verify_flag: bool = enable_ssl_check,
     ):
         self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, verify_flag)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.admin_command_root = (
-                self.platform_url
-                + "/open-metadata/admin-services/users/"
-                + user_id
+            self.platform_url + "/open-metadata/admin-services/users/" + user_id
         )
 
     #
     #       Configure Access Services
     #
     def get_stored_configuration(self, server_name: str = None) -> dict:
-        """ Retrieves all the configuration documents for a server
+        """Retrieves all the configuration documents for a server
         Parameters
         ----------
             self :
@@ -98,7 +92,7 @@ class CoreServerConfig(Client):
         return response.json().get("omagserverConfig", "No configuration found")
 
     def is_server_configured(self, server_name: str = None) -> bool:
-        """ Check if the server has a stored configuration
+        """Check if the server has a stored configuration
 
         Parameters
         ----------
@@ -115,13 +109,13 @@ class CoreServerConfig(Client):
 
         response = self.get_stored_configuration(server_name=server_name)
 
-        if 'auditTrail' in response:
+        if "auditTrail" in response:
             return True
         else:
             return False
 
     def get_configured_access_services(self, server_name: str = None) -> list | str:
-        """ Return the list of access services that are configured for this server.
+        """Return the list of access services that are configured for this server.
 
         Parameters
         ----------
@@ -153,7 +147,7 @@ class CoreServerConfig(Client):
         return response.json().get("services", "No access services found")
 
     def configure_all_access_services(self, server_name: str = None) -> None:
-        """ Enable all access services that are registered with this server platform.
+        """Enable all access services that are registered with this server platform.
             The access services will send notifications if it is part of its implementation.
         Parameters
         ----------
@@ -185,7 +179,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url)
 
     def configure_all_access_services_no_topics(self, server_name: str = None) -> None:
-        """ Configure all access services for the specified server with no cohort/Event Bus.
+        """Configure all access services for the specified server with no cohort/Event Bus.
         Parameters
         ----------
         server_name : str, optional
@@ -211,11 +205,13 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/no-topics"
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/access-services/no-topics"
+        )
         self.make_request("POST", url)
 
     def clear_all_access_services(self, server_name: str = None) -> None:
-        """ Disable the access services. This removes all configuration for the access services and disables the
+        """Disable the access services. This removes all configuration for the access services and disables the
             enterprise repository services.
         Parameters
         ----------
@@ -247,8 +243,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/access-services"
         self.make_request("DELETE", url)
 
-    def get_access_service_config(self, access_service_name: str, server_name: str = None) -> dict:
-        """ Retrieve the config for an access service.
+    def get_access_service_config(
+        self, access_service_name: str, server_name: str = None
+    ) -> dict:
+        """Retrieve the config for an access service.
 
         Parameters
         ----------
@@ -276,7 +274,7 @@ class CoreServerConfig(Client):
         ConfigurationErrorException
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
-       """
+        """
         if server_name is None:
             server_name = self.server_name
         validate_name(access_service_name)
@@ -285,9 +283,13 @@ class CoreServerConfig(Client):
         response = self.make_request("GET", url)
         return response.json().get("config", "Access service not found")
 
-    def configure_access_service(self, access_service_name: str, access_service_options: dict = None,
-                                 server_name: str = None) -> None:
-        """ Enable a single access service. This access service will send notifications if it is part
+    def configure_access_service(
+        self,
+        access_service_name: str,
+        access_service_options: dict = None,
+        server_name: str = None,
+    ) -> None:
+        """Enable a single access service. This access service will send notifications if it is part
             of its implementation.
 
         Parameters
@@ -329,9 +331,13 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}"
         self.make_request("POST", url, access_service_options)
 
-    def configure_access_service_no_topics(self, access_service_name: str, access_service_options: dict = None,
-                                           server_name: str = None) -> None:
-        """ Enable a single access service. Notifications, if supported, are disabled.
+    def configure_access_service_no_topics(
+        self,
+        access_service_name: str,
+        access_service_options: dict = None,
+        server_name: str = None,
+    ) -> None:
+        """Enable a single access service. Notifications, if supported, are disabled.
 
         Parameters
         ----------
@@ -375,8 +381,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}/no-topics"
         self.make_request("POST", url, access_service_options)
 
-    def clear_access_service(self, access_service_name: str, server_name: str = None) -> None:
-        """ Remove the config for an access service.
+    def clear_access_service(
+        self, access_service_name: str, server_name: str = None
+    ) -> None:
+        """Remove the config for an access service.
 
         Parameters
         ----------
@@ -413,7 +421,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def get_access_services_configuration(self, server_name: str = None) -> list:
-        """ Return the detailed configuration for the access services in this server.
+        """Return the detailed configuration for the access services in this server.
 
         Parameters
         ----------
@@ -438,7 +446,7 @@ class CoreServerConfig(Client):
     #       Configure Event Bus
     #
     def get_event_bus(self, server_name: str = None) -> dict:
-        """ Returns the event bus configuration for the specified server
+        """Returns the event bus configuration for the specified server
 
         Parameters
         ----------
@@ -468,7 +476,7 @@ class CoreServerConfig(Client):
         return response.json().get("config", "No event bus configured")
 
     def set_event_bus(self, event_bus_config: dict, server_name: str = None) -> None:
-        """ Sets the event bus configuration for the server.
+        """Sets the event bus configuration for the server.
 
         Parameters
         ----------
@@ -511,7 +519,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, event_bus_config)
 
     def clear_event_bus(self, server_name: str = None) -> None:
-        """ Delete the event bus configuration for the given server.
+        """Delete the event bus configuration for the given server.
 
         Parameters
         ----------
@@ -550,27 +558,27 @@ class CoreServerConfig(Client):
     #       Configure Audit Logs
     #
     def get_audit_log_destinations(self, server_name: str = None) -> dict:
-        """ Get the destinations for a servers audit log
+        """Get the destinations for a servers audit log
 
-         Parameters
-         ----------
-         server_name : str, optional
-         The name of the server to retrieve the audit configuration for. If no value is provided will pull
-         the default from the class definition.
+        Parameters
+        ----------
+        server_name : str, optional
+        The name of the server to retrieve the audit configuration for. If no value is provided will pull
+        the default from the class definition.
 
-         Returns
-         -------
-         Returns json string containing the audit log destinations configuration.
+        Returns
+        -------
+        Returns json string containing the audit log destinations configuration.
 
-         Raises
-         ------
+        Raises
+        ------
 
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
+        InvalidParameterException
+            If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
         """
 
         if server_name is None:
@@ -578,10 +586,12 @@ class CoreServerConfig(Client):
 
         url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations"
         response = self.make_request("GET", url)
-        return response.json().get("connections", "No audit log destinations configured")
+        return response.json().get(
+            "connections", "No audit log destinations configured"
+        )
 
     def clear_audit_log_destinations(self, server_name: str = None) -> None:
-        """ Clears the audit log destination configuration for the specified server
+        """Clears the audit log destination configuration for the specified server
 
         Parameters
         ----------
@@ -611,7 +621,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def clear_a_log_destination(self, dest_name: str, server_name: str = None) -> None:
-        """  Clears audit log destinations for a server
+        """Clears audit log destinations for a server
 
         Parameters
         ----------
@@ -642,8 +652,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/connection/{dest_name}"
         self.make_request("DELETE", url)
 
-    def add_console_log_destinations(self, severities: [str], server_name: str = None) -> None:
-        """ Adds a console log destination to a server
+    def add_console_log_destinations(
+        self, severities: [str], server_name: str = None
+    ) -> None:
+        """Adds a console log destination to a server
 
         Parameters
         ----------
@@ -678,7 +690,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, severities)
 
     def add_default_log_destinations(self, server_name: str = None) -> None:
-        """ Adds the default log destination to a server
+        """Adds the default log destination to a server
 
         Parameters
         ----------
@@ -706,8 +718,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/default"
         self.make_request("POST", url)
 
-    def add_event_topic_log_destinations(self, topic_name: str, severities: [str], server_name: str = None) -> None:
-        """ Adds an event topic log destination to a server
+    def add_event_topic_log_destinations(
+        self, topic_name: str, severities: [str], server_name: str = None
+    ) -> None:
+        """Adds an event topic log destination to a server
 
         Parameters
         ----------
@@ -746,13 +760,16 @@ class CoreServerConfig(Client):
         if severities is None:
             severities = []
 
-        url = (f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/event-topic?topicName="
-               f"{topic_name}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/event-topic?topicName="
+            f"{topic_name}"
+        )
         self.make_request("POST", url, severities)
 
-    def add_file_log_destinations(self, directory_name: str, severities=None,
-                                  server_name: str = None) -> None:
-        """ Adds a file log destination to a server. Each message is a separate file in the directory
+    def add_file_log_destinations(
+        self, directory_name: str, severities=None, server_name: str = None
+    ) -> None:
+        """Adds a file log destination to a server. Each message is a separate file in the directory
             indicated by the directory name.
 
         Parameters
@@ -791,12 +808,16 @@ class CoreServerConfig(Client):
 
         if severities is None:
             severities = []
-        url = (f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/files?directoryName="
-               f"{directory_name}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/files?directoryName="
+            f"{directory_name}"
+        )
         self.make_request("POST", url, severities)
 
-    def add_slf4j_log_destination(self, severities: [str] = None, server_name: str = None) -> None:
-        """ Adds an SLF4J log destination to a server
+    def add_slf4j_log_destination(
+        self, severities: [str] = None, server_name: str = None
+    ) -> None:
+        """Adds an SLF4J log destination to a server
 
         Parameters
         ----------
@@ -830,7 +851,7 @@ class CoreServerConfig(Client):
     #   Basic Repository Configuration
     #
     def set_no_repository_mode(self, server_name: str = None) -> None:
-        """ Disable the local repository for this server
+        """Disable the local repository for this server
 
         Parameters
         ----------
@@ -857,7 +878,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def get_local_repository_config(self, server_name: str = None) -> dict:
-        """ Retrieve the local repository configuration as a JSON dictionary
+        """Retrieve the local repository configuration as a JSON dictionary
 
         Parameters
         ----------
@@ -882,7 +903,12 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/local-repository/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/local-repository/configuration"
+        )
         response = self.make_request("GET", url)
 
         # return response.json().get("config")
@@ -890,7 +916,7 @@ class CoreServerConfig(Client):
         return response.json().get("config", "No configuration found")
 
     def clear_local_repository_config(self, server_name: str = None) -> None:
-        """ Clear the configuration of the local repository
+        """Clear the configuration of the local repository
 
         Parameters
         ----------
@@ -914,11 +940,18 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/local-repository/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/local-repository/configuration"
+        )
         self.make_request("DELETE", url)
 
-    def set_local_metadata_collection_id(self, metadata_collection_id: str, server_name: str = None) -> None:
-        """ set the metadata collection id of the local repository
+    def set_local_metadata_collection_id(
+        self, metadata_collection_id: str, server_name: str = None
+    ) -> None:
+        """set the metadata collection id of the local repository
 
         Parameters
         ----------
@@ -949,7 +982,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, metadata_collection_id)
 
     def get_local_metadata_collection_id(self, server_name: str = None) -> str:
-        """ get the local metadata collection id
+        """get the local metadata collection id
         Parameters
         ----------
                 server_name : str, optional
@@ -976,11 +1009,14 @@ class CoreServerConfig(Client):
             server_name = self.server_name
 
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/metadata-collection-id"
-        response = self.make_request("GET", url, )
-        return response.json().get('guid', "No ID found")
+        response = self.make_request(
+            "GET",
+            url,
+        )
+        return response.json().get("guid", "No ID found")
 
     def get_local_metadata_collection_name(self, server_name: str = None) -> str:
-        """ get the local metadata collection name
+        """get the local metadata collection name
         Parameters
         ----------
                 server_name : str, optional
@@ -1007,11 +1043,16 @@ class CoreServerConfig(Client):
             server_name = self.server_name
 
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/metadata-collection-name"
-        response = self.make_request("GET", url, )
+        response = self.make_request(
+            "GET",
+            url,
+        )
         return response.json().get("resultString", "No name found")
 
-    def set_local_metadata_collection_name(self, metadata_collection_name: str, server_name: str = None) -> None:
-        """ Set local metadata collection name
+    def set_local_metadata_collection_name(
+        self, metadata_collection_name: str, server_name: str = None
+    ) -> None:
+        """Set local metadata collection name
 
         Parameters
         ----------
@@ -1040,12 +1081,14 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(metadata_collection_name)
 
-        url = (f"{self.admin_command_root}/servers/{server_name}/local-repository/"
-               f"metadata-collection-name/{metadata_collection_name}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/local-repository/"
+            f"metadata-collection-name/{metadata_collection_name}"
+        )
         self.make_request("POST", url)
 
     def set_in_mem_local_repository(self, server_name: str = None) -> None:
-        """  Sets the local repository to use the native in-memory repository
+        """Sets the local repository to use the native in-memory repository
 
         Parameters
         ----------
@@ -1071,7 +1114,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url)
 
     def set_graph_local_repository(self, server_name: str = None) -> None:
-        """ Sets the local repository to use JanusGraph file based repository
+        """Sets the local repository to use JanusGraph file based repository
 
         Parameters
         ----------
@@ -1099,7 +1142,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url)
 
     def set_read_only_local_repository(self, server_name: str = None) -> None:
-        """ Sets the local repository to be read-only
+        """Sets the local repository to be read-only
 
         Parameters
         ----------
@@ -1126,8 +1169,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/read-only-repository"
         self.make_request("POST", url)
 
-    def set_repository_proxy_details(self, connector_provider: str, server_name: str = None) -> None:
-        """ Sets the local repository to use the proxy repository specified by the connection.
+    def set_repository_proxy_details(
+        self, connector_provider: str, server_name: str = None
+    ) -> None:
+        """Sets the local repository to use the proxy repository specified by the connection.
 
         Parameters
         ----------
@@ -1156,12 +1201,16 @@ class CoreServerConfig(Client):
 
         validate_name(connector_provider)
 
-        url = (f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/repository-proxy/"
-               f"details?connectorProvider={connector_provider}")
+        url = (
+            f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/repository-proxy/"
+            f"details?connectorProvider={connector_provider}"
+        )
         self.make_request("POST", url)
 
-    def set_plug_in_repository(self, config_body: dict, server_name: str = None) -> None:
-        """ Configure the metadata repository using a full repository connection body.
+    def set_plug_in_repository(
+        self, config_body: dict, server_name: str = None
+    ) -> None:
+        """Configure the metadata repository using a full repository connection body.
 
         Parameters
         ----------
@@ -1193,7 +1242,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, config_body)
 
     def set_xtdb_in_mem_repository(self, server_name: str = None) -> None:
-        """ Set xtdb local repository connection to be XTDB with an in memory repository
+        """Set xtdb local repository connection to be XTDB with an in memory repository
 
         Parameters
         ----------
@@ -1221,7 +1270,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url)
 
     def set_xtdb_local_kv_repository(self, server_name: str = None) -> None:
-        """ Set xtdb local repository connection to be XTDB with a local file based key-value store
+        """Set xtdb local repository connection to be XTDB with a local file based key-value store
 
         Parameters
         ----------
@@ -1253,8 +1302,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-kv-repository"
         self.make_request("POST", url)
 
-    def set_xtdb_local_repository(self, xtdb_config_body: dict, server_name: str = None) -> None:
-        """ Set the local repository connection to be XTDB with a potentially complex XTDB configuration
+    def set_xtdb_local_repository(
+        self, xtdb_config_body: dict, server_name: str = None
+    ) -> None:
+        """Set the local repository connection to be XTDB with a potentially complex XTDB configuration
 
         Parameters
         ----------
@@ -1288,8 +1339,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
         self.make_request("POST", url, xtdb_config_body)
 
-    def set_xtdb_pg_repository(self, host: str, pg_user: str, pg_pwd: str, server_name: str = None) -> None:
-        """ Set the local repository connection to be XTDB using PostgresSQL Server, passing in basic parameters
+    def set_xtdb_pg_repository(
+        self, host: str, pg_user: str, pg_pwd: str, server_name: str = None
+    ) -> None:
+        """Set the local repository connection to be XTDB using PostgresSQL Server, passing in basic parameters
 
         Parameters
         ----------
@@ -1331,25 +1384,31 @@ class CoreServerConfig(Client):
         validate_name(host)
         pg_db = server_name.lower()
 
-        jdbc_url = f'"jdbc:postgresql://{host}/{pg_db}?user={pg_user}&password={pg_pwd}"'
+        jdbc_url = (
+            f'"jdbc:postgresql://{host}/{pg_db}?user={pg_user}&password={pg_pwd}"'
+        )
         index_dir = f'"data/servers/{server_name}/repository/xtdb/rdb-index"'
         lucene_dir = f'"data/servers/{server_name}/repository/xtdb/lucene"'
 
-        index_str = '{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir '
-        index_str2 = index_str + index_dir + '}}'
+        index_str = "{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "
+        index_str2 = index_str + index_dir + "}}"
 
-        lucene_str = ':xtdb.lucene/lucene-store {:db-dir ' + lucene_dir
-        lucene_str2 = lucene_str + ' :indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer} '
-        lucene_str3 = lucene_str2 + ':analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}} '
+        lucene_str = ":xtdb.lucene/lucene-store {:db-dir " + lucene_dir
+        lucene_str2 = (
+            lucene_str + " :indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer} "
+        )
+        lucene_str3 = (
+            lucene_str2 + ":analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}} "
+        )
 
-        conn_pool_str = ':xtdb.jdbc/connection-pool {:dialect {:xtdb/module xtdb.jdbc.psql/->dialect} '
-        conn_pool_str2 = f'{conn_pool_str} :db-spec {{:jdbcUrl {jdbc_url} }} }}'
+        conn_pool_str = ":xtdb.jdbc/connection-pool {:dialect {:xtdb/module xtdb.jdbc.psql/->dialect} "
+        conn_pool_str2 = f"{conn_pool_str} :db-spec {{:jdbcUrl {jdbc_url} }} }}"
 
-        tx_str = ':xtdb/tx-log {:xtdb/module xtdb.jdbc/->tx-log :connection-pool '
+        tx_str = ":xtdb/tx-log {:xtdb/module xtdb.jdbc/->tx-log :connection-pool "
         tx_str2 = tx_str + ':xtdb.jdbc/connection-pool :poll-sleep-duration "PT1S"}'
 
-        doc_str = ':xtdb/document-store {:xtdb/module xtdb.jdbc/->document-store :connection-pool'
-        doc_str2 = doc_str + ' :xtdb.jdbc/connection-pool}}'
+        doc_str = ":xtdb/document-store {:xtdb/module xtdb.jdbc/->document-store :connection-pool"
+        doc_str2 = doc_str + " :xtdb.jdbc/connection-pool}}"
 
         edn = f"{index_str2} {lucene_str3} {conn_pool_str2} {tx_str2} {doc_str2}"
         body = {
@@ -1357,11 +1416,11 @@ class CoreServerConfig(Client):
         }
 
         print(json.dumps(body, indent=4))
-        url = f'{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository'
+        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
         self.make_request("POST", url, body)
 
     def get_open_metadata_archives(self, server_name: str = None) -> dict:
-        """ Return the list of open metadata archives configured to load on startup.
+        """Return the list of open metadata archives configured to load on startup.
 
         Parameters
         ----------
@@ -1391,7 +1450,7 @@ class CoreServerConfig(Client):
         return response.json().get("connections", "No archives found")
 
     def clear_open_metadata_archives(self, server_name: str = None) -> None:
-        """ Clear open metadata archives from being loaded at startup
+        """Clear open metadata archives from being loaded at startup
 
         Parameters
         ----------
@@ -1417,8 +1476,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives"
         self.make_request("DELETE", url)
 
-    def add_startup_open_metadata_archive_file(self, archive_file: str, server_name: str = None) -> None:
-        """ Add a metadata archive file to be loaded on startup
+    def add_startup_open_metadata_archive_file(
+        self, archive_file: str, server_name: str = None
+    ) -> None:
+        """Add a metadata archive file to be loaded on startup
         Parameters
         ----------
 
@@ -1452,10 +1513,17 @@ class CoreServerConfig(Client):
     #
     #   Basic settings and security
     #
-    def set_basic_server_properties(self, local_server_description: str, organization_name: str,
-                                    local_server_url: str, local_server_user_id: str, local_server_password: str,
-                                    max_page_size: int = 0, server_name: str = None):
-        """ Sets the basic server properties.
+    def set_basic_server_properties(
+        self,
+        local_server_description: str,
+        organization_name: str,
+        local_server_url: str,
+        local_server_user_id: str,
+        local_server_password: str,
+        max_page_size: int = 0,
+        server_name: str = None,
+    ):
+        """Sets the basic server properties.
         Parameters
         ----------
         local_server_description : str
@@ -1496,14 +1564,14 @@ class CoreServerConfig(Client):
             "localServerURL": local_server_url,
             "localServerUserId": local_server_user_id,
             "localServerPassword": local_server_password,
-            "maxPageSize": max_page_size
+            "maxPageSize": max_page_size,
         }
         url = self.admin_command_root + "/servers/" + server_name + "/server-properties"
 
         self.make_request("POST", url, basic_props)
 
     def get_basic_server_properties(self, server_name: str = None) -> dict | str:
-        """ Retrieve the basic properties associated with this server
+        """Retrieve the basic properties associated with this server
 
         Parameters
         ----------
@@ -1531,10 +1599,12 @@ class CoreServerConfig(Client):
         url = self.admin_command_root + "/servers/" + server_name + "/server-properties"
         response = self.make_request("GET", url)
 
-        return response.json().get("basicServerProperties", "No server properties found")
+        return response.json().get(
+            "basicServerProperties", "No server properties found"
+        )
 
     def get_server_type_classification(self, server_name: str = None) -> dict | str:
-        """ Clears the server type for the given server
+        """Clears the server type for the given server
 
         Parameters
         ----------
@@ -1564,7 +1634,7 @@ class CoreServerConfig(Client):
         return response.json().get("serverTypeClassification", "No server type found")
 
     def get_server_security_connection(self, server_name: str = None) -> dict | str:
-        """ Retrieve the security connection configuration for a server.
+        """Retrieve the security connection configuration for a server.
 
         Parameters
         ----------
@@ -1593,8 +1663,10 @@ class CoreServerConfig(Client):
         response = self.make_request("GET", url)
         return response.json()
 
-    def set_server_security_connection(self, security_connection_body: dict, server_name: str = None) -> None:
-        """ Set the server security configuration
+    def set_server_security_connection(
+        self, security_connection_body: dict, server_name: str = None
+    ) -> None:
+        """Set the server security configuration
 
         Parameters
         ----------
@@ -1625,36 +1697,36 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, security_connection_body)
 
     def clear_server_security_connection(self, server_name: str = None) -> None:
-        """ Clears the server security configuration
+        """Clears the server security configuration
 
-                Parameters
-                ----------
+        Parameters
+        ----------
 
-                server_name : str (optional)
-                    The name of the server for which the security connection should be set.
-                    If not provided, the default server name will be used.
+        server_name : str (optional)
+            The name of the server for which the security connection should be set.
+            If not provided, the default server name will be used.
 
-                Returns
-                -------
-                None
+        Returns
+        -------
+        None
 
-                Raises
-                ------
-                InvalidParameterException
-                    If the response code is not 200.
-                PropertyServerException:
-                    Raised by the server when an issue arises in processing a valid request
-                NotAuthorizedException:
-                    The principle specified by the user_id does not have authorization for the requested action
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
 
-                """
+        """
         if server_name is None:
             server_name = self.server_name
         url = f"{self.admin_command_root}/servers/{server_name}/security/connection"
         self.make_request("DELETE", url)
 
     def get_server_classification(self, server_name: str = None) -> dict:
-        """ Get server classification
+        """Get server classification
 
         Parameters
         ----------
@@ -1688,7 +1760,7 @@ class CoreServerConfig(Client):
     #
 
     def get_configured_view_svcs(self, server_name: str = None) -> dict:
-        """ Get the list of view services configured for the specified server
+        """Get the list of view services configured for the specified server
 
         Parameters
         ----------
@@ -1717,9 +1789,13 @@ class CoreServerConfig(Client):
 
         return response.json().get("services", "No view services found")
 
-    def config_all_view_services(self, mdr_server_name: str,
-                                   mdr_server_platform_root_url: str, server_name: str = None) -> None:
-        """ Enable all view services that are registered with this OMAG server platform.
+    def config_all_view_services(
+        self,
+        mdr_server_name: str,
+        mdr_server_platform_root_url: str,
+        server_name: str = None,
+    ) -> None:
+        """Enable all view services that are registered with this OMAG server platform.
 
         Parameters
         ----------
@@ -1762,14 +1838,16 @@ class CoreServerConfig(Client):
         view_service_body = {
             "class": "ViewServiceRequestBody",
             "omagserverName": mdr_server_name,
-            "omagserverPlatformRootURL": mdr_server_platform_root_url
+            "omagserverPlatformRootURL": mdr_server_platform_root_url,
         }
 
         url = f"{self.admin_command_root}/servers/{server_name}/view-services"
         self.make_request("POST", url, view_service_body)
 
-    def config_all_view_services_w_body(self, view_services_request_body, server_name: str = None) -> None:
-        """ Configure all view services for the specified view server with a simple configuration.
+    def config_all_view_services_w_body(
+        self, view_services_request_body, server_name: str = None
+    ) -> None:
+        """Configure all view services for the specified view server with a simple configuration.
 
         Parameters
         ----------
@@ -1805,7 +1883,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, view_services_request_body)
 
     def clear_all_view_services(self, server_name: str = None) -> None:
-        """ Clears all the view services for the given server
+        """Clears all the view services for the given server
 
         Parameters
         ----------
@@ -1831,8 +1909,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/view-services"
         self.make_request("DELETE", url)
 
-    def get_view_svc_config(self, service_url_marker: str, server_name: str = None) -> dict | str:
-        """ Retrieves the view service configuration for the given view server.
+    def get_view_svc_config(
+        self, service_url_marker: str, server_name: str = None
+    ) -> dict | str:
+        """Retrieves the view service configuration for the given view server.
         Parameters
         ----------
         service_url_marker : str
@@ -1871,9 +1951,14 @@ class CoreServerConfig(Client):
         response = self.make_request("GET", url)
         return response.json().get("config", "No view services found")
 
-    def config_view_service(self, service_url_marker: str, mdr_server_name: str,
-                            mdr_server_platform_root_url: str, server_name: str = None) -> None:
-        """ Configure a view service specified by the service_url_marker with basic properties.
+    def config_view_service(
+        self,
+        service_url_marker: str,
+        mdr_server_name: str,
+        mdr_server_platform_root_url: str,
+        server_name: str = None,
+    ) -> None:
+        """Configure a view service specified by the service_url_marker with basic properties.
 
         Parameters
         ----------
@@ -1919,14 +2004,16 @@ class CoreServerConfig(Client):
         view_service_body = {
             "class": "ViewServiceRequestBody",
             "omagserverName": mdr_server_name,
-            "omagserverPlatformRootURL": mdr_server_platform_root_url
+            "omagserverPlatformRootURL": mdr_server_platform_root_url,
         }
 
         url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         self.make_request("POST", url, view_service_body)
 
-    def clear_view_service(self, service_url_marker: str, server_name: str = None) -> None:
-        """ Remove the view service specified by the service_url_marker.
+    def clear_view_service(
+        self, service_url_marker: str, server_name: str = None
+    ) -> None:
+        """Remove the view service specified by the service_url_marker.
 
         Parameters
         ----------
@@ -1965,7 +2052,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def get_view_svcs_config(self, server_name: str = None) -> str | list:
-        """ Retrieves the view services configuration for the specified view server.
+        """Retrieves the view services configuration for the specified view server.
         Parameters
         ----------
         server_name : str, optional
@@ -2004,8 +2091,10 @@ class CoreServerConfig(Client):
     #
     #   Cohort Configuration, etc.
     #
-    def add_cohort_registration(self, cohort_name: str, server_name: str = None) -> None:
-        """ Enable registration of server to an open metadata repository cohort using the default topic structure
+    def add_cohort_registration(
+        self, cohort_name: str, server_name: str = None
+    ) -> None:
+        """Enable registration of server to an open metadata repository cohort using the default topic structure
             (DEDICATED_TOPICS). A cohort is a group of open metadata repositories that are sharing metadata.
             An OMAG server can connect to zero, one or more cohorts. Each cohort needs a unique name.
             The members of the cohort use a shared topic to exchange registration information and events
@@ -2038,7 +2127,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url)
 
     def get_cohort_config(self, cohort_name: str, server_name: str = None) -> dict:
-        """ Get the cohort configuration for the given cohort.
+        """Get the cohort configuration for the given cohort.
 
         Parameters
         ----------
@@ -2066,13 +2155,21 @@ class CoreServerConfig(Client):
 
         validate_name(cohort_name)
 
-        url = self.admin_command_root + "/servers/" + server_name + "/cohorts/" + cohort_name
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/cohorts/"
+            + cohort_name
+        )
         response = self.make_request("GET", url)
 
         return response.json().get("config", "No cohort configuration found")
 
-    def deploy_server_config(self, target_platform_body: dict, server_name: str = None) -> None:
-        """ Add a metadata archive file to be loaded on startup
+    def deploy_server_config(
+        self, target_platform_body: dict, server_name: str = None
+    ) -> None:
+        """Add a metadata archive file to be loaded on startup
         Parameters
         ----------
 
@@ -2106,7 +2203,7 @@ class CoreServerConfig(Client):
     #   Integration Groups
     #
     def clear_all_integration_groups(self, server_name: str = None) -> None:
-        """ Remove all the integration groups associated with the server.
+        """Remove all the integration groups associated with the server.
 
         Parameters
         ----------
@@ -2138,8 +2235,10 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/integration-groups"
         self.make_request("DELETE", url)
 
-    def clear_an_integration_group(self, group_qualified_name: str, server_name: str = None) -> None:
-        """ Remove the integration group specified by the group_qualified_name parameter.
+    def clear_an_integration_group(
+        self, group_qualified_name: str, server_name: str = None
+    ) -> None:
+        """Remove the integration group specified by the group_qualified_name parameter.
 
         Parameters
         ----------
@@ -2174,7 +2273,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def get_integration_groups_config(self, server_name: str = None) -> list | str:
-        """ Get the Integration Groups configuration server specified by the server_name parameter.
+        """Get the Integration Groups configuration server specified by the server_name parameter.
 
         Parameters
         ----------
@@ -2199,14 +2298,24 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/integration-groups/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/integration-groups/configuration"
+        )
         response = self.make_request("GET", url)
 
         return response.json().get("groups", "No Integration Group configuration found")
 
-    def config_integration_group(self, omag_server_name: str, omag_server_platform_root_url: str,
-                                 qualified_name: str, server_name: str = None) -> None:
-        """ Add configuration for a single integration group to the server's config document.
+    def config_integration_group(
+        self,
+        omag_server_name: str,
+        omag_server_platform_root_url: str,
+        qualified_name: str,
+        server_name: str = None,
+    ) -> None:
+        """Add configuration for a single integration group to the server's config document.
 
         Parameters
         ----------
@@ -2252,7 +2361,7 @@ class CoreServerConfig(Client):
             "class": "IntegrationGroupConfig",
             "omagserverName": omag_server_name,
             "omagserverPlatformRootURL": omag_server_platform_root_url,
-            "integrationGroupQualifiedName": qualified_name
+            "integrationGroupQualifiedName": qualified_name,
         }
 
         url = f"{self.admin_command_root}/servers/{server_name}/integration-groups/configuration"
@@ -2263,7 +2372,7 @@ class CoreServerConfig(Client):
     #
 
     def clear_engine_definitions_client_config(self, server_name: str = None) -> None:
-        """ Remove the configuration for the Governance Engine OMAS Engine client configuration in a single call.
+        """Remove the configuration for the Governance Engine OMAS Engine client configuration in a single call.
         This overrides the current values.
 
         Parameters
@@ -2295,9 +2404,13 @@ class CoreServerConfig(Client):
         url = f"{self.admin_command_root}/servers/{server_name}/engine-definitions/client-config"
         self.make_request("DELETE", url)
 
-    def set_engine_definitions_client_config(self, mdr_server_name: str, mdr_server_platform_root_url: str,
-                                             server_name: str = None) -> None:
-        """ Set up the name and platform URL root for the metadata server running the Governance Engine OMAS that
+    def set_engine_definitions_client_config(
+        self,
+        mdr_server_name: str,
+        mdr_server_platform_root_url: str,
+        server_name: str = None,
+    ) -> None:
+        """Set up the name and platform URL root for the metadata server running the Governance Engine OMAS that
          provides the governance engine definitions used by the engine services.
 
         Parameters
@@ -2346,7 +2459,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, body)
 
     def clear_engine_list(self, server_name: str = None) -> None:
-        """ Remove the configuration for the Governance Engine OMAS Engine client configuration in a single call.
+        """Remove the configuration for the Governance Engine OMAS Engine client configuration in a single call.
         This overrides the current values.
 
         Parameters
@@ -2379,7 +2492,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def set_engine_list(self, engine_list: [dict], server_name: str = None) -> None:
-        """ Set up the list of governance engine that will use the metadata from the same metadata access server
+        """Set up the list of governance engine that will use the metadata from the same metadata access server
          as the engine host uses for retrieving the engine configuration.
 
         Parameters
@@ -2429,7 +2542,7 @@ class CoreServerConfig(Client):
         self.make_request("POST", url, engine_list)
 
     def get_engine_host_services_config(self, server_name: str = None) -> dict | str:
-        """ Return the configuration for the complete engine host services in this server.
+        """Return the configuration for the complete engine host services in this server.
 
         Parameters
         ----------
@@ -2454,14 +2567,19 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = self.admin_command_root + "/servers/" + server_name + "/engine-host-services/configuration"
+        url = (
+            self.admin_command_root
+            + "/servers/"
+            + server_name
+            + "/engine-host-services/configuration"
+        )
         response = self.make_request("GET", url)
 
         # return response.json().get("config", "No engine definitions client configuration found")
         return response.json().get("services", "No engine host services")
 
     def get_placeholder_variables(self) -> dict:
-        """ get placeholder variables
+        """get placeholder variables
 
         Get the placeholder variables from the platform.
 
@@ -2486,7 +2604,7 @@ class CoreServerConfig(Client):
         return response.json().get("stringMap")
 
     def set_placeholder_variables(self, placeholder_variables: dict) -> None:
-        """ Set placeholder variables - replaces previous placeholders with the new list
+        """Set placeholder variables - replaces previous placeholders with the new list
 
         Parameters
         ----------

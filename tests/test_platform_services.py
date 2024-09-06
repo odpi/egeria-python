@@ -78,11 +78,11 @@ class TestPlatform:
             #         pytest.raises(InvalidParameterException),
             # ),
             (
-                    "active-metadata-server",
-                    "https://localhost:9443",
-                    "garygeeke",
-                    "nothing",
-                    does_not_raise(),
+                "active-metadata-server",
+                "https://localhost:9443",
+                "garygeeke",
+                "nothing",
+                does_not_raise(),
             ),
             # (
             #         "cocoMDS1",
@@ -126,7 +126,11 @@ class TestPlatform:
             print(f"\n\n\t Platform shutdown")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code is not "200", "Invalid parameters"
         finally:
@@ -145,21 +149,29 @@ class TestPlatform:
             print(f"\n\n\t server {server} configured and activated successfully")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
 
         finally:
             p_client.close_session()
 
-    def test_shutdown_server(self, server: str = 'cocoMDS1'):
+    def test_shutdown_server(self, server: str = "cocoMDS1"):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             p_client.shutdown_server(server)
             print(f"\n\n\t server {server} was shut down successfully")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code == 404, "Invalid parameters"
         finally:
@@ -172,7 +184,11 @@ class TestPlatform:
             print(f"\n\n\t response = {response}")
             assert len(response) > 0, "Empty server list"
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
@@ -180,11 +196,11 @@ class TestPlatform:
 
     def test_shutdown_unregister_servers(self, server: str = good_server_2):
         try:
-            p_client = Platform(
-                server, self.good_platform1_url, self.good_user_1
-            )
+            p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             p_client.shutdown_unregister_servers()
-            print(f"\n\n\t Servers on platform {p_client.platform_url} shutdown and unregistered")
+            print(
+                f"\n\n\t Servers on platform {p_client.platform_url} shutdown and unregistered"
+            )
             assert True
 
         except (InvalidParameterException, PropertyServerException) as e:
@@ -225,28 +241,28 @@ class TestPlatform:
                 does_not_raise(),
             ),
             (
-                    good_server_2,
-                    "https://127.0.0.1:9443",
-                    "garygeeke",
-                    None,
-                    does_not_raise(),
+                good_server_2,
+                "https://127.0.0.1:9443",
+                "garygeeke",
+                None,
+                does_not_raise(),
             ),
             (
-                    "cocoMDS2",
-                    "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
-                    "meow",
-                    "UserNotAuthorizedException",
-                    pytest.raises(UserNotAuthorizedException)
-            )
+                "cocoMDS2",
+                "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
+                "meow",
+                "UserNotAuthorizedException",
+                pytest.raises(UserNotAuthorizedException),
+            ),
         ],
     )
-    def test_get_active_configuration(
-            self, server, url, user_id, ex_type, expectation
-    ):
+    def test_get_active_configuration(self, server, url, user_id, ex_type, expectation):
         with Platform(server, url, user_id) as p_client:
             with expectation as excinfo:
                 response = p_client.get_active_configuration(server)
-                print(f"\n\n\tThe active configuration of {server} is \n{json.dumps(response, indent=4)}")
+                print(
+                    f"\n\n\tThe active configuration of {server} is \n{json.dumps(response, indent=4)}"
+                )
                 assert True
 
             if excinfo:
@@ -267,13 +283,9 @@ class TestPlatform:
                 "class": "EventBusConfig",
                 "topicURLRoot": "egeria.omag",
                 "configurationProperties": {
-                    "producer": {
-                        "bootstrap.servers": "localhost:9092"
-                    },
-                    "consumer": {
-                        "bootstrap.servers": "localhost:9092"
-                    }
-                }
+                    "producer": {"bootstrap.servers": "localhost:9092"},
+                    "consumer": {"bootstrap.servers": "localhost:9092"},
+                },
             },
             "accessServicesConfig": [
                 {
@@ -294,23 +306,19 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "egeria.omag.server.test-store.omas.datamanager.outTopic"
+                            "address": "egeria.omag.server.test-store.omas.datamanager.outTopic",
                         },
                         "configurationProperties": {
-                            "producer": {
-                                "bootstrap.servers": "localhost:9092"
-                            },
+                            "producer": {"bootstrap.servers": "localhost:9092"},
                             "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                            "consumer": {
-                                "bootstrap.servers": "localhost:9092"
-                            }
-                        }
-                    }
+                            "consumer": {"bootstrap.servers": "localhost:9092"},
+                        },
+                    },
                 },
                 {
                     "class": "AccessServiceConfig",
@@ -330,23 +338,19 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "egeria.omag.server.test-store.omas.assetmanager.outTopic"
+                            "address": "egeria.omag.server.test-store.omas.assetmanager.outTopic",
                         },
                         "configurationProperties": {
-                            "producer": {
-                                "bootstrap.servers": "localhost:9092"
-                            },
+                            "producer": {"bootstrap.servers": "localhost:9092"},
                             "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                            "consumer": {
-                                "bootstrap.servers": "localhost:9092"
-                            }
-                        }
-                    }
+                            "consumer": {"bootstrap.servers": "localhost:9092"},
+                        },
+                    },
                 },
                 {
                     "class": "AccessServiceConfig",
@@ -366,23 +370,19 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "egeria.omag.server.test-store.omas.communityprofile.outTopic"
+                            "address": "egeria.omag.server.test-store.omas.communityprofile.outTopic",
                         },
                         "configurationProperties": {
-                            "producer": {
-                                "bootstrap.servers": "localhost:9092"
-                            },
+                            "producer": {"bootstrap.servers": "localhost:9092"},
                             "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                            "consumer": {
-                                "bootstrap.servers": "localhost:9092"
-                            }
-                        }
-                    }
+                            "consumer": {"bootstrap.servers": "localhost:9092"},
+                        },
+                    },
                 },
                 {
                     "class": "AccessServiceConfig",
@@ -402,23 +402,19 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "egeria.omag.server.test-store.omas.governanceserver.outTopic"
+                            "address": "egeria.omag.server.test-store.omas.governanceserver.outTopic",
                         },
                         "configurationProperties": {
-                            "producer": {
-                                "bootstrap.servers": "localhost:9092"
-                            },
+                            "producer": {"bootstrap.servers": "localhost:9092"},
                             "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                            "consumer": {
-                                "bootstrap.servers": "localhost:9092"
-                            }
-                        }
-                    }
+                            "consumer": {"bootstrap.servers": "localhost:9092"},
+                        },
+                    },
                 },
                 {
                     "class": "AccessServiceConfig",
@@ -438,24 +434,20 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.kafka.KafkaOpenMetadataTopicProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "egeria.omag.server.test-store.omas.governanceengine.outTopic"
+                            "address": "egeria.omag.server.test-store.omas.governanceengine.outTopic",
                         },
                         "configurationProperties": {
-                            "producer": {
-                                "bootstrap.servers": "localhost:9092"
-                            },
+                            "producer": {"bootstrap.servers": "localhost:9092"},
                             "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                            "consumer": {
-                                "bootstrap.servers": "localhost:9092"
-                            }
-                        }
-                    }
-                }
+                            "consumer": {"bootstrap.servers": "localhost:9092"},
+                        },
+                    },
+                },
             ],
             "repositoryServicesConfig": {
                 "class": "RepositoryServicesConfig",
@@ -468,7 +460,7 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.auditlogstore.console.ConsoleAuditLogStoreProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.auditlogstore.console.ConsoleAuditLogStoreProvider",
                         },
                         "configurationProperties": {
                             "supportedSeverities": [
@@ -482,9 +474,9 @@ class TestPlatform:
                                 "Startup",
                                 "Shutdown",
                                 "Asset",
-                                "Cohort"
+                                "Cohort",
                             ]
-                        }
+                        },
                     }
                 ],
                 "localRepositoryConfig": {
@@ -498,7 +490,7 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.xtdb.repositoryconnector.XTDBOMRSRepositoryConnectorProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.xtdb.repositoryconnector.XTDBOMRSRepositoryConnectorProvider",
                         },
                         "configurationProperties": {
                             "xtdbConfig": {
@@ -508,23 +500,23 @@ class TestPlatform:
                                 "xtdb/tx-log": {
                                     "kv-store": {
                                         "db-dir": "data/servers/test-store/repository/xtdb-kv/rdb-tx",
-                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store"
+                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store",
                                     }
                                 },
                                 "xtdb/index-store": {
                                     "kv-store": {
                                         "db-dir": "data/servers/test-store/repository/xtdb-kv/rdb-index",
-                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store"
+                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store",
                                     }
                                 },
                                 "xtdb/document-store": {
                                     "kv-store": {
                                         "db-dir": "data/servers/test-store/repository/xtdb-kv/rdb-docs",
-                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store"
+                                        "xtdb/module": "xtdb.rocksdb/-\u003ekv-store",
                                     }
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                     "localRepositoryRemoteConnection": {
                         "class": "Connection",
@@ -533,16 +525,16 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.rest.repositoryconnector.OMRSRESTRepositoryConnectorProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.rest.repositoryconnector.OMRSRESTRepositoryConnectorProvider",
                         },
                         "endpoint": {
                             "class": "Endpoint",
                             "headerVersion": 0,
-                            "address": "https://localhost:9443/servers/test-store"
-                        }
+                            "address": "https://localhost:9443/servers/test-store",
+                        },
                     },
                     "eventsToSaveRule": "ALL",
-                    "eventsToSendRule": "ALL"
+                    "eventsToSendRule": "ALL",
                 },
                 "enterpriseAccessConfig": {
                     "class": "EnterpriseAccessConfig",
@@ -555,7 +547,7 @@ class TestPlatform:
                         "connectorType": {
                             "class": "ConnectorType",
                             "headerVersion": 0,
-                            "connectorProviderClassName": "org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicProvider"
+                            "connectorProviderClassName": "org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicProvider",
                         },
                         "embeddedConnections": [
                             {
@@ -570,24 +562,24 @@ class TestPlatform:
                                     "connectorType": {
                                         "class": "ConnectorType",
                                         "headerVersion": 0,
-                                        "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.inmemory.InMemoryOpenMetadataTopicProvider"
+                                        "connectorProviderClassName": "org.odpi.openmetadata.adapters.eventbus.topic.inmemory.InMemoryOpenMetadataTopicProvider",
                                     },
                                     "endpoint": {
                                         "class": "Endpoint",
                                         "headerVersion": 0,
-                                        "address": "test-store.openmetadata.repositoryservices.enterprise.test-store.OMRSTopic"
+                                        "address": "test-store.openmetadata.repositoryservices.enterprise.test-store.OMRSTopic",
                                     },
                                     "configurationProperties": {
                                         "local.server.id": "f81bbe7a-2592-4afe-bd81-64dfb3bd7920",
-                                        "eventDirection": "inOut"
-                                    }
-                                }
+                                        "eventDirection": "inOut",
+                                    },
+                                },
                             }
-                        ]
+                        ],
                     },
-                    "enterpriseOMRSTopicProtocolVersion": "V1"
-                }
-            }
+                    "enterpriseOMRSTopicProtocolVersion": "V1",
+                },
+            },
         }
 
         try:
@@ -609,7 +601,7 @@ class TestPlatform:
             if type(response) is str:
                 print("Server instance status indicates: " + response)
             else:
-                print (f"\n\n\tActive server status: {json.dumps(response, indent=4)}")
+                print(f"\n\n\tActive server status: {json.dumps(response, indent=4)}")
             assert True
 
         except (InvalidParameterException, PropertyServerException) as e:
@@ -619,7 +611,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_is_server_known(self, server:str = good_server_2):
+    def test_is_server_known(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.is_server_known(server)
@@ -633,11 +625,13 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_is_server_configured(self, server:str= good_server_3):
+    def test_is_server_configured(self, server: str = good_server_3):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.is_server_configured(server)
-            print(f"\n\n\tis_server_configured() for server {server} reports {response}")
+            print(
+                f"\n\n\tis_server_configured() for server {server} reports {response}"
+            )
             assert (response is True) or (response is False), "Exception happened?"
 
         except (InvalidParameterException, PropertyServerException) as e:
@@ -711,14 +705,19 @@ class TestPlatform:
             print(f"\n\n\t  activation success was {response}")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-
     def test_activate_servers_on_platform(self, server: str = good_server_2):
         server_name = server
-        with Platform(server_name, self.good_platform1_url, self.good_user_1) as p_client:
+        with Platform(
+            server_name, self.good_platform1_url, self.good_user_1
+        ) as p_client:
             server_list = p_client.get_known_servers()
             print(f"\n\n\tKnown servers on the platform are: {server_list}")
 
@@ -735,10 +734,12 @@ class TestPlatform:
             print_exception_response(p_client.exc_val)
             assert False
 
-    def test_activate_platform(self, server:str = good_server_3):
+    def test_activate_platform(self, server: str = good_server_3):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
-            p_client.activate_platform("laz", ["active-metadata-store","simple-metadata-store"])
+            p_client.activate_platform(
+                "laz", ["active-metadata-store", "simple-metadata-store"]
+            )
             print(f"\n\n\tPlatform laz activated")
             assert True
 
@@ -749,22 +750,24 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_display_status(self, server:str = good_server_1):
+    def test_display_status(self, server: str = good_server_1):
         server_name = server
 
         table = Table(
             title=f"Server Status for Platform - {time.asctime()}",
-            style = "black on grey66",
-            header_style = "white on dark_blue",
+            style="black on grey66",
+            header_style="white on dark_blue",
             show_lines=True,
-            expand=True
+            expand=True,
         )
         table.add_column("Known Server", width=20)
-        table.add_column( "Status", width=10)
-        table.add_column( "Service Name", width=20, no_wrap=True)
-        table.add_column( "Service Status", width=10)
+        table.add_column("Status", width=10)
+        table.add_column("Service Name", width=20, no_wrap=True)
+        table.add_column("Service Status", width=10)
         try:
-            with  ServerOps(server_name, self.good_platform1_url, self.good_user_1) as p_client:
+            with ServerOps(
+                server_name, self.good_platform1_url, self.good_user_1
+            ) as p_client:
                 server_list = p_client.get_known_servers()
                 live = Live(table, refresh_per_second=1)
                 with live:
@@ -774,22 +777,26 @@ class TestPlatform:
                             status = "Active"
                         else:
                             status = "Inactive"
-                        services = p_client.get_server_status(server)['serverStatus']['services']
+                        services = p_client.get_server_status(server)["serverStatus"][
+                            "services"
+                        ]
                         for service in services:
-                            service_name = service['serviceName']
-                            service_status = service['serviceStatus']
+                            service_name = service["serviceName"]
+                            service_status = service["serviceStatus"]
                             table.add_row(server, status, service_name, service_status),
 
                     sleep(2)
 
-        except(InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
             p_client.close_session()
-
-
 
     def test_platform_services(self):
         server = self.good_server_2
@@ -799,55 +806,87 @@ class TestPlatform:
         # tp = TestPlatform()
         print("Running through a test scenario for the platform services module.")
 
-        print("\n\n==========================================>Check what servers are active")
+        print(
+            "\n\n==========================================>Check what servers are active"
+        )
         self.test_get_active_server_list(server)
 
-        print("\n\n==========================================>First we will shutdown and unregister all servers")
+        print(
+            "\n\n==========================================>First we will shutdown and unregister all servers"
+        )
         self.test_shutdown_unregister_servers(server)
 
-        print("\n\n==========================================>Check what servers are active")
+        print(
+            "\n\n==========================================>Check what servers are active"
+        )
         self.test_get_active_server_list(server)
 
-        print("\n\n==========================================>Now we will look to see what servers are known")
+        print(
+            "\n\n==========================================>Now we will look to see what servers are known"
+        )
         self.test_get_known_servers()
 
-        print("\n\n==========================================>Start `simple-metadata-store`")
+        print(
+            "\n\n==========================================>Start `simple-metadata-store`"
+        )
         self.test_activate_server_stored_config(server)
 
-        print("\n\n==========================================>Check that simple-metadata-store is active")
+        print(
+            "\n\n==========================================>Check that simple-metadata-store is active"
+        )
         self.test_check_server_active()
 
-        print("\n\n==========================================>Retrieve the server status for simple-metadata-store")
+        print(
+            "\n\n==========================================>Retrieve the server status for simple-metadata-store"
+        )
         self.test_get_active_server_instance_status()
 
-        print("\n\n==========================================>Retrieve the active_server_instance_status for simple-metadata-store")
+        print(
+            "\n\n==========================================>Retrieve the active_server_instance_status for simple-metadata-store"
+        )
         self.test_get_active_server_instance_status()
 
-        print("\n\n==========================================>Retrieve the active service list for simple-metadata-store")
+        print(
+            "\n\n==========================================>Retrieve the active service list for simple-metadata-store"
+        )
         self.test_get_active_server_instance_status()
 
-        print("\n\n==========================================>Start the 'active-metadata-store'")
+        print(
+            "\n\n==========================================>Start the 'active-metadata-store'"
+        )
         self.test_activate_server_stored_config("active-metadata-store")
 
-        print("\n\n==========================================>Get the list of all active servers")
+        print(
+            "\n\n==========================================>Get the list of all active servers"
+        )
         self.test_get_active_server_list(server)
 
-        print("\n\n==========================================>Stop the simple-metadata-store server")
+        print(
+            "\n\n==========================================>Stop the simple-metadata-store server"
+        )
         self.test_shutdown_server("simple-metadata-store")
 
-        print("\n\n==========================================>Get the list of all active servers")
+        print(
+            "\n\n==========================================>Get the list of all active servers"
+        )
         self.test_get_active_server_list(server)
 
-        print(f"\n\n==========================================>Activate {self.good_server_2} if down")
+        print(
+            f"\n\n==========================================>Activate {self.good_server_2} if down"
+        )
         self.test_activate_server_if_down()
 
-        print("\n\n==========================================>Get the list of all active servers")
+        print(
+            "\n\n==========================================>Get the list of all active servers"
+        )
         self.test_get_active_server_list(server)
 
         print("\n\n==========================================>Activate known servers")
         self.test_activate_servers_on_platform()
 
-        print("\n\n==========================================>All Tests Complete<======================================")
+        print(
+            "\n\n==========================================>All Tests Complete<======================================"
+        )
 
 
 if __name__ == "__main__":

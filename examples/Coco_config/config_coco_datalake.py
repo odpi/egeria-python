@@ -16,14 +16,26 @@ This script creates and configures the Data Lake
 import json
 import argparse
 import httpx
-from globals import (cocoMDS2Name, corePlatformURL, cocoCohort, devCohort, iotCohort, max_paging_size, cocoMDS1Name,
-                     cocoMDS4Name, dataLakePlatformURL, fileSystemRoot, adminUserId)
+from globals import (
+    cocoMDS2Name,
+    corePlatformURL,
+    cocoCohort,
+    devCohort,
+    iotCohort,
+    max_paging_size,
+    cocoMDS1Name,
+    cocoMDS4Name,
+    dataLakePlatformURL,
+    fileSystemRoot,
+    adminUserId,
+)
 from pyegeria import CoreServerConfig, Platform, FullServerConfig
 from pyegeria import (
     print_exception_response,
 )
 
-def config_coco_datalake(url:str, userid:str):
+
+def config_coco_datalake(url: str, userid: str):
     print("Configuring and starting the Data Lake")
     disable_ssl_warnings = True
     platform_url = url
@@ -39,21 +51,16 @@ def config_coco_datalake(url:str, userid:str):
     #     }
     # }
     event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "host.docker.internal:9192"
-        },
-        "consumer": {
-            "bootstrap.servers": "host.docker.internal:9192"
-        }
+        "producer": {"bootstrap.servers": "host.docker.internal:9192"},
+        "consumer": {"bootstrap.servers": "host.docker.internal:9192"},
     }
 
     security_connection_body = {
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
 
     #
@@ -70,11 +77,14 @@ def config_coco_datalake(url:str, userid:str):
     try:
         o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-        o_client.set_basic_server_properties(metadataCollectionName,
-                                             "Coco Pharmaceuticals",
-                                             platform_url,
-                                             mdr_server_user_id, mdr_server_password,
-                                             max_paging_size)
+        o_client.set_basic_server_properties(
+            metadataCollectionName,
+            "Coco Pharmaceuticals",
+            platform_url,
+            mdr_server_user_id,
+            mdr_server_password,
+            max_paging_size,
+        )
 
         o_client.set_event_bus(event_bus_config)
         o_client.set_server_security_connection(security_connection_body)
@@ -88,7 +98,13 @@ def config_coco_datalake(url:str, userid:str):
 
         o_client.add_cohort_registration(cocoCohort)
         access_service_options = {
-            "SupportedZones": ["quarantine", "clinical-trials", "research", "data-lake", "trash-can"]
+            "SupportedZones": [
+                "quarantine",
+                "clinical-trials",
+                "research",
+                "data-lake",
+                "trash-can",
+            ]
         }
 
         # o_client.configure_access_service("asset-catalog", {})
@@ -101,12 +117,15 @@ def config_coco_datalake(url:str, userid:str):
 
         o_client.configure_access_service("asset-manager", access_service_options)
         o_client.configure_access_service("asset-owner", access_service_options)
-        o_client.configure_access_service("community-profile",
-                                          {"KarmaPointPlateau": "500"})
+        o_client.configure_access_service(
+            "community-profile", {"KarmaPointPlateau": "500"}
+        )
         # o_client.configure_access_service("glossary-view", {})
         # o_client.configure_access_service("data-engine", access_service_options)
         o_client.configure_access_service("data-manager", access_service_options)
-        o_client.configure_access_service("digital-architecture", access_service_options)
+        o_client.configure_access_service(
+            "digital-architecture", access_service_options
+        )
         o_client.configure_access_service("governance-engine", access_service_options)
         o_client.configure_access_service("governance-server", access_service_options)
         o_client.configure_access_service("asset-lineage", access_service_options)
@@ -130,15 +149,16 @@ def config_coco_datalake(url:str, userid:str):
     print("Configuring " + mdr_server + "...")
 
     try:
-
         o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-        o_client.set_basic_server_properties("Data Lake Users",
-                                             "Coco Pharmaceuticals",
-                                             platform_url,
-                                             mdr_server_user_id, mdr_server_password,
-                                             max_paging_size)
-
+        o_client.set_basic_server_properties(
+            "Data Lake Users",
+            "Coco Pharmaceuticals",
+            platform_url,
+            mdr_server_user_id,
+            mdr_server_password,
+            max_paging_size,
+        )
 
         o_client.set_event_bus(event_bus_config)
         o_client.set_server_security_connection(security_connection_body)
@@ -148,15 +168,14 @@ def config_coco_datalake(url:str, userid:str):
 
         o_client.add_cohort_registration(cocoCohort)
 
-        accessServiceOptions = {
-            "SupportedZones": ["data-lake"]
-        }
+        accessServiceOptions = {"SupportedZones": ["data-lake"]}
 
         # o_client.configure_access_service("asset-catalog", accessServiceOptions)
         o_client.configure_access_service("asset-consumer", accessServiceOptions)
         o_client.configure_access_service("asset-owner", {})
-        o_client.configure_access_service("community-profile",
-                                          {"KarmaPointPlateau": "500"})
+        o_client.configure_access_service(
+            "community-profile", {"KarmaPointPlateau": "500"}
+        )
         # o_client.configure_access_service("glossary-view", {})
         o_client.configure_access_service("data-science", accessServiceOptions)
 
@@ -182,20 +201,17 @@ def config_coco_datalake(url:str, userid:str):
     folder_connector_name = "DropFootClinicalTrialResultsFolderMonitor"
     folder_connector_user_id = "monitorDL01npa"
     folder_connector_source_name = "DropFootClinicalTrialResults"
-    folder_connector_folder = fileSystemRoot + '/data-lake/research/clinical-trials/drop-foot/weekly-measurements'
+    folder_connector_folder = (
+        fileSystemRoot
+        + "/data-lake/research/clinical-trials/drop-foot/weekly-measurements"
+    )
     folder_connector_connection = {
         "class": "Connection",
-        "connectorType":
-            {
-                "class": "ConnectorType",
-                "connectorProviderClassName":
-                    "org.odpi.openmetadata.adapters.connectors.integration.basicfiles.DataFolderMonitorIntegrationProvider"
-            },
-        "endpoint":
-            {
-                "class": "Endpoint",
-                "address": folder_connector_folder
-            }
+        "connectorType": {
+            "class": "ConnectorType",
+            "connectorProviderClassName": "org.odpi.openmetadata.adapters.connectors.integration.basicfiles.DataFolderMonitorIntegrationProvider",
+        },
+        "endpoint": {"class": "Endpoint", "address": folder_connector_folder},
     }
 
     integration_group_name = "Onboarding"
@@ -203,13 +219,18 @@ def config_coco_datalake(url:str, userid:str):
     print("Configuring " + daemon_server_name)
 
     try:
-        f_client = FullServerConfig(daemon_server_name, daemon_server_platform, admin_user)
+        f_client = FullServerConfig(
+            daemon_server_name, daemon_server_platform, admin_user
+        )
 
-        f_client.set_basic_server_properties("Supports exchange of metadata with third party technologies",
-                                             "Coco Pharmaceuticals",
-                                             daemon_server_platform,
-                                             daemon_server_user_id, daemon_server_password,
-                                             max_paging_size)
+        f_client.set_basic_server_properties(
+            "Supports exchange of metadata with third party technologies",
+            "Coco Pharmaceuticals",
+            daemon_server_platform,
+            daemon_server_user_id,
+            daemon_server_password,
+            max_paging_size,
+        )
 
         f_client.set_server_security_connection(security_connection_body)
         f_client.add_default_log_destinations()
@@ -222,15 +243,17 @@ def config_coco_datalake(url:str, userid:str):
                 "connection": folder_connector_connection,
                 "metadataSourceQualifiedName": folder_connector_source_name,
                 "refreshTimeInterval": 10,
-                "usesBlockingCalls": "false"
+                "usesBlockingCalls": "false",
             }
         ]
 
-        f_client.config_integration_service(mdr_server, platform_url, "files-integrator",
-                                            {}, connector_configs)
+        f_client.config_integration_service(
+            mdr_server, platform_url, "files-integrator", {}, connector_configs
+        )
 
-        f_client.config_integration_group(mdr_server, daemon_server_platform,
-                                          integration_group_name)
+        f_client.config_integration_group(
+            mdr_server, daemon_server_platform, integration_group_name
+        )
         print(f"Activating {daemon_server_name}")
         p_client = Platform(daemon_server_name, daemon_server_platform, adminUserId)
         p_client.activate_server_stored_config()
@@ -256,27 +279,32 @@ def config_coco_datalake(url:str, userid:str):
     try:
         o_client = CoreServerConfig(engine_server, engine_server_platform, admin_user)
 
-        o_client.set_basic_server_properties("An Engine Host to run governance actions for Coco Pharmaceuticals",
-                                             "Coco Pharmaceuticals",
-                                             engine_server_platform,
-                                             engine_server_user_id, engine_server_password,
-                                             max_paging_size)
+        o_client.set_basic_server_properties(
+            "An Engine Host to run governance actions for Coco Pharmaceuticals",
+            "Coco Pharmaceuticals",
+            engine_server_platform,
+            engine_server_user_id,
+            engine_server_password,
+            max_paging_size,
+        )
 
         o_client.set_server_security_connection(security_connection_body)
 
-        o_client.set_engine_definitions_client_config(mdr_server, mdr_engine_server_platform)
+        o_client.set_engine_definitions_client_config(
+            mdr_server, mdr_engine_server_platform
+        )
 
         engine_list_body = [
             {
                 "class": "EngineConfig",
                 "engineQualifiedName": "AssetDiscovery",
-                "engineUserId": "findItDL01npa"
+                "engineUserId": "findItDL01npa",
             },
             {
                 "class": "EngineConfig",
                 "engineQualifiedName": "AssetQuality",
-                "engineUserId": "findItDL01npa"
-            }
+                "engineUserId": "findItDL01npa",
+            },
         ]
 
         o_client.set_engine_list(engine_list_body)
@@ -349,40 +377,41 @@ def config_coco_datalake(url:str, userid:str):
             "description": "Used for storing lineage in the Open Metadata format",
             "connectorType": {
                 "class": "ConnectorType",
-                "connectorProviderClassName": "org.odpi.openmetadata.openconnectors.governancedaemonconnectors.lineagewarehouseconnectors.janusconnector.graph.LineageGraphConnectorProvider"
+                "connectorProviderClassName": "org.odpi.openmetadata.openconnectors.governancedaemonconnectors.lineagewarehouseconnectors.janusconnector.graph.LineageGraphConnectorProvider",
             },
             "configurationProperties": {
                 "gremlin.graph": "org.janusgraph.core.JanusGraphFactory",
                 "storage.backend": "berkeleyje",
-                "storage.directory": "data/servers/" + lineageServerName + "/lineage-repository/berkeley",
+                "storage.directory": "data/servers/"
+                + lineageServerName
+                + "/lineage-repository/berkeley",
                 "index.search.backend": "lucene",
-                "index.search.directory": "data/servers/" + lineageServerName + "/lineage-repository/searchindex"
-            }
+                "index.search.directory": "data/servers/"
+                + lineageServerName
+                + "/lineage-repository/searchindex",
+            },
         },
         "accessServiceConfig": {
             "serverName": mdrServerName,
             "serverPlatformUrlRoot": mdrServerPlatform,
             "user": mdrServerUserId,
-            "password": mdrServerPassword
+            "password": mdrServerPassword,
         },
         "backgroundJobs": [
-            {
-                "jobName": "LineageGraphJob",
-                "jobInterval": 120,
-                "jobEnabled": "false"
-            },
+            {"jobName": "LineageGraphJob", "jobInterval": 120, "jobEnabled": "false"},
             {
                 "jobName": "AssetLineageUpdateJob",
                 "jobInterval": 120,
                 "jobEnabled": "false",
-                "jobDefaultValue": "2021-12-03T10:15:30"
-            }
-        ]
+                "jobDefaultValue": "2021-12-03T10:15:30",
+            },
+        ],
     }
 
-
     try:
-        f_client = FullServerConfig(lineageServerName, lineageServerPlatform, admin_user)
+        f_client = FullServerConfig(
+            lineageServerName, lineageServerPlatform, admin_user
+        )
 
         f_client.set_server_description("Coco View Server")
         f_client.set_server_url_root(lineageServerPlatform)
@@ -399,6 +428,7 @@ def config_coco_datalake(url:str, userid:str):
     except Exception as e:
         print_exception_response(e)
 
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -410,6 +440,7 @@ def main():
     userid = args.userid if args.userid is not None else adminUserId
 
     config_coco_datalake(url, userid)
+
 
 if __name__ == "__main__":
     main()

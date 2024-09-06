@@ -11,7 +11,13 @@ Configuring cocoMDS1 - Data Lake Operations metadata server
 
 import json
 
-from globals import (adminUserId, cocoMDS1Name, dataLakePlatformURL, cocoCohort, adminUserId)
+from globals import (
+    adminUserId,
+    cocoMDS1Name,
+    dataLakePlatformURL,
+    cocoCohort,
+    adminUserId,
+)
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,
@@ -32,21 +38,21 @@ print("Configuring " + mdr_server + "..." + " @ " + platform_url)
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties("Data lake operations",
-                                         "Coco Pharmaceuticals",
-                                         platform_url,
-                                         mdr_server_user_id, mdr_server_password,
-                                         max_page_size, mdr_server)
+    o_client.set_basic_server_properties(
+        "Data lake operations",
+        "Coco Pharmaceuticals",
+        platform_url,
+        mdr_server_user_id,
+        mdr_server_password,
+        max_page_size,
+        mdr_server,
+    )
 
     # Can also inherit event bus config from application properties
 
     event_bus_config = {
-        "producer": {
-            "bootstrap.servers": "{{kafkaEndpoint}}"
-        },
-        "consumer": {
-            "bootstrap.servers": "{{kafkaEndpoint}}"
-        }
+        "producer": {"bootstrap.servers": "{{kafkaEndpoint}}"},
+        "consumer": {"bootstrap.servers": "{{kafkaEndpoint}}"},
     }
 
     o_client.set_event_bus(event_bus_config)
@@ -55,9 +61,8 @@ try:
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
     o_client.set_xtdb_local_kv_repository()
     # o_client.set_in_mem_local_repository()
@@ -72,7 +77,13 @@ try:
 
     # o_client.configure_all_access_services()
     access_service_options = {
-        "SupportedZones": ["quarantine", "clinical-trials", "research", "data-lake", "trash-can"]
+        "SupportedZones": [
+            "quarantine",
+            "clinical-trials",
+            "research",
+            "data-lake",
+            "trash-can",
+        ]
     }
 
     # o_client.configure_access_service("asset-catalog", access_service_options)
@@ -85,8 +96,7 @@ try:
 
     o_client.configure_access_service("asset-manager", access_service_options)
     o_client.configure_access_service("asset-owner", access_service_options)
-    o_client.configure_access_service("community-profile",
-                                      {"KarmaPointPlateau": "500"})
+    o_client.configure_access_service("community-profile", {"KarmaPointPlateau": "500"})
     # o_client.configure_access_service("glossary-view", {})
     # o_client.configure_access_service("data-engine", access_service_options)
     o_client.configure_access_service("data-manager", access_service_options)

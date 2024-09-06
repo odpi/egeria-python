@@ -45,6 +45,7 @@ class TestServerOperations:
     good_server_1 = "active-metadata-store"
     good_server_2 = "integration-daemon"
     good_server_3 = "exchangeDL01"
+    good_server_4 = "engine-host"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -66,8 +67,8 @@ class TestServerOperations:
             server = self.good_server_1
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             p_client.add_archive_file(
-                "content-packs/CocoComboArchive.omarchive",
-                server)
+                "content-packs/CocoComboArchive.omarchive", server
+            )
             assert True, "Should have raised an exception"
 
         except (InvalidParameterException, PropertyServerException) as e:
@@ -88,7 +89,7 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
-    def test_get_active_server_status(self, server: str= good_server_1):
+    def test_get_active_server_status(self, server: str = good_server_1):
         try:
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_server_status(server)
@@ -111,12 +112,14 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-    def test_get_governance_engine_summaries(self, server:str = good_server_3):
+    def test_get_governance_engine_summaries(self, server: str = good_server_4):
         try:
             server_name = server
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_governance_engine_summaries(server)
-            print(f"\n\n\tGovernance Engine Summary for server {server} is {json.dumps(response, indent=4)}")
+            print(
+                f"\n\n\tGovernance Engine Summary for server {server} is {json.dumps(response, indent=4)}"
+            )
 
             assert True, "Invalid URL or server"
 
@@ -128,7 +131,7 @@ class TestServerOperations:
     #   Integration Daemon Ops
     #
 
-    def test_get_integration_daemon_status(self, server:str = good_server_2):
+    def test_get_integration_daemon_status(self, server: str = good_server_2):
         try:
             server_name = server
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
@@ -146,14 +149,15 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-
-    def test_get_connector_config(self, server:str = good_server_2):
+    def test_get_connector_config(self, server: str = good_server_2):
         try:
             server_name = server
             connector = "JDBCDatabaseCataloguer"
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
-            response = s_client.get_connector_config(connector,server)
-            print(f"\n\n\tConnector configuration for connector {connector} is \n{json.dumps(response, indent=4)}")
+            response = s_client.get_connector_config(connector, server)
+            print(
+                f"\n\n\tConnector configuration for connector {connector} is \n{json.dumps(response, indent=4)}"
+            )
 
             assert True, "Invalid URL or server"
 
@@ -161,8 +165,8 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-# todo - review with Mandy?
-    def test_restart_integration_connector(self, server:str = good_server_2):
+    # todo - review with Mandy?
+    def test_restart_integration_connector(self, server: str = good_server_2):
         try:
             server_name = "integration-daemon"
             # connector = "FilesMonitor"
@@ -179,13 +183,13 @@ class TestServerOperations:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
-    def test_refresh_integration_connectors(self, server:str = good_server_3):
+    def test_refresh_integration_connectors(self, server: str = good_server_3):
         try:
             server_name = "integration-daemon"
             connector = "FilesMonitor"
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
 
-            s_client.refresh_integration_connectors('all', server_name)
+            s_client.refresh_integration_connectors("all", server_name)
 
             assert True, "Invalid URL or server"
 

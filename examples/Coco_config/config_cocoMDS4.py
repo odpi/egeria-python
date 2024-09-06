@@ -13,7 +13,7 @@ This script creates and configures the cocoMDS4 - Data Lake Users
 
 import json
 
-from globals import (cocoMDS4Name, dataLakePlatformURL, cocoCohort, max_paging_size)
+from globals import cocoMDS4Name, dataLakePlatformURL, cocoCohort, max_paging_size
 from pyegeria import CoreServerConfig, Platform
 from pyegeria import (
     print_exception_response,
@@ -34,11 +34,14 @@ print("Configuring " + mdr_server + "...")
 try:
     o_client = CoreServerConfig(mdr_server, platform_url, admin_user)
 
-    o_client.set_basic_server_properties("Data Lake Users",
-                                         "Coco Pharmaceuticals",
-                                         platform_url,
-                                         mdr_server_user_id, mdr_server_password,
-                                         max_paging_size)
+    o_client.set_basic_server_properties(
+        "Data Lake Users",
+        "Coco Pharmaceuticals",
+        platform_url,
+        mdr_server_user_id,
+        mdr_server_password,
+        max_paging_size,
+    )
 
     # Inherit event bus config
 
@@ -57,9 +60,8 @@ try:
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
 
     o_client.set_server_security_connection(security_connection_body)
@@ -71,15 +73,12 @@ try:
 
     print(f"Configuring {mdr_server}  Access Services (OMAS)....")
 
-    accessServiceOptions = {
-        "SupportedZones": ["data-lake"]
-    }
+    accessServiceOptions = {"SupportedZones": ["data-lake"]}
 
     # o_client.configure_access_service("asset-catalog", accessServiceOptions)
     o_client.configure_access_service("asset-consumer", accessServiceOptions)
     o_client.configure_access_service("asset-owner", {})
-    o_client.configure_access_service("community-profile",
-                                      {"KarmaPointPlateau": "500"})
+    o_client.configure_access_service("community-profile", {"KarmaPointPlateau": "500"})
     # o_client.configure_access_service("glossary-view", {})
     o_client.configure_access_service("data-science", accessServiceOptions)
 

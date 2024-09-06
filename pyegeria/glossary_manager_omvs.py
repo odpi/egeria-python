@@ -13,7 +13,11 @@ import time
 # import json
 from pyegeria._client import Client
 from pyegeria._globals import enable_ssl_check
-from pyegeria._validators import (validate_name, validate_guid, validate_search_string, )
+from pyegeria._validators import (
+    validate_name,
+    validate_guid,
+    validate_search_string,
+)
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 from pyegeria.utils import body_slimmer
 
@@ -38,20 +42,32 @@ class GlossaryManager(GlossaryBrowser):
             Flag to indicate if SSL Certificates should be verified in the HTTP requests.
             Defaults to False.
 
-     """
+    """
 
-    def __init__(self, server_name: str, platform_url: str, token: str = None, user_id: str = None,
-                 user_pwd: str = None, verify_flag: bool = enable_ssl_check, sync_mode: bool = True):
+    def __init__(
+        self,
+        server_name: str,
+        platform_url: str,
+        user_id: str = None,
+        user_pwd: str = None,
+        token: str = None,
+    ):
         self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token, async_mode=sync_mode)
+        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
 
     #
     #       Get Valid Values for Enumerations
     #
 
-    async def _async_create_glossary(self, display_name: str, description: str, language: str = "English",
-                                     usage: str = None, server_name: str = None) -> str:
-        """ Create a new glossary. Async version.
+    async def _async_create_glossary(
+        self,
+        display_name: str,
+        description: str,
+        language: str = "English",
+        usage: str = None,
+        server_name: str = None,
+    ) -> str:
+        """Create a new glossary. Async version.
 
         Parameters
         ----------
@@ -78,22 +94,27 @@ class GlossaryManager(GlossaryBrowser):
         url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries"
         body = {
             "class": "ReferenceableRequestBody",
-            "elementProperties":
-                {
-                    "class": "GlossaryProperties",
-                    "qualifiedName": f"Glossary-{display_name}-{time.asctime()}",
-                    "displayName": display_name,
-                    "description": description,
-                    "language" : language,
-                    "usage" : usage
-                }
+            "elementProperties": {
+                "class": "GlossaryProperties",
+                "qualifiedName": f"Glossary-{display_name}-{time.asctime()}",
+                "displayName": display_name,
+                "description": description,
+                "language": language,
+                "usage": usage,
+            },
         }
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get("guid", None)
 
-    def create_glossary(self, display_name: str, description: str, language: str = "English", usage: str= None,
-                        server_name: str = None) -> str:
-        """ Create a new glossary.
+    def create_glossary(
+        self,
+        display_name: str,
+        description: str,
+        language: str = "English",
+        usage: str = None,
+        server_name: str = None,
+    ) -> str:
+        """Create a new glossary.
 
         Parameters
         ----------
@@ -115,12 +136,17 @@ class GlossaryManager(GlossaryBrowser):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_glossary(display_name, description, language,
-                                                                       usage, server_name))
+        response = loop.run_until_complete(
+            self._async_create_glossary(
+                display_name, description, language, usage, server_name
+            )
+        )
         return response
 
-    async def _async_delete_glossary(self, glossary_guid: str, server_name: str = None) -> None:
-        """ Delete glossary. Async version.
+    async def _async_delete_glossary(
+        self, glossary_guid: str, server_name: str = None
+    ) -> None:
+        """Delete glossary. Async version.
 
         Parameters
         ----------
@@ -137,14 +163,16 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"{glossary_guid}/remove")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/remove"
+        )
 
         await self._async_make_request("POST", url)
         return
 
     def delete_glossary(self, glossary_guid: str, server_name: str = None) -> None:
-        """ Create a new glossary.
+        """Create a new glossary.
 
         Parameters
         ----------
@@ -159,18 +187,30 @@ class GlossaryManager(GlossaryBrowser):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_delete_glossary(glossary_guid, server_name))
+        response = loop.run_until_complete(
+            self._async_delete_glossary(glossary_guid, server_name)
+        )
         return response
 
     #
     #       Glossaries
     #
 
-    async def _async_find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                                     ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-                                     for_duplicate_processing: bool = False, type_name: str = None,
-                                     server_name: str = None, start_from: int = 0, page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary metadata elements that contain the search string. Async version.
+    async def _async_find_glossaries(
+        self,
+        search_string: str,
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        type_name: str = None,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
@@ -231,85 +271,114 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_search_string(search_string)
 
-        if search_string == '*':
+        if search_string == "*":
             search_string = None
 
-        body = {"class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time,
-                "typeName": type_name}
+        body = {
+            "class": "SearchStringRequestBody",
+            "searchString": search_string,
+            "effectiveTime": effective_time,
+            "typeName": type_name,
+        }
         body = body_slimmer(body)
         # print(f"\n\nBody is: \n{body}")
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+            f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
+            f"forDuplicateProcessing={for_duplicate_processing_s}"
+        )
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elementList", "No Glossaries found")
 
-    def find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                        ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-                        for_duplicate_processing: bool = False, type_name: str = None, server_name: str = None,
-                        start_from: int = 0, page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary metadata elements that contain the search string.
-                   The search string is located in the request body and is interpreted as a plain string.
-                   The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    def find_glossaries(
+        self,
+        search_string: str,
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        type_name: str = None,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary metadata elements that contain the search string.
+                The search string is located in the request body and is interpreted as a plain string.
+                The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
-           Parameters
-           ----------
-           search_string: str,
-               Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+        Parameters
+        ----------
+        search_string: str,
+            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
 
-           effective_time: str, [default=None], optional
-               Effective time of the query. If not specified will default to any time. Time format is
-               "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-           server_name : str, optional
-               The name of the server to  configure.
-               If not provided, the server name associated with the instance is used.
-           starts_with : bool, [default=False], optional
-               Starts with the supplied string.
-           ends_with : bool, [default=False], optional
-               Ends with the supplied string
-           ignore_case : bool, [default=False], optional
-               Ignore case when searching
-           for_lineage : bool, [default=False], optional
-                Indicates the search is for lineage.
-           for_duplicate_processing : bool, [default=False], optional
-           type_name: str, [default=None], optional
-               An optional parameter indicating the subtype of the glossary to filter by.
-               Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
-            start_from: int, [default=0], optional
-                When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-           Returns
-           -------
-           List | str
+        effective_time: str, [default=None], optional
+            Effective time of the query. If not specified will default to any time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name : str, optional
+            The name of the server to  configure.
+            If not provided, the server name associated with the instance is used.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        for_lineage : bool, [default=False], optional
+             Indicates the search is for lineage.
+        for_duplicate_processing : bool, [default=False], optional
+        type_name: str, [default=None], optional
+            An optional parameter indicating the subtype of the glossary to filter by.
+            Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
+         start_from: int, [default=0], optional
+             When multiple pages of results are available, the page number to start from.
+         page_size: int, [default=None]
+             The number of items to return in a single page. If not specified, the default will be taken from
+             the class instance.
+        Returns
+        -------
+        List | str
 
-           A list of glossary definitions active in the server.
+        A list of glossary definitions active in the server.
 
-           Raises
-           ------
+        Raises
+        ------
 
-           InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-           PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-           NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
-           """
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_glossaries(search_string, effective_time, starts_with, ends_with, ignore_case, for_lineage,
-                                        for_duplicate_processing, type_name, server_name, start_from, page_size))
+            self._async_find_glossaries(
+                search_string,
+                effective_time,
+                starts_with,
+                ends_with,
+                ignore_case,
+                for_lineage,
+                for_duplicate_processing,
+                type_name,
+                server_name,
+                start_from,
+                page_size,
+            )
+        )
 
         return response
 
-    async def _async_get_glossary_by_guid(self, glossary_guid: str, server_name: str = None,
-                                          effective_time: str = None) -> dict:
-        """ Retrieves information about a glossary
+    async def _async_get_glossary_by_guid(
+        self, glossary_guid: str, server_name: str = None, effective_time: str = None
+    ) -> dict:
+        """Retrieves information about a glossary
         Parameters
         ----------
             glossary_guid : str
@@ -340,16 +409,21 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_guid)
 
-        body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"{glossary_guid}/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{glossary_guid}/retrieve"
+        )
         print(url)
         response = await self._async_make_request("POST", url, payload=body)
         return response.json()
 
     def get_glossary_by_guid(self, glossary_guid: str, server_name: str = None) -> dict:
-        """ Retrieves information about a glossary
+        """Retrieves information about a glossary
         Parameters
         ----------
             glossary_guid : str
@@ -374,13 +448,20 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_by_guid(glossary_guid, server_name))
+        response = loop.run_until_complete(
+            self._async_get_glossary_by_guid(glossary_guid, server_name)
+        )
         return response
 
-    async def _async_get_glossaries_by_name(self, glossary_name: str, effective_time: str = None,
-                                            server_name: str = None, start_from: int = 0,
-                                            page_size: int = None) -> dict | str:
-        """ Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
+    async def _async_get_glossaries_by_name(
+        self,
+        glossary_name: str,
+        effective_time: str = None,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> dict | str:
+        """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
             There are no wildcards supported on this request.
 
         Parameters
@@ -427,15 +508,23 @@ class GlossaryManager(GlossaryBrowser):
         else:
             body = {"name": glossary_name, "effectiveTime": effective_time}
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"by-name?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"by-name?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def get_glossaries_by_name(self, glossary_name: str, effective_time: str = None, server_name: str = None,
-                               start_from: int = 0, page_size: int = None) -> dict | str:
-        """ Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
+    def get_glossaries_by_name(
+        self,
+        glossary_name: str,
+        effective_time: str = None,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> dict | str:
+        """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
             There are no wildcards supported on this request.
 
         Parameters
@@ -471,15 +560,23 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossaries_by_name(glossary_name, effective_time, server_name, start_from, page_size))
+            self._async_get_glossaries_by_name(
+                glossary_name, effective_time, server_name, start_from, page_size
+            )
+        )
         return response
 
     #
     # Glossary Categories
     #
-    async def _async_create_category(self, glossary_guid: str, display_name: str, description: str,
-                                     server_name: str = None) -> str:
-        """ Create a new category within the specified glossary. Async Version.
+    async def _async_create_category(
+        self,
+        glossary_guid: str,
+        display_name: str,
+        description: str,
+        server_name: str = None,
+    ) -> str:
+        """Create a new category within the specified glossary. Async Version.
 
         Parameters
         ----------
@@ -513,24 +610,30 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"{glossary_guid}/categories")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/categories"
+        )
         body = {
             "class": "ReferenceableRequestBody",
-            "elementProperties":
-                {
-                    "class": "GlossaryCategoryProperties",
-                    "qualifiedName": f"GlossaryCategory-{display_name}-{time.asctime()}",
-                    "displayName": display_name,
-                    "description": description
-                }
+            "elementProperties": {
+                "class": "GlossaryCategoryProperties",
+                "qualifiedName": f"GlossaryCategory-{display_name}-{time.asctime()}",
+                "displayName": display_name,
+                "description": description,
+            },
         }
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", None)
 
-    def create_category(self, glossary_guid: str, display_name: str, description: str,
-                        server_name: str = None) -> str:
-        """ Create a new category within the specified glossary.
+    def create_category(
+        self,
+        glossary_guid: str,
+        display_name: str,
+        description: str,
+        server_name: str = None,
+    ) -> str:
+        """Create a new category within the specified glossary.
 
         Parameters
         ----------
@@ -563,12 +666,19 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_category(glossary_guid, display_name, description, server_name))
+            self._async_create_category(
+                glossary_guid, display_name, description, server_name
+            )
+        )
         return response
 
-    async def _async_get_glossary_for_category(self, glossary_category_guid: str, effective_time: str = None,
-                                               server_name: str = None) -> dict | str:
-        """ Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
+    async def _async_get_glossary_for_category(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> dict | str:
+        """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
 
         Parameters
@@ -602,17 +712,26 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"for-category/{glossary_category_guid}/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"for-category/{glossary_category_guid}/retrieve"
+        )
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def get_glossary_for_category(self, glossary_category_guid: str, effective_time: str = None,
-                                  server_name: str = None) -> dict | str:
-        """ Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
+    def get_glossary_for_category(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> dict | str:
+        """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
 
         Parameters
@@ -645,14 +764,24 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_fpr_category(glossary_category_guid, effective_time, server_name))
+            self._async_get_glossary_fpr_category(
+                glossary_category_guid, effective_time, server_name
+            )
+        )
         return response
 
-    async def _async_find_glossary_categories(self, search_string: str, effective_time: str = None,
-                                              starts_with: bool = False, ends_with: bool = False,
-                                              ignore_case: bool = False, server_name: str = None, start_from: int = 0,
-                                              page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary category metadata elements that contain the search string.
+    async def _async_find_glossary_categories(
+        self,
+        search_string: str,
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
             Async version.
@@ -706,75 +835,103 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_search_string(search_string)
 
-        if search_string == '*':
+        if search_string == "*":
             search_string = None
 
-        body = {"class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time}
+        body = {
+            "class": "SearchStringRequestBody",
+            "searchString": search_string,
+            "effectiveTime": effective_time,
+        }
         body = body_slimmer(body)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+            f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
+        )
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elementList", "No Categories found")
 
-    def find_glossary_categories(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                                 ends_with: bool = False, ignore_case: bool = False, server_name: str = None,
-                                 start_from: int = 0, page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary category metadata elements that contain the search string.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    def find_glossary_categories(
+        self,
+        search_string: str,
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary category metadata elements that contain the search string.
+         The search string is located in the request body and is interpreted as a plain string.
+         The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
-           Parameters
-           ----------
-           search_string: str,
-               Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+        Parameters
+        ----------
+        search_string: str,
+            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
 
-           effective_time: str, [default=None], optional
-               Effective time of the query. If not specified will default to any time. Time format is
-               "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-           server_name : str, optional
-               The name of the server to  configure.
-               If not provided, the server name associated with the instance is used.
-           starts_with : bool, [default=False], optional
-               Starts with the supplied string.
-           ends_with : bool, [default=False], optional
-               Ends with the supplied string
-           ignore_case : bool, [default=False], optional
-               Ignore case when searching
-            start_from: int, [default=0], optional
-                When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-           Returns
-           -------
-           List | str
+        effective_time: str, [default=None], optional
+            Effective time of the query. If not specified will default to any time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name : str, optional
+            The name of the server to  configure.
+            If not provided, the server name associated with the instance is used.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+         start_from: int, [default=0], optional
+             When multiple pages of results are available, the page number to start from.
+         page_size: int, [default=None]
+             The number of items to return in a single page. If not specified, the default will be taken from
+             the class instance.
+        Returns
+        -------
+        List | str
 
-           A list of glossary definitions active in the server.
+        A list of glossary definitions active in the server.
 
-           Raises
-           ------
+        Raises
+        ------
 
-           InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-           PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-           NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
-           """
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_glossary_categories(search_string, effective_time, starts_with, ends_with, ignore_case,
-                                                 server_name, start_from, page_size))
+            self._async_find_glossary_categories(
+                search_string,
+                effective_time,
+                starts_with,
+                ends_with,
+                ignore_case,
+                server_name,
+                start_from,
+                page_size,
+            )
+        )
 
         return response
 
-    async def _async_get_categories_for_glossary(self, glossary_guid: str, server_name: str = None, start_from: int = 0,
-                                                 page_size: int = None) -> list | str:
-        """ Return the list of categories associated with a glossary.
+    async def _async_get_categories_for_glossary(
+        self,
+        glossary_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Return the list of categories associated with a glossary.
             Async version.
 
         Parameters
@@ -811,15 +968,22 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No Categories found")
 
-    def get_categories_for_glossary(self, glossary_guid: str, server_name: str = None, start_from: int = 0,
-                                    page_size: int = None) -> list | str:
-        """ Return the list of categories associated with a glossary.
+    def get_categories_for_glossary(
+        self,
+        glossary_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Return the list of categories associated with a glossary.
 
         Parameters
         ----------
@@ -852,12 +1016,20 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_for_glossary(glossary_guid, server_name, start_from, page_size))
+            self._async_get_categories_for_glossary(
+                glossary_guid, server_name, start_from, page_size
+            )
+        )
         return response
 
-    async def _async_get_categories_for_term(self, glossary_term_guid: str, server_name: str = None,
-                                             start_from: int = 0, page_size: int = None) -> list | str:
-        """ Return the list of categories associated with a glossary term.
+    async def _async_get_categories_for_term(
+        self,
+        glossary_term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Return the list of categories associated with a glossary term.
             Async version.
 
         Parameters
@@ -894,15 +1066,22 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/terms/"
-               f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/terms/"
+            f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No Categories found")
 
-    def get_categories_for_term(self, glossary_term_guid: str, server_name: str = None, start_from: int = 0,
-                                page_size: int = None) -> list | str:
-        """ Return the list of categories associated with a glossary term.
+    def get_categories_for_term(
+        self,
+        glossary_term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Return the list of categories associated with a glossary term.
 
         Parameters
         ----------
@@ -935,13 +1114,22 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_for_term(glossary_term_guid, server_name, start_from, page_size))
+            self._async_get_categories_for_term(
+                glossary_term_guid, server_name, start_from, page_size
+            )
+        )
         return response
 
-    async def _async_get_categories_by_name(self, name: str, glossary_guid: str = None, status: [str] = ["ACTIVE"],
-                                            server_name: str = None, start_from: int = 0,
-                                            page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
+    async def _async_get_categories_by_name(
+        self,
+        name: str,
+        glossary_guid: str = None,
+        status: [str] = ["ACTIVE"],
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
             The name to search for is located in the request body and is interpreted as a plain string.
             The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
 
@@ -986,18 +1174,31 @@ class GlossaryManager(GlossaryBrowser):
             page_size = self.page_size
         validate_name(name)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
-               f"by-name?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"by-name?startFrom={start_from}&pageSize={page_size}"
+        )
 
-        body = {"class": "GlossaryNameRequestBody", "name": name, "glossaryGUID": glossary_guid,
-                "limitResultsByStatus": status}
+        body = {
+            "class": "GlossaryNameRequestBody",
+            "name": name,
+            "glossaryGUID": glossary_guid,
+            "limitResultsByStatus": status,
+        }
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No Categories found")
 
-    def get_categories_by_name(self, name: str, glossary_guid: str = None, status: [str] = ["ACTIVE"],
-                               server_name: str = None, start_from: int = 0, page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
+    def get_categories_by_name(
+        self,
+        name: str,
+        glossary_guid: str = None,
+        status: [str] = ["ACTIVE"],
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
             The name to search for is located in the request body and is interpreted as a plain string.
             The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
 
@@ -1036,12 +1237,19 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_name(name, glossary_guid, status, server_name, start_from, page_size))
+            self._async_get_categories_by_name(
+                name, glossary_guid, status, server_name, start_from, page_size
+            )
+        )
         return response
 
-    async def _async_get_categories_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-                                            server_name: str = None) -> list | str:
-        """  Retrieve the requested glossary category metadata element.  The optional request body contain an effective
+    async def _async_get_categories_by_guid(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> list | str:
+        """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
         Async version.
@@ -1077,17 +1285,26 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
-               f"{glossary_category_guid}/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{glossary_category_guid}/retrieve"
+        )
 
-        body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("element", "No Category found")
 
-    def get_categories_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-                               server_name: str = None) -> list | str:
-        """  Retrieve the requested glossary category metadata element.  The optional request body contain an effective
+    def get_categories_by_guid(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> list | str:
+        """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
         Parameters
@@ -1120,12 +1337,19 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_guid(glossary_category_guid, effective_time, server_name))
+            self._async_get_categories_by_guid(
+                glossary_category_guid, effective_time, server_name
+            )
+        )
         return response
 
-    async def _async_get_category_parent(self, glossary_category_guid: str, effective_time: str = None,
-                                         server_name: str = None) -> list | str:
-        """ Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
+    async def _async_get_category_parent(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> list | str:
+        """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
             does not have a parent category, null is returned.  The optional request body contain an effective time
             for the query.
@@ -1163,17 +1387,26 @@ class GlossaryManager(GlossaryBrowser):
         if server_name is None:
             server_name = self.server_name
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
-               f"{glossary_category_guid}/parent/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{glossary_category_guid}/parent/retrieve"
+        )
 
-        body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("element", "No Parent Category found")
 
-    def get_category_parent(self, glossary_category_guid: str, effective_time: str = None,
-                            server_name: str = None) -> list | str:
-        """ Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
+    def get_category_parent(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        server_name: str = None,
+    ) -> list | str:
+        """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
             does not have a parent category, null is returned.  The optional request body contain an effective time
             for the query.
@@ -1208,15 +1441,19 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_category_parent(glossary_category_guid, effective_time, server_name))
+            self._async_get_category_parent(
+                glossary_category_guid, effective_time, server_name
+            )
+        )
         return response
 
     #
     #  Terms
     #
-    async def _async_create_controlled_glossary_term(self, glossary_guid: str, body: dict,
-                                                     server_name: str = None) -> str:
-        """ Create a term for a controlled glossary.
+    async def _async_create_controlled_glossary_term(
+        self, glossary_guid: str, body: dict, server_name: str = None
+    ) -> str:
+        """Create a term for a controlled glossary.
             See also: https://egeria-project.org/types/3/0385-Controlled-Glossary-Development/?h=controlled
             The request body also supports the specification of an effective time for the query.
 
@@ -1277,16 +1514,19 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"{glossary_guid}/terms/new-controlled"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/terms/new-controlled"
+        )
 
         response = await self._async_make_request("POST", url, body)
 
         return response.json().get("guid", "Term not created")
 
-    def create_controlled_glossary_term(self, glossary_guid: str, body: dict, server_name: str = None) -> str:
-        """ Create a term for a controlled glossary.
+    def create_controlled_glossary_term(
+        self, glossary_guid: str, body: dict, server_name: str = None
+    ) -> str:
+        """Create a term for a controlled glossary.
             See also: https://egeria-project.org/types/3/0385-Controlled-Glossary-Development/?h=controlled
             The request body also supports the specification of an effective time for the query.
 
@@ -1342,13 +1582,23 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_controlled_glossary_term(glossary_guid, body, server_name))
+            self._async_create_controlled_glossary_term(
+                glossary_guid, body, server_name
+            )
+        )
 
         return response
 
-    async def _async_create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name: str,
-                                      version_id: str, term_status: str = "PROPOSED", server_name: str = None) -> str:
-        """ Create a new term from an existing term.
+    async def _async_create_term_copy(
+        self,
+        glossary_guid: str,
+        glossary_term_guid: str,
+        new_display_name: str,
+        version_id: str,
+        term_status: str = "PROPOSED",
+        server_name: str = None,
+    ) -> str:
+        """Create a new term from an existing term.
 
             Async Version.
 
@@ -1391,29 +1641,36 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(glossary_guid)
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"{glossary_guid}/terms/from-template/{glossary_term_guid}"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/terms/from-template/{glossary_term_guid}"
+        )
 
         body = {
             "class": "GlossaryTemplateRequestBody",
-            "elementProperties":
-                {
-                    "class": "TemplateProperties",
-                    "qualifiedName": f"Term-{new_display_name}-{time.asctime()}",
-                    "displayName": new_display_name,
-                    "versionIdentifier": version_id
-                },
-            "glossaryTermStatus": term_status
+            "elementProperties": {
+                "class": "TemplateProperties",
+                "qualifiedName": f"Term-{new_display_name}-{time.asctime()}",
+                "displayName": new_display_name,
+                "versionIdentifier": version_id,
+            },
+            "glossaryTermStatus": term_status,
         }
 
         response = await self._async_make_request("POST", url, body)
 
         return response.json().get("guid", "Term not created")
 
-    def create_term_copy(self, glossary_guid: str, glossary_term_guid: str, new_display_name: str,
-                         version_id: str, term_status: str = "PROPOSED", server_name: str = None) -> str:
-        """ Create a new term from an existing term.
+    def create_term_copy(
+        self,
+        glossary_guid: str,
+        glossary_term_guid: str,
+        new_display_name: str,
+        version_id: str,
+        term_status: str = "PROPOSED",
+        server_name: str = None,
+    ) -> str:
+        """Create a new term from an existing term.
 
         Parameters
         ----------
@@ -1450,14 +1707,22 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_term_copy(glossary_guid, glossary_term_guid, new_display_name,
-                                         version_id, term_status, server_name))
+            self._async_create_term_copy(
+                glossary_guid,
+                glossary_term_guid,
+                new_display_name,
+                version_id,
+                term_status,
+                server_name,
+            )
+        )
 
         return response
 
-    async def _async_add_data_field_to_term(self, glossary_term_guid: str, body: dict,
-                                            server_name: str = None) -> None:
-        """ Add the data field values classification to a glossary term
+    async def _async_add_data_field_to_term(
+        self, glossary_term_guid: str, body: dict, server_name: str = None
+    ) -> None:
+        """Add the data field values classification to a glossary term
 
             Async Version.
 
@@ -1506,15 +1771,18 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
-               f"terms/{glossary_term_guid}/is-data-field"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{glossary_term_guid}/is-data-field"
+        )
 
         await self._async_make_request("POST", url, body)
         return
 
-    def add_data_field_to_term(self, glossary_term_guid: str, body: dict, server_name: str = None) -> None:
-        """ Add the data field values classification to a glossary term
+    def add_data_field_to_term(
+        self, glossary_term_guid: str, body: dict, server_name: str = None
+    ) -> None:
+        """Add the data field values classification to a glossary term
 
         Parameters
         ----------
@@ -1556,13 +1824,18 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_data_field_to_term(glossary_term_guid, body, server_name))
+            self._async_add_data_field_to_term(glossary_term_guid, body, server_name)
+        )
 
         return
 
-    async def _async_add_confidentiality_to_term(self, glossary_term_guid: str,
-                                                 confidentiality_level: int, server_name: str = None) -> None:
-        """ Add the confidentiality classification to a glossary term
+    async def _async_add_confidentiality_to_term(
+        self,
+        glossary_term_guid: str,
+        confidentiality_level: int,
+        server_name: str = None,
+    ) -> None:
+        """Add the confidentiality classification to a glossary term
 
             Async Version.
 
@@ -1599,25 +1872,29 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
-               f"{glossary_term_guid}/confidentiality"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
+            f"{glossary_term_guid}/confidentiality"
+        )
 
         body = {
             "class": "ClassificationRequestBody",
-            "properties":
-                {
-                    "class": "GovernanceClassificationProperties",
-                    "levelIdentifier": confidentiality_level
-                }
+            "properties": {
+                "class": "GovernanceClassificationProperties",
+                "levelIdentifier": confidentiality_level,
+            },
         }
 
         await self._async_make_request("POST", url, body)
         return
 
-    def add_confidentiality_to_term(self, glossary_term_guid: str,
-                                    confidentiality_level: int, server_name: str = None) -> str:
-        """ Add the confidentiality classification to a glossary term
+    def add_confidentiality_to_term(
+        self,
+        glossary_term_guid: str,
+        confidentiality_level: int,
+        server_name: str = None,
+    ) -> str:
+        """Add the confidentiality classification to a glossary term
 
         Parameters
         ----------
@@ -1649,14 +1926,17 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_confidentiality_to_term(glossary_term_guid, confidentiality_level,
-                                                    server_name))
+            self._async_add_confidentiality_to_term(
+                glossary_term_guid, confidentiality_level, server_name
+            )
+        )
 
         return
 
-    async def _async_add_subject_area_to_term(self, glossary_term_guid: str, subject_area: str,
-                                              server_name: str = None) -> None:
-        """ Add the confidentiality classification to a glossary term
+    async def _async_add_subject_area_to_term(
+        self, glossary_term_guid: str, subject_area: str, server_name: str = None
+    ) -> None:
+        """Add the confidentiality classification to a glossary term
 
             Async Version.
 
@@ -1693,24 +1973,26 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(glossary_term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
-               f"{glossary_term_guid}/subject-area-member"
-               )
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
+            f"{glossary_term_guid}/subject-area-member"
+        )
 
         body = {
             "class": "ClassificationRequestBody",
-            "properties":
-                {
-                    "class": "SubjectAreaMemberProperties",
-                    "subjectAreaName": subject_area
-                }
+            "properties": {
+                "class": "SubjectAreaMemberProperties",
+                "subjectAreaName": subject_area,
+            },
         }
 
         await self._async_make_request("POST", url, body)
         return
 
-    def add_subject_area_to_term(self, glossary_term_guid: str, subject_area: str, server_name: str = None) -> None:
-        """ Add the confidentiality classification to a glossary term
+    def add_subject_area_to_term(
+        self, glossary_term_guid: str, subject_area: str, server_name: str = None
+    ) -> None:
+        """Add the confidentiality classification to a glossary term
 
         Parameters
         ----------
@@ -1742,14 +2024,21 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_subject_area_to_term(glossary_term_guid, subject_area,
-                                                 server_name))
+            self._async_add_subject_area_to_term(
+                glossary_term_guid, subject_area, server_name
+            )
+        )
 
         return
 
-    async def _async_update_term(self, glossary_term_guid: str, body: dict, is_merge_update: bool,
-                                 server_name: str = None) -> None:
-        """ Add the data field values classification to a glossary term
+    async def _async_update_term(
+        self,
+        glossary_term_guid: str,
+        body: dict,
+        is_merge_update: bool,
+        server_name: str = None,
+    ) -> None:
+        """Add the data field values classification to a glossary term
 
             Async Version.
 
@@ -1801,14 +2090,19 @@ class GlossaryManager(GlossaryBrowser):
         url = (
             f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate={is_merge_update_s}"
-            )
+        )
 
         await self._async_make_request("POST", url, body)
         return
 
-    def update_term(self, glossary_term_guid: str, body: dict, is_merge_update: bool,
-                    server_name: str = None) -> None:
-        """ Add the data field values classification to a glossary term
+    def update_term(
+        self,
+        glossary_term_guid: str,
+        body: dict,
+        is_merge_update: bool,
+        server_name: str = None,
+    ) -> None:
+        """Add the data field values classification to a glossary term
 
             Async Version.
 
@@ -1853,13 +2147,20 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term(glossary_term_guid, body, is_merge_update, server_name))
+            self._async_update_term(
+                glossary_term_guid, body, is_merge_update, server_name
+            )
+        )
 
         return
 
-    async def _async_update_term_version_id(self, glossary_term_guid: str, new_version_identifier: str,
-                                            server_name: str = None) -> None:
-        """ Update a glossary term's version identifier
+    async def _async_update_term_version_id(
+        self,
+        glossary_term_guid: str,
+        new_version_identifier: str,
+        server_name: str = None,
+    ) -> None:
+        """Update a glossary term's version identifier
 
             Async Version.
 
@@ -1898,22 +2199,25 @@ class GlossaryManager(GlossaryBrowser):
         url = (
             f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate=true"
-            )
+        )
 
         body = {
             "class": "ReferenceableRequestBody",
-            "elementProperties":
-                {
-                    "class": "GlossaryTermProperties",
-                    "publishVersionIdentifier": new_version_identifier
-                }
+            "elementProperties": {
+                "class": "GlossaryTermProperties",
+                "publishVersionIdentifier": new_version_identifier,
+            },
         }
         await self._async_make_request("POST", url, body)
         return
 
-    def update_term_version_id(self, glossary_term_guid: str, new_version_identifier: str,
-                               server_name: str = None) -> None:
-        """ Update a glossary term's version identifier
+    def update_term_version_id(
+        self,
+        glossary_term_guid: str,
+        new_version_identifier: str,
+        server_name: str = None,
+    ) -> None:
+        """Update a glossary term's version identifier
 
             Async Version.
 
@@ -1946,14 +2250,22 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term_version_id(glossary_term_guid, new_version_identifier, server_name))
+            self._async_update_term_version_id(
+                glossary_term_guid, new_version_identifier, server_name
+            )
+        )
 
         return
 
-    async def _async_get_terms_for_category(self, glossary_category_guid: str, server_name: str = None,
-                                            effective_time: str = None, start_from: int = 0,
-                                            page_size: int = None) -> list | str:
-        """ Retrieve ALL the glossary terms in a category.
+    async def _async_get_terms_for_category(
+        self,
+        glossary_category_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve ALL the glossary terms in a category.
             The request body also supports the specification of an effective time for the query.
 
             Async Version.
@@ -1996,8 +2308,10 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
-               f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         if effective_time is not None:
             body = {"effectiveTime": effective_time}
@@ -2007,10 +2321,15 @@ class GlossaryManager(GlossaryBrowser):
 
         return response.json().get("elementList", "No terms found")
 
-    def get_terms_for_category(self, glossary_category_guid: str, server_name: str = None,
-                               effective_time: str = None, start_from: int = 0,
-                               page_size: int = None) -> list | str:
-        """ Retrieve ALL the glossary terms in a category.
+    def get_terms_for_category(
+        self,
+        glossary_category_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve ALL the glossary terms in a category.
             The request body also supports the specification of an effective time for the query.
 
             Async Version.
@@ -2047,15 +2366,26 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_for_category(glossary_category_guid, server_name, effective_time, start_from,
-                                               page_size))
+            self._async_get_terms_for_category(
+                glossary_category_guid,
+                server_name,
+                effective_time,
+                start_from,
+                page_size,
+            )
+        )
 
         return response
 
-    async def _async_get_terms_for_glossary(self, glossary_guid: str, server_name: str = None,
-                                            effective_time: str = None, start_from: int = 0,
-                                            page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary terms associated with a glossary.
+    async def _async_get_terms_for_glossary(
+        self,
+        glossary_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary terms associated with a glossary.
             The request body also supports the specification of an effective time for the query.
         Parameters
         ----------
@@ -2095,8 +2425,10 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"{glossary_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{glossary_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         if effective_time is not None:
             body = {"effectiveTime": effective_time}
@@ -2106,9 +2438,15 @@ class GlossaryManager(GlossaryBrowser):
 
         return response.json().get("elementList", "No terms found")
 
-    def get_terms_for_glossary(self, glossary_guid: str, server_name: str = None, effective_time: str = None,
-                               start_from: int = 0, page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary terms associated with a glossary.
+    def get_terms_for_glossary(
+        self,
+        glossary_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary terms associated with a glossary.
             The request body also supports the specification of an effective time for the query.
         Parameters
         ----------
@@ -2142,15 +2480,22 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_for_glossary(glossary_guid, server_name, effective_time, start_from, page_size))
+            self._async_get_terms_for_glossary(
+                glossary_guid, server_name, effective_time, start_from, page_size
+            )
+        )
 
         return response
 
-    async def _async_get_term_relationships(self, term_guid: str, server_name: str = None,
-                                            effective_time: str = None, start_from: int = 0,
-                                            page_size: int = None) -> list | str:
-
-        """ This call retrieves details of the glossary terms linked to this glossary term.
+    async def _async_get_term_relationships(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
         Parameters
         ----------
@@ -2190,8 +2535,10 @@ class GlossaryManager(GlossaryBrowser):
         if page_size is None:
             page_size = self.page_size
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
-               f"{term_guid}/related-terms?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{term_guid}/related-terms?startFrom={start_from}&pageSize={page_size}"
+        )
 
         if effective_time is not None:
             body = {"effectiveTime": effective_time}
@@ -2201,10 +2548,15 @@ class GlossaryManager(GlossaryBrowser):
 
         return response.json().get("elementList", "No terms found")
 
-    def get_term_relationships(self, term_guid: str, server_name: str = None, effective_time: str = None,
-                               start_from: int = 0, page_size: int = None) -> list | str:
-
-        """ This call retrieves details of the glossary terms linked to this glossary term.
+    def get_term_relationships(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
         Parameters
         ----------
@@ -2238,13 +2590,17 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_relationships(term_guid, server_name, effective_time, start_from, page_size))
+            self._async_get_term_relationships(
+                term_guid, server_name, effective_time, start_from, page_size
+            )
+        )
 
         return response
 
-    async def _async_get_glossary_for_term(self, term_guid: str, server_name: str = None,
-                                           effective_time: str = None) -> dict | str:
-        """ Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
+    async def _async_get_glossary_for_term(
+        self, term_guid: str, server_name: str = None, effective_time: str = None
+    ) -> dict | str:
+        """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
             that the glossary element should only be returned if it was effective at a particular time.
 
             Async Version.
@@ -2278,16 +2634,22 @@ class GlossaryManager(GlossaryBrowser):
             server_name = self.server_name
         validate_guid(term_guid)
 
-        body = {"class": "EffectiveTimeQueryRequestBody", "effectiveTime": effective_time}
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"for-term/{term_guid}/retrieve")
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"for-term/{term_guid}/retrieve"
+        )
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("element", "No glossary found")
 
-    def get_glossary_for_term(self, term_guid: str, server_name: str = None,
-                              effective_time: str = None) -> dict | str:
-        """ Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
+    def get_glossary_for_term(
+        self, term_guid: str, server_name: str = None, effective_time: str = None
+    ) -> dict | str:
+        """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
             that the glossary element should only be returned if it was effective at a particular time.
 
             Async Version.
@@ -2318,14 +2680,24 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_for_term(term_guid, server_name, effective_time))
+        response = loop.run_until_complete(
+            self._async_get_glossary_for_term(term_guid, server_name, effective_time)
+        )
         return response
 
-    async def _async_get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
-                                       server_name: str = None, effective_time: str = None,
-                                       for_lineage: bool = False, for_duplicate_processing: bool = False,
-                                       start_from: int = 0, page_size: int = None) -> list:
-        """ Retrieve glossary terms by display name or qualified name. Async Version.
+    async def _async_get_terms_by_name(
+        self,
+        term: str,
+        glossary_guid: str = None,
+        status_filter: list = [],
+        server_name: str = None,
+        effective_time: str = None,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list:
+        """Retrieve glossary terms by display name or qualified name. Async Version.
 
         Parameters
         ----------
@@ -2373,69 +2745,97 @@ class GlossaryManager(GlossaryBrowser):
         for_lineage_s = str(for_lineage).lower()
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
 
-        body = {"class": "GlossaryNameRequestBody", "glossaryGUID": glossary_guid, "name": term,
-                "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
+        body = {
+            "class": "GlossaryNameRequestBody",
+            "glossaryGUID": glossary_guid,
+            "name": term,
+            "effectiveTime": effective_time,
+            "limitResultsByStatus": status_filter,
+        }
         # body = body_slimmer(body)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"terms/by-name?startFrom={start_from}&pageSize={page_size}&"
-               f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"terms/by-name?startFrom={start_from}&pageSize={page_size}&"
+            f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
+        )
 
         # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elementList", "No terms found")
 
-    def get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [], server_name: str = None,
-                          effective_time: str = None, for_lineage: bool = False,
-                          for_duplicate_processing: bool = False, start_from: int = 0, page_size: int = None) -> list:
-        """ Retrieve glossary terms by display name or qualified name.
+    def get_terms_by_name(
+        self,
+        term: str,
+        glossary_guid: str = None,
+        status_filter: list = [],
+        server_name: str = None,
+        effective_time: str = None,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list:
+        """Retrieve glossary terms by display name or qualified name.
 
-           Parameters
-           ----------
-           term : str
-               The term to search for in the glossaries.
-           glossary_guid : str, optional
-               The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
-           status_filter : list, optional
-               A list of status values to filter the search results. Default is an empty list, which means no filtering.
-           server_name : str, optional
-               The name of the server where the glossaries reside. If not provided, it will use the default server name.
-           effective_time : datetime, optional
-               If specified, the term information will be retrieved if it is active at the `effective_time`.
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-           for_lineage : bool, optional
-               Flag to indicate whether the search should include lineage information. Default is False.
-           for_duplicate_processing : bool, optional
-               Flag to indicate whether the search should include duplicate processing information. Default is False.
-           start_from : int, optional
-               The index of the first term to retrieve. Default is 0.
-           page_size : int, optional
-               The number of terms to retrieve per page. If not provided, it will use the default page size.
+        Parameters
+        ----------
+        term : str
+            The term to search for in the glossaries.
+        glossary_guid : str, optional
+            The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
+        status_filter : list, optional
+            A list of status values to filter the search results. Default is an empty list, which means no filtering.
+        server_name : str, optional
+            The name of the server where the glossaries reside. If not provided, it will use the default server name.
+        effective_time : datetime, optional
+            If specified, the term information will be retrieved if it is active at the `effective_time`.
+             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage : bool, optional
+            Flag to indicate whether the search should include lineage information. Default is False.
+        for_duplicate_processing : bool, optional
+            Flag to indicate whether the search should include duplicate processing information. Default is False.
+        start_from : int, optional
+            The index of the first term to retrieve. Default is 0.
+        page_size : int, optional
+            The number of terms to retrieve per page. If not provided, it will use the default page size.
 
-           Returns
-           -------
-           list
-               A list of terms matching the search criteria. If no terms are found,
-               it returns the string "No terms found".
+        Returns
+        -------
+        list
+            A list of terms matching the search criteria. If no terms are found,
+            it returns the string "No terms found".
 
-           Raises
-           ------
-            InvalidParameterException
-                If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-            PropertyServerException
-                Raised by the server when an issue arises in processing a valid request.
-            NotAuthorizedException
-                The principle specified by the user_id does not have authorization for the requested action.
-           """
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_by_name(term, glossary_guid, status_filter, server_name, effective_time, for_lineage,
-                                          for_duplicate_processing, start_from, page_size))
+            self._async_get_terms_by_name(
+                term,
+                glossary_guid,
+                status_filter,
+                server_name,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+            )
+        )
         return response
 
-    async def _async_get_terms_by_guid(self, term_guid: str, server_name: str = None) -> dict | str:
-        """ Retrieve a term using its unique id. Async version.
+    async def _async_get_terms_by_guid(
+        self, term_guid: str, server_name: str = None
+    ) -> dict | str:
+        """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
@@ -2463,14 +2863,16 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
-               f"{term_guid}/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{term_guid}/retrieve"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("element", "No term found")
 
     def get_terms_by_guid(self, term_guid: str, server_name: str = None) -> dict | str:
-        """ Retrieve a term using its unique id. Async version.
+        """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
@@ -2495,13 +2897,20 @@ class GlossaryManager(GlossaryBrowser):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid, server_name))
+        response = loop.run_until_complete(
+            self._async_get_terms_by_guid(term_guid, server_name)
+        )
 
         return response
 
-    async def _async_get_terms_versions(self, term_guid: str, server_name: str = None, start_from: int = 0,
-                                        page_size=None) -> dict | str:
-        """ Retrieve the versions of a glossary term. Async version.
+    async def _async_get_terms_versions(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the versions of a glossary term. Async version.
         Parameters
         ----------
         term_guid : str
@@ -2535,15 +2944,22 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
-               f"{term_guid}/history?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{term_guid}/history?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("element", "No term found")
 
-    def get_terms_versions(self, term_guid: str, server_name: str = None, start_from: int = 0,
-                           page_size=None) -> dict | str:
-        """ Retrieve the versions of a glossary term.
+    def get_terms_versions(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the versions of a glossary term.
         Parameters
         ----------
         term_guid : str
@@ -2572,13 +2988,21 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_versions(term_guid, server_name, start_from, page_size))
+            self._async_get_terms_versions(
+                term_guid, server_name, start_from, page_size
+            )
+        )
 
         return response
 
-    async def _async_get_term_revision_logs(self, term_guid: str, server_name: str = None, start_from: int = 0,
-                                            page_size=None) -> dict | str:
-        """ Retrieve the revision log history for a term. Async version.
+    async def _async_get_term_revision_logs(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the revision log history for a term. Async version.
         Parameters
         ----------
         term_guid : str
@@ -2612,15 +3036,22 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(term_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
-               f"{term_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
+            f"{term_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No log found")
 
-    def get_term_revision_logs(self, term_guid: str, server_name: str = None, start_from: int = 0,
-                               page_size=None) -> dict | str:
-        """ Retrieve the revision log history for a term.
+    def get_term_revision_logs(
+        self,
+        term_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the revision log history for a term.
         Parameters
         ----------
         term_guid : str
@@ -2649,13 +3080,21 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_revision_logs(term_guid, server_name, start_from, page_size))
+            self._async_get_term_revision_logs(
+                term_guid, server_name, start_from, page_size
+            )
+        )
 
         return response
 
-    async def _async_get_term_revision_history(self, term_revision_log_guid: str, server_name: str = None,
-                                               start_from: int = 0, page_size=None) -> dict | str:
-        """ Retrieve the revision history for a glossary term. Async version.
+    async def _async_get_term_revision_history(
+        self,
+        term_revision_log_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the revision history for a glossary term. Async version.
 
         Parameters
         ----------
@@ -2695,15 +3134,22 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(term_revision_log_guid)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/note-logs/"
-               f"{term_revision_log_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/note-logs/"
+            f"{term_revision_log_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
+        )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("elementList", "No logs found")
 
-    def get_term_revision_history(self, term_revision_log_guid: str, server_name: str = None, start_from: int = 0,
-                                  page_size=None) -> dict | str:
-        """ Retrieve the revision history for a glossary term.
+    def get_term_revision_history(
+        self,
+        term_revision_log_guid: str,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size=None,
+    ) -> dict | str:
+        """Retrieve the revision history for a glossary term.
 
         Parameters
         ----------
@@ -2738,17 +3184,29 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_revision_history(term_revision_log_guid, server_name, start_from, page_size))
+            self._async_get_term_revision_history(
+                term_revision_log_guid, server_name, start_from, page_size
+            )
+        )
 
         return response
 
-    async def _async_find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-                                         effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
-                                         ignore_case: bool = False, for_lineage: bool = False,
-                                         for_duplicate_processing: bool = False, server_name: str = None,
-                                         start_from: int = 0, page_size: int = None) -> list | str:
-
-        """ Retrieve the list of glossary term metadata elements that contain the search string.
+    async def _async_find_glossary_terms(
+        self,
+        search_string: str,
+        glossary_guid: str = None,
+        status_filter: list = [],
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters
         ----------
@@ -2812,89 +3270,119 @@ class GlossaryManager(GlossaryBrowser):
         ignore_case_s = str(ignore_case).lower()
         for_lineage_s = str(for_lineage).lower()
         for_duplicate_processing_s = str(for_duplicate_processing).lower()
-        if search_string == '*':
+        if search_string == "*":
             search_string = None
 
         # validate_search_string(search_string)
 
-        body = {"class": "GlossarySearchStringRequestBody", "glossaryGUID": glossary_guid,
-                "searchString": search_string, "effectiveTime": effective_time, "limitResultsByStatus": status_filter}
+        body = {
+            "class": "GlossarySearchStringRequestBody",
+            "glossaryGUID": glossary_guid,
+            "searchString": search_string,
+            "effectiveTime": effective_time,
+            "limitResultsByStatus": status_filter,
+        }
         # body = body_slimmer(body)
 
-        url = (f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-               f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
+        url = (
+            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+            f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
+            f"forDuplicateProcessing={for_duplicate_processing_s}"
+        )
 
         # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No terms found")  # return response.text
+        return response.json().get(
+            "elementList", "No terms found"
+        )  # return response.text
 
-    def find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-                            effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
-                            ignore_case: bool = False, for_lineage: bool = False,
-                            for_duplicate_processing: bool = False, server_name: str = None, start_from: int = 0,
-                            page_size: int = None) -> list | str:
-        """ Retrieve the list of glossary term metadata elements that contain the search string.
+    def find_glossary_terms(
+        self,
+        search_string: str,
+        glossary_guid: str = None,
+        status_filter: list = [],
+        effective_time: str = None,
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        server_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
+    ) -> list | str:
+        """Retrieve the list of glossary term metadata elements that contain the search string.
 
-               Parameters
-               ----------
-               search_string: str
-                   Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
-               glossary_guid str
-                   Identifier of the glossary to search within. If None, then all glossaries are searched.
-               status_filter: list, default = [], optional
-                   Filters the results by the included Term statuses (such as 'ACTIVE', 'DRAFT'). If not specified,
-                   the results will not be filtered.
-               effective_time: str, [default=None], optional
-                   If specified, the term information will be retrieved if it is active at the `effective_time`.
-                   Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-               server_name : str, optional
-                   The name of the server to  configure.
-                   If not provided, the server name associated with the instance is used.
-               starts_with : bool, [default=False], optional
-                   Starts with the supplied string.
-               ends_with : bool, [default=False], optional
-                   Ends with the supplied string
-               ignore_case : bool, [default=False], optional
-                   Ignore case when searching
-               for_lineage : bool, [default=False], optional
+        Parameters
+        ----------
+        search_string: str
+            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+        glossary_guid str
+            Identifier of the glossary to search within. If None, then all glossaries are searched.
+        status_filter: list, default = [], optional
+            Filters the results by the included Term statuses (such as 'ACTIVE', 'DRAFT'). If not specified,
+            the results will not be filtered.
+        effective_time: str, [default=None], optional
+            If specified, the term information will be retrieved if it is active at the `effective_time`.
+            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name : str, optional
+            The name of the server to  configure.
+            If not provided, the server name associated with the instance is used.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        for_lineage : bool, [default=False], optional
 
-               for_duplicate_processing : bool, [default=False], optional
+        for_duplicate_processing : bool, [default=False], optional
 
-               start_from: str, [default=0], optional
-                   Page of results to start from
-               page_size : int, optional
-                   Number of elements to return per page - if None, then default for class will be used.
+        start_from: str, [default=0], optional
+            Page of results to start from
+        page_size : int, optional
+            Number of elements to return per page - if None, then default for class will be used.
 
-               Returns
-               -------
-               List | str
+        Returns
+        -------
+        List | str
 
-               A list of term definitions
+        A list of term definitions
 
-               Raises
-               ------
-               InvalidParameterException
-                 If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-               PropertyServerException
-                 Raised by the server when an issue arises in processing a valid request
-               NotAuthorizedException
-                 The principle specified by the user_id does not have authorization for the requested action
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
-               Notes
-               -----
-               The search string is located in the request body and is interpreted as a plain string.
-               The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-               The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
-               """
+        Notes
+        -----
+        The search string is located in the request body and is interpreted as a plain string.
+        The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+        The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_glossary_terms(search_string, glossary_guid, status_filter, effective_time, starts_with,
-                                            ends_with, ignore_case, for_lineage, for_duplicate_processing, server_name,
-                                            start_from, page_size))
+            self._async_find_glossary_terms(
+                search_string,
+                glossary_guid,
+                status_filter,
+                effective_time,
+                starts_with,
+                ends_with,
+                ignore_case,
+                for_lineage,
+                for_duplicate_processing,
+                server_name,
+                start_from,
+                page_size,
+            )
+        )
 
         return response
-

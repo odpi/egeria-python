@@ -21,26 +21,33 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    RegisteredInfo
+    RegisteredInfo,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_asset_types(server: str, url: str, username: str, user_password: str,
-                        jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH
-                        ):
+def display_asset_types(
+    server: str,
+    url: str,
+    username: str,
+    user_password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     r_client = RegisteredInfo(server, url, username)
     token = r_client.create_egeria_bearer_token(username, user_password)
     asset_types = r_client.list_asset_types()
@@ -56,7 +63,7 @@ def display_asset_types(server: str, url: str, username: str, user_password: str
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Asset Types from Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Name")
@@ -74,9 +81,7 @@ def display_asset_types(server: str, url: str, username: str, user_password: str
                 description = a_type.get("description", "none")
                 version = a_type.get("version", " ")
                 super_type = a_type.get("superType", "none")
-                table.add_row(
-                    name, description, super_type, str(version)
-                )
+                table.add_row(name, description, super_type, str(version))
         return table
 
     try:
@@ -84,7 +89,11 @@ def display_asset_types(server: str, url: str, username: str, user_password: str
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
@@ -108,6 +117,7 @@ def main():
     guid = None
 
     display_asset_types(server, url, userid, user_pass)
+
 
 if __name__ == "__main__":
     main()

@@ -22,79 +22,97 @@ from pyegeria._exceptions import (
 )
 
 
-@click.command('add-todo')
-@click.argument('integration-connector')
-@click.argument('metadata-element-guid')
-@click.argument('catalog-target-name')
+@click.command("add-todo")
+@click.argument("integration-connector")
+@click.argument("metadata-element-guid")
+@click.argument("catalog-target-name")
 @click.pass_context
-def add_catalog_target(ctx, integration_connector: str, metadata_element_guid:str, catalog_target_name:str)-> str:
+def add_catalog_target(
+    ctx,
+    integration_connector: str,
+    metadata_element_guid: str,
+    catalog_target_name: str,
+) -> str:
     """Add catalog targets to the specified integration connector"""
     try:
         if integration_connector not in INTEGRATION_GUIDS.keys():
-            click.echo('Integration connector is not known')
+            click.echo("Integration connector is not known")
 
         c = ctx.obj
-        a_client = AutomatedCuration(c.view_server, c.view_server_url, c.userid, c.password)
+        a_client = AutomatedCuration(
+            c.view_server, c.view_server_url, c.userid, c.password
+        )
         token = a_client.create_egeria_bearer_token()
 
-        guid = a_client.add_catalog_target(INTEGRATION_GUIDS[integration_connector], metadata_element_guid,
-                                           catalog_target_name)
+        guid = a_client.add_catalog_target(
+            INTEGRATION_GUIDS[integration_connector],
+            metadata_element_guid,
+            catalog_target_name,
+        )
 
-        click.echo(f"Added catalog target to {integration_connector} with a return guid of {guid}")
-
+        click.echo(
+            f"Added catalog target to {integration_connector} with a return guid of {guid}"
+        )
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 
-
-@click.command('remove-target')
-@click.argument('relationship-guid')
+@click.command("remove-target")
+@click.argument("relationship-guid")
 @click.pass_context
 def remove_catalog_target(ctx, relationship_guid: str):
     """Remove the catalog target specified by the relationship guidr"""
     try:
         c = ctx.obj
-        a_client = AutomatedCuration(c.view_server, c.view_server_url, c.userid, c.password)
+        a_client = AutomatedCuration(
+            c.view_server, c.view_server_url, c.userid, c.password
+        )
         token = a_client.create_egeria_bearer_token()
 
         a_client.remove_catalog_target(relationship_guid)
 
-        click.echo(f"Removed catalog target with relationship guid of {relationship_guid}")
-
+        click.echo(
+            f"Removed catalog target with relationship guid of {relationship_guid}"
+        )
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 
-@click.command('update-target')
-@click.argument('relationship-guid')
-@click.argument('catalog-target-name')
+@click.command("update-target")
+@click.argument("relationship-guid")
+@click.argument("catalog-target-name")
 @click.pass_context
-def update_catalog_target(ctx, relationship_guid: str, catalog_target_name:str):
-    """Update the catalog target specified by the relationship guid """
+def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str):
+    """Update the catalog target specified by the relationship guid"""
     try:
         c = ctx.obj
-        a_client = AutomatedCuration(c.view_server, c.view_server_url, c.userid, c.password)
+        a_client = AutomatedCuration(
+            c.view_server, c.view_server_url, c.userid, c.password
+        )
         token = a_client.create_egeria_bearer_token()
 
         guid = a_client.update_catalog_target(relationship_guid, catalog_target_name)
 
-        click.echo(f"Update catalog target with relationship guid of  {relationship_guid} to a catalog target name of "
-                   f"{catalog_target_name} with a return guid of {guid}")
-
+        click.echo(
+            f"Update catalog target with relationship guid of  {relationship_guid} to a catalog target name of "
+            f"{catalog_target_name} with a return guid of {guid}"
+        )
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 
-@click.command('stop')
+@click.command("stop")
 @click.pass_context
 def stop_server(ctx):
     """Stop an integration daemon"""
     try:
         c = ctx.obj
-        p_client = Platform(c.integration_daemon, c.integration_daemon_url, c.userid, c.password)
+        p_client = Platform(
+            c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        )
 
         p_client.shutdown_server()
 
@@ -103,13 +121,15 @@ def stop_server(ctx):
         print_exception_response(e)
 
 
-@click.command('start')
+@click.command("start")
 @click.pass_context
 def start_server(ctx):
-    """Start or restart an integration daemon from its known configuration """
+    """Start or restart an integration daemon from its known configuration"""
     try:
         c = ctx.obj
-        p_client = Platform(c.integration_daemon, c.integration_daemon_url, c.userid, c.password)
+        p_client = Platform(
+            c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        )
 
         p_client.activate_server_stored_config()
 
@@ -117,4 +137,3 @@ def start_server(ctx):
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
-

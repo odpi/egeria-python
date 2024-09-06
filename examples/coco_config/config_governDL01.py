@@ -12,7 +12,7 @@ This script creates and configures the governDL01 engine host.
 
 import json
 
-from globals import (dataLakePlatformURL, max_paging_size)
+from globals import dataLakePlatformURL, max_paging_size
 from pyegeria import CoreServerConfig
 from pyegeria import (
     print_exception_response,
@@ -33,35 +33,39 @@ print("Configuring " + engine_server + "...")
 try:
     o_client = CoreServerConfig(engine_server, engine_server_platform, admin_user)
 
-    o_client.set_basic_server_properties("An Engine Host to run governance actions for Coco Pharmaceuticals",
-                                         "Coco Pharmaceuticals",
-                                         engine_server_platform,
-                                         engine_server_user_id, engine_server_password,
-                                         max_paging_size)
+    o_client.set_basic_server_properties(
+        "An Engine Host to run governance actions for Coco Pharmaceuticals",
+        "Coco Pharmaceuticals",
+        engine_server_platform,
+        engine_server_user_id,
+        engine_server_password,
+        max_paging_size,
+    )
 
     security_connection_body = {
         "class": "Connection",
         "connectorType": {
             "class": "ConnectorType",
-            "connectorProviderClassName":
-                "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider"
-        }
+            "connectorProviderClassName": "org.odpi.openmetadata.metadatasecurity.samples.CocoPharmaServerSecurityProvider",
+        },
     }
     o_client.set_server_security_connection(security_connection_body)
 
-    o_client.set_engine_definitions_client_config(mdr_server, mdr_engine_server_platform)
+    o_client.set_engine_definitions_client_config(
+        mdr_server, mdr_engine_server_platform
+    )
 
     engine_list_body = [
         {
             "class": "EngineConfig",
             "engineQualifiedName": "AssetDiscovery",
-            "engineUserId": "findItDL01npa"
+            "engineUserId": "findItDL01npa",
         },
         {
             "class": "EngineConfig",
             "engineQualifiedName": "AssetQuality",
-            "engineUserId": "findItDL01npa"
-        }
+            "engineUserId": "findItDL01npa",
+        },
     ]
 
     o_client.set_engine_list(engine_list_body)

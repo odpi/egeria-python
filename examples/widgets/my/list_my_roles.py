@@ -27,22 +27,32 @@ from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-def display_my_roles(server: str, url: str, username: str, user_pass:str,
-                        jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
+def display_my_roles(
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     m_client = MyProfile(server, url, user_id=username, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token(username, user_pass)
     my_profiles = m_client.get_my_profile()
@@ -59,7 +69,7 @@ def display_my_roles(server: str, url: str, username: str, user_pass:str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"My Profile from Server '{server}' @ Platform - {url}\n Press 'q' to Quit",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Name")
@@ -81,9 +91,11 @@ def display_my_roles(server: str, url: str, username: str, user_pass:str,
         else:
             name = my_profiles["profileProperties"]["fullName"]
             job_title = my_profiles["profileProperties"]["jobTitle"]
-            id_list=" "
+            id_list = " "
             for identities in my_profiles["userIdentities"]:
-                id_list = f"{identities['userIdentity']['properties']['userId']} {id_list}"
+                id_list = (
+                    f"{identities['userIdentity']['properties']['userId']} {id_list}"
+                )
 
             my_guid = my_profiles["elementHeader"]["guid"]
 
@@ -91,7 +103,7 @@ def display_my_roles(server: str, url: str, username: str, user_pass:str,
             for a_role in my_roles:
                 my_role_props = a_role["properties"]
                 role_type = my_role_props["typeName"]
-                role = my_role_props.get("title"," ")
+                role = my_role_props.get("title", " ")
                 role_guid = a_role["elementHeader"]["guid"]
                 table.add_row(
                     name, job_title, str(id_list), my_guid, role_type, role, role_guid
@@ -109,10 +121,14 @@ def display_my_roles(server: str, url: str, username: str, user_pass:str,
         with console.pager():
             console.print(generate_table())
 
-
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -129,6 +145,7 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     display_my_roles(server, url, userid, user_pass)
+
 
 if __name__ == "__main__":
     main()

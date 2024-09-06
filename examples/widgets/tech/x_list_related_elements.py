@@ -23,34 +23,45 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ClassificationManager
+    ClassificationManager,
 )
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_related_elements(element_guid: str, relationship: str, om_type: str, server: str,
-                             url: str, username: str, password: str, jupyter: bool = EGERIA_JUPYTER,
-                             width: int = EGERIA_WIDTH
-                             ):
+def display_related_elements(
+    element_guid: str,
+    relationship: str,
+    om_type: str,
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
     rel_el = c_client.get_related_elements(element_guid, relationship, om_type)
 
     if type(rel_el) is str:
-        print(f"\n\nWas not able find related elements for {element_guid} with relationship {relationship}\n\n")
+        print(
+            f"\n\nWas not able find related elements for {element_guid} with relationship {relationship}\n\n"
+        )
         sys.exit(0)
 
     def generate_table() -> Table:
@@ -78,23 +89,23 @@ def display_related_elements(element_guid: str, relationship: str, om_type: str,
         for related_element in rel_el:
             relationship_props = related_element["relationshipProperties"]
 
-            rel_prop_md = ''
+            rel_prop_md = ""
             for key in relationship_props.keys():
                 rel_prop_md += f"{key}: {relationship_props[key]}\n"
             # rel_prop_out = Markdown(rel_prop_md)
 
-            rel_element = related_element['relatedElement']
+            rel_element = related_element["relatedElement"]
             el = rel_element["properties"]
             for prop in el:
-                el_case = el.get("isCaseSensitive", '---')
-                el_pref = el.get("preferredValue", '---')
-                el_desc = el.get("description", '---')
-                el_add = el.get("additionalProperties", '---')
+                el_case = el.get("isCaseSensitive", "---")
+                el_pref = el.get("preferredValue", "---")
+                el_desc = el.get("description", "---")
+                el_add = el.get("additionalProperties", "---")
 
-                el_add_md = ''
-                el_add_f = el_add.replace('\u003d',':')
-                s = el_add.strip('{}').strip()
-                pairs = [i.split('=') for i in s.split(', ')]
+                el_add_md = ""
+                el_add_f = el_add.replace("\u003d", ":")
+                s = el_add.strip("{}").strip()
+                pairs = [i.split("=") for i in s.split(", ")]
                 # d_add_prop = dict(pairs)
                 # for key in d_add_prop.keys():
                 #     el_add_md += f"{key}: {d_add_prop[key]}\n"
@@ -110,7 +121,11 @@ def display_related_elements(element_guid: str, relationship: str, om_type: str,
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
@@ -134,10 +149,15 @@ def main():
 
     try:
         element_guid = Prompt.ask("Enter an Element GUID find relationships for")
-        relationship = Prompt.ask("Enter the relationship to search", default="SpecificationPropertyAssignment")
+        relationship = Prompt.ask(
+            "Enter the relationship to search",
+            default="SpecificationPropertyAssignment",
+        )
         om_type = Prompt.ask("Enter an optional Open Metadata Type", default=None)
-        display_related_elements(element_guid, relationship, om_type, server, url, userid, password)
-    except(KeyboardInterrupt):
+        display_related_elements(
+            element_guid, relationship, om_type, server, url, userid, password
+        )
+    except KeyboardInterrupt:
         pass
 
 

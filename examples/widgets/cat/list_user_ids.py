@@ -14,33 +14,38 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-   ClassificationManager
+    ClassificationManager,
 )
 
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-
-def list_user_ids(server: str,
-                       url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH
+def list_user_ids(
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
 ):
-
     c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
-    elements = c_client.get_elements('UserIdentity')
+    elements = c_client.get_elements("UserIdentity")
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -61,27 +66,38 @@ def list_user_ids(server: str,
         table.add_column("Job Title")
         table.add_column("UserId")
         table.add_column("Created")
-        table.add_column("GUID", width = 38,no_wrap=True)
+        table.add_column("GUID", width=38, no_wrap=True)
         table.add_column("Qualified Name")
 
-
         if type(elements) is list:
-            for element in elements:
-                header = element['elementHeader']
-                el_q_name = element['properties'].get('qualifiedName',"---")
-                el_create_time = header['versions']['createTime'][:-10]
-                el_guid = header['guid']
-                el_user_id = element['properties'].get('userId',"---")
-                full_name = ''
-                job = ''
+            sorted_elements = sorted(
+                elements, key=lambda i: i["properties"].get("userId", "---")
+            )
+            for element in sorted_elements:
+                header = element["elementHeader"]
+                el_q_name = element["properties"].get("qualifiedName", "---")
+                el_create_time = header["versions"]["createTime"][:-10]
+                el_guid = header["guid"]
+                el_user_id = element["properties"].get("userId", "---")
+                full_name = ""
+                job = ""
 
-                profile = c_client.get_related_elements(el_guid, 'ProfileIdentity')
+                profile = c_client.get_related_elements(el_guid, "ProfileIdentity")
                 if type(profile) is list:
                     for rel in profile:
-                        full_name = rel['relatedElement']['properties'].get('fullName','---')
-                        job = rel['relatedElement']['properties'].get('jobTitle','---')
+                        full_name = rel["relatedElement"]["properties"].get(
+                            "fullName", "---"
+                        )
+                        job = rel["relatedElement"]["properties"].get("jobTitle", "---")
 
-                table.add_row(full_name, job, el_user_id, el_create_time, el_guid, el_q_name,)
+                table.add_row(
+                    full_name,
+                    job,
+                    el_user_id,
+                    el_create_time,
+                    el_guid,
+                    el_q_name,
+                )
 
             return table
         else:
@@ -94,7 +110,11 @@ def list_user_ids(server: str,
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         print("Perhaps the type name isn't known")
     finally:
@@ -117,12 +137,9 @@ def main():
 
     try:
         list_user_ids(server, url, userid, password)
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
 
 
 if __name__ == "__main__":
     main()
-
-
-

@@ -25,23 +25,31 @@ from pyegeria import (
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_registered_svcs(service: str, server: str, url: str,
-                            username: str, password: str, jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH
-                            ):
-    """ Display the registered services list
+def display_registered_svcs(
+    service: str,
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
+    """Display the registered services list
     Parameters
     ----------
     service : str, optional
@@ -72,14 +80,14 @@ def display_registered_svcs(service: str, server: str, url: str,
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Registered Services from Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
         table.add_column("Service Id")
         table.add_column("Service Name")
         table.add_column("Service  Development Status")
         table.add_column("URL Marker")
         table.add_column("Description")
-        table.add_column("Wiki",no_wrap=True)
+        table.add_column("Wiki", no_wrap=True)
         table.add_column("Server Type")
         table.add_column("Partner Service Name")
         table.add_column("Partner Service Type")
@@ -96,8 +104,14 @@ def display_registered_svcs(service: str, server: str, url: str,
                 svc_partner_svc_type = svc.get("partnerServiceType", " ")
 
                 table.add_row(
-                    svc_id, svc_name, svc_dev_status, svc_url_marker, svc_description, svc_wiki,
-                    svc_partner_svc_name, svc_partner_svc_type
+                    svc_id,
+                    svc_name,
+                    svc_dev_status,
+                    svc_url_marker,
+                    svc_description,
+                    svc_wiki,
+                    svc_partner_svc_name,
+                    svc_partner_svc_type,
                 )
             return table
         elif type(svc_list) is str:
@@ -129,7 +143,11 @@ def display_registered_svcs(service: str, server: str, url: str,
         with console.pager(styles=True):
             console.print(generate_table(svc_list))
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         console.print_exception(show_locals=True)
     finally:
         a_client.close_session()
@@ -150,9 +168,11 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        svc_kind = Prompt.ask("Enter the service type you are searching for:", default="all")
+        svc_kind = Prompt.ask(
+            "Enter the service type you are searching for:", default="all"
+        )
         display_registered_svcs(svc_kind, server, url, userid, password=password)
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
 
 

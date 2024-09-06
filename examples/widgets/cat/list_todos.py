@@ -28,26 +28,38 @@ from pyegeria import (
 from pyegeria.my_profile_omvs import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-def display_to_dos(search_string: str, status_filter: str, server: str, url: str, username: str, user_pass:str,
-                   jupyter:bool=EGERIA_JUPYTER, width:int = EGERIA_WIDTH):
 
+def display_to_dos(
+    search_string: str,
+    status_filter: str,
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     m_client = MyProfile(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, user_pass)
 
-    def generate_table(search_string:str = '*') -> Table:
+    def generate_table(search_string: str = "*") -> Table:
         """Make a new table."""
         table = Table(
             title=f"Open ToDos for Platform {url} @ {time.asctime()}",
@@ -56,7 +68,7 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
             show_lines=True,
             box=box.ROUNDED,
             caption=f"ToDos for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Name")
@@ -70,7 +82,7 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
         table.add_column("Sponsor")
         table.add_column("Assigned")
 
-        todo_items = m_client.find_to_do(search_string,status = status_filter)
+        todo_items = m_client.find_to_do(search_string, status=status_filter)
 
         if type(todo_items) is str:
             name = " "
@@ -82,10 +94,10 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
 
             status = " "
             sponsor = " "
-            assigned_out = ''
+            assigned_out = ""
         else:
             for item in todo_items:
-                guid = item['elementHeader']['guid']
+                guid = item["elementHeader"]["guid"]
                 props = item["properties"]
                 name = props["name"]
                 type_name = props.get("toDoType", " ")
@@ -93,12 +105,12 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
                 priority = str(props.get("priority", " "))
                 due = props.get("dueTime", "          ")[:-19]
                 completed = props.get("completionTime", "           ")[:-10]
-                status = props.get("toDoStatus", '---')
+                status = props.get("toDoStatus", "---")
 
-                assigned_out = ''
-                assigned_actors = item.get("assignedActors",'---')
+                assigned_out = ""
+                assigned_actors = item.get("assignedActors", "---")
                 if type(assigned_actors) is list:
-                    assigned_md = ''
+                    assigned_md = ""
                     for actor in assigned_actors:
                         assigned_md += f"* {actor['uniqueName'].split(',')[0]}\n"
                     assigned_out = Markdown(assigned_md)
@@ -112,7 +124,16 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
                     status = f"[red]{status}"
 
                 table.add_row(
-                    name, type_name, guid, created, priority, due, completed, status, sponsor, assigned_out
+                    name,
+                    type_name,
+                    guid,
+                    created,
+                    priority,
+                    due,
+                    completed,
+                    status,
+                    sponsor,
+                    assigned_out,
                 )
 
         m_client.close_session()
@@ -125,11 +146,13 @@ def display_to_dos(search_string: str, status_filter: str, server: str, url: str
         #         live.update(generate_table())
         console = Console(width=width, force_terminal=not jupyter)
         with console.pager():
-
             console.print(generate_table(search_string))
 
-
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
     except KeyboardInterrupt:
         pass
@@ -152,9 +175,12 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
         search_string = Prompt.ask("Enter the ToDo you are searching for", default="*")
-        status_filter = Prompt.ask("Enter an optional status filter ['OPEN','IN_PROGRESS','WAITING','COMPLETE',"
-                                   "'ABANDONED', 'None']", default=None)
-        display_to_dos(search_string, status_filter,server, url, userid, user_pass)
+        status_filter = Prompt.ask(
+            "Enter an optional status filter ['OPEN','IN_PROGRESS','WAITING','COMPLETE',"
+            "'ABANDONED', 'None']",
+            default=None,
+        )
+        display_to_dos(search_string, status_filter, server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

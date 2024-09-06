@@ -29,25 +29,36 @@ from pyegeria import (
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_ENGINE_HOST = os.environ.get('INTEGRATION_ENGINE_HOST', 'engine-host')
-EGERIA_ENGINE_HOST_URL = os.environ.get('INTEGRATION_ENGINE_HOST_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_ENGINE_HOST = os.environ.get("INTEGRATION_ENGINE_HOST", "engine-host")
+EGERIA_ENGINE_HOST_URL = os.environ.get(
+    "INTEGRATION_ENGINE_HOST_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 disable_ssl_warnings = True
 
 
-def display_engine_activity(server: str, url: str, user: str, user_pass: str, paging: bool,
-                            jupyter: bool = EGERIA_JUPYTER, width=EGERIA_WIDTH):
+def display_engine_activity(
+    server: str,
+    url: str,
+    user: str,
+    user_pass: str,
+    paging: bool,
+    jupyter: bool = EGERIA_JUPYTER,
+    width=EGERIA_WIDTH,
+):
     g_client = AutomatedCuration(server, url, user, user_pwd=user_pass)
 
     def generate_table() -> Table:
@@ -62,7 +73,7 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Engine Status for Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
         table.add_column("Requested Time")
         table.add_column("Start Time")
@@ -77,6 +88,7 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
 
         token = g_client.create_egeria_bearer_token()
         action_status = g_client.get_engine_actions()
+
         if type(action_status) is str:
             requested_time = " "
             start_time = " "
@@ -88,7 +100,12 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
             process_name = " "
             completion_message = " "
         elif type(action_status) is list:
-            for action in action_status:
+            sorted_action_status = sorted(
+                action_status,
+                key=lambda i: i.get("requestedTime", time.asctime()),
+                reverse=True,
+            )
+            for action in sorted_action_status:
                 requested_time = action.get("requestedTime", " ")
                 start_time = action.get("startTime", " ")
                 completion_time = action.get("completionTime", " ")
@@ -96,7 +113,12 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
                 engine_name = action["governanceEngineName"]
                 request_type = action["requestType"]
                 action_guid = action["elementHeader"]["guid"]
-                if action["actionStatus"] in ("REQUESTED", "APPROVED", "WAITING", "ACTIVATING"):
+                if action["actionStatus"] in (
+                    "REQUESTED",
+                    "APPROVED",
+                    "WAITING",
+                    "ACTIVATING",
+                ):
                     action_status = f"[yellow]{action['actionStatus']}"
                 elif action["actionStatus"] in ("IN_PROGRESS", "ACTIONED"):
                     action_status = f"[green]{action['actionStatus']}"
@@ -106,14 +128,14 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
                 targets = action.get("actionTargetElements", "Empty")
                 if type(targets) is list:
                     tgt_tab = Table()
-                    tgt_tab.add_column('name')
-                    tgt_tab.add_column('guid', no_wrap=True)
-                    tgt_tab.add_column('type_name')
+                    tgt_tab.add_column("name")
+                    tgt_tab.add_column("guid", no_wrap=True)
+                    tgt_tab.add_column("type_name")
                     targets_md = ""
                     for target in targets:
-                        t_name = target['actionTargetName']
-                        t_guid = target['actionTargetGUID']
-                        t_type = target['targetElement']['type']['typeName']
+                        t_name = target["actionTargetName"]
+                        t_guid = target["actionTargetGUID"]
+                        t_type = target["targetElement"]["type"]["typeName"]
                         tgt_tab.add_row(t_name, t_guid, t_type)
                     # target_element = json.dumps(target[0]["targetElement"]["elementProperties"]["propertiesAsStrings"])
                     target_element = tgt_tab
@@ -124,8 +146,16 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
                 completion_message = action.get("completionMessage", " ")
 
                 table.add_row(
-                    requested_time, start_time, action_guid, engine_name, request_type,
-                    action_status, target_element, completion_time, process_name, completion_message
+                    requested_time,
+                    start_time,
+                    action_guid,
+                    engine_name,
+                    request_type,
+                    action_status,
+                    target_element,
+                    completion_time,
+                    process_name,
+                    completion_message,
                 )
         else:
             print("Egeria integration daemon not running")
@@ -139,12 +169,21 @@ def display_engine_activity(server: str, url: str, user: str, user_pass: str, pa
             with console.pager():
                 console.print(generate_table())
         else:
-            with Live(generate_table(), refresh_per_second=1, screen=True, vertical_overflow="visible") as live:
+            with Live(
+                generate_table(),
+                refresh_per_second=1,
+                screen=True,
+                vertical_overflow="visible",
+            ) as live:
                 while True:
                     time.sleep(2)
                     live.update(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
     except KeyboardInterrupt:
         pass
@@ -166,7 +205,9 @@ def main_live():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=False)
+    display_engine_activity(
+        server=server, url=url, user=userid, user_pass=user_pass, paging=False
+    )
 
 
 def main_paging():
@@ -183,7 +224,9 @@ def main_paging():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_engine_activity(server=server, url=url, user=userid, user_pass=user_pass, paging=True)
+    display_engine_activity(
+        server=server, url=url, user=userid, user_pass=user_pass, paging=True
+    )
 
 
 if __name__ == "__main__":
