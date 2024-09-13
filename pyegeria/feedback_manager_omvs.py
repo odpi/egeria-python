@@ -92,18 +92,6 @@ def elements_response(response: dict, element_type: str, detailed_response: bool
     else:
         return element_property_plus_list(response[element_type])
 
-# def elements_response(response: dict, element_type: str, detailed_response: bool):
-#     if type(response) != dict:
-#         return "---"
-#     if detailed_response:
-#         return response
-#     else:
-#         return element_property_plus_list(response.get(element_type, "---"))
-
-
-# Todo - review with Kevin...
-
-
 class FeedbackManager(Client):
     """FeedbackManager is a class that extends the Client class. It
     provides methods to CRUD tags, comments and likes for managed
@@ -163,19 +151,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - String - unique id for the anchor element.
-        commentGUID
+        comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isPublic
+        is_public
             - is this visible to other people
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -220,19 +208,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - String - unique id for the anchor element.
-        commentGUID
+        comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isPublic
+        is_public
             - is this visible to other people
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -286,17 +274,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -341,17 +329,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -399,17 +387,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -455,17 +443,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -512,17 +500,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing the StarRating and user review of element.
 
         Returns
@@ -567,17 +555,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - String - unique id for the element.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing the StarRating and user review of element.
 
         Returns
@@ -625,17 +613,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique id for the element.
-        tagGUID
+        tag_guid
             - unique id of the tag.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -680,19 +668,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique id for the element.
-        tagGUID
+        tag_guid
             - unique id of the tag.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isPublic
+        is_public
             - is this visible to other people
-        requestBody
+        body
             - optional effective time
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -740,17 +728,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server to route the request to
-        questionCommentGUID
+        question_comment_guid
             - unique identifier of the comment containing the question
-        answerCommentGUID
+        answer_comment_guid
             - unique identifier of the comment containing the accepted answer
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - properties to help with the mapping of the elements in the external asset manager and open metadata
 
         Returns
@@ -793,17 +781,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server to route the request to
-        questionCommentGUID
+        question_comment_guid
             - unique identifier of the comment containing the question
-        answerCommentGUID
+        answer_comment_guid
             - unique identifier of the comment containing the accepted answer
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - properties to help with the mapping of the elements in the external asset manager and open metadata
 
         Returns
@@ -848,13 +836,13 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - public/private flag, name of the tag and (optional) description of the tag.
 
         Example
@@ -871,7 +859,7 @@ class FeedbackManager(Client):
 
         Returns
         -------
-        new elementGUID
+        new element_guid
 
         Raises
         ------
@@ -908,13 +896,13 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - public/private flag, name of the tag and (optional) description of the tag.
 
         Example
@@ -931,7 +919,7 @@ class FeedbackManager(Client):
 
         Returns
         -------
-        new elementGUID
+        new element_guid
 
         Raises
         ------
@@ -965,15 +953,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier of the note log
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - contains the name of the tag and (optional) description of the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1016,15 +1004,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier of the note log
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - contains the name of the tag and (optional) description of the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1070,17 +1058,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier of the element where the note log is located
-        serverName
+        server_name
             - name of the server instances for this request
-        isPublic
+        is_public
             - is this element visible to other people.
-        requestBody
+        body
             - contains the name of the tag and (optional) description of the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1124,17 +1112,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier of the element where the note log is located
-        serverName
+        server_name
             - name of the server instances for this request
-        isPublic
+        is_public
             - is this element visible to other people.
-        requestBody
+        body
             - contains the name of the tag and (optional) description of the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1185,15 +1173,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        tagGUID
+        tag_guid
             - String - unique id for the tag.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - null request body.
 
         Returns
@@ -1256,15 +1244,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        tagGUID
+        tag_guid
             - String - unique id for the tag.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - null request body.
 
         Returns
@@ -1330,23 +1318,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - search string and effective time.
 
         Returns
@@ -1399,23 +1387,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - search string and effective time.
 
         Returns
@@ -1470,23 +1458,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        requestBody
+        body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1538,23 +1526,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        requestBody
+        body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1609,23 +1597,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        requestBody
+        body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1677,23 +1665,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        requestBody
+        body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1748,23 +1736,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - search string and effective time.
 
         Returns
@@ -1816,23 +1804,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - search string and effective time.
 
         Returns
@@ -1889,21 +1877,21 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -1955,23 +1943,23 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        requestBody
+        body
             - search string and effective time.
-        serverName
+        server_name
             - name of the server instances for this request.
-        startsWith
+        starts_with
             - does the value start with the supplied string?
-        endsWith
+        ends_with
             - does the value end with the supplied string?
-        ignoreCase
+        ignore_case
             - should the search ignore case?
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2024,19 +2012,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the comments are connected to (maybe a comment too).
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2083,19 +2071,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the comments are connected to (maybe a comment too).
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2144,15 +2132,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        commentGUID
+        comment_guid
             - unique identifier for the comment object.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -2195,15 +2183,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        commentGUID
+        comment_guid
             - unique identifier for the comment object.
-        serverName
+        server_name
             - name of the server instances for this request
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -2251,19 +2239,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the likes are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
 
@@ -2313,19 +2301,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the likes are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
 
@@ -2376,19 +2364,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the ratings are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2435,19 +2423,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the ratings are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2497,19 +2485,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the ratings are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2557,19 +2545,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique identifier for the element that the ratings are connected to
-        serverName
+        server_name
             - name of the server instances for this request
         body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2620,19 +2608,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        tagGUID
+        tag_guid
             - unique identifier of tag.
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2679,19 +2667,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        tagGUID
+        tag_guid
             - unique identifier of tag.
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - optional effective time
-        startFrom
+        start_from
             - index of the list to start from (0 for start)
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -2740,13 +2728,13 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteGUID
+        note_guid
              - unique identifier of the requested metadata element
-        serverName
+        server_name
              - name of the server instances for this request
-        viewServiceURLMarker
-             - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+             - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
              - optional access service URL marker used to identify which back end service to call
 
          Returns
@@ -2789,13 +2777,13 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteGUID
+        note_guid
              - unique identifier of the requested metadata element
-        serverName
+        server_name
              - name of the server instances for this request
-        viewServiceURLMarker
-             - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+             - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
              - optional access service URL marker used to identify which back end service to call
 
          Returns
@@ -2842,15 +2830,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        noteLogGUID
+        note_log_guid
             - unique identifier of the requested metadata element
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -2893,15 +2881,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        noteLogGUID
+        note_log_guid
             - unique identifier of the requested metadata element
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -2951,17 +2939,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - name to search for and correlators
 
         Returns
@@ -3011,15 +2999,15 @@ class FeedbackManager(Client):
         ----------
         body
             - name to search for and correlators
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3069,19 +3057,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - element to start from
         body
             - optional effective time
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3128,19 +3116,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - element to start from
         body
             - optional effective time
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3191,19 +3179,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier of the note log of interest
         body
             - optional effective time
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3250,19 +3238,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier of the note log of interest
         body
             - optional effective time
-        serverName
+        server_name
             - name of the server instances for this request
-        startFrom
+        start_from
             - paging start point
-        pageSize
+        page_size
             - maximum results that can be returned
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3306,19 +3294,19 @@ class FeedbackManager(Client):
         detailed_response: bool = False,
     ) -> dict | str:
         """
-        Return the informal tag for the supplied unique identifier (tagGUID).
+        Return the informal tag for the supplied unique identifier (tag_guid).
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        tagGUID
+        tag_guid
             - unique identifier of the meaning.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -3358,19 +3346,19 @@ class FeedbackManager(Client):
         detailed_response: bool = False,
     ) -> dict | str:
         """
-        Return the informal tag for the supplied unique identifier (tagGUID).
+        Return the informal tag for the supplied unique identifier (tag_guid).
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        tagGUID
+        tag_guid
             - unique identifier of the meaning.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - optional effective time
 
         Returns
@@ -3417,17 +3405,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        requestBody
+        body
             - name of tag.
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3474,17 +3462,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        requestBody
+        body
             - name of tag.
-        startFrom
+        start_from
             - index of the list to start from (0 for start).
-        pageSize
+        page_size
             - maximum number of elements to return.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3533,15 +3521,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        commentGUID
+        comment_guid
             - String - unique id for the comment object
-        serverName
+        server_name
             - name of the server instances for this request
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -3585,15 +3573,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        commentGUID
+        comment_guid
             - String - unique id for the comment object
-        serverName
+        server_name
             - name of the server instances for this request
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -3638,15 +3626,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique identifier for the element where the like is attached.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -3688,15 +3676,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique identifier for the element where the like is attached.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -3743,15 +3731,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        noteGUID
+        note_guid
             - unique id for the note .
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - null request body.
 
 
@@ -3796,15 +3784,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteGUID
+        note_guid
             - unique id for the note .
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - null request body.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
 
@@ -3852,15 +3840,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique id for the note log.
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - null request body.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3904,15 +3892,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique id for the note log.
-        serverName
+        server_name
             - name of the server instances for this request
-        requestBody
+        body
             - null request body.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -3957,15 +3945,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique identifier for the element where the rating is attached.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4007,15 +3995,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique identifier for the element where the rating is attached.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4062,17 +4050,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        elementGUID
+        element_guid
             - unique id for the element.
-        tagGUID
+        tag_guid
             - unique id of the tag.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - null request body needed for correct protocol exchange.
 
         Returns
@@ -4116,17 +4104,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        elementGUID
+        element_guid
             - unique id for the element.
-        tagGUID
+        tag_guid
             - unique id of the tag.
-        serverName
+        server_name
             - name of the server instances for this request.
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - null request body needed for correct protocol exchange.
 
         Returns
@@ -4174,19 +4162,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server to route the request to
-        questionCommentGUID
+        question_comment_guid
             - unique identifier of the comment containing the question
-        answerCommentGUID
+        answer_comment_guid
             - unique identifier of the comment containing the accepted answer
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - properties to help with the mapping of the elements in the external asset manager and open metadata
 
         Returns
@@ -4231,19 +4219,19 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server to route the request to
-        questionCommentGUID
+        question_comment_guid
             - unique identifier of the comment containing the question
-        answerCommentGUID
+        answer_comment_guid
             - unique identifier of the comment containing the accepted answer
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - properties to help with the mapping of the elements in the external asset manager and open metadata
 
         Returns
@@ -4291,17 +4279,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        commentGUID
+        comment_guid
             - unique identifier for the comment to change.
         body
             - containing type of comment enum and the text of the comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -4345,17 +4333,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        commentGUID
+        comment_guid
             - unique identifier for the comment to change.
         body
             - containing type of comment enum and the text of the comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -4403,17 +4391,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        commentGUID
+        comment_guid
             - unique identifier for the comment to change.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4458,17 +4446,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        commentGUID
+        comment_guid
             - unique identifier for the comment to change.
-        isPublic
+        is_public
             - is this visible to other people
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4516,17 +4504,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        noteGUID
+        note_guid
             - unique identifier for the note to change.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4570,17 +4558,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request.
-        noteGUID
+        note_guid
             - unique identifier for the note to change.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody
+        body
             - containing type of comment enum and the text of the comment.
 
         Returns
@@ -4627,17 +4615,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier for the note log to change.
         body
             - containing type of comment enum and the text of the comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -4681,17 +4669,17 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        noteLogGUID
+        note_log_guid
             - unique identifier for the note log to change.
         body
             - containing type of comment enum and the text of the comment.
-        serverName
+        server_name
             - name of the server instances for this request.
-        isMergeUpdate
+        is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
 
         Returns
@@ -4737,15 +4725,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        tagGUID
+        tag_guid
             - unique id for the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody - contains the name of the tag and (optional) description of the tag.
+        body - contains the name of the tag and (optional) description of the tag.
 
         Returns
         -------
@@ -4788,15 +4776,15 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        serverName
+        server_name
             - name of the server instances for this request
-        tagGUID
+        tag_guid
             - unique id for the tag
-        viewServiceURLMarker
-            - optional view service URL marker (overrides accessServiceURLMarker)
-        accessServiceURLMarker
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        requestBody - contains the name of the tag and (optional) description of the tag.
+        body - contains the name of the tag and (optional) description of the tag.
 
         Returns
         -------
