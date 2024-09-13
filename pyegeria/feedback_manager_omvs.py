@@ -57,6 +57,8 @@ def extract_related_elements_list(element_list):
 def related_elements_response(response: dict, detailed_response: bool):
     if detailed_response:
         return response
+    elif not "elementList" in response:
+        return response
     else:
         return extract_related_elements_list(response["elementList"])
 
@@ -75,17 +77,28 @@ def element_property_plus_list(element_list):
 def element_response(response: dict, element_type: str, detailed_response: bool):
     if detailed_response:
         return response
+    elif not element_type in response:
+        return response
     else:
         return element_properties_plus(response[element_type])
 
 
 def elements_response(response: dict, element_type: str, detailed_response: bool):
-    if type(response) != dict:
-        return "---"
+    print(response)
     if detailed_response:
         return response
+    elif not element_type in response:
+        return response
     else:
-        return element_property_plus_list(response.get(element_type, "---"))
+        return element_property_plus_list(response[element_type])
+
+# def elements_response(response: dict, element_type: str, detailed_response: bool):
+#     if type(response) != dict:
+#         return "---"
+#     if detailed_response:
+#         return response
+#     else:
+#         return element_property_plus_list(response.get(element_type, "---"))
 
 
 # Todo - review with Kevin...
@@ -2277,8 +2290,8 @@ class FeedbackManager(Client):
         )
         url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
-        # return elements_response(response.json(), "elementList", detailed_response)
-        return response.json().get("ratings", "---")
+        return elements_response(response.json(), "elementList", detailed_response)
+        #return response.json().get("ratings", "---")
 
     def get_attached_likes(
         self,
@@ -2522,8 +2535,8 @@ class FeedbackManager(Client):
         )
         url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("tags", "---")
-        # return elements_response(response.json(), "tags", detailed_response)
+        #return response.json().get("tags", "---")
+        return elements_response(response.json(), "tags", detailed_response)
 
     def get_attached_tags(
         self,
