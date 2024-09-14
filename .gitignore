@@ -19,6 +19,9 @@ venv
 *#
 *~
 
+# Poetry artifacts
+poetry.lock
+
 # Mac OS
 __MACOSX
 *.dylib
