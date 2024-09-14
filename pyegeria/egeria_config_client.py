@@ -6,12 +6,10 @@ Client to configure the Egeria platform and servers
 
 """
 
-from pyegeria import (
-    FullServerConfig,
-)
+from pyegeria import FullServerConfig, ServerOps
 
 
-class EgeriaConfig(FullServerConfig):
+class EgeriaConfig(FullServerConfig, ServerOps):
     """
     Client for configuring the Egeria Platform and Servers
 
@@ -35,3 +33,8 @@ class EgeriaConfig(FullServerConfig):
         self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None
     ):
         FullServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
+        ServerOps.__init__(self, server_name, platform_url, user_id, user_pwd)
+
+
+if __name__ == "__main__":
+    print("Main-Config Client")

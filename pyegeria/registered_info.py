@@ -19,7 +19,7 @@ class RegisteredInfo(Client):
 
     Parameters:
     ----------
-        server_name: str
+        view_server: str
                 Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
@@ -161,3 +161,7 @@ class RegisteredInfo(Client):
 
         response = self.make_request("GET", url)
         return response.json().get("types", "no types found")
+
+
+if __name__ == "__main__":
+    print("Main-Registered Info")

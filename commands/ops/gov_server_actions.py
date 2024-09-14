@@ -13,7 +13,7 @@ from rich import print, print_json
 from rich.console import Console
 
 import click
-from pyegeria import ServerOps, AutomatedCuration, INTEGRATION_GUIDS, Platform
+from pyegeria import EgeriaTech, AutomatedCuration, INTEGRATION_GUIDS
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -104,36 +104,73 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str)
         print_exception_response(e)
 
 
-@click.command("stop")
+@click.command("refresh-gov-eng-config")
 @click.pass_context
-def stop_server(ctx):
-    """Stop an integration daemon"""
+def refresh_gov_eng_config(ctx):
+    """Start or restart an engine-host from its known configuration"""
+    c = ctx.obj
+    p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
+    token = p_client.create_egeria_bearer_token()
     try:
-        c = ctx.obj
-        p_client = Platform(
-            c.integration_daemon, c.integration_daemon_url, c.userid, c.password
-        )
+        engine_host_guid = p_client.get_guid_for_name(c.engine_host)
+        p_client.refresh_gov_eng_config(engine_host_guid)
 
-        p_client.shutdown_server()
+        click.echo(f"Refreshed server {c.engine_host}")
 
-        click.echo(f"Stopped server {c.integration_daemon}")
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
+    finally:
+        p_client.close_session()
 
 
 @click.command("start")
 @click.pass_context
-def start_server(ctx):
-    """Start or restart an integration daemon from its known configuration"""
+@click.option("--server", default="simple-metadata-store", help="OMAG Server to start")
+def start_server(ctx, server):
+    """Start or restart an engine-host from its known configuration"""
+    c = ctx.obj
+
+    p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
+    token = p_client.create_egeria_bearer_token()
     try:
-        c = ctx.obj
-        p_client = Platform(
-            c.integration_daemon, c.integration_daemon_url, c.userid, c.password
-        )
+        server_guid = p_client.get_element_guid_by_unique_name(server, "name")
+        p_client.activate_server_with_stored_config(server_guid)
 
-        p_client.activate_server_stored_config()
-
-        click.echo(f"Started server {c.integration_daemon}")
+        click.echo(f"Started server {server}")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
+    finally:
+        p_client.close_session()
+
+
+@click.command("stop")
+@click.option("--server", help="OMAG Server to stop")
+# @click.option(
+#     "--view-server", default=EGERIA_VIEW_SERVER, help="View Server to communicate with"
+# )
+# @click.option(
+#     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+# )
+# @click.option("--userid", default="garygeeke", envvar="EGERIA_USER", help="Egeria user")
+# @click.option(
+#     "--password",
+#     default="secret",
+#     envvar="EGERIA_PASSWORD",
+#     help="Egeria user password",
+# )
+@click.pass_context
+def stop_server(ctx, server):
+    """Stop an engine-host daemon"""
+    c = ctx.obj
+    p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
+    token = p_client.create_egeria_bearer_token()
+    try:
+        server_guid = p_client.get_guid_for_name(server)
+
+        p_client.shutdown_server(server_guid)
+        click.echo(f"Stopped server {server}")
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        p_client.close_session()

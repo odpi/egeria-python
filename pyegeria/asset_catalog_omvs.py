@@ -728,12 +728,4 @@ class AssetCatalog(Client):
 
 
 if __name__ == "__main__":
-    p = AssetCatalog(
-        "active-metadata-store",
-        "https://127.0.0.1:9443",
-        "garygeeke",
-        verify_flag=False,
-    )
-    response = p.get_assets_by_metadata_collection_id()
-    out = response.json()
-    print(out)
+    print("Main-asset-catalog")

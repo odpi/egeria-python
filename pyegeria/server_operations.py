@@ -461,7 +461,8 @@ class ServerOps(Platform):
 
 
 if __name__ == "__main__":
-    p = ServerOps("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
-    response = p.get_active_service_list_for_server()
-    out = response.json()["result"]
-    print(out)
+    # p = ServerOps("meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False)
+    # response = p.get_active_service_list_for_server()
+    # out = response.json()["result"]
+    # print(out)
+    print("Main-Server Operations")

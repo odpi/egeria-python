@@ -12,66 +12,63 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.cat.get_asset_graph import asset_viewer
-from examples.widgets.cat.get_collection import collection_viewer
-from examples.widgets.cat.get_project_dependencies import project_dependency_viewer
-from examples.widgets.cat.get_project_structure import project_structure_viewer
-from examples.widgets.cat.get_tech_type_elements import tech_viewer
-from examples.widgets.cat.get_tech_type_template import template_viewer
-from examples.widgets.cat.list_assets import display_assets
-from examples.widgets.cat.list_cert_types import display_certifications
-from examples.widgets.cat.list_glossary import display_glossary_terms
-from examples.widgets.cat.list_projects import display_project_list
-from examples.widgets.cat.list_relationships import list_relationships
-from examples.widgets.cat.list_tech_types import display_tech_types
-from examples.widgets.cat.list_todos import display_to_dos as list_todos
-from examples.widgets.cat.list_user_ids import list_user_ids
-from examples.widgets.cat.list_archives import display_archive_list
-from examples.widgets.cli.ops_config import Config
-from examples.widgets.my.list_my_profile import display_my_profile
-from examples.widgets.my.list_my_roles import display_my_roles
-from examples.widgets.my.monitor_my_todos import display_my_todos
-from examples.widgets.my.monitor_open_todos import display_todos
-from examples.widgets.ops.engine_actions import (
-    start_daemon as start_engine_host,
-    stop_daemon as stop_engine_host,
-)
-from examples.widgets.ops.integration_daemon_actions import (
+from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.get_collection import collection_viewer
+from commands.cat.get_project_dependencies import project_dependency_viewer
+from commands.cat.get_project_structure import project_structure_viewer
+from commands.cat.get_tech_type_elements import tech_viewer
+from commands.cat.get_tech_type_template import template_viewer
+from commands.cat.list_assets import display_assets
+from commands.cat.list_cert_types import display_certifications
+from commands.cat.list_glossary import display_glossary_terms
+from commands.cat.list_projects import display_project_list
+from commands.cat.list_relationships import list_relationships
+from commands.cat.list_tech_types import display_tech_types
+from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.list_user_ids import list_user_ids
+from commands.cat.list_archives import display_archive_list
+from commands.cli.ops_config import Config
+from commands.my.list_my_profile import display_my_profile
+from commands.my.list_my_roles import display_my_roles
+from commands.my.monitor_my_todos import display_my_todos
+from commands.my.monitor_open_todos import display_todos
+
+from commands.ops.gov_server_actions import (
     add_catalog_target,
     remove_catalog_target,
     update_catalog_target,
+    refresh_gov_eng_config,
     stop_server,
     start_server,
 )
-from examples.widgets.ops.list_catalog_targets import display_catalog_targets
-from examples.widgets.ops.load_archive import load_archive
-from examples.widgets.ops.monitor_engine_activity import display_engine_activity
-from examples.widgets.ops.monitor_engine_activity_c import display_engine_activity_c
-from examples.widgets.ops.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.ops.monitor_integ_daemon_status import (
+from commands.ops.list_catalog_targets import display_catalog_targets
+from commands.ops.load_archive import load_archive
+from commands.ops.monitor_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity_c import display_engine_activity_c
+from commands.ops.monitor_gov_eng_status import display_gov_eng_status
+from commands.ops.monitor_integ_daemon_status import (
     display_integration_daemon_status,
 )
-from examples.widgets.ops.monitor_platform_status import (
+from commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
-from examples.widgets.ops.monitor_server_list import display_status as display_list
-from examples.widgets.ops.monitor_server_status import (
+from commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
-from examples.widgets.ops.refresh_integration_daemon import refresh_connector
-from examples.widgets.ops.restart_integration_daemon import restart_connector
-from examples.widgets.tech.get_element_info import display_elements
-from examples.widgets.tech.get_guid_info import display_guid
-from examples.widgets.tech.get_tech_details import tech_details_viewer
-from examples.widgets.tech.list_asset_types import display_asset_types
-from examples.widgets.tech.list_elements import list_elements
-from examples.widgets.tech.list_registered_services import display_registered_svcs
-from examples.widgets.tech.list_related_specification import (
+from commands.ops.refresh_integration_daemon import refresh_connector
+from commands.ops.restart_integration_daemon import restart_connector
+from commands.tech.get_element_info import display_elements
+from commands.tech.get_guid_info import display_guid
+from commands.tech.get_tech_details import tech_details_viewer
+from commands.tech.list_asset_types import display_asset_types
+from commands.tech.list_elements import list_elements
+from commands.tech.list_registered_services import display_registered_svcs
+from commands.tech.list_related_specification import (
     display_related_specification,
 )
-from examples.widgets.tech.list_relationship_types import display_relationship_types
-from examples.widgets.tech.list_tech_templates import display_templates_spec
-from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
+from commands.tech.list_relationship_types import display_relationship_types
+from commands.tech.list_tech_templates import display_templates_spec
+from commands.tech.list_valid_metadata_values import display_metadata_values
 
 
 @tui()
@@ -841,7 +838,7 @@ def show_projects(ctx, search_string):
     "--status",
     type=click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
-        case_sensitive="False",
+        case_sensitive=False,
     ),
     help="Enter an optional status filter, default='OPEN'",
     required=False,
@@ -879,7 +876,13 @@ def list_archives(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_archive_list(
-        c.view_server, c.view_server_url, c.userid, c.password, None, c.jupyter, c.width
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        False,
+        c.jupyter,
+        c.width,
     )
 
 
@@ -966,30 +969,21 @@ def show_server(ctx):
     "--full",
     is_flag=True,
     default=False,
-    help="If True, full server descriptions will be shown",
+    help="If set, full server descriptions will be shown",
 )
 @click.pass_context
 def show_server_status(ctx, full):
     """Display a live status view of Egeria servers for the specified Egeria platform"""
     c = ctx.obj
-    if full:
-        display_list(
-            c.metadata_store,
-            c.metadata_store_url,
-            c.admin_user,
-            c.admin_user_password,
-            c.jupyter,
-            c.width,
-        )
-    else:
-        s_display_status(
-            c.metadata_store,
-            c.metadata_store_url,
-            c.admin_user,
-            c.admin_user_password,
-            c.jupyter,
-            c.width,
-        )
+    s_display_status(
+        full,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
 
 
 @show.group("engines")
@@ -1003,12 +997,24 @@ def engine_host(ctx):
 @click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
+@click.option(
+    "--engine-host",
+    default="engine-host",
+    help="Name of the Engine Host to get status for",
+)
 @click.pass_context
-def gov_eng_status(ctx, list):
+def gov_eng_status(ctx, engine_host, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(
-        c.engine_host, c.engine_host_url, c.userid, c.password, list, c.jupyter, c.width
+        engine_host,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        list,
+        c.jupyter,
+        c.width,
     )
 
 
@@ -1124,11 +1130,16 @@ def integration_daemon(ctx):
     default="all",
     help="Name of connector to refresh or 'all' to refresh all",
 )
-def refresh_connectors(ctx, connector):
+@click.option(
+    "--server",
+    default="integration-daemon",
+    help="Name of the integration server to refresh",
+)
+def refresh_connectors(ctx, server, connector):
     """Refresh the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     refresh_connector(
-        connector, c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        connector, server, c.view_server_url, c.view_server, c.userid, c.password
     )
 
 
@@ -1139,11 +1150,16 @@ def refresh_connectors(ctx, connector):
     default="all",
     help="Name of connector to restart or 'all' to restart all",
 )
-def restart_connectors(ctx, connector):
+@click.option(
+    "--server",
+    default="integration-daemon",
+    help="Name of the integration server to refresh",
+)
+def restart_connectors(ctx, server, connector):
     """Restart the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     restart_connector(
-        connector, c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        connector, server, c.view_server_url, c.view_server, c.userid, c.password
     )
 
 
@@ -1161,8 +1177,9 @@ def engine_host(ctx):
     pass
 
 
-engine_host.add_command(start_engine_host)
-engine_host.add_command(stop_engine_host)
+engine_host.add_command(start_server)
+engine_host.add_command(stop_server)
+engine_host.add_command(refresh_gov_eng_config)
 
 
 @tell.group("repository")

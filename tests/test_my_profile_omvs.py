@@ -306,8 +306,8 @@ class TestMyProfile:
         finally:
             m_client.close_session()
 
-    # def test_update_todo_status(self, server_name: str = good_view_server_1):
-    #     m_client = MyProfile(server_name, self.good_platform1_url,
+    # def test_update_todo_status(self, view_server: str = good_view_server_1):
+    #     m_client = MyProfile(view_server, self.good_platform1_url,
     #                          user_id=self.good_user_2, user_pwd='secret')
     #
     #     token = m_client.create_egeria_bearer_token()

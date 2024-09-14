@@ -48,12 +48,12 @@ class GlossaryManager(GlossaryBrowser):
         self,
         server_name: str,
         platform_url: str,
-        user_id: str = None,
+        user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
         self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
 
     #
     #       Get Valid Values for Enumerations
@@ -3386,3 +3386,7 @@ class GlossaryManager(GlossaryBrowser):
         )
 
         return response
+
+
+if __name__ == "__main__":
+    print("Main-Glossary Manager")

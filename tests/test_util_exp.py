@@ -68,7 +68,7 @@ class TestValidators:
         except InvalidParameterException as e:
             print_exception_response(e)
 
-    @pytest.mark.parametrize("server_name, result", [("cocoMDS1", True), ("", False)])
+    @pytest.mark.parametrize("view_server, result", [("cocoMDS1", True), ("", False)])
     def test_validate_server_name(self, server_name, result):
         """
         Test the validator for a server name

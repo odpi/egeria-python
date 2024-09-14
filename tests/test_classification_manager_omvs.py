@@ -163,9 +163,39 @@ def test_get_elements_by_property_value():
         c_client.close_session()
 
 
+def test_get_elements_by_guid():
+    element_guid = "ea67ae71-c674-473e-b38b-689879d2a7d9"
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        result = c_client.get_element_by_guid(element_guid)
+
+        if type(result) is list:
+            print(f"\n\tElement count is: {len(result)}")
+
+            print_json(data=result)
+        elif type(result) is str:
+            console.print("\n\n\t Response is: " + result)
+
+        assert True
+
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
+        print_exception_response(e)
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+
 def test_get_guid_for_name():
     open_metadata_type_name = None
-    property_value = "Dr Tessa Tube"
+    # property_value = "Person:UK:324713"
+    property_value = "simple-metadata-store"
 
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -173,6 +203,44 @@ def test_get_guid_for_name():
     result = c_client.get_guid_for_name(property_value)
 
     if type(result) is list:
+        print(f"\n\tElement count is: {len(result)}")
+        print_json(data=result)
+    elif type(result) is str:
+        console.print("\n\n\t Response is " + result)
+
+    assert True
+
+
+def test_get_element_guid_by_unique_name():
+    open_metadata_type_name = None
+    # property_value = "Person:UK:324713"
+    property_value = "simple-metadata-store"
+
+    c_client = ClassificationManager(view_server, platform_url)
+
+    bearer_token = c_client.create_egeria_bearer_token(user, password)
+    result = c_client.get_element_guid_by_unique_name(property_value, "name")
+
+    if type(result) is list:
+        print(f"\n\tElement count is: {len(result)}")
+        print_json(data=result)
+    elif type(result) is str:
+        console.print("\n\n\t Response is " + result)
+
+    assert True
+
+
+def test_get_element_by_unique_name():
+    open_metadata_type_name = None
+    # property_value = "Person:UK:324713"
+    property_value = "Erin Overview"
+
+    c_client = ClassificationManager(view_server, platform_url)
+
+    bearer_token = c_client.create_egeria_bearer_token(user, password)
+    result = c_client.get_element_by_unique_name(property_value, "name")
+
+    if type(result) is dict:
         print(f"\n\tElement count is: {len(result)}")
         print_json(data=result)
     elif type(result) is str:

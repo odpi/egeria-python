@@ -125,7 +125,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Digital Products"
+            search_string = "*"
 
             response = c_client.find_collections(
                 search_string, None, True, ignore_case=False
@@ -270,7 +270,7 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "11311b9a-58f9-4d8e-94cd-616b809c5f66"
+            parent_guid = "cbf16227-c3cd-4fe2-8175-a768cd2bfb74"
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
             display_name = "Elecraft Radio collection"
@@ -281,7 +281,7 @@ class TestCollectionManager:
             order_property_name = None
 
             response = c_client.create_collection(
-                "Set",
+                "ResultsSet",
                 anchor_guid,
                 parent_guid,
                 parent_relationship_type_name,
@@ -365,17 +365,20 @@ class TestCollectionManager:
                 self.good_view_server_1,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
+                user_pwd="secret",
             )
 
-            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = c_client.create_egeria_bearer_token()
+
             start_time = time.perf_counter()
             anchor_guid = None
             parent_guid = None
             parent_relationship_type_name = None
             parent_at_end1 = False
-            display_name = "Clinical Trials Data"
-            description = "This is the root catalog for clinical trials data"
-            collection_type = "Medical Data"
+            display_name = "Quick Test"
+            description = "This is the root catalog for for a quick test"
+            collection_type = "Test Data"
             is_own_anchor = True
 
             response = c_client.create_root_collection(
@@ -916,12 +919,11 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-
-            # name = "Root Sustainability Collection"
+            guid = "bfac5ae3-f300-46d0-b9cb-bcfec2614df2"
             name = "Root Sustainability Collection"
             # name = "Land Use Classification"
 
-            response = c_client.get_member_list(name)
+            response = c_client.get_member_list(guid)
 
             duration = time.perf_counter() - start_time
             if type(response) is list:
@@ -957,7 +959,6 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
             element_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
-            name = "Root Sustainability Collection"
 
             body = {
                 "class": "CollectionMembershipProperties",

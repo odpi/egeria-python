@@ -108,10 +108,9 @@ class FeedbackManager(Client):
             doesn't pass the user_id on a method call.
          user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP
-            requests.
-            Defaults to False.
+
+         token: str, optional
+            bearer token
 
     """
 
@@ -119,19 +118,17 @@ class FeedbackManager(Client):
         self,
         server_name: str,
         platform_url: str,
-        token: str = None,
-        user_id: str = None,
+        user_id: str,
         user_pwd: str = None,
-        verify_flag: bool = enable_ssl_check,
-        sync_mode: bool = True,
+        token: str = None,
     ):
         self.admin_command_root: str
         Client.__init__(
             self,
             server_name,
             platform_url,
-            user_id=user_id,
-            user_pwd=user_pwd,
+            user_id,
+            user_pwd,
             token=token,
         )
 
@@ -4810,3 +4807,7 @@ class FeedbackManager(Client):
             )
         )
         return response
+
+
+if __name__ == "__main__":
+    print("Main-Feedback Manager")

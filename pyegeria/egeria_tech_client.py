@@ -17,18 +17,22 @@ from pyegeria import (
     EgeriaCat,
     ValidMetadataManager,
     AutomatedCuration,
-    ActionAuthor,
+    # ActionAuthor,
     ClassificationManager,
     RegisteredInfo,
+    RuntimeManager,
+    TEMPLATE_GUIDS,
+    INTEGRATION_GUIDS,
 )
 
 
 class EgeriaTech(
-    ActionAuthor,
+    # ActionAuthor,
     AutomatedCuration,
     EgeriaCat,
     ClassificationManager,
     RegisteredInfo,
+    RuntimeManager,
     ValidMetadataManager,
 ):
     """
@@ -55,23 +59,30 @@ class EgeriaTech(
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        ActionAuthor.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        # ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         AutomatedCuration.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
-        EgeriaCat.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        EgeriaCat.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         ClassificationManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
         RegisteredInfo.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
+        )
+        RuntimeManager.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
         )
         ValidMetadataManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
+
+
+if __name__ == "__main__":
+    print("Main-Tech Client")

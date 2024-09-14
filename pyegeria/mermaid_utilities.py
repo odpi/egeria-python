@@ -105,9 +105,8 @@ def generate_process_graph(
     """
     console = Console()
     a_client = AutomatedCuration(view_server, url, user_id, user_pass)
+    token = a_client.create_egeria_bearer_token()
     try:
-        token = a_client.create_egeria_bearer_token()
-
         start_time = time.perf_counter()
         response = a_client.get_gov_action_process_graph(process_guid)
         duration = time.perf_counter() - start_time
@@ -123,6 +122,8 @@ def generate_process_graph(
             ]
 
             md = f"\n---\ntitle: {gov_process_dn}\n---\nflowchart LR\n"
+            header = '%%{init: {"flowchart": {"htmlLabels": false}} }%%\n'
+            md += header
             element = response["firstProcessStep"]["element"]
             qname = element["processStepProperties"]["qualifiedName"]
             dname = element["processStepProperties"]["displayName"]
@@ -134,7 +135,7 @@ def generate_process_graph(
             ]
             link = response["firstProcessStep"]["linkGUID"]
 
-            md = f'{md}\nStep1[("`**{dname}**\n*nwait_time*: {wait}\n*nmult_trig*: {ignore_mult_trig}`")]'
+            md = f'{md}\nStep1("`**{dname}**\n*nwait_time*: {wait}\n*nmult_trig*: {ignore_mult_trig}`")'
             process_steps = {
                 qname: {
                     "step": "Step1",

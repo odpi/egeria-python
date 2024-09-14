@@ -137,7 +137,7 @@ class MyProfile(Client):
         status: str
             The status of teh action to filter on. Default value is "OPEN".
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -190,7 +190,7 @@ class MyProfile(Client):
         status: str
             The status of teh action to filter on. Default value is "OPEN".
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -236,7 +236,7 @@ class MyProfile(Client):
         status: str
             The status of teh action to filter on. Default value is "OPEN".
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -288,7 +288,7 @@ class MyProfile(Client):
         status: str
             The status of teh action to filter on. Default value is "OPEN"
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -334,7 +334,7 @@ class MyProfile(Client):
         status: str
             The status of the action to filter on. Default value is "OPEN".
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -385,7 +385,7 @@ class MyProfile(Client):
         status: str
             The status of teh action to filter on. Default value is "OPEN".
         server_name: str, optional
-            The name of the server. If not provided, the value of self.server_name will be used.
+            The name of the server. If not provided, the value of self.view_server will be used.
         start_from: int, optional
             The index from which to start retrieving the assigned actions. Default is 0.
         page_size: int, optional
@@ -884,7 +884,7 @@ class MyProfile(Client):
            ----------
           search_string: str
              String to search against. If '*' then all to-do items will match.
-          server_name : str, optional
+          view_server : str, optional
              The name of the server where the to-do item will be created. If not provided,
              the default server name associated with the instance of the class will be used.
           status: str
@@ -1111,3 +1111,7 @@ class MyProfile(Client):
             )
         )
         return
+
+
+if __name__ == "__main__":
+    print("Main-My Profile")

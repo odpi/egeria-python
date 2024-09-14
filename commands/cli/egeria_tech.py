@@ -12,19 +12,19 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.cat.list_tech_types import display_tech_types
-from examples.widgets.cli.ops_config import Config
-from examples.widgets.tech.get_guid_info import display_guid
-from examples.widgets.tech.get_tech_details import tech_details_viewer
-from examples.widgets.tech.list_asset_types import display_asset_types
-from examples.widgets.tech.list_registered_services import display_registered_svcs
-from examples.widgets.tech.list_relationship_types import display_relationship_types
-from examples.widgets.tech.list_tech_templates import display_templates_spec
-from examples.widgets.tech.list_valid_metadata_values import display_metadata_values
-from examples.widgets.cat.get_tech_type_template import template_viewer
-from examples.widgets.tech.list_elements import list_elements
-from examples.widgets.tech.get_element_info import display_elements
-from examples.widgets.tech.list_related_specification import (
+from commands.cat.list_tech_types import display_tech_types
+from commands.cli.ops_config import Config
+from commands.tech.get_guid_info import display_guid
+from commands.tech.get_tech_details import tech_details_viewer
+from commands.tech.list_asset_types import display_asset_types
+from commands.tech.list_registered_services import display_registered_svcs
+from commands.tech.list_relationship_types import display_relationship_types
+from commands.tech.list_tech_templates import display_templates_spec
+from commands.tech.list_valid_metadata_values import display_metadata_values
+from commands.cat.get_tech_type_template import template_viewer
+from commands.tech.list_elements import list_elements
+from commands.tech.get_element_info import display_elements
+from commands.tech.list_related_specification import (
     display_related_specification,
 )
 
@@ -112,7 +112,7 @@ from examples.widgets.tech.list_related_specification import (
     help="Egeria admin password",
 )
 @click.option(
-    "--userid", default="erinoverview", envvar="EGERIA_USER", help="Egeria user"
+    "--userid", default="peterprofile", envvar="EGERIA_USER", help="Egeria user"
 )
 @click.option(
     "--password",

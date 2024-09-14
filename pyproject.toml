@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.8.4.1"
+version = "0.8.4.29"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -16,12 +16,11 @@ classifiers = [
  ]
 packages = [
     { include = "pyegeria"},
-    { include = "examples/widgets/cat" },
-    { include = "examples/widgets/tech" },
-    { include = "examples/widgets/ops"},
-    { include = "examples/widgets/my"},
-    { include = "examples/doc_samples"},
-    { include = "examples/widgets/cli"}
+    { include = "commands/cat" },
+    { include = "commands/tech" },
+    { include = "commands/my"},
+    { include = "commands/ops"},
+    { include = "commands/cli"}
     ]
 
 [tool.poetry.dependencies]
@@ -52,68 +51,68 @@ pytest = "^8.2.2"
 
 
 [tool.poetry.scripts]
-    list_assets = "examples.widgets.cat.list_assets:main"
-    list_tech_types = "examples.widgets.cat.list_tech_types:main"
-    get_asset_graph = "examples.widgets.cat.get_asset_graph:main"
-    get_collection = "examples.widgets.cat.get_collection:main"
-    list_glossary = "examples.widgets.cat.list_glossary:main"
-    get_tech_type_elements = "examples.widgets.cat.get_tech_type_elements:main"
-    get_tech_type_template = "examples.widgets.cat.get_tech_type_template:main"
-    list_projects = "examples.widgets.cat.list_projects:main"
-    list_todos = "examples.widgets.cat.list_todos:main"
-    list_cert_types = "examples.widgets.cat.list_cert_types:main"
-    get_project_structure = "examples.widgets.cat.get_project_structure:main"
-    get_project_dependencies = "examples.widgets.cat.get_project_dependencies:main"
-    list_relationships = "examples.widgets.cat.list_relationships:main"
-    list_user_ids = "examples.widgets.cat.list_user_ids:main"
-    list_archives = "examples.widgets.cat.list_archives:main"
+    list_assets = "commands.cat.list_assets:main"
+    list_tech_types = "commands.cat.list_tech_types:main"
+    get_asset_graph = "commands.cat.get_asset_graph:main"
+    get_collection = "commands.cat.get_collection:main"
+    list_glossary = "commands.cat.list_glossary:main"
+    get_tech_type_elements = "commands.cat.get_tech_type_elements:main"
+    get_tech_type_template = "commands.cat.get_tech_type_template:main"
+    list_projects = "commands.cat.list_projects:main"
+    list_todos = "commands.cat.list_todos:main"
+    list_cert_types = "commands.cat.list_cert_types:main"
+    get_project_structure = "commands.cat.get_project_structure:main"
+    get_project_dependencies = "commands.cat.get_project_dependencies:main"
+    list_relationships = "commands.cat.list_relationships:main"
+    list_user_ids = "commands.cat.list_user_ids:main"
+    list_archives = "commands.cat.list_archives:main"
 
-    monitor_asset_events = "examples.widgets.ops.monitor_asset_events:main"
-    monitor_coco_status = "examples.widgets.ops.monitor_coco_status:main"
-    monitor_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_live"
-    list_engine_activity = "examples.widgets.ops.monitor_engine_activity:main_paging "
-    list_engine_activity_compressed = "examples.widgets.ops.monitor_engine_activity_c:main_paging "
-    monitor_engine_activity_compressed = "examples.widgets.ops.monitor_engine_activity_c:main_live"
+    monitor_asset_events = "commands.ops.monitor_asset_events:main"
+    monitor_coco_status = "commands.ops.monitor_coco_status:main"
+    monitor_engine_activity = "commands.ops.monitor_engine_activity:main_live"
+    list_engine_activity = "commands.ops.monitor_engine_activity:main_paging "
+    list_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_paging "
+    monitor_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_live"
 
-    monitor_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_live"
-    list_gov_eng_status = "examples.widgets.ops.monitor_gov_eng_status:main_paging"
-    monitor_integ_daemon_status = "examples.widgets.ops.monitor_integ_daemon_status:main_live"
-    list_integ_daemon_status = "examples.widgets.ops.monitor_integ_daemon_status:main_paging"
-    monitor_platform_status = "examples.widgets.ops.monitor_platform_status:main"
-    monitor_server_list = "examples.widgets.ops.monitor_server_list:main"
-    monitor_server_status = "examples.widgets.ops.monitor_server_status:main"
-    refresh_integration_daemon = "examples.widgets.ops.refresh_integration_daemon:main"
-    restart_integration_daemon = "examples.widgets.ops.restart_integration_daemon:main"
-    load_archive = "examples.widgets.ops.load_archive:load_archive"
-    load_archive_tui = "examples.widgets.ops.load_archive:tui"
-    list_catalog_targets = "examples.widgets.ops.list_catalog_targets:main"
-    start_daemon = "examples.widgets.ops.engine_actions:start_daemon"
-    stop_daemon = "examples.widgets.ops.engine_actions:stop_daemon"
+    monitor_gov_eng_status = "commands.ops.monitor_gov_eng_status:main_live"
+    list_gov_eng_status = "commands.ops.monitor_gov_eng_status:main_paging"
+    monitor_integ_daemon_status = "commands.ops.monitor_integ_daemon_status:main_live"
+    list_integ_daemon_status = "commands.ops.monitor_integ_daemon_status:main_paging"
+    monitor_platform_status = "commands.ops.monitor_platform_status:main"
+    monitor_server_list = "commands.ops.orig_monitor_server_list:main"
+    monitor_server_status = "commands.ops.monitor_server_status:main"
+    refresh_integration_daemon = "commands.ops.refresh_integration_daemon:main"
+    restart_integration_daemon = "commands.ops.restart_integration_daemon:main"
+    load_archive = "commands.ops.load_archive:load_archive"
+    load_archive_tui = "commands.ops.load_archive:tui"
+    list_catalog_targets = "commands.ops.list_catalog_targets:main"
+    start_daemon = "commands.ops.engine_actions:start_daemon"
+    stop_daemon = "commands.ops.engine_actions:stop_daemon"
 
-    list_my_profile = "examples.widgets.my.list_my_profile:main"
-    monitor_open_todos = "examples.widgets.my.monitor_open_todos:main"
-    monitor_my_todos = "examples.widgets.my.monitor_my_todos:main"
-    create_todo = "examples.widgets.my.todo_actions:create_todo"
-    delete_todo = "examples.widgets.my.todo_actions:delete_todo"
-    change_todo_status = "examples.widgets.my.todo_actions:change_todo_status"
-    mark_todo_complete = "examples.widgets.my.todo_actions:mark_todo_complete"
-    reassign_todo = "examples.widgets.my.todo_actions:reassign_todo"
+    list_my_profile = "commands.my.list_my_profile:main"
+    monitor_open_todos = "commands.my.monitor_open_todos:main"
+    monitor_my_todos = "commands.my.monitor_my_todos:main"
+    create_todo = "commands.my.todo_actions:create_todo"
+    delete_todo = "commands.my.todo_actions:delete_todo"
+    change_todo_status = "commands.my.todo_actions:change_todo_status"
+    mark_todo_complete = "commands.my.todo_actions:mark_todo_complete"
+    reassign_todo = "commands.my.todo_actions:reassign_todo"
 
 
-    hey_egeria_ops = "examples.widgets.cli.egeria_ops:cli"
-    hey_egeria_cat = "examples.widgets.cli.egeria_cat:cli"
-    hey_egeria_tech = "examples.widgets.cli.egeria_cat:cli"
-    hey_egeria_my = "examples.widgets.cli.egeria_my:cli"
-    hey_egeria = "examples.widgets.cli.egeria:cli"
+    hey_egeria_ops = "commands.cli.egeria_ops:cli"
+    hey_egeria_cat = "commands.cli.egeria_cat:cli"
+    hey_egeria_tech = "commands.cli.egeria_cat:cli"
+    hey_egeria_my = "commands.cli.egeria_my:cli"
+    hey_egeria = "commands.cli.egeria:cli"
 
-    get_guid_info = "examples.widgets.tech.get_guid_info:main"
-    get_tech_details = "examples.widgets.tech.get_tech_details:main"
-    list_asset_types = "examples.widgets.tech.list_asset_types:main"
-    list_registered_services = "examples.widgets.tech.list_registered_services:main"
-    list_relationship_types = "examples.widgets.tech.list_relationship_types:main"
-    list_tech_templates = "examples.widgets.tech.list_tech_templates:main"
-    get_element_info = "examples.widgets.tech.get_element_info:main"
-    list_elements = "examples.widgets.tech.list_elements:main"
-    list_related_specification = "examples.widgets.tech.list_related_specification:main"
+    get_guid_info = "commands.tech.get_guid_info:main"
+    get_tech_details = "commands.tech.get_tech_details:main"
+    list_asset_types = "commands.tech.list_asset_types:main"
+    list_registered_services = "commands.tech.list_registered_services:main"
+    list_relationship_types = "commands.tech.list_relationship_types:main"
+    list_tech_templates = "commands.tech.list_tech_templates:main"
+    get_element_info = "commands.tech.get_element_info:main"
+    list_elements = "commands.tech.list_elements:main"
+    list_related_specification = "commands.tech.list_related_specification:main"
 
-    list_valid_metadata_values = "examples.widgets.tech.list_valid_metadata_values:main"
+    list_valid_metadata_values = "commands.tech.list_valid_metadata_values:main"

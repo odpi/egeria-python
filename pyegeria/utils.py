@@ -125,9 +125,7 @@ def print_response(response):
     print(" ")
 
 
-def print_unexpected_response(
-        server_name, platform_name, platform_url, response
-):
+def print_unexpected_response(server_name, platform_name, platform_url, response):
     """
 
     Args:
@@ -178,7 +176,7 @@ def get_last_guid(guids):
 
 
 def body_slimmer(body: dict) -> dict:
-    """ body_slimmer is a little function to remove unused keys from a dict
+    """body_slimmer is a little function to remove unused keys from a dict
 
     Parameters
     ----------
@@ -192,3 +190,6 @@ def body_slimmer(body: dict) -> dict:
     slimmed = {key: value for key, value in body.items() if value}
     return slimmed
 
+
+if __name__ == "__main__":
+    print("Main-Utils")

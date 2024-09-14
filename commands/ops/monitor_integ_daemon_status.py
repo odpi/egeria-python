@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria import ServerOps, AutomatedCuration
+from pyegeria import EgeriaTech, AutomatedCuration
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -36,8 +36,6 @@ EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-da
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
     "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
 )
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
@@ -58,9 +56,9 @@ def display_integration_daemon_status(
     width: int = EGERIA_WIDTH,
     sort: bool = True,
 ):
-    s_client = ServerOps(integ_server, integ_url, user)
-    a_client = AutomatedCuration(view_server, view_url, user, user_pass)
-    token = a_client.create_egeria_bearer_token()
+    s_client = EgeriaTech(view_server, view_url, user, user_pass)
+    token = s_client.create_egeria_bearer_token()
+    server_guid = s_client.get_guid_for_name(integ_server)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -84,7 +82,7 @@ def display_integration_daemon_status(
         table.add_column("Target Element", min_width=20)
         table.add_column("Exception Message", min_width=10)
 
-        daemon_status = s_client.get_integration_daemon_status()
+        daemon_status = s_client.get_server_report(server_guid)
 
         reports = daemon_status["integrationConnectorReports"]
         if sort is True:
@@ -102,7 +100,7 @@ def display_integration_daemon_status(
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = " "
             if connector_guid != "---":
-                targets = a_client.get_catalog_targets(connector_guid)
+                targets = s_client.get_catalog_targets(connector_guid)
                 tgt_tab = Table()
                 tgt_tab.add_column("Target")
                 tgt_tab.add_column("UniqueName")
@@ -172,7 +170,6 @@ def display_integration_daemon_status(
 
     finally:
         s_client.close_session()
-        a_client.close_session()
 
 
 def main_live():

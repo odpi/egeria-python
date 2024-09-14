@@ -10,9 +10,6 @@ import time
 
 # import json
 from pyegeria._client import Client
-from pyegeria._exceptions import (
-    InvalidParameterException,
-)
 from pyegeria._validators import (
     validate_guid,
     validate_search_string,
@@ -46,12 +43,12 @@ class CollectionManager(Client):
         self,
         server_name: str,
         platform_url: str,
-        user_id: str = None,
+        user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
         self.command_base: str = f"/api/open-metadata/collection-manager/collections"
-        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
 
     #
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
@@ -819,7 +816,8 @@ class CollectionManager(Client):
         Parameters
         ----------
         classification_name: str
-            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+            Type of collection to create; e.g RootCollection, Folder, ResultsSet, DigitalProduct, HomeCollection,
+            RecentAccess, WorkItemList, etc.
         anchor_guid: str
             The unique identifier of the element that should be the anchor for the new element. Set to null if no
             anchor, or if this collection is to be its own anchor.
@@ -915,8 +913,10 @@ class CollectionManager(Client):
 
         Parameters
         ----------
+
         classification_name: str
-            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
+            Type of collection to create; e.g RootCollection, Folder, ResultsSet, DigitalProduct, HomeCollection,
+            RecentAccess, WorkItemList, etc.
         anchor_guid: str
             The unique identifier of the element that should be the anchor for the new element.
             Set to null if no anchor, or if this collection is to be its own anchor.
@@ -2718,13 +2718,13 @@ class CollectionManager(Client):
         return
 
     async def _async_get_member_list(
-        self, root_collection_name: str, server_name: str = None
+        self, root_collection_guid: str, server_name: str = None
     ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
-        root_collection_name : str
-            The name of the root collection.
+        root_collection_guid : str
+            The unique GUID of the root collection.
 
         server_name : str, optional
             The name of the server. If not provided, the default server name will be used.
@@ -2743,18 +2743,10 @@ class CollectionManager(Client):
         if server_name is None:
             server_name = self.server_name
         # first find the guid for the collection we are using as root
-        root_guids = await self._async_get_collections_by_name(root_collection_name)
-        if type(root_guids) is str:
-            return False
-        if len(root_guids) != 1:
-            raise InvalidParameterException(
-                "root_collection_name must have exactly one root collection for this method"
-            )
-        root = root_guids[0]["elementHeader"]["guid"]
 
         # now find the members of the collection
         member_list = []
-        members = await self._async_get_collection_members(root)
+        members = await self._async_get_collection_members(root_collection_guid)
         if type(members) is str:
             return False
         # finally, construct a list of  member information
@@ -2775,13 +2767,13 @@ class CollectionManager(Client):
         return member_list
 
     def get_member_list(
-        self, root_collection_name: str, server_name: str = None
+        self, root_collection_guid: str, server_name: str = None
     ) -> list | bool:
         """Get the member list for the collection.
         Parameters
         ----------
-        root_collection_name : str
-            The name of the root collection.
+        root_collection_guid : str
+            The GUID of the root collection.
 
         server_name : str, optional
             The name of the server. If not provided, the default server name will be used.
@@ -2799,6 +2791,10 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_member_list(root_collection_name, server_name)
+            self._async_get_member_list(root_collection_guid, server_name)
         )
         return resp
+
+
+if __name__ == "__main__":
+    print("Main-Collection Manager")

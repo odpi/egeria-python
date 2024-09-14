@@ -2865,7 +2865,7 @@ class AutomatedCuration(Client):
     #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
     #
     #     """
-    #     server = self.server_name if server is None else server
+    #     server = self.view_server if server is None else server
     #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
     #            f"initiate")
     #
@@ -2911,7 +2911,7 @@ class AutomatedCuration(Client):
     #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
     #
     #     """
-    #     server = self.server_name if server is None else server
+    #     server = self.view_server if server is None else server
     #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
     #            f"initiate")
     #
@@ -2957,7 +2957,7 @@ class AutomatedCuration(Client):
     #         The GUID of the initiated action or "Action not initiated" if the action was not initiated.
     #
     #     """
-    #     server = self.server_name if server is None else server
+    #     server = self.view_server if server is None else server
     #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
     #            f"initiate")
     #
@@ -4071,3 +4071,7 @@ class AutomatedCuration(Client):
             )
         )
         return response
+
+
+if __name__ == "__main__":
+    print("Main-Automated Curation")

@@ -97,7 +97,7 @@ class CoreServerConfig(Client):
         Parameters
         ----------
         server_name : str, optional
-            The name of the server. If not provided, it uses the default server_name from the instance.
+            The name of the server. If not provided, it uses the default view_server from the instance.
 
         Returns
         -------
@@ -856,7 +856,7 @@ class CoreServerConfig(Client):
         Parameters
         ----------
         server_name : str, optional
-            The name of the server. If not provided, the method uses the value stored in `self.server_name`.
+            The name of the server. If not provided, the method uses the value stored in `self.view_server`.
 
         Returns
         -------
@@ -1731,7 +1731,7 @@ class CoreServerConfig(Client):
         Parameters
         ----------
         server_name : str, optional
-            The name of the server. If not provided, the value from `self.server_name` will be used.
+            The name of the server. If not provided, the value from `self.view_server` will be used.
 
         Returns
         -------
@@ -2273,7 +2273,7 @@ class CoreServerConfig(Client):
         self.make_request("DELETE", url)
 
     def get_integration_groups_config(self, server_name: str = None) -> list | str:
-        """Get the Integration Groups configuration server specified by the server_name parameter.
+        """Get the Integration Groups configuration server specified by the view_server parameter.
 
         Parameters
         ----------
@@ -2650,3 +2650,7 @@ class CoreServerConfig(Client):
         """
         url = f"{self.admin_command_root}/stores/placeholder-variables"
         self.make_request("DELETE", url)
+
+
+if __name__ == "__main__":
+    print("Main-Core OMAG server config")
