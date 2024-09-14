@@ -698,7 +698,7 @@ class TestPlatform:
 
     def test_activate_server_if_down(self):
         try:
-            server = self.good_server_3
+            server = self.good_server_2
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
 
             response = p_client.activate_server_if_down(server, verbose=True)

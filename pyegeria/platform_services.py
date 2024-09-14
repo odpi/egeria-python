@@ -476,7 +476,7 @@ class Platform(Client):
         ----------
         server : str, optional
             The name of the server to check if configured. If not specified, the server name stored in
-            `self.server_name` will be used.
+            `self.view_server` will be used.
 
         Returns
         -------
@@ -500,7 +500,7 @@ class Platform(Client):
         ----------
         server : str, optional
             The name of the server to check if configured. If not specified,
-            the server name stored in `self.server_name` will be used.
+            the server name stored in `self.view_server` will be used.
 
         Returns
         -------
@@ -1120,7 +1120,4 @@ class Platform(Client):
 
 
 if __name__ == "__main__":
-    p = Platform("meow", "https://127.0.0.1:9443", "garygeeke")
-    response = p.get_known_servers()
-
-    print(response)
+    print("Main-Platform Services")

@@ -114,7 +114,7 @@ def display_status(
                             server_status = "UNKNOWN"
                             status_flag = "[bright yellow]"
 
-                        server_list = (
+                        server_list += (
                             f"{status_flag}{server_types[server_type]}: {server_name}\n"
                         )
                         # server_list = server_list + serv

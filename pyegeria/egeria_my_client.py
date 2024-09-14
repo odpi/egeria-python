@@ -43,5 +43,9 @@ class EgeriaMy(MyProfile, FeedbackManager):
     ):
         MyProfile.__init__(self, server_name, platform_url, user_id, user_pwd, token)
         FeedbackManager.__init__(
-            self, server_name, platform_url, token, user_id, user_pwd
+            self, server_name, platform_url, user_id, user_pwd, token
         )
+
+
+if __name__ == "__main__":
+    print("Main-Egeria My Client")

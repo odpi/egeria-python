@@ -9,7 +9,6 @@ Unit tests for the Utils helper functions using the Pytest framework.
 A simple status display for Governance Actions
 """
 import argparse
-import json
 import os
 import time
 
@@ -23,7 +22,7 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    print_exception_response,
+    EgeriaTech,
 )
 from pyegeria.server_operations import ServerOps
 
@@ -53,7 +52,8 @@ disable_ssl_warnings = True
 
 
 def display_gov_eng_status(
-    server: str,
+    engine_host: str,
+    view_server: str,
     url: str,
     username: str,
     user_pass: str,
@@ -62,8 +62,9 @@ def display_gov_eng_status(
     width: int = EGERIA_WIDTH,
 ):
     console = Console(width=EGERIA_WIDTH)
-    server_name = server
-    s_client = ServerOps(server_name, url, username, user_pass)
+
+    s_client = EgeriaTech(view_server, url, username, user_pass)
+    token = s_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -76,19 +77,21 @@ def display_gov_eng_status(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Server: '{server_name}' running on {url}",
+            caption=f"Server: '{engine_host}' running on {url}",
             expand=True,
         )
-        # table.footer: f"Server {server_name} on Platform {good_platform1_url}"
+        # table.footer: f"Server {view_server} on Platform {good_platform1_url}"
         table.add_column("Gov Engine")
         table.add_column("Gov Engine Type")
         table.add_column("Gov Engine Desc")
         table.add_column("Engine Status")
         table.add_column("Request Types")
 
-        gov_eng_status = s_client.get_governance_engine_summaries()
+        eng_host_guid = s_client.get_guid_for_name(engine_host)
+        gov_eng_status = s_client.get_server_report(eng_host_guid)
+        eng_summaries = gov_eng_status["governanceEngineSummaries"]
         sorted_gov_eng_status = sorted(
-            gov_eng_status, key=lambda k: k.get("governanceEngineName", " ")
+            eng_summaries, key=lambda k: k.get("governanceEngineName", " ")
         )
         for engine in sorted_gov_eng_status:
             gov_eng = engine["governanceEngineName"]
@@ -113,7 +116,7 @@ def display_gov_eng_status(
 
             table.add_row(gov_eng, eng_type, eng_desc, eng_status, eng_req_type_out)
 
-        table.caption = f"Server {server_name} running on {url}"
+        table.caption = f"Server {engine_host} running on {url}"
         return table
 
     try:
@@ -165,19 +168,27 @@ def main_live():
 
 def main_paging():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the server to display status for")
-    parser.add_argument("--url", help="URL Platform to connect to")
+    parser.add_argument(
+        "--engine_host", help="Name of the engine host to display status for"
+    )
+    parser.add_argument("--view_server", help="Name of the view server to use")
+    parser.add_argument("--url", help="URL of Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_ENGINE_HOST
-    url = args.url if args.url is not None else EGERIA_ENGINE_HOST_URL
+    engine_host = (
+        args.engine_host if args.engine_host is not None else EGERIA_ENGINE_HOST
+    )
+    view_server = (
+        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+    )
+    url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     display_gov_eng_status(
-        server=server, url=url, username=userid, user_pass=user_pass, paging=True
+        engine_host, view_server, url, userid, user_pass, paging=True
     )
 
 

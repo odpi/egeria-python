@@ -34,7 +34,6 @@ from ._exceptions import (
     print_exception_response,
 )
 
-# from .utils import print_response, body_slimmer, wrap_text
 from .utils import print_response, body_slimmer
 from ._client import Client
 from .automated_curation_omvs import AutomatedCuration
@@ -61,10 +60,9 @@ from .collection_manager_omvs import CollectionManager
 from .project_manager_omvs import ProjectManager
 from .valid_metadata_omvs import ValidMetadataManager
 from .asset_catalog_omvs import AssetCatalog
-from .Xloaded_resources_omvs import LoadedResources
 from ._deprecated_gov_engine import GovEng
 from .runtime_manager_omvs import RuntimeManager
-from .action_author_omvs import ActionAuthor
+from .x_action_author_omvs import ActionAuthor
 from .glossary_manager_omvs import GlossaryManager
 from .create_tech_guid_lists import build_global_guid_lists
 from .classification_manager_omvs import ClassificationManager
@@ -74,7 +72,6 @@ from .egeria_my_client import EgeriaMy
 from .egeria_cat_client import EgeriaCat
 from .egeria_tech_client import EgeriaTech
 from .egeria_config_client import EgeriaConfig
-from .egeria_ops_client import EgeriaOps
 from .egeria_client import Egeria
 
 #
@@ -87,8 +84,7 @@ from .egeria_client import Egeria
 # the use of custom connectors and templates.
 #
 #
-global TEMPLATE_GUIDS, INTEGRATION_GUIDS
-
+global template_guids, integration_guids
 TEMPLATE_GUIDS["CSV Data File"] = "13770f93-13c8-42be-9bb8-e0b1b1e52b1f"
 TEMPLATE_GUIDS["Keystore File"] = "fbcfcc0c-1652-421f-b49b-c3e1c108768f"
 TEMPLATE_GUIDS["Unity Catalog Server"] = "dcca9788-b30f-4007-b1ac-ec634aff6879"
@@ -181,3 +177,6 @@ INTEGRATION_GUIDS["OpenLineageKafkaListener"] = "980b989c-de78-4e6a-a58d-51049d7
 INTEGRATION_GUIDS["OpenLineageFilePublisher"] = "6271b678-7d22-4cdf-87b1-45b366beaf4e"
 INTEGRATION_GUIDS["ContentPacksCataloguer"] = "6bb2181e-7724-4515-ba3c-877cded55980"
 INTEGRATION_GUIDS["OpenLineageCataloguer"] = "3347ac71-8dd2-403a-bc16-75a71be64bd7"
+
+if __name__ == "__main__":
+    print("Main-Init")

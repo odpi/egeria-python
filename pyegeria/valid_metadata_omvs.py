@@ -1038,3 +1038,7 @@ class ValidMetadataManager(Client):
             self._async_get_typedef_by_name(entity_type, server_name)
         )
         return resp
+
+
+if __name__ == "__main__":
+    print("Main-Valid Metadata Manager")

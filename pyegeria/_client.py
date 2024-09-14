@@ -10,6 +10,7 @@ import asyncio
 import inspect
 import json
 import os
+
 import httpx
 from httpx import AsyncClient, Response
 
@@ -21,10 +22,7 @@ from pyegeria._exceptions import (
 )
 from pyegeria._globals import (
     max_paging_size,
-    TEMPLATE_GUIDS,
-    INTEGRATION_GUIDS,
     enable_ssl_check,
-    disable_ssl_warnings,
 )
 from pyegeria._validators import (
     validate_name,
@@ -85,10 +83,10 @@ class Client:
         platform_url: str,
         user_id: str = None,
         user_pwd: str = None,
-        api_key: str = None,
-        page_size: int = max_paging_size,
         token: str = None,
         token_src: str = None,
+        api_key: str = None,
+        page_size: int = max_paging_size,
     ):
         self.server_name = None
         self.platform_url = None
@@ -655,9 +653,4 @@ class Client:
 
 
 if __name__ == "__main__":
-    try:
-        connection = Client(
-            "active-metadata-store", "https://127.0.0.1:9443", "garygeeke", "foo"
-        )
-    except Exception as e:
-        print(e)
+    print("Main-__client")

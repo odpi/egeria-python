@@ -23,10 +23,9 @@ from pyegeria._validators import (
     validate_url,
     is_json,
 )
-from pyegeria._exceptions import (
-    print_exception_response,
-    InvalidParameterException
-)
+from pyegeria._exceptions import print_exception_response, InvalidParameterException
+
+
 #
 #  Test field validators
 #
@@ -70,7 +69,7 @@ class TestValidators:
         except InvalidParameterException as e:
             print_exception_response(e)
 
-    @pytest.mark.parametrize("server_name, result", [("cocoMDS1", True), ("", False)])
+    @pytest.mark.parametrize("view_server, result", [("cocoMDS1", True), ("", False)])
     def test_validate_server_name(self, server_name, result):
         """
         Test the validator for a server name
@@ -174,11 +173,12 @@ class TestValidators:
                 does_not_raise(),
             ),
             ("", False, pytest.raises(InvalidParameterException)),
-            (   "http://localhost:9444",
+            (
+                "http://localhost:9444",
                 True,
                 # pytest.raises(InvalidParameterException)
-                does_not_raise()
-             ),
+                does_not_raise(),
+            ),
         ],
     )
     def test_validate_url(self, url, result, expectation):

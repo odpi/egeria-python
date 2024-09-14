@@ -13,35 +13,32 @@ import click
 from trogon import tui
 
 # from pyegeria import ServerOps
-from examples.widgets.cli.ops_config import Config
-from examples.widgets.ops.engine_actions import (
-    start_daemon as start_engine_host,
-    stop_daemon as stop_engine_host,
-)
-from examples.widgets.ops.integration_daemon_actions import (
+from commands.cli.ops_config import Config
+
+from commands.ops.gov_server_actions import (
     add_catalog_target,
     remove_catalog_target,
     update_catalog_target,
-    stop_server,
+    refresh_gov_eng_config,
     start_server,
+    stop_server,
 )
-from examples.widgets.ops.list_catalog_targets import display_catalog_targets
-from examples.widgets.ops.load_archive import load_archive
-from examples.widgets.ops.monitor_engine_activity import display_engine_activity
-from examples.widgets.ops.monitor_engine_activity_c import display_engine_activity_c
-from examples.widgets.ops.monitor_gov_eng_status import display_gov_eng_status
-from examples.widgets.ops.monitor_integ_daemon_status import (
+from commands.ops.list_catalog_targets import display_catalog_targets
+from commands.ops.load_archive import load_archive
+from commands.ops.monitor_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity_c import display_engine_activity_c
+from commands.ops.monitor_gov_eng_status import display_gov_eng_status
+from commands.ops.monitor_integ_daemon_status import (
     display_integration_daemon_status,
 )
-from examples.widgets.ops.monitor_platform_status import (
+from commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
-from examples.widgets.ops.monitor_server_list import display_status as display_list
-from examples.widgets.ops.monitor_server_status import (
+from commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
-from examples.widgets.ops.refresh_integration_daemon import refresh_connector
-from examples.widgets.ops.restart_integration_daemon import restart_connector
+from commands.ops.refresh_integration_daemon import refresh_connector
+from commands.ops.restart_integration_daemon import restart_connector
 
 
 # class Config(object):
@@ -122,13 +119,11 @@ from examples.widgets.ops.restart_integration_daemon import restart_connector
     envvar="EGERIA_ADMIN_PASSWORD",
     help="Egeria admin password",
 )
-@click.option(
-    "--userid", default="erinoverview", envvar="EGERIA_USER", help="Egeria user"
-)
+@click.option("--userid", default="garygeeke", envvar="EGERIA_USER", help="Egeria user")
 @click.option(
     "--password",
     default="secret",
-    envvar="EGERIA_PASSWORD",
+    envvar="EGERIA_USER_PASSWORD",
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
@@ -235,30 +230,21 @@ def show_server(ctx):
     "--full",
     is_flag=True,
     default=False,
-    help="If True, full server descriptions will be shown",
+    help="If set, full server descriptions will be shown",
 )
 @click.pass_context
 def show_server_status(ctx, full):
     """Display a live status view of Egeria servers for the specified Egeria platform"""
     c = ctx.obj
-    if full:
-        display_list(
-            c.metadata_store,
-            c.metadata_store_url,
-            c.admin_user,
-            c.admin_user_password,
-            c.jupyter,
-            c.width,
-        )
-    else:
-        s_display_status(
-            c.metadata_store,
-            c.metadata_store_url,
-            c.admin_user,
-            c.admin_user_password,
-            c.jupyter,
-            c.width,
-        )
+    s_display_status(
+        full,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
 
 
 @show.group("engines")
@@ -270,14 +256,26 @@ def engine_host(ctx):
 
 @engine_host.command("status")
 @click.option(
+    "--engine-host",
+    default="engine-host",
+    help="Name of the Engine Host to get status for",
+)
+@click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
 @click.pass_context
-def gov_eng_status(ctx, list):
+def gov_eng_status(ctx, engine_host, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(
-        c.engine_host, c.engine_host_url, c.userid, c.password, list, c.jupyter, c.width
+        c.engine_host,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        list,
+        c.jupyter,
+        c.width,
     )
 
 
@@ -379,6 +377,17 @@ def tell(ctx):
     pass
 
 
+@tell.group("servers")
+@click.pass_context
+def servers(ctx):
+    """Perform actions on OMAG Servers"""
+    pass
+
+
+servers.add_command(start_server)
+servers.add_command(stop_server)
+
+
 @tell.group("integration-daemon")
 @click.pass_context
 def integration_daemon(ctx):
@@ -393,11 +402,16 @@ def integration_daemon(ctx):
     default="all",
     help="Name of connector to refresh or 'all' to refresh all",
 )
-def refresh_connectors(ctx, connector):
+@click.option(
+    "--server",
+    default="integration-daemon",
+    help="Name of the integration server to refresh",
+)
+def refresh_connectors(ctx, server, connector):
     """Refresh the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     refresh_connector(
-        connector, c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        connector, server, c.view_server_url, c.view_server, c.userid, c.password
     )
 
 
@@ -408,19 +422,22 @@ def refresh_connectors(ctx, connector):
     default="all",
     help="Name of connector to restart or 'all' to restart all",
 )
-def restart_connectors(ctx, connector):
+@click.option(
+    "--server",
+    default="integration-daemon",
+    help="Name of the integration server to refresh",
+)
+def restart_connectors(ctx, server, connector):
     """Restart the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     restart_connector(
-        connector, c.integration_daemon, c.integration_daemon_url, c.userid, c.password
+        connector, server, c.view_server_url, c.view_server, c.userid, c.password
     )
 
 
 integration_daemon.add_command(add_catalog_target)
 integration_daemon.add_command(remove_catalog_target)
 integration_daemon.add_command(update_catalog_target)
-integration_daemon.add_command(stop_server)
-integration_daemon.add_command(start_server)
 
 
 @tell.group("engine-host")
@@ -430,8 +447,7 @@ def engine_host(ctx):
     pass
 
 
-engine_host.add_command(start_engine_host)
-engine_host.add_command(stop_engine_host)
+engine_host.add_command(refresh_gov_eng_config)
 
 
 @tell.group("repository")
@@ -442,7 +458,6 @@ def repository(ctx):
 
 
 repository.add_command(load_archive)
-
 
 if __name__ == "__main__":
     cli()

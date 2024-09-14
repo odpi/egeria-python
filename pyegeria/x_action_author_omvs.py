@@ -94,19 +94,19 @@ class ActionAuthor(AutomatedCuration):
 
     # Governance Action Processes
 
-    # async def _async_create_gov_action_process(self, body: dict, server_name:str=None) -> None:
+    # async def _async_create_gov_action_process(self, body: dict, view_server:str=None) -> None:
     #     pass
     #
-    # async def _async_update_gov_action_process(self, process_id: str, body: dict, server_name:str=None) -> None:
+    # async def _async_update_gov_action_process(self, process_id: str, body: dict, view_server:str=None) -> None:
     #     pass
     #
-    # async def _async_publish_gov_action_process(self, process_id:str, server_name:str=None) -> None:
+    # async def _async_publish_gov_action_process(self, process_id:str, view_server:str=None) -> None:
     #     pass
     #
-    # async def _async_withdraw_gov_action_process(self, process_id:str, server_name:str=None) -> None:
+    # async def _async_withdraw_gov_action_process(self, process_id:str, view_server:str=None) -> None:
     #     pass
     #
-    # async def _async_remove_gov_action_process(self, process_id: str, server_name: str = None) -> None:
+    # async def _async_remove_gov_action_process(self, process_id: str, view_server: str = None) -> None:
     #     pass
 
     async def _async_find_gov_action_processes(
@@ -130,52 +130,52 @@ class ActionAuthor(AutomatedCuration):
         pass
 
     # Process Steps
-    #     async def _async_create_gov_action_process_step(self, body: dict, server_name:str=None) -> None:
+    #     async def _async_create_gov_action_process_step(self, body: dict, view_server:str=None) -> None:
     #         pass
     #
-    #     async def _async_update_gov_action_process_step(self, guid: str, body: dict, server_name:str=None) -> None:
+    #     async def _async_update_gov_action_process_step(self, guid: str, body: dict, view_server:str=None) -> None:
     #         pass
     #
-    #     async def _async_remove_gov_action_process_step(self, guid: str, server_name:str=None) -> None:
-    #         pass
-    #
-    #
-    #     async def _async_find_gov_action_process_step(self, search_string: str, server_name: str = None) -> dict | str:
+    #     async def _async_remove_gov_action_process_step(self, guid: str, view_server:str=None) -> None:
     #         pass
     #
     #
-    #     async def _async_get_gov_action_process_step_by_name(self, name: str, server_name: str = None) -> dict | str:
+    #     async def _async_find_gov_action_process_step(self, search_string: str, view_server: str = None) -> dict | str:
     #         pass
     #
     #
-    #     async def _async_get_gov_action_process_step_by_guid(self, guid: str, server_name: str = None) -> dict | str:
+    #     async def _async_get_gov_action_process_step_by_name(self, name: str, view_server: str = None) -> dict | str:
+    #         pass
+    #
+    #
+    #     async def _async_get_gov_action_process_step_by_guid(self, guid: str, view_server: str = None) -> dict | str:
     #         pass
     #
     #
     #     async def _async_setup_first_action_process_step(self, process_guid: str, process_step_guid:str,
-    #                                                      server_name: str = None) -> dict | str:
+    #                                                      view_server: str = None) -> dict | str:
     #         pass
     #
-    #     async def _async_get_first_action_process_step(self, process_guid: str, server_name: str = None) -> dict | str:
+    #     async def _async_get_first_action_process_step(self, process_guid: str, view_server: str = None) -> dict | str:
     #         pass
     #
-    #     async def _async_remove_first_action_process_step(self, process_guid: str, server_name: str = None) -> None:
+    #     async def _async_remove_first_action_process_step(self, process_guid: str, view_server: str = None) -> None:
     #         pass
     #
     #     async def _async_setup_next_action_process_step(self, process_guid: str, process_step_guid:str,
-    #                                                      next_process_step_guid:str, server_name: str = None) -> None:
+    #                                                      next_process_step_guid:str, view_server: str = None) -> None:
     #         pass
     #
     #
-    #     async def _async_update_next_action_process_step(self, guid: str, body: dict, server_name: str = None) -> None:
+    #     async def _async_update_next_action_process_step(self, guid: str, body: dict, view_server: str = None) -> None:
     #         pass
     #
     #
-    #     async def _async_remove_next_action_process_step(self, guid: str, server_name: str = None) -> None:
+    #     async def _async_remove_next_action_process_step(self, guid: str, view_server: str = None) -> None:
     #         pass
     #
     #
-    #     async def _async_get_next_action_process_step(self, guid: str, server_name: str = None) -> dict | str:
+    #     async def _async_get_next_action_process_step(self, guid: str, view_server: str = None) -> dict | str:
     #         pass
 
     # Engine Actions
@@ -197,9 +197,4 @@ class ActionAuthor(AutomatedCuration):
 
 
 if __name__ == "__main__":
-    p = AutomatedCuration(
-        "meow", "https://127.0.0.1:9443", "garygeeke", verify_flag=False
-    )
-    response = p.get_active_service_list_for_server()
-    out = response.json()["result"]
-    print(out)
+    print("Main-Action Author")

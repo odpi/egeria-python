@@ -431,6 +431,401 @@ class ClassificationManager(Client):
         )
         return response
 
+    async def _async_get_element_by_guid(
+        self,
+        element_guid: str,
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> dict | str:
+        """
+        Retrieve element by its unique identifier.  Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier for the element
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+           - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+           - Normally false. Set true when the caller is part of a deduplication function
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        dict | str
+            Returns a string if no elements found; otherwise a dict of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+            ]
+        )
+
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
+
+        url = f"{base_path(self, server_name)}/elements/{element_guid}{possible_query_params}"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+        elements = response.json().get("elements", "No elements found")
+        if type(elements) is list:
+            if len(elements) == 0:
+                return "No elements found"
+        return elements
+
+    def get_element_by_guid(
+        self,
+        element_guid: str,
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> dict | str:
+        """
+        Retrieve element by its unique identifier.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier for the element
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+           - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+           - Normally false. Set true when the caller is part of a deduplication function
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        dict | str
+            Returns a string if no elements found; otherwise a dict of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_element_by_guid(
+                element_guid,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                server_name,
+                time_out,
+            )
+        )
+        return response
+
+    async def _async_get_element_by_unique_name(
+        self,
+        name: str,
+        property_name: str = None,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        effective_time: str = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve the metadata element using the supplied unique element name (typically the qualifiedName,
+        but it is possible to specify a different property name in the request body as long as its unique.
+        If more than one element returned, an exception is thrown. Async version.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: str, optional
+            - optional name of property to search. If not specified, defaults to qualifiedName
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        if server_name is None:
+            server_name = self.server_name
+        property_name = "qualifiedName" if property_name is None else property_name
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+            ]
+        )
+
+        body = {
+            "class": "NameRequestBody",
+            "name": name,
+            "namePropertyName": property_name,
+            "forLineage": for_lineage,
+            "forDuplicateProcessing": for_duplicate_processing,
+            "effectiveTime": effective_time,
+        }
+
+        url = f"{base_path(self, server_name)}/elements/by-unique-name{possible_query_params}"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+        return response.json().get("element", "No elements found")
+
+    def get_element_by_unique_name(
+        self,
+        name: str,
+        property_name: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        effective_time: str = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve the metadata element using the supplied unique element name (typically the qualifiedName,
+        but it is possible to specify a different property name in the request body as long as its unique.
+        If more than one element returned, an exception is thrown.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: str, optional
+            - optional name of property to search. If not specified, defaults to qualifiedName
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_element_by_unique_name(
+                name,
+                property_name,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                server_name,
+                time_out,
+            )
+        )
+        return response
+
+    async def _async_get_element_guid_by_unique_name(
+        self,
+        name: str,
+        property_name: str = None,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        effective_time: str = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve the guid associated with the supplied unique element name.
+        If more than one element returned, an exception is thrown. Async version.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: str, optional
+            - optional name of property to search. If not specified, defaults to qualifiedName
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        if server_name is None:
+            server_name = self.server_name
+        property_name = "qualifiedName" if property_name is None else property_name
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+            ]
+        )
+
+        body = {
+            "class": "NameRequestBody",
+            "name": name,
+            "namePropertyName": property_name,
+            "forLineage": for_lineage,
+            "forDuplicateProcessing": for_duplicate_processing,
+            "effectiveTime": effective_time,
+        }
+
+        url = f"{base_path(self, server_name)}/elements/guid-by-unique-name{possible_query_params}"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+        return response.json().get("guid", "No elements found")
+
+    def get_element_guid_by_unique_name(
+        self,
+        name: str,
+        property_name: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        effective_time: str = None,
+        server_name: str = None,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve the guid associated with the supplied unique element name.
+        If more than one element returned, an exception is thrown.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: str, optional
+            - optional name of property to search. If not specified, defaults to qualifiedName
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        server_name: str, default = None
+            - name of the server instances for this request.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_element_guid_by_unique_name(
+                name,
+                property_name,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                server_name,
+                time_out,
+            )
+        )
+        return response
+
     async def _async_get_guid_for_name(
         self, name: str, server_name: str = None, time_out: int = default_time_out
     ) -> list | str:
@@ -4199,7 +4594,7 @@ class ClassificationManager(Client):
         time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the security tags for an element. Async versuib,
+        Add or replace the security tags for an element. Async version,
 
         Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
 
@@ -5036,3 +5431,7 @@ class ClassificationManager(Client):
                 time_out,
             )
         )
+
+
+if __name__ == "__main__":
+    print("Main-Classification Manager")

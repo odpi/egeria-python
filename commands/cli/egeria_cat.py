@@ -12,24 +12,24 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from examples.widgets.cat.get_asset_graph import asset_viewer
-from examples.widgets.cat.get_collection import collection_viewer
-from examples.widgets.cat.get_tech_type_elements import tech_viewer
-from examples.widgets.cat.get_tech_type_template import template_viewer
-from examples.widgets.cat.list_assets import display_assets
-from examples.widgets.cat.list_glossary import display_glossary_terms
-from examples.widgets.cat.list_tech_types import display_tech_types
-from examples.widgets.cat.list_projects import display_project_list
-from examples.widgets.cat.list_todos import display_to_dos as list_todos
-from examples.widgets.cat.get_project_structure import project_structure_viewer
-from examples.widgets.cat.get_project_dependencies import project_dependency_viewer
-from examples.widgets.cat.list_cert_types import display_certifications
-from examples.widgets.cat.list_relationships import list_relationships
-from examples.widgets.cat.list_user_ids import list_user_ids
-from examples.widgets.cat.list_archives import display_archive_list
+from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.get_collection import collection_viewer
+from commands.cat.get_tech_type_elements import tech_viewer
+from commands.cat.get_tech_type_template import template_viewer
+from commands.cat.list_assets import display_assets
+from commands.cat.list_glossary import display_glossary_terms
+from commands.cat.list_tech_types import display_tech_types
+from commands.cat.list_projects import display_project_list
+from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.get_project_structure import project_structure_viewer
+from commands.cat.get_project_dependencies import project_dependency_viewer
+from commands.cat.list_cert_types import display_certifications
+from commands.cat.list_relationships import list_relationships
+from commands.cat.list_user_ids import list_user_ids
+from commands.cat.list_archives import display_archive_list
 
 # from pyegeria import ServerOps
-from examples.widgets.cli.ops_config import Config
+from commands.cli.ops_config import Config
 
 
 # class Config(object):

@@ -40,12 +40,12 @@ class ProjectManager(Client):
         self,
         server_name: str,
         platform_url: str,
-        user_id: str = None,
+        user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
         self.command_base: str = f"/api/open-metadata/project-manager/metadata-elements"
-        Client.__init__(self, server_name, platform_url, user_id=user_id, token=token)
+        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
 
     #
     #       Retrieving Projects= Information - https://egeria-project.org/concepts/project
@@ -763,7 +763,7 @@ class ProjectManager(Client):
             A dict representing the details of the project to create.
         classification: str, optional
             An optional project classification. See https://egeria-project.org/types/1/0130-Projects for values.
-        server_name: str, optional, defaults to None
+        view_server: str, optional, defaults to None
             The name of the server to  configure. If not provided, the server name associated with the
             instance is used.
 
@@ -828,7 +828,7 @@ class ProjectManager(Client):
             A dict representing the details of the project to create.
         classification: str, optional
             An optional project classification. See https://egeria-project.org/types/1/0130-Projects for values.
-        server_name: str, optional, defaults to None
+        view_server: str, optional, defaults to None
             The name of the server to  configure. If not provided, the server name associated with the instance
              is used.
 
@@ -1935,3 +1935,7 @@ class ProjectManager(Client):
             )
         )
         return
+
+
+if __name__ == "__main__":
+    print("Main-Project Manager")

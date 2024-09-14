@@ -103,7 +103,7 @@ def validate_server_name(server_name: str) -> bool:
                 "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
                     "user_action"
                 ],
-                "exceptionProperties": {"server_name": server_name},
+                "exceptionProperties": {"view_server": server_name},
             }
         )
         raise InvalidParameterException(exc_msg)
@@ -214,8 +214,11 @@ def validate_search_string(search_string: str) -> bool:
     caller_method = inspect.getframeinfo(calling_frame).function
 
     if (search_string is None) or (len(search_string) == 0):
-        msg = str(OMAGCommonErrorCode.NULL_SEARCH_STRING.value["message_template"].
-                  format('search_string', caller_method))
+        msg = str(
+            OMAGCommonErrorCode.NULL_SEARCH_STRING.value["message_template"].format(
+                "search_string", caller_method
+            )
+        )
         exc_msg = json.dumps(
             {
                 "class": "VoidResponse",
@@ -329,8 +332,8 @@ def validate_url(url: str) -> bool:
 
     # The following hack allows localhost to be used as a hostname - which is disallowed by the
     # validations package
-    if ('localhost' in url) and ('localhost.' not in url):
-        url = url.replace('localhost', '127.0.0.1')
+    if ("localhost" in url) and ("localhost." not in url):
+        url = url.replace("localhost", "127.0.0.1")
 
     result = validators.url(url)
     if result is not True:

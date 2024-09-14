@@ -17,7 +17,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import AutomatedCuration, RuntimeManager
+from pyegeria import AutomatedCuration, RuntimeManager, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -52,6 +52,40 @@ class TestRuntimeManager:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
+    def test_get_config_properties(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"
+            connector_name = "UnityCatalogServerSynchronizer"
+            start_time = time.perf_counter()
+            response = r_client.get_config_properties(server_guid, connector_name)
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Config Properties:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
     def test_get_platforms_by_name(self):
         try:
             r_client = RuntimeManager(
@@ -69,6 +103,8 @@ class TestRuntimeManager:
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            else:
+                print(f"--> response was {response}")
             assert True
 
         except (
@@ -187,13 +223,14 @@ class TestRuntimeManager:
             r_client = RuntimeManager(
                 self.good_view_server_1,
                 self.good_platform1_url,
-                user_id=self.good_user_2,
+                user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "Survey Engine Host"
+            # filter = "Survey Engine Host"
+            filter = "simple-metadata-store"
             response = r_client.get_servers_by_name(filter)
 
             duration = time.perf_counter() - start_time
@@ -225,7 +262,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "6f45a1cd-4864-425f-9c4d-63ce55d49152"
+            server_guid = "7c6e733e-c35c-471b-83f7-c853c593a4c3"
             start_time = time.perf_counter()
             response = r_client.get_server_by_guid(server_guid)
 
@@ -254,13 +291,183 @@ class TestRuntimeManager:
             r_client = RuntimeManager(
                 self.good_view_server_1,
                 self.good_platform1_url,
-                user_id=self.good_user_2,
+                user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "6f45a1cd-4864-425f-9c4d-63ce55d49152"
+            server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"
             start_time = time.perf_counter()
             response = r_client.get_server_report(server_guid)
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_get_server_report(self):
+        try:
+            r_client = EgeriaTech(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            filter = "integration-daemon"
+            start_time = time.perf_counter()
+            server_guid = r_client.get_guid_for_name(filter)
+            print(f"\n\tServer GUID is {server_guid}")
+            response = r_client.get_server_report(server_guid)
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Server Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_restart_integ_daemon_connectors(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"  # integ_daemon
+            archive_file = "content-packs/CocoComboArchive.omarchive"
+            start_time = time.perf_counter()
+            response = r_client.restart_integration_connectors(server_guid)
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_shutdown_server(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = "3601a8cd-2325-4992-915e-d454716b155c"  # integ_daemon
+            archive_file = "content-packs/CocoComboArchive.omarchive"
+            start_time = time.perf_counter()
+            response = r_client.shutdown_server(server_guid)
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_activate_server_with_stored_config(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = "3601a8cd-2325-4992-915e-d454716b155c"  # integ_daemon
+            archive_file = "content-packs/CocoComboArchive.omarchive"
+            start_time = time.perf_counter()
+            response = r_client.activate_server_with_stored_config(server_guid)
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_add_archive_file(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = "7c6e733e-c35c-471b-83f7-c853c593a4c3"
+            archive_file = "content-packs/CocoComboArchive.omarchive"
+            start_time = time.perf_counter()
+            response = r_client.add_archive_file(archive_file, server_guid)
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")

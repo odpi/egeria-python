@@ -72,43 +72,43 @@ class Egeria(
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        AssetCatalog.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         CollectionManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
-        EgeriaMy.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        EgeriaMy.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
         GlossaryManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
 
         ProjectManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
 
         RuntimeManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token=token
+            self, view_server, platform_url, user_id, user_pwd, token=token
         )
-        ServerOps.__init__(self, server_name, platform_url, user_id, user_pwd)
+        ServerOps.__init__(self, view_server, platform_url, user_id, user_pwd)
 
-        EgeriaConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
+        EgeriaConfig.__init__(self, view_server, platform_url, user_id, user_pwd)
 
-        ActionAuthor.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         AutomatedCuration.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
         ClassificationManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
         RegisteredInfo.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
         ValidMetadataManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )

@@ -1100,7 +1100,7 @@ class FullServerConfig(CoreServerConfig):
             The body of the view service request.
 
         server_name : str, optional
-            The name of the server. If not provided, the value of `self.server_name` will be used.
+            The name of the server. If not provided, the value of `self.view_server` will be used.
 
         Returns
         -------
@@ -1327,3 +1327,7 @@ class FullServerConfig(CoreServerConfig):
     def remove_lineage_warehouse_services(self, lineage_server: str = None) -> None:
         url = f"{self.admin_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
         self.make_request("DELETE", url)
+
+
+if __name__ == "__main__":
+    print("Main-Full OMAG Server Config")

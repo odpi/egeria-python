@@ -54,20 +54,20 @@ class EgeriaCat(
         user_pwd: str = None,
         token: str = None,
     ):
-        AssetCatalog.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token=token
-        )
+        AssetCatalog.__init__(self, server_name, platform_url, user_id, user_pwd, token)
         CollectionManager.__init__(
             self, server_name, platform_url, user_id, user_pwd, token
         )
-        EgeriaMy.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token=token
-        )
+        EgeriaMy.__init__(self, server_name, platform_url, user_id, user_pwd, token)
 
         GlossaryManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token=token
+            self, server_name, platform_url, user_id, user_pwd, token
         )
 
         ProjectManager.__init__(
             self, server_name, platform_url, user_id, user_pwd, token
         )
+
+
+if __name__ == "__main__":
+    print("Egeria Cat Client")
