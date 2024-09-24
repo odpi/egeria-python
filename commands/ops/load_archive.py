@@ -36,7 +36,6 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 @click.command("load-archive")
 @click.option(
     "--file",
-    prompt="Path on the Metadata Server of the archive file to load",
     default="content-packs/CocoComboArchive.omarchive",
     help="Full path on the Metadata Server to the archive file to load",
 )
@@ -58,8 +57,10 @@ def load_archive(file, server, view_server, url, userid, password, timeout):
     try:
         s_client = EgeriaTech(view_server, url, userid, password)
         token = s_client.create_egeria_bearer_token()
-        server_guid = s_client.get_guid_for_name(server)
-        s_client.add_archive_file(file, server_guid, timeout=timeout)
+        server_guid = None
+        s_client.add_archive_file(
+            file, server_guid, EGERIA_METADATA_STORE, time_out=timeout
+        )
 
         click.echo(f"Loaded archive: {file}")
 

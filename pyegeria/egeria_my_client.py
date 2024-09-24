@@ -18,7 +18,7 @@ class EgeriaMy(MyProfile, FeedbackManager):
 
     Attributes:
 
-        server_name: str
+        view_server: str
                 Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
@@ -35,15 +35,20 @@ class EgeriaMy(MyProfile, FeedbackManager):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        MyProfile.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
+        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         FeedbackManager.__init__(
-            self, server_name, platform_url, user_id, user_pwd, token
+            self, view_server, platform_url, user_id, user_pwd, token
         )
 
 

@@ -93,7 +93,7 @@ class TestMyProfile:
             )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            actor = "a588fb08-ae09-4415-bd5d-991882ceacba"
+            actor = "b1f21e62-4d71-4f9b-8339-66ecd5795149"
 
             response = m_client.get_assigned_actions(actor)
 
@@ -153,7 +153,7 @@ class TestMyProfile:
             )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
+            erins_guid = "b1f21e62-4d71-4f9b-8339-66ecd5795149"
             to_do = "Mandy will book a holiday"
             to_do_desc = "Another holiday is always good"
             to_do_type = "holiday"
@@ -199,9 +199,9 @@ class TestMyProfile:
             )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            todo_guid = "766e5ac5-ba62-4210-803c-45acdaf12b32"
+            todo_guid = "91f6712a-a5ee-4c05-ac18-f7fd996c87ca"
             # 10a5e593-cc8a-45d0-a191-d060656363e9
-            response = m_client.get_to_do(todo_guid, server_name)
+            response = m_client.get_to_do(todo_guid)
 
             if type(response) is dict:
                 print_json(data=response)
@@ -230,7 +230,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do("*", status="COMPLETE")
+            response = m_client.find_to_do("*", status="OPEN")
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
@@ -261,7 +261,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.get_to_dos_by_type("drink", server_name, status=None)
+            response = m_client.get_to_dos_by_type("holiday", "Open")
 
             if type(response) is list:
                 print_json(data=response)
@@ -305,31 +305,3 @@ class TestMyProfile:
             console.print_exception(show_locals=True, width=200)
         finally:
             m_client.close_session()
-
-    # def test_update_todo_status(self, view_server: str = good_view_server_1):
-    #     m_client = MyProfile(view_server, self.good_platform1_url,
-    #                          user_id=self.good_user_2, user_pwd='secret')
-    #
-    #     token = m_client.create_egeria_bearer_token()
-    #     new_status = "Waiting"
-    #     todo_guid = " 766e5ac5-ba62-4210-803c-45acdaf12b32"
-    #
-    #     try:
-    #
-    #         body = {
-    #             "properties": {
-    #                 "class": "ToDoProperties",
-    #                 "toDoStatus": new_status
-    #             },
-    #         }
-    #         m_client.update_to_do(todo_guid, body, is_merge_update=True)
-    #
-    #         print(f"Marked todo item {todo_guid} as complete.")
-    #
-    #     except (InvalidParameterException, PropertyServerException) as e:
-    #         print_exception_response(e)
-    #         console.print_exception(show_locals=True)
-    #     finally:
-    #         m_client.close_session()
-    #
-    #

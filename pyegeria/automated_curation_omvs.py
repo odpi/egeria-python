@@ -23,7 +23,7 @@ class AutomatedCuration(Client):
     """Set up and maintain automation services in Egeria.
 
     Attributes:
-        server_name : str
+        view_server : str
             The name of the View Server to use.
         platform_url : str
             URL of the server platform to connect to
@@ -38,25 +38,25 @@ class AutomatedCuration(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
-        self.cur_command_root = f"{platform_url}/servers/"
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
-    async def _async_create_element_from_template(
-        self, body: dict, server: str = None
-    ) -> str:
+    async def _async_create_element_from_template(self, body: dict) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
         body : str
             The json body used to instantiate the template.
-        server : str, optional
-           The name of the view server to use. If not provided, the default server name will be used.
 
         Returns
         -------
@@ -95,20 +95,17 @@ class AutomatedCuration(Client):
            }
         """
 
-        server = self.server_name if server is None else server
-
-        url = f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-templates/new-element"
+        url = f"{self.curation_command_root}/catalog-templates/new-element"
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "GUID failed to be returned")
 
-    def create_element_from_template(self, body: dict, server: str = None) -> str:
+    def create_element_from_template(self, body: dict) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
         body : str
              The json body used to instantiate the template.
-        server : str, optional
-            The name of the view server to use. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -148,7 +145,7 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_element_from_template(body, server)
+            self._async_create_element_from_template(body)
         )
         return response
 
@@ -158,7 +155,6 @@ class AutomatedCuration(Client):
         host_name: str,
         port: str,
         description: str = None,
-        server: str = None,
     ) -> str:
         """Create a Kafka server element from a template. Async version.
 
@@ -176,8 +172,7 @@ class AutomatedCuration(Client):
         description: str, opt
             A description of the Kafka server.
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -196,7 +191,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_kafka_server_element_from_template(
@@ -205,7 +200,6 @@ class AutomatedCuration(Client):
         host_name: str,
         port: str,
         description: str = None,
-        server: str = None,
     ) -> str:
         """Create a Kafka server element from a template.
 
@@ -223,8 +217,7 @@ class AutomatedCuration(Client):
         description: str, opt
             A description of the Kafka server.
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -234,7 +227,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_kafka_server_element_from_template(
-                kafka_server, host_name, port, description, server
+                kafka_server, host_name, port, description
             )
         )
         return response
@@ -247,7 +240,6 @@ class AutomatedCuration(Client):
         db_user: str,
         db_pwd: str,
         description: str = None,
-        server: str = None,
     ) -> str:
         """Create a Postgres server element from a template. Async version.
 
@@ -271,8 +263,7 @@ class AutomatedCuration(Client):
         description: str, opt
             A description of the element.
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -292,7 +283,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_postgres_server_element_from_template(
@@ -303,7 +294,6 @@ class AutomatedCuration(Client):
         db_user: str,
         db_pwd: str,
         description: str = None,
-        server: str = None,
     ) -> str:
         """Create a Postgres server element from a template.
 
@@ -318,8 +308,7 @@ class AutomatedCuration(Client):
         port : str
             The port number of the Postgres server.
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         description: str, opt
             A description of the elementr.
@@ -338,7 +327,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_postgres_server_element_from_template(
-                postgres_server, host_name, port, db_user, db_pwd, description, server
+                postgres_server, host_name, port, db_user, db_pwd, description
             )
         )
         return response
@@ -350,7 +339,6 @@ class AutomatedCuration(Client):
         file_system: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a File folder element from a template.
         Async version.
@@ -373,8 +361,7 @@ class AutomatedCuration(Client):
         version: str, opt
             version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -393,7 +380,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_folder_element_from_template(
@@ -403,7 +390,6 @@ class AutomatedCuration(Client):
         file_system: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a File folder element from a template.
 
@@ -425,8 +411,7 @@ class AutomatedCuration(Client):
         version: str, opt
             version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -436,7 +421,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_folder_element_from_template(
-                path_name, folder_name, file_system, description, version, server
+                path_name, folder_name, file_system, description, version
             )
         )
         return response
@@ -448,7 +433,6 @@ class AutomatedCuration(Client):
         port: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -469,8 +453,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -489,7 +472,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_server_element_from_template(
@@ -499,7 +482,6 @@ class AutomatedCuration(Client):
         port: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -520,8 +502,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -531,7 +512,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_uc_server_element_from_template(
-                server_name, host_url, port, description, version, server
+                server_name, host_url, port, description, version
             )
         )
         return response
@@ -542,7 +523,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template. Async version.
 
@@ -560,8 +540,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -579,7 +558,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_catalog_element_from_template(
@@ -588,7 +567,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template.
 
@@ -606,8 +584,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -617,7 +594,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_uc_catalog_element_from_template(
-                uc_catalog, network_address, description, version, server
+                uc_catalog, network_address, description, version
             )
         )
         return response
@@ -629,7 +606,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog schema element from a template. Async version.
 
@@ -650,8 +626,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -670,7 +645,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_schema_element_from_template(
@@ -680,7 +655,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog schema element from a template. Async version.
 
@@ -701,8 +675,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -712,7 +685,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_uc_schema_element_from_template(
-                uc_catalog, uc_schema, network_address, description, version, server
+                uc_catalog, uc_schema, network_address, description, version
             )
         )
         return response
@@ -728,7 +701,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog table element from a template. Async version.
 
@@ -758,8 +730,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -782,7 +753,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_table_element_from_template(
@@ -796,7 +767,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog table element from a template.
 
@@ -826,8 +796,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -846,7 +815,6 @@ class AutomatedCuration(Client):
                 network_address,
                 description,
                 version,
-                server,
             )
         )
         return response
@@ -859,7 +827,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog function element from a template. Async version.
 
@@ -883,8 +850,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -904,7 +870,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_function_element_from_template(
@@ -915,7 +881,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog function element from a template.
 
@@ -939,8 +904,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -956,7 +920,6 @@ class AutomatedCuration(Client):
                 network_address,
                 description,
                 version,
-                server,
             )
         )
         return response
@@ -971,7 +934,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -988,7 +950,7 @@ class AutomatedCuration(Client):
 
         uc_vol_type: str
             The volume type of the UC volume we are configuring. Currently Managed or External.
-        uc_storage_locL str
+        uc_storage_loc: str
             The location with the data associated with this element is stored.
 
         network_address : str
@@ -1000,8 +962,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -1023,7 +984,7 @@ class AutomatedCuration(Client):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s, server)
+        response = await self._async_create_element_from_template(body_s)
         return str(response)
 
     def create_uc_volume_element_from_template(
@@ -1036,7 +997,6 @@ class AutomatedCuration(Client):
         network_address: str,
         description: str = None,
         version: str = None,
-        server: str = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -1053,7 +1013,8 @@ class AutomatedCuration(Client):
 
         uc_vol_type: str
             The volume type of the UC volume we are configuring. Currently Managed or External.
-        uc_storage_locL str
+
+        uc_storage_loc: str
             The location with the data associated with this element is stored.
 
         network_address : str
@@ -1065,8 +1026,7 @@ class AutomatedCuration(Client):
         version: str, opt
                 version of the element - typically of the form x.y.z
 
-        server : str, optional
-            The name of the view server to use. Default uses the client instance.
+
 
         Returns
         -------
@@ -1084,7 +1044,6 @@ class AutomatedCuration(Client):
                 network_address,
                 description,
                 version,
-                server,
             )
         )
         return response
@@ -1093,13 +1052,12 @@ class AutomatedCuration(Client):
     # Engine Actions
     #
     async def _async_get_engine_actions(
-        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+        self, start_from: int = 0, page_size: int = max_paging_size
     ) -> list:
         """Retrieve the engine actions that are known to the server. Async version.
         Parameters
         ----------
-        server : str, optional
-            The name of the server. If not provided, it uses the default server name.
+
         start_from : int, optional
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
@@ -1120,10 +1078,9 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        server = self.server_name if server is None else server
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions?"
+            f"{self.curation_command_root}/engine-actions?"
             f"startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1131,13 +1088,12 @@ class AutomatedCuration(Client):
         return response.json().get("elements", "No elements")
 
     def get_engine_actions(
-        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+        self, start_from: int = 0, page_size: int = max_paging_size
     ) -> list:
         """Retrieve the engine actions that are known to the server.
         Parameters
         ----------
-        server : str, optional
-            The name of the server. If not provided, it uses the default server name.
+
         start_from : int, optional
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
@@ -1160,21 +1116,18 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_actions(server, start_from, page_size)
+            self._async_get_engine_actions(start_from, page_size)
         )
         return response
 
-    async def _async_get_engine_action(
-        self, engine_action_guid: str, server: str = None
-    ) -> dict:
+    async def _async_get_engine_action(self, engine_action_guid: str) -> dict:
         """Request the status and properties of an executing engine action request. Async version.
         Parameters
         ----------
         engine_action_guid : str
             The GUID of the engine action to retrieve.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1191,25 +1144,20 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        server = self.server_name if server is None else server
 
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/"
-            f"{engine_action_guid}"
-        )
+        url = f"{self.curation_command_root}/engine-actions/" f"{engine_action_guid}"
 
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "No element found")
 
-    def get_engine_action(self, engine_action_guid: str, server: str = None) -> dict:
+    def get_engine_action(self, engine_action_guid: str) -> dict:
         """Request the status and properties of an executing engine action request.
         Parameters
         ----------
         engine_action_guid : str
             The GUID of the engine action to retrieve.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1228,21 +1176,18 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_action(engine_action_guid, server)
+            self._async_get_engine_action(engine_action_guid)
         )
         return response
 
-    async def _async_cancel_engine_action(
-        self, engine_action_guid: str, server: str = None
-    ) -> None:
+    async def _async_cancel_engine_action(self, engine_action_guid: str) -> None:
         """Request that an engine action request is cancelled and any running governance service is stopped. Async Ver.
         Parameters
         ----------
         engine_action_guid : str
             The GUID of the engine action to retrieve.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1259,25 +1204,24 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        server = self.server_name if server is None else server
+
         validate_guid(engine_action_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/"
+            f"{self.curation_command_root}/engine-actions/"
             f"{engine_action_guid}/cancel"
         )
 
         await self._async_make_request("POST", url)
 
-    def cancel_engine_action(self, engine_action_guid: str, server: str = None) -> None:
+    def cancel_engine_action(self, engine_action_guid: str) -> None:
         """Request that an engine action request is cancelled and any running governance service is stopped.
         Parameters
         ----------
         engine_action_guid : str
             The GUID of the engine action to retrieve.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1295,20 +1239,17 @@ class AutomatedCuration(Client):
         For more information see: https://egeria-project.org/concepts/engine-action
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_cancel_engine_action(engine_action_guid, server)
-        )
+        loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
         return
 
     async def _async_get_active_engine_actions(
-        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+        self, start_from: int = 0, page_size: int = max_paging_size
     ) -> list | str:
         """Retrieve the engine actions that are still in process. Async Version.
 
         Parameters:
         ----------
-        server : str, optional
-            The name of the server. If not provided, it uses the default server name.
+
         start_from : int, optional
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
@@ -1328,10 +1269,9 @@ class AutomatedCuration(Client):
         For more information see: https://egeria-project.org/concepts/engine-action
 
         """
-        server = self.server_name if server is None else server
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/active?"
+            f"{self.curation_command_root}/engine-actions/active?"
             f"startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1339,14 +1279,13 @@ class AutomatedCuration(Client):
         return response.json().get("elements", "no actions")
 
     def get_active_engine_actions(
-        self, server: str = None, start_from: int = 0, page_size: int = 0
+        self, start_from: int = 0, page_size: int = 0
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
         Parameters:
         ----------
-        server : str, optional
-            The name of the server. If not provided, it uses the default server name.
+
         start_from : int, optional
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
@@ -1367,14 +1306,13 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_active_engine_actions(server, start_from, page_size)
+            self._async_get_active_engine_actions(start_from, page_size)
         )
         return response
 
     async def _async_get_engine_actions_by_name(
         self,
         name: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -1384,9 +1322,7 @@ class AutomatedCuration(Client):
         ----------
         name : str
             The name of the engine action to retrieve.
-        server : str, optional
-             The name of the server to retrieve the engine action from. If not provided, the default server specified in
-             the instance will be used.
+
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
@@ -1409,11 +1345,11 @@ class AutomatedCuration(Client):
         For more information see: https://egeria-project.org/concepts/engine-action
 
         """
-        server = self.server_name if server is None else server
+
         validate_name(name)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/by-name?"
+            f"{self.curation_command_root}/engine-actions/by-name?"
             f"startFrom={start_from}&pageSize={page_size}"
         )
         body = {"filter": name}
@@ -1423,7 +1359,6 @@ class AutomatedCuration(Client):
     def get_engine_actions_by_name(
         self,
         name: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -1434,9 +1369,7 @@ class AutomatedCuration(Client):
         ----------
         name : str
             The name of the engine action to retrieve.
-        server : str, optional
-            The name of the server to retrieve the engine action from. If not provided, the default server specified in
-            the instance will be used.
+
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
@@ -1461,14 +1394,13 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_actions_by_name(name, server, start_from, page_size)
+            self._async_get_engine_actions_by_name(name, start_from, page_size)
         )
         return response
 
     async def _async_find_engine_actions(
         self,
         search_string: str,
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -1481,8 +1413,7 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -1515,7 +1446,7 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
         """
-        server = self.server_name if server is None else server
+
         validate_search_string(search_string)
         if search_string == "*":
             search_string = None
@@ -1524,7 +1455,7 @@ class AutomatedCuration(Client):
         ignore_case_s = str(ignore_case).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/engine-actions/"
+            f"{self.curation_command_root}/engine-actions/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -1535,7 +1466,6 @@ class AutomatedCuration(Client):
     def find_engine_actions(
         self,
         search_string: str = "*",
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -1548,8 +1478,7 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -1587,7 +1516,6 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_find_engine_actions(
                 search_string,
-                server,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -1602,7 +1530,7 @@ class AutomatedCuration(Client):
     #
 
     async def _async_get_governance_action_process_by_guid(
-        self, process_guid: str, server: str = None
+        self, process_guid: str
     ) -> dict | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier. Async Version.
 
@@ -1610,8 +1538,7 @@ class AutomatedCuration(Client):
         ----------
             process_guid: str
               The GUID (Globally Unique Identifier) of the governance action process.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         Returns:
         -------
@@ -1625,28 +1552,24 @@ class AutomatedCuration(Client):
             UserNotAuthorizedException:
         """
 
-        server = self.server_name if server is None else server
         validate_guid(process_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/"
+            f"{self.curation_command_root}/"
             f"governance-action-processes/{process_guid}"
         )
 
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_governance_action_process_by_guid(
-        self, process_guid: str, server: str = None
-    ) -> dict | str:
+    def get_governance_action_process_by_guid(self, process_guid: str) -> dict | str:
         """Retrieve the governance action process metadata element with the supplied unique identifier.
 
         Parameters:
         ----------
             process_guid: str
               The GUID (Globally Unique Identifier) of the governance action process.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: The JSON representation of the governance action process element.
@@ -1660,12 +1583,12 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governance_action_process_by_guid(process_guid, server)
+            self._async_get_governance_action_process_by_guid(process_guid)
         )
         return response
 
     async def _async_get_gov_action_process_graph(
-        self, process_guid: str, server: str = None
+        self, process_guid: str
     ) -> dict | str:
         """Retrieve the governance action process metadata element with the supplied unique
             identifier along with the flow definition describing its implementation. Async Version.
@@ -1673,8 +1596,6 @@ class AutomatedCuration(Client):
         ----------
         process_guid : str
             The process GUID to retrieve the graph for.
-        server : str, optional
-            The name of the server to retrieve the graph from. If not provided, the default server name will be used.
 
         Returns
         -------
@@ -1689,28 +1610,24 @@ class AutomatedCuration(Client):
             UserNotAuthorizedException:
 
         """
-        server = self.server_name if server is None else server
+
         validate_guid(process_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/"
+            f"{self.curation_command_root}/"
             f"governance-action-processes/{process_guid}/graph"
         )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("element", "no actions")
 
-    def get_gov_action_process_graph(
-        self, process_guid: str, server: str = None
-    ) -> dict | str:
+    def get_gov_action_process_graph(self, process_guid: str) -> dict | str:
         """Retrieve the governance action process metadata element with the supplied unique
          identifier along with the flow definition describing its implementation.
         Parameters
         ----------
         process_guid : str
             The process GUID to retrieve the graph for.
-        server : str, optional
-            The name of the server to retrieve the graph from. If not provided, the default server name will be used.
 
         Returns
         -------
@@ -1727,14 +1644,13 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_gov_action_process_graph(process_guid, server)
+            self._async_get_gov_action_process_graph(process_guid)
         )
         return response
 
     async def _async_get_gov_action_processes_by_name(
         self,
         name: str,
-        server: str = None,
         start_from: int = None,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -1745,9 +1661,7 @@ class AutomatedCuration(Client):
         ----------
         name : str
             The name of the engine action to retrieve.
-        server : str, optional
-            The name of the server to retrieve the engine action from. If not provided, the default server specified
-            in the instance will be used.
+
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
@@ -1765,11 +1679,11 @@ class AutomatedCuration(Client):
         PropertyServerException
         UserNotAuthorizedException
         """
-        server = self.server_name if server is None else server
+
         validate_name(name)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-processes/"
+            f"{self.curation_command_root}/governance-action-processes/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
         body = {"filter": name}
@@ -1779,7 +1693,6 @@ class AutomatedCuration(Client):
     def get_gov_action_processes_by_name(
         self,
         name: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -1790,9 +1703,7 @@ class AutomatedCuration(Client):
         ----------
         name : str
             The name of the engine action to retrieve.
-        server : str, optional
-            The name of the server to retrieve the engine action from. If not provided, the default server specified
-            in the instance will be used.
+
         start_from : int, optional
             The index to start retrieving engine actions from. If not provided, the default value will be used.
         page_size : int, optional
@@ -1812,16 +1723,13 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_gov_action_processes_by_name(
-                name, server, start_from, page_size
-            )
+            self._async_get_gov_action_processes_by_name(name, start_from, page_size)
         )
         return response
 
     async def _async_find_gov_action_processes(
         self,
         search_string: str,
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -1835,8 +1743,7 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -1865,7 +1772,7 @@ class AutomatedCuration(Client):
         PropertyServerException
         UserNotAuthorizedException
         """
-        server = self.server_name if server is None else server
+
         validate_search_string(search_string)
         if search_string == "*":
             search_string = None
@@ -1874,7 +1781,7 @@ class AutomatedCuration(Client):
         ignore_case_s = str(ignore_case).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-processes/"
+            f"{self.curation_command_root}/governance-action-processes/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -1890,7 +1797,6 @@ class AutomatedCuration(Client):
     def find_gov_action_processes(
         self,
         search_string: str = "*",
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -1904,8 +1810,7 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -1939,7 +1844,6 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_find_gov_action_processes(
                 search_string,
-                server,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -1958,7 +1862,6 @@ class AutomatedCuration(Client):
         request_parameters: dict = None,
         orig_service_name: str = None,
         orig_engine_name: str = None,
-        server: str = None,
     ) -> str:
         """Using the named governance action process as a template, initiate a chain of engine actions. Async version.
 
@@ -1990,15 +1893,12 @@ class AutomatedCuration(Client):
         UserNotAuthorizedException
 
         """
-        server = self.server_name if server is None else server
+
         start_time: datetime = (
             datetime.datetime.now() if start_time is None else start_time
         )
 
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-processes/"
-            f"initiate"
-        )
+        url = f"{self.curation_command_root}/governance-action-processes/" f"initiate"
         body = {
             "class": "GovernanceActionProcessRequestBody",
             "processQualifiedName": action_type_qualified_name,
@@ -2022,7 +1922,6 @@ class AutomatedCuration(Client):
         request_parameters: dict = None,
         orig_service_name: str = None,
         orig_engine_name: str = None,
-        server: str = None,
     ) -> str:
         """Using the named governance action process as a template, initiate a chain of engine actions.
 
@@ -2042,8 +1941,6 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str, optional
             - optional unique name of the governance engine (if initiated by a governance engine).
-        server: str, optional
-            - if not specified, the server from the class instance will be used
 
         Returns
         -------
@@ -2066,13 +1963,12 @@ class AutomatedCuration(Client):
                 request_parameters,
                 orig_service_name,
                 orig_engine_name,
-                server,
             )
         )
         return response
 
     async def _async_get_gov_action_types_by_guid(
-        self, gov_action_type_guid: str, server: str = None
+        self, gov_action_type_guid: str
     ) -> dict | str:
         """Retrieve the governance action type metadata element with the supplied unique identifier. Async version.
 
@@ -2080,8 +1976,7 @@ class AutomatedCuration(Client):
         ----------
             gov_action_type_guid: str
               The GUID (Globally Unique Identifier) of the governance action type to retrieve.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: The JSON representation of the governance action type element.
@@ -2093,28 +1988,25 @@ class AutomatedCuration(Client):
             PropertyServerException: If the API response indicates a server side error.
             UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(gov_action_type_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/"
+            f"{self.curation_command_root}/"
             f"governance-action-types/{gov_action_type_guid}"
         )
 
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_gov_action_types_by_guid(
-        self, gov_action_type_guid: str, server: str = None
-    ) -> dict | str:
+    def get_gov_action_types_by_guid(self, gov_action_type_guid: str) -> dict | str:
         """Retrieve the governance action type metadata element with the supplied unique identifier.
 
         Parameters:
         ----------
             gov_action_type_guid: str
               The GUID (Globally Unique Identifier) of the governance action type to retrieve.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: The JSON representation of the governance action type element.
@@ -2128,14 +2020,13 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_gov_action_types_by_guid(gov_action_type_guid, server)
+            self._async_get_gov_action_types_by_guid(gov_action_type_guid)
         )
         return response
 
     async def _async_get_gov_action_types_by_name(
         self,
         action_type_name,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -2146,9 +2037,7 @@ class AutomatedCuration(Client):
             ----------
                 action_type_name: str
                   The name of the governance action type to retrieve.
-                server: str, optional
-                    The name of the server. If None, will use the default server specified in the instance
-                    will be used.
+
             Returns:
             -------
                 dict: The JSON representation of the governance action type element.
@@ -2160,11 +2049,11 @@ class AutomatedCuration(Client):
                 PropertyServerException: If the API response indicates a server side error.
                 UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_name(action_type_name)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/"
+            f"{self.curation_command_root}/"
             f"governance-action-types/by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2176,7 +2065,6 @@ class AutomatedCuration(Client):
     def get_gov_action_types_by_name(
         self,
         action_type_name,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -2187,8 +2075,7 @@ class AutomatedCuration(Client):
         ----------
             action_type_name: str
               The name of the governance action type to retrieve.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: The JSON representation of the governance action type element.
@@ -2203,7 +2090,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_gov_action_types_by_name(
-                action_type_name, server, start_from, page_size
+                action_type_name, start_from, page_size
             )
         )
         return response
@@ -2211,7 +2098,6 @@ class AutomatedCuration(Client):
     async def _async_find_gov_action_types(
         self,
         search_string: str = "*",
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
@@ -2226,8 +2112,7 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -2258,7 +2143,6 @@ class AutomatedCuration(Client):
 
         """
 
-        server = self.server_name if server is None else server
         validate_search_string(search_string)
         if search_string == "*":
             search_string = None
@@ -2267,7 +2151,7 @@ class AutomatedCuration(Client):
         ignore_case_s = str(ignore_case).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+            f"{self.curation_command_root}/governance-action-types/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -2278,7 +2162,6 @@ class AutomatedCuration(Client):
     def find_gov_action_types(
         self,
         search_string: str = "*",
-        server: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -2292,8 +2175,6 @@ class AutomatedCuration(Client):
         search_string : str
             The string used for searching engine actions by name.
 
-        server : str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
 
         starts_with : bool, optional
             Whether to search engine actions that start with the given search string. Default is False.
@@ -2327,7 +2208,6 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_find_gov_action_types(
                 search_string,
-                server,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -2346,7 +2226,6 @@ class AutomatedCuration(Client):
         request_parameters: dict = None,
         orig_service_name: str = None,
         orig_engine_name: str = None,
-        server: str = None,
     ) -> str:
         """Using the named governance action type as a template, initiate an engine action. Async version.
 
@@ -2366,8 +2245,6 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str
             - optional unique name of the governance engine (if initiated by a governance engine).
-        server : str, optional
-            - The name of the server. If None, will use the default server specified in the instance will be used.
 
         Returns
         -------
@@ -2380,11 +2257,8 @@ class AutomatedCuration(Client):
         UserNotAuthorizedException
 
         """
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
         start = int(start_time.timestamp() * 1000) if start_time else None
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2409,7 +2283,6 @@ class AutomatedCuration(Client):
         request_parameters: dict = None,
         orig_service_name: str = None,
         orig_engine_name: str = None,
-        server: str = None,
     ) -> str:
         """Using the named governance action type as a template, initiate an engine action.
 
@@ -2429,8 +2302,6 @@ class AutomatedCuration(Client):
             - unique name of the requesting governance service (if initiated by a governance engine)
         orig_engine_name: str
             - optional unique name of the governance engine (if initiated by a governance engine).
-        server : str, optional
-            - The name of the server. If None, will use the default server specified in the instance will be used.
 
         Returns
         -------
@@ -2452,7 +2323,6 @@ class AutomatedCuration(Client):
                 request_parameters,
                 orig_service_name,
                 orig_engine_name,
-                server,
             )
         )
         return response
@@ -2462,14 +2332,11 @@ class AutomatedCuration(Client):
     #
 
     async def _async_initiate_postgres_database_survey(
-        self, postgres_database_guid: str, server: str = None
+        self, postgres_database_guid: str
     ) -> str:
         """Initiate a postgres database survey"""
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2485,25 +2352,20 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_postgres_database_survey(
-        self, postgres_database_guid: str, server: str = None
-    ) -> str:
+    def initiate_postgres_database_survey(self, postgres_database_guid: str) -> str:
         """Initiate a postgres database survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_postgres_server_survey(postgres_database_guid, server)
+            self._async_initiate_postgres_server_survey(postgres_database_guid)
         )
         return response
 
     async def _async_initiate_postgres_server_survey(
-        self, postgres_server_guid: str, server: str = None
+        self, postgres_server_guid: str
     ) -> str:
         """Initiate a postgres server survey - Async version"""
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2519,13 +2381,11 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_postgres_server_survey(
-        self, postgres_server_guid: str, server: str = None
-    ) -> str:
+    def initiate_postgres_server_survey(self, postgres_server_guid: str) -> str:
         """Initiate a postgres server survey"""
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_postgres_server_survey(postgres_server_guid, server)
+            self._async_initiate_postgres_server_survey(postgres_server_guid)
         )
         return response
 
@@ -2533,7 +2393,6 @@ class AutomatedCuration(Client):
         self,
         file_folder_guid: str,
         survey_name: str = "AssetSurvey:survey-folder",
-        server: str = None,
     ) -> str:
         """Initiate a file folder survey - async version
 
@@ -2543,8 +2402,7 @@ class AutomatedCuration(Client):
                 The GUID of the File Folder that we wish to survey.
             survey_name: str, optional
                 The unique name of the survey routine to execute. Default surveys all folders.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             str:
@@ -2567,11 +2425,8 @@ class AutomatedCuration(Client):
             - AssetSurvey:survey-all-folders
             - AssetSurvey:survey-all-folders-and-files
         """
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2591,7 +2446,6 @@ class AutomatedCuration(Client):
         self,
         file_folder_guid: str,
         survey_name: str = "AssetSurvey:survey-folder",
-        server: str = None,
     ) -> str:
         """Initiate a file folder survey - async version
 
@@ -2601,8 +2455,7 @@ class AutomatedCuration(Client):
                 The GUID of the File Folder that we wish to survey.
             survey_name: str, optional
                 The unique name of the survey routine to execute. Default surveys all folders.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             str:
@@ -2629,21 +2482,14 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_file_folder_survey(
-                file_folder_guid, survey_name, server
-            )
+            self._async_initiate_file_folder_survey(file_folder_guid, survey_name)
         )
         return response
 
-    async def _async_initiate_file_survey(
-        self, file_guid: str, server: str = None
-    ) -> str:
+    async def _async_initiate_file_survey(self, file_guid: str) -> str:
         """Initiate a file survey - async version"""
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2659,25 +2505,18 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_file_survey(self, file_guid: str, server: str = None) -> str:
+    def initiate_file_survey(self, file_guid: str) -> str:
         """Initiate a file survey"""
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_initiate_file_survey(file_guid, server)
-        )
+        response = loop.run_until_complete(self._async_initiate_file_survey(file_guid))
         return response
 
-    async def _async_initiate_kafka_server_survey(
-        self, kafka_server_guid: str, server: str = None
-    ) -> str:
+    async def _async_initiate_kafka_server_survey(self, kafka_server_guid: str) -> str:
         """Initiate survey of a kafka server. Async Version.
         Parameters
         ----------
         kafka_server_guid : str
             The GUID of the Kafka server to be surveyed.
-
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
 
         Returns
         -------
@@ -2685,11 +2524,8 @@ class AutomatedCuration(Client):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2705,17 +2541,13 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_kafka_server_survey(
-        self, kafka_server_guid: str, server: str = None
-    ) -> str:
+    def initiate_kafka_server_survey(self, kafka_server_guid: str) -> str:
         """Initiate survey of a kafka server.
         Parameters
         ----------
         kafka_server_guid : str
             The GUID of the Kafka server to be surveyed.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
 
         Returns
         -------
@@ -2725,21 +2557,17 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_kafka_server_survey(kafka_server_guid, server)
+            self._async_initiate_kafka_server_survey(kafka_server_guid)
         )
         return response
 
-    async def _async_initiate_uc_server_survey(
-        self, uc_server_guid: str, server: str = None
-    ) -> str:
+    async def _async_initiate_uc_server_survey(self, uc_server_guid: str) -> str:
         """Initiate survey of a Unity Catalog server. Async Version.
         Parameters
         ----------
         uc_server_guid : str
             The GUID of the Kafka server to be surveyed.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
 
         Returns
         -------
@@ -2747,11 +2575,8 @@ class AutomatedCuration(Client):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2767,15 +2592,13 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    def initiate_uc_server_survey(self, uc_server_guid: str) -> str:
         """Initiate survey of a Unity Catalog server. Async Version.
         Parameters
         ----------
         uc_server_guid : str
             The GUID of the Kafka server to be surveyed.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
 
         Returns
         -------
@@ -2785,21 +2608,16 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_uc_server_survey(uc_server_guid, server)
+            self._async_initiate_uc_server_survey(uc_server_guid)
         )
         return response
 
-    async def _async_initiate_uc_schema_survey(
-        self, uc_schema_guid: str, server: str = None
-    ) -> str:
+    async def _async_initiate_uc_schema_survey(self, uc_schema_guid: str) -> str:
         """Initiate survey of a Unity Catalog schema. Async Version.
         Parameters
         ----------
         uc_schema_guid : str
             The GUID of the Kafka server to be surveyed.
-
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
 
         Returns
         -------
@@ -2807,11 +2625,8 @@ class AutomatedCuration(Client):
             The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
         """
-        server = self.server_name if server is None else server
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
-            f"initiate"
-        )
+
+        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2827,15 +2642,14 @@ class AutomatedCuration(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
-    def initiate_uc_schema_survey(self, uc_schema_guid: str, server: str = None) -> str:
+    def initiate_uc_schema_survey(self, uc_schema_guid: str) -> str:
         """Initiate survey of a Unity Catalog schema. Async Version.
         Parameters
         ----------
         uc_schema_guid : str
             The GUID of the Kafka server to be surveyed.
 
-        server : str, optional
-            The name of the server. If not provided, the default server name is used.
+
 
         Returns
         -------
@@ -2845,11 +2659,11 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_uc_schema_survey(uc_schema_guid, server)
+            self._async_initiate_uc_schema_survey(uc_schema_guid)
         )
         return response
 
-    # async def _async_initiate_uc_function_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # async def _async_initiate_uc_function_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2866,7 +2680,7 @@ class AutomatedCuration(Client):
     #
     #     """
     #     server = self.view_server if server is None else server
-    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #     url = (f"{self.curation_command_root}/governance-action-types/"
     #            f"initiate")
     #
     #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
@@ -2875,7 +2689,7 @@ class AutomatedCuration(Client):
     #     response = await self._async_make_request("POST", url, body)
     #     return response.json().get("guid", "Action not initiated")
     #
-    # def initiate_uc_function_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # def initiate_uc_function_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2892,10 +2706,10 @@ class AutomatedCuration(Client):
     #
     #     """
     #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid))
     #     return response
     #
-    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2912,7 +2726,7 @@ class AutomatedCuration(Client):
     #
     #     """
     #     server = self.view_server if server is None else server
-    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #     url = (f"{self.curation_command_root}/governance-action-types/"
     #            f"initiate")
     #
     #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
@@ -2921,7 +2735,7 @@ class AutomatedCuration(Client):
     #     response = await self._async_make_request("POST", url, body)
     #     return response.json().get("guid", "Action not initiated")
     #
-    # def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # def initiate_uc_server_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2938,10 +2752,10 @@ class AutomatedCuration(Client):
     #
     #     """
     #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid))
     #     return response
     #
-    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # async def _async_initiate_uc_server_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2958,7 +2772,7 @@ class AutomatedCuration(Client):
     #
     #     """
     #     server = self.view_server if server is None else server
-    #     url = (f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-action-types/"
+    #     url = (f"{self.curation_command_root}/governance-action-types/"
     #            f"initiate")
     #
     #     body = {"class": "InitiateGovernanceActionTypeRequestBody",
@@ -2967,7 +2781,7 @@ class AutomatedCuration(Client):
     #     response = await self._async_make_request("POST", url, body)
     #     return response.json().get("guid", "Action not initiated")
     #
-    # def initiate_uc_server_survey(self, uc_server_guid: str, server: str = None) -> str:
+    # def initiate_uc_server_survey(self, uc_server_guid: str) -> str:
     #     """ Initiate survey of a Unity Catalog server. Async Version.
     #     Parameters
     #     ----------
@@ -2984,7 +2798,7 @@ class AutomatedCuration(Client):
     #
     #     """
     #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid, server))
+    #     response = loop.run_until_complete(self._async_initiate_uc_server_survey(uc_server_guid))
     #     return response
 
     #
@@ -3007,7 +2821,6 @@ class AutomatedCuration(Client):
         request_src_name: str = None,
         originator_svc_name: str = None,
         originator_eng_name: str = None,
-        server: str = None,
     ) -> str:
         """Create an engine action in the metadata store that will trigger the governance service associated with
         the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
@@ -3046,9 +2859,9 @@ class AutomatedCuration(Client):
 
 
         """
-        server = self.server_name if server is None else server
+
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/governance-engines/"
+            f"{self.curation_command_root}/governance-engines/"
             f"engine-actions/initiate"
         )
         body = {
@@ -3088,7 +2901,6 @@ class AutomatedCuration(Client):
         request_src_name: str = None,
         originator_svc_name: str = None,
         originator_eng_name: str = None,
-        server: str = None,
     ) -> str:
         """Create an engine action in the metadata store that will trigger the governance service associated with
         the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
@@ -3142,7 +2954,6 @@ class AutomatedCuration(Client):
                 request_src_name,
                 originator_svc_name,
                 originator_eng_name,
-                server,
             )
         )
         return response
@@ -3150,7 +2961,6 @@ class AutomatedCuration(Client):
     async def _async_get_catalog_targets(
         self,
         integ_connector_guid: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -3161,8 +2971,6 @@ class AutomatedCuration(Client):
         ----------
             integ_connector_guid: str
               The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
         Returns:
         -------
             [dict]: The list of catalog targets JSON objects.
@@ -3174,11 +2982,11 @@ class AutomatedCuration(Client):
             PropertyServerException: If the API response indicates a server side error.
             UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(integ_connector_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
+            f"{self.curation_command_root}/integration-connectors/"
             f"{integ_connector_guid}/catalog-targets?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -3188,7 +2996,6 @@ class AutomatedCuration(Client):
     def get_catalog_targets(
         self,
         integ_connector_guid: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -3198,8 +3005,6 @@ class AutomatedCuration(Client):
         ----------
             integ_connector_guid: str
               The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
         Returns:
         -------
             [dict]: The list of catalog targets JSON objects.
@@ -3214,15 +3019,11 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_targets(
-                integ_connector_guid, server, start_from, page_size
-            )
+            self._async_get_catalog_targets(integ_connector_guid, start_from, page_size)
         )
         return response
 
-    async def _async_get_catalog_target(
-        self, relationship_guid: str, server: str = None
-    ) -> dict | str:
+    async def _async_get_catalog_target(self, relationship_guid: str) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Further Information:
         https://egeria-project.org/concepts/integration-connector/ .    Async version.
 
@@ -3230,8 +3031,7 @@ class AutomatedCuration(Client):
         ----------
             relationship_guid: str
                 The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: JSON structure of the catalog target.
@@ -3243,20 +3043,15 @@ class AutomatedCuration(Client):
             PropertyServerException: If the API response indicates a server side error.
             UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(relationship_guid)
 
-        url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
-            f"{relationship_guid}"
-        )
+        url = f"{self.curation_command_root}/catalog-targets/" f"{relationship_guid}"
 
         response = await self._async_make_request("GET", url)
         return response.json().get("element", "no actions")
 
-    def get_catalog_target(
-        self, relationship_guid: str, server: str = None
-    ) -> dict | str:
+    def get_catalog_target(self, relationship_guid: str) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.  Further Information:
         https://egeria-project.org/concepts/integration-connector/ .
 
@@ -3264,8 +3059,7 @@ class AutomatedCuration(Client):
         ----------
             relationship_guid: str
                 The GUID (Globally Unique Identifier) identifying the catalog targets for an integration connector.
-            server: str, optional
-                The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             dict: JSON structure of the catalog target.
@@ -3280,7 +3074,7 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid, server)
+            self._async_get_catalog_target(relationship_guid)
         )
         return response
 
@@ -3295,7 +3089,6 @@ class AutomatedCuration(Client):
         template_properties: dict = None,
         permitted_sync: str = "BOTH_DIRECTIONS",
         delete_method: str = "ARCHIVE",
-        server: str = None,
     ) -> str:
         """Add a catalog target to an integration connector and .
         Async version.
@@ -3320,10 +3113,7 @@ class AutomatedCuration(Client):
             Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
         delete_method: str, default = ARCHIVE
             Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
-        Returns:
+                Returns:
         -------
             Relationship GUID for the catalog target,
 
@@ -3334,12 +3124,12 @@ class AutomatedCuration(Client):
         PropertyServerException: If the API response indicates a server side error.
         UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(integ_connector_guid)
         validate_guid(metadata_element_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/integration-connectors/"
+            f"{self.curation_command_root}/integration-connectors/"
             f"{integ_connector_guid}/catalog-targets/{metadata_element_guid}"
         )
         body = {
@@ -3366,7 +3156,6 @@ class AutomatedCuration(Client):
         template_properties: dict = None,
         permitted_sync: str = "BOTH_DIRECTIONS",
         delete_method: str = "ARCHIVE",
-        server: str = None,
     ) -> str:
         """Add a catalog target to an integration connector and .
 
@@ -3390,10 +3179,7 @@ class AutomatedCuration(Client):
             Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
         delete_method: str, default = ARCHIVE
             Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
-        Returns:
+                Returns:
         -------
             Relationship GUID for the catalog target,
 
@@ -3416,7 +3202,6 @@ class AutomatedCuration(Client):
                 template_properties,
                 permitted_sync,
                 delete_method,
-                server,
             )
         )
         return response
@@ -3431,7 +3216,6 @@ class AutomatedCuration(Client):
         template_properties: dict = None,
         permitted_sync: str = "BOTH_DIRECTIONS",
         delete_method: str = "ARCHIVE",
-        server: str = None,
     ) -> None:
         """Update a catalog target to an integration connector.
         Async version.
@@ -3454,9 +3238,6 @@ class AutomatedCuration(Client):
             Direction the metadata is allowed to flow (BOTH_DIRECTIONS, FROM_THIRD_PARTH, TO_THIRD_PARTY
         delete_method: str, default = ARCHIVE
             Controls the type of delete. Use ARCHIVE for lineage considerations. Alternative is SOFT_DELETE.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
         Returns:
         -------
             None
@@ -3468,11 +3249,11 @@ class AutomatedCuration(Client):
         PropertyServerException: If the API response indicates a server side error.
         UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(relationship_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
+            f"{self.curation_command_root}/catalog-targets/"
             f"{relationship_guid}/update"
         )
         body = {
@@ -3497,7 +3278,6 @@ class AutomatedCuration(Client):
         template_properties: dict = None,
         permitted_sync: str = "BOTH_DIRECTIONS",
         delete_method: str = "ARCHIVE",
-        server: str = None,
     ) -> None:
         """Update a catalog target to an integration connector.
 
@@ -3533,22 +3313,18 @@ class AutomatedCuration(Client):
                 template_properties,
                 permitted_sync,
                 delete_method,
-                server,
             )
         )
         return
 
-    async def _async_remove_catalog_target(
-        self, relationship_guid: str, server: str = None
-    ) -> None:
+    async def _async_remove_catalog_target(self, relationship_guid: str) -> None:
         """Remove a catalog target to an integration connector. Async version.
 
         Parameters:
         ----------
         relationship_guid: str
             The GUID (Globally Unique Identifier) identifying the catalog target relationship.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             None
@@ -3560,26 +3336,25 @@ class AutomatedCuration(Client):
         PropertyServerException: If the API response indicates a server side error.
         UserNotAuthorizedException:
         """
-        server = self.server_name if server is None else server
+
         validate_guid(relationship_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/catalog-targets/"
+            f"{self.curation_command_root}/catalog-targets/"
             f"{relationship_guid}/remove"
         )
 
         await self._async_make_request("POST", url)
         return
 
-    def remove_catalog_target(self, relationship_guid: str, server: str = None) -> None:
+    def remove_catalog_target(self, relationship_guid: str) -> None:
         """Remove a catalog target to an integration connector.
 
         Parameters:
         ----------
         relationship_guid: str
             The GUID (Globally Unique Identifier) identifying the catalog target relationship.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             None
@@ -3593,9 +3368,7 @@ class AutomatedCuration(Client):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_remove_catalog_target(relationship_guid, server)
-        )
+        loop.run_until_complete(self._async_remove_catalog_target(relationship_guid))
         return
 
     #
@@ -3606,7 +3379,6 @@ class AutomatedCuration(Client):
         self,
         type_name: str,
         tech_name: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -3619,8 +3391,7 @@ class AutomatedCuration(Client):
             The technology type we are looking for.
         tech_name: str
             The technology name we are looking for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             [dict] | str: List of elements describing the technology - or "no tech found" if not found.
@@ -3636,10 +3407,10 @@ class AutomatedCuration(Client):
         -----
         More information can be found at: https://egeria-project.org/types
         """
-        server = self.server_name if server is None else server
+
         # validate_name(type_name)
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/open-metadata-types/"
+            f"{self.curation_command_root}/open-metadata-types/"
             f"{type_name}/technology-types?startFrom={start_from}&pageSize={page_size}"
         )
         body = {"filter": tech_name}
@@ -3651,7 +3422,6 @@ class AutomatedCuration(Client):
         self,
         type_name: str,
         tech_name: str,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> list | str:
@@ -3664,8 +3434,7 @@ class AutomatedCuration(Client):
             The technology type we are looking for.
         tech_name: str
             The technology name we are looking for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             [dict] | str: List of elements describing the technology - or "no tech found" if not found.
@@ -3684,23 +3453,19 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_tech_types_for_open_metadata_type(
-                type_name, tech_name, server, start_from, page_size
+                type_name, tech_name, start_from, page_size
             )
         )
         return response
 
-    async def _async_get_technology_type_detail(
-        self, type_name: str, server: str = None
-    ) -> list | str:
+    async def _async_get_technology_type_detail(self, type_name: str) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
         ----------
         type_name : str
             The name of the technology type to retrieve detailed information for.
-        server : str, optional
-            The name of the server to fetch the technology type from. If not provided, the default server name will
-            be used.
+
 
         Returns
         -------
@@ -3718,27 +3483,22 @@ class AutomatedCuration(Client):
         -----
         More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
         """
-        server = self.server_name if server is None else server
+
         # validate_name(type_name)
-        url = f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/by-name"
+        url = f"{self.curation_command_root}/technology-types/by-name"
 
         body = {"filter": type_name}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("element", "no type found")
 
-    def get_technology_type_detail(
-        self, type_name: str, server: str = None
-    ) -> list | str:
+    def get_technology_type_detail(self, type_name: str) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
         and contain no wild cards.
         Parameters
         ----------
         type_name : str
             The name of the technology type to retrieve detailed information for.
-        server : str, optional
-            The name of the server to fetch the technology type from. If not provided, the default server name will
-            be used.
 
         Returns
         -------
@@ -3759,14 +3519,13 @@ class AutomatedCuration(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_detail(type_name, server)
+            self._async_get_technology_type_detail(type_name)
         )
         return response
 
     async def _async_find_technology_types(
         self,
         search_string: str = "*",
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         starts_with: bool = False,
@@ -3779,9 +3538,6 @@ class AutomatedCuration(Client):
         ----------
         type_name: str
             The technology type we are looking for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
         starts_with : bool, optional
            Whether to search engine actions that start with the given search string. Default is False.
 
@@ -3811,7 +3567,6 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-        server = self.server_name if server is None else server
 
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
@@ -3821,7 +3576,7 @@ class AutomatedCuration(Client):
             search_string = ""
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/"
+            f"{self.curation_command_root}/technology-types/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -3833,7 +3588,6 @@ class AutomatedCuration(Client):
     def find_technology_types(
         self,
         search_string: str = "*",
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         starts_with: bool = False,
@@ -3846,8 +3600,7 @@ class AutomatedCuration(Client):
         ----------
         type_name: str
             The technology type we are looking for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
+
         Returns:
         -------
             [dict] | str: List of elements describing the technology - or "no tech found" if not found.
@@ -3868,7 +3621,6 @@ class AutomatedCuration(Client):
         response = loop.run_until_complete(
             self._async_find_technology_types(
                 search_string,
-                server,
                 start_from,
                 page_size,
                 starts_with,
@@ -3879,18 +3631,16 @@ class AutomatedCuration(Client):
         return response
 
     async def _async_get_all_technology_types(
-        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+        self, start_from: int = 0, page_size: int = max_paging_size
     ) -> list | str:
         """Get all technology types - async version"""
-        return await self._async_find_technology_types(
-            "*", server, start_from, page_size
-        )
+        return await self._async_find_technology_types("*", start_from, page_size)
 
     def get_all_technology_types(
-        self, server: str = None, start_from: int = 0, page_size: int = max_paging_size
+        self, start_from: int = 0, page_size: int = max_paging_size
     ) -> list | str:
         """Get all technology types"""
-        return self.find_technology_types("*", server, start_from, page_size)
+        return self.find_technology_types("*", start_from, page_size)
 
     def print_engine_action_summary(self, governance_action: dict):
         """print_governance_action_summary
@@ -3965,7 +3715,6 @@ class AutomatedCuration(Client):
         self,
         filter: str,
         effective_time: str = None,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         get_templates: bool = False,
@@ -3977,10 +3726,7 @@ class AutomatedCuration(Client):
         ----------
         filter: str
             The name of the deployed technology implementation type to retrieve elements for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
-        effective_time: datetime, [default=None], optional
+                effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
@@ -4005,13 +3751,12 @@ class AutomatedCuration(Client):
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-        server = self.server_name if server is None else server
 
         get_templates_s = str(get_templates).lower()
         validate_name(filter)
 
         url = (
-            f"{self.platform_url}/servers/{server}/api/open-metadata/automated-curation/technology-types/elements?"
+            f"{self.curation_command_root}/technology-types/elements?"
             f"startFrom={start_from}&pageSize={page_size}&getTemplates={get_templates_s}"
         )
         body = {"filter": filter, "effective_time": effective_time}
@@ -4023,7 +3768,6 @@ class AutomatedCuration(Client):
         self,
         filter: str,
         effective_time: str = None,
-        server: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         get_templates: bool = False,
@@ -4035,10 +3779,7 @@ class AutomatedCuration(Client):
         ----------
         filter: str
             The name of the deployed technology implementation type to retrieve elements for.
-        server: str, optional
-            The name of the server. If None, will use the default server specified in the instance will be used.
-
-        effective_time: datetime, [default=None], optional
+                effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
@@ -4067,7 +3808,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_technology_type_elements(
-                filter, effective_time, server, start_from, page_size, get_templates
+                filter, effective_time, start_from, page_size, get_templates
             )
         )
         return response

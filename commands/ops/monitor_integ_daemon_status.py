@@ -45,20 +45,18 @@ disable_ssl_warnings = True
 
 
 def display_integration_daemon_status(
-    integ_server: str,
-    integ_url: str,
-    view_server: str,
-    view_url: str,
-    user: str,
-    user_pass: str,
-    paging: bool,
+    integ_server: str = EGERIA_INTEGRATION_DAEMON,
+    integ_url: str = EGERIA_INTEGRATION_DAEMON_URL,
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
+    paging: bool = True,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     sort: bool = True,
 ):
     s_client = EgeriaTech(view_server, view_url, user, user_pass)
-    token = s_client.create_egeria_bearer_token()
-    server_guid = s_client.get_guid_for_name(integ_server)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -82,7 +80,9 @@ def display_integration_daemon_status(
         table.add_column("Target Element", min_width=20)
         table.add_column("Exception Message", min_width=10)
 
-        daemon_status = s_client.get_server_report(server_guid)
+        token = s_client.create_egeria_bearer_token()
+        # server_guid = s_client.get_guid_for_name(integ_server)
+        daemon_status = s_client.get_server_report(None, integ_server)
 
         reports = daemon_status["integrationConnectorReports"]
         if sort is True:

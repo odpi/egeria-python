@@ -40,7 +40,7 @@ class EgeriaTech(
 
     Attributes:
 
-        server_name: str
+        view_server: str
                 Name of the server to use.
         platform_url : str
             URL of the server platform to connect to

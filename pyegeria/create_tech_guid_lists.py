@@ -3,7 +3,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 Script to create a new file to initiate tech guids.
-These GUIDS should be copied into the __init__.py.
+These GUIDS should be copied into the pyegeria/__init__.py.
 
 """
 from datetime import datetime

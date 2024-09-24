@@ -73,8 +73,25 @@ try:
     o_client.add_default_log_destinations()
 
     # o_client.set_in_mem_local_repository()
-    o_client.set_xtdb_local_kv_repository()
-
+    # o_client.set_xtdb_local_kv_repository()
+    body = {
+        "xtdbConfigEDN": """{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "data/servers/xtdb/rdb-index"}}
+                                                :xtdb.lucene/lucene-store {:db-dir "data/servers/xtdb/lucene"
+                                                                             :indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer}
+                                                                             :analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}}
+                                                  :xtdb.jdbc/connection-pool {:dialect {:xtdb/module xtdb.jdbc.psql/->dialect}
+                                                                              :db-spec {:jdbcUrl "jdbc:postgresql://host.docker.internal:5442/xtdb?user=postgres&password=egeria"}}
+                                                  :xtdb/tx-log {:xtdb/module xtdb.jdbc/->tx-log
+                                                                :connection-pool :xtdb.jdbc/connection-pool
+                                                                :poll-sleep-duration "PT1S"}
+                                                  :xtdb/document-store {:xtdb/module xtdb.jdbc/->document-store
+                                                                        :connection-pool :xtdb.jdbc/connection-pool}}""",
+        "syncIndex": True,
+    }
+    o_client.add_startup_open_metadata_archive_file(
+        "content-packs/CoreContentPack.omarchive"
+    )
+    o_client.set_xtdb_local_repository(body)
     o_client.set_local_metadata_collection_id(metadataCollectionId)
     o_client.set_local_metadata_collection_name(metadataCollectionName)
 
@@ -96,10 +113,10 @@ try:
     o_client.configure_access_service("governance-program", {})
     # o_client.configure_access_service("data-privacy", {})
     o_client.configure_access_service("digital-architecture", {})
-    o_client.configure_access_service("security-manager", {})
-    o_client.configure_access_service("asset-lineage", {})
-    o_client.configure_access_service("it-infrastructure", {})
-    o_client.configure_access_service("project-management", {})
+    # o_client.configure_access_service("security-manager", {})
+    # o_client.configure_access_service("asset-lineage", {})
+    # o_client.configure_access_service("it-infrastructure", {})
+    # o_client.configure_access_service("project-management", {})
 
     p_client = Platform(mdr_server, platform_url, admin_user)
     p_client.activate_server_stored_config()

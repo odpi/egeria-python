@@ -7,12 +7,11 @@ added in subsequent versions of the glossary_omvs module.
 
 """
 import asyncio
-from datetime import datetime
 import time
+from datetime import datetime
 
 # import json
 from pyegeria._client import Client
-from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import (
     validate_name,
     validate_guid,
@@ -29,7 +28,7 @@ class GlossaryManager(GlossaryBrowser):
 
     Attributes:
 
-        server_name: str
+        view_server: str
             The name of the View Server to connect to.
         platform_url : str
             URL of the server platform to connect to
@@ -38,22 +37,25 @@ class GlossaryManager(GlossaryBrowser):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-        verify_flag: bool
-            Flag to indicate if SSL Certificates should be verified in the HTTP requests.
-            Defaults to False.
+
 
     """
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        self.gl_mgr_command_root: str
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Get Valid Values for Enumerations
@@ -65,7 +67,6 @@ class GlossaryManager(GlossaryBrowser):
         description: str,
         language: str = "English",
         usage: str = None,
-        server_name: str = None,
     ) -> str:
         """Create a new glossary. Async version.
 
@@ -79,8 +80,7 @@ class GlossaryManager(GlossaryBrowser):
             The language the used for the glossary
         usage: str, optional, default = None
             How the glossary is intended to be used
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -88,10 +88,8 @@ class GlossaryManager(GlossaryBrowser):
             The GUID of the created glossary.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries"
         body = {
             "class": "ReferenceableRequestBody",
             "elementProperties": {
@@ -112,7 +110,6 @@ class GlossaryManager(GlossaryBrowser):
         description: str,
         language: str = "English",
         usage: str = None,
-        server_name: str = None,
     ) -> str:
         """Create a new glossary.
 
@@ -126,8 +123,7 @@ class GlossaryManager(GlossaryBrowser):
             The language the used for the glossary
         usage: str, optional, default = None
             How the glossary is intended to be used
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -137,49 +133,41 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_glossary(
-                display_name, description, language, usage, server_name
-            )
+            self._async_create_glossary(display_name, description, language, usage)
         )
         return response
 
-    async def _async_delete_glossary(
-        self, glossary_guid: str, server_name: str = None
-    ) -> None:
+    async def _async_delete_glossary(self, glossary_guid: str) -> None:
         """Delete glossary. Async version.
 
         Parameters
         ----------
         glossary_guid: str
             The ID of the glossary to delete.
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
         None
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"{glossary_guid}/remove"
         )
 
         await self._async_make_request("POST", url)
         return
 
-    def delete_glossary(self, glossary_guid: str, server_name: str = None) -> None:
+    def delete_glossary(self, glossary_guid: str) -> None:
         """Create a new glossary.
 
         Parameters
         ----------
         glossary_guid: str
             The ID of the glossary to delete.
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -187,9 +175,7 @@ class GlossaryManager(GlossaryBrowser):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_delete_glossary(glossary_guid, server_name)
-        )
+        response = loop.run_until_complete(self._async_delete_glossary(glossary_guid))
         return response
 
     #
@@ -206,7 +192,6 @@ class GlossaryManager(GlossaryBrowser):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         type_name: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -222,9 +207,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -259,8 +242,7 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -284,7 +266,7 @@ class GlossaryManager(GlossaryBrowser):
         # print(f"\n\nBody is: \n{body}")
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
@@ -303,7 +285,6 @@ class GlossaryManager(GlossaryBrowser):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         type_name: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -319,9 +300,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -367,7 +346,6 @@ class GlossaryManager(GlossaryBrowser):
                 for_lineage,
                 for_duplicate_processing,
                 type_name,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -375,89 +353,10 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
-    async def _async_get_glossary_by_guid(
-        self, glossary_guid: str, server_name: str = None, effective_time: str = None
-    ) -> dict:
-        """Retrieves information about a glossary
-        Parameters
-        ----------
-            glossary_guid : str
-                Unique idetifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
-            effective_time: str, optional
-                Effective time of the query. If not specified will default to any time. Time format is
-                "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        if server_name is None:
-            server_name = self.server_name
-        validate_guid(glossary_guid)
-
-        body = {
-            "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
-        }
-
-        url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
-            f"{glossary_guid}/retrieve"
-        )
-        print(url)
-        response = await self._async_make_request("POST", url, payload=body)
-        return response.json()
-
-    def get_glossary_by_guid(self, glossary_guid: str, server_name: str = None) -> dict:
-        """Retrieves information about a glossary
-        Parameters
-        ----------
-            glossary_guid : str
-                Unique idetifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, server_name)
-        )
-        return response
-
     async def _async_get_glossaries_by_name(
         self,
         glossary_name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> dict | str:
@@ -471,9 +370,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
              When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -497,8 +394,7 @@ class GlossaryManager(GlossaryBrowser):
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         validate_name(glossary_name)
@@ -509,7 +405,7 @@ class GlossaryManager(GlossaryBrowser):
             body = {"name": glossary_name, "effectiveTime": effective_time}
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -520,7 +416,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> dict | str:
@@ -533,9 +428,7 @@ class GlossaryManager(GlossaryBrowser):
             Name of the glossary to be retrieved
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
             When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -561,7 +454,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_glossaries_by_name(
-                glossary_name, effective_time, server_name, start_from, page_size
+                glossary_name, effective_time, start_from, page_size
             )
         )
         return response
@@ -574,7 +467,6 @@ class GlossaryManager(GlossaryBrowser):
         glossary_guid: str,
         display_name: str,
         description: str,
-        server_name: str = None,
     ) -> str:
         """Create a new category within the specified glossary. Async Version.
 
@@ -586,9 +478,7 @@ class GlossaryManager(GlossaryBrowser):
             Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
         description: str,
             Description for the category.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -607,11 +497,9 @@ class GlossaryManager(GlossaryBrowser):
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"{glossary_guid}/categories"
         )
         body = {
@@ -631,7 +519,6 @@ class GlossaryManager(GlossaryBrowser):
         glossary_guid: str,
         display_name: str,
         description: str,
-        server_name: str = None,
     ) -> str:
         """Create a new category within the specified glossary.
 
@@ -643,9 +530,7 @@ class GlossaryManager(GlossaryBrowser):
             Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
         description: str,
             Description for the category.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -666,9 +551,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_category(
-                glossary_guid, display_name, description, server_name
-            )
+            self._async_create_category(glossary_guid, display_name, description)
         )
         return response
 
@@ -676,7 +559,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
@@ -688,9 +570,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -709,8 +589,6 @@ class GlossaryManager(GlossaryBrowser):
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         body = {
             "class": "EffectiveTimeQueryRequestBody",
@@ -718,7 +596,7 @@ class GlossaryManager(GlossaryBrowser):
         }
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"for-category/{glossary_category_guid}/retrieve"
         )
 
@@ -729,7 +607,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
@@ -741,9 +618,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -764,8 +639,8 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_fpr_category(
-                glossary_category_guid, effective_time, server_name
+            self._async_get_glossary_for_category(
+                glossary_category_guid, effective_time
             )
         )
         return response
@@ -777,7 +652,6 @@ class GlossaryManager(GlossaryBrowser):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -794,9 +668,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -825,8 +697,7 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -846,7 +717,7 @@ class GlossaryManager(GlossaryBrowser):
         body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -861,7 +732,6 @@ class GlossaryManager(GlossaryBrowser):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -877,9 +747,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -916,7 +784,6 @@ class GlossaryManager(GlossaryBrowser):
                 starts_with,
                 ends_with,
                 ignore_case,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -927,7 +794,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_categories_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -938,9 +804,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         glossary_guid: str,
             Unique identity of the glossary
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -963,13 +827,12 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -979,7 +842,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_categories_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -989,9 +851,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         glossary_guid: str,
             Unique identity of the glossary
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1017,7 +877,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_for_glossary(
-                glossary_guid, server_name, start_from, page_size
+                glossary_guid, start_from, page_size
             )
         )
         return response
@@ -1025,7 +885,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_categories_for_term(
         self,
         glossary_term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1036,9 +895,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         glossary_term_guid: str,
             Unique identity of a glossary term
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1061,13 +918,12 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
             f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1077,7 +933,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_categories_for_term(
         self,
         glossary_term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1087,9 +942,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         glossary_term_guid: str,
             Unique identity of a glossary term
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1115,7 +968,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_for_term(
-                glossary_term_guid, server_name, start_from, page_size
+                glossary_term_guid, start_from, page_size
             )
         )
         return response
@@ -1125,7 +978,6 @@ class GlossaryManager(GlossaryBrowser):
         name: str,
         glossary_guid: str = None,
         status: [str] = ["ACTIVE"],
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1143,9 +995,7 @@ class GlossaryManager(GlossaryBrowser):
             The identity of the glossary to search. If not specified, all glossaries will be searched.
         status: [str], optional
             A list of statuses to optionally restrict results. Default is Active
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1168,14 +1018,13 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         validate_name(name)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1194,7 +1043,6 @@ class GlossaryManager(GlossaryBrowser):
         name: str,
         glossary_guid: str = None,
         status: [str] = ["ACTIVE"],
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1210,9 +1058,7 @@ class GlossaryManager(GlossaryBrowser):
             The identity of the glossary to search. If not specified, all glossaries will be searched.
         status: [str], optional
             A list of statuses to optionally restrict results. Default is Active
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1238,7 +1084,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_by_name(
-                name, glossary_guid, status, server_name, start_from, page_size
+                name, glossary_guid, status, start_from, page_size
             )
         )
         return response
@@ -1247,7 +1093,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1258,12 +1103,10 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         glossary_category_guid: str
             The identity of the glossary category to search.
-        effective_time, datetime, optional
+        effective_time: str, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1282,11 +1125,9 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/retrieve"
         )
 
@@ -1302,7 +1143,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1314,9 +1154,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time, datetime, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1337,9 +1175,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_guid(
-                glossary_category_guid, effective_time, server_name
-            )
+            self._async_get_categories_by_guid(glossary_category_guid, effective_time)
         )
         return response
 
@@ -1347,7 +1183,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
@@ -1363,9 +1198,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time, datetime, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1384,11 +1217,9 @@ class GlossaryManager(GlossaryBrowser):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/parent/retrieve"
         )
 
@@ -1404,7 +1235,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
@@ -1418,9 +1248,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time, datetime, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1441,9 +1269,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_category_parent(
-                glossary_category_guid, effective_time, server_name
-            )
+            self._async_get_category_parent(glossary_category_guid, effective_time)
         )
         return response
 
@@ -1451,7 +1277,7 @@ class GlossaryManager(GlossaryBrowser):
     #  Terms
     #
     async def _async_create_controlled_glossary_term(
-        self, glossary_guid: str, body: dict, server_name: str = None
+        self, glossary_guid: str, body: dict
     ) -> str:
         """Create a term for a controlled glossary.
             See also: https://egeria-project.org/types/3/0385-Controlled-Glossary-Development/?h=controlled
@@ -1465,9 +1291,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the glossary category to retrieve terms from.
             body: dict
                 The dictionary to create te controlled glossary term for. Example below.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1510,12 +1334,10 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"{glossary_guid}/terms/new-controlled"
         )
 
@@ -1523,9 +1345,7 @@ class GlossaryManager(GlossaryBrowser):
 
         return response.json().get("guid", "Term not created")
 
-    def create_controlled_glossary_term(
-        self, glossary_guid: str, body: dict, server_name: str = None
-    ) -> str:
+    def create_controlled_glossary_term(self, glossary_guid: str, body: dict) -> str:
         """Create a term for a controlled glossary.
             See also: https://egeria-project.org/types/3/0385-Controlled-Glossary-Development/?h=controlled
             The request body also supports the specification of an effective time for the query.
@@ -1536,9 +1356,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the glossary category to retrieve terms from.
             body: dict
                 The dictionary to create te controlled glossary term for. Example below.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1582,9 +1400,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_controlled_glossary_term(
-                glossary_guid, body, server_name
-            )
+            self._async_create_controlled_glossary_term(glossary_guid, body)
         )
 
         return response
@@ -1596,7 +1412,6 @@ class GlossaryManager(GlossaryBrowser):
         new_display_name: str,
         version_id: str,
         term_status: str = "PROPOSED",
-        server_name: str = None,
     ) -> str:
         """Create a new term from an existing term.
 
@@ -1614,9 +1429,7 @@ class GlossaryManager(GlossaryBrowser):
                 The version identifier of the new term.
             term_status: str, optional, default = "PROPOSED"
                 The status of the term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1636,13 +1449,11 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_guid)
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"{glossary_guid}/terms/from-template/{glossary_term_guid}"
         )
 
@@ -1668,7 +1479,6 @@ class GlossaryManager(GlossaryBrowser):
         new_display_name: str,
         version_id: str,
         term_status: str = "PROPOSED",
-        server_name: str = None,
     ) -> str:
         """Create a new term from an existing term.
 
@@ -1684,9 +1494,7 @@ class GlossaryManager(GlossaryBrowser):
                 The version identifier of the new term.
             term_status: str, optional, default = "PROPOSED"
                 The status of the term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1713,14 +1521,13 @@ class GlossaryManager(GlossaryBrowser):
                 new_display_name,
                 version_id,
                 term_status,
-                server_name,
             )
         )
 
         return response
 
     async def _async_add_data_field_to_term(
-        self, glossary_term_guid: str, body: dict, server_name: str = None
+        self, glossary_term_guid: str, body: dict
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -1734,9 +1541,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1767,21 +1572,17 @@ class GlossaryManager(GlossaryBrowser):
         }
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{glossary_term_guid}/is-data-field"
         )
 
         await self._async_make_request("POST", url, body)
         return
 
-    def add_data_field_to_term(
-        self, glossary_term_guid: str, body: dict, server_name: str = None
-    ) -> None:
+    def add_data_field_to_term(self, glossary_term_guid: str, body: dict) -> None:
         """Add the data field values classification to a glossary term
 
         Parameters
@@ -1790,9 +1591,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1824,7 +1623,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_data_field_to_term(glossary_term_guid, body, server_name)
+            self._async_add_data_field_to_term(glossary_term_guid, body)
         )
 
         return
@@ -1833,7 +1632,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         confidentiality_level: int,
-        server_name: str = None,
     ) -> None:
         """Add the confidentiality classification to a glossary term
 
@@ -1845,9 +1643,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             confidentiality_level: int
                 The level of confidentiality to classify the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1868,12 +1664,10 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/elements/"
             f"{glossary_term_guid}/confidentiality"
         )
 
@@ -1892,7 +1686,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         confidentiality_level: int,
-        server_name: str = None,
     ) -> str:
         """Add the confidentiality classification to a glossary term
 
@@ -1902,9 +1695,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             confidentiality_level: int
                 The level of confidentiality to classify the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1927,14 +1718,14 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_add_confidentiality_to_term(
-                glossary_term_guid, confidentiality_level, server_name
+                glossary_term_guid, confidentiality_level
             )
         )
 
         return
 
     async def _async_add_subject_area_to_term(
-        self, glossary_term_guid: str, subject_area: str, server_name: str = None
+        self, glossary_term_guid: str, subject_area: str
     ) -> None:
         """Add the confidentiality classification to a glossary term
 
@@ -1946,9 +1737,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             subject_area: str
                 The subject area to classify the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1969,12 +1758,10 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/elements/"
             f"{glossary_term_guid}/subject-area-member"
         )
 
@@ -1990,7 +1777,7 @@ class GlossaryManager(GlossaryBrowser):
         return
 
     def add_subject_area_to_term(
-        self, glossary_term_guid: str, subject_area: str, server_name: str = None
+        self, glossary_term_guid: str, subject_area: str
     ) -> None:
         """Add the confidentiality classification to a glossary term
 
@@ -2000,9 +1787,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             subject_area: str
                 The subject area to classify the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2024,9 +1809,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_subject_area_to_term(
-                glossary_term_guid, subject_area, server_name
-            )
+            self._async_add_subject_area_to_term(glossary_term_guid, subject_area)
         )
 
         return
@@ -2036,7 +1819,6 @@ class GlossaryManager(GlossaryBrowser):
         glossary_term_guid: str,
         body: dict,
         is_merge_update: bool,
-        server_name: str = None,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2050,9 +1832,7 @@ class GlossaryManager(GlossaryBrowser):
                 Body containing information about the data field to add
             is_merge_update: bool
                 Whether the data field values should be merged with existing definition or replace it.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2082,13 +1862,11 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_term_guid)
         is_merge_update_s = str(is_merge_update).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate={is_merge_update_s}"
         )
 
@@ -2100,7 +1878,6 @@ class GlossaryManager(GlossaryBrowser):
         glossary_term_guid: str,
         body: dict,
         is_merge_update: bool,
-        server_name: str = None,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2114,9 +1891,7 @@ class GlossaryManager(GlossaryBrowser):
                 Body containing information about the data field to add
             is_merge_update: bool
                 Whether the data field values should be merged with existing definition or replace it.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2147,9 +1922,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term(
-                glossary_term_guid, body, is_merge_update, server_name
-            )
+            self._async_update_term(glossary_term_guid, body, is_merge_update)
         )
 
         return
@@ -2158,7 +1931,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         new_version_identifier: str,
-        server_name: str = None,
     ) -> None:
         """Update a glossary term's version identifier
 
@@ -2170,9 +1942,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             new_version_identifier: str
                 The new version identifier to update the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2192,12 +1962,10 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
             f"update?isMergeUpdate=true"
         )
 
@@ -2215,7 +1983,6 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         new_version_identifier: str,
-        server_name: str = None,
     ) -> None:
         """Update a glossary term's version identifier
 
@@ -2227,9 +1994,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             new_version_identifier: str
                 The new version identifier to update the term with.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2251,7 +2016,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_term_version_id(
-                glossary_term_guid, new_version_identifier, server_name
+                glossary_term_guid, new_version_identifier
             )
         )
 
@@ -2260,7 +2025,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_terms_for_category(
         self,
         glossary_category_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2274,9 +2038,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             glossary_category_guid : str
                 Unique identifier for the glossary category to retrieve terms from.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, the terms are returned if they are active at the `effective_time
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2301,15 +2062,13 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_category_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2324,7 +2083,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_terms_for_category(
         self,
         glossary_category_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2338,9 +2096,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             glossary_category_guid : str
                 Unique identifier for the glossary category to retrieve terms from.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, the terms are returned if they are active at the `effective_time.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`.
@@ -2368,7 +2123,6 @@ class GlossaryManager(GlossaryBrowser):
         response = loop.run_until_complete(
             self._async_get_terms_for_category(
                 glossary_category_guid,
-                server_name,
                 effective_time,
                 start_from,
                 page_size,
@@ -2380,7 +2134,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_terms_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2391,9 +2144,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             glossary_guid : str
                 Unique identifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, terms are potentially included if they are active at the`effective_time.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`
@@ -2418,15 +2168,13 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2441,7 +2189,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_terms_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2452,9 +2199,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             glossary_guid : str
                 Unique identifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, terms are potentially returned if they are active at the `effective_time`
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2481,7 +2225,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_for_glossary(
-                glossary_guid, server_name, effective_time, start_from, page_size
+                glossary_guid, effective_time, start_from, page_size
             )
         )
 
@@ -2490,7 +2234,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_term_relationships(
         self,
         term_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2501,9 +2244,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             term_guid : str
                 Unique identifier for the glossary term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, term relationships are included if they are active at the `effective_time`.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2528,15 +2268,13 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(term_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/related-terms?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2551,7 +2289,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_term_relationships(
         self,
         term_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2562,9 +2299,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             term_guid : str
                 Unique identifier for the glossary term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time : str, optional
                 If specified, term relationships are included if they are active at the `effective_time`.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2591,14 +2325,14 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_term_relationships(
-                term_guid, server_name, effective_time, start_from, page_size
+                term_guid, effective_time, start_from, page_size
             )
         )
 
         return response
 
     async def _async_get_glossary_for_term(
-        self, term_guid: str, server_name: str = None, effective_time: str = None
+        self, term_guid: str, effective_time: str = None
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
             that the glossary element should only be returned if it was effective at a particular time.
@@ -2609,8 +2343,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The unique identifier for the term.
-        server_name : str, optional
-            The name of the server. If not specified, the default server name will be used.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2630,8 +2363,7 @@ class GlossaryManager(GlossaryBrowser):
         Notes
         -----
         """
-        if server_name is None:
-            server_name = self.server_name
+
         validate_guid(term_guid)
 
         body = {
@@ -2639,7 +2371,7 @@ class GlossaryManager(GlossaryBrowser):
             "effectiveTime": effective_time,
         }
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"for-term/{term_guid}/retrieve"
         )
 
@@ -2647,7 +2379,7 @@ class GlossaryManager(GlossaryBrowser):
         return response.json().get("element", "No glossary found")
 
     def get_glossary_for_term(
-        self, term_guid: str, server_name: str = None, effective_time: str = None
+        self, term_guid: str, effective_time: str = None
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
             that the glossary element should only be returned if it was effective at a particular time.
@@ -2658,8 +2390,7 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The unique identifier for the term.
-        server_name : str, optional
-            The name of the server. If not specified, the default server name will be used.
+
         effective_time : datetime, optional
             TIf specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
@@ -2681,7 +2412,7 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_for_term(term_guid, server_name, effective_time)
+            self._async_get_glossary_for_term(term_guid, effective_time)
         )
         return response
 
@@ -2690,7 +2421,6 @@ class GlossaryManager(GlossaryBrowser):
         term: str,
         glossary_guid: str = None,
         status_filter: list = [],
-        server_name: str = None,
         effective_time: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
@@ -2707,8 +2437,7 @@ class GlossaryManager(GlossaryBrowser):
             The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
         status_filter : list, optional
             A list of status values to filter the search results. Default is an empty list, which means no filtering.
-        server_name : str, optional
-            The name of the server where the glossaries reside. If not provided, it will use the default server name.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2735,8 +2464,7 @@ class GlossaryManager(GlossaryBrowser):
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -2755,7 +2483,7 @@ class GlossaryManager(GlossaryBrowser):
         # body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"terms/by-name?startFrom={start_from}&pageSize={page_size}&"
             f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
         )
@@ -2770,7 +2498,6 @@ class GlossaryManager(GlossaryBrowser):
         term: str,
         glossary_guid: str = None,
         status_filter: list = [],
-        server_name: str = None,
         effective_time: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
@@ -2787,8 +2514,7 @@ class GlossaryManager(GlossaryBrowser):
             The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
         status_filter : list, optional
             A list of status values to filter the search results. Default is an empty list, which means no filtering.
-        server_name : str, optional
-            The name of the server where the glossaries reside. If not provided, it will use the default server name.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
              Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -2822,7 +2548,6 @@ class GlossaryManager(GlossaryBrowser):
                 term,
                 glossary_guid,
                 status_filter,
-                server_name,
                 effective_time,
                 for_lineage,
                 for_duplicate_processing,
@@ -2832,16 +2557,13 @@ class GlossaryManager(GlossaryBrowser):
         )
         return response
 
-    async def _async_get_terms_by_guid(
-        self, term_guid: str, server_name: str = None
-    ) -> dict | str:
+    async def _async_get_terms_by_guid(self, term_guid: str) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -2858,27 +2580,24 @@ class GlossaryManager(GlossaryBrowser):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/retrieve"
         )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("element", "No term found")
 
-    def get_terms_by_guid(self, term_guid: str, server_name: str = None) -> dict | str:
+    def get_terms_by_guid(self, term_guid: str) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -2897,16 +2616,13 @@ class GlossaryManager(GlossaryBrowser):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_by_guid(term_guid, server_name)
-        )
+        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid))
 
         return response
 
     async def _async_get_terms_versions(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2915,8 +2631,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2936,8 +2650,6 @@ class GlossaryManager(GlossaryBrowser):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -2945,7 +2657,7 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/history?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2955,7 +2667,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_terms_versions(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2964,8 +2675,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2988,9 +2697,7 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_versions(
-                term_guid, server_name, start_from, page_size
-            )
+            self._async_get_terms_versions(term_guid, start_from, page_size)
         )
 
         return response
@@ -2998,7 +2705,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_term_revision_logs(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -3007,8 +2713,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -3028,8 +2732,6 @@ class GlossaryManager(GlossaryBrowser):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -3037,7 +2739,7 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/elements/"
             f"{term_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -3047,7 +2749,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_term_revision_logs(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -3056,8 +2757,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -3080,9 +2779,7 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_revision_logs(
-                term_guid, server_name, start_from, page_size
-            )
+            self._async_get_term_revision_logs(term_guid, start_from, page_size)
         )
 
         return response
@@ -3090,7 +2787,6 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_get_term_revision_history(
         self,
         term_revision_log_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -3100,8 +2796,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_revision_log_guid : str
             The GUID of the glossary term revision log to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -3126,8 +2820,6 @@ class GlossaryManager(GlossaryBrowser):
         This revision history is created automatically.  The text is supplied on the update request.
         If no text is supplied, the value "None" is show.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -3135,7 +2827,7 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(term_revision_log_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/note-logs/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/note-logs/"
             f"{term_revision_log_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -3145,7 +2837,6 @@ class GlossaryManager(GlossaryBrowser):
     def get_term_revision_history(
         self,
         term_revision_log_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -3155,8 +2846,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_revision_log_guid : str
             The GUID of the glossary term revision log to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -3185,7 +2874,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_term_revision_history(
-                term_revision_log_guid, server_name, start_from, page_size
+                term_revision_log_guid, start_from, page_size
             )
         )
 
@@ -3202,7 +2891,6 @@ class GlossaryManager(GlossaryBrowser):
         ignore_case: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -3220,9 +2908,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -3259,8 +2945,7 @@ class GlossaryManager(GlossaryBrowser):
         The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
         The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         if effective_time is None:
@@ -3285,7 +2970,7 @@ class GlossaryManager(GlossaryBrowser):
         # body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
@@ -3309,7 +2994,6 @@ class GlossaryManager(GlossaryBrowser):
         ignore_case: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -3327,9 +3011,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str, [default=None], optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -3379,7 +3061,6 @@ class GlossaryManager(GlossaryBrowser):
                 ignore_case,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 start_from,
                 page_size,
             )

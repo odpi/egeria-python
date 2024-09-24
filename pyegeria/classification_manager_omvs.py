@@ -14,7 +14,7 @@ from pyegeria import body_slimmer
 
 # import json
 from pyegeria._client import Client, max_paging_size
-from pyegeria._globals import enable_ssl_check, default_time_out
+from pyegeria._globals import default_time_out
 
 
 def query_seperator(current_string):
@@ -39,50 +39,6 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
 
 
-# def extract_relationships_plus(element):
-#     type_name = element["relatedElement"]["type"]["typeName"]
-#     guid = element["relationshipHeader"]["guid"]
-#     properties = element["relationshipProperties"]["propertiesAsStrings"]
-#     name = element["relatedElement"]["uniqueName"]
-#     return {"name": name, "typeName": type_name, "guid": guid, "properties": properties}
-#
-#
-# def extract_related_elements_list(element_list):
-#     return [extract_relationships_plus(element) for element in element_list]
-#
-#
-# def related_elements_response(response: dict, detailed_response: bool):
-#     if detailed_response:
-#         return response
-#     else:
-#         return extract_related_elements_list(response["elements"])
-#
-#
-# def element_properties_plus(element):
-#     props_plus = element["properties"]
-#     props_plus.update({"guid": element["elementHeader"]["guid"]})
-#     props_plus.update({"versions": element["elementHeader"]["versions"]})
-#     return props_plus
-#
-#
-# def element_property_plus_list(element_list):
-#     return [element_properties_plus(element) for element in element_list]
-#
-#
-# def element_response(response: dict, element_type: str, detailed_response: bool):
-#     if detailed_response:
-#         return response
-#     else:
-#         return element_properties_plus(response[element_type])
-#
-#
-# def elements_response(response: dict, element_type: str, detailed_response: bool):
-#     if detailed_response:
-#         return response
-#     else:
-#         return element_property_plus_list(response[element_type])
-
-
 class ClassificationManager(Client):
     """ClassificationManager is a class that extends the Client class. It
     provides methods to CRUD annotations and to query elements and relationships. Async version.
@@ -105,16 +61,20 @@ class ClassificationManager(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str = None,
         user_pwd: str = None,
         token: str = None,
     ):
-        self.admin_command_root: str
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+        self.classification_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
         Client.__init__(
             self,
-            server_name,
+            view_server,
             platform_url,
             user_id=user_id,
             user_pwd=user_pwd,
@@ -133,7 +93,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -156,8 +115,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -175,8 +134,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -193,7 +150,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/by-type{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/by-type{possible_query_params}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
@@ -211,7 +168,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -234,8 +190,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -263,7 +219,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -279,7 +234,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -306,8 +260,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -325,8 +279,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -345,7 +297,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/by-exact-property-value{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/by-exact-property-value{possible_query_params}"
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -367,7 +319,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -394,8 +345,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -425,7 +376,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -437,7 +387,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> dict | str:
         """
@@ -455,8 +404,8 @@ class ClassificationManager(Client):
            - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
            - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -474,8 +423,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -489,7 +436,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/{element_guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}{possible_query_params}"
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -507,7 +454,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> dict | str:
         """
@@ -525,8 +471,8 @@ class ClassificationManager(Client):
            - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
            - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -552,7 +498,6 @@ class ClassificationManager(Client):
                 effective_time,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -565,7 +510,6 @@ class ClassificationManager(Client):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -585,8 +529,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -604,8 +548,7 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         property_name = "qualifiedName" if property_name is None else property_name
 
         possible_query_params = query_string(
@@ -624,7 +567,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/by-unique-name{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/by-unique-name{possible_query_params}"
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -639,7 +582,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -659,8 +601,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -687,7 +629,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -700,7 +641,6 @@ class ClassificationManager(Client):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -719,8 +659,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -738,8 +678,7 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         property_name = "qualifiedName" if property_name is None else property_name
 
         possible_query_params = query_string(
@@ -758,7 +697,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/guid-by-unique-name{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/guid-by-unique-name{possible_query_params}"
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -773,7 +712,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -792,8 +730,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -820,14 +758,13 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
         return response
 
     async def _async_get_guid_for_name(
-        self, name: str, server_name: str = None, time_out: int = default_time_out
+        self, name: str, time_out: int = default_time_out
     ) -> list | str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -837,8 +774,8 @@ class ClassificationManager(Client):
         ----------
         name: str
             - element name to be searched.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -856,8 +793,7 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         property_name = ["name", "qualifiedName", "title"]
         elements = await self._async_get_elements_by_property_value(
             name, property_name, None
@@ -873,7 +809,7 @@ class ClassificationManager(Client):
         return elements
 
     def get_guid_for_name(
-        self, name: str, server_name: str = None, time_out: int = default_time_out
+        self, name: str, time_out: int = default_time_out
     ) -> list | str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -883,8 +819,8 @@ class ClassificationManager(Client):
         ----------
         name: str
             - element name to be searched.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -905,7 +841,7 @@ class ClassificationManager(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_guid_for_name(name, server_name, time_out)
+            self._async_get_guid_for_name(name, time_out)
         )
         return response
 
@@ -919,7 +855,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -947,8 +882,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -966,8 +901,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -986,7 +919,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/elements/by-property-value-search{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/by-property-value-search{possible_query_params}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
@@ -1006,7 +939,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1034,8 +966,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1065,7 +997,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1083,7 +1014,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1109,8 +1039,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1128,8 +1058,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1147,7 +1075,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/by-classification/{classification_name}"
+            f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}"
             f"{possible_query_params}"
         )
         response = await self._async_make_request(
@@ -1168,7 +1096,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1194,8 +1121,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1224,7 +1151,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1241,7 +1167,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1271,8 +1196,8 @@ class ClassificationManager(Client):
              - index of the list to start from (0 for start).
          page_size
              - maximum number of elements to return.
-         server_name: str, default = None
-             - name of the server instances for this request.
+
+
          time_out: int, default = default_time_out
              - http request timeout for this request
 
@@ -1290,8 +1215,6 @@ class ClassificationManager(Client):
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1311,7 +1234,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/by-classification/{classification_name}/"
+            f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
             f"with-exact-property-value{possible_query_params}"
         )
         response = await self._async_make_request(
@@ -1334,7 +1257,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1363,8 +1285,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1395,7 +1317,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1412,7 +1333,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1443,8 +1363,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1462,8 +1382,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1483,7 +1401,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/by-classification/{classification_name}/"
+            f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
             f"with-property-value-search{possible_query_params}"
         )
         response = await self._async_make_request(
@@ -1506,7 +1424,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1537,8 +1454,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1569,7 +1486,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1588,7 +1504,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1616,8 +1531,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1635,8 +1550,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1655,7 +1568,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/by-relationship"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship"
             f"{possible_query_params}"
         )
         response: Response = await self._async_make_request(
@@ -1677,7 +1590,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1705,8 +1617,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1736,7 +1648,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1753,7 +1664,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1783,8 +1693,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1802,8 +1712,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1822,7 +1730,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/by-relationship/"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
             f"{relationship_type}{possible_query_params}"
         )
         response: Response = await self._async_make_request(
@@ -1845,7 +1753,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1875,8 +1782,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1907,7 +1814,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -1926,7 +1832,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -1961,8 +1866,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -1980,8 +1885,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2002,7 +1905,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/by-relationship/"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
             f"{relationship_type}/with-exact-property-value{possible_query_params}"
         )
 
@@ -2028,7 +1931,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2062,8 +1964,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2096,7 +1998,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -2115,7 +2016,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2151,8 +2051,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2170,8 +2070,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2192,7 +2090,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/by-relationship/"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
             f"{relationship_type}/with-property-value-search{possible_query_params}"
         )
 
@@ -2219,7 +2117,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2254,8 +2151,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2288,7 +2185,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -2305,7 +2201,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2325,8 +2220,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2344,8 +2239,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2359,7 +2252,7 @@ class ClassificationManager(Client):
         body = {"class": "FindProperties", "effectiveTime": effective_time}
 
         url = (
-            f"{base_path(self, server_name)}/relationships/{relationship_type}"
+            f"{base_path(self, self.view_server)}/relationships/{relationship_type}"
             f"{possible_query_params}"
         )
 
@@ -2381,7 +2274,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2401,8 +2293,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2430,7 +2322,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -2446,7 +2337,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2473,8 +2363,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2492,8 +2382,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2512,7 +2400,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/relationships/{relationship_type}/"
+            f"{base_path(self, self.view_server)}/relationships/{relationship_type}/"
             f"with-exact-property-value{possible_query_params}"
         )
 
@@ -2535,7 +2423,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2560,8 +2447,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2591,7 +2478,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -2607,7 +2493,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2633,8 +2518,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2652,8 +2537,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2672,7 +2555,7 @@ class ClassificationManager(Client):
         }
 
         url = (
-            f"{base_path(self, server_name)}/relationships/"
+            f"{base_path(self, self.view_server)}/relationships/"
             f"{relationship_type}/with-property-value-search{possible_query_params}"
         )
 
@@ -2696,7 +2579,6 @@ class ClassificationManager(Client):
         for_duplicate_processing: bool = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2724,8 +2606,8 @@ class ClassificationManager(Client):
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2755,7 +2637,6 @@ class ClassificationManager(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                server_name,
                 time_out,
             )
         )
@@ -2771,7 +2652,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2788,8 +2668,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2807,8 +2687,6 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2822,7 +2700,7 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = f"{base_path(self, server_name)}/guids/{guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/guids/{guid}{possible_query_params}"
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
@@ -2835,7 +2713,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> list | str:
         """
@@ -2852,8 +2729,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2879,7 +2756,6 @@ class ClassificationManager(Client):
                 effective_time,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -2895,7 +2771,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -2915,8 +2790,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -2955,8 +2830,6 @@ class ClassificationManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2966,7 +2839,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/confidence"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence"
             f"{possible_query_params}"
         )
 
@@ -2980,7 +2853,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3000,8 +2872,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3048,7 +2920,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -3059,7 +2930,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3078,8 +2948,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3099,8 +2969,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3110,7 +2978,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/confidence/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence/remove"
             f"{possible_query_params}"
         )
         body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time}
@@ -3125,7 +2993,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3144,8 +3011,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3173,7 +3040,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -3184,7 +3050,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3206,8 +3071,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3246,8 +3111,6 @@ class ClassificationManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3257,7 +3120,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/confidentiality"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidentiality"
             f"{possible_query_params}"
         )
 
@@ -3271,7 +3134,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3293,8 +3155,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3341,7 +3203,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -3352,7 +3213,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3371,8 +3231,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3392,8 +3252,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3403,7 +3261,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/confidentiality/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/confidentiality/remove"
             f"{possible_query_params}"
         )
 
@@ -3419,7 +3277,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3438,8 +3295,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3467,7 +3324,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -3478,7 +3334,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3498,8 +3353,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3538,8 +3393,6 @@ class ClassificationManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3549,7 +3402,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/criticality"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/criticality"
             f"{possible_query_params}"
         )
 
@@ -3563,7 +3416,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3583,8 +3435,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3631,7 +3483,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -3642,7 +3493,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3661,8 +3511,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3682,8 +3532,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3693,7 +3541,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/criticality/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/criticality/remove"
             f"{possible_query_params}"
         )
 
@@ -3709,7 +3557,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3728,8 +3575,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3757,7 +3604,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -3769,7 +3615,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3789,8 +3634,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3808,8 +3653,6 @@ class ClassificationManager(Client):
             the requesting user is not authorized to issue this request.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3819,7 +3662,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/governed-by/definition/{definition_guid}"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/{definition_guid}"
             f"{possible_query_params}"
         )
 
@@ -3836,7 +3679,6 @@ class ClassificationManager(Client):
         effective_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3856,8 +3698,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3884,7 +3726,6 @@ class ClassificationManager(Client):
                 effective_time,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -3896,7 +3737,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3916,8 +3756,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3937,8 +3777,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3948,7 +3786,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/governed-by/definition/"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/"
             f"{definition_guid}/remove{possible_query_params}"
         )
 
@@ -3965,7 +3803,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -3985,8 +3822,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4014,7 +3851,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -4025,7 +3861,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4043,8 +3878,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4076,8 +3911,6 @@ class ClassificationManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4087,7 +3920,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/ownership"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/ownership"
             f"{possible_query_params}"
         )
 
@@ -4101,7 +3934,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4119,8 +3951,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4160,7 +3992,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -4171,7 +4002,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4189,8 +4019,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4209,8 +4039,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4220,7 +4048,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/ownership/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/ownership/remove"
             f"{possible_query_params}"
         )
 
@@ -4236,7 +4064,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4254,8 +4081,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4282,7 +4109,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -4293,7 +4119,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4314,8 +4139,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4357,8 +4182,6 @@ class ClassificationManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4368,7 +4191,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/retention"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/retention"
             f"{possible_query_params}"
         )
 
@@ -4382,7 +4205,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4403,8 +4225,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4453,7 +4275,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -4464,7 +4285,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4483,8 +4303,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4504,8 +4324,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4515,7 +4333,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/retention/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/retention/remove"
             f"{possible_query_params}"
         )
 
@@ -4531,7 +4349,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4550,8 +4367,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4579,7 +4396,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -4590,7 +4406,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4608,8 +4423,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4650,8 +4465,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4661,7 +4474,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/security-tags"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags"
             f"{possible_query_params}"
         )
 
@@ -4675,7 +4488,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4693,8 +4505,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4743,7 +4555,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -4754,7 +4565,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4770,8 +4580,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4790,8 +4600,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4801,7 +4609,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/security-tags/remove"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags/remove"
             f"{possible_query_params}"
         )
 
@@ -4817,7 +4625,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4835,8 +4642,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4863,7 +4670,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -4875,7 +4681,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4897,8 +4702,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -4936,8 +4741,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4947,7 +4750,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/semantic-assignment/terms"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms"
             f"/{glossary_term_guid}{possible_query_params}"
         )
 
@@ -4962,7 +4765,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -4984,8 +4786,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -5031,7 +4833,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -5043,7 +4844,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5063,8 +4863,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -5082,8 +4882,6 @@ class ClassificationManager(Client):
             the requesting user is not authorized to issue this request.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -5093,7 +4891,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/semantic-assignment/terms/"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/"
             f"{glossary_term_guid}/remove{possible_query_params}"
         )
 
@@ -5110,7 +4908,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5130,8 +4927,8 @@ class ClassificationManager(Client):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -5159,7 +4956,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )
@@ -5170,7 +4966,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5188,8 +4983,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -5221,8 +5016,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -5232,7 +5025,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/subject-area-member"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/subject-area-member"
             f"{possible_query_params}"
         )
 
@@ -5246,7 +5039,6 @@ class ClassificationManager(Client):
         body: dict,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5264,8 +5056,8 @@ class ClassificationManager(Client):
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        server_name: str, default = None
-            - name of the server instances for this request.
+
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -5305,7 +5097,6 @@ class ClassificationManager(Client):
                 body,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 time_out,
             )
         )
@@ -5316,7 +5107,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5334,8 +5124,8 @@ class ClassificationManager(Client):
              - Normally false. Set true when the caller is part of a deduplication function
          effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-         server_name: str, default = None
-             - name of the server instances for this request.
+
+
          time_out: int, default = default_time_out
              - http request timeout for this request
 
@@ -5354,8 +5144,6 @@ class ClassificationManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -5365,7 +5153,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, server_name)}/elements/{element_guid}/subject-area-member"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/subject-area-member"
             f"/remove{possible_query_params}"
         )
 
@@ -5381,7 +5169,6 @@ class ClassificationManager(Client):
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
-        server_name: str = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -5399,8 +5186,8 @@ class ClassificationManager(Client):
              - Normally false. Set true when the caller is part of a deduplication function
          effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-         server_name: str, default = None
-             - name of the server instances for this request.
+
+
          time_out: int, default = default_time_out
              - http request timeout for this request
 
@@ -5427,7 +5214,6 @@ class ClassificationManager(Client):
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
-                server_name,
                 time_out,
             )
         )

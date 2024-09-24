@@ -64,11 +64,10 @@ class TestServerOperations:
     def test_add_archive_files(self):
         # Todo - the base function doesn't seem to validate the file or to actually load? Check
         try:
-            server = self.good_server_1
+            # server = self.good_server_1
+            server = "cocoMDS2"
             p_client = ServerOps(server, self.good_platform1_url, self.good_user_1)
-            p_client.add_archive_file(
-                "content-packs/CocoComboArchive.omarchive", server
-            )
+            p_client.add_archive_file("content-packs/CoreContentPack.omarchive", server)
             assert True, "Should have raised an exception"
 
         except (InvalidParameterException, PropertyServerException) as e:

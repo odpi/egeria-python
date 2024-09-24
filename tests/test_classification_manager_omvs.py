@@ -128,12 +128,12 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
-    # open_metadata_type_name = None
+    open_metadata_type_name = "ArchiveFile"
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = None
-    property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
-    property_names = ["name", "qualifiedName"]
+    # open_metadata_type_name = None
+    property_value = "CoreContentPack"
+    property_names = ["name", "resourceName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -169,8 +169,10 @@ def test_get_elements_by_guid():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
+        start_time = time.perf_counter()
         result = c_client.get_element_by_guid(element_guid)
-
+        duration = time.perf_counter() - start_time
+        print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:
             print(f"\n\tElement count is: {len(result)}")
 
@@ -200,8 +202,10 @@ def test_get_guid_for_name():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    start_time = time.perf_counter()
     result = c_client.get_guid_for_name(property_value)
-
+    duration = time.perf_counter() - start_time
+    print(f"\n\tDuration was {duration} seconds")
     if type(result) is list:
         print(f"\n\tElement count is: {len(result)}")
         print_json(data=result)
@@ -219,8 +223,10 @@ def test_get_element_guid_by_unique_name():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    start_time = time.perf_counter()
     result = c_client.get_element_guid_by_unique_name(property_value, "name")
-
+    duration = time.perf_counter() - start_time
+    print(f"\n\tDuration was {duration} seconds")
     if type(result) is list:
         print(f"\n\tElement count is: {len(result)}")
         print_json(data=result)
@@ -238,8 +244,10 @@ def test_get_element_by_unique_name():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    start_time = time.perf_counter()
     result = c_client.get_element_by_unique_name(property_value, "name")
-
+    duration = time.perf_counter() - start_time
+    print(f"\n\tDuration was {duration} seconds")
     if type(result) is dict:
         print(f"\n\tElement count is: {len(result)}")
         print_json(data=result)
@@ -340,9 +348,9 @@ def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
 
     # open_metadata_type_name = "Organization"
-    open_metadata_type_name = None
-    element_guid = "25385e7b-4718-4bed-b9ac-cb99679d68db"
-    relationship_type = "ProfileIdentity"
+    open_metadata_type_name = "CSVFile"
+    element_guid = "8a921039-ad5f-454d-ae17-e5a5b69f9333"
+    relationship_type = "Certification"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)

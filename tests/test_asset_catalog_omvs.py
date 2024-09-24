@@ -105,19 +105,19 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server: str = good_view_server_1):
         try:
             server_name = server
-            asset_guid = "d349b01e-52ff-42ca-ac2a-23b876cb4ed7"
+            asset_guid = "cbb54dc4-a0b1-446a-8bb4-f3b3070c8ef3"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_graph(asset_guid, server_name)
+            response = a_client.get_asset_graph(asset_guid)
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
-                print(f"Found {count} terms")
+                print(f"Found {count} assets")
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
