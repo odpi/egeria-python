@@ -11,7 +11,6 @@ import json
 
 # import json
 from pyegeria._client import Client, max_paging_size
-from pyegeria._globals import enable_ssl_check
 
 
 def jprint(info, comment=None):
@@ -92,6 +91,7 @@ def elements_response(response: dict, element_type: str, detailed_response: bool
     else:
         return element_property_plus_list(response[element_type])
 
+
 class FeedbackManager(Client):
     """FeedbackManager is a class that extends the Client class. It
     provides methods to CRUD tags, comments and likes for managed
@@ -99,7 +99,7 @@ class FeedbackManager(Client):
 
     Attributes:
 
-        server_name: str
+        view_server: str
             The name of the View Server to connect to.
         platform_url : str
             URL of the server platform to connect to
@@ -117,16 +117,21 @@ class FeedbackManager(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
         self.admin_command_root: str
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
         Client.__init__(
             self,
-            server_name,
+            view_server,
             platform_url,
             user_id,
             user_pwd,
@@ -137,7 +142,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         comment_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -152,8 +156,7 @@ class FeedbackManager(Client):
             - String - unique id for the anchor element.
         comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-        server_name
-            - name of the server instances for this request.
+
         is_public
             - is this visible to other people
         body
@@ -176,8 +179,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -186,7 +187,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments/{comment_guid}/replies{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/comments/{comment_guid}/replies{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -194,7 +195,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         comment_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -209,8 +209,7 @@ class FeedbackManager(Client):
             - String - unique id for the anchor element.
         comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-        server_name
-            - name of the server instances for this request.
+
         is_public
             - is this visible to other people
         body
@@ -238,18 +237,11 @@ class FeedbackManager(Client):
             self._async_add_comment_reply(
                 element_guid,
                 comment_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
             )
-        )
-        return response
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_add_comment_reply(server_name, body)
         )
         return response
 
@@ -260,7 +252,6 @@ class FeedbackManager(Client):
     async def _async_add_comment_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -271,8 +262,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -297,8 +287,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -307,7 +295,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/comments{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
@@ -315,7 +303,6 @@ class FeedbackManager(Client):
     def add_comment_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -326,8 +313,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -357,7 +343,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_add_comment_to_element(
                 element_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -373,7 +358,6 @@ class FeedbackManager(Client):
     async def _async_add_like_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -384,8 +368,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -410,8 +393,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -421,7 +402,7 @@ class FeedbackManager(Client):
             ]
         )
 
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/likes{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
@@ -429,7 +410,6 @@ class FeedbackManager(Client):
     def add_like_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -440,8 +420,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -470,7 +449,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_add_like_to_element(
                 element_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -486,7 +464,6 @@ class FeedbackManager(Client):
     async def _async_add_rating_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -497,8 +474,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -523,8 +499,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -533,7 +507,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/ratings{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
@@ -541,7 +515,6 @@ class FeedbackManager(Client):
     def add_rating_to_element(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -552,8 +525,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - String - unique id for the element.
         is_public
@@ -582,7 +554,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_add_rating_to_element(
                 element_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -599,7 +570,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         tag_guid: str,
-        server_name: str = None,
         is_public: bool = False,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -610,8 +580,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique id for the element.
         tag_guid
@@ -636,8 +605,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -646,7 +613,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/{tag_guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/tags/{tag_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -654,7 +621,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         tag_guid: str,
-        server_name: str = None,
         is_public: bool = False,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -669,8 +635,7 @@ class FeedbackManager(Client):
             - unique id for the element.
         tag_guid
             - unique id of the tag.
-        server_name
-            - name of the server instances for this request.
+
         is_public
             - is this visible to other people
         body
@@ -698,7 +663,6 @@ class FeedbackManager(Client):
             self._async_add_tag_to_element(
                 element_guid,
                 tag_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -715,7 +679,6 @@ class FeedbackManager(Client):
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -751,8 +714,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -760,7 +721,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -768,7 +729,6 @@ class FeedbackManager(Client):
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -809,7 +769,6 @@ class FeedbackManager(Client):
             self._async_clear_accepted_answer(
                 question_comment_guid,
                 answer_comment_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -824,7 +783,6 @@ class FeedbackManager(Client):
     async def _async_create_informal_tag(
         self,
         body: dict,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -833,8 +791,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         view_service_url_marker
             - optional view service URL marker (overrides access_service_url_marker)
         access_service_url_marker
@@ -867,8 +824,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -876,7 +831,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
@@ -884,7 +839,6 @@ class FeedbackManager(Client):
     def create_informal_tag(
         self,
         body: dict,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -893,8 +847,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         view_service_url_marker
             - optional view service URL marker (overrides access_service_url_marker)
         access_service_url_marker
@@ -929,7 +882,7 @@ class FeedbackManager(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_informal_tag(body, server_name)
+            self._async_create_informal_tag(body, self.view_server)
         )
         return response
 
@@ -940,7 +893,6 @@ class FeedbackManager(Client):
     async def _async_create_note(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -974,8 +926,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -984,14 +934,13 @@ class FeedbackManager(Client):
             ]
         )
 
-        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/notes{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/{note_log_guid}/notes{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def create_note(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -1029,7 +978,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_create_note(
                 note_log_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -1044,7 +992,6 @@ class FeedbackManager(Client):
     async def _async_create_note_log(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -1081,8 +1028,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1091,14 +1036,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/note-logs{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/note-logs{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def create_note_log(
         self,
         element_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -1139,7 +1083,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_create_note_log(
                 element_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -1155,7 +1098,6 @@ class FeedbackManager(Client):
     async def _async_delete_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -1209,8 +1151,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1218,7 +1158,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/feedback-manager/tags/{tag_guid}/remove{possible_query_params}"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/feedback-manager/tags/{tag_guid}/remove{possible_query_params}"
 
         response = await self._async_make_request("POST", url, {})
         return response.json()
@@ -1226,7 +1166,6 @@ class FeedbackManager(Client):
     def delete_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -1284,7 +1223,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_delete_tag(
                 tag_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -1299,7 +1237,6 @@ class FeedbackManager(Client):
     async def _async_find_my_tags(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1315,8 +1252,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1347,8 +1283,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1361,14 +1295,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags/by-search-string{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def find_my_tags(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1384,8 +1317,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1420,7 +1352,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_find_my_tags(
                 body,
-                server_name=server_name,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -1440,7 +1371,6 @@ class FeedbackManager(Client):
     async def _async_find_note_logs(
         self,
         body: dict,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1457,8 +1387,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1487,8 +1416,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1501,14 +1428,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/by-search-string{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_note_logs(
         self,
         body: dict,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1525,8 +1451,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1559,7 +1484,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_find_note_logs(
                 body,
-                server_name,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -1579,7 +1503,6 @@ class FeedbackManager(Client):
     async def _async_find_notes(
         self,
         body: dict,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1596,8 +1519,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1626,8 +1548,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1640,14 +1560,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/notes/by-search-string{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/notes/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_notes(
         self,
         body: dict,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1664,8 +1583,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1698,7 +1616,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_find_notes(
                 body,
-                server_name,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -1718,7 +1635,6 @@ class FeedbackManager(Client):
     async def _async_find_tags(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1733,8 +1649,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1765,8 +1680,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1779,14 +1692,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags/by-search-string{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
     def find_tags(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1801,8 +1713,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1837,7 +1748,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_find_tags(
                 body,
-                server_name=server_name,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -1857,7 +1767,6 @@ class FeedbackManager(Client):
     async def _async_find_comments(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1874,8 +1783,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1904,8 +1812,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -1918,14 +1824,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/by-search-string{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_comments(
         self,
         body: str,
-        server_name: str = None,
         starts_with: bool = None,
         ends_with: bool = None,
         ignore_case: bool = None,
@@ -1942,8 +1847,7 @@ class FeedbackManager(Client):
         ----------
         body
             - search string and effective time.
-        server_name
-            - name of the server instances for this request.
+
         starts_with
             - does the value start with the supplied string?
         ends_with
@@ -1976,7 +1880,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_find_comments(
                 body,
-                server_name,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -1996,7 +1899,6 @@ class FeedbackManager(Client):
     async def _async_get_attached_comments(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2037,8 +1939,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2048,14 +1948,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/comments/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/comments/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_comments(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2100,7 +1999,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_attached_comments(
                 element_guid,
-                server_name,
                 body,
                 start_from,
                 page_size,
@@ -2118,7 +2016,6 @@ class FeedbackManager(Client):
     async def _async_get_comment(
         self,
         comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2153,8 +2050,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2162,14 +2057,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/{comment_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/{comment_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_comment(
         self,
         comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2208,7 +2102,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_comment(
                 comment_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -2223,7 +2116,6 @@ class FeedbackManager(Client):
     async def _async_get_attached_likes(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2265,8 +2157,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2276,15 +2166,14 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/likes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
-        #return response.json().get("ratings", "---")
+        # return response.json().get("ratings", "---")
 
     def get_attached_likes(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2331,7 +2220,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_attached_likes(
                 element_guid,
-                server_name,
                 body,
                 start_from,
                 page_size,
@@ -2348,7 +2236,6 @@ class FeedbackManager(Client):
     async def _async_get_attached_ratings(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2389,8 +2276,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2400,14 +2285,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/ratings/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_ratings(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2452,7 +2336,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_attached_ratings(
                 element_guid,
-                server_name,
                 body,
                 start_from,
                 page_size,
@@ -2469,7 +2352,6 @@ class FeedbackManager(Client):
     async def _async_get_attached_tags(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2510,8 +2392,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2521,15 +2401,14 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/tags/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
-        #return response.json().get("tags", "---")
+        # return response.json().get("tags", "---")
         return elements_response(response.json(), "tags", detailed_response)
 
     def get_attached_tags(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2574,7 +2453,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_attached_tags(
                 element_guid,
-                server_name,
                 body,
                 start_from,
                 page_size,
@@ -2592,7 +2470,6 @@ class FeedbackManager(Client):
     async def _async_get_elements_by_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2633,8 +2510,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2644,14 +2519,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/by-tag/{tag_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/by-tag/{tag_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return related_elements_response(response.json(), detailed_response)
 
     def get_elements_by_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2696,7 +2570,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_elements_by_tag(
                 tag_guid,
-                server_name,
                 body,
                 start_from,
                 page_size,
@@ -2714,7 +2587,6 @@ class FeedbackManager(Client):
     async def _async_get_note_by_guid(
         self,
         note_guid: str,
-        server_name: str = None,
         body: str = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2747,8 +2619,6 @@ class FeedbackManager(Client):
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2756,14 +2626,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/notes/{note_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/notes/{note_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_note_by_guid(
         self,
         note_guid: str,
-        server_name: str = None,
         body: str = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2800,7 +2669,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_note_by_guid(
                 note_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -2816,7 +2684,6 @@ class FeedbackManager(Client):
     async def _async_get_note_log_by_guid(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: str = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2851,8 +2718,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2860,14 +2725,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/{note_log_guid}/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
     def get_note_log_by_guid(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: str = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -2906,7 +2770,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_note_log_by_guid(
                 note_log_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -2922,7 +2785,6 @@ class FeedbackManager(Client):
     async def _async_get_note_logs_by_name(
         self,
         body: dict,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -2962,8 +2824,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -2973,14 +2833,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/by-name{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/by-name{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_note_logs_by_name(
         self,
         body: dict,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3024,7 +2883,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_note_logs_by_name(
                 body,
-                server_name,
                 start_from,
                 page_size,
                 view_service_url_marker,
@@ -3042,7 +2900,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         body: dict = {},
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3082,8 +2939,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3093,7 +2948,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/note-logs/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/note-logs/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
@@ -3101,7 +2956,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         body: dict = {},
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3146,7 +3000,6 @@ class FeedbackManager(Client):
             self._async_get_note_logs_for_element(
                 element_guid,
                 body,
-                server_name,
                 start_from,
                 page_size,
                 view_service_url_marker,
@@ -3164,7 +3017,6 @@ class FeedbackManager(Client):
         self,
         note_log_guid: str,
         body: dict = {},
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3204,8 +3056,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3215,7 +3065,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/notes/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/{note_log_guid}/notes/retrieve{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
@@ -3223,7 +3073,6 @@ class FeedbackManager(Client):
         self,
         note_log_guid: str,
         body: dict = {},
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3268,7 +3117,6 @@ class FeedbackManager(Client):
             self._async_get_notes_for_note_log(
                 note_log_guid,
                 body,
-                server_name,
                 start_from,
                 page_size,
                 view_service_url_marker,
@@ -3285,7 +3133,6 @@ class FeedbackManager(Client):
     async def _async_get_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
         detailed_response: bool = False,
@@ -3295,8 +3142,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         tag_guid
             - unique identifier of the meaning.
         view_service_url_marker
@@ -3320,16 +3166,13 @@ class FeedbackManager(Client):
             the requesting user is not authorized to issue this request.
         """
 
-        if server_name is None:
-            server_name = self.server_name
-
         possible_query_params = query_string(
             [
                 ("viewServiceUrlMarker", view_service_url_marker),
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags/{tag_guid}/retrieve{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags/{tag_guid}/retrieve{possible_query_params}"
 
         response = await self._async_make_request("POST", url, {})
         return element_response(response.json(), "tag", detailed_response)
@@ -3337,7 +3180,6 @@ class FeedbackManager(Client):
     def get_tag(
         self,
         tag_guid: str,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
         detailed_response: bool = False,
@@ -3347,8 +3189,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         tag_guid
             - unique identifier of the meaning.
         view_service_url_marker
@@ -3375,7 +3216,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_tag(
                 tag_guid,
-                server_name,
                 view_service_url_marker,
                 access_service_url_marker,
                 detailed_response,
@@ -3390,7 +3230,6 @@ class FeedbackManager(Client):
     async def _async_get_tags_by_name(
         self,
         body: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3402,8 +3241,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         body
             - name of tag.
         start_from
@@ -3428,8 +3266,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3439,7 +3275,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags/by-name{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags/by-name{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
@@ -3447,7 +3283,6 @@ class FeedbackManager(Client):
     def get_tags_by_name(
         self,
         body: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         view_service_url_marker: str = None,
@@ -3459,8 +3294,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         body
             - name of tag.
         start_from
@@ -3489,7 +3323,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_get_tags_by_name(
                 body,
-                server_name,
                 start_from,
                 page_size,
                 view_service_url_marker,
@@ -3506,7 +3339,6 @@ class FeedbackManager(Client):
     async def _async_remove_comment_from_element(
         self,
         comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3542,8 +3374,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3551,14 +3381,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/{comment_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/{comment_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_comment_from_element(
         self,
         comment_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3598,7 +3427,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_remove_comment_from_element(
                 comment_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -3613,7 +3441,6 @@ class FeedbackManager(Client):
     async def _async_remove_like_from_element(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3623,8 +3450,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique identifier for the element where the like is attached.
         view_service_url_marker
@@ -3647,8 +3473,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3656,14 +3480,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/likes/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/likes/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_like_from_element(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3673,8 +3496,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique identifier for the element where the like is attached.
         view_service_url_marker
@@ -3701,7 +3523,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_remove_like_from_element(
                 element_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -3716,7 +3537,6 @@ class FeedbackManager(Client):
     async def _async_remove_note(
         self,
         note_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3753,8 +3573,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3762,14 +3580,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/notes/{note_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/notes/{note_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_note(
         self,
         note_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3810,7 +3627,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_remove_note(
                 note_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -3825,7 +3641,6 @@ class FeedbackManager(Client):
     async def _async_remove_note_log(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3861,8 +3676,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3870,14 +3683,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/{note_log_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_note_log(
         self,
         note_log_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3917,7 +3729,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_remove_note_log(
                 note_log_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -3932,7 +3743,6 @@ class FeedbackManager(Client):
     async def _async_remove_rating_from_element(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3942,8 +3752,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique identifier for the element where the rating is attached.
         view_service_url_marker
@@ -3966,8 +3775,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -3975,14 +3782,13 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/ratings/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/ratings/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
     def remove_rating_from_element(
         self,
         element_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -3992,8 +3798,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique identifier for the element where the rating is attached.
         view_service_url_marker
@@ -4020,7 +3825,6 @@ class FeedbackManager(Client):
         response = loop.run_until_complete(
             self._async_remove_rating_from_element(
                 element_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -4036,7 +3840,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4047,8 +3850,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         element_guid
             - unique id for the element.
         tag_guid
@@ -4073,8 +3875,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4082,7 +3882,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/elements/{element_guid}/tags/{tag_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/tags/{tag_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4090,7 +3890,6 @@ class FeedbackManager(Client):
         self,
         element_guid: str,
         tag_guid: str,
-        server_name: str = None,
         body: dict = {},
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4105,8 +3904,7 @@ class FeedbackManager(Client):
             - unique id for the element.
         tag_guid
             - unique id of the tag.
-        server_name
-            - name of the server instances for this request.
+
         view_service_url_marker
             - optional view service URL marker (overrides access_service_url_marker)
         access_service_url_marker
@@ -4132,7 +3930,6 @@ class FeedbackManager(Client):
             self._async_remove_tag_from_element(
                 element_guid,
                 tag_guid,
-                server_name,
                 body,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -4148,7 +3945,6 @@ class FeedbackManager(Client):
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -4187,8 +3983,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4197,7 +3991,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4205,7 +3999,6 @@ class FeedbackManager(Client):
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
-        server_name: str = None,
         is_public: bool = True,
         body: dict = {},
         view_service_url_marker: str = None,
@@ -4249,7 +4042,6 @@ class FeedbackManager(Client):
             self._async_setup_accepted_answer(
                 question_comment_guid,
                 answer_comment_guid,
-                server_name,
                 is_public,
                 body,
                 view_service_url_marker,
@@ -4266,7 +4058,6 @@ class FeedbackManager(Client):
         self,
         comment_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4280,8 +4071,7 @@ class FeedbackManager(Client):
             - unique identifier for the comment to change.
         body
             - containing type of comment enum and the text of the comment.
-        server_name
-            - name of the server instances for this request.
+
         is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
         view_service_url_marker
@@ -4302,8 +4092,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4312,7 +4100,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/comments/{comment_guid}/update{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/{comment_guid}/update{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4320,7 +4108,6 @@ class FeedbackManager(Client):
         self,
         comment_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4334,8 +4121,7 @@ class FeedbackManager(Client):
             - unique identifier for the comment to change.
         body
             - containing type of comment enum and the text of the comment.
-        server_name
-            - name of the server instances for this request.
+
         is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
         view_service_url_marker
@@ -4361,7 +4147,6 @@ class FeedbackManager(Client):
             self._async_update_comment(
                 comment_guid,
                 body,
-                server_name,
                 is_merge_update,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -4379,7 +4164,6 @@ class FeedbackManager(Client):
         comment_guid: str,
         is_public: bool,
         body: dict = {},
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -4388,8 +4172,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         comment_guid
             - unique identifier for the comment to change.
         is_public
@@ -4414,8 +4197,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4424,7 +4205,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/parents/{parent_guid}/comments/{comment_guid}/update-visibility{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/parents/{parent_guid}/comments/{comment_guid}/update-visibility{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4434,7 +4215,6 @@ class FeedbackManager(Client):
         comment_guid: str,
         is_public: bool,
         body: dict = {},
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -4443,8 +4223,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         comment_guid
             - unique identifier for the comment to change.
         is_public
@@ -4476,7 +4255,6 @@ class FeedbackManager(Client):
                 comment_guid,
                 is_public,
                 body,
-                server_name,
                 view_service_url_marker,
                 access_service_url_marker,
             )
@@ -4491,7 +4269,6 @@ class FeedbackManager(Client):
         self,
         note_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4501,8 +4278,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         note_guid
             - unique identifier for the note to change.
         is_merge_update
@@ -4527,8 +4303,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4537,7 +4311,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/notes/{note_guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/notes/{note_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4545,7 +4319,6 @@ class FeedbackManager(Client):
         self,
         note_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4555,8 +4328,7 @@ class FeedbackManager(Client):
 
         Parameters
         ----------
-        server_name
-            - name of the server instances for this request.
+
         note_guid
             - unique identifier for the note to change.
         is_merge_update
@@ -4586,7 +4358,6 @@ class FeedbackManager(Client):
             self._async_update_note(
                 note_guid,
                 body,
-                server_name,
                 is_merge_update,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -4602,7 +4373,6 @@ class FeedbackManager(Client):
         self,
         note_log_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4616,8 +4386,7 @@ class FeedbackManager(Client):
             - unique identifier for the note log to change.
         body
             - containing type of comment enum and the text of the comment.
-        server_name
-            - name of the server instances for this request.
+
         is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
         view_service_url_marker
@@ -4638,8 +4407,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4648,7 +4415,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/note-logs/{note_log_guid}{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/note-logs/{note_log_guid}{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -4656,7 +4423,6 @@ class FeedbackManager(Client):
         self,
         note_log_guid: str,
         body: dict,
-        server_name: str = None,
         is_merge_update: bool = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
@@ -4670,8 +4436,7 @@ class FeedbackManager(Client):
             - unique identifier for the note log to change.
         body
             - containing type of comment enum and the text of the comment.
-        server_name
-            - name of the server instances for this request.
+
         is_merge_update
             - should the new properties be merged with existing properties (true) or completely replace them (false)?
         view_service_url_marker
@@ -4697,7 +4462,6 @@ class FeedbackManager(Client):
             self._async_update_note_log(
                 note_log_guid,
                 body,
-                server_name,
                 is_merge_update,
                 view_service_url_marker,
                 access_service_url_marker,
@@ -4713,7 +4477,6 @@ class FeedbackManager(Client):
         self,
         tag_guid: str,
         body: str,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -4746,8 +4509,6 @@ class FeedbackManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         possible_query_params = query_string(
             [
@@ -4755,7 +4516,7 @@ class FeedbackManager(Client):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, server_name)}/tags/{tag_guid}/update{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/tags/{tag_guid}/update{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body)
         return response.json()
@@ -4764,7 +4525,6 @@ class FeedbackManager(Client):
         self,
         tag_guid: str,
         body: str,
-        server_name: str = None,
         view_service_url_marker: str = None,
         access_service_url_marker: str = None,
     ) -> dict | str:
@@ -4802,7 +4562,6 @@ class FeedbackManager(Client):
             self._async_update_tag_description(
                 tag_guid,
                 body,
-                server_name,
                 view_service_url_marker,
                 access_service_url_marker,
             )

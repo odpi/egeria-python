@@ -41,9 +41,9 @@ class FullServerConfig(CoreServerConfig):
         user_id: str,
         user_pwd: str = None,
     ):
-        self.admin_command_root: str
+        self.full_config_command_root: str
         Client.__init__(self, server_name, platform_url, user_id, user_pwd)
-        self.admin_command_root = (
+        self.full_config_command_root = (
             self.platform_url + "/open-metadata/admin-services/users/" + user_id
         )
 
@@ -69,7 +69,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(access_service_name)
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/access-services/"
@@ -97,7 +97,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/access-services/topic-names"
@@ -130,7 +130,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/access-services/configuration"
@@ -146,7 +146,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/access-services/"
@@ -164,7 +164,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/access-services/"
@@ -208,7 +208,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/audit-log-destinations"
@@ -244,7 +244,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/audit-log-destinations/connection/"
@@ -288,7 +288,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/audit-log-destinations/connection"
@@ -327,7 +327,7 @@ class FullServerConfig(CoreServerConfig):
             raise InvalidParameterException(cohort_config_body)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -362,7 +362,7 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/cohorts/{cohort_name}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/cohorts/{cohort_name}"
         validate_name(cohort_name)
 
         self.make_request("DELETE", url)
@@ -393,7 +393,7 @@ class FullServerConfig(CoreServerConfig):
         validate_name(cohort_name)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -428,7 +428,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(cohort_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/cohorts/{cohort_name}/topic-name"
+        url = f"{self.full_config_command_root}/servers/{server_name}/cohorts/{cohort_name}/topic-name"
         response = self.make_request("GET", url)
         return response.json().get("topicName")
 
@@ -455,7 +455,7 @@ class FullServerConfig(CoreServerConfig):
         validate_name(topic_override)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -489,7 +489,7 @@ class FullServerConfig(CoreServerConfig):
         validate_name(topic_override)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -525,7 +525,7 @@ class FullServerConfig(CoreServerConfig):
         validate_name(topic_override)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -561,7 +561,7 @@ class FullServerConfig(CoreServerConfig):
         validate_name(topic_override)
 
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -608,7 +608,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(cohort_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/cohorts/{cohort_name}/topic-structure/{topic_structure}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/cohorts/{cohort_name}/topic-structure/{topic_structure}"
         self.make_request("POST", url)
 
     def set_server_configuration(
@@ -638,7 +638,9 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/configuration"
+        url = (
+            self.full_config_command_root + "/servers/" + server_name + "/configuration"
+        )
         response = self.make_request("POST", url, config_body)
         if response.status_code != 200:
             return str(response.status_code)  # should never get here?
@@ -674,7 +676,9 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/configuration"
+        url = (
+            self.full_config_command_root + "/servers/" + server_name + "/configuration"
+        )
         response = self.make_request("DELETE", url)
         if response.status_code != 200:
             return str(response.status_code)  # should never get here?
@@ -710,7 +714,7 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/configuration/deploy"
+        url = f"{self.full_config_command_root}/servers/{server_name}/configuration/deploy"
 
         self.make_request("POST", url, target_url_root)
 
@@ -739,7 +743,7 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/event-bus"
+        url = f"{self.full_config_command_root}/servers/{server_name}/event-bus"
 
         response = self.make_request("GET", url)
         return response.json().get("config")
@@ -784,7 +788,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/event-bus?connectorProvider="
+            f"{self.full_config_command_root}/servers/{server_name}/event-bus?connectorProvider="
             f"{connector_provider}&topicURLRoot={topic_url_root}"
         )
         self.make_request("POST", url)
@@ -816,13 +820,13 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/event-bus"
+        url = f"{self.full_config_command_root}/servers/{server_name}/event-bus"
         self.make_request("DELETE", url)
 
     def set_server_url_root(self, url_root: str, server_name: str = None) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-url-root-for-caller"
+        url = f"{self.full_config_command_root}/servers/{server_name}/server-url-root-for-caller"
         body = {"urlRoot": url_root}
         response = self.make_request("POST", url, payload=body)
         related_code = response.json().get("relatedHTTPCode")
@@ -861,13 +865,13 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/max-page-size?limit={max_page_size}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/max-page-size?limit={max_page_size}"
         self.make_request("POST", url)
 
     def set_server_user_id(self, server_user_id: str, server_name: str = None) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-user-id?id={server_user_id}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/server-user-id?id={server_user_id}"
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -880,7 +884,7 @@ class FullServerConfig(CoreServerConfig):
     ) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-user-password?password={server_user_pwd}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/server-user-password?password={server_user_pwd}"
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -891,7 +895,7 @@ class FullServerConfig(CoreServerConfig):
     def set_organization_name(self, org_name: str, server_name: str = None) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/organization-name?name={org_name}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/organization-name?name={org_name}"
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -905,7 +909,7 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         url = (
-            self.admin_command_root
+            self.full_config_command_root
             + "/servers/"
             + server_name
             + "/local-repository/configuration"
@@ -922,7 +926,7 @@ class FullServerConfig(CoreServerConfig):
     ) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
+        url = f"{self.full_config_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
         self.make_request("POST", url, payload=repository_connection_body)
 
     def set_plug_in_repository_connection_provider(
@@ -955,7 +959,7 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/"
+            f"{self.full_config_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/"
             f"details?connectionProvider={repository_connection_provider}"
         )
         self.make_request("POST", url)
@@ -965,7 +969,7 @@ class FullServerConfig(CoreServerConfig):
     ) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives"
+        url = f"{self.full_config_command_root}/servers/{server_name}/open-metadata-archives"
         response = self.make_request("POST", url, payload=archives_list_body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -1003,13 +1007,15 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-type?typeName={type_name}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/server-type?typeName={type_name}"
         self.make_request("POST", url)
 
     def set_server_description(self, server_desc: str, server_name: str = None) -> None:
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-description"
+        url = (
+            f"{self.full_config_command_root}/servers/{server_name}/server-description"
+        )
         response = self.make_request("POST", url, server_desc)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
@@ -1051,7 +1057,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
 
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/"
+            f"{self.full_config_command_root}/servers/{server_name}/"
             f"server-type?typename={server_type}"
         )
         self.make_request("POST", url)
@@ -1080,9 +1086,7 @@ class FullServerConfig(CoreServerConfig):
             """
             if server_name is None:
                 server_name = self.server_name
-            url = (
-                f"{self.admin_command_root}/servers/{server_name}/server-type?typeName="
-            )
+            url = f"{self.full_config_command_root}/servers/{server_name}/server-type?typeName="
             self.make_request("POST", url)
 
     def config_view_service(
@@ -1127,7 +1131,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(service_url_marker)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         self.make_request("POST", url, view_service_body)
 
     # todo - this may not be used anymore - old
@@ -1167,7 +1171,7 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/configuration"
+        url = f"{self.full_config_command_root}/servers/{server_name}/view-services/configuration"
         self.make_request("POST", url, view_svcs_config_body)
 
     def set_integration_groups_config(
@@ -1213,7 +1217,7 @@ class FullServerConfig(CoreServerConfig):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-groups/configuration/all"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-groups/configuration/all"
         self.make_request("POST", url, integration_groups_config_body)
 
     def set_engine_host_services(self):
@@ -1254,7 +1258,7 @@ class FullServerConfig(CoreServerConfig):
             "integrationConnectorConfigs": connector_configs,
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         # print(f"URL is : {url}")
         # print(f"body is : \n{json.dumps(request_body, indent=4)}")
 
@@ -1286,7 +1290,7 @@ class FullServerConfig(CoreServerConfig):
             ]
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-services"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-services"
         print(f"URL is : {url}")
         print(f"body is : \n{json.dumps(request_body, indent=4)}")
 
@@ -1299,7 +1303,7 @@ class FullServerConfig(CoreServerConfig):
             server_name = self.server_name
         validate_name(service_url_marker)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-services/{service_url_marker}"
         self.make_request("DELETE", url)
 
     def get_integration_service_config(
@@ -1308,7 +1312,7 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
         validate_name(service_url_marker)
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-services/{service_url_marker}/configuration"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-services/{service_url_marker}/configuration"
         response = self.make_request("GET", url)
         return response.json().get("config", "No configuration found")
 
@@ -1316,16 +1320,16 @@ class FullServerConfig(CoreServerConfig):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-services/configuration"
+        url = f"{self.full_config_command_root}/servers/{server_name}/integration-services/configuration"
         response = self.make_request("GET", url)
         return response.json().get("services", "No configuration found")
 
     def set_lineage_warehouse_services(self, body: dict, lineage_server: str) -> None:
-        url = f"{self.admin_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
+        url = f"{self.full_config_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
         self.make_request("POST", url, body)
 
     def remove_lineage_warehouse_services(self, lineage_server: str = None) -> None:
-        url = f"{self.admin_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
+        url = f"{self.full_config_command_root}/servers/{lineage_server}/lineage-warehouse/configuration"
         self.make_request("DELETE", url)
 
 

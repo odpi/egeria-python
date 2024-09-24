@@ -50,7 +50,7 @@ class ActionAuthor(AutomatedCuration):
         AutomatedCuration.__init__(
             self, server_name, platform_url, user_id, user_pwd, token=token
         )
-        self.cur_command_root = f"{platform_url}/servers/"
+        self.action_command_root = f"{platform_url}/servers/"
 
     async def _async_create_element_from_template(
         self, body: str, server: str = None

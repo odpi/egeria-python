@@ -33,18 +33,20 @@ from pyegeria.feedback_manager_omvs import FeedbackManager
 disable_ssl_warnings = True
 
 
-TESTING_EGERIA_PLATFORM_URL = os.environ.get('TESTING_EGERIA_PLATFORM_URL', "https://localhost:8443")
+TESTING_EGERIA_PLATFORM_URL = os.environ.get(
+    "TESTING_EGERIA_PLATFORM_URL", "https://localhost:9443"
+)
 
 view_server = "view-server"
-
-fm_client = FeedbackManager(view_server, TESTING_EGERIA_PLATFORM_URL)
-
 user = "erinoverview"
 password = "secret"
 
+fm_client = FeedbackManager(view_server, TESTING_EGERIA_PLATFORM_URL, user)
+
+
 bearer_token = fm_client.create_egeria_bearer_token(user, password)
 
-term_guid = "912e7871-539a-46a8-b17c-665d772eaa2f"
+term_guid = "1dfb68d4-4fc7-49d1-9cac-11b0073e6266"
 
 tag_for_testing = {
     "isPrivateTag": False,
@@ -372,15 +374,20 @@ def test_find_my_tags():
     assert response[0]["description"] == my_test_tag_body["description"]
     delete_response = fm_client.delete_tag(create_response["guid"])
 
+
 def test_find_my_tags_with_no_tags():
     response = fm_client.find_my_tags({"filter": "one"}, starts_with=True)
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
 
+
 def test_find_my_tags_with_no_tags_and_details():
-    response = fm_client.find_my_tags({"filter": "one"}, starts_with=True, detailed_response=True)
+    response = fm_client.find_my_tags(
+        {"filter": "one"}, starts_with=True, detailed_response=True
+    )
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
+
 
 #
 ## test_find_note_logs test
@@ -403,13 +410,17 @@ def test_find_note_logs_detailed():
     assert "elementList" in response
     fm_client.remove_note_log(create_response["guid"])
 
+
 def test_find_note_logs_with_no_note_logs():
     response = fm_client.find_note_logs({"filter": ""}, starts_with=True)
     assert response["class"] == "NoteLogsResponse"
     assert response["relatedHTTPCode"] == 200
 
+
 def test_find_note_logs_with_no_no_note_and_details():
-    response = fm_client.find_note_logs({"filter": ""}, starts_with=True, detailed_response=True)
+    response = fm_client.find_note_logs(
+        {"filter": ""}, starts_with=True, detailed_response=True
+    )
     assert response["class"] == "NoteLogsResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -438,13 +449,17 @@ def test_find_notes_detailed():
     assert "elementList" in response
     fm_client.remove_note_log(note_log_response["guid"])
 
+
 def test_find_notes_with_no_notes():
     response = fm_client.find_notes({"filter": ""}, starts_with=True)
     assert response["class"] == "NotesResponse"
     assert response["relatedHTTPCode"] == 200
 
+
 def test_find_notes_with_no_notes_and_details():
-    response = fm_client.find_notes({"filter": ""}, starts_with=True, detailed_response=True)
+    response = fm_client.find_notes(
+        {"filter": ""}, starts_with=True, detailed_response=True
+    )
     assert response["class"] == "NotesResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -465,13 +480,17 @@ def test_find_tags():
     assert response[0]["description"] == my_test_tag_body["description"]
     delete_response = fm_client.delete_tag(create_response["guid"])
 
+
 def test_find_tags_with_no_tags():
     response = fm_client.find_tags({"filter": "one"}, starts_with=True)
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
 
+
 def test_find_tags_with_no_tags_and_details():
-    response = fm_client.find_tags({"filter": "one"}, starts_with=True, detailed_response=True)
+    response = fm_client.find_tags(
+        {"filter": "one"}, starts_with=True, detailed_response=True
+    )
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -483,12 +502,14 @@ def test_can_handle_no_comments():
     response = fm_client.find_comments({"filter": ""})
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_can_handle_no_comments_with_details_requested():
     response = fm_client.find_comments({"filter": ""}, detailed_response=True)
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_find_comments():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
     response = fm_client.find_comments({"filter": ""})
@@ -529,16 +550,19 @@ def test_get_attached_comments_detailed():
     assert "elementList" in response
     fm_client.remove_comment_from_element(create_response["guid"])
 
+
 def test_get_attached_comments_with_no_comments():
     response = fm_client.get_attached_comments(term_guid)
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_get_attached_comments_with_no_comments_and_details():
     response = fm_client.get_attached_comments(term_guid, detailed_response=True)
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 #
 ## test_get_attached_likes test
 #
@@ -558,16 +582,18 @@ def test_get_attached_likes_detailed():
     assert "elementList" in response
     fm_client.remove_like_from_element(term_guid)
 
+
 def test_get_attached_likes_with_no_likes():
     response = fm_client.get_attached_likes(term_guid)
     assert response["class"] == "LikeElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_get_attached_likes_with_no_likes_and_details():
     response = fm_client.get_attached_likes(term_guid, detailed_response=True)
     assert response["class"] == "LikeElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
 
 #
 ## test_get_attached_ratings test
@@ -590,16 +616,17 @@ def test_get_attached_ratings_detailed():
     assert "elementList" in response
     fm_client.remove_rating_from_element(term_guid)
 
+
 def test_get_attached_ratings_with_no_ratings():
     response = fm_client.get_attached_ratings(term_guid)
     assert response["class"] == "RatingElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_get_attached_ratings_with_no_ratings_and_details():
     response = fm_client.get_attached_ratings(term_guid, detailed_response=True)
     assert response["class"] == "RatingElementsResponse"
     assert response["relatedHTTPCode"] == 200
-    
 
 
 #
@@ -624,16 +651,17 @@ def test_get_attached_tags_detailed():
     assert "tags" in response
     fm_client.delete_tag(create_response["guid"])
 
+
 def test_get_attached_tags_with_no_tags():
     response = fm_client.get_attached_tags(term_guid)
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
-    
+
+
 def test_get_attached_tags_with_no_tags_and_details():
     response = fm_client.get_attached_tags(term_guid, detailed_response=True)
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
-    
 
 
 #
@@ -658,10 +686,12 @@ def test_get_comment_detailed():
     assert response["class"] == "CommentResponse"
     fm_client.remove_comment_from_element(create_response["guid"])
 
+
 def test_get_comment_with_bad_guid():
     with pytest.raises(InvalidParameterException):
         response = fm_client.get_comment("1234")
-    
+
+
 #
 ## test_get_elements_by_tag test
 #

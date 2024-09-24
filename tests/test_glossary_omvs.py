@@ -226,7 +226,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Facility"
+            term_name = "Sustainability"
             glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
             response = g_client.get_terms_by_name(term_name, glossary_guid, ["ACTIVE"])
 
@@ -250,7 +250,9 @@ class TestGlossaryBrowser:
 
     def test_find_glossary_terms(self):
         try:
-            g_client = GlossaryBrowser(self.good_view_server_1, self.good_platform1_url)
+            g_client = GlossaryBrowser(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
@@ -260,7 +262,8 @@ class TestGlossaryBrowser:
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
                 "*",
-                glossary_guid=glossary_guid,
+                # glossary_guid=glossary_guid,
+                None,
                 starts_with=True,
                 ends_with=False,
                 for_lineage=False,

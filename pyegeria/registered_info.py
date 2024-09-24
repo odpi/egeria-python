@@ -45,20 +45,22 @@ class RegisteredInfo(Client):
             Lists the defined asset types.
     """
 
-    admin_command_root: str
-
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        if server_name is None:
+        if view_server is None:
             server_name = "NA"
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
-        self.admin_command_root = (
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+        self.reg_command_root = (
             f"{self.platform_url}/open-metadata/platform-services/users/"
             f"{self.user_id}/server-platform/registered-services"
         )
@@ -100,9 +102,9 @@ class RegisteredInfo(Client):
                 get more details on the specified service category.
             """
         if kind == "all":
-            url = f"{self.admin_command_root}"
+            url = f"{self.reg_command_root}"
         else:
-            url = f"{self.admin_command_root}/{kind}"
+            url = f"{self.reg_command_root}/{kind}"
         response = self.make_request("GET", url)
 
         return response.json().get("services", "No services found")
@@ -128,18 +130,17 @@ class RegisteredInfo(Client):
 
         """
         url = (
-            f"{self.platform_url}/servers/{self.server_name}/open-metadata/repository-services"
+            f"{self.platform_url}/servers/{self.view_server}/open-metadata/repository-services"
             f"/users/{self.user_id}/audit-log/severity-definitions"
         )
         response = self.make_request("GET", url)
         return response.json().get("severities", "No severities found")
 
-    def list_asset_types(self, server: str = None) -> list | str:
+    def list_asset_types(self) -> list | str:
         """Get the registered severities for the OMAG Server
 
         Parameters
         ----------
-         server: str, optional, default = None
 
         Returns
         -------
@@ -156,8 +157,7 @@ class RegisteredInfo(Client):
             The principle specified by the user_id does not have authorization for the requested action
 
         """
-        server = self.server_name if server is None else server
-        url = f"{self.platform_url}/servers/{server}/api/open-metadata/asset-catalog/assets/types"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/types"
 
         response = self.make_request("GET", url)
         return response.json().get("types", "no types found")

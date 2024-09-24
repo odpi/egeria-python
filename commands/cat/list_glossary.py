@@ -10,6 +10,7 @@ A simple display for glossary terms
 """
 import argparse
 import os
+import sys
 import time
 
 from rich import box
@@ -53,8 +54,8 @@ def display_glossary_terms(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    g_client = GlossaryBrowser(server, url)
-    token = g_client.create_egeria_bearer_token(username, user_password)
+    g_client = GlossaryBrowser(server, url, username, user_password)
+    token = g_client.create_egeria_bearer_token()
 
     def generate_table(search_string: str = "*") -> Table:
         """Make a new table."""
@@ -86,6 +87,9 @@ def display_glossary_terms(
             page_size=500,
         )
 
+        if type(terms) is str:
+            print(f"No terms found!")
+            sys.exit(0)
         sorted_terms = sorted(
             terms, key=lambda k: k["glossaryTermProperties"]["displayName"]
         )

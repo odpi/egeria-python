@@ -54,8 +54,8 @@ class Egeria(
 
     Attributes:
 
-        server_name: str
-                Name of the server to use.
+        view_server: str
+                Name of the view server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -82,6 +82,7 @@ class Egeria(
         CollectionManager.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
+
         EgeriaMy.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
         GlossaryManager.__init__(

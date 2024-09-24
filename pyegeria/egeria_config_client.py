@@ -32,6 +32,11 @@ class EgeriaConfig(FullServerConfig, ServerOps):
     def __init__(
         self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None
     ):
+        self.server_name = server_name
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
         FullServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
         ServerOps.__init__(self, server_name, platform_url, user_id, user_pwd)
 

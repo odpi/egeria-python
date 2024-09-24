@@ -194,7 +194,9 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
             platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"
             start_time = time.perf_counter()
-            response = r_client.get_platform_report(platform_guid)
+            response = r_client.get_platform_report(
+                None, "Default Local OMAG Server Platform"
+            )
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
@@ -230,14 +232,14 @@ class TestRuntimeManager:
 
             start_time = time.perf_counter()
             # filter = "Survey Engine Host"
-            filter = "simple-metadata-store"
+            filter = "active-metadata-store"
             response = r_client.get_servers_by_name(filter)
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
-                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+                print(f"Servers:\n{json.dumps(response, indent=4)}")
             elif type(response) is str:
                 print(f"String response was {response}")
             assert True
@@ -288,39 +290,6 @@ class TestRuntimeManager:
 
     def test_get_server_report(self):
         try:
-            r_client = RuntimeManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_1,
-                user_pwd="secret",
-            )
-            token = r_client.create_egeria_bearer_token()
-            server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"
-            start_time = time.perf_counter()
-            response = r_client.get_server_report(server_guid)
-
-            duration = time.perf_counter() - start_time
-            print(f"Type of response: {type(response)}")
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
-            elif type(response) is str:
-                print(f"String response was {response}")
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            r_client.close_session()
-
-    def test_get_server_report(self):
-        try:
             r_client = EgeriaTech(
                 self.good_view_server_1,
                 self.good_platform1_url,
@@ -328,11 +297,11 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            filter = "integration-daemon"
+            name = "integration-daemon"
             start_time = time.perf_counter()
-            server_guid = r_client.get_guid_for_name(filter)
+            server_guid = None
             print(f"\n\tServer GUID is {server_guid}")
-            response = r_client.get_server_report(server_guid)
+            response = r_client.get_server_report(server_guid, name)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -362,10 +331,12 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"  # integ_daemon
-            archive_file = "content-packs/CocoComboArchive.omarchive"
+            server_guid = None
+            server_name = "integration-daemon"
             start_time = time.perf_counter()
-            response = r_client.restart_integration_connectors(server_guid)
+            response = r_client.restart_integration_connectors(
+                "integration-daemon", server_guid, server_name
+            )
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
@@ -423,17 +394,20 @@ class TestRuntimeManager:
 
     def test_activate_server_with_stored_config(self):
         try:
-            r_client = RuntimeManager(
+            r_client = EgeriaTech(
                 self.good_view_server_1,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "3601a8cd-2325-4992-915e-d454716b155c"  # integ_daemon
-            archive_file = "content-packs/CocoComboArchive.omarchive"
+            # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"  # integ_daemon
+            server_guid = None
+            server_name = "active-metadata-store"
             start_time = time.perf_counter()
-            response = r_client.activate_server_with_stored_config(server_guid)
+            response = r_client.activate_server_with_stored_config(
+                server_guid, server_name
+            )
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
@@ -457,15 +431,18 @@ class TestRuntimeManager:
 
     def test_add_archive_file(self):
         try:
-            r_client = RuntimeManager(
+            r_client = EgeriaTech(
                 self.good_view_server_1,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "7c6e733e-c35c-471b-83f7-c853c593a4c3"
+            # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"
+            server_guid = r_client.get_guid_for_name("active-metadata-store")
             archive_file = "content-packs/CocoComboArchive.omarchive"
+            # archive_file = "content-packs/CoreContentPack.omarchive"
+
             start_time = time.perf_counter()
             response = r_client.add_archive_file(archive_file, server_guid)
 

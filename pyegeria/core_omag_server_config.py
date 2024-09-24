@@ -11,6 +11,10 @@ deployed to take effect.
 
 import json
 
+import psycopg2
+from psycopg2 import sql
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
 # import json
 from pyegeria._client import Client
 from pyegeria._globals import enable_ssl_check
@@ -44,9 +48,9 @@ class CoreServerConfig(Client):
         user_pwd: str = None,
         verify_flag: bool = enable_ssl_check,
     ):
-        self.admin_command_root: str
+        self.core_command_root: str
         Client.__init__(self, server_name, platform_url, user_id, user_pwd)
-        self.admin_command_root = (
+        self.core_command_root = (
             self.platform_url + "/open-metadata/admin-services/users/" + user_id
         )
 
@@ -87,7 +91,7 @@ class CoreServerConfig(Client):
 
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/configuration"
+        url = f"{self.core_command_root}/servers/{server_name}/configuration"
         response = self.make_request("GET", url)
         return response.json().get("omagserverConfig", "No configuration found")
 
@@ -142,7 +146,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services"
         response = self.make_request("GET", url)
         return response.json().get("services", "No access services found")
 
@@ -175,7 +179,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services"
         self.make_request("POST", url)
 
     def configure_all_access_services_no_topics(self, server_name: str = None) -> None:
@@ -206,7 +210,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/access-services/no-topics"
+            f"{self.core_command_root}/servers/{server_name}/access-services/no-topics"
         )
         self.make_request("POST", url)
 
@@ -240,7 +244,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services"
         self.make_request("DELETE", url)
 
     def get_access_service_config(
@@ -279,7 +283,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(access_service_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services/{access_service_name}"
         response = self.make_request("GET", url)
         return response.json().get("config", "Access service not found")
 
@@ -328,7 +332,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
         validate_name(access_service_name)
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services/{access_service_name}"
         self.make_request("POST", url, access_service_options)
 
     def configure_access_service_no_topics(
@@ -378,7 +382,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(access_service_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}/no-topics"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services/{access_service_name}/no-topics"
         self.make_request("POST", url, access_service_options)
 
     def clear_access_service(
@@ -417,7 +421,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(access_service_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/{access_service_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services/{access_service_name}"
         self.make_request("DELETE", url)
 
     def get_access_services_configuration(self, server_name: str = None) -> list:
@@ -437,7 +441,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/access-services/configuration"
+        url = f"{self.core_command_root}/servers/{server_name}/access-services/configuration"
         response = self.make_request("GET", url)
 
         return response.json().get("services", "No access services configured")
@@ -470,7 +474,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/event-bus"
+        url = f"{self.core_command_root}/servers/{server_name}/event-bus"
 
         response = self.make_request("GET", url)
         return response.json().get("config", "No event bus configured")
@@ -515,7 +519,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/event-bus"
+        url = f"{self.core_command_root}/servers/{server_name}/event-bus"
         self.make_request("POST", url, event_bus_config)
 
     def clear_event_bus(self, server_name: str = None) -> None:
@@ -551,7 +555,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/event-bus"
+        url = f"{self.core_command_root}/servers/{server_name}/event-bus"
         self.make_request("DELETE", url)
 
     #
@@ -584,7 +588,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations"
         response = self.make_request("GET", url)
         return response.json().get(
             "connections", "No audit log destinations configured"
@@ -617,7 +621,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations"
         self.make_request("DELETE", url)
 
     def clear_a_log_destination(self, dest_name: str, server_name: str = None) -> None:
@@ -649,7 +653,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
         validate_name(dest_name)
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/connection/{dest_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/connection/{dest_name}"
         self.make_request("DELETE", url)
 
     def add_console_log_destinations(
@@ -686,7 +690,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         if severities is None:
             severities = []
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/console"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/console"
         self.make_request("POST", url, severities)
 
     def add_default_log_destinations(self, server_name: str = None) -> None:
@@ -715,7 +719,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/default"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/default"
         self.make_request("POST", url)
 
     def add_event_topic_log_destinations(
@@ -761,7 +765,7 @@ class CoreServerConfig(Client):
             severities = []
 
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/event-topic?topicName="
+            f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/event-topic?topicName="
             f"{topic_name}"
         )
         self.make_request("POST", url, severities)
@@ -809,7 +813,7 @@ class CoreServerConfig(Client):
         if severities is None:
             severities = []
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/files?directoryName="
+            f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/files?directoryName="
             f"{directory_name}"
         )
         self.make_request("POST", url, severities)
@@ -844,7 +848,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         if severities is None:
             severities = []
-        url = f"{self.admin_command_root}/servers/{server_name}/audit-log-destinations/slf4j"
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/slf4j"
         self.make_request("POST", url, severities)
 
     #
@@ -874,7 +878,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository"
         self.make_request("DELETE", url)
 
     def get_local_repository_config(self, server_name: str = None) -> dict:
@@ -904,7 +908,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
         url = (
-            self.admin_command_root
+            self.core_command_root
             + "/servers/"
             + server_name
             + "/local-repository/configuration"
@@ -941,7 +945,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
         url = (
-            self.admin_command_root
+            self.core_command_root
             + "/servers/"
             + server_name
             + "/local-repository/configuration"
@@ -978,7 +982,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_guid(metadata_collection_id)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/metadata-collection-id"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/metadata-collection-id"
         self.make_request("POST", url, metadata_collection_id)
 
     def get_local_metadata_collection_id(self, server_name: str = None) -> str:
@@ -1008,7 +1012,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/metadata-collection-id"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/metadata-collection-id"
         response = self.make_request(
             "GET",
             url,
@@ -1042,7 +1046,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/metadata-collection-name"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/metadata-collection-name"
         response = self.make_request(
             "GET",
             url,
@@ -1082,7 +1086,7 @@ class CoreServerConfig(Client):
         validate_name(metadata_collection_name)
 
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/local-repository/"
+            f"{self.core_command_root}/servers/{server_name}/local-repository/"
             f"metadata-collection-name/{metadata_collection_name}"
         )
         self.make_request("POST", url)
@@ -1110,7 +1114,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/in-memory-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/in-memory-repository"
         self.make_request("POST", url)
 
     def set_graph_local_repository(self, server_name: str = None) -> None:
@@ -1138,7 +1142,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/local-graph-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/local-graph-repository"
         self.make_request("POST", url)
 
     def set_read_only_local_repository(self, server_name: str = None) -> None:
@@ -1166,7 +1170,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/read-only-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/read-only-repository"
         self.make_request("POST", url)
 
     def set_repository_proxy_details(
@@ -1202,7 +1206,7 @@ class CoreServerConfig(Client):
         validate_name(connector_provider)
 
         url = (
-            f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/repository-proxy/"
+            f"{self.core_command_root}/servers/{server_name}/local-repository/mode/repository-proxy/"
             f"details?connectorProvider={connector_provider}"
         )
         self.make_request("POST", url)
@@ -1238,7 +1242,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/plugin-repository/connection"
         self.make_request("POST", url, config_body)
 
     def set_xtdb_in_mem_repository(self, server_name: str = None) -> None:
@@ -1266,7 +1270,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-in-memory-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/xtdb-in-memory-repository"
         self.make_request("POST", url)
 
     def set_xtdb_local_kv_repository(self, server_name: str = None) -> None:
@@ -1299,7 +1303,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-kv-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-kv-repository"
         self.make_request("POST", url)
 
     def set_xtdb_local_repository(
@@ -1336,19 +1340,22 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
         self.make_request("POST", url, xtdb_config_body)
 
     def set_xtdb_pg_repository(
-        self, host: str, pg_user: str, pg_pwd: str, server_name: str = None
+        self, host: str, port: str, pg_user: str, pg_pwd: str, server_name: str = None
     ) -> None:
-        """Set the local repository connection to be XTDB using PostgresSQL Server, passing in basic parameters
+        """Set the local repository connection to be XTDB using PostgresSQL Server, passing in basic parameters.
+            A postgres database with the name of the metadata server will be created if it doesn't exist.
+
 
         Parameters
         ----------
         host : str
-            the full hostname and port of the postgres server
-
+            the full hostname of the postgres server
+        port: str
+            the port number of the postgres server
         pg_user : str
             postgresql user name
 
@@ -1379,16 +1386,42 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
+
         validate_name(pg_pwd)
         validate_name(pg_user)
         validate_name(host)
         pg_db = server_name.lower()
 
-        jdbc_url = (
-            f'"jdbc:postgresql://{host}/{pg_db}?user={pg_user}&password={pg_pwd}"'
+        # Connect to the PostgreSQL server
+        conn = psycopg2.connect(
+            host=host,
+            port=port,
+            user=pg_user,
+            password=pg_pwd,
+            dbname="postgres",  # Connect to the default 'postgres' database to perform operations
         )
-        index_dir = f'"data/servers/{server_name}/repository/xtdb/rdb-index"'
-        lucene_dir = f'"data/servers/{server_name}/repository/xtdb/lucene"'
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # Enable autocommit mode
+
+        cursor = conn.cursor()
+
+        # Check if database exists
+        cursor.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [pg_db])
+        database_exists = cursor.fetchone()
+
+        # If the database does not exist, create it
+        if not database_exists:
+            cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(pg_db)))
+            print(f"Database '{pg_db}' created.")
+        else:
+            print(f"Database '{pg_db}' already exists.")
+
+        # Close the connection to the server
+        cursor.close()
+        conn.close()
+
+        jdbc_url = f'"jdbc:postgresql://{host}:{port}/{pg_db}?user={pg_user}&password={pg_pwd}"'
+        index_dir = f'"data/servers/{server_name}/repository/{server_name}/rdb-index"'
+        lucene_dir = f'"data/servers/{server_name}/repository/{server_name}/lucene"'
 
         index_str = "{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "
         index_str2 = index_str + index_dir + "}}"
@@ -1416,7 +1449,7 @@ class CoreServerConfig(Client):
         }
 
         print(json.dumps(body, indent=4))
-        url = f"{self.admin_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/xtdb-local-repository"
         self.make_request("POST", url, body)
 
     def get_open_metadata_archives(self, server_name: str = None) -> dict:
@@ -1444,7 +1477,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives"
+        url = f"{self.core_command_root}/servers/{server_name}/open-metadata-archives"
         response = self.make_request("GET", url)
 
         return response.json().get("connections", "No archives found")
@@ -1473,7 +1506,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives"
+        url = f"{self.core_command_root}/servers/{server_name}/open-metadata-archives"
         self.make_request("DELETE", url)
 
     def add_startup_open_metadata_archive_file(
@@ -1507,7 +1540,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(archive_file)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/open-metadata-archives/file"
+        url = f"{self.core_command_root}/servers/{server_name}/open-metadata-archives/file"
         self.make_request("POST", url, archive_file)
 
     #
@@ -1566,7 +1599,7 @@ class CoreServerConfig(Client):
             "localServerPassword": local_server_password,
             "maxPageSize": max_page_size,
         }
-        url = self.admin_command_root + "/servers/" + server_name + "/server-properties"
+        url = self.core_command_root + "/servers/" + server_name + "/server-properties"
 
         self.make_request("POST", url, basic_props)
 
@@ -1596,7 +1629,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = self.admin_command_root + "/servers/" + server_name + "/server-properties"
+        url = self.core_command_root + "/servers/" + server_name + "/server-properties"
         response = self.make_request("GET", url)
 
         return response.json().get(
@@ -1628,7 +1661,9 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-type-classification"
+        url = (
+            f"{self.core_command_root}/servers/{server_name}/server-type-classification"
+        )
         response = self.make_request("GET", url)
 
         return response.json().get("serverTypeClassification", "No server type found")
@@ -1659,7 +1694,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/security/connection"
+        url = f"{self.core_command_root}/servers/{server_name}/security/connection"
         response = self.make_request("GET", url)
         return response.json()
 
@@ -1693,7 +1728,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/security/connection"
+        url = f"{self.core_command_root}/servers/{server_name}/security/connection"
         self.make_request("POST", url, security_connection_body)
 
     def clear_server_security_connection(self, server_name: str = None) -> None:
@@ -1722,7 +1757,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/security/connection"
+        url = f"{self.core_command_root}/servers/{server_name}/security/connection"
         self.make_request("DELETE", url)
 
     def get_server_classification(self, server_name: str = None) -> dict:
@@ -1750,7 +1785,9 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/server-type-classification"
+        url = (
+            f"{self.core_command_root}/servers/{server_name}/server-type-classification"
+        )
         response = self.make_request("GET", url)
 
         return response.json().get("serverTypeClassification")
@@ -1784,7 +1821,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services"
         response = self.make_request("GET", url)
 
         return response.json().get("services", "No view services found")
@@ -1841,7 +1878,7 @@ class CoreServerConfig(Client):
             "omagserverPlatformRootURL": mdr_server_platform_root_url,
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services"
         self.make_request("POST", url, view_service_body)
 
     def config_all_view_services_w_body(
@@ -1879,7 +1916,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services"
         self.make_request("POST", url, view_services_request_body)
 
     def clear_all_view_services(self, server_name: str = None) -> None:
@@ -1906,7 +1943,7 @@ class CoreServerConfig(Client):
         """
         if server_name is None:
             server_name = self.server_name
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services"
         self.make_request("DELETE", url)
 
     def get_view_svc_config(
@@ -1947,7 +1984,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(service_url_marker)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         response = self.make_request("GET", url)
         return response.json().get("config", "No view services found")
 
@@ -2007,7 +2044,7 @@ class CoreServerConfig(Client):
             "omagserverPlatformRootURL": mdr_server_platform_root_url,
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         self.make_request("POST", url, view_service_body)
 
     def clear_view_service(
@@ -2048,7 +2085,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(service_url_marker)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/{service_url_marker}"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services/{service_url_marker}"
         self.make_request("DELETE", url)
 
     def get_view_svcs_config(self, server_name: str = None) -> str | list:
@@ -2083,7 +2120,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/configuration"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services/configuration"
         response = self.make_request("GET", url)
 
         return response.json().get("services", "No services found")
@@ -2123,7 +2160,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(cohort_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/cohorts/{cohort_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/cohorts/{cohort_name}"
         self.make_request("POST", url)
 
     def get_cohort_config(self, cohort_name: str, server_name: str = None) -> dict:
@@ -2156,7 +2193,7 @@ class CoreServerConfig(Client):
         validate_name(cohort_name)
 
         url = (
-            self.admin_command_root
+            self.core_command_root
             + "/servers/"
             + server_name
             + "/cohorts/"
@@ -2196,7 +2233,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/configuration/deploy"
+        url = f"{self.core_command_root}/servers/{server_name}/configuration/deploy"
         self.make_request("POST", url, target_platform_body)
 
     #
@@ -2232,7 +2269,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-groups"
+        url = f"{self.core_command_root}/servers/{server_name}/integration-groups"
         self.make_request("DELETE", url)
 
     def clear_an_integration_group(
@@ -2269,7 +2306,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
         validate_name(group_qualified_name)
 
-        url = f"{self.admin_command_root}/servers/{server_name}/view-services/{group_qualified_name}"
+        url = f"{self.core_command_root}/servers/{server_name}/view-services/{group_qualified_name}"
         self.make_request("DELETE", url)
 
     def get_integration_groups_config(self, server_name: str = None) -> list | str:
@@ -2299,7 +2336,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.core_command_root
             + "/servers/"
             + server_name
             + "/integration-groups/configuration"
@@ -2364,7 +2401,7 @@ class CoreServerConfig(Client):
             "integrationGroupQualifiedName": qualified_name,
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/integration-groups/configuration"
+        url = f"{self.core_command_root}/servers/{server_name}/integration-groups/configuration"
         self.make_request("POST", url, integration_group_service_body)
 
     #
@@ -2401,7 +2438,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/engine-definitions/client-config"
+        url = f"{self.core_command_root}/servers/{server_name}/engine-definitions/client-config"
         self.make_request("DELETE", url)
 
     def set_engine_definitions_client_config(
@@ -2455,7 +2492,7 @@ class CoreServerConfig(Client):
             "omagserverPlatformRootURL": mdr_server_platform_root_url,
         }
 
-        url = f"{self.admin_command_root}/servers/{server_name}/engine-definitions/client-config"
+        url = f"{self.core_command_root}/servers/{server_name}/engine-definitions/client-config"
         self.make_request("POST", url, body)
 
     def clear_engine_list(self, server_name: str = None) -> None:
@@ -2488,7 +2525,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/engine-list"
+        url = f"{self.core_command_root}/servers/{server_name}/engine-list"
         self.make_request("DELETE", url)
 
     def set_engine_list(self, engine_list: [dict], server_name: str = None) -> None:
@@ -2538,7 +2575,7 @@ class CoreServerConfig(Client):
         if server_name is None:
             server_name = self.server_name
 
-        url = f"{self.admin_command_root}/servers/{server_name}/engine-list"
+        url = f"{self.core_command_root}/servers/{server_name}/engine-list"
         self.make_request("POST", url, engine_list)
 
     def get_engine_host_services_config(self, server_name: str = None) -> dict | str:
@@ -2568,7 +2605,7 @@ class CoreServerConfig(Client):
             server_name = self.server_name
 
         url = (
-            self.admin_command_root
+            self.core_command_root
             + "/servers/"
             + server_name
             + "/engine-host-services/configuration"
@@ -2598,7 +2635,7 @@ class CoreServerConfig(Client):
 
 
         """
-        url = self.admin_command_root + "/stores/placeholder-variables"
+        url = self.core_command_root + "/stores/placeholder-variables"
         response = self.make_request("GET", url)
 
         return response.json().get("stringMap")
@@ -2625,7 +2662,7 @@ class CoreServerConfig(Client):
             The principle specified by the user_id does not have authorization for the requested action
 
         """
-        url = f"{self.admin_command_root}/stores/placeholder-variables"
+        url = f"{self.core_command_root}/stores/placeholder-variables"
         self.make_request("POST", url, placeholder_variables)
 
     def clear_placeholder_variables(self) -> None:
@@ -2648,7 +2685,7 @@ class CoreServerConfig(Client):
             The principle specified by the user_id does not have authorization for the requested action
 
         """
-        url = f"{self.admin_command_root}/stores/placeholder-variables"
+        url = f"{self.core_command_root}/stores/placeholder-variables"
         self.make_request("DELETE", url)
 
 

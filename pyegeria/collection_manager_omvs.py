@@ -41,14 +41,19 @@ class CollectionManager(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        self.command_base: str = f"/api/open-metadata/collection-manager/collections"
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
+        self.collection_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
@@ -56,7 +61,6 @@ class CollectionManager(Client):
     async def _async_get_linked_collections(
         self,
         parent_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list:
@@ -66,9 +70,9 @@ class CollectionManager(Client):
         ----------
         parent_guid: str
             The identity of the parent to find linked collections from.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -91,15 +95,14 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         body = {}
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
             f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -109,7 +112,6 @@ class CollectionManager(Client):
     def get_linked_collections(
         self,
         parent_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list:
@@ -119,9 +121,9 @@ class CollectionManager(Client):
         ----------
         parent_guid: str
             The identity of the parent to find linked collections from.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -146,16 +148,13 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_linked_collections(
-                parent_guid, server_name, start_from, page_size
-            )
+            self._async_get_linked_collections(parent_guid, start_from, page_size)
         )
         return resp
 
     async def _async_get_classified_collections(
         self,
         classification: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -166,9 +165,9 @@ class CollectionManager(Client):
         ----------
         classification: str
             The classification of the collection to inspect.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -191,15 +190,14 @@ class CollectionManager(Client):
         Notes
         -----
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         body = {"filter": classification}
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/by-classifications?"
+            f"{self.collection_command_root}/by-classifications?"
             f"startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -211,7 +209,6 @@ class CollectionManager(Client):
     def get_classified_collections(
         self,
         classification: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -222,9 +219,9 @@ class CollectionManager(Client):
         ----------
         classification: str
             The classification of the collection to inspect.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -250,7 +247,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_classified_collections(
-                classification, server_name, start_from, page_size
+                classification, start_from, page_size
             )
         )
         return resp
@@ -262,7 +259,6 @@ class CollectionManager(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -276,9 +272,9 @@ class CollectionManager(Client):
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -307,8 +303,7 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -324,7 +319,7 @@ class CollectionManager(Client):
 
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/"
+            f"{self.collection_command_root}/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -339,7 +334,6 @@ class CollectionManager(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -353,9 +347,9 @@ class CollectionManager(Client):
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -392,7 +386,6 @@ class CollectionManager(Client):
                 starts_with,
                 ends_with,
                 ignore_case,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -404,7 +397,6 @@ class CollectionManager(Client):
         self,
         name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -416,9 +408,9 @@ class CollectionManager(Client):
             name to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -441,8 +433,7 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -454,7 +445,7 @@ class CollectionManager(Client):
         }
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/"
+            f"{self.collection_command_root}/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -465,7 +456,6 @@ class CollectionManager(Client):
         self,
         name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -479,9 +469,9 @@ class CollectionManager(Client):
             name to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -508,7 +498,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collections_by_name(
-                name, effective_time, server_name, start_from, page_size
+                name, effective_time, start_from, page_size
             )
         )
 
@@ -518,7 +508,6 @@ class CollectionManager(Client):
         self,
         collection_type: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -531,9 +520,9 @@ class CollectionManager(Client):
             collection_type to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -557,8 +546,7 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -571,7 +559,7 @@ class CollectionManager(Client):
         body_s = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/"
+            f"{self.collection_command_root}/"
             f"by-collection-type?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -582,7 +570,6 @@ class CollectionManager(Client):
         self,
         collection_type: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -596,9 +583,9 @@ class CollectionManager(Client):
             collection type to find.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -625,14 +612,14 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collections_by_type(
-                collection_type, effective_time, server_name, start_from, page_size
+                collection_type, effective_time, start_from, page_size
             )
         )
 
         return resp
 
     async def _async_get_collection(
-        self, collection_guid: str, effective_time: str = None, server_name: str = None
+        self, collection_guid: str, effective_time: str = None
     ) -> dict | str:
         """Return the properties of a specific collection. Async version.
 
@@ -642,9 +629,9 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
 
         Returns
         -------
@@ -663,12 +650,10 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(collection_guid)
 
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}"
+        url = f"{self.collection_command_root}/{collection_guid}"
         body = {
             "effective_time": effective_time,
         }
@@ -676,7 +661,7 @@ class CollectionManager(Client):
         return resp.json()
 
     def get_collection(
-        self, collection_guid: str, effective_time: str = None, server_name: str = None
+        self, collection_guid: str, effective_time: str = None
     ) -> dict | str:
         """Return the properties of a specific collection.
 
@@ -686,9 +671,9 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
 
         Returns
         -------
@@ -709,7 +694,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection(collection_guid, effective_time, server_name)
+            self._async_get_collection(collection_guid, effective_time)
         )
 
         return resp
@@ -718,7 +703,7 @@ class CollectionManager(Client):
     #   Create collection methods
     #
     async def _async_create_collection_w_body(
-        self, classification_name: str, body: dict, server_name: str = None
+        self, classification_name: str, body: dict
     ) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection Async version.
 
@@ -728,9 +713,7 @@ class CollectionManager(Client):
             Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the
-            instance is used.
+
 
         Returns
         -------
@@ -748,20 +731,16 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}?"
+            f"{self.collection_command_root}?"
             f"classificationName={classification_name}"
         )
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID returned")
 
-    def create_collection_w_body(
-        self, classification_name: str, body: dict, server_name: str = None
-    ) -> str:
+    def create_collection_w_body(self, classification_name: str, body: dict) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
 
         Parameters
@@ -770,8 +749,8 @@ class CollectionManager(Client):
             Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
+
+             If not provided, the server name associated with the instance is
             used.
 
         Returns
@@ -792,7 +771,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_collection_w_body(classification_name, body, server_name)
+            self._async_create_collection_w_body(classification_name, body)
         )
         return resp
 
@@ -809,7 +788,6 @@ class CollectionManager(Client):
         is_own_anchor: bool = False,
         collection_ordering: str = None,
         order_property_name: str = None,
-        server_name: str = None,
     ) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection Async version.
 
@@ -842,9 +820,7 @@ class CollectionManager(Client):
              "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
 
         Returns
         -------
@@ -862,15 +838,13 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if parent_guid is None:
             is_own_anchor = False
         is_own_anchor_s = str(is_own_anchor).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}?"
+            f"{self.collection_command_root}?"
             f"classificationName={classification_name}"
         )
 
@@ -907,7 +881,6 @@ class CollectionManager(Client):
         is_own_anchor: bool = False,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
-        server_name: str = None,
     ) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
 
@@ -941,9 +914,7 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the
-            instance is used.
+
 
         Returns
         -------
@@ -975,7 +946,6 @@ class CollectionManager(Client):
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
-                server_name,
             )
         )
         return resp
@@ -990,7 +960,6 @@ class CollectionManager(Client):
         description: str,
         collection_type: str,
         is_own_anchor: bool = False,
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
         collection hierarchy. Async version.
@@ -1016,8 +985,6 @@ class CollectionManager(Client):
             Add appropriate valid value for the collection type.
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should classified as its own anchor or not.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If none, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1035,10 +1002,9 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         is_own_anchor_s = str(is_own_anchor).lower()
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/root-collection"
+        url = f"{self.collection_command_root}/root-collection"
 
         body = {
             "anchorGUID": anchor_guid,
@@ -1068,7 +1034,6 @@ class CollectionManager(Client):
         description: str,
         collection_type: str,
         is_own_anchor: bool = False,
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
          collection hierarchy.
@@ -1095,8 +1060,6 @@ class CollectionManager(Client):
             Add appropriate valid value for the collection type.
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should classified as its own anchor or not.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1125,7 +1088,6 @@ class CollectionManager(Client):
                 description,
                 collection_type,
                 is_own_anchor,
-                server_name,
             )
         )
         return resp
@@ -1142,7 +1104,6 @@ class CollectionManager(Client):
         is_own_anchor: bool = True,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types. Async version.
@@ -1173,8 +1134,6 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1192,10 +1151,8 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        if server_name is None:
-            server_name = self.server_name
         is_own_anchor_s = str(is_own_anchor).lower()
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/data-spec-collection"
+        url = f"{self.collection_command_root}/data-spec-collection"
 
         body = {
             "anchorGUID": anchor_guid,
@@ -1229,7 +1186,6 @@ class CollectionManager(Client):
         is_own_anchor: bool,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
@@ -1259,8 +1215,8 @@ class CollectionManager(Client):
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is used.
+
+
 
         Returns
         -------
@@ -1291,7 +1247,6 @@ class CollectionManager(Client):
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
-                server_name,
             )
         )
         return resp
@@ -1308,7 +1263,6 @@ class CollectionManager(Client):
         is_own_anchor: bool = True,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy. Async version.
@@ -1339,8 +1293,6 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1358,11 +1310,10 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         is_own_anchor_s = str(is_own_anchor).lower()
 
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/folder"
+        url = f"{self.collection_command_root}/folder"
 
         body = {
             "anchorGUID": anchor_guid,
@@ -1396,7 +1347,6 @@ class CollectionManager(Client):
         is_own_anchor: bool,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
-        server_name: str = None,
     ) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy.
@@ -1427,8 +1377,6 @@ class CollectionManager(Client):
             "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1459,14 +1407,11 @@ class CollectionManager(Client):
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
-                server_name,
             )
         )
         return resp
 
-    async def _async_create_collection_from_template(
-        self, body: dict, server_name: str = None
-    ) -> str:
+    async def _async_create_collection_from_template(self, body: dict) -> str:
         """Create a new metadata element to represent a collection using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new collection.
         Async version.
@@ -1476,8 +1421,6 @@ class CollectionManager(Client):
 
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1522,17 +1465,13 @@ class CollectionManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/from-template"
+        url = f"{self.collection_command_root}/from-template"
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID Returned")
 
-    def create_collection_from_template(
-        self, body: dict, server_name: str = None
-    ) -> str:
+    def create_collection_from_template(self, body: dict) -> str:
         """Create a new metadata element to represent a collection using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new collection.
 
@@ -1540,8 +1479,6 @@ class CollectionManager(Client):
         ----------
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If None, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1587,21 +1524,19 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_collection_from_template(body, server_name)
+            self._async_create_collection_from_template(body)
         )
         return resp
 
-    async def _async_create_digital_product(
-        self, body: dict, server_name: str = None
-    ) -> str:
+    async def _async_create_digital_product(self, body: dict) -> str:
         """Create a new collection that represents a digital product. Async version.
 
         Parameters
         ----------
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -1655,23 +1590,21 @@ class CollectionManager(Client):
           }
         }
         """
-        if server_name is None:
-            server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products"
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID returned")
 
-    def create_digital_product(self, body: dict, server_name: str = None) -> str:
+    def create_digital_product(self, body: dict) -> str:
         """Create a new collection that represents a digital product. Async version.
 
         Parameters
         ----------
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -1726,9 +1659,7 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_digital_product(body, server_name)
-        )
+        resp = loop.run_until_complete(self._async_create_digital_product(body))
         return resp
 
     #
@@ -1744,7 +1675,6 @@ class CollectionManager(Client):
         collection_ordering: str = None,
         order_property_name: str = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update the properties of a collection.  Async version.
 
@@ -1767,8 +1697,8 @@ class CollectionManager(Client):
            Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
-        server_name: str, optional, defaults to None
-           The name of the server to  configure. If not provided, the server name associated
+
+            If not provided, the server name associated
            with the instance is used.
 
         Returns
@@ -1784,11 +1714,10 @@ class CollectionManager(Client):
         NotAuthorizedException
          The principle specified by the user_id does not have authorization for the requested action
         """
-        if server_name is None:
-            server_name = self.server_name
+
         replace_all_props_s = str(replace_all_props).lower()
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/update?"
+            f"{self.collection_command_root}/{collection_guid}/update?"
             f"replaceAllProperties={replace_all_props_s}"
         )
 
@@ -1815,7 +1744,6 @@ class CollectionManager(Client):
         collection_ordering: str = None,
         order_property_name: str = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update the properties of a collection.
 
@@ -1838,8 +1766,8 @@ class CollectionManager(Client):
            Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
-        server_name: str, optional, defaults to None
-           The name of the server to  configure. If not provided, the server name associated
+
+            If not provided, the server name associated
            with the instance is used.
 
         Returns
@@ -1866,7 +1794,6 @@ class CollectionManager(Client):
                 collection_ordering,
                 order_property_name,
                 replace_all_props,
-                server_name,
             )
         )
         return
@@ -1876,7 +1803,6 @@ class CollectionManager(Client):
         collection_guid: str,
         body: dict,
         replace_all_props: bool = False,
-        server_name: str = None,
     ):
         """Update the properties of the DigitalProduct classification attached to a collection. Async version.
 
@@ -1888,9 +1814,7 @@ class CollectionManager(Client):
             A dict representing the details of the collection to create.
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the
-            instance is used.
+
 
         Returns
         -------
@@ -1926,12 +1850,10 @@ class CollectionManager(Client):
           }
         }
         """
-        if server_name is None:
-            server_name = self.server_name
 
         replace_all_props_s = str(replace_all_props).lower()
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/digital-products/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products/"
             f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}"
         )
 
@@ -1943,7 +1865,6 @@ class CollectionManager(Client):
         collection_guid: str,
         body: dict,
         replace_all_props: bool = False,
-        server_name: str = None,
     ):
         """Update the properties of the DigitalProduct classification attached to a collection.
 
@@ -1955,9 +1876,7 @@ class CollectionManager(Client):
             A dict representing the details of the collection to create.
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the
-            instance is used.
+
 
         Returns
         -------
@@ -1995,9 +1914,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_digital_product(
-                collection_guid, body, replace_all_props, server_name
-            )
+            self._async_update_digital_product(collection_guid, body, replace_all_props)
         )
         return
 
@@ -2010,7 +1927,6 @@ class CollectionManager(Client):
         resource_use_props: dict = None,
         watch_resources: bool = False,
         make_anchor: bool = False,
-        server_name: str = None,
     ) -> None:
         """Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
         Parameters
@@ -2029,9 +1945,7 @@ class CollectionManager(Client):
             Whether to watch for the resources to be updated.
         make_anchor, bool, optional, defaults to False
             Whether to make the this an anchor.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the
-            instance is used.
+
 
         Returns
         -------
@@ -2047,13 +1961,12 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         watch_resources_s = str(watch_resources).lower()
         make_anchor_s = str(make_anchor).lower()
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor_s}"
         )
 
@@ -2076,7 +1989,6 @@ class CollectionManager(Client):
         resource_use_props: dict = None,
         watch_resources: bool = False,
         make_anchor: bool = False,
-        server_name: str = None,
     ) -> None:
         """Connect an existing collection to an element using the ResourceList relationship (0019).
         Parameters
@@ -2095,8 +2007,8 @@ class CollectionManager(Client):
             Whether to watch for the resources to be updated.
         make_anchor: bool, optional, defaults to False
             Whether to make the this an anchor.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -2123,13 +2035,12 @@ class CollectionManager(Client):
                 resource_use_props,
                 watch_resources,
                 make_anchor,
-                server_name,
             )
         )
         return
 
     async def _async_detach_collection(
-        self, collection_guid: str, element_guid: str, server_name: str = None
+        self, collection_guid: str, element_guid: str
     ) -> None:
         """Detach an existing collection from an element.  If the collection is anchored to the element, it is deleted.
         Async version.
@@ -2140,8 +2051,8 @@ class CollectionManager(Client):
             The guid of the collection to update.
         element_guid: str
             The guid of the element to attach.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -2158,10 +2069,9 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/collection-manager/metadata-elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{element_guid}/collections/{collection_guid}/detach"
         )
 
@@ -2170,9 +2080,7 @@ class CollectionManager(Client):
         await self._async_make_request("POST", url, body)
         return
 
-    def detach_collection(
-        self, collection_guid: str, element_guid: str, server_name: str = None
-    ) -> None:
+    def detach_collection(self, collection_guid: str, element_guid: str) -> None:
         """Connect an existing collection to an element using the ResourceList relationship (0019).
         Parameters
         ----------
@@ -2180,8 +2088,8 @@ class CollectionManager(Client):
             The guid of the collection to update.
         element_guid: str
             The guid of the element to attach.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -2200,13 +2108,11 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_collection(collection_guid, element_guid, server_name)
+            self._async_detach_collection(collection_guid, element_guid)
         )
         return
 
-    async def _async_delete_collection(
-        self, collection_guid: str, server_name: str = None
-    ) -> None:
+    async def _async_delete_collection(self, collection_guid: str) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted. Async version
 
@@ -2215,8 +2121,8 @@ class CollectionManager(Client):
         ----------
         collection_guid: str
             The guid of the collection to update.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -2233,15 +2139,14 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
-        url = f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/delete"
+
+        url = f"{self.collection_command_root}/{collection_guid}/delete"
         body = {"class": "NullRequestBody"}
 
         await self._async_make_request("POST", url, body)
         return
 
-    def delete_collection(self, collection_guid: str, server_name: str = None) -> None:
+    def delete_collection(self, collection_guid: str) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted.
 
@@ -2249,8 +2154,8 @@ class CollectionManager(Client):
         ----------
         collection_guid: str
             The guid of the collection to update.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated
+
+             If not provided, the server name associated
             with the instance is used.
 
         Returns
@@ -2269,16 +2174,13 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_delete_collection(collection_guid, server_name)
-        )
+        loop.run_until_complete(self._async_delete_collection(collection_guid))
         return
 
     async def _async_get_collection_members(
         self,
         collection_guid: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2290,9 +2192,9 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -2315,13 +2217,12 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/"
+            f"{self.collection_command_root}/{collection_guid}/"
             f"members?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2332,7 +2233,6 @@ class CollectionManager(Client):
         self,
         collection_guid: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2344,9 +2244,9 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
+
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -2372,7 +2272,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collection_members(
-                collection_guid, effective_time, server_name, start_from, page_size
+                collection_guid, effective_time, start_from, page_size
             )
         )
 
@@ -2383,7 +2283,6 @@ class CollectionManager(Client):
         collection_guid: str,
         element_guid: str,
         body: dict = None,
-        server_name: str = None,
     ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
 
@@ -2395,9 +2294,9 @@ class CollectionManager(Client):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2432,11 +2331,9 @@ class CollectionManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
+            f"{self.collection_command_root}/{collection_guid}/members/"
             f"{element_guid}/attach"
         )
         body_s = body_slimmer(body)
@@ -2448,7 +2345,6 @@ class CollectionManager(Client):
         collection_guid: str,
         element_guid: str,
         body: dict = None,
-        server_name: str = None,
     ) -> None:
         """Add an element to a collection.  The request body is optional.
 
@@ -2460,9 +2356,9 @@ class CollectionManager(Client):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2499,9 +2395,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_to_collection(
-                collection_guid, element_guid, body, server_name
-            )
+            self._async_add_to_collection(collection_guid, element_guid, body)
         )
         return
 
@@ -2511,7 +2405,6 @@ class CollectionManager(Client):
         element_guid: str,
         body: dict = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update an element's membership to a collection. Async version.
 
@@ -2525,9 +2418,9 @@ class CollectionManager(Client):
             The body of the request to add to the collection. See notes.
         replace_all_props: bool, optional, defaults to False
             Replace all properties or just update ones specified in body.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2562,11 +2455,10 @@ class CollectionManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         replace_all_props_s = str(replace_all_props).lower()
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
+            f"{self.collection_command_root}/{collection_guid}/members/"
             f"{element_guid}/update?replaceAllProperties={replace_all_props_s}"
         )
         body_s = body_slimmer(body)
@@ -2579,7 +2471,6 @@ class CollectionManager(Client):
         element_guid: str,
         body: dict = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update an element's membership to a collection.
 
@@ -2593,9 +2484,9 @@ class CollectionManager(Client):
             The body of the request to add to the collection. See notes.
         replace_all_props: bool, optional, defaults to False
             Replace all properties or just update ones specified in body.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2633,13 +2524,13 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_collection_membership(
-                collection_guid, element_guid, body, replace_all_props, server_name
+                collection_guid, element_guid, body, replace_all_props
             )
         )
         return
 
     async def _async_remove_from_collection(
-        self, collection_guid: str, element_guid: str, server_name: str = None
+        self, collection_guid: str, element_guid: str
     ) -> None:
         """Remove an element from a collection. Async version.
 
@@ -2649,9 +2540,9 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2668,20 +2559,16 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}{self.command_base}/{collection_guid}/members/"
+            f"{self.collection_command_root}/{collection_guid}/members/"
             f"{element_guid}/detach"
         )
         body = {"class": "NullRequestBody"}
         await self._async_make_request("POST", url, body)
         return
 
-    def remove_from_collection(
-        self, collection_guid: str, element_guid: str, server_name: str = None
-    ) -> None:
+    def remove_from_collection(self, collection_guid: str, element_guid: str) -> None:
         """Remove an element from a collection.
 
         Parameters
@@ -2690,9 +2577,9 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
+
             The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -2711,22 +2598,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_from_collection(
-                collection_guid, element_guid, server_name
-            )
+            self._async_remove_from_collection(collection_guid, element_guid)
         )
         return
 
-    async def _async_get_member_list(
-        self, root_collection_guid: str, server_name: str = None
-    ) -> list | bool:
+    async def _async_get_member_list(self, root_collection_guid: str) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
         root_collection_guid : str
             The unique GUID of the root collection.
 
-        server_name : str, optional
+
             The name of the server. If not provided, the default server name will be used.
 
         Returns
@@ -2740,8 +2623,7 @@ class CollectionManager(Client):
             If the root_collection_name does not have exactly one root collection.
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         # first find the guid for the collection we are using as root
 
         # now find the members of the collection
@@ -2766,16 +2648,14 @@ class CollectionManager(Client):
 
         return member_list
 
-    def get_member_list(
-        self, root_collection_guid: str, server_name: str = None
-    ) -> list | bool:
+    def get_member_list(self, root_collection_guid: str) -> list | bool:
         """Get the member list for the collection.
         Parameters
         ----------
         root_collection_guid : str
             The GUID of the root collection.
 
-        server_name : str, optional
+
             The name of the server. If not provided, the default server name will be used.
 
         Returns
@@ -2791,7 +2671,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_member_list(root_collection_guid, server_name)
+            self._async_get_member_list(root_collection_guid)
         )
         return resp
 

@@ -38,14 +38,20 @@ class ProjectManager(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        self.command_base: str = f"/api/open-metadata/project-manager/metadata-elements"
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+        self.project_command_base: str = (
+            f"/api/open-metadata/project-manager/metadata-elements"
+        )
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Retrieving Projects= Information - https://egeria-project.org/concepts/project
@@ -55,7 +61,6 @@ class ProjectManager(Client):
         parent_guid: str,
         project_status: str = None,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -70,9 +75,7 @@ class ProjectManager(Client):
             Optionally, filter results by project status.
         effective_time: str, optional
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -95,8 +98,7 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -106,7 +108,7 @@ class ProjectManager(Client):
         }
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
             f"metadata-elements/{parent_guid}/projects?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -118,7 +120,6 @@ class ProjectManager(Client):
         parent_guid: str,
         project_status: str = None,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -133,9 +134,7 @@ class ProjectManager(Client):
             Optionally, filter results by project status.
         effective_time: str, optional
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -164,7 +163,6 @@ class ProjectManager(Client):
                 parent_guid,
                 project_status,
                 effective_time,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -175,7 +173,6 @@ class ProjectManager(Client):
         self,
         project_classification: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -189,9 +186,7 @@ class ProjectManager(Client):
             The project classification to search for.
         effective_time: str, optional
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -214,8 +209,7 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -225,7 +219,7 @@ class ProjectManager(Client):
         }
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
             f"projects/by-classifications?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -236,7 +230,6 @@ class ProjectManager(Client):
         self,
         project_classification: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -250,9 +243,7 @@ class ProjectManager(Client):
             The project classification to search for.
         effective_time: str, optional
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -280,7 +271,6 @@ class ProjectManager(Client):
             self._async_get_classified_projects(
                 project_classification,
                 effective_time,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -292,7 +282,6 @@ class ProjectManager(Client):
         project_guid: str,
         team_role: str = None,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -309,9 +298,7 @@ class ProjectManager(Client):
             team role to filter on. Project managers would be "ProjectManagement".
         effective_time: str, optional
             Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -334,15 +321,14 @@ class ProjectManager(Client):
         Notes
         -----
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         body = {effective_time: effective_time, "filter": team_role}
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
             f"{project_guid}/team?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -356,7 +342,6 @@ class ProjectManager(Client):
         project_guid: str,
         team_role: str = None,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -373,9 +358,7 @@ class ProjectManager(Client):
             team role to filter on. Project managers would be "ProjectManagement".
         effective_time: str, optional
             Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -404,7 +387,6 @@ class ProjectManager(Client):
                 project_guid,
                 team_role,
                 effective_time,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -418,7 +400,6 @@ class ProjectManager(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -433,9 +414,7 @@ class ProjectManager(Client):
             Search string to use to find matching projects. If the search string is '*' then all projects returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -464,8 +443,7 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -483,7 +461,7 @@ class ProjectManager(Client):
         }
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -498,7 +476,6 @@ class ProjectManager(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -512,9 +489,7 @@ class ProjectManager(Client):
             Search string to use to find matching projects. If the search string is '*' then all projects returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -551,7 +526,6 @@ class ProjectManager(Client):
                 starts_with,
                 ends_with,
                 ignore_case,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -563,7 +537,6 @@ class ProjectManager(Client):
         self,
         name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -575,9 +548,7 @@ class ProjectManager(Client):
             name to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO 8601 format.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -600,8 +571,7 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -613,7 +583,7 @@ class ProjectManager(Client):
         }
         body_s = body_slimmer(body)
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -624,7 +594,6 @@ class ProjectManager(Client):
         self,
         name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -636,9 +605,7 @@ class ProjectManager(Client):
             name to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO 8601 format.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -664,14 +631,16 @@ class ProjectManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_projects_by_name(
-                name, effective_time, server_name, start_from, page_size
+                name, effective_time, start_from, page_size
             )
         )
 
         return resp
 
     async def _async_get_project(
-        self, project_guid: str, effective_time: str = None, server_name: str = None
+        self,
+        project_guid: str,
+        effective_time: str = None,
     ) -> dict | str:
         """Return the properties of a specific project. Async version.
 
@@ -681,9 +650,7 @@ class ProjectManager(Client):
             unique identifier of the project.
         effective_time: str, [default=None], optional
              Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -702,28 +669,26 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(project_guid)
         body = {
             "effective_time": effective_time,
         }
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}"
 
         resp = await self._async_make_request("GET", url, body)
         return resp.json()
 
-    def get_project(self, project_guid: str, server_name: str = None) -> dict | str:
+    def get_project(self, project_guid: str, effective_time: str = None) -> dict | str:
         """Return the properties of a specific project.
 
         Parameters
         ----------
         project_guid: str,
             unique identifier of the project.
-        server_name : str, optional
-            The name of the server to  configure.
-            If not provided, the server name associated with the instance is used.
+        effective_time: str, [default=None], optional
+             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+
 
         Returns
         -------
@@ -744,7 +709,7 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project(project_guid, server_name)
+            self._async_get_project(project_guid, effective_time)
         )
 
         return resp
@@ -753,7 +718,9 @@ class ProjectManager(Client):
     #   Create project methods
     #
     async def _async_create_project_w_body(
-        self, body: dict, classification: str = None, server_name: str = None
+        self,
+        body: dict,
+        classification: str = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project Async version.
 
@@ -804,13 +771,12 @@ class ProjectManager(Client):
         }
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if classification is None:
-            url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects"
+            url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         else:
             url = (
-                f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects?"
+                f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects?"
                 f"classificationName={classification}"
             )
         body_s = body_slimmer(body)
@@ -818,7 +784,9 @@ class ProjectManager(Client):
         return resp.json().get("guid", "No GUID returned")
 
     def create_project_w_body(
-        self, body: dict, classification: str = None, server_name: str = None
+        self,
+        body: dict,
+        classification: str = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project
 
@@ -871,7 +839,7 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_project_w_body(body, classification, server_name)
+            self._async_create_project_w_body(body, classification)
         )
         return resp
 
@@ -891,7 +859,6 @@ class ProjectManager(Client):
         project_health: str = None,
         start_date: str = None,
         planned_end_date: str = None,
-        server_name: str = None,
     ) -> str:
         """Create Project: https://egeria-project.org/concepts/project Async version.
 
@@ -929,9 +896,7 @@ class ProjectManager(Client):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
 
         Returns
         -------
@@ -947,17 +912,15 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if parent_guid is None:
             is_own_anchor = False
 
         if classification_name is None:
-            url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects"
+            url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         else:
             url = (
-                f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects?"
+                f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects?"
                 f"classificationName={classification_name}"
             )
 
@@ -1000,7 +963,6 @@ class ProjectManager(Client):
         project_health: str = None,
         start_date: str = None,
         planned_end_date: str = None,
-        server_name: str = None,
     ) -> str:
         """Create Project: https://egeria-project.org/concepts/project
 
@@ -1038,9 +1000,7 @@ class ProjectManager(Client):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
 
         Returns
         -------
@@ -1073,7 +1033,6 @@ class ProjectManager(Client):
                 project_health,
                 start_date,
                 planned_end_date,
-                server_name,
             )
         )
         return resp
@@ -1089,7 +1048,6 @@ class ProjectManager(Client):
         project_health: str = None,
         start_date: str = None,
         planned_end_date: str = None,
-        server_name: str = None,
     ) -> str:
         """Create a new project with the Task classification and link it to a project. Async version.
 
@@ -1113,9 +1071,7 @@ class ProjectManager(Client):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
         Returns
         -------
         str - the guid of the created project task
@@ -1130,11 +1086,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
             f"{project_guid}/task"
         )
 
@@ -1165,7 +1119,6 @@ class ProjectManager(Client):
         project_health: str = None,
         start_date: str = None,
         planned_end_date: str = None,
-        server_name: str = None,
     ) -> str:
         """Create a new project with the Task classification and link it to a project.
 
@@ -1189,9 +1142,7 @@ class ProjectManager(Client):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
         Returns
         -------
         str - the guid of the created project task
@@ -1218,13 +1169,13 @@ class ProjectManager(Client):
                 project_health,
                 start_date,
                 planned_end_date,
-                server_name,
             )
         )
         return resp
 
     async def _async_create_project_from_template(
-        self, body: dict, server_name: str = None
+        self,
+        body: dict,
     ) -> str:
         """Create a new metadata element to represent a project using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new project.
@@ -1235,9 +1186,7 @@ class ProjectManager(Client):
 
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance
-             is used.
+
 
         Returns
         -------
@@ -1282,15 +1231,16 @@ class ProjectManager(Client):
 
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
-        url = f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/from-template"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/from-template"
         body_s = body_slimmer(body)
         resp = await self._async_make_request("POST", url, body_s)
         return resp.json().get("guid", "No GUID Returned")
 
-    def create_project_from_template(self, body: dict, server_name: str = None) -> str:
+    def create_project_from_template(
+        self,
+        body: dict,
+    ) -> str:
         """Create a new metadata element to represent a project using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new project.
 
@@ -1299,9 +1249,7 @@ class ProjectManager(Client):
 
         body: dict
             A dict representing the details of the collection to create.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance
-             is used.
+
 
         Returns
         -------
@@ -1345,9 +1293,7 @@ class ProjectManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_project_from_template(body, server_name)
-        )
+        resp = loop.run_until_complete(self._async_create_project_from_template(body))
         return resp
 
     async def _async_update_project(
@@ -1363,7 +1309,6 @@ class ProjectManager(Client):
         start_date: str = None,
         planned_end_date: str = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update the properties of a project. Async Version.
 
@@ -1391,9 +1336,7 @@ class ProjectManager(Client):
             Planned completion date in ISO 8601 string format.
         replace_all_props: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
         Returns
         -------
         str - the guid of the created project task
@@ -1407,11 +1350,10 @@ class ProjectManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
-        if server_name is None:
-            server_name = self.server_name
+
         replace_all_props_s = str(replace_all_props).lower()
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"update?replaceAllProperties={replace_all_props_s}"
         )
 
@@ -1444,7 +1386,6 @@ class ProjectManager(Client):
         start_date: str = None,
         planned_end_date: str = None,
         replace_all_props: bool = False,
-        server_name: str = None,
     ) -> None:
         """Update the properties of a project.
 
@@ -1472,9 +1413,7 @@ class ProjectManager(Client):
             Planned completion date in ISO 8601 string format.
         replace_all_props: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance is
-             used.
+
         Returns
         -------
         str - the guid of the created project task
@@ -1502,13 +1441,13 @@ class ProjectManager(Client):
                 start_date,
                 planned_end_date,
                 replace_all_props,
-                server_name,
             )
         )
         return
 
     async def _async_delete_project(
-        self, project_guid: str, server_name: str = None
+        self,
+        project_guid: str,
     ) -> None:
         """Delete a project.  It is detected from all parent elements. Async version
 
@@ -1516,9 +1455,7 @@ class ProjectManager(Client):
         ----------
         project_guid: str
             The guid of the project to update.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance
-             is used.
+
 
         Returns
         -------
@@ -1534,11 +1471,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
             f"{project_guid}/delete"
         )
 
@@ -1547,16 +1482,17 @@ class ProjectManager(Client):
         await self._async_make_request("POST", url, body)
         return
 
-    def delete_project(self, project_guid: str, server_name: str = None) -> None:
+    def delete_project(
+        self,
+        project_guid: str,
+    ) -> None:
         """Delete a project.  It is detected from all parent elements.
 
         Parameters
         ----------
         project_guid: str
             The guid of the collection to update.
-        server_name: str, optional, defaults to None
-            The name of the server to  configure. If not provided, the server name associated with the instance
-             is used.
+
 
         Returns
         -------
@@ -1574,7 +1510,7 @@ class ProjectManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_project(project_guid, server_name))
+        loop.run_until_complete(self._async_delete_project(project_guid))
         return
 
     async def _async_add_to_project_team(
@@ -1584,7 +1520,6 @@ class ProjectManager(Client):
         team_role: str = None,
         effective_from: str = None,
         effective_to: str = None,
-        server_name: str = None,
     ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
         the actor plays in the project. Async version.
@@ -1601,9 +1536,6 @@ class ProjectManager(Client):
             Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
         effective_to: str, optional, defaults to None
             Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1620,11 +1552,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"members/{actor_guid}/attach"
         )
         body = {
@@ -1647,7 +1577,6 @@ class ProjectManager(Client):
         team_role: str = None,
         effective_from: str = None,
         effective_to: str = None,
-        server_name: str = None,
     ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
         the actor plays in the project.
@@ -1664,9 +1593,6 @@ class ProjectManager(Client):
             Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
         effective_to: str, optional, defaults to None
             Date at which the actor is no longer active in the project. Date format is ISO 8601 string format.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1691,13 +1617,14 @@ class ProjectManager(Client):
                 team_role,
                 effective_from,
                 effective_to,
-                server_name,
             )
         )
         return
 
     async def _async_remove_from_project_team(
-        self, project_guid: str, actor_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        actor_guid: str,
     ) -> None:
         """Remove an actor from a project. Async version.
 
@@ -1707,9 +1634,6 @@ class ProjectManager(Client):
             identity of the project to remove members from.
         actor_guid: str
             identity of the actor to remove.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1726,11 +1650,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"members/{actor_guid}/detach"
         )
 
@@ -1739,7 +1661,9 @@ class ProjectManager(Client):
         return
 
     def remove_from_project_team(
-        self, project_guid: str, actor_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        actor_guid: str,
     ) -> None:
         """Remove an actor from a project.
 
@@ -1749,9 +1673,6 @@ class ProjectManager(Client):
             identity of the project.
         actor_guid: str
             identity of the actor to remove.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
 
         Returns
         -------
@@ -1770,12 +1691,14 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_from_project_team(project_guid, actor_guid, server_name)
+            self._async_remove_from_project_team(project_guid, actor_guid)
         )
         return
 
     async def _async_setup_project_management_role(
-        self, project_guid: str, project_role_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        project_role_guid: str,
     ) -> None:
         """Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
         the role is a member of the project. Async version.
@@ -1786,9 +1709,7 @@ class ProjectManager(Client):
             identity of the project.
         project_role_guid: str
             guid of the role to assign to the project.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1805,11 +1726,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"project-management-roles/{project_role_guid}/attach"
         )
 
@@ -1818,7 +1737,9 @@ class ProjectManager(Client):
         return
 
     def setup_project_management_role(
-        self, project_guid: str, project_role_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        project_role_guid: str,
     ) -> None:
         """Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
         the role is a member of the project. Async version.
@@ -1829,9 +1750,7 @@ class ProjectManager(Client):
             identity of the project.
         project_role_guid: str
             guid of the role to assign to the project.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1850,14 +1769,14 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_setup_project_management_role(
-                project_guid, project_role_guid, server_name
-            )
+            self._async_setup_project_management_role(project_guid, project_role_guid)
         )
         return
 
     async def _async_clear_project_management_role(
-        self, project_guid: str, project_role_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        project_role_guid: str,
     ) -> None:
         """Remove a ProjectManagement relationship between a project and a person role. Async version.
 
@@ -1867,9 +1786,7 @@ class ProjectManager(Client):
             identity of the project.
         project_role_guid: str
             guid of the role to assign to the project.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1886,11 +1803,9 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/project-manager/projects/{project_guid}/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"project-management-roles/{project_role_guid}/detach"
         )
 
@@ -1899,7 +1814,9 @@ class ProjectManager(Client):
         return
 
     def clear_project_management_role(
-        self, project_guid: str, project_role_guid: str, server_name: str = None
+        self,
+        project_guid: str,
+        project_role_guid: str,
     ) -> None:
         """Clear a ProjectManagement relationship between a project and a person role.
 
@@ -1909,9 +1826,7 @@ class ProjectManager(Client):
             identity of the project.
         project_role_guid: str
             guid of the role to assign to the project.
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -1930,9 +1845,7 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_clear_project_management_role(
-                project_guid, project_role_guid, server_name
-            )
+            self._async_clear_project_management_role(project_guid, project_role_guid)
         )
         return
 

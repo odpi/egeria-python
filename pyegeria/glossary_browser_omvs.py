@@ -26,7 +26,7 @@ class GlossaryBrowser(Client):
 
     Attributes:
 
-        server_name: str
+        view_server: str
             The name of the View Server to connect to.
         platform_url : str
             URL of the server platform to connect to
@@ -40,26 +40,30 @@ class GlossaryBrowser(Client):
 
     def __init__(
         self,
-        server_name: str,
+        view_server: str,
         platform_url: str,
         user_id: str,
         user_pwd: str = None,
         token: str = None,
     ):
-        self.admin_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd, token)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_pwd = user_pwd
+        self.user_id = user_id
+        self.g_browser_command_root: str
+
+        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Get Valid Values for Enumerations
     #
 
-    async def _async_get_glossary_term_statuses(self, server_name: str = None) -> [str]:
+    async def _async_get_glossary_term_statuses(self) -> [str]:
         """Return the list of glossary term status enum values. Async version.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -67,24 +71,21 @@ class GlossaryBrowser(Client):
             A list of glossary term statuses retrieved from the server.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}"
+            f"{self.platform_url}/servers/{self.view_server}"
             f"/api/open-metadata/glossary-browser/glossaries/terms/status-list"
         )
 
         response = await self._async_make_request("GET", url)
         return response.json().get("statuses", [])
 
-    def get_glossary_term_statuses(self, server_name: str = None) -> [str]:
+    def get_glossary_term_statuses(self) -> [str]:
         """Return the list of glossary term status enum values.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -93,22 +94,17 @@ class GlossaryBrowser(Client):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_term_statuses(server_name)
-        )
+        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
         return response
 
-    async def _async_get_glossary_term_rel_statuses(
-        self, server_name: str = None
-    ) -> [str]:
+    async def _async_get_glossary_term_rel_statuses(self) -> [str]:
         """Return the list of glossary term relationship status enum values.  These values are stored in a
         term-to-term, or term-to-category, relationship and are used to indicate how much the relationship should be
         trusted. Async version.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -116,26 +112,23 @@ class GlossaryBrowser(Client):
             A list of glossary term statuses retrieved from the server.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}"
+            f"{self.platform_url}/servers/{self.view_server}"
             f"/api/open-metadata/glossary-browser/glossaries/terms/relationships/status-list"
         )
 
         response = await self._async_make_request("GET", url)
         return response.json().get("statuses", [])
 
-    def get_glossary_term_rel_statuses(self, server_name: str = None) -> [str]:
+    def get_glossary_term_rel_statuses(self) -> [str]:
         """Return the list of glossary term relationship status enum values.  These values are stored in a
         term-to-term, or term-to-category, relationship and are used to indicate how much the relationship should be
         trusted.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query . If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -144,20 +137,15 @@ class GlossaryBrowser(Client):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_term_rel_statuses(server_name)
-        )
+        response = loop.run_until_complete(self._async_get_glossary_term_rel_statuses())
         return response
 
-    async def _async_get_glossary_term_activity_types(
-        self, server_name: str = None
-    ) -> [str]:
+    async def _async_get_glossary_term_activity_types(self) -> [str]:
         """Return the list of glossary term activity type enum values. Async version.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query. If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -165,24 +153,21 @@ class GlossaryBrowser(Client):
             A list of glossary term statuses retrieved from the server.
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}"
+            f"{self.platform_url}/servers/{self.view_server}"
             f"/api/open-metadata/glossary-browser/glossaries/terms/activity-types"
         )
 
         response = await self._async_make_request("GET", url)
         return response.json().get("types", [])
 
-    def get_glossary_term_activity_types(self, server_name: str = None) -> [str]:
+    def get_glossary_term_activity_types(self) -> [str]:
         """Return the list of glossary term activity type enum values.
 
         Parameters
         ----------
-        server_name : str, optional
-            The name of the server to query . If not provided, the server name associated with the instance is used.
+
 
         Returns
         -------
@@ -191,9 +176,7 @@ class GlossaryBrowser(Client):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_term_statuses(server_name)
-        )
+        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
         return response
 
     #
@@ -210,7 +193,6 @@ class GlossaryBrowser(Client):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         type_name: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -226,8 +208,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -263,8 +244,7 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -288,7 +268,7 @@ class GlossaryBrowser(Client):
         # print(f"\n\nBody is: \n{body}")
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
@@ -307,7 +287,6 @@ class GlossaryBrowser(Client):
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         type_name: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -324,8 +303,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -339,7 +317,7 @@ class GlossaryBrowser(Client):
         type_name: str, [default=None], optional
             An optional parameter indicating the subtype of the glossary to filter by.
             Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
-         start_from: int, [default=0], optional
+         start_from : int, [default=0], optional
              When multiple pages of results are available, the page number to start from.
          page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
@@ -372,7 +350,6 @@ class GlossaryBrowser(Client):
                 for_lineage,
                 for_duplicate_processing,
                 type_name,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -381,16 +358,13 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_glossary_by_guid(
-        self, glossary_guid: str, server_name: str = None, effective_time: str = None
+        self, glossary_guid: str, effective_time: str = None
     ) -> dict:
         """Retrieves information about a glossary
         Parameters
         ----------
             glossary_guid : str
                 Unique idetifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
             effective_time: str, optional
                 Effective time of the query. If not specified will default to any time. Time format is
                 "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -410,8 +384,7 @@ class GlossaryBrowser(Client):
         Notes
         -----
         """
-        if server_name is None:
-            server_name = self.server_name
+
         validate_guid(glossary_guid)
 
         body = {
@@ -420,22 +393,25 @@ class GlossaryBrowser(Client):
         }
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/retrieve"
         )
         print(url)
         response = await self._async_make_request("POST", url, payload=body)
         return response.json()
 
-    def get_glossary_by_guid(self, glossary_guid: str, server_name: str = None) -> dict:
+    def get_glossary_by_guid(
+        self, glossary_guid: str, effective_time: str = None
+    ) -> dict:
         """Retrieves information about a glossary
         Parameters
         ----------
             glossary_guid : str
                 Unique idetifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+            effective_time: str, optional
+                Effective time of the query. If not specified will default to any time. Time format is
+                "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+
         Returns
         -------
         dict
@@ -454,7 +430,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, server_name)
+            self._async_get_glossary_by_guid(glossary_guid, effective_time)
         )
         return response
 
@@ -462,7 +438,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> dict | str:
@@ -476,8 +451,7 @@ class GlossaryBrowser(Client):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
              When multiple pages of results are available, the page number to start from.
@@ -502,8 +476,7 @@ class GlossaryBrowser(Client):
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         validate_name(glossary_name)
@@ -514,7 +487,7 @@ class GlossaryBrowser(Client):
             body = {"name": glossary_name, "effectiveTime": effective_time}
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -525,7 +498,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_name: str,
         effective_time: str = None,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> dict | str:
@@ -538,8 +510,7 @@ class GlossaryBrowser(Client):
             Name of the glossary to be retrieved
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time.
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
             When multiple pages of results are available, the page number to start from.
@@ -566,7 +537,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_glossaries_by_name(
-                glossary_name, effective_time, server_name, start_from, page_size
+                glossary_name, effective_time, start_from, page_size
             )
         )
         return response
@@ -579,7 +550,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
@@ -591,8 +561,7 @@ class GlossaryBrowser(Client):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -612,8 +581,6 @@ class GlossaryBrowser(Client):
           Raised when configuration parameters passed on earlier calls turn out to be
           invalid or make the new call invalid.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         body = {
             "class": "EffectiveTimeQueryRequestBody",
@@ -621,7 +588,7 @@ class GlossaryBrowser(Client):
         }
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"for-category/{glossary_category_guid}/retrieve"
         )
 
@@ -632,7 +599,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
@@ -644,8 +610,7 @@ class GlossaryBrowser(Client):
         effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -668,7 +633,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_glossary_for_category(
-                glossary_category_guid, effective_time, server_name
+                glossary_category_guid, effective_time
             )
         )
         return response
@@ -680,7 +645,6 @@ class GlossaryBrowser(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -697,8 +661,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -728,8 +691,7 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         starts_with_s = str(starts_with).lower()
@@ -749,7 +711,7 @@ class GlossaryBrowser(Client):
         body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
@@ -764,7 +726,6 @@ class GlossaryBrowser(Client):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -781,8 +742,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time format is
             "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -820,7 +780,6 @@ class GlossaryBrowser(Client):
                 starts_with,
                 ends_with,
                 ignore_case,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -831,7 +790,6 @@ class GlossaryBrowser(Client):
     async def _async_get_categories_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -842,8 +800,7 @@ class GlossaryBrowser(Client):
         ----------
         glossary_guid: str,
             Unique identity of the glossary
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -867,13 +824,12 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -883,7 +839,6 @@ class GlossaryBrowser(Client):
     def get_categories_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -893,8 +848,7 @@ class GlossaryBrowser(Client):
         ----------
         glossary_guid: str,
             Unique identity of the glossary
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -921,7 +875,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_for_glossary(
-                glossary_guid, server_name, start_from, page_size
+                glossary_guid, start_from, page_size
             )
         )
         return response
@@ -929,7 +883,6 @@ class GlossaryBrowser(Client):
     async def _async_get_categories_for_term(
         self,
         glossary_term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -940,9 +893,7 @@ class GlossaryBrowser(Client):
         ----------
         glossary_term_guid: str,
             Unique identity of a glossary term
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -965,13 +916,12 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -981,7 +931,6 @@ class GlossaryBrowser(Client):
     def get_categories_for_term(
         self,
         glossary_term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -991,9 +940,7 @@ class GlossaryBrowser(Client):
         ----------
         glossary_term_guid: str,
             Unique identity of a glossary term
-        server_name : str, optional
-            The name of the server to use.
-            If not provided, the server name associated with the instance is used.
+
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -1019,7 +966,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_for_term(
-                glossary_term_guid, server_name, start_from, page_size
+                glossary_term_guid, start_from, page_size
             )
         )
         return response
@@ -1029,7 +976,6 @@ class GlossaryBrowser(Client):
         name: str,
         glossary_guid: str = None,
         status: [str] = ["ACTIVE"],
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1048,8 +994,7 @@ class GlossaryBrowser(Client):
             The identity of the glossary to search. If not specified, all glossaries will be searched.
         status: [str], optional
             A list of statuses to optionally restrict results. Default is Active
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -1073,14 +1018,13 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         validate_name(name)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"by-name?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1099,7 +1043,6 @@ class GlossaryBrowser(Client):
         name: str,
         glossary_guid: str = None,
         status: [str] = ["ACTIVE"],
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -1116,8 +1059,7 @@ class GlossaryBrowser(Client):
             The identity of the glossary to search. If not specified, all glossaries will be searched.
         status: [str], optional
             A list of statuses to optionally restrict results. Default is Active
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -1144,7 +1086,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_categories_by_name(
-                name, glossary_guid, status, server_name, start_from, page_size
+                name, glossary_guid, status, start_from, page_size
             )
         )
         return response
@@ -1153,7 +1095,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1167,8 +1108,7 @@ class GlossaryBrowser(Client):
         effective_time: str, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -1188,11 +1128,9 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/retrieve"
         )
 
@@ -1208,7 +1146,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1220,8 +1157,7 @@ class GlossaryBrowser(Client):
         effective_time: str, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -1243,9 +1179,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_guid(
-                glossary_category_guid, effective_time, server_name
-            )
+            self._async_get_categories_by_guid(glossary_category_guid, effective_time)
         )
         return response
 
@@ -1253,7 +1187,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
@@ -1269,8 +1202,7 @@ class GlossaryBrowser(Client):
         effective_time: str, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -1290,11 +1222,9 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        if server_name is None:
-            server_name = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/categories/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/parent/retrieve"
         )
 
@@ -1310,7 +1240,6 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
-        server_name: str = None,
     ) -> list | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
             element for the glossary category with the supplied unique identifier.  If the requested category
@@ -1324,8 +1253,7 @@ class GlossaryBrowser(Client):
         effective_time: str, optional
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
 
         Returns
@@ -1347,9 +1275,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_category_parent(
-                glossary_category_guid, effective_time, server_name
-            )
+            self._async_get_category_parent(glossary_category_guid, effective_time)
         )
         return response
 
@@ -1360,7 +1286,6 @@ class GlossaryBrowser(Client):
     async def _async_get_terms_for_category(
         self,
         glossary_category_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1374,9 +1299,7 @@ class GlossaryBrowser(Client):
         ----------
             glossary_category_guid : str
                 Unique identifier for the glossary category to retrieve terms from.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, the terms are returned if they are active at the `effective_time
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1401,15 +1324,13 @@ class GlossaryBrowser(Client):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_category_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1424,7 +1345,6 @@ class GlossaryBrowser(Client):
     def get_terms_for_category(
         self,
         glossary_category_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1438,9 +1358,7 @@ class GlossaryBrowser(Client):
         ----------
             glossary_category_guid : str
                 Unique identifier for the glossary category to retrieve terms from.
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, the terms are returned if they are active at the `effective_time.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`.
@@ -1468,7 +1386,6 @@ class GlossaryBrowser(Client):
         response = loop.run_until_complete(
             self._async_get_terms_for_category(
                 glossary_category_guid,
-                server_name,
                 effective_time,
                 start_from,
                 page_size,
@@ -1480,7 +1397,6 @@ class GlossaryBrowser(Client):
     async def _async_get_terms_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1491,9 +1407,7 @@ class GlossaryBrowser(Client):
         ----------
             glossary_guid : str
                 Unique identifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, terms are potentially included if they are active at the`effective_time.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`
@@ -1518,15 +1432,13 @@ class GlossaryBrowser(Client):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(glossary_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1541,7 +1453,6 @@ class GlossaryBrowser(Client):
     def get_terms_for_glossary(
         self,
         glossary_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1552,9 +1463,7 @@ class GlossaryBrowser(Client):
         ----------
             glossary_guid : str
                 Unique identifier for the glossary
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, terms are potentially returned if they are active at the `effective_time`
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1581,7 +1490,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_for_glossary(
-                glossary_guid, server_name, effective_time, start_from, page_size
+                glossary_guid, effective_time, start_from, page_size
             )
         )
 
@@ -1590,7 +1499,6 @@ class GlossaryBrowser(Client):
     async def _async_get_term_relationships(
         self,
         term_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1601,9 +1509,7 @@ class GlossaryBrowser(Client):
         ----------
             term_guid : str
                 Unique identifier for the glossary term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, term relationships are included if they are active at the `effective_time`.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1628,15 +1534,13 @@ class GlossaryBrowser(Client):
         -----
         """
 
-        if server_name is None:
-            server_name = self.server_name
         validate_guid(term_guid)
 
         if page_size is None:
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/related-terms?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1651,7 +1555,6 @@ class GlossaryBrowser(Client):
     def get_term_relationships(
         self,
         term_guid: str,
-        server_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -1662,9 +1565,7 @@ class GlossaryBrowser(Client):
         ----------
             term_guid : str
                 Unique identifier for the glossary term
-            server_name : str, optional
-               The name of the server to get the configured access services for.
-               If not provided, the server name associated with the instance is used.
+
             effective_time : str, optional
                 If specified, term relationships are included if they are active at the `effective_time`.
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1691,14 +1592,14 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_term_relationships(
-                term_guid, server_name, effective_time, start_from, page_size
+                term_guid, effective_time, start_from, page_size
             )
         )
 
         return response
 
     async def _async_get_glossary_for_term(
-        self, term_guid: str, server_name: str = None, effective_time: str = None
+        self, term_guid: str, effective_time: str = None
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to
             specify that the glossary element should only be returned if it was effective at a particular time.
@@ -1709,8 +1610,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The unique identifier for the term.
-        server_name : str, optional
-            The name of the server. If not specified, the default server name will be used.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1730,8 +1630,7 @@ class GlossaryBrowser(Client):
         Notes
         -----
         """
-        if server_name is None:
-            server_name = self.server_name
+
         validate_guid(term_guid)
 
         body = {
@@ -1739,7 +1638,7 @@ class GlossaryBrowser(Client):
             "effectiveTime": effective_time,
         }
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"for-term/{term_guid}/retrieve"
         )
 
@@ -1747,7 +1646,7 @@ class GlossaryBrowser(Client):
         return response.json().get("element", "No glossary found")
 
     def get_glossary_for_term(
-        self, term_guid: str, server_name: str = None, effective_time: str = None
+        self, term_guid: str, effective_time: str = None
     ) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to
             specify that the glossary element should only be returned if it was effective at a particular time.
@@ -1758,8 +1657,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The unique identifier for the term.
-        server_name : str, optional
-            The name of the server. If not specified, the default server name will be used.
+
         effective_time : datetime, optional
             TIf specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
@@ -1781,7 +1679,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_for_term(term_guid, server_name, effective_time)
+            self._async_get_glossary_for_term(term_guid, effective_time)
         )
         return response
 
@@ -1790,7 +1688,6 @@ class GlossaryBrowser(Client):
         term: str,
         glossary_guid: str = None,
         status_filter: list = [],
-        server_name: str = None,
         effective_time: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
@@ -1807,8 +1704,7 @@ class GlossaryBrowser(Client):
             The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
         status_filter : list, optional
             A list of status values to filter the search results. Default is an empty list, which means no filtering.
-        server_name : str, optional
-            The name of the server where the glossaries reside. If not provided, it will use the default server name.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1835,8 +1731,7 @@ class GlossaryBrowser(Client):
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
 
@@ -1855,7 +1750,7 @@ class GlossaryBrowser(Client):
         # body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"terms/by-name?startFrom={start_from}&pageSize={page_size}&"
             f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
         )
@@ -1870,7 +1765,6 @@ class GlossaryBrowser(Client):
         term: str,
         glossary_guid: str = None,
         status_filter: list = [],
-        server_name: str = None,
         effective_time: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
@@ -1887,8 +1781,7 @@ class GlossaryBrowser(Client):
             The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
         status_filter : list, optional
             A list of status values to filter the search results. Default is an empty list, which means no filtering.
-        server_name : str, optional
-            The name of the server where the glossaries reside. If not provided, it will use the default server name.
+
         effective_time : datetime, optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
              Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1922,7 +1815,6 @@ class GlossaryBrowser(Client):
                 term,
                 glossary_guid,
                 status_filter,
-                server_name,
                 effective_time,
                 for_lineage,
                 for_duplicate_processing,
@@ -1932,16 +1824,13 @@ class GlossaryBrowser(Client):
         )
         return response
 
-    async def _async_get_terms_by_guid(
-        self, term_guid: str, server_name: str = None
-    ) -> dict | str:
+    async def _async_get_terms_by_guid(self, term_guid: str) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1958,27 +1847,24 @@ class GlossaryBrowser(Client):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/retrieve"
         )
 
         response = await self._async_make_request("POST", url)
         return response.json().get("element", "No term found")
 
-    def get_terms_by_guid(self, term_guid: str, server_name: str = None) -> dict | str:
+    def get_terms_by_guid(self, term_guid: str) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
 
         Returns
         -------
@@ -1997,16 +1883,13 @@ class GlossaryBrowser(Client):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_by_guid(term_guid, server_name)
-        )
+        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid))
 
         return response
 
     async def _async_get_terms_versions(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2015,8 +1898,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2036,8 +1918,6 @@ class GlossaryBrowser(Client):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -2045,7 +1925,7 @@ class GlossaryBrowser(Client):
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/history?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2055,7 +1935,6 @@ class GlossaryBrowser(Client):
     def get_terms_versions(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2064,8 +1943,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2088,9 +1966,7 @@ class GlossaryBrowser(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_terms_versions(
-                term_guid, server_name, start_from, page_size
-            )
+            self._async_get_terms_versions(term_guid, start_from, page_size)
         )
 
         return response
@@ -2098,7 +1974,6 @@ class GlossaryBrowser(Client):
     async def _async_get_term_revision_logs(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2107,8 +1982,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2128,8 +2002,6 @@ class GlossaryBrowser(Client):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -2137,7 +2009,7 @@ class GlossaryBrowser(Client):
         validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/elements/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/elements/"
             f"{term_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2147,7 +2019,6 @@ class GlossaryBrowser(Client):
     def get_term_revision_logs(
         self,
         term_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2156,8 +2027,7 @@ class GlossaryBrowser(Client):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2180,9 +2050,7 @@ class GlossaryBrowser(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_revision_logs(
-                term_guid, server_name, start_from, page_size
-            )
+            self._async_get_term_revision_logs(term_guid, start_from, page_size)
         )
 
         return response
@@ -2190,7 +2058,6 @@ class GlossaryBrowser(Client):
     async def _async_get_term_revision_history(
         self,
         term_revision_log_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2200,8 +2067,7 @@ class GlossaryBrowser(Client):
         ----------
         term_revision_log_guid : str
             The GUID of the glossary term revision log to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2226,8 +2092,6 @@ class GlossaryBrowser(Client):
         This revision history is created automatically.  The text is supplied on the update request.
         If no text is supplied, the value "None" is show.
         """
-        if server_name is None:
-            server_name = self.server_name
 
         if page_size is None:
             page_size = self.page_size
@@ -2235,7 +2099,7 @@ class GlossaryBrowser(Client):
         validate_guid(term_revision_log_guid)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/note-logs/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/note-logs/"
             f"{term_revision_log_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -2245,7 +2109,6 @@ class GlossaryBrowser(Client):
     def get_term_revision_history(
         self,
         term_revision_log_guid: str,
-        server_name: str = None,
         start_from: int = 0,
         page_size=None,
     ) -> dict | str:
@@ -2255,8 +2118,7 @@ class GlossaryBrowser(Client):
         ----------
         term_revision_log_guid : str
             The GUID of the glossary term revision log to retrieve.
-        server_name : str, optional
-            The name of the server to connect to. If not provided, the default server name will be used.
+
         start_from : int, optional
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
@@ -2285,7 +2147,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_term_revision_history(
-                term_revision_log_guid, server_name, start_from, page_size
+                term_revision_log_guid, start_from, page_size
             )
         )
 
@@ -2302,7 +2164,6 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2320,8 +2181,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -2360,8 +2220,7 @@ class GlossaryBrowser(Client):
         The request body also supports the specification of a glossaryGUID to restrict the search to within a single
         glossary.
         """
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         if effective_time is None:
@@ -2386,7 +2245,7 @@ class GlossaryBrowser(Client):
         # body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
@@ -2410,7 +2269,6 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2429,8 +2287,7 @@ class GlossaryBrowser(Client):
         effective_time: str, [default=None], optional
             If specified, the term information will be retrieved if it is active at the `effective_time`.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        server_name : str, optional
-            The name of the server to  configure.
+
             If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -2482,7 +2339,6 @@ class GlossaryBrowser(Client):
                 ignore_case,
                 for_lineage,
                 for_duplicate_processing,
-                server_name,
                 start_from,
                 page_size,
             )
@@ -2497,13 +2353,10 @@ class GlossaryBrowser(Client):
         self,
         commemt_guid: str,
         effective_time: str,
-        server_name: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
     ) -> dict | list:
         """Retrieve the comment specified by the comment GUID"""
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(commemt_guid)
 
@@ -2516,7 +2369,7 @@ class GlossaryBrowser(Client):
         body = {"effective_time": effective_time}
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/comments/"
             f"{commemt_guid}?forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
@@ -2532,14 +2385,10 @@ class GlossaryBrowser(Client):
         is_public: bool,
         comment_type: str,
         comment_text: str,
-        server_name: str = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
     ) -> str:
         """Reply to a comment"""
-
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(comment_guid)
         validate_name(comment_type)
@@ -2556,7 +2405,7 @@ class GlossaryBrowser(Client):
         }
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/comments/"
             f"{comment_guid}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
@@ -2572,14 +2421,11 @@ class GlossaryBrowser(Client):
         is_public: bool,
         comment_type: str,
         comment_text: str,
-        server_name: str = None,
         is_merge_update: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
     ) -> str:
         """Update the specified comment"""
-        if server_name is None:
-            server_name = self.server_name
 
         validate_guid(comment_guid)
         validate_name(comment_type)
@@ -2596,7 +2442,7 @@ class GlossaryBrowser(Client):
         }
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/comments/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/comments/"
             f"{comment_guid}/replies?isPublic={is_public_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
@@ -2617,13 +2463,11 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        server_name: str = None,
         start_from: int = 0,
         page_size: int = None,
     ):
         """Find comments by search string"""
-        if server_name is None:
-            server_name = self.server_name
+
         if page_size is None:
             page_size = self.page_size
         if effective_time is None:
@@ -2648,7 +2492,7 @@ class GlossaryBrowser(Client):
         # body = body_slimmer(body)
 
         url = (
-            f"{self.platform_url}/servers/{server_name}/api/open-metadata/glossary-browser/glossaries/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"terms/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
             f"forDuplicateProcessing={for_duplicate_processing_s}"

@@ -12,7 +12,7 @@ import json
 
 import httpx
 
-from pyegeria import Client
+from pyegeria import Client, enable_ssl_check
 from pyegeria._validators import validate_user_id
 from pyegeria._exceptions import (
     OMAGCommonErrorCode,
@@ -40,7 +40,7 @@ class Platform(Client):
 
     """
 
-    admin_command_root: str
+    platform_command_root: str
 
     def __init__(
         self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None
@@ -88,7 +88,7 @@ class Platform(Client):
 
         url = self.admin_command_root + "/origin"
 
-        local_session = httpx.Client(verify=self.ssl_verify)
+        local_session = httpx.Client(verify=enable_ssl_check)
         response = " "
         try:
             response = local_session.get(url)

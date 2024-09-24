@@ -183,7 +183,11 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.create_postgres_server_element_from_template(
-                "laz-postgres", "localhost", "5432", db_user="postgres", db_pwd="secret"
+                "laz-postgres",
+                "localhost",
+                "5432",
+                db_user="postgres",
+                db_pwd="notingres",
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1104,7 +1108,8 @@ class TestAutomatedCuration:
             # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
             t = INTEGRATION_GUIDS["UnityCatalogInsideCatalogSynchronizer"]
             start_time = time.perf_counter()
-            response = a_client.get_catalog_targets(t)
+            connector_guid = "6bb2181e-7724-4515-ba3c-877cded55980"
+            response = a_client.get_catalog_targets(connector_guid)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1267,7 +1272,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "0ae01472-a871-4119-b6f0-1aa273cc5ca7"
+            a_postgres_server_guid = "941d42b4-a3a0-4ff4-af8f-48e23085d3ee"
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
