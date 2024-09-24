@@ -128,12 +128,12 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
-    # open_metadata_type_name = None
+    open_metadata_type_name = "ArchiveFile"
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = None
-    property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
-    property_names = ["name", "qualifiedName"]
+    # open_metadata_type_name = None
+    property_value = "CoreContentPack"
+    property_names = ["name", "resourceName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 

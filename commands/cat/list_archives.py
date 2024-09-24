@@ -71,8 +71,9 @@ def display_archive_list(
         )
 
         table.add_column("Name")
+        table.add_column("Description")
         table.add_column("Path Name")
-        table.add_column("Creation Date")
+
         # table.add_column("Creator")
         # table.add_column("Description")
 
@@ -93,16 +94,14 @@ def display_archive_list(
             for archive in sorted_archives:
                 name = archive["properties"].get("name", "---")
                 path_name = archive["properties"].get("pathName", "---")
+                description = archive["properties"].get("description", "---")
                 creation_date_epoch = (
                     int(archive["properties"].get("storeCreateTime", 0)) / 1000
                 )
                 create_date = datetime.datetime.fromtimestamp(creation_date_epoch)
                 creator = "---"
-                description = "---"
 
-                table.add_row(
-                    name, path_name, create_date.strftime("%Y-%m-%d %H:%M:%S")
-                )
+                table.add_row(name, description, path_name)
 
         return table
 
