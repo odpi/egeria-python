@@ -2888,7 +2888,7 @@ class GlossaryManager(GlossaryBrowser):
         effective_time: str = None,
         starts_with: bool = False,
         ends_with: bool = False,
-        ignore_case: bool = False,
+        ignore_case: bool = True,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         start_from: int = 0,

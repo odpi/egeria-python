@@ -9,7 +9,7 @@ import asyncio
 
 # import json
 from pyegeria._client import Client
-from pyegeria._globals import enable_ssl_check, max_paging_size
+from pyegeria._globals import max_paging_size
 
 
 class ValidMetadataManager(Client):
@@ -67,6 +67,17 @@ class ValidMetadataManager(Client):
 
         Returns
         -------
+        No value is returned.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
 
         Notes
         -----
@@ -78,7 +89,9 @@ class ValidMetadataManager(Client):
           "preferredValue": "",
           "dataType": "",
           "isCaseSensitive": false,
-          "isDeprecated" : false
+          "isDeprecated" : false,
+          "effectiveFrom" : "2024-09-30T20:00:00.000Z",
+          "effectiveTo" : "2025-09-30T20:00:00.000Z",
         }
         """
 
@@ -110,9 +123,16 @@ class ValidMetadataManager(Client):
 
         Returns
         -------
-        str
-            The GUID of the valid metadata value if it was successfully set up, or "GUID failed to be returned"
-            if the GUID was not returned in the response.
+        None - this method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----
@@ -160,6 +180,76 @@ class ValidMetadataManager(Client):
         None
             This method does not return any value.
 
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
+        Notes
+        -----
+
+        Body strycture similar to:
+
+        {
+          "displayName": "",
+          "description": "",
+          "preferredValue": "put mapName value here",
+          "dataType": "",
+          "isCaseSensitive": false,
+          "isDeprecated" : false,
+          "effectiveFrom" : "2024-09-30T20:00:00.000Z",
+          "effectiveTo" : "2025-09-30T20:00:00.000Z"
+        }
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-name/{property_name}?"
+            f"typeName={type_name}"
+        )
+
+        await self._async_make_request("POST", url, body)
+        return
+
+    def setup_valid_metadata_map_name(
+        self, property_name: str, type_name: str, body: dict
+    ):
+        """Create or update the valid value for a name that can be stored in a particular open metadata property name.
+        This property is of type map from name to string. The mapName is stored in the preferredValue property of
+        validMetadataValue. If the typeName is null, this valid value applies to properties of this name from any
+        open metadata type. If a valid value is already set up for this property (with overlapping effective dates)
+        then the valid value is updated.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        body : dict
+            The metadata map setup data.
+
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
         Notes
         -----
 
@@ -176,73 +266,803 @@ class ValidMetadataManager(Client):
 
         """
 
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_setup_valid_metadata_map_name(property_name, type_name, body)
+        )
+        return
+
+    async def _async_setup_valid_metadata_map_value(
+        self, property_name: str, type_name: str, map_name: str, body: dict
+    ) -> None:
+        """Create or update the valid value for a name that can be stored in a particular open metadata property name.
+        This property is of type map from name to string.
+        The valid value is stored in the preferredValue property of validMetadataValue.
+        If the typeName is null, this valid value applies to properties of this name from any open metadata type.
+        If a valid value is already set up for this property (with overlapping effective dates) then the valid value
+        is updated.  Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map we associate a value with.
+        body : dict
+            The metadata map setup data.
+
+        Returns
+        -------
+        None
+            This method does not return any value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
+        Notes
+        -----
+
+        Body strycture similar to:
+
+        {
+          "displayName": "",
+          "description": "",
+          "preferredValue": "put mapName value here",
+          "dataType": "",
+          "isCaseSensitive": false,
+          "effectiveFrom" : "2024-09-30T20:00:00.000Z",
+          "effectiveTo" : "2025-09-30T20:00:00.000Z"
+        }
+        """
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-name/{property_name}?"
-            f"typeName={type_name}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/setup-map-value/"
+            f"{property_name}/{map_name}?typeName={type_name}"
         )
 
         await self._async_make_request("POST", url, body)
         return
 
-    async def _async_setup_valid_metadata_type_value(
-        self, property_name: str, type_name: str, map_name: str
-    ):
-        pass
+    def setup_valid_metadata_map_value(
+        self, property_name: str, type_name: str, map_name: str, body: dict
+    ) -> None:
+        """Create or update the valid value for a name that can be stored in a particular open metadata property name.
+        This property is of type map from name to string.
+        The valid value is stored in the preferredValue property of validMetadataValue.
+        If the typeName is null, this valid value applies to properties of this name from any open metadata type.
+        If a valid value is already set up for this property (with overlapping effective dates) then the valid value
+        is updated.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map we associate a value with.
+        body : dict
+            The metadata map setup data.
+
+
+        Returns
+        -------
+        None
+            This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
+        Notes
+        -----
+
+        Body structure similar to:
+
+        {
+          "displayName": "",
+          "description": "",
+          "preferredValue": "put mapName value here",
+          "dataType": "",
+          "isCaseSensitive": false,
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_setup_valid_metadata_map_value(
+                property_name, type_name, map_name, body
+            )
+        )
+        return
 
     async def _async_clear_valid_metadata_value(
-        self, property_name: str, type_name: str, map_name: str
-    ):
-        pass
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> None:
+        """Remove a valid value for a property. Async version.
 
-    async def _async_clear_valid_metadata_map_value(
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The reference valye to remove.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-value/"
+            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+        )
+
+        await self._async_make_request("POST", url)
+        return
+
+    def clear_valid_metadata_value(
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> None:
+        """Remove a valid value for a property.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The reference valye to remove.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_valid_metadata_value(
+                property_name, type_name, preferred_value
+            )
+        )
+        return
+
+    async def _async_clear_valid_metadata_map_name(
         self,
         property_name: str,
         type_name: str,
         map_name: str,
-        preferred_value: str,
-        server: str = None,
     ):
-        pass
+        """Remove a valid map name value for a property. The match is done on MapName name. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map we associate a value with.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-map-name/"
+            f"{property_name}?typeName={type_name}&mapName={map_name}"
+        )
+
+        await self._async_make_request("POST", url)
+        return
+
+    def clear_valid_metadata_map_name(
+        self,
+        property_name: str,
+        type_name: str,
+        map_name: str,
+    ):
+        """Remove a valid map name value for a property. The match is done on MapName name.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map we associate a value with.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_valid_metadata_map_name(
+                property_name, type_name, map_name
+            )
+        )
+        return
+
+    async def _async_clear_valid_metadata_map_value(
+        self, property_name: str, type_name: str, preferred_value: str
+    ):
+        """Remove a valid map name value for a property.  The match is done on preferred name. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The value to remove.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/clear-map-value/"
+            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+        )
+
+        await self._async_make_request("POST", url)
+        return
+
+    def clear_valid_metadata_map_value(
+        self, property_name: str, type_name: str, preferred_value: str
+    ):
+        """Remove a valid map name value for a property.  The match is done on preferred name.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The value to remove.
+
+        Returns
+        -------
+        None - This method does not return a value.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_valid_metadata_map_value(
+                property_name, type_name, preferred_value
+            )
+        )
+        return
 
     async def _async_validate_metadata_value(
         self, property_name: str, type_name: str, actual_value: str
-    ):
-        pass
+    ) -> bool | str:
+        """Validate whether the value found in an open metadata property is valid. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        actual_value: str
+            The value to validate.
+
+        Returns
+        -------
+        Bool - True, if validated.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-value/"
+            f"{property_name}?typeName={type_name}&actualValue={actual_value}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("flag", "No flag found")
+
+    def validate_metadata_value(
+        self, property_name: str, type_name: str, actual_value: str
+    ) -> bool | str:
+        """Validate whether the value found in an open metadata property is valid.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        actual_value: str
+            The value to validate.
+
+        Returns
+        -------
+        Bool - True, if validated.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_clear_valid_metadata_map_value(
+                property_name, type_name, actual_value
+            )
+        )
+        return response
 
     async def _async_validate_metadata_map_name(
         self, property_name: str, type_name: str, map_name: str
-    ):
-        pass
+    ) -> bool | str:
+        """Validate whether the name found in an open metadata map property is valid. Async version.
+
+         Parameters
+         ----------
+         property_name : str
+             The name of the property to setup metadata map.
+         type_name : str
+             The type name of the property.
+        map_name: str
+             The name of a map to validate.
+
+         Returns
+         -------
+         Bool - True, if validated.
+
+         Raises
+         ------
+         InvalidParameterException
+           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+         PropertyServerException
+           Raised by the server when an issue arises in processing a valid request
+         NotAuthorizedException
+           The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-map-name/"
+            f"{property_name}?typeName={type_name}&mapName={map_name}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("flag", "No flag found")
+
+    def validate_metadata_map_name(
+        self, property_name: str, type_name: str, map_name: str
+    ) -> bool | str:
+        """Validate whether the name found in an open metadata map property is valid.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map to validate.
+
+        Returns
+        -------
+        Bool - True, if validated.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_validate_metadata_map_name(property_name, type_name, map_name)
+        )
+        return response
+
+    async def _async_validate_metadata_map_value(
+        self, property_name: str, type_name: str, map_name: str, actual_value: str
+    ) -> bool | str:
+        """Validate whether the name found in an open metadata map property is valid. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map to validate.
+        actual_value: str
+            The actual value associated with the map to validate.
+
+        Returns
+        -------
+        Bool - True, if validated.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/validate-map-value/"
+            f"{property_name}/{map_name}?typeName={type_name}&actualValue={actual_value}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("flag", "No flag found")
+
+    def validate_metadata_map_value(
+        self, property_name: str, type_name: str, map_name: str, actual_value: str
+    ) -> bool | str:
+        """Validate whether the name found in an open metadata map property is valid.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            The name of a map to validate.
+        actual_value: str
+             The actual value associated with the map to validate.
+
+        Returns
+        -------
+        Bool - True, if validated.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_validate_metadata_map_value(
+                property_name, type_name, map_name, actual_value
+            )
+        )
+        return response
 
     async def _async_get_valid_metadata_value(
-        self,
-        property_name: str,
-        type_name: str,
-        preferred_value: str,
-        server: str = None,
-    ):
-        pass
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> dict | str:
+        """Retrieve details of a specific valid value for a property. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The preferred value of the property.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/get-value/"
+            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("element", "No value found")
+
+    def get_valid_metadata_value(
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> dict | str:
+        """Retrieve details of a specific valid value for a property.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            The preferred value of the property.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_valid_metadata_value(
+                property_name, type_name, preferred_value
+            )
+        )
+        return response
 
     async def _async_get_valid_metadata_map_name(
         self, property_name: str, type_name: str, map_name: str
-    ):
-        pass
+    ) -> dict | str:
+        """Retrieve details of a specific valid name for a map property. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            Map to return details of.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/get-map-name/"
+            f"{property_name}?typeName={type_name}&mapName={map_name}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("element", "No value found")
+
+    def get_valid_metadata_map_name(
+        self, property_name: str, type_name: str, map_name: str
+    ) -> dict | str:
+        """Retrieve details of a specific valid name for a map property.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        map_name: str
+            Map to return details of.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_valid_metadata_map_name(property_name, type_name, map_name)
+        )
+        return response
 
     async def _async_get_valid_metadata_map_value(
-        self,
-        property_name: str,
-        type_name: str,
-        map_name: str,
-        preferred_value: str,
-        server: str = None,
-    ):
-        pass
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> dict | str:
+        """Retrieve details of a specific valid value for a map property. Async version.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            Preferred value to return details of.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/get-map-value/"
+            f"{property_name}?typeName={type_name}&preferredValue={preferred_value}"
+        )
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("element", "No value found")
+
+    def get_valid_metadata_map_value(
+        self, property_name: str, type_name: str, preferred_value: str
+    ) -> dict | str:
+        """Retrieve details of a specific valid value for a map property.
+
+        Parameters
+        ----------
+        property_name : str
+            The name of the property to setup metadata map.
+        type_name : str
+            The type name of the property.
+        preferred_value: str
+            Preferred value to return details of.
+
+        Returns
+        -------
+        Dict if the value is found, otherwise an str indicating the value wasn't found.
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_valid_metadata_map_value(
+                property_name, type_name, preferred_value
+            )
+        )
+        return response
 
     async def _async_get_valid_metadata_values(
         self,
         property_name: str,
         type_name: str = None,
-        start_value: int = 0,
+        start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
         """Retrieve list of values for the property. Async version.
@@ -254,6 +1074,10 @@ class ValidMetadataManager(Client):
         type_name: str, opt
             The Open Metadata type to get the property values for. If not specified then all property values
             will be returned.
+        start_from: int, opt
+            Page to start from.
+        page_size: int, opt
+             Number of elements to return per page - if None, then default for class will be used.
 
 
         Returns
@@ -279,14 +1103,18 @@ class ValidMetadataManager(Client):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/get-valid-metadata-values/{property_name}"
-            f"?typeName={type_name}&startFrom={start_value}&pageSize={page_size}"
+            f"?typeName={type_name}&startFrom={start_from}&pageSize={page_size}"
         )
 
         resp = await self._async_make_request("GET", url)
         return resp.json().get("elementList", "No elements found")
 
     def get_valid_metadata_values(
-        self, property_name: str, type_name: str = None
+        self,
+        property_name: str,
+        type_name: str = None,
+        start_from: int = 0,
+        page_size: int = None,
     ) -> list | str:
         """Retrieve list of values for the property.
 
@@ -297,7 +1125,10 @@ class ValidMetadataManager(Client):
         type_name: str, opt
             The Open Metadata type to get the property values for. If not specified then all property values
             will be returned.
-
+        start_from: int, opt
+            Page to start from.
+        page_size: int, opt
+             Number of elements to return per page - if None, then default for class will be used.
 
         Returns
         -------
@@ -318,7 +1149,9 @@ class ValidMetadataManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_valid_metadata_values(property_name, type_name)
+            self._async_get_valid_metadata_values(
+                property_name, type_name, start_from, page_size
+            )
         )
         return resp
 
@@ -342,13 +1175,13 @@ class ValidMetadataManager(Client):
         map_name : str
             A valid map name that associates a property with a value.
         preferred_value : str
-
-
+            Preferred value to return details of.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+
         Returns
         -------
         List | str
@@ -377,7 +1210,7 @@ class ValidMetadataManager(Client):
         )
 
         resp = await self._async_make_request("GET", url)
-        return resp.json()
+        return resp.json().get("elementList", "No elements found")
 
     def get_consistent_metadata_values(
         self,
@@ -435,6 +1268,124 @@ class ValidMetadataManager(Client):
             )
         )
         return resp
+
+    async def _async_set_consistent_metadata_values(
+        self,
+        property_name1: str,
+        property_name2: str,
+        type_name1: str,
+        map_name1: str,
+        preferred_value1: str,
+        type_name2: str,
+        map_name2: str,
+        preferred_value2: str,
+    ) -> None:
+        """Set up consistent metadata values relationship between the two property values. Async version.
+
+        Parameters
+        ----------
+        property_name1 : str
+            The name of the first property.
+        property_name2 : str
+            The name of the second property.
+        type_name1 : str
+            The open metadata type that property1 is associated with.
+        map_name1 : str
+            First valid map name.
+        preferred_value1 : str
+            First preferred value.
+        type_name2 : str
+            The open metadata type that property2 is associated with.
+        map_name2 : str
+            Second valid map name.
+        preferred_value2 : str
+            Second preferred value.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/{property_name1}/"
+            f"consistent-metadata-values/{property_name2}?"
+            f"typeName1={type_name1}&mapName1={map_name1}&preferredValue1={preferred_value1}&"
+            f"typeName1={type_name2}&mapName2={map_name2}&preferredValue2={preferred_value2}"
+        )
+
+        await self._async_make_request("POST", url)
+        return
+
+    def set_consistent_metadata_values(
+        self,
+        property_name1: str,
+        property_name2: str,
+        type_name1: str,
+        map_name1: str,
+        preferred_value1: str,
+        type_name2: str,
+        map_name2: str,
+        preferred_value2: str,
+    ) -> None:
+        """Set up consistent metadata values relationship between the two property values.
+
+        Parameters
+        ----------
+        property_name1 : str
+            The name of the first property.
+        property_name2 : str
+            The name of the second property.
+        type_name1 : str
+            The open metadata type that property1 is associated with.
+        map_name1 : str
+            First valid map name.
+        preferred_value1 : str
+            First preferred value.
+        type_name2 : str
+            The open metadata type that property2 is associated with.
+        map_name2 : str
+            Second valid map name.
+        preferred_value2 : str
+            Second preferred value.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_consistent_metadata_values(
+                property_name1,
+                property_name2,
+                type_name1,
+                map_name1,
+                preferred_value1,
+                type_name2,
+                map_name2,
+                preferred_value2,
+            )
+        )
+        return
 
     #
     # Get all ...
@@ -680,6 +1631,74 @@ class ValidMetadataManager(Client):
     #
     # Get valid ...
     #
+
+    async def _async_get_sub_types(self, type_name: str) -> list | str:
+        """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
+            type has no subtypes. Async version.
+
+        Parameters
+        ----------
+        type_name : str
+            Type name to retrieve the sub-types for.
+
+        Returns
+        -------
+        List | str
+
+            A list of TypeDefs that can be attached to the specified type.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/sub-types/"
+            f"{type_name}"
+        )
+
+        resp = await self._async_make_request("GET", url)
+        return resp.json().get("typeDefs", "No TypeDefs Found")
+
+    def get_sub_types(self, type_name: str) -> list | str:
+        """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
+            type has no subtypes.
+
+        Parameters
+        ----------
+        type_name : str
+            Type name to retrieve the sub-types for.
+
+        Returns
+        -------
+        List | str
+
+            A list of TypeDefs that can be attached to the specified type.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_valid_relationship_types(type_name)
+        )
+        return resp
+
     async def _async_get_valid_relationship_types(self, entity_type: str) -> list | str:
         """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
             Async version.

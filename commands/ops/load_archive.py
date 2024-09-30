@@ -35,12 +35,13 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 @click.command("load-archive")
 @click.option(
-    "--file",
+    "--file_name",
+    prompt="Enter the name of the archive to load",
     default="content-packs/CocoComboArchive.omarchive",
     help="Full path on the Metadata Server to the archive file to load",
 )
 @click.option(
-    "--server", default=EGERIA_METADATA_STORE, help="Egeria metadata store to load"
+    "--server_name", default=EGERIA_METADATA_STORE, help="Egeria metadata store to load"
 )
 @click.option(
     "--view-server", default=EGERIA_VIEW_SERVER, help="Egeria view server to connect to"
@@ -50,21 +51,24 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria admin user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria admin password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-def load_archive(file, server, view_server, url, userid, password, timeout):
+@click.option("--timeout", default=120, help="Number of seconds to wait")
+def load_archive(file_name, server_name, view_server, url, userid, password, timeout):
     """Load an Open Metadata Archive"""
 
     try:
         s_client = EgeriaTech(view_server, url, userid, password)
         token = s_client.create_egeria_bearer_token()
         server_guid = None
-        s_client.add_archive_file(
-            file, server_guid, EGERIA_METADATA_STORE, time_out=timeout
-        )
+        file_name = file_name.strip()
+        s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout)
 
-        click.echo(f"Loaded archive: {file}")
+        click.echo(f"Loaded archive: {file_name}")
 
     except (InvalidParameterException, PropertyServerException) as e:
+        print(
+            f"Perhaps there was a timeout? If so, the command will complete despite the exception\n"
+            f"===> You can check by rerunning the command in a few minutes"
+        )
         print_exception_response(e)
 
 

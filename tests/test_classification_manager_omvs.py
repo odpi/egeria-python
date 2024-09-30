@@ -105,46 +105,6 @@ def test_get_elements_by_property_value():
 
         if type(result) is list:
             print(f"\n\tElement count is: {len(result)}")
-
-            print_json(data=result)
-        elif type(result) is str:
-            console.print("\n\n\t Response is: " + result)
-
-        assert True
-
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
-        console.print_exception(show_locals=True)
-        assert False, "Invalid request"
-    finally:
-        c_client.close_session()
-
-
-def test_get_elements_by_property_value():
-    # open_metadata_type_name = 'Project'
-    # property_value = "Campaign:Clinical Trials Management"
-    # open_metadata_type_name = "ValidValueDefinition"
-    open_metadata_type_name = "ArchiveFile"
-    # property_value = "Unity Catalog Catalog"
-    # property_names = ["name", "qualifiedName"]
-    # open_metadata_type_name = None
-    property_value = "CoreContentPack"
-    property_names = ["name", "resourceName"]
-    try:
-        c_client = ClassificationManager(view_server, platform_url)
-
-        bearer_token = c_client.create_egeria_bearer_token(user, password)
-        result = c_client.get_elements_by_property_value(
-            property_value, property_names, open_metadata_type_name
-        )
-
-        if type(result) is list:
-            print(f"\n\tElement count is: {len(result)}")
-
             print_json(data=result)
         elif type(result) is str:
             console.print("\n\n\t Response is: " + result)
@@ -258,8 +218,10 @@ def test_get_element_by_unique_name():
 
 
 def test_get_elements_by_classification():
-    open_metadata_type_name = "Project"
-    classification = "GovernanceProject"
+    # open_metadata_type_name = "Project"
+    open_metadata_type_name = None
+    # classification = "GovernanceProject"
+    classification = "ReferenceData"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -270,13 +232,14 @@ def test_get_elements_by_classification():
     if type(response) is list:
         print_json(data=response)
     elif type(response) is str:
-        console.print("\n\n\t Response is" + response)
+        console.print("\n\n\t Response is: " + response)
 
     assert True
 
 
 def test_get_elements_by_classification_with_property_value():
-    open_metadata_type_name = "Project"
+    # open_metadata_type_name = "Project"
+    open_metadata_type_name = None
     classification = "GovernanceProject"
     property_value = "Clinical Trials"
     property_names = ["name", "qualifiedName"]
@@ -331,9 +294,11 @@ def test_get_all_related_elements():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
-    element_guid = "25385e7b-4718-4bed-b9ac-cb99679d68db"
+    element_guid = "064519ac-c6fb-4e76-b3dd-43c9bd31cd16"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_all_related_elements(element_guid, open_metadata_type_name)
+    response = c_client.get_related_elements(
+        element_guid, None, open_metadata_type_name
+    )
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -348,9 +313,10 @@ def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
 
     # open_metadata_type_name = "Organization"
-    open_metadata_type_name = "CSVFile"
-    element_guid = "8a921039-ad5f-454d-ae17-e5a5b69f9333"
-    relationship_type = "Certification"
+    # open_metadata_type_name = "CSVFile"
+    open_metadata_type_name = None
+    element_guid = "064519ac-c6fb-4e76-b3dd-43c9bd31cd16"
+    relationship_type = "SupportedGovernanceService"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)

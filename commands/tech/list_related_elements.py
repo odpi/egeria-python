@@ -1,4 +1,5 @@
 """This creates a templates guid file from the core metadata archive"""
+from jedi import Project
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 import os
@@ -17,7 +18,6 @@ from pyegeria import (
     EgeriaTech,
 )
 
-
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -32,11 +32,13 @@ EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "220"))
 
 
-def list_elements(
+def list_related_elements(
+    element_guid: str,
     om_type: str,
+    relationship_type: str,
     server: str,
     url: str,
     username: str,
@@ -47,13 +49,13 @@ def list_elements(
     c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
 
-    om_typedef = c_client.get_typedef_by_name(om_type)
-    if type(om_typedef) is str:
-        print(
-            f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}"
-        )
-        sys.exit(1)
-    elements = c_client.get_elements(om_type)
+    if om_type is not None:
+        om_typedef = c_client.get_typedef_by_name(om_type)
+        if type(om_typedef) is str:
+            print(
+                f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}"
+            )
+            sys.exit(1)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -66,33 +68,44 @@ def list_elements(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            title=f"Elements for Open Metadata Type: '{om_type}' ",
+            title=f"Elements related to: '{element_guid}' ",
             expand=True,
             # width=500
         )
-
-        table.add_column("Qualified Name")
-        table.add_column("Type")
-        table.add_column("Created")
-        table.add_column("Home Store")
-        table.add_column("GUID", width=38, no_wrap=True)
+        table.add_column("Relationship GUID", width=38, no_wrap=True)
+        table.add_column("Rel Header", width=38, no_wrap=True)
+        table.add_column("Relationship Props")
+        table.add_column("Related GUID", width=38, no_wrap=True)
         table.add_column("Properties")
-        table.add_column("Classifications")
+        table.add_column("Element Header")
+
+        elements = c_client.get_related_elements(
+            element_guid, relationship_type, om_type
+        )
 
         if type(elements) is list:
             for element in elements:
-                header = element["elementHeader"]
-                el_q_name = element["properties"].get("qualifiedName", "---")
+                header = element["relationshipHeader"]
                 el_type = header["type"]["typeName"]
                 el_home = header["origin"]["homeMetadataCollectionName"]
                 el_create_time = header["versions"]["createTime"][:-10]
                 el_guid = header["guid"]
                 el_class = header.get("classifications", "---")
+                rel_header_md = (
+                    f"* Type: {el_type}\n"
+                    f"* Home: {el_home}\n"
+                    f"* Created: {el_create_time}\n"
+                )
+                rel_header_out = Markdown(rel_header_md)
+                rel_props = element.get("relationshipProperties", "---")
 
-                el_props_md = ""
-                for prop in element["properties"].keys():
-                    el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
-                el_props_out = Markdown(el_props_md)
+                rel_props_md = ""
+                if type(rel_props) is list:
+                    for prop in rel_props.keys():
+                        rel_props_md += (
+                            f"* **{prop}**: {element['relationshipProperties'][prop]}\n"
+                        )
+                rel_props_out = Markdown(rel_props_md)
 
                 c_md = ""
                 if type(el_class) is list:
@@ -109,14 +122,30 @@ def list_elements(
                                 c_md += f"  * **{prop}**: {class_props[prop]}\n"
                 c_md_out = Markdown(c_md)
 
+                rel_element = element["relatedElement"]
+                rel_el_header = rel_element["elementHeader"]
+                rel_type = rel_el_header["type"]["typeName"]
+                rel_home = rel_el_header["origin"]["homeMetadataCollectionName"]
+                rel_guid = rel_el_header["guid"]
+
+                rel_el_header_md = f"* Type: {rel_type}\n" f"* Home: {rel_home}\n"
+                rel_el_header_out = Markdown(rel_el_header_md)
+
+                rel_el_props_md = ""
+                for prop in rel_element["properties"].keys():
+                    rel_el_props_md += (
+                        f"* **{prop}**: {rel_element['properties'][prop]}\n"
+                    )
+                rel_el_props_out = Markdown(rel_el_props_md)
+
                 table.add_row(
-                    el_q_name,
-                    el_type,
-                    el_create_time,
-                    el_home,
                     el_guid,
-                    el_props_out,
-                    c_md_out,
+                    rel_header_out,
+                    rel_props_out,
+                    # el_q_name,
+                    rel_guid,
+                    rel_el_props_out,
+                    rel_el_header_out,
                 )
 
             return table
@@ -156,10 +185,18 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        om_type = Prompt.ask(
-            "Enter the Open Metadata Type to find elements of:", default="GlossaryTerm"
+        element_guid = Prompt.ask("Guid of base element").strip()
+        om_type = Prompt.ask("Enter the Open Metadata Type to find elements of")
+        relationship_type = Prompt.ask("Enter the relationship type to follow")
+
+        om_type = None if len(om_type) == 0 else om_type.strip()
+        relationship_type = (
+            None if len(relationship_type) == 0 else relationship_type.strip()
         )
-        list_elements(om_type, server, url, userid, password)
+
+        list_related_elements(
+            element_guid, om_type, relationship_type, server, url, userid, password
+        )
     except KeyboardInterrupt:
         pass
 

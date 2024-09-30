@@ -57,6 +57,8 @@ from commands.ops.monitor_server_status import (
 )
 from commands.ops.refresh_integration_daemon import refresh_connector
 from commands.ops.restart_integration_daemon import restart_connector
+from commands.ops.monitor_server_startup import display_startup_status
+
 from commands.tech.get_element_info import display_elements
 from commands.tech.get_guid_info import display_guid
 from commands.tech.get_tech_details import tech_details_viewer
@@ -979,6 +981,21 @@ def show_server_status(ctx, full):
         full,
         c.view_server,
         c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_server.command("startup")
+@click.pass_context
+def show_startup_status(ctx):
+    """Display a live status view of Egeria servers for the specified Egeria platform"""
+    c = ctx.obj
+    display_startup_status(
+        c.server,
+        c.url,
         c.userid,
         c.password,
         c.jupyter,

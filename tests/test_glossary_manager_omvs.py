@@ -278,9 +278,10 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
             # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
-            glossary_guid = (
-                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
-            )
+            # glossary_guid = (
+            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
+            # )
+            glossary_guid = None
 
             start_time = time.perf_counter()
             response = g_client.get_terms_for_glossary(
@@ -370,26 +371,31 @@ class TestGlossaryManager:
 
     def test_find_glossary_terms(self):
         try:
-            g_client = GlossaryManager(self.good_view_server_1, self.good_platform1_url)
+            g_client = GlossaryManager(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+            )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
-            glossary_guid = (
-                "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
-            )
+            # glossary_guid = (
+            #     "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+            # )
+            glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "*",
+                "CSRD",
                 glossary_guid=glossary_guid,
                 starts_with=True,
                 ends_with=False,
                 for_lineage=False,
+                ignore_case=True,
                 for_duplicate_processing=True,
                 status_filter=[],
                 page_size=10,
                 effective_time=None,
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
+            print(f"Number of terms is: {len(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
                 # print_json_list_as_table(response)
