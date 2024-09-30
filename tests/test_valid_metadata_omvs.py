@@ -394,7 +394,7 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            entity_type = "AssetOwner"
+            entity_type = "Catalog"
 
             response = m_client.get_typedef_by_name(entity_type)
             duration = time.perf_counter() - start_time

@@ -1494,169 +1494,11 @@ class ClassificationManager(Client):
     #
     #   related elements
     #
-    async def _async_get_all_related_elements(
-        self,
-        element_guid: str,
-        open_metadata_type_name: str = None,
-        start_at_end: int = 1,
-        effective_time: str = None,
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        time_out: int = default_time_out,
-    ) -> list | str:
-        """
-        Retrieve elements linked any relationship type name. It is also possible to limit the results by
-        specifying a type name for the elements that should be returned. If no type name is specified then any type of
-        element may be returned. Async version.
-
-        https://egeria-project.org/types/
-
-        Parameters
-        ----------
-        element_guid: str
-            - the base element to get related elements for
-        open_metadata_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        start_at_end: int, default = 1
-            - The end of the relationship to start from - typically End1
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-        """
-
-        possible_query_params = query_string(
-            [
-                ("startFrom", start_from),
-                ("pageSize", page_size),
-                ("forLineage", for_lineage),
-                ("forDuplicateProcessing", for_duplicate_processing),
-                ("startAtEnd", start_at_end),
-            ]
-        )
-
-        body = {
-            "class": "FindProperties",
-            "openMetadataTypeName": open_metadata_type_name,
-            "effectiveTime": effective_time,
-        }
-
-        url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship"
-            f"{possible_query_params}"
-        )
-        response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
-        elements = response.json().get("elements", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
-
-    def get_all_related_elements(
-        self,
-        element_guid: str,
-        open_metadata_type_name: str = None,
-        start_at_end: int = 1,
-        effective_time: str = None,
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        time_out: int = default_time_out,
-    ) -> list | str:
-        """
-        Retrieve elements linked via any relationship type name. It is also possible to limit the results by
-        specifying a type name for the elements that should be returned. If no type name is specified then any type of
-        element may be returned.
-
-        https://egeria-project.org/types/
-
-        Parameters
-        ----------
-        element_guid: str
-            - the base element to get related elements for
-        open_metadata_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        start_at_end: int, default = 1
-            - The end of the relationship to start from - typically End1
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_all_related_elements(
-                element_guid,
-                open_metadata_type_name,
-                start_at_end,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
-        )
-        return response
 
     async def _async_get_related_elements(
         self,
         element_guid: str,
-        relationship_type: str,
+        relationship_type: str = None,
         open_metadata_type_name: str = None,
         start_at_end: int = 1,
         effective_time: str = None,
@@ -1667,9 +1509,9 @@ class ClassificationManager(Client):
         time_out: int = default_time_out,
     ) -> list | str:
         """
-        Retrieve elements linked any relationship type name. It is also possible to limit the results by
-        specifying a type name for the elements that should be returned. If no type name is specified then any type of
-        element may be returned. Async version.
+        Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
+        will be returned. It is also possible to limit the results by specifying a type name for the elements that
+        should be returned. If no type name is specified then any type of element may be returned. Async version.
 
         https://egeria-project.org/types/
 
@@ -1677,8 +1519,9 @@ class ClassificationManager(Client):
         ----------
         element_guid: str
             - the base element to get related elements for
-        relationship_type: str
-            - the type of relationship to navigate to related elements
+        relationship_type: str, optional, default = None
+            - the type of relationship to navigate to related elements.
+              If None, then all related elements will be returned.
         open_metadata_type_name : str, default = None
             - open metadata type to be used to restrict the search
         start_at_end: int, default = 1
@@ -1729,10 +1572,17 @@ class ClassificationManager(Client):
             "effectiveTime": effective_time,
         }
 
-        url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
-            f"{relationship_type}{possible_query_params}"
-        )
+        if relationship_type is None:
+            url = (
+                f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship"
+                f"{possible_query_params}"
+            )
+        else:
+            url = (
+                f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
+                f"{relationship_type}{possible_query_params}"
+            )
+
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
@@ -1745,7 +1595,7 @@ class ClassificationManager(Client):
     def get_related_elements(
         self,
         element_guid: str,
-        relationship_type: str,
+        relationship_type: str = None,
         open_metadata_type_name: str = None,
         start_at_end: int = 1,
         effective_time: str = None,
@@ -1756,9 +1606,9 @@ class ClassificationManager(Client):
         time_out: int = default_time_out,
     ) -> list | str:
         """
-        Retrieve elements linked via any relationship type name. It is also possible to limit the results by
-        specifying a type name for the elements that should be returned. If no type name is specified then any type of
-        element may be returned.
+        Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
+        will be returned. It is also possible to limit the results by specifying a type name for the elements that
+        should be returned. If no type name is specified then any type of element may be returned.
 
         https://egeria-project.org/types/
 

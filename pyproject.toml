@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "0.8.4.39"
+version = "0.8.4.51"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -81,6 +81,7 @@ pytest = "^8.2.2"
     list_integ_daemon_status = "commands.ops.monitor_integ_daemon_status:main_paging"
     monitor_platform_status = "commands.ops.monitor_platform_status:main"
     monitor_server_list = "commands.ops.orig_monitor_server_list:main"
+    monitor_server_startup = "commands.ops.monitor_server_startup:main"
     monitor_server_status = "commands.ops.monitor_server_status:main"
     refresh_integration_daemon = "commands.ops.refresh_integration_daemon:main"
     restart_integration_daemon = "commands.ops.restart_integration_daemon:main"
@@ -102,7 +103,7 @@ pytest = "^8.2.2"
 
     hey_egeria_ops = "commands.cli.egeria_ops:cli"
     hey_egeria_cat = "commands.cli.egeria_cat:cli"
-    hey_egeria_tech = "commands.cli.egeria_cat:cli"
+    hey_egeria_tech = "commands.cli.egeria_tech:cli"
     hey_egeria_my = "commands.cli.egeria_my:cli"
     hey_egeria = "commands.cli.egeria:cli"
 
@@ -115,5 +116,7 @@ pytest = "^8.2.2"
     get_element_info = "commands.tech.get_element_info:main"
     list_elements = "commands.tech.list_elements:main"
     list_related_specification = "commands.tech.list_related_specification:main"
+    list_elements_by_classification = "commands.tech.list_elements_by_classification:main"
+    list_related_elements = "commands.tech.list_related_elements:main"
 
     list_valid_metadata_values = "commands.tech.list_valid_metadata_values:main"

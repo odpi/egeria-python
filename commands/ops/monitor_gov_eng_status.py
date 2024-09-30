@@ -24,7 +24,6 @@ from pyegeria import (
     UserNotAuthorizedException,
     EgeriaTech,
 )
-from pyegeria.server_operations import ServerOps
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -151,19 +150,27 @@ def display_gov_eng_status(
 
 def main_live():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the server to display status for")
+    parser.add_argument(
+        "--engine_host", help="Name of the server to display status for"
+    )
+    parser.add_argument("--view_server", help="Name of the view server to use")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     parser.add_argument("--paging", help="Paging")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_ENGINE_HOST
+    engine_host = (
+        args.engine_host if args.engine_host is not None else EGERIA_ENGINE_HOST
+    )
+    view_server = (
+        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+    )
     url = args.url if args.url is not None else EGERIA_ENGINE_HOST_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     paging = args.paging if args.paging is not None else False
-    display_gov_eng_status(server, url, userid, user_pass, paging)
+    display_gov_eng_status(engine_host, view_server, url, userid, user_pass, paging)
 
 
 def main_paging():

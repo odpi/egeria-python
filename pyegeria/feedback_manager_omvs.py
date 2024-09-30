@@ -83,7 +83,7 @@ def element_response(response: dict, element_type: str, detailed_response: bool)
 
 
 def elements_response(response: dict, element_type: str, detailed_response: bool):
-    print(response)
+    # print(response)
     if detailed_response:
         return response
     elif not element_type in response:

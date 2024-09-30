@@ -366,10 +366,10 @@ class AutomatedCuration(Client):
         Returns
         -------
         str
-            The GUID of the Postgres server element.
+            The GUID of the File Folder element.
         """
         body = {
-            "templateGUID": TEMPLATE_GUIDS["FileFolder"],
+            "templateGUID": TEMPLATE_GUIDS["File System Directory"],
             "isOwnAnchor": "true",
             "placeholderPropertyValues": {
                 "directoryPathName": path_name,
@@ -416,7 +416,7 @@ class AutomatedCuration(Client):
         Returns
         -------
         str
-            The GUID of the Postgres server element.
+            The GUID of the File Folder element.
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(

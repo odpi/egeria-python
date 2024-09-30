@@ -27,6 +27,8 @@ from commands.tech.get_element_info import display_elements
 from commands.tech.list_related_specification import (
     display_related_specification,
 )
+from commands.tech.list_related_elements import list_related_elements
+from commands.tech.list_elements_for_classification import list_classified_elements
 
 
 # from pyegeria import ServerOps
@@ -325,6 +327,65 @@ def show_relationship_types(ctx, rel_type):
         c.userid,
         c.password,
         False,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("elements-by-classification")
+@click.option(
+    "--om-type",
+    default="Project",
+    help="Open Metadata type to filter by",
+)
+@click.option(
+    "--classification",
+    default="GovernanceProject",
+    help="Classification to filter byt",
+)
+@click.pass_context
+def show_elements_by_classification(ctx, om_type, classification):
+    """Show information about the specified relationship type"""
+    c = ctx.obj
+    list_classified_elements(
+        om_type,
+        classification,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("related-elements")
+@click.option(
+    "--element-guid",
+    help="GUID of the Element to navigate from.",
+)
+@click.option(
+    "--om-type",
+    default="Project",
+    help="Open metadata type to filter by.",
+)
+@click.option(
+    "--rel-type",
+    default="Certification",
+    help="Relationship type to follow.",
+)
+@click.pass_context
+def show_relationship_types(ctx, element_guid, om_type, rel_type):
+    """Show information about the specified relationship type"""
+    c = ctx.obj
+    list_related_elements(
+        element_guid,
+        om_type,
+        rel_type,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
         c.jupyter,
         c.width,
     )

@@ -1,4 +1,5 @@
 """This creates a templates guid file from the core metadata archive"""
+from jedi import Project
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 import os
@@ -14,11 +15,8 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    # ClassificationManager,
-    # FeedbackManager,
     EgeriaTech,
 )
-
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -37,8 +35,9 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def list_elements_x(
+def list_classified_elements(
     om_type: str,
+    classification: str,
     server: str,
     url: str,
     username: str,
@@ -55,7 +54,8 @@ def list_elements_x(
             f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}"
         )
         sys.exit(1)
-    elements = c_client.get_elements(om_type)
+
+    elements = c_client.get_elements_by_classification(classification, om_type)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -70,7 +70,7 @@ def list_elements_x(
             box=box.ROUNDED,
             title=f"Elements for Open Metadata Type: '{om_type}' ",
             expand=True,
-            width=width,
+            # width=500
         )
 
         table.add_column("Qualified Name")
@@ -79,8 +79,7 @@ def list_elements_x(
         table.add_column("Home Store")
         table.add_column("GUID", width=38, no_wrap=True)
         table.add_column("Properties")
-        table.add_column("Feedback", min_width=30)
-        table.add_column("Public Comments")
+        table.add_column("Classifications")
 
         if type(elements) is list:
             for element in elements:
@@ -88,45 +87,29 @@ def list_elements_x(
                 el_q_name = element["properties"].get("qualifiedName", "---")
                 el_type = header["type"]["typeName"]
                 el_home = header["origin"]["homeMetadataCollectionName"]
-                el_create_time = header["versions"]["createTime"][:-18]
+                el_create_time = header["versions"]["createTime"][:-10]
                 el_guid = header["guid"]
+                el_class = header.get("classifications", "---")
 
                 el_props_md = ""
                 for prop in element["properties"].keys():
                     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
-
                 el_props_out = Markdown(el_props_md)
 
-                tags = c_client.get_attached_tags(el_guid)
-                tags_md = "Tags:\n"
-                if type(tags) is list:
-                    for tag in tags:
-                        tags_md += (
-                            f"* tag: {tag.get('name','---')}\n"
-                            f"\t description: {tag.get('description','---')}\n"
-                            f"\t assigned by: {tag.get('user','---')}\n"
+                c_md = ""
+                if type(el_class) is list:
+                    for classification in el_class:
+                        classification_name = classification.get(
+                            "classificationName", "---"
                         )
-
-                else:
-                    tags_md = "---"
-
-                likes = c_client.get_attached_likes(el_guid)
-                likes_md = "Likes:\b"
-                if type(likes) is list:
-                    for like in likes:
-                        likes_md += (
-                            f"* tag: {like['name']}\n"
-                            f"* description: {like['description']}\n"
-                            f"* assigned by: {like['user']}\n"
-                            f"\n"
+                        c_md = f"* **{classification_name}**\n"
+                        class_props = classification.get(
+                            "classificationProperties", "---"
                         )
-
-                else:
-                    likes_md = "---"
-
-                feedback_out = f"{tags_md}\n --- \n{likes_md}"
-
-                comments_out = " "
+                        if type(class_props) is dict:
+                            for prop in class_props.keys():
+                                c_md += f"  * **{prop}**: {class_props[prop]}\n"
+                c_md_out = Markdown(c_md)
 
                 table.add_row(
                     el_q_name,
@@ -135,8 +118,7 @@ def list_elements_x(
                     el_home,
                     el_guid,
                     el_props_out,
-                    feedback_out,
-                    comments_out,
+                    c_md_out,
                 )
 
             return table
@@ -177,9 +159,10 @@ def main():
 
     try:
         om_type = Prompt.ask(
-            "Enter the Open Metadata Type to find elements of:", default="GlossaryTerm"
+            "Enter the Open Metadata Type to find elements of:", default="Project"
         )
-        list_elements_x(om_type, server, url, userid, password)
+        classification = Prompt.ask("Enter the classification to filter by: ")
+        list_classified_elements(om_type, classification, server, url, userid, password)
     except KeyboardInterrupt:
         pass
 

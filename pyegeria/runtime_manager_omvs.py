@@ -1096,7 +1096,7 @@ class RuntimeManager(Client):
         archive_file: str,
         server_guid: str = None,
         server_name: str = None,
-        time_out: int = 60,
+        time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1141,7 +1141,7 @@ class RuntimeManager(Client):
         archive_file: str,
         server_guid: str = None,
         server_name: str = None,
-        time_out: int = 60,
+        time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1247,7 +1247,7 @@ class RuntimeManager(Client):
         return
 
     async def _async_activate_server_with_stored_config(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: str = None, server_name: str = None, timeout: int = 240
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store. Async version.
@@ -1260,6 +1260,7 @@ class RuntimeManager(Client):
             Identity of the server to act on. If not specified, server_name must be.
         server_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
+        timeout: int, optional, default = 240 seconds
 
         Returns
         -------
@@ -1275,11 +1276,11 @@ class RuntimeManager(Client):
         server_guid = self.__get_guid__(server_guid, server_name)
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("POST", url)
+        await self._async_make_request("POST", url, time_out=timeout)
         return
 
     def activate_server_with_stored_config(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: str = None, server_name: str = None, timeout: int = 240
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store.
@@ -1292,6 +1293,7 @@ class RuntimeManager(Client):
             Identity of the server to act on. If not specified, server_name must be.
         server_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
+        timeout: int, optional, default = 240 seconds
 
         Returns
         -------
@@ -1306,7 +1308,9 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_activate_server_with_stored_config(server_guid, server_name)
+            self._async_activate_server_with_stored_config(
+                server_guid, server_name, timeout
+            )
         )
         return
 
