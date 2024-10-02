@@ -70,7 +70,8 @@ def valid_guid(guid):
 #
 def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
-    open_metadata_type_name = "ArchiveFile"
+    #
+    open_metadata_type_name = "Database"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -93,7 +94,8 @@ def test_get_elements_by_property_value():
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
     open_metadata_type_name = None
-    property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
+    # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
+    property_value = ""
     property_names = ["name", "qualifiedName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -221,7 +223,7 @@ def test_get_elements_by_classification():
     # open_metadata_type_name = "Project"
     open_metadata_type_name = None
     # classification = "GovernanceProject"
-    classification = "ReferenceData"
+    classification = ""
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -294,7 +296,8 @@ def test_get_all_related_elements():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
-    element_guid = "064519ac-c6fb-4e76-b3dd-43c9bd31cd16"
+    # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
+    element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name
