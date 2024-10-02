@@ -14,14 +14,9 @@ open source Egeria project can be found at [Egeria Project](https://egeria-proje
 
 This package is in active development. There is initial
 support for many of Egeria's services including configuration and operation.  This client depends on 
-This release supports Egeria 5.1 - although most of the functions may work on earlier versions of Egeria as well. 
+This release supports Egeria 5.1 and above - although most of the functions may work on earlier versions of Egeria as well. 
 
 The code is organized to mimic the existing Egeria Java Client structure.
-
-The commands folder holds the Egeria Command Line Interface and corresponding commands
-to visualize and use Egeria. The commands also serve as useful examples.
-
-An examples folder holds some useful examples showing different facets of using pyegeria.
 
 WARNING: files that start with "X" are in-progress placeholders that are not meant to be used..they will mature and 
 evolve.

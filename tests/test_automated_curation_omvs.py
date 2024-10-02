@@ -845,7 +845,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            search_string = "AssetSurvey"
+            search_string = "*"
             start_time = time.perf_counter()
             response = a_client.find_gov_action_types(search_string)
             duration = time.perf_counter() - start_time
@@ -1272,7 +1272,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "941d42b4-a3a0-4ff4-af8f-48e23085d3ee"
+            a_postgres_server_guid = "ba714db9-09e0-4334-85f6-898485932896"
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)

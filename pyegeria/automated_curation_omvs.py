@@ -2336,11 +2336,11 @@ class AutomatedCuration(Client):
     ) -> str:
         """Initiate a postgres database survey"""
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey-postgres-database",
+            "governanceActionTypeQualifiedName": "survey-postgres-database",
             "actionTargets": [
                 {
                     "class": "NewActionTarget",
@@ -2365,7 +2365,7 @@ class AutomatedCuration(Client):
     ) -> str:
         """Initiate a postgres server survey - Async version"""
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2426,7 +2426,7 @@ class AutomatedCuration(Client):
             - AssetSurvey:survey-all-folders-and-files
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2489,7 +2489,7 @@ class AutomatedCuration(Client):
     async def _async_initiate_file_survey(self, file_guid: str) -> str:
         """Initiate a file survey - async version"""
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2525,7 +2525,7 @@ class AutomatedCuration(Client):
 
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2576,7 +2576,7 @@ class AutomatedCuration(Client):
 
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
@@ -2626,7 +2626,7 @@ class AutomatedCuration(Client):
 
         """
 
-        url = f"{self.curation_command_root}/governance-action-types/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-types/initiate"
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
