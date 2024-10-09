@@ -46,12 +46,8 @@ def restart_connector(
         else:
             statement = f"the {connector} "
         server = "integration-daemon" if server is None else server
-        server_guid = s_client.get_guid_for_name(server)
 
-        s_client.restart_integration_connectors(
-            server_guid,
-            connector,
-        )
+        s_client.restart_integration_connectors(connector, None, server)
 
         print(f"\n===> Integration Daemon '{server}' restarted {statement}.")
 

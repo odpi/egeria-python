@@ -32,6 +32,9 @@ from commands.my.list_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
 from commands.my.monitor_my_todos import display_my_todos
 from commands.my.monitor_open_todos import display_todos
+from commands.cat.list_deployed_database_schemas import list_deployed_database_schemas
+from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+
 
 from commands.ops.gov_server_actions import (
     add_catalog_target,
@@ -71,6 +74,7 @@ from commands.tech.list_related_specification import (
 from commands.tech.list_relationship_types import display_relationship_types
 from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
+from commands.tech.list_gov_action_processes import display_gov_processes
 
 
 @tui()
@@ -540,6 +544,23 @@ def tech_template_spec(ctx, search_string):
     )
 
 
+@show.command("gov-action-processes")
+@click.pass_context
+@click.option("--search-string", default="*", help="Search string")
+def gov_action_processes(ctx, search_string):
+    """Display available governance action processes."""
+    c = ctx.obj
+    display_gov_processes(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show.command("valid-metadata-values")
 @click.pass_context
 @click.option("--property", default="projectHealth", help="Metadata property to query")
@@ -883,6 +904,42 @@ def list_archives(ctx):
         c.userid,
         c.password,
         False,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("list-deployed-schemas")
+@click.option("--search-string", default="*", help="What database or catalog to search")
+@click.pass_context
+def list_deployed_schemas(search_string, ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_database_schemas(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        None,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("list-catalogs")
+# @click.option("--search-string", default="*", help="What database or catalog to search")
+@click.pass_context
+def list_catalogs(ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_catalogs(
+        " ",
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        None,
         c.jupyter,
         c.width,
     )

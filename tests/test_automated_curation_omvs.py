@@ -183,11 +183,53 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.create_postgres_server_element_from_template(
-                "laz-postgres",
-                "localhost",
+                "cray-postgres-5432",
+                "cray.local",
                 "5432",
                 db_user="postgres",
                 db_pwd="notingres",
+            )
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                pprint(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                pprint("Database Server GUID create is " + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_create_postgres_database_element_from_template(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            response = a_client.create_postgres_database_element_from_template(
+                "coco_ods",
+                "cray-postgres-5432",
+                "cray.local",
+                "5432",
+                db_user="postgres",
+                db_pwd="notingres",
+                description="An operational datastore for Coco Pharmaceuticals",
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -845,7 +887,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            search_string = "*"
+            search_string = "survey-postgres-server"
             start_time = time.perf_counter()
             response = a_client.find_gov_action_types(search_string)
             duration = time.perf_counter() - start_time
@@ -992,7 +1034,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("Unity Catalog Volume")
+            response = a_client.get_technology_type_detail("Unity Catalog Server")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -1142,12 +1184,12 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            element_guid = "40e938fb-165a-4370-9a62-641f3793285c"
-            catalog_target_name = "Landing Area"
+            element_guid = "60e4c944-fc0b-4d48-a191-80803ad99dc8"
+            catalog_target_name = "cray-postgres-5432"
             postgres_con_guid = ""
             start_time = time.perf_counter()
             guid = a_client.add_catalog_target(
-                INTEGRATION_GUIDS["FileFolder"], element_guid, catalog_target_name
+                INTEGRATION_GUIDS["PostgreSQLServer"], element_guid, catalog_target_name
             )
             duration = time.perf_counter() - start_time
             print(f"guid returned is: {guid}")
@@ -1272,7 +1314,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "ba714db9-09e0-4334-85f6-898485932896"
+            a_postgres_server_guid = "60e4c944-fc0b-4d48-a191-80803ad99dc8"
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
@@ -1307,7 +1349,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_database_guid = "78cf662f-c91d-44f9-aefe-61015d045c37"
+            a_postgres_database_guid = "95e3df33-701b-4638-9a62-0b44c4580d50"
 
             start_time = time.perf_counter()
 

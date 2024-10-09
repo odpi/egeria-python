@@ -332,6 +332,105 @@ class AutomatedCuration(Client):
         )
         return response
 
+    async def _async_create_postgres_database_element_from_template(
+        self,
+        postgres_database: str,
+        server_name: str,
+        host_identifier: str,
+        port: str,
+        db_user: str,
+        db_pwd: str,
+        description: str = None,
+    ) -> str:
+        """Create a Postgres database element from a template. Async version.
+
+        Parameters
+        ----------
+        postgres_database : str
+            The name of the Postgres database.
+        server_name : str
+            The server name of the Postgres server.
+        host_identifier: str
+            The host IP address or domain name.
+        port : str
+            The port number of the Postgres server.
+        db_user: str
+            User name to connect to the database
+        db_pwd: str
+            User password to connect to the database
+        description: str, opt
+            A description of the element.
+
+        Returns
+        -------
+        str
+            The GUID of the Postgres database element.
+        """
+        body = {
+            "templateGUID": TEMPLATE_GUIDS["PostgreSQL Relational Database"],
+            "isOwnAnchor": "true",
+            "placeholderPropertyValues": {
+                "databaseName": postgres_database,
+                "serverName": server_name,
+                "hostIdentifier": host_identifier,
+                "portNumber": port,
+                "databaseUserId": db_user,
+                "description": description,
+                "databasePassword": db_pwd,
+            },
+        }
+        body_s = body_slimmer(body)
+        response = await self._async_create_element_from_template(body_s)
+        return str(response)
+
+    def create_postgres_database_element_from_template(
+        self,
+        postgres_database: str,
+        server_name: str,
+        host_identifier: str,
+        port: str,
+        db_user: str,
+        db_pwd: str,
+        description: str = None,
+    ) -> str:
+        """Create a Postgres database element from a template. Async version.
+
+        Parameters
+        ----------
+        postgres_database : str
+            The name of the Postgres database.
+        server_name : str
+            The server name of the Postgres server.
+        host_identifier: str
+            The host IP address or domain name.
+        port : str
+            The port number of the Postgres server.
+        db_user: str
+            User name to connect to the database
+        db_pwd: str
+            User password to connect to the database
+        description: str, opt
+            A description of the element.
+
+        Returns
+        -------
+        str
+            The GUID of the Postgres database element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_postgres_database_element_from_template(
+                postgres_database,
+                server_name,
+                host_identifier,
+                port,
+                db_user,
+                db_pwd,
+                description,
+            )
+        )
+        return response
+
     async def _async_create_folder_element_from_template(
         self,
         path_name: str,
@@ -2340,11 +2439,11 @@ class AutomatedCuration(Client):
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "survey-postgres-database",
+            "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-database",
             "actionTargets": [
                 {
                     "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
+                    "actionTargetName": "postgresDatabase",
                     "actionTargetGUID": postgres_database_guid,
                 }
             ],
@@ -2369,7 +2468,7 @@ class AutomatedCuration(Client):
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-server",
+            "governanceActionTypeQualifiedName": "survey-postgres-server",
             "actionTargets": [
                 {
                     "class": "NewActionTarget",
