@@ -1,7 +1,7 @@
 """PDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-This module contains an initial version of the feedback_manager_omvs
+This module contains an initial version of the classification_manager_omvs
 module.
 
 """
@@ -442,10 +442,8 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elements", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
+        elements = response.json().get("element", "No elements found")
+
         return elements
 
     def get_element_by_guid(

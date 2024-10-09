@@ -71,7 +71,7 @@ def valid_guid(guid):
 def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
     #
-    open_metadata_type_name = "Database"
+    open_metadata_type_name = "DeployedDatabaseSchema"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -93,10 +93,12 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = None
+    open_metadata_type_name = "DeployedDatabaseSchema"
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
-    property_value = ""
-    property_names = ["name", "qualifiedName"]
+    # property_value = "default"
+    # property_names = ["name", "qualifiedName"]
+    property_value = "803a8a33-492d-4b15-afdc-5704d6029155"
+    property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -125,8 +127,8 @@ def test_get_elements_by_property_value():
         c_client.close_session()
 
 
-def test_get_elements_by_guid():
-    element_guid = "ea67ae71-c674-473e-b38b-689879d2a7d9"
+def test_get_element_by_guid():
+    element_guid = "e53f062e-b4f4-4afe-af67-f536f1e4e9c4"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -135,9 +137,7 @@ def test_get_elements_by_guid():
         result = c_client.get_element_by_guid(element_guid)
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
-        if type(result) is list:
-            print(f"\n\tElement count is: {len(result)}")
-
+        if type(result) is dict:
             print_json(data=result)
         elif type(result) is str:
             console.print("\n\n\t Response is: " + result)
@@ -159,8 +159,8 @@ def test_get_elements_by_guid():
 def test_get_guid_for_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
-    property_value = "simple-metadata-store"
-
+    # property_value = "simple-metadata-store"
+    property_value = "unity"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -221,9 +221,10 @@ def test_get_element_by_unique_name():
 
 def test_get_elements_by_classification():
     # open_metadata_type_name = "Project"
+    # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
     # classification = "GovernanceProject"
-    classification = ""
+    classification = "Anchors"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -232,6 +233,7 @@ def test_get_elements_by_classification():
     )
 
     if type(response) is list:
+        print("Result = \n")
         print_json(data=response)
     elif type(response) is str:
         console.print("\n\n\t Response is: " + response)
@@ -241,10 +243,10 @@ def test_get_elements_by_classification():
 
 def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
-    open_metadata_type_name = None
-    classification = "GovernanceProject"
-    property_value = "Clinical Trials"
-    property_names = ["name", "qualifiedName"]
+    open_metadata_type_name = "DeployedDatabaseSchema"
+    classification = "Anchors"
+    property_value = "803a8a33-492d-4b15-afdc-5704d6029155"
+    property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -273,9 +275,15 @@ def test_get_elements_by_classification_with_property_value():
 
 
 def test_find_elements_by_classification_with_property_value():
-    classification = "GovernanceProject"
-    open_metadata_type_name = "Project"
-    property_value = "Clinical Trials"
+    # classification = "GovernanceProject"
+    # open_metadata_type_name = "Project"
+    # property_value = "Clinical Trials"
+    # property_names = ["name", "qualifiedName"]
+    #
+    classification = "Template"
+    # open_metadata_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = None
+    property_value = "Unity Catalog Server template"
     property_names = ["name", "qualifiedName"]
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -285,6 +293,27 @@ def test_find_elements_by_classification_with_property_value():
     )
 
     if type(response) is list:
+        print_json(data=response)
+    elif type(response) is str:
+        console.print("\n\n\t Response is: " + response)
+
+    assert True
+
+
+def test_find_anchored_elements_with_property_value():
+    classification = "Anchors"
+    open_metadata_type_name = None
+    property_value = "Catalog"
+    property_names = ["ServerCapability", "anchorTypeName"]
+    c_client = ClassificationManager(view_server, platform_url)
+
+    bearer_token = c_client.create_egeria_bearer_token(user, password)
+    response = c_client.find_elements_by_classification_with_property_value(
+        classification, property_value, property_names, open_metadata_type_name
+    )
+
+    if type(response) is list:
+        print("Response payload is: \n")
         print_json(data=response)
     elif type(response) is str:
         console.print("\n\n\t Response is" + response)
@@ -297,7 +326,8 @@ def test_get_all_related_elements():
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
-    element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
+    # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
+    element_guid = "e53f062e-b4f4-4afe-af67-f536f1e4e9c4"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name
@@ -474,7 +504,7 @@ def test_retrieve_instance_for_guid():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    element_guid = "abb234ab-712f-48d3-b083-244029cd8d2b"
+    element_guid = "5929cf40-3035-45f0-9770-2a6df02f7c83"
     response = c_client.retrieve_instance_for_guid(element_guid)
 
     if type(response) is dict:

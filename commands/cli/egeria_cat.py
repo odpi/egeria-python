@@ -27,6 +27,9 @@ from commands.cat.list_cert_types import display_certifications
 from commands.cat.list_relationships import list_relationships
 from commands.cat.list_user_ids import list_user_ids
 from commands.cat.list_archives import display_archive_list
+from commands.cat.list_deployed_database_schemas import list_deployed_database_schemas
+from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+
 
 # from pyegeria import ServerOps
 from commands.cli.ops_config import Config
@@ -483,6 +486,42 @@ def list_archives(ctx):
     c = ctx.obj
     display_archive_list(
         c.view_server, c.view_server_url, c.userid, c.password, None, c.jupyter, c.width
+    )
+
+
+@show.command("list-deployed-schemas")
+@click.option("--search-string", default="*", help="What database or catalog to search")
+@click.pass_context
+def list_deployed_schemas(search_string, ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_database_schemas(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        None,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("list-catalogs")
+# @click.option("--search-string", default="*", help="What database or catalog to search")
+@click.pass_context
+def list_catalogs(ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_catalogs(
+        " ",
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        None,
+        c.jupyter,
+        c.width,
     )
 
 

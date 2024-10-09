@@ -29,7 +29,7 @@ from commands.tech.list_related_specification import (
 )
 from commands.tech.list_related_elements import list_related_elements
 from commands.tech.list_elements_for_classification import list_classified_elements
-
+from commands.tech.list_gov_action_processes import display_gov_processes
 
 # from pyegeria import ServerOps
 
@@ -419,6 +419,23 @@ def tech_template_spec(ctx, search_string):
     """Display template specification information about the specified technology."""
     c = ctx.obj
     display_templates_spec(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("gov-action-processes")
+@click.pass_context
+@click.option("--search-string", default="*", help="Search string")
+def gov_action_processes(ctx, search_string):
+    """Display available governance action processes."""
+    c = ctx.obj
+    display_gov_processes(
         search_string,
         c.view_server,
         c.view_server_url,
