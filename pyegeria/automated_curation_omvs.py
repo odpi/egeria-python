@@ -2439,7 +2439,7 @@ class AutomatedCuration(Client):
 
         body = {
             "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-postgres-database",
+            "governanceActionTypeQualifiedName": "PostgreSQLSurveys:survey-postgres-database",
             "actionTargets": [
                 {
                     "class": "NewActionTarget",

@@ -312,7 +312,9 @@ class AssetCatalog(Client):
         ignore_case: bool = True,
         time_out: int = 60,
     ) -> list | str:
-        """Retrieve the list of engine action metadata elements that contain the search string. Async Version.
+        """Locate string value in elements that are anchored to assets.  Async Version.
+        Asset: https: // egeria - project.org / concepts / asset /
+
         Parameters
         ----------
         search_string : str
