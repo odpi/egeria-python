@@ -74,7 +74,7 @@ class TestGlossaryBrowser:
                     print(
                         f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
                     )
-                    # print(json.dumps(response[i],indent = 4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True

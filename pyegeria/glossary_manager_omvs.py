@@ -1405,6 +1405,17 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
+    def load_terms_from_file(
+        self, glossary_name: str, filename: str, upsert: bool = False
+    ) -> str:
+        """This method loads glossary terms into the specified glossary from the indicated file."""
+        # Check that glossary exists and get guid
+
+        # Open file
+
+        # Insert terms into glossary
+        pass
+
     async def _async_create_term_copy(
         self,
         glossary_guid: str,

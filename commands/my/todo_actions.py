@@ -25,7 +25,7 @@ erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
 peter_guid = "a187bc48-8154-491f-97b4-a2f3c3f1a00e"
 tanya_guid = "26ec1614-bede-4b25-a2a3-f8ed26db3aaa"
 
-ERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
 EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
 EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
@@ -43,11 +43,11 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 
 @click.command("create-todo")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option(
-    "--server", default=EGERIA_VIEW_SERVER, help="Egeria metadata store to load"
-)
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url",
+    default=EGERIA_VIEW_SERVER_URL,
+    help="URL of Egeria platform to connect to.",
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
