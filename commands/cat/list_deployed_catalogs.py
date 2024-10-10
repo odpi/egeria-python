@@ -114,12 +114,16 @@ def list_deployed_catalogs(
                 )
                 schemas_md = ""
                 if type(schemas) is list:
+                    cnt = 0
                     for schema in schemas:
                         schema_md = ""
                         schema_props = schema["properties"]
                         for key in schema_props.keys():
                             schema_md += f"* **{key}**: {schema_props[key]}\n"
-                        schemas_md += schema_md
+
+                        spacer = "---\n" if cnt > 0 else ""
+                        cnt += 1
+                        schemas_md += f"{spacer}{schema_md}"
                 schemas_md_out = Markdown(schemas_md)
 
                 element_info = c_client.get_element_by_guid(server_guid)

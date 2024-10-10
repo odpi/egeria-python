@@ -125,7 +125,7 @@ def list_deployed_databases(
                         for key in rel_props.keys():
                             props_md += f"* **{key}**: {rel_props[key]}\n"
                         rel_el_md = f"* **{rel_type}**: {rel_guid}\n{props_md}"
-                        if count > 1:
+                        if count >= 1:
                             rel_el_md += "---\n"
                     rel_el_out = Markdown(rel_el_md)
 

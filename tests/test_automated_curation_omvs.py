@@ -466,7 +466,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.find_engine_actions("Downloads")
+            response = a_client.find_engine_actions("Postgres")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -887,7 +887,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            search_string = "survey-postgres-server"
+            search_string = "survey-postgres-database"
             start_time = time.perf_counter()
             response = a_client.find_gov_action_types(search_string)
             duration = time.perf_counter() - start_time
@@ -1349,7 +1349,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_database_guid = "95e3df33-701b-4638-9a62-0b44c4580d50"
+            a_postgres_database_guid = "d008f863-fe31-44a8-8032-58a44eb47a4b"
 
             start_time = time.perf_counter()
 

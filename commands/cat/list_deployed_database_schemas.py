@@ -137,29 +137,29 @@ def list_deployed_database_schemas(
                     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
                 el_props_out = Markdown(el_props_md)
 
-                rel_elements = c_client.get_related_elements(
-                    el_guid, "RelationalDBSchemaType"
+                rel_elements = c_client.get_elements_by_property_value(
+                    el_guid, ["anchorGUID"]
                 )
                 schema_md = ""
                 count = 0
                 rel_el_out = ""
                 if type(rel_elements) is list:
-                    print(len(rel_elements))
+                    len_els = len(rel_elements)
+                    rel_el_md = ""
+                    spacer = ""
                     for rel_element in rel_elements:
                         count += 1
-                        rel_type = rel_element["relatedElement"]["elementHeader"][
-                            "type"
-                        ]["typeName"]
-                        rel_guid = rel_element["relatedElement"]["elementHeader"][
-                            "guid"
-                        ]
-                        rel_props = rel_element["relatedElement"]["properties"]
+                        rel_type = rel_element["elementHeader"]["type"]["typeName"]
+                        rel_guid = rel_element["elementHeader"]["guid"]
+                        rel_props = rel_element["properties"]
                         props_md = ""
                         for key in rel_props.keys():
-                            props_md += f"* **{key}**: {rel_props[key]}\n"
-                        rel_el_md = f"* **{rel_type}**: {rel_guid}\n{props_md}"
-                        if count > 1:
-                            rel_el_md += "---\n"
+                            props_md += f"\t* **{key}**: {rel_props[key]}\n"
+                        rel_el_md = f"{rel_el_md}\n* **{rel_type}**:\n\t{rel_guid}\n{props_md}{spacer}"
+                        if count > 1 and count < len_els:
+                            spacer = "---\n"
+                        elif count > len_els:
+                            spacer = ""
                     rel_el_out = Markdown(rel_el_md)
 
                 table.add_row(

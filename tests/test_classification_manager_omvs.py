@@ -93,11 +93,11 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = None
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
-    property_value = "803a8a33-492d-4b15-afdc-5704d6029155"
+    property_value = "8dca6e76-d454-4344-9c93-faa837a1a898"
     property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
