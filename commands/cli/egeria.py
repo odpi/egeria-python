@@ -34,6 +34,13 @@ from commands.my.monitor_my_todos import display_my_todos
 from commands.my.monitor_open_todos import display_todos
 from commands.cat.list_deployed_database_schemas import list_deployed_database_schemas
 from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from commands.cat.glossary_actions import create_glossary, delete_glossary, create_term
+from commands.my.todo_actions import (
+    mark_todo_complete,
+    reassign_todo,
+    delete_todo,
+    create_todo,
+)
 
 
 from commands.ops.gov_server_actions import (
@@ -955,6 +962,15 @@ def list_catalogs(ctx):
 def tell(ctx):
     """Perform actions an Egeria Objects"""
     pass
+
+
+tell.add_command(create_glossary)
+tell.add_command(delete_glossary)
+tell.add_command(create_term)
+tell.add_command(mark_todo_complete)
+tell.add_command(reassign_todo)
+tell.add_command(delete_todo)
+tell.add_command(create_todo)
 
 
 @tell.group("survey")
