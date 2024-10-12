@@ -1349,7 +1349,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_database_guid = "d008f863-fe31-44a8-8032-58a44eb47a4b"
+            a_postgres_database_guid = "d3109a88-1c7b-4ce2-9baa-7a176d6ea42f"
 
             start_time = time.perf_counter()
 

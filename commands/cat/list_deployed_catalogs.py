@@ -47,7 +47,7 @@ def check_if_template(header: dict) -> bool:
 
 
 def list_deployed_catalogs(
-    uc_server_name: str,
+    catalog_server: str,
     server: str,
     url: str,
     username: str,
@@ -79,9 +79,13 @@ def list_deployed_catalogs(
         table.add_column("Properties")
         table.add_column("Catalog Schemas")
 
-        om_type = "DeployedDatabaseSchema"
-
-        cats = c_client.get_elements_by_classification("Anchors", "Catalog")
+        if catalog_server in [None, "*"]:
+            cats = c_client.get_elements_by_classification("Anchors", "Catalog")
+        else:
+            server_guid = c_client.get_guid_for_name(catalog_server)
+            cats = c_client.get_elements_by_classification_with_property_value(
+                "Anchors", server_guid, ["anchorGUID"], "Catalog"
+            )
         if type(cats) is list:
             for cat in cats:
                 header = cat["elementHeader"]
@@ -165,7 +169,7 @@ def list_deployed_catalogs(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server", help="Name of the server to display status for")
+    parser.add_argument("--server", help="Name of the view server to use")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="Password")
@@ -178,10 +182,9 @@ def main():
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        # uc_server_name = Prompt.ask(
-        #     "Enter the name of a server to retrieve schemas for", default="*"
-        # )
-        uc_server_name = None
+        uc_server_name = Prompt.ask(
+            "Enter the name of a server to retrieve catalogs for", default="*"
+        )
         list_deployed_catalogs(uc_server_name, server, url, userid, password)
     except KeyboardInterrupt:
         pass

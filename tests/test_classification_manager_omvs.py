@@ -93,20 +93,63 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = None
+    open_metadata_type_name = "Asset"
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
-    property_value = "8dca6e76-d454-4344-9c93-faa837a1a898"
-    property_names = ["anchorGUID"]
+    property_names = ["name"]
+    property_value = "Set up new clinical trial"
+    # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
+        start_time = time.perf_counter()
         result = c_client.get_elements_by_property_value(
             property_value, property_names, open_metadata_type_name
         )
+        duration = time.perf_counter() - start_time
+        print(f"\n\tDuration was {duration} seconds")
+        if type(result) is list:
+            print(f"\n\tElement count is: {len(result)}")
+            print_json(data=result)
+        elif type(result) is str:
+            console.print("\n\n\t Response is: " + result)
 
+        assert True
+
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
+        print_exception_response(e)
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+
+def test_find_elements_by_property_value():
+    # open_metadata_type_name = 'Project'
+    # property_value = "Campaign:Clinical Trials Management"
+    # open_metadata_type_name = "ValidValueDefinition"
+    # open_metadata_type_name = None
+    # open_metadata_type_name = "Asset"
+    open_metadata_type_name = None
+    property_names = ["name"]
+    property_value = "Set up new clinical trial"
+
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        start_time = time.perf_counter()
+        result = c_client.find_elements_by_property_value(
+            property_value, property_names, open_metadata_type_name
+        )
+        duration = time.perf_counter() - start_time
+        print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:
             print(f"\n\tElement count is: {len(result)}")
             print_json(data=result)
@@ -128,7 +171,7 @@ def test_get_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = "e53f062e-b4f4-4afe-af67-f536f1e4e9c4"
+    element_guid = "5b0c1309-47d1-423f-a7e6-29fb7a322190"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -243,9 +286,9 @@ def test_get_elements_by_classification():
 
 def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
-    open_metadata_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = None
     classification = "Anchors"
-    property_value = "803a8a33-492d-4b15-afdc-5704d6029155"
+    property_value = "5b0c1309-47d1-423f-a7e6-29fb7a322190"
     property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -280,10 +323,10 @@ def test_find_elements_by_classification_with_property_value():
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
-    classification = "Template"
+    classification = "Anchors"
     # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
-    property_value = "Unity Catalog Server template"
+    property_value = "Unity Catalog 1"
     property_names = ["name", "qualifiedName"]
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -303,8 +346,9 @@ def test_find_elements_by_classification_with_property_value():
 def test_find_anchored_elements_with_property_value():
     classification = "Anchors"
     open_metadata_type_name = None
-    property_value = "Catalog"
-    property_names = ["ServerCapability", "anchorTypeName"]
+    property_value = "Set up"
+    # property_names = ["ServerCapability", "anchorTypeName"]
+    property_names = ["name"]
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -327,7 +371,7 @@ def test_get_all_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
-    element_guid = "e53f062e-b4f4-4afe-af67-f536f1e4e9c4"
+    element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name
@@ -348,8 +392,9 @@ def test_get_related_elements():
     # open_metadata_type_name = "Organization"
     # open_metadata_type_name = "CSVFile"
     open_metadata_type_name = None
-    element_guid = "064519ac-c6fb-4e76-b3dd-43c9bd31cd16"
-    relationship_type = "SupportedGovernanceService"
+    element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
+    # relationship_type = "DataContentForDataSet"
+    relationship_type = "ReferenceableFacet"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -360,7 +405,7 @@ def test_get_related_elements():
     if type(response) is list:
         print_json(data=response)
     elif type(response) is str:
-        console.print("\n\n\t Response is: " + response)
+        console.print("\n\n\t Response is:\n " + response)
 
     assert True
 

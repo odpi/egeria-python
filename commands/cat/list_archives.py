@@ -55,7 +55,7 @@ def display_archive_list(
     save_output: bool,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
-):
+) -> object:
     c_client = ClassificationManager(server, url, user_id=username)
     token = c_client.create_egeria_bearer_token(username, user_pass)
 

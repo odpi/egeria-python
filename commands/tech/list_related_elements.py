@@ -186,10 +186,12 @@ def main():
 
     try:
         element_guid = Prompt.ask("Guid of base element").strip()
-        om_type = Prompt.ask("Enter the Open Metadata Type to find elements of")
+        om_type = Prompt.ask(
+            "Enter the Open Metadata Type to find elements of", default=None
+        )
         relationship_type = Prompt.ask("Enter the relationship type to follow")
 
-        om_type = None if len(om_type) == 0 else om_type.strip()
+        om_type = om_type.strip() if type(om_type) is str else None
         relationship_type = (
             None if len(relationship_type) == 0 else relationship_type.strip()
         )
