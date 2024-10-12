@@ -32,7 +32,7 @@ EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "300"))
 
 
 def check_if_template(header: dict) -> bool:
@@ -111,6 +111,7 @@ def list_deployed_databases(
                 rel_elements = c_client.get_related_elements(el_guid)
                 schema_md = ""
                 count = 0
+                rel_cnt = len(rel_elements)
                 if type(rel_elements) is list:
                     for rel_element in rel_elements:
                         count += 1
@@ -124,9 +125,9 @@ def list_deployed_databases(
                         props_md = ""
                         for key in rel_props.keys():
                             props_md += f"* **{key}**: {rel_props[key]}\n"
-                        rel_el_md = f"* **{rel_type}**: {rel_guid}\n{props_md}"
-                        if count >= 1:
-                            rel_el_md += "---\n"
+                        rel_el_md = f"* **{rel_type}**: {rel_guid}\n{props_md}\n---\n"
+                        if count == rel_cnt:
+                            rel_el_md = rel_el_md[:-4]
                     rel_el_out = Markdown(rel_el_md)
 
                 table.add_row(

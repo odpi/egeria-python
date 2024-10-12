@@ -381,6 +381,165 @@ class ClassificationManager(Client):
         )
         return response
 
+    async def _async_find_elements_by_property_value(
+        self,
+        property_value: str,
+        property_names: [str],
+        open_metadata_type_name: str = None,
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
+        properties rather than needing to be an exact match. An open metadata type name may be supplied to restrict the
+        results. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        open_metadata_type_name : str, default = None
+            - open metadata type to be used to restrict the search
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        possible_query_params = query_string(
+            [
+                ("startFrom", start_from),
+                ("pageSize", page_size),
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+            ]
+        )
+
+        body = {
+            "class": "FindPropertyNamesProperties",
+            "openMetadataTypeName": open_metadata_type_name,
+            "propertyValue": property_value,
+            "propertyNames": property_names,
+            "effectiveTime": effective_time,
+        }
+
+        url = f"{base_path(self, self.view_server)}/elements/by-property-value-search{possible_query_params}"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+        elements = response.json().get("elements", "No elements found")
+        if type(elements) is list:
+            if len(elements) == 0:
+                return "No elements found"
+        return elements
+
+    def find_elements_by_property_value(
+        self,
+        property_value: str,
+        property_names: [str],
+        open_metadata_type_name: str = None,
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
+        properties rather than needing to be an exact match. An open metadata type name may be supplied to restrict the
+        results.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        open_metadata_type_name : str, default = None
+            - open metadata type to be used to restrict the search
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_elements_by_property_value(
+                property_value,
+                property_names,
+                open_metadata_type_name,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+                time_out,
+            )
+        )
+        return response
+
     async def _async_get_element_by_guid(
         self,
         element_guid: str,

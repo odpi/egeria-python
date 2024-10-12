@@ -32,8 +32,11 @@ from commands.my.list_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
 from commands.my.monitor_my_todos import display_my_todos
 from commands.my.monitor_open_todos import display_todos
-from commands.cat.list_deployed_database_schemas import list_deployed_database_schemas
+from commands.cat.old_list_deployed_database_schemas import (
+    list_deployed_database_schemas,
+)
 from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from commands.cat.list_deployed_databases import list_deployed_databases
 from commands.cat.glossary_actions import create_glossary, delete_glossary, create_term
 from commands.my.todo_actions import (
     mark_todo_complete,
@@ -917,38 +920,48 @@ def list_archives(ctx):
 
 
 @show.command("list-deployed-schemas")
-@click.option("--search-string", default="*", help="What database or catalog to search")
+@click.option(
+    "--search_catalog", default="*", help="What database or catalog to search"
+)
 @click.pass_context
-def list_deployed_schemas(search_string, ctx):
+def list_deployed_schemas(search_catalog, ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
-        search_string,
+        search_catalog,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
-        None,
         c.jupyter,
         c.width,
     )
 
 
 @show.command("list-catalogs")
-# @click.option("--search-string", default="*", help="What database or catalog to search")
+@click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
-def list_catalogs(ctx):
+def list_catalogs(search_server, ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_catalogs(
-        " ",
+        search_server,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
-        None,
         c.jupyter,
         c.width,
+    )
+
+
+@show.command("list-databases")
+@click.pass_context
+def list_databases(ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_databases(
+        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
     )
 
 

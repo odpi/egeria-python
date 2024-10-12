@@ -14,22 +14,25 @@ from trogon import tui
 
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
+from commands.cat.get_project_dependencies import project_dependency_viewer
+from commands.cat.get_project_structure import project_structure_viewer
 from commands.cat.get_tech_type_elements import tech_viewer
 from commands.cat.get_tech_type_template import template_viewer
-from commands.cat.list_assets import display_assets
-from commands.cat.list_glossary import display_glossary_terms
-from commands.cat.list_tech_types import display_tech_types
-from commands.cat.list_projects import display_project_list
-from commands.cat.list_todos import display_to_dos as list_todos
-from commands.cat.get_project_structure import project_structure_viewer
-from commands.cat.get_project_dependencies import project_dependency_viewer
-from commands.cat.list_cert_types import display_certifications
-from commands.cat.list_relationships import list_relationships
-from commands.cat.list_user_ids import list_user_ids
-from commands.cat.list_archives import display_archive_list
-from commands.cat.list_deployed_database_schemas import list_deployed_database_schemas
-from commands.cat.list_deployed_catalogs import list_deployed_catalogs
 from commands.cat.glossary_actions import create_glossary, delete_glossary, create_term
+from commands.cat.list_archives import display_archive_list
+from commands.cat.list_assets import display_assets
+from commands.cat.list_cert_types import display_certifications
+from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from commands.cat.old_list_deployed_database_schemas import (
+    list_deployed_database_schemas,
+)
+from commands.cat.list_deployed_databases import list_deployed_databases
+from commands.cat.list_glossary import display_glossary_terms
+from commands.cat.list_projects import display_project_list
+from commands.cat.list_relationships import list_relationships
+from commands.cat.list_tech_types import display_tech_types
+from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.list_user_ids import list_user_ids
 
 # from pyegeria import ServerOps
 from commands.cli.ops_config import Config
@@ -73,7 +76,7 @@ from commands.my.todo_actions import (
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
+    "--integration_daemon",
     default="integration-daemon",
     envvar="EGERIA_INTEGRATION_DAEMON",
     help="Egeria integration daemon to work with",
@@ -198,8 +201,7 @@ def cli(
 
 
 @cli.group("show")
-@click.pass_context
-def show(ctx):
+def show():
     """Display an Egeria Object"""
     pass
 
@@ -366,7 +368,7 @@ def show_projects(ctx, search_string):
 @click.pass_context
 def show_certification_types(ctx, search_string):
     """Show certification types
-    - generally stay with the default..
+    - generally stay with the default.
     """
     c = ctx.obj
     display_certifications(
@@ -453,7 +455,7 @@ def show_relationships(ctx, relationship):
     "--status",
     type=click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
-        case_sensitive="False",
+        case_sensitive=False,
     ),
     help="Enter an optional status filter",
     required=False,
@@ -491,43 +493,57 @@ def list_archives(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_archive_list(
-        c.view_server, c.view_server_url, c.userid, c.password, None, c.jupyter, c.width
-    )
-
-
-@show.command("list-deployed-schemas")
-@click.option("--search-string", default="*", help="What database or catalog to search")
-@click.pass_context
-def list_deployed_schemas(search_string, ctx):
-    """Display a tree graph of information about an asset"""
-    c = ctx.obj
-    list_deployed_database_schemas(
-        search_string,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
-        None,
+        False,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("list-schemas")
+@click.option("--catalog", default="*", help="What database or catalog to search")
+@click.pass_context
+def list_deployed_schemas(ctx, catalog):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_database_schemas(
+        catalog,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
         c.jupyter,
         c.width,
     )
 
 
 @show.command("list-catalogs")
-# @click.option("--search-string", default="*", help="What database or catalog to search")
+@click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
-def list_catalogs(ctx):
+def list_catalogs(ctx, search_server):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_catalogs(
-        " ",
+        search_server,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
-        None,
         c.jupyter,
         c.width,
+    )
+
+
+@show.command("list-databases")
+@click.pass_context
+def list_databases(ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    list_deployed_databases(
+        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
     )
 
 

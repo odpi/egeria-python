@@ -46,14 +46,6 @@ def check_if_template(header: dict) -> bool:
     return False
 
 
-def make_prop_md(props: dict) -> str:
-    """Given a properties dict, make a markdown string"""
-    props_md = ""
-    for key in props.keys():
-        props_md += f"* {key}: {props[key]}\n"
-    return props_md
-
-
 def list_deployed_database_schemas(
     db_name: str,
     server: str,
@@ -92,16 +84,15 @@ def list_deployed_database_schemas(
 
         om_type = "DeployedDatabaseSchema"
 
-        # First get the deployed schemas - either all of them or for a specific server
+        # get the guid for the database or catalog
+
         if db_name in (None, "*"):
             dbs = c_client.get_elements(om_type)
         else:
-            # get the guid for the database or catalog and then all schemas anchored on that catalog
             db_guid = c_client.get_guid_for_name(db_name)
             dbs = c_client.get_elements_by_classification_with_property_value(
                 "Anchors", db_guid, ["anchorGUID"], om_type
             )
-        # Now we should have a list of Database/Catalog Schemas
 
         if type(dbs) is not list:
             print("No instances found")
@@ -114,19 +105,18 @@ def list_deployed_database_schemas(
                 continue
 
             el_name = element["properties"].get("name", "---")
-            # el_type = header["type"]["typeName"]
-            # el_home = header["origin"]["homeMetadataCollectionName"]
-            # el_create_time = header["versions"]["createTime"][:-10]
-            # el_created_by = header["versions"]["createdBy"]
-            # el_created_md = (
-            #     f"* **Created By**: {el_created_by}\n"
-            #     f"* **Created Time**: {el_create_time}"
-            # )
-            # el_created_out = Markdown(el_created_md)
+            el_type = header["type"]["typeName"]
+            el_home = header["origin"]["homeMetadataCollectionName"]
+            el_create_time = header["versions"]["createTime"][:-10]
+            el_created_by = header["versions"]["createdBy"]
+            el_created_md = (
+                f"* **Created By**: {el_created_by}\n"
+                f"* **Created Time**: {el_create_time}"
+            )
+            el_created_out = Markdown(el_created_md)
 
             el_guid = header["guid"]
 
-            # get the information about the catalog we are part of
             el_classification = header["classifications"]
             for c in el_classification:
                 if c["type"]["typeName"] == "Anchors":
@@ -145,30 +135,14 @@ def list_deployed_database_schemas(
             el_schema_id = (
                 f"{el_name}\n{el_guid}\n\n\t\tin\n\n{el_cat_name}\n{el_cat_guid}"
             )
+            el_props_md = ""
+            for prop in element["properties"].keys():
+                el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
+            el_props_out = Markdown(el_props_md)
 
-            # get the schema properties
-            el_props_md = make_prop_md(element["properties"])
-            # el_props_md = ""
-            # for prop in element["properties"].keys():
-            #     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
-
-            # Now get property facets related to us
-            el_facets = c_client.get_related_elements(
-                el_guid, "ReferenceableFacet", None
+            rel_elements = c_client.get_elements_by_property_value(
+                el_guid, ["anchorGUID"]
             )
-            el_facets_md = "---\n**Property Facets:**\n"
-            if type(el_facets) is list:
-                for facet in el_facets:
-                    el_facets_md += make_prop_md(facet["relatedElement"]["properties"])
-            else:
-                el_facets_md += "--- \n"
-            # Add the facet properties under the normal properties
-            el_props_out = Markdown(f"{el_props_md}{el_facets_md}")
-            # get the Content within our schema
-            rel_elements = c_client.get_related_elements(
-                el_guid, "DataContentForDataSet", None
-            )
-
             schema_md = ""
             count = 0
             rel_el_out = ""
@@ -178,9 +152,9 @@ def list_deployed_database_schemas(
                 spacer = "---\n"
                 for rel_element in rel_elements:
                     count += 1
-                    rel_type = rel_element["relationshipHeader"]["type"]["typeName"]
-                    rel_guid = rel_element["relationshipHeader"]["guid"]
-                    rel_props = rel_element["relatedElement"]["properties"]
+                    rel_type = rel_element["elementHeader"]["type"]["typeName"]
+                    rel_guid = rel_element["elementHeader"]["guid"]
+                    rel_props = rel_element["properties"]
                     props_md = ""
                     for key in rel_props.keys():
                         props_md += f"\t* **{key}**: {rel_props[key]}\n"
