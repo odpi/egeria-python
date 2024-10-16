@@ -23,7 +23,7 @@ from commands.cat.list_archives import display_archive_list
 from commands.cat.list_assets import display_assets
 from commands.cat.list_cert_types import display_certifications
 from commands.cat.list_deployed_catalogs import list_deployed_catalogs
-from commands.cat.old_list_deployed_database_schemas import (
+from commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
 from commands.cat.list_deployed_databases import list_deployed_databases

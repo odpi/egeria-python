@@ -410,7 +410,7 @@ class GlossaryManager(GlossaryBrowser):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json()
+        return response.json().get("elementList", "No glossaries found")
 
     def get_glossaries_by_name(
         self,
@@ -1410,6 +1410,20 @@ class GlossaryManager(GlossaryBrowser):
     ) -> str:
         """This method loads glossary terms into the specified glossary from the indicated file."""
         # Check that glossary exists and get guid
+        glossaries = self.get_glossaries_by_name(glossary_name)
+        if type(glossaries) is not list:
+            return "Unknown glossary"
+        if len(glossaries) > 1:
+            for g in glossaries:
+                glossary_error = (
+                    "Multiple glossaries found - please use the qualified name\n"
+                )
+                glossary_error += (
+                    f"Display Name: {g['glossaryProperties']['displayName']}\tQualified Name:"
+                    f" {g['glossaryProperties']['qualifiedName']}\n"
+                )
+                return glossary_error
+        glossary_guid = glossaries[0]["elementHeader"]["guid"]
 
         # Open file
 
