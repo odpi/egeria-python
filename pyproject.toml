@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "1.5.1.0.120"
+version = "1.5.1.0.21"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -68,6 +68,7 @@ pytest = "^8.2.2"
     list_user_ids = "commands.cat.list_user_ids:main"
     list_archives = "commands.cat.list_archives:main"
     list_deployed_catalogs = "commands.cat.list_deployed_catalogs:main"
+    list_deployed_databases = "commands.cat.list_deployed_databases:main"
     list_deployed_schemas = "commands.cat.list_deployed_database_schemas:main"
     create_glossary = "commands.cat.glossary_actions:create_glossary"
     delete_glossary = "commands.cat.glossary_actions:delete_glossary"

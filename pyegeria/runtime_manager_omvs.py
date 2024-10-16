@@ -59,7 +59,7 @@ class RuntimeManager(Client):
         )
 
     async def __async__get_guid__(
-        self, guid: str = None, name: str = None, property_name: str = "name"
+        self, guid: str = None, name: str = None, property_name: str = "qualifiedName"
     ) -> str:
         """Helper function to return a server_guid - one of server_guid or server_name should
         contain information. If both are None, an exception will be thrown. If both contain
@@ -92,7 +92,7 @@ class RuntimeManager(Client):
             )
 
     def __get_guid__(
-        self, guid: str = None, name: str = None, property_name: str = "name"
+        self, guid: str = None, name: str = None, property_name: str = "qualifiedName"
     ) -> str:
         """Helper function to return a server_guid - one of server_guid or server_name should
         contain information. If both are None, an exception will be thrown. If both contain
@@ -1128,6 +1128,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
+        server_name = f"Metadata Access Server:{server_name}"
         server_guid = self.__get_guid__(server_guid, server_name)
         url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
 
