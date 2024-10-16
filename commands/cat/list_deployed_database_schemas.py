@@ -114,15 +114,6 @@ def list_deployed_database_schemas(
                 continue
 
             el_name = element["properties"].get("name", "---")
-            # el_type = header["type"]["typeName"]
-            # el_home = header["origin"]["homeMetadataCollectionName"]
-            # el_create_time = header["versions"]["createTime"][:-10]
-            # el_created_by = header["versions"]["createdBy"]
-            # el_created_md = (
-            #     f"* **Created By**: {el_created_by}\n"
-            #     f"* **Created Time**: {el_create_time}"
-            # )
-            # el_created_out = Markdown(el_created_md)
 
             el_guid = header["guid"]
 
@@ -148,9 +139,6 @@ def list_deployed_database_schemas(
 
             # get the schema properties
             el_props_md = make_prop_md(element["properties"])
-            # el_props_md = ""
-            # for prop in element["properties"].keys():
-            #     el_props_md += f"* **{prop}**: {element['properties'][prop]}\n"
 
             # Now get property facets related to us
             el_facets = c_client.get_related_elements(
@@ -189,7 +177,7 @@ def list_deployed_database_schemas(
                     #     spacer = "---\n"
                     # elif count > len_els:
                     #     spacer = ""
-                    rel_el_md = f"{rel_el_md}\n* **{rel_type}**:\n\t{rel_guid}\n{props_md}{spacer}"
+                    # rel_el_md = f"{rel_el_md}\n* **{rel_type}**:\n\t{rel_guid}\n{props_md}{spacer}"
                     if count == len_els:
                         rel_el_md = rel_el_md[:-4]
                 rel_el_out = Markdown(rel_el_md)

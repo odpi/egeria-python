@@ -2430,99 +2430,21 @@ class AutomatedCuration(Client):
     #   Initiate surveys
     #
 
-    async def _async_initiate_postgres_database_survey(
-        self, postgres_database_guid: str
-    ) -> str:
-        """Initiate a postgres database survey"""
+    async def _async_initiate_survey(self, survey_name: str, resource_guid: str) -> str:
+        """Initiate a survey of the survey_name on the target resource. Async Version.
 
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "PostgreSQLSurveys:survey-postgres-database",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "postgresDatabase",
-                    "actionTargetGUID": postgres_database_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
-
-    def initiate_postgres_database_survey(self, postgres_database_guid: str) -> str:
-        """Initiate a postgres database survey"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_initiate_postgres_server_survey(postgres_database_guid)
-        )
-        return response
-
-    async def _async_initiate_postgres_server_survey(
-        self, postgres_server_guid: str
-    ) -> str:
-        """Initiate a postgres server survey - Async version"""
-
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "survey-postgres-server",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
-                    "actionTargetGUID": postgres_server_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
-
-    def initiate_postgres_server_survey(self, postgres_server_guid: str) -> str:
-        """Initiate a postgres server survey"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_initiate_postgres_server_survey(postgres_server_guid)
-        )
-        return response
-
-    async def _async_initiate_file_folder_survey(
-        self,
-        file_folder_guid: str,
-        survey_name: str = "AssetSurvey:survey-folder",
-    ) -> str:
-        """Initiate a file folder survey - async version
-
-        Parameters:
+        Parameters
         ----------
-            file_folder_guid: str
-                The GUID of the File Folder that we wish to survey.
-            survey_name: str, optional
-                The unique name of the survey routine to execute. Default surveys all folders.
+        survey_name: str
+            The name of the survey to initiate.
+        resource_guid : str
+            The GUID of the resource to be surveyed.
 
-        Returns:
+        Returns
         -------
-            str:
-                The guid of the survey being run.
+        str
+            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
 
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-
-        Notes:
-            There are multiple kinds of file folder surveys available, each with their own purpose. They are described
-            in the Core Content Brain.
-
-            File Folder Survey Names currently include::
-            - AssetSurvey:survey-folders
-            - AssetSurvey:survey-folder-and-files
-            - AssetSurvey:survey-all-folders
-            - AssetSurvey:survey-all-folders-and-files
         """
 
         url = f"{self.curation_command_root}/governance-action-types/initiate"
@@ -2533,18 +2455,38 @@ class AutomatedCuration(Client):
             "actionTargets": [
                 {
                     "class": "NewActionTarget",
-                    "actionTargetName": "folderToSurvey",
-                    "actionTargetGUID": file_folder_guid,
+                    "actionTargetName": "serverToSurvey",
+                    "actionTargetGUID": resource_guid,
                 }
             ],
         }
         response = await self._async_make_request("POST", url, body)
         return response.json().get("guid", "Action not initiated")
 
+    def initiate_postgres_database_survey(self, postgres_database_guid: str) -> str:
+        """Initiate a postgres database survey"""
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_initiate_survey(
+                "PostgreSQLSurveys:survey-postgres-database", postgres_database_guid
+            )
+        )
+        return response
+
+    def initiate_postgres_server_survey(self, postgres_server_guid: str) -> str:
+        """Initiate a postgres server survey"""
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_initiate_survey(
+                "PostgreSQLSurveys:survey-postgres-server", postgres_server_guid
+            )
+        )
+        return response
+
     def initiate_file_folder_survey(
         self,
         file_folder_guid: str,
-        survey_name: str = "AssetSurvey:survey-folder",
+        survey_name: str = "FileSurveys:survey-folder",
     ) -> str:
         """Initiate a file folder survey - async version
 
@@ -2581,64 +2523,20 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_file_folder_survey(file_folder_guid, survey_name)
+            self._async_initiate_survey(
+                survey_name,
+                file_folder_guid,
+            )
         )
         return response
-
-    async def _async_initiate_file_survey(self, file_guid: str) -> str:
-        """Initiate a file survey - async version"""
-
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-data-file",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "fileToSurvey",
-                    "actionTargetGUID": file_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
 
     def initiate_file_survey(self, file_guid: str) -> str:
         """Initiate a file survey"""
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_initiate_file_survey(file_guid))
+        response = loop.run_until_complete(
+            self._async_initiate_survey("FileSurveys:survey-data-file", file_guid)
+        )
         return response
-
-    async def _async_initiate_kafka_server_survey(self, kafka_server_guid: str) -> str:
-        """Initiate survey of a kafka server. Async Version.
-        Parameters
-        ----------
-        kafka_server_guid : str
-            The GUID of the Kafka server to be surveyed.
-
-        Returns
-        -------
-        str
-            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
-
-        """
-
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-kafka-server",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
-                    "actionTargetGUID": kafka_server_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
 
     def initiate_kafka_server_survey(self, kafka_server_guid: str) -> str:
         """Initiate survey of a kafka server.
@@ -2656,40 +2554,11 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_kafka_server_survey(kafka_server_guid)
+            self._async_initiate_survey(
+                "ApacheKafkaSurveys:survey-kafka-server", kafka_server_guid
+            )
         )
         return response
-
-    async def _async_initiate_uc_server_survey(self, uc_server_guid: str) -> str:
-        """Initiate survey of a Unity Catalog server. Async Version.
-        Parameters
-        ----------
-        uc_server_guid : str
-            The GUID of the Kafka server to be surveyed.
-
-
-        Returns
-        -------
-        str
-            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
-
-        """
-
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-server",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
-                    "actionTargetGUID": uc_server_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
 
     def initiate_uc_server_survey(self, uc_server_guid: str) -> str:
         """Initiate survey of a Unity Catalog server. Async Version.
@@ -2707,39 +2576,11 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_uc_server_survey(uc_server_guid)
+            self._async_initiate_survey(
+                "UnityCatalogSurveys:survey-unity-catalog-server", uc_server_guid
+            )
         )
         return response
-
-    async def _async_initiate_uc_schema_survey(self, uc_schema_guid: str) -> str:
-        """Initiate survey of a Unity Catalog schema. Async Version.
-        Parameters
-        ----------
-        uc_schema_guid : str
-            The GUID of the Kafka server to be surveyed.
-
-        Returns
-        -------
-        str
-            The GUID of the initiated action or "Action not initiated" if the action was not initiated.
-
-        """
-
-        url = f"{self.curation_command_root}/governance-action-types/initiate"
-
-        body = {
-            "class": "InitiateGovernanceActionTypeRequestBody",
-            "governanceActionTypeQualifiedName": "AssetSurvey:survey-unity-catalog-schema",
-            "actionTargets": [
-                {
-                    "class": "NewActionTarget",
-                    "actionTargetName": "serverToSurvey",
-                    "actionTargetGUID": uc_schema_guid,
-                }
-            ],
-        }
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "Action not initiated")
 
     def initiate_uc_schema_survey(self, uc_schema_guid: str) -> str:
         """Initiate survey of a Unity Catalog schema. Async Version.
@@ -2758,7 +2599,9 @@ class AutomatedCuration(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_initiate_uc_schema_survey(uc_schema_guid)
+            self._async_initiate_survey(
+                "UnityCatalogSurveys:survey-unity-catalog-schema", uc_schema_guid
+            )
         )
         return response
 

@@ -32,7 +32,7 @@ from commands.my.list_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
 from commands.my.monitor_my_todos import display_my_todos
 from commands.my.monitor_open_todos import display_todos
-from commands.cat.old_list_deployed_database_schemas import (
+from commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
 from commands.cat.list_deployed_catalogs import list_deployed_catalogs

@@ -396,9 +396,8 @@ class GlossaryBrowser(Client):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/retrieve"
         )
-        print(url)
-        response = await self._async_make_request("POST", url, payload=body)
-        return response.json()
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("elementList", "No glossaries found")
 
     def get_glossary_by_guid(
         self, glossary_guid: str, effective_time: str = None
@@ -492,7 +491,7 @@ class GlossaryBrowser(Client):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json()
+        return response.json().get("elementList", "No glossaries found")
 
     def get_glossaries_by_name(
         self,
@@ -593,7 +592,7 @@ class GlossaryBrowser(Client):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json()
+        return response.json().get("elementList", "No categories found")
 
     def get_glossary_for_category(
         self,

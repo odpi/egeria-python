@@ -250,7 +250,7 @@ class Client:
         )
         return response
 
-    async def _async_refresh_egeria_bearer_token(self) -> None:
+    async def _async_refresh_egeria_bearer_token(self) -> str:
         """
         Refreshes the Egeria bearer token. Async version.
 
@@ -272,7 +272,10 @@ class Client:
             and validate_user_id(self.user_id)
             and validate_name(self.user_pwd)
         ):
-            await self._async_create_egeria_bearer_token(self.user_id, self.user_pwd)
+            token = await self._async_create_egeria_bearer_token(
+                self.user_id, self.user_pwd
+            )
+            return token
         else:
             raise InvalidParameterException("Invalid token source")
 
@@ -298,8 +301,8 @@ class Client:
                 The principle specified by the user_id does not have authorization for the requested action
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_refresh_egeria_bearer_token())
-        return
+        token = loop.run_until_complete(self._async_refresh_egeria_bearer_token())
+        return token
 
     def set_bearer_token(self, token: str) -> None:
         """Retrieve and set a Bearer Token

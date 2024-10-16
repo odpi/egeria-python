@@ -16,6 +16,9 @@ from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
+import nest_asyncio
+from typing import Union
+from textual.widgets import DataTable
 
 from pyegeria import EgeriaTech, AutomatedCuration
 from pyegeria._exceptions import (
@@ -42,6 +45,7 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 disable_ssl_warnings = True
+
 
 
 def display_integration_daemon_status(

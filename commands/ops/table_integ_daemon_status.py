@@ -47,6 +47,25 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 disable_ssl_warnings = True
 
 
+def add_row(
+    table: Union[Table, DataTable],
+    connector_name: str,
+    connector_status: str,
+    last_refresh_time: str,
+    refresh_interval: str,
+    targets_out,
+    exception_msg,
+) -> Table | DataTable:
+    table.add_row(
+        connector_name,
+        connector_status,
+        last_refresh_time,
+        refresh_interval,
+        targets_out,
+        exception_msg,
+    )
+    return table
+
 
 def display_integration_daemon_status(
     integ_server: str = EGERIA_INTEGRATION_DAEMON,
@@ -59,33 +78,46 @@ def display_integration_daemon_status(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     sort: bool = True,
-):
+    data_table: bool = False,
+) -> Table | DataTable:
     s_client = EgeriaTech(view_server, view_url, user, user_pass)
+    nest_asyncio.apply()
 
     def generate_table() -> Table:
         """Make a new table."""
-        table = Table(
-            title=f"Integration Daemon Status @ {time.asctime()}",
-            style="bold white on black",
-            row_styles=["bold white on black"],
-            header_style="white on dark_blue",
-            title_style="bold white on black",
-            caption_style="white on black",
-            show_lines=True,
-            box=box.ROUNDED,
-            caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
-            expand=True,
-        )
-        table.add_column("Connector Name", min_width=15)
-        table.add_column("Status", max_width=6)
 
-        table.add_column("Last Refresh Time", min_width=12)
-        table.add_column("Min Refresh (mins)", max_width=6)
-        table.add_column("Target Element", min_width=20)
-        table.add_column("Exception Message", min_width=10)
+        if data_table:
+            table = DataTable()
+            table.add_columns(
+                "Connector Name",
+                "Status",
+                "Last Refresh Time",
+                "Min Refresh (Mins)",
+                "Target Element",
+                "Exception Message",
+            )
+        else:
+            table = Table(
+                title=f"Integration Daemon Status @ {time.asctime()}",
+                style="bold white on black",
+                row_styles=["bold white on black"],
+                header_style="white on dark_blue",
+                title_style="bold white on black",
+                caption_style="white on black",
+                show_lines=True,
+                box=box.ROUNDED,
+                caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
+                expand=True,
+            )
+            table.add_column("Connector Name", min_width=15)
+            table.add_column("Status", max_width=6)
+            table.add_column("Last Refresh Time", min_width=12)
+            table.add_column("Min Refresh (mins)", max_width=6)
+            table.add_column("Target Element", min_width=20)
+            table.add_column("Exception Message", min_width=10)
 
+        # Now get the integration connector report
         token = s_client.create_egeria_bearer_token()
-        # server_guid = s_client.get_guid_for_name(integ_server)
         daemon_status = s_client.get_server_report(None, integ_server)
 
         reports = daemon_status["integrationConnectorReports"]
@@ -136,7 +168,8 @@ def display_integration_daemon_status(
             else:
                 connector_status = f"[yellow]{connector_status}"
 
-            table.add_row(
+            add_row(
+                table,
                 connector_name,
                 connector_status,
                 last_refresh_time,
@@ -210,6 +243,7 @@ def main_live():
         user=userid,
         user_pass=user_pass,
         paging=False,
+        data_table=False,
     )
 
 
@@ -247,6 +281,7 @@ def main_paging():
         user=userid,
         user_pass=user_pass,
         paging=True,
+        data_table=False,
     )
 
 
