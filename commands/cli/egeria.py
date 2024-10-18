@@ -43,6 +43,7 @@ from commands.cat.glossary_actions import (
     list_glossaries,
     create_term,
     load_terms,
+    export_terms,
 )
 from commands.my.todo_actions import (
     mark_todo_complete,
@@ -993,6 +994,7 @@ tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
 tell.add_command(load_terms)
+tell.add_command(export_terms)
 
 
 @tell.group("survey")

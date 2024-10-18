@@ -329,3 +329,30 @@ def load_terms(
         print_exception_response(e)
     finally:
         m_client.close_session()
+
+
+@click.command("export-terms-to-file")
+@click.option("--glossary-guid", help="GUID of Glossary to export", required=True)
+@click.option("--file-name", help="Path of CSV file", required=True)
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def export_terms(glossary_guid, file_name, server, url, userid, password, timeout):
+    """Delete the glossary specified"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        result = m_client.export_glossary_to_csv(glossary_guid, file_name)
+
+        click.echo(
+            f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
+        )
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()

@@ -73,12 +73,12 @@ def display_glossary_terms(
         )
         table.add_column("Term Name")
         table.add_column("Qualified Name / GUID")
-        table.add_column("Glossary")
         table.add_column("Abbreviation")
         table.add_column("Summary")
         table.add_column("Description")
         table.add_column("Version Id")
-        # table.add_column("Status")
+        table.add_column("Glossary")
+        table.add_column("Status")
 
         terms = g_client.find_glossary_terms(
             search_string,
@@ -98,7 +98,7 @@ def display_glossary_terms(
         style = "bright_white on black"
         if type(terms) is str:
             return table
-
+        glossary_info = {}
         for term in sorted_terms:
             props = term.get("glossaryTermProperties", "None")
             if props == "None":
@@ -113,19 +113,31 @@ def display_glossary_terms(
             description = Text(props.get("description", " "), style=style)
             version = Text(props.get("publishVersionIdentifier", " "), style=style)
 
-            glossary_info = g_client.get_glossary_for_term(term_guid)
+            classifications = term["elementHeader"]["classifications"]
+            glossary_guid = None
+            for c in classifications:
+                if c["classificationName"] == "Anchors":
+                    glossary_guid = c["classificationProperties"]["anchorGUID"]
 
-            glossary_name = glossary_info["glossaryProperties"].get("displayName", " ")
+            if glossary_guid and glossary_guid in glossary_info:
+                glossary_name = glossary_info[glossary_guid]
+            elif glossary_guid:
+                g = g_client.get_glossary_for_term(term_guid)
+                glossary_name = g["glossaryProperties"].get("displayName", "---")
+                glossary_info[glossary_guid] = glossary_name
+            else:
+                glossary_name = "---"
 
+            term_status = term["elementHeader"]["status"]
             table.add_row(
                 display_name,
                 q_name,
-                glossary_name,
                 abbrev,
                 summary,
                 description,
                 version,
-                # status,
+                glossary_name,
+                term_status,
                 style="bold white on black",
             )
 
@@ -133,10 +145,6 @@ def display_glossary_terms(
         return table
 
     try:
-        # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-        #     while True:
-        #         time.sleep(2)
-        #         live.update(generate_table(search_string))
         console = Console(
             style="bold bright_white on black", width=width, force_terminal=not jupyter
         )

@@ -24,6 +24,7 @@ from commands.cat.glossary_actions import (
     create_term,
     load_terms,
     list_glossaries,
+    export_terms,
 )
 from commands.cat.list_archives import display_archive_list
 from commands.cat.list_assets import display_assets
@@ -575,6 +576,7 @@ tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
 tell.add_command(load_terms)
+tell.add_command(export_terms)
 
 
 @tell.group("survey")

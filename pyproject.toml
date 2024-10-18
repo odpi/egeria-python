@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "1.5.1.1.11"
+version = "1.5.1.1.14"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -75,6 +75,7 @@ pytest = "^8.2.2"
     create_term = "commands.cat.glossary_actions:create_term"
     list_glossaries = "commands.cat.glossary_actions:list_glossaries"
     load_terms_from_file = "commands.cat.glossary_actions:load_terms"
+    export_terms_to_file = "commands.cat.glossary_actions:export_terms"
 
     monitor_asset_events = "commands.ops.monitor_asset_events:main"
     monitor_coco_status = "commands.ops.monitor_coco_status:main"
