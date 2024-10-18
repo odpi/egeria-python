@@ -20,7 +20,7 @@ from commands.cat.get_tech_type_elements import tech_viewer
 from commands.cat.get_tech_type_template import template_viewer
 from commands.cat.list_assets import display_assets
 from commands.cat.list_cert_types import display_certifications
-from commands.cat.list_glossary import display_glossary_terms
+from commands.cat.list_terms import display_glossary_terms
 from commands.cat.list_projects import display_project_list
 from commands.cat.list_relationships import list_relationships
 from commands.cat.list_tech_types import display_tech_types
@@ -37,7 +37,13 @@ from commands.cat.list_deployed_database_schemas import (
 )
 from commands.cat.list_deployed_catalogs import list_deployed_catalogs
 from commands.cat.list_deployed_databases import list_deployed_databases
-from commands.cat.glossary_actions import create_glossary, delete_glossary, create_term
+from commands.cat.glossary_actions import (
+    create_glossary,
+    delete_glossary,
+    list_glossaries,
+    create_term,
+    load_terms,
+)
 from commands.my.todo_actions import (
     mark_todo_complete,
     reassign_todo,
@@ -965,6 +971,8 @@ def list_databases(ctx):
     )
 
 
+show.add_command(list_glossaries)
+
 #
 #  Catalog User: Tell
 #
@@ -984,6 +992,7 @@ tell.add_command(mark_todo_complete)
 tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
+tell.add_command(load_terms)
 
 
 @tell.group("survey")

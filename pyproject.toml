@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "1.5.1.0.21"
+version = "1.5.1.1.11"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -56,7 +56,7 @@ pytest = "^8.2.2"
     list_tech_types = "commands.cat.list_tech_types:main"
     get_asset_graph = "commands.cat.get_asset_graph:main"
     get_collection = "commands.cat.get_collection:main"
-    list_glossary = "commands.cat.list_glossary:main"
+    list_terms = "commands.cat.list_terms:main"
     get_tech_type_elements = "commands.cat.get_tech_type_elements:main"
     get_tech_type_template = "commands.cat.get_tech_type_template:main"
     list_projects = "commands.cat.list_projects:main"
@@ -73,6 +73,8 @@ pytest = "^8.2.2"
     create_glossary = "commands.cat.glossary_actions:create_glossary"
     delete_glossary = "commands.cat.glossary_actions:delete_glossary"
     create_term = "commands.cat.glossary_actions:create_term"
+    list_glossaries = "commands.cat.glossary_actions:list_glossaries"
+    load_terms_from_file = "commands.cat.glossary_actions:load_terms"
 
     monitor_asset_events = "commands.ops.monitor_asset_events:main"
     monitor_coco_status = "commands.ops.monitor_coco_status:main"

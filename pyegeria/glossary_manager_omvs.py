@@ -8,7 +8,11 @@ added in subsequent versions of the glossary_omvs module.
 """
 import asyncio
 import time
+import csv
 from datetime import datetime
+from typing import List
+
+from pyegeria import InvalidParameterException
 
 # import json
 from pyegeria._client import Client
@@ -60,6 +64,11 @@ class GlossaryManager(GlossaryBrowser):
     #
     #       Get Valid Values for Enumerations
     #
+
+    def __validate_term_status__(self, status: str) -> bool:
+        """Return True if the status is a legal glossary term status"""
+        recognized_term_status = {"DRAFT", "ACTIVE", "DEPRACATED", "OBSOLETE", "OTHER"}
+        return status in recognized_term_status
 
     async def _async_create_glossary(
         self,
@@ -1335,6 +1344,8 @@ class GlossaryManager(GlossaryBrowser):
         """
 
         validate_guid(glossary_guid)
+        if self.__validate_term_status__(body["initialStatus"]) is False:
+            raise InvalidParameterException("Bad status value")
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
@@ -1407,28 +1418,114 @@ class GlossaryManager(GlossaryBrowser):
 
     def load_terms_from_file(
         self, glossary_name: str, filename: str, upsert: bool = False
-    ) -> str:
+    ) -> List[dict]:
         """This method loads glossary terms into the specified glossary from the indicated file."""
         # Check that glossary exists and get guid
         glossaries = self.get_glossaries_by_name(glossary_name)
         if type(glossaries) is not list:
             return "Unknown glossary"
         if len(glossaries) > 1:
+            glossary_error = (
+                "Multiple glossaries found - please use a qualified name from below\n"
+            )
             for g in glossaries:
-                glossary_error = (
-                    "Multiple glossaries found - please use the qualified name\n"
-                )
                 glossary_error += (
                     f"Display Name: {g['glossaryProperties']['displayName']}\tQualified Name:"
                     f" {g['glossaryProperties']['qualifiedName']}\n"
                 )
-                return glossary_error
+            raise InvalidParameterException(glossary_error)
+            sys.exit(1)
+
+        # Now we know we have a single glossary so we can get the guid
         glossary_guid = glossaries[0]["elementHeader"]["guid"]
 
-        # Open file
+        term_properties = {
+            "Term Name",
+            "Qualified Name",
+            "Abbreviation",
+            "Summary",
+            "Description",
+            "Examples",
+            "Usage",
+            "Version Identifier",
+            "Status",
+        }
+        # process file
+        with open(filename, mode="r") as file:
+            # Create a CSV reader object
+            csv_reader = csv.DictReader(file)
+            headers = csv_reader.fieldnames
+            term_info = []
+            # check that the column headers are known
+            if all(header in term_properties for header in headers) is False:
+                raise InvalidParameterException("Invalid headers in CSV File")
+                sys.exit(1)
 
-        # Insert terms into glossary
-        pass
+            # process each row
+            for row in csv_reader:
+                term_name = row.get("Term Name", None)
+                qualified_name = row.get("Qualified Name", None)
+                abbrev = row.get("Abbreviation", None)
+                summary = row.get("Summary", None)
+                description = row.get("Description", None)
+                examples = row.get("Examples", None)
+                usage = row.get("Usage", None)
+                version = row.get("Version Identifier", "1.0")
+                status = row.get("Status", "DRAFT").upper()
+
+                # process the row
+                if len(term_name) < 2:
+                    term_info.append(
+                        {
+                            "term_name": "---",
+                            "qualified_name": "---",
+                            "term_guid": "---",
+                            "error": "missing or invalid term names - skipping",
+                        }
+                    )
+                    continue
+                if self.__validate_term_status__(status) is False:
+                    term_info.append(
+                        {
+                            "term_name": "---",
+                            "qualified_name": "---",
+                            "term_guid": "---",
+                            "error": "invalid term status",
+                        }
+                    )
+                    continue
+
+                body = {
+                    "class": "ReferenceableRequestBody",
+                    "elementProperties": {
+                        "class": "GlossaryTermProperties",
+                        "qualifiedName": f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}",
+                        "displayName": term_name,
+                        "summary": summary,
+                        "description": description,
+                        "abbreviation": abbrev,
+                        "examples": examples,
+                        "usage": usage,
+                        "publishVersionIdentifier": version,
+                    },
+                    "initialStatus": status,
+                }
+
+                # if upsert:
+                #     if len(qualified_name) > 5:
+                #         existing_term =
+                # Add the term
+                term_guid = self.create_controlled_glossary_term(
+                    glossary_guid, body_slimmer(body)
+                )
+                term_info.append(
+                    {
+                        "term_name": term_name,
+                        "qualified_name": qualified_name,
+                        "term_guid": term_guid,
+                    }
+                )
+        return term_info
 
     async def _async_create_term_copy(
         self,
