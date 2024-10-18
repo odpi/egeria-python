@@ -49,7 +49,6 @@ def list_templates(
     tech_info_list: dict = []
 
     if type(tech_list) is list:
-        entry = {}
         for item in tech_list:
             if "deployedImplementationType" not in item["qualifiedName"]:
                 continue
@@ -66,7 +65,8 @@ def list_templates(
                 for template in templates:
                     t_list.append({"template": template["name"]})
                 entry[details["name"]] = t_list
-                print(json.dumps(entry, indent=2))
+                tech_info_list.append(entry)
+    return tech_info_list
 
 
 def display_templates_spec(
@@ -194,8 +194,8 @@ def main():
         search_string = Prompt.ask(
             "Enter the technology you are searching for:", default="*"
         )
-        display_templates_spec(search_string, server, url, userid, password)
-        # list_templates(search_string, server, url, userid, password)
+        # display_templates_spec(search_string, server, url, userid, password)
+        list_templates(search_string, server, url, userid, password)
     except KeyboardInterrupt:
         pass
 

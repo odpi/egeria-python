@@ -68,15 +68,17 @@ def display_glossary_terms(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Glossary View Server '{server}' @ Platform - {url}",
+            caption=f"View Server '{server}' @ Platform - {url}",
             expand=True,
         )
-        table.add_column("Display Name")
-        table.add_column("Qualified Name")
-
+        table.add_column("Term Name")
+        table.add_column("Qualified Name / GUID")
+        table.add_column("Glossary")
         table.add_column("Abbreviation")
         table.add_column("Summary")
         table.add_column("Description")
+        table.add_column("Version Id")
+        # table.add_column("Status")
 
         terms = g_client.find_glossary_terms(
             search_string,
@@ -103,17 +105,27 @@ def display_glossary_terms(
                 return table
 
             display_name = Text(props["displayName"], style=style)
-            qualified_name = Text(props["qualifiedName"], style=style)
+            qualified_name = props["qualifiedName"]
+            term_guid = term["elementHeader"]["guid"]
+            q_name = Text(f"{qualified_name}\n\t\t\t&\n{term_guid}", style=style)
             abbrev = Text(props.get("abbreviation", " "), style=style)
             summary = Text(props.get("summary", " "), style=style)
             description = Text(props.get("description", " "), style=style)
+            version = Text(props.get("publishVersionIdentifier", " "), style=style)
+
+            glossary_info = g_client.get_glossary_for_term(term_guid)
+
+            glossary_name = glossary_info["glossaryProperties"].get("displayName", " ")
 
             table.add_row(
                 display_name,
-                qualified_name,
+                q_name,
+                glossary_name,
                 abbrev,
                 summary,
                 description,
+                version,
+                # status,
                 style="bold white on black",
             )
 

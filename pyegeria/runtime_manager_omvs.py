@@ -59,15 +59,27 @@ class RuntimeManager(Client):
         )
 
     async def __async__get_guid__(
-        self, guid: str = None, name: str = None, property_name: str = "qualifiedName"
+        self,
+        guid: str = None,
+        name: str = None,
+        property_name: str = "qualifiedName",
+        tech_type: str = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid or server_name should
         contain information. If both are None, an exception will be thrown. If both contain
-        values, server_guid will be used. Async version.
+        values, server_guid will be used. If the tech_type is supplied and the property_name is qualifiedName
+        then the name will be pre-pended with the tech_type name to form a qualifiedName.
+
+        An InvalidParameter Exception is thrown if multiple matches
+        are found for the given property name. If this occurs, use a qualified name for the property name.
+        Async version.
         """
         if guid:
             return guid
         if name:
+            if (tech_type) and (property_name == "qualifiedName"):
+                name = f"{tech_type}:{name}"
+
             body = {
                 "class": "NameRequestBody",
                 "name": name,
@@ -92,15 +104,23 @@ class RuntimeManager(Client):
             )
 
     def __get_guid__(
-        self, guid: str = None, name: str = None, property_name: str = "qualifiedName"
+        self,
+        guid: str = None,
+        name: str = None,
+        property_name: str = "qualifiedName",
+        tech_type: str = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid or server_name should
         contain information. If both are None, an exception will be thrown. If both contain
-        values, server_guid will be used.
+        values, server_guid will be used. If the tech_type is supplied and the property_name is qualifiedName
+        then the name will be pre-pended with the tech_type name to form a qualifiedName.
+
+        An InvalidParameter Exception is thrown if multiple matches
+        are found for the given property name. If this occurs, use a qualified name for the property name.
         """
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(
-            self.__async__get_guid__(guid, name, property_name)
+            self.__async__get_guid__(guid, name, property_name, tech_type)
         )
         return result
 
@@ -111,7 +131,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_name: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -124,8 +144,8 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
 
@@ -140,7 +160,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_qualified_name)
         url = (
             f"{self.runtime_command_root}/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/connect"
@@ -149,7 +169,10 @@ class RuntimeManager(Client):
         return
 
     def connect_to_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None
+        self,
+        cohort_name: str,
+        server_guid: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -162,8 +185,8 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
 
@@ -180,12 +203,17 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_connect_to_cohort(cohort_name, server_guid, server_name)
+            self._async_connect_to_cohort(
+                cohort_name, server_guid, server_qualified_name
+            )
         )
         return
 
     async def _async_disconnect_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None
+        self,
+        cohort_name: str,
+        server_guid: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """Disconnect communications from a specific cohort.  Async version.
 
@@ -195,8 +223,8 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
 
@@ -211,7 +239,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_qualified_name)
         url = (
             f"{self.runtime_command_root}/runtime-manager/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/disconnect"
@@ -220,7 +248,10 @@ class RuntimeManager(Client):
         return
 
     def disconnect_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None
+        self,
+        cohort_name: str,
+        server_guid: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """Disconnect communications from a specific cohort.
 
@@ -230,8 +261,8 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
 
@@ -248,12 +279,17 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_disconnect_from_cohort(cohort_name, server_guid, server_name)
+            self._async_disconnect_from_cohort(
+                cohort_name, server_guid, server_qualified_name
+            )
         )
         return
 
     async def _async_unregister_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None
+        self,
+        cohort_name: str,
+        server_guid: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.  Async version.
 
@@ -263,8 +299,8 @@ class RuntimeManager(Client):
         ----------
          server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
 
@@ -279,7 +315,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_qualified_name)
         url = (
             f"{self.runtime_command_root}/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/unregister"
@@ -288,7 +324,10 @@ class RuntimeManager(Client):
         return
 
     def unregister_from_cohort(
-        self, cohort_name: str, server_guid: str = None, server_name: str = None
+        self,
+        cohort_name: str,
+        server_guid: str = None,
+        server_qualified_name: str = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.
             https://egeria-project.org/concepts/cohort-member/
@@ -297,8 +336,8 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+        server_qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
 
@@ -315,7 +354,9 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_disconnect_from_cohort(cohort_name, server_guid, server_name)
+            self._async_disconnect_from_cohort(
+                cohort_name, server_guid, server_qualified_name
+            )
         )
         return
 
@@ -357,7 +398,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_name, "name")
         url = (
             f"{self.runtime_command_root}/engine-hosts/"
             f"{server_guid}/governance_engines/{gov_engine_name}/refresh-config"
@@ -436,7 +477,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Integration Daemon"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
@@ -518,7 +561,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Connection"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
@@ -618,7 +663,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Connection"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/{connector_name}/endpoint-network-address"
@@ -705,7 +752,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Integration Daemon"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/refresh"
@@ -788,7 +837,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Integration Daemon"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-connectors/restart"
@@ -873,7 +924,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Integration Daemon"
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
@@ -957,7 +1010,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_name, "name")
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-daemons/{server_guid}/open-lineage-events/publish"
@@ -1038,7 +1091,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Metadata Access Store"
+        )
         url = (
             f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/"
             f"archive-content"
@@ -1129,7 +1184,9 @@ class RuntimeManager(Client):
 
         """
         server_name = f"Metadata Access Server:{server_name}"
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "qualifiedName", "Metadata Access Store"
+        )
         url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
 
         await self._async_make_request(
@@ -1209,7 +1266,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_name, "name")
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}"
 
         await self._async_make_request("DELETE", url)
@@ -1274,7 +1331,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_name, "name")
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
         await self._async_make_request("POST", url, time_out=timeout)
@@ -1339,7 +1396,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(server_guid, server_name, "name")
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
         await self._async_make_request("DELETE", url)
@@ -1674,7 +1731,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        platform_guid = self.__get_guid__(platform_guid, platform_name)
+        platform_guid = self.__get_guid__(platform_guid, platform_name, "name")
         url = f"{self.runtime_command_root}/platforms/{platform_guid}/report"
 
         response = await self._async_make_request("GET", url)
@@ -1778,7 +1835,6 @@ class RuntimeManager(Client):
     async def _async_get_server_by_guid(
         self,
         server_guid: str = None,
-        server_name: str = None,
         effective_time: str = None,
     ) -> str | dict:
         """Returns details about the server's catalog entry (asset). Async version.
@@ -1802,7 +1858,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+
         url = f"{self.runtime_command_root}/software-servers/{server_guid}"
 
         if effective_time is not None:
@@ -1817,7 +1873,6 @@ class RuntimeManager(Client):
     def get_server_by_guid(
         self,
         server_guid: str = None,
-        server_name: str = None,
         effective_time: str = None,
     ) -> str | dict:
         """Returns details about the platform's catalog entry (asset).
@@ -1843,7 +1898,7 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_server_by_guid(server_guid, server_name, effective_time)
+            self._async_get_server_by_guid(server_guid, effective_time)
         )
         return response
 
@@ -2135,7 +2190,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name)
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "name", tech_type="OMAG Server"
+        )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
         response = await self._async_make_request("GET", url)

@@ -7,14 +7,21 @@ Copyright Contributors to the ODPi Egeria project.
 Execute Glossary actions.
 
 """
+import csv
+import json
 import os
 import sys
 import time
 from datetime import datetime
+from rich import box
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.text import Text
 
 import click
 
-# from ops_config import Config, pass_config
+
 from pyegeria import EgeriaTech, body_slimmer
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -38,6 +45,8 @@ EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 200)
+EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
 
 
 @click.command("create-glossary")
@@ -86,8 +95,81 @@ def create_glossary(
                 )
             sys.exit(0)
 
-        glossary_guid = m_client.create_glossary(name, language, description, usage)
+        glossary_guid = m_client.create_glossary(name, description, language, usage)
         print(f"New glossary {name} created with id of {glossary_guid}")
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("list-glossaries")
+@click.option("--search-string", default="*", help="Glossaries to search for")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.option(
+    "--jupyter",
+    is_flag=True,
+    default=False,
+    envvar="EGERIA_JUPYTER",
+    help="Enable for rendering in a Jupyter terminal",
+)
+@click.option(
+    "--width",
+    default=200,
+    envvar="EGERIA_WIDTH",
+    help="Screen width, in characters, to use",
+)
+def list_glossaries(
+    search_string, server, url, userid, password, timeout, jupyter, width
+):
+    """List all glossaries"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        table = Table(
+            title=f"Glossary List @ {time.asctime()}",
+            style="bright_white on black",
+            header_style="bright_white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
+            show_lines=True,
+            box=box.ROUNDED,
+            caption=f"View Server '{server}' @ Platform - {url}",
+            expand=True,
+        )
+        table.add_column("Glossary Name")
+        table.add_column("Qualified Name / GUID")
+        table.add_column("Language")
+        table.add_column("Description")
+        table.add_column("Usage")
+
+        glossaries = m_client.find_glossaries(search_string)
+        if type(glossaries) is list:
+            sorted_glossary_list = sorted(
+                glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
+            )
+            for glossary in sorted_glossary_list:
+                display_name = glossary["glossaryProperties"]["displayName"]
+                qualified_name = glossary["glossaryProperties"]["qualifiedName"]
+                guid = glossary["elementHeader"]["guid"]
+                q_name = f"{qualified_name}\n\n{guid}"
+                language = glossary["glossaryProperties"]["language"]
+                description = glossary["glossaryProperties"]["description"]
+                usage = glossary["glossaryProperties"]["usage"]
+                table.add_row(display_name, q_name, language, description, usage)
+            console = Console(
+                style="bold bright_white on black",
+                width=width,
+                force_terminal=not jupyter,
+            )
+            console.print(table)
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
@@ -111,7 +193,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     try:
         m_client.delete_to_do(glossary_guid)
 
-        click.echo(f"Deleted Todo item {glossary_guid}")
+        click.echo(f"Deleted glossary: {glossary_guid}")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
@@ -156,7 +238,6 @@ def create_term(
     url,
     userid,
     password,
-    timeout,
     glossary_name,
     term_name,
     summary,
@@ -166,7 +247,8 @@ def create_term(
     usage,
     version,
     status,
-):
+    timeout: int = 120,
+) -> str:
     """Create a new term"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
@@ -175,7 +257,7 @@ def create_term(
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryTermProperties",
-                "qualifiedName": f"GlossaryTerm: {term_name} : {datetime.now().isoformat()}",
+                "qualifiedName": f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}",
                 "displayName": term_name,
                 "summary": summary,
                 "description": description,
@@ -205,6 +287,43 @@ def create_term(
         click.echo(
             f"Successfully created term {term_name} with GUID {term_guid}, in glossary {glossary_name}.\n"
         )
+        return term_guid
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("load-terms-from-file")
+@click.option("--glossary-name", help="Name of Glossary", required=True)
+@click.option("--file-name", help="Path of CSV file", required=True)
+@click.option(
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="If set, result descriptions are provided",
+)
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def load_terms(
+    glossary_name, file_name, verbose, server, url, userid, password, timeout
+):
+    """Delete the glossary specified"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        result = m_client.load_terms_from_file(glossary_name, file_name)
+
+        click.echo(
+            f"Loaded terms from  into glossary: {glossary_name} from {file_name}"
+        )
+        if verbose:
+            print(f"\n Verbose output:\n{json.dumps(result, indent = 2)}")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
