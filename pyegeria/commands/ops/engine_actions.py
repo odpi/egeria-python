@@ -98,7 +98,7 @@ def start_server(ctx, server):
         p_client.close_session()
 
 
-@click.command("refresh-gov-eng-config")
+@click.command("refresh")
 @click.pass_context
 # @click.option(
 #     "--engine-host", default=EGERIA_ENGINE_HOST, help="Engine Host to refresh"

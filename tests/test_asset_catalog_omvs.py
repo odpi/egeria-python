@@ -105,7 +105,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server: str = good_view_server_1):
         try:
             server_name = server
-            asset_guid = "cbb54dc4-a0b1-446a-8bb4-f3b3070c8ef3"
+            asset_guid = "8285b149-5419-4cee-94d2-12eae983c605"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -118,6 +118,66 @@ class TestAssetCatalog:
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} assets")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_get_asset_lineage_graph(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            asset_guid = "8285b149-5419-4cee-94d2-12eae983c605"
+            a_client = AssetCatalog(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            response = a_client.get_asset_lineage_graph(asset_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} pieces")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_get_asset_lineage_mermaid_graph(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            asset_guid = "8285b149-5419-4cee-94d2-12eae983c605"
+            a_client = AssetCatalog(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            response = a_client.get_asset_lineage_mermaid_graph(asset_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} pieces")
             elif type(response) is str:
                 print("\n\n" + response)
             assert True

@@ -506,6 +506,116 @@ class AssetCatalog(Client):
         )
         return response
 
+    async def _async_get_asset_lineage_graph(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+    ) -> str | dict:
+        """Return the asset lineage including a mermaid markdown string. Async Version.
+         Parameters
+         ----------
+         asset_guid : str
+             The unique identity of the asset to get the graph for.
+
+         start_from : int, optional
+             The index from which to start fetching the engine actions. Default is 0.
+
+         page_size : int, optional
+             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+         Returns
+         -------
+        str | dict
+             A dictionary of the asset graph that includes a mermaid markdown string.
+
+         Raises:
+         ------
+         InvalidParameterException
+         PropertyServerException
+         UserNotAuthorizedException
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
+            f"as-lineage-graph?startFrom={start_from}&pageSize={page_size}"
+        )
+
+        response = await self._async_make_request("POST", url)
+        return response.json().get("assetLineageGraph", "no asset found")
+
+    def get_asset_lineage_graph(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+    ) -> str | dict:
+        """Return the asset lineage including a mermaid markdown string. Async Version.
+         Parameters
+         ----------
+         asset_guid : str
+             The unique identity of the asset to get the graph for.
+
+         start_from : int, optional
+             The index from which to start fetching the engine actions. Default is 0.
+
+         page_size : int, optional
+             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+         Returns
+         -------
+        dict or str
+             A dictionary of the asset graph.
+
+         Raises:
+         ------
+         InvalidParameterException
+         PropertyServerException
+         UserNotAuthorizedException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_asset_lineage_graph(asset_guid, start_from, page_size)
+        )
+        return response
+
+    def get_asset_lineage_mermaid_graph(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+    ) -> str:
+        """Return the lineage as mermaid markdown string. Async Version.
+         Parameters
+         ----------
+         asset_guid : str
+             The unique identity of the asset to get the graph for.
+
+         start_from : int, optional
+             The index from which to start fetching the engine actions. Default is 0.
+
+         page_size : int, optional
+             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+         Returns
+         -------
+        str
+             A mermaid string representing the lineage.
+
+         Raises:
+         ------
+         InvalidParameterException
+         PropertyServerException
+         UserNotAuthorizedException
+
+        """
+
+        asset_graph = self.get_asset_lineage_graph(asset_guid, start_from, page_size)
+        return asset_graph.get("mermaidGraph")
+
     async def _async_get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
