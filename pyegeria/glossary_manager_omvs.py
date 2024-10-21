@@ -1577,13 +1577,24 @@ class GlossaryManager(GlossaryBrowser):
 
             # process each row
             for row in csv_reader:
+                # Parse the file. When the value '---' is encountered, make the value None.
                 term_name = row.get("Term Name", None)
                 qualified_name = row.get("Qualified Name", None)
-                abbrev = row.get("Abbreviation", None)
-                summary = row.get("Summary", None)
-                description = row.get("Description", None)
-                examples = row.get("Examples", None)
-                usage = row.get("Usage", None)
+                abbrev_in = row.get("Abbreviation", None)
+                abbrev = None if abbrev_in == "---" else abbrev_in
+
+                summary_in = row.get("Summary", None)
+                summary = None if summary_in == "---" else summary_in
+
+                description_in = row.get("Description", None)
+                description = None if description_in == "---" else description_in
+
+                examples_in = row.get("Examples", None)
+                examples = None if examples_in == "---" else examples_in
+
+                usage_in = row.get("Usage", None)
+                usage = None if usage_in == "---" else usage_in
+
                 version = row.get("Version Identifier", "1.0")
                 status = row.get("Status", "DRAFT")
                 status = status.upper()
@@ -1727,12 +1738,14 @@ class GlossaryManager(GlossaryBrowser):
             for term in term_list:
                 term_name = term["glossaryTermProperties"]["displayName"]
                 qualified_name = term["glossaryTermProperties"]["qualifiedName"]
-                abbrev = term["glossaryTermProperties"]["abbreviation"]
-                summary = term["glossaryTermProperties"]["summary"]
-                description = term["glossaryTermProperties"]["description"]
-                examples = term["glossaryTermProperties"]["examples"]
-                usage = term["glossaryTermProperties"]["usage"]
-                version = term["glossaryTermProperties"]["publishVersionIdentifier"]
+                abbrev = term["glossaryTermProperties"].get("abbreviation", "---")
+                summary = term["glossaryTermProperties"].get("summary", "---")
+                description = term["glossaryTermProperties"].get("description", "---")
+                examples = term["glossaryTermProperties"].get("examples", "---")
+                usage = term["glossaryTermProperties"].get("usage", "---")
+                version = term["glossaryTermProperties"].get(
+                    "publishVersionIdentifier", "---"
+                )
                 status = term["elementHeader"]["status"]
 
                 csv_writer.writerow(
