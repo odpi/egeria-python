@@ -500,7 +500,7 @@ def show_todos(ctx):
     )
 
 
-@show.command("list-archives")
+@show.command("archives")
 @click.pass_context
 def list_archives(ctx):
     """Display a tree graph of information about an asset"""
@@ -516,7 +516,7 @@ def list_archives(ctx):
     )
 
 
-@show.command("list-schemas")
+@show.command("server-schemas")
 @click.option("--catalog", default="*", help="What database or catalog to search")
 @click.pass_context
 def list_deployed_schemas(ctx, catalog):
@@ -533,7 +533,7 @@ def list_deployed_schemas(ctx, catalog):
     )
 
 
-@show.command("list-catalogs")
+@show.command("catalogs")
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
 def list_catalogs(ctx, search_server):
@@ -550,10 +550,10 @@ def list_catalogs(ctx, search_server):
     )
 
 
-@show.command("list-glossaries")
+@show.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
-def list_glossaries(ctx, search_string):
+def glossaries(ctx, search_string):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_glossaries(
@@ -567,7 +567,7 @@ def list_glossaries(ctx, search_string):
     )
 
 
-@show.command("list-databases")
+@show.command("databases")
 @click.pass_context
 def list_databases(ctx):
     """Display a tree graph of information about an asset"""
@@ -608,19 +608,19 @@ def survey(ctx):
     pass
 
 
-@survey.command("survey-uc-server")
-@click.pass_context
-@click.option(
-    "--uc_endpoint",
-    default="https://localhost:8080",
-    help="Endpoint of the Unity Catalog Server to Survey",
-)
-def survey_uc_server(ctx, uc_endpoint):
-    """Survey the Unity Catalog server at the given endpoint"""
-    c = ctx.obj
-    pass
-    # restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
-    #                   c.userid, c.password)
+# @survey.command("survey-uc-server")
+# @click.pass_context
+# @click.option(
+#     "--uc_endpoint",
+#     default="https://localhost:8080",
+#     help="Endpoint of the Unity Catalog Server to Survey",
+# )
+# def survey_uc_server(ctx, uc_endpoint):
+#     """Survey the Unity Catalog server at the given endpoint"""
+#     c = ctx.obj
+#     pass
+#     # restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
+#     #                   c.userid, c.password)
 
 
 if __name__ == "__main__":

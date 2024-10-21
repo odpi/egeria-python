@@ -1577,7 +1577,7 @@ class GlossaryManager(GlossaryBrowser):
 
             # process each row
             for row in csv_reader:
-                # Parse the file. When the value '---' is encountered, make the value None.
+                # Parse the file. When the value '---' is encountered, make the value None.git+https:
                 term_name = row.get("Term Name", None)
                 qualified_name = row.get("Qualified Name", None)
                 abbrev_in = row.get("Abbreviation", None)
