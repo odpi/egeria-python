@@ -453,7 +453,7 @@ def refresh_connectors(ctx, server, connector):
 @click.option(
     "--server",
     default="integration-daemon",
-    help="Name of the integration server to refresh",
+    help="Name of the integration server to restart",
 )
 def restart_connectors(ctx, server, connector):
     """Restart the specified integration connector or ALL connectors if not specified"""

@@ -104,7 +104,7 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str)
         print_exception_response(e)
 
 
-@click.command("refresh-gov-eng-config")
+@click.command("refresh")
 @click.pass_context
 def refresh_gov_eng_config(ctx):
     """Start or restart an engine-host from its known configuration"""

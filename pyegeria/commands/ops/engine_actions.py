@@ -116,7 +116,7 @@ def start_server(ctx, server):
 #     envvar="EGERIA_PASSWORD",
 #     help="Egeria user password",
 # )
-def refresh_gov_eng_config(ctx):
+def refresh(ctx):
     """Start or restart an engine-host from its known configuration"""
     c = ctx.obj
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)
