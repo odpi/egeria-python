@@ -16,6 +16,7 @@ from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
@@ -51,21 +52,53 @@ disable_ssl_warnings = True
 
 
 def display_gov_eng_status(
-    engine_host: str,
-    view_server: str,
-    url: str,
-    username: str,
-    user_pass: str,
-    paging: bool,
+    search_list: list[str] = ["*"],
+    engine_host: str = EGERIA_ENGINE_HOST,
+    view_server: str = EGERIA_VIEW_SERVER,
+    url: str = EGERIA_VIEW_SERVER_URL,
+    username: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
+    paging: bool = True,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
-):
+    sort: bool = True,
+) -> None:
+    """Displays the status table of the governance engines on the specified Engine Host OMAG Server
+
+    Parameters
+    ----------
+    search_list : list of str
+        List of governance engine names to search for. Defaults to ["*"] which returns all governance engines.
+    engine_host : str
+        The host name of the governance engine.
+    view_server : str
+        The name of the view server to interact with.
+    url : str
+        The URL of the view server.
+    username : str
+        Username for authentication with the view server.
+    user_pass : str
+        Password for authentication with the view server.
+    paging : bool
+        Determines whether to use a pager or live monitor for output. Defaults to True.
+    jupyter : bool
+        Specifies if the code is running in a Jupyter environment. Defaults to EGERIA_JUPYTER.
+    width : int
+        Width of the console output. Defaults to EGERIA_WIDTH.
+    sort : bool
+        Determines whether to sort the governance engine statuses. Defaults to True.
+
+    Returns
+    -------
+
+    Nothing
+    """
     console = Console(width=EGERIA_WIDTH)
 
     s_client = EgeriaTech(view_server, url, username, user_pass)
     token = s_client.create_egeria_bearer_token()
 
-    def generate_table() -> Table:
+    def generate_table(search_list: list[str]) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Governance Engine Status @ {time.asctime()}",
@@ -86,14 +119,25 @@ def display_gov_eng_status(
         table.add_column("Engine Status")
         table.add_column("Request Types")
 
-        eng_host_guid = s_client.get_guid_for_name(engine_host)
-        gov_eng_status = s_client.get_server_report(eng_host_guid)
-        eng_summaries = gov_eng_status["governanceEngineSummaries"]
-        sorted_gov_eng_status = sorted(
-            eng_summaries, key=lambda k: k.get("governanceEngineName", " ")
+        # eng_host_guid = s_client.get_guid_for_name(engine_host)
+        gov_eng_status = s_client.get_server_report(
+            server_guid=None, server_name=engine_host
         )
-        for engine in sorted_gov_eng_status:
+        eng_summaries = gov_eng_status["governanceEngineSummaries"]
+
+        if sort is True:
+            engine_info = sorted(
+                eng_summaries, key=lambda k: k.get("governanceEngineName", " ")
+            )
+        else:
+            engine_info = eng_summaries
+
+        for engine in engine_info:
             gov_eng = engine["governanceEngineName"]
+
+            if (gov_eng not in search_list) and (search_list != ["*"]):
+                # if specific engines are requested and it doesn't match, then skip
+                continue
             eng_type = engine.get("governanceEngineTypeName", " ")
 
             eng_desc = engine.get("governanceEngineDescription", " ")
@@ -115,24 +159,23 @@ def display_gov_eng_status(
 
             table.add_row(gov_eng, eng_type, eng_desc, eng_status, eng_req_type_out)
 
-        table.caption = f"Server {engine_host} running on {url}"
         return table
 
     try:
         if paging is True:
             console = Console(width=width, force_terminal=not jupyter)
             with console.pager():
-                console.print(generate_table())
+                console.print(generate_table(search_list))
         else:
             with Live(
-                generate_table(),
+                generate_table(search_list),
                 refresh_per_second=1,
                 screen=True,
                 vertical_overflow="visible",
             ) as live:
                 while True:
                     time.sleep(2)
-                    live.update(generate_table())
+                    live.update(generate_table(search_list))
 
     except (
         InvalidParameterException,
@@ -157,7 +200,7 @@ def main_live():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
-    parser.add_argument("--paging", help="Paging")
+    # parser.add_argument("--paging", help="Paging")
     args = parser.parse_args()
 
     engine_host = (
@@ -169,8 +212,15 @@ def main_live():
     url = args.url if args.url is not None else EGERIA_ENGINE_HOST_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    paging = args.paging if args.paging is not None else False
-    display_gov_eng_status(engine_host, view_server, url, userid, user_pass, paging)
+    paging = False
+
+    search_list = Prompt.ask(
+        "Enter the list of engines you are interested in or ['*'] for all",
+        default=["*"],
+    )
+    display_gov_eng_status(
+        search_list, engine_host, view_server, url, userid, user_pass, paging
+    )
 
 
 def main_paging():
@@ -193,9 +243,14 @@ def main_paging():
     url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    paging = True
+    search_list = Prompt.ask(
+        "Enter the list of engines you are interested in or ['*'] for all",
+        default=["*"],
+    )
 
     display_gov_eng_status(
-        engine_host, view_server, url, userid, user_pass, paging=True
+        search_list, engine_host, view_server, url, userid, user_pass, paging
     )
 
 

@@ -88,88 +88,28 @@ def create_glossary(
 
         existing_glossary = m_client.find_glossaries(name)
         if type(existing_glossary) is list:
-            click.echo(f"\nFound {len(existing_glossary)} existing Glossaries\n")
+            click.echo(
+                f"\nFound {len(existing_glossary)} existing Glossaries with a similar name!\n"
+            )
             for glossary in existing_glossary:
-                click.echo(
-                    f"\tFound glossary: {glossary['glossaryProperties']['qualifiedName']} with id of {glossary['elementHeader']['guid']}\n"
-                )
-            sys.exit(0)
+                if (
+                    glossary["glossaryProperties"]["qualifiedName"]
+                    == "Glossary:" + name
+                ):
+                    click.echo(
+                        (
+                            f"\tFound existing glossary: {glossary['glossaryProperties']['qualifiedName']} with id of {glossary['elementHeader']['guid']}\n"
+                            "Exiting\n"
+                        )
+                    )
+                    sys.exit(0)
+                else:
+                    click.echo(
+                        "Found glossaries with similar names but different qualifiedNames...proceeding\n"
+                    )
 
         glossary_guid = m_client.create_glossary(name, description, language, usage)
         print(f"New glossary {name} created with id of {glossary_guid}")
-
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
-    finally:
-        m_client.close_session()
-
-
-@click.command("list-glossaries")
-@click.option("--search-string", default="*", help="Glossaries to search for")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option(
-    "--jupyter",
-    is_flag=True,
-    default=False,
-    envvar="EGERIA_JUPYTER",
-    help="Enable for rendering in a Jupyter terminal",
-)
-@click.option(
-    "--width",
-    default=200,
-    envvar="EGERIA_WIDTH",
-    help="Screen width, in characters, to use",
-)
-def list_glossaries(
-    search_string, server, url, userid, password, timeout, jupyter, width
-):
-    """List all glossaries"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        table = Table(
-            title=f"Glossary List @ {time.asctime()}",
-            style="bright_white on black",
-            header_style="bright_white on dark_blue",
-            title_style="bold white on black",
-            caption_style="white on black",
-            show_lines=True,
-            box=box.ROUNDED,
-            caption=f"View Server '{server}' @ Platform - {url}",
-            expand=True,
-        )
-        table.add_column("Glossary Name")
-        table.add_column("Qualified Name / GUID")
-        table.add_column("Language")
-        table.add_column("Description")
-        table.add_column("Usage")
-
-        glossaries = m_client.find_glossaries(search_string)
-        if type(glossaries) is list:
-            sorted_glossary_list = sorted(
-                glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
-            )
-            for glossary in sorted_glossary_list:
-                display_name = glossary["glossaryProperties"]["displayName"]
-                qualified_name = glossary["glossaryProperties"]["qualifiedName"]
-                guid = glossary["elementHeader"]["guid"]
-                q_name = f"{qualified_name}\n\n{guid}"
-                language = glossary["glossaryProperties"]["language"]
-                description = glossary["glossaryProperties"]["description"]
-                usage = glossary["glossaryProperties"]["usage"]
-                table.add_row(display_name, q_name, language, description, usage)
-            console = Console(
-                style="bold bright_white on black",
-                width=width,
-                force_terminal=not jupyter,
-            )
-            console.print(table)
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
@@ -303,6 +243,12 @@ def create_term(
     default=False,
     help="If set, result descriptions are provided",
 )
+@click.option(
+    "--upsert",
+    is_flag=True,
+    default=True,
+    help="If set, terms will be updated if they exist; otherwise they would be appended",
+)
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
 @click.option(
     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
@@ -311,19 +257,52 @@ def create_term(
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def load_terms(
-    glossary_name, file_name, verbose, server, url, userid, password, timeout
+    glossary_name, file_name, verbose, upsert, server, url, userid, password, timeout
 ):
     """Delete the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        result = m_client.load_terms_from_file(glossary_name, file_name)
+        if os.path.exists(file_name):
+            print(f"Found file at: {file_name}\n")
+        else:
+            print(f"File not found at: {file_name}\n")
+            sys.exit(0)
+
+        result = m_client.load_terms_from_file(glossary_name, file_name, upsert=upsert)
 
         click.echo(
             f"Loaded terms from  into glossary: {glossary_name} from {file_name}"
         )
         if verbose:
             print(f"\n Verbose output:\n{json.dumps(result, indent = 2)}")
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("export-terms-to-file")
+@click.option("--glossary-guid", help="GUID of Glossary to export", required=True)
+@click.option("--file-name", help="Path of CSV file", required=True)
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def export_terms(glossary_guid, file_name, server, url, userid, password, timeout):
+    """Delete the glossary specified"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        result = m_client.export_glossary_to_csv(glossary_guid, file_name)
+
+        click.echo(
+            f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
+        )
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)

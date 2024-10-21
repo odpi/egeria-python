@@ -47,21 +47,41 @@ def check_if_template(header: dict) -> bool:
 
 
 def list_deployed_catalogs(
-    catalog_server: str,
-    server: str,
-    url: str,
-    username: str,
-    password: str,
+    catalog_server: str = "*",
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
+    """
+    Display the list of deployed catalogs. These could be metadata catalogs or other catalogs such as database catalogs..
+
+    Parameters
+    ----------
+    catalog_server : str, optional
+        The name of the catalog server to query. Default is "*" for all catalog servers.
+    view_server : str, optional
+        The server providing the view. Default is EGERIA_VIEW_SERVER.
+    view_url : str, optional
+        The URL of the view server. Default is EGERIA_VIEW_SERVER_URL.
+    user : str, optional
+        The user ID for authentication. Default is EGERIA_USER.
+    user_pass : str, optional
+        The password for the user. Default is EGERIA_USER_PASSWORD.
+    jupyter : bool, optional
+        Enable Jupyter notebook output. Default is EGERIA_JUPYTER.
+    width : int, optional
+        The width of the console output. Default is EGERIA_WIDTH.
+    """
+    c_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = c_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            caption=f"Databases found: {url} - {server} @ {time.asctime()}",
+            caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",

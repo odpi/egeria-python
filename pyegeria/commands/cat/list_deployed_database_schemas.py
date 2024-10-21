@@ -55,21 +55,39 @@ def make_prop_md(props: dict) -> str:
 
 
 def list_deployed_database_schemas(
-    db_name: str,
-    server: str,
-    url: str,
-    username: str,
-    password: str,
+    db_name: str = "*",
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
+    """List schemas that have been deployed in database catalogs or databases.
+    Parameters
+    ----------
+    db_name : str
+        Name of the database or catalog to get schemas for, or '*' for all databases.
+    view_server : str
+        The view server to connect to.
+    view_url : str
+        URL of the view server.
+    user : str
+        Username for authentication.
+    user_pass : str
+        Password for authentication.
+    jupyter : bool
+        Whether to force the terminal output to behave as if in a Jupyter notebook.
+    width : int
+        Width of the console output.
+    """
+    c_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = c_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            caption=f"Databases found: {url} - {server} @ {time.asctime()}",
+            caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",

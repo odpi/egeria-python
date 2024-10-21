@@ -45,15 +45,15 @@ console = Console(width=200)
 
 
 def display_status(
-    server: str,
-    url: str,
-    username: str,
-    user_pass: str,
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    r_client = RuntimeManager(server, url, username)
-    token = r_client.create_egeria_bearer_token(username, user_pass)
+    r_client = RuntimeManager(view_server, view_url, user)
+    token = r_client.create_egeria_bearer_token(user, user_pass)
 
     def generate_table() -> Table:
         """Make a new table."""

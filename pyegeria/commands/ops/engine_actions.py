@@ -7,11 +7,8 @@ Copyright Contributors to the ODPi Egeria project.
 Execute engine actions.
 
 """
-import os
 
 import click
-
-from commands.ops.monitor_engine_activity import EGERIA_ENGINE_HOST
 
 # from ops_config import Config, pass_config
 from pyegeria import EgeriaTech

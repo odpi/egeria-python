@@ -13,9 +13,9 @@ import click
 from trogon import tui
 
 # from pyegeria import ServerOps
-from commands.cli.ops_config import Config
+from pyegeria.commands.cli.ops_config import Config
 
-from commands.ops.gov_server_actions import (
+from pyegeria.commands.ops.gov_server_actions import (
     add_catalog_target,
     remove_catalog_target,
     update_catalog_target,
@@ -23,23 +23,23 @@ from commands.ops.gov_server_actions import (
     start_server,
     stop_server,
 )
-from commands.ops.list_catalog_targets import display_catalog_targets
-from commands.ops.load_archive import load_archive
-from commands.ops.monitor_engine_activity import display_engine_activity
-from commands.ops.monitor_engine_activity_c import display_engine_activity_c
-from commands.ops.monitor_gov_eng_status import display_gov_eng_status
-from commands.ops.monitor_integ_daemon_status import (
+from pyegeria.commands.ops.list_catalog_targets import display_catalog_targets
+from pyegeria.commands.ops.load_archive import load_archive
+from pyegeria.commands.ops.monitor_engine_activity import display_engine_activity
+from pyegeria.commands.ops.monitor_engine_activity_c import display_engine_activity_c
+from pyegeria.commands.ops.monitor_gov_eng_status import display_gov_eng_status
+from pyegeria.commands.ops.monitor_integ_daemon_status import (
     display_integration_daemon_status,
 )
-from commands.ops.monitor_platform_status import (
+from pyegeria.commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
-from commands.ops.monitor_server_status import (
+from pyegeria.commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
-from commands.ops.refresh_integration_daemon import refresh_connector
-from commands.ops.restart_integration_daemon import restart_connector
-from commands.ops.monitor_server_startup import display_startup_status
+from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
+from pyegeria.commands.ops.restart_integration_daemon import restart_connector
+from pyegeria.commands.ops.monitor_server_startup import display_startup_status
 
 
 # class Config(object):
@@ -271,6 +271,11 @@ def engine_host(ctx):
 
 
 @engine_host.command("status")
+@click.options(
+    "--engine-list",
+    default=["*"],
+    help="Enter the list of connectors you are interested in or ['*'] for all",
+)
 @click.option(
     "--engine-host",
     default="engine-host",
@@ -280,11 +285,12 @@ def engine_host(ctx):
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
 @click.pass_context
-def gov_eng_status(ctx, engine_host, list):
+def gov_eng_status(ctx, engine_list, engine_host, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(
-        c.engine_host,
+        engine_list,
+        engine_host,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -345,13 +351,19 @@ def integrations(ctx):
 
 @integrations.command("status")
 @click.option(
+    "--connector-list",
+    default=["*"],
+    help="Enter the list of connectors you are interested in or ['*'] for all",
+)
+@click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
 @click.pass_context
-def integrations_status(ctx, list):
+def integrations_status(ctx, connector_list, list):
     """Display integration-daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
+        connector_list,
         c.integration_daemon,
         c.integration_daemon_url,
         c.view_server,

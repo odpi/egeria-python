@@ -71,8 +71,8 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            display_name = "Test Glossary"
-            description = "A glossary used for testing"
+            display_name = "test"
+            description = "A glossary used for test"
             language = "English"
             usage = "for testing purposes only"
             response = g_client.create_glossary(
@@ -82,6 +82,45 @@ class TestGlossaryManager:
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n\nNew glossary {display_name} created with GUID of {response}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_update_glossary(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
+            start_time = time.perf_counter()
+            body = {
+                "class": "ReferenceableRequestBody",
+                "elementProperties": {
+                    "class": "GlossaryProperties",
+                    "displayName": "puddys-universe",
+                    "qualified_name": "Glossary:puddys-universe",
+                },
+            }
+
+            g_client.update_glossary(glossary_guid, body, True)
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nUpdated glossary {glossary_guid}")
             assert True
         except (
             InvalidParameterException,
@@ -152,7 +191,7 @@ class TestGlossaryManager:
                     print(
                         f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
                     )
-                    # print(json.dumps(response[i],indent = 4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
@@ -207,11 +246,11 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_name = "Sustainability Glossary"
+            glossary_name = "puddys-universe"
 
             response = g_client.get_glossaries_by_name(glossary_name)
             print(f"type is {type(response)}")
-            if type(response) is dict:
+            if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
 
             elif type(response) is str:
@@ -281,7 +320,7 @@ class TestGlossaryManager:
             # glossary_guid = (
             #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
             # )
-            glossary_guid = None
+            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
 
             start_time = time.perf_counter()
             response = g_client.get_terms_for_glossary(
@@ -308,6 +347,36 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_export_glossary_to_csv(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
+            file_name = f"/Users/dwolfson/localGit/test_export-{glossary_guid}.csv"
+            response = g_client.export_glossary_to_csv(glossary_guid, file_name)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nExported {response} rows to {file_name}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
     def test_get_glossary_for_term(self, server: str = good_view_server_1):
         server_name = server
 
@@ -317,7 +386,7 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "ae936fe7-88d7-4f00-a888-d5fcd637fd02"
+            term_guid = "5467f5d4-d821-4fc2-ad71-8af7181826ff"
             response = g_client.get_glossary_for_term(term_guid)
 
             print(f"type is {type(response)}")
@@ -347,9 +416,9 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Facility"
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
-            response = g_client.get_terms_by_name(term_name, glossary_guid, ["ACTIVE"])
+            term_name = "GlossaryTerm: puddie - 2024-10-18T13:51:52.356216"
+            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
+            response = g_client.get_terms_by_name(term_name, glossary_guid, ["DRAFT"])
 
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -383,7 +452,7 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "CSRD",
+                "*",
                 glossary_guid=glossary_guid,
                 starts_with=True,
                 ends_with=False,
@@ -401,6 +470,33 @@ class TestGlossaryManager:
                 # print_json_list_as_table(response)
                 count = len(response)
                 print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_load_terms_from_csv(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_3
+            )
+            token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
+            glossary = "test-glossary"
+            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/pets.csv"
+            response = g_client.load_terms_from_file(glossary, file_name)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True

@@ -67,7 +67,7 @@ class GlossaryManager(GlossaryBrowser):
 
     def __validate_term_status__(self, status: str) -> bool:
         """Return True if the status is a legal glossary term status"""
-        recognized_term_status = {"DRAFT", "ACTIVE", "DEPRACATED", "OBSOLETE", "OTHER"}
+        recognized_term_status = self.get_glossary_term_statuses()
         return status in recognized_term_status
 
     async def _async_create_glossary(
@@ -103,7 +103,7 @@ class GlossaryManager(GlossaryBrowser):
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryProperties",
-                "qualifiedName": f"Glossary-{display_name}-{time.asctime()}",
+                "qualifiedName": f"Glossary:{display_name}",
                 "displayName": display_name,
                 "description": description,
                 "language": language,
@@ -186,6 +186,120 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_delete_glossary(glossary_guid))
         return response
+
+    async def _async_update_glossary(
+        self,
+        glossary_guid: str,
+        body: dict,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+    ) -> None:
+        """Update Glossary.
+
+        Async version.
+
+        Parameters
+        ----------
+        glossary_guid: str
+            The ID of the glossary to update.
+        body: dict
+            A dict containing the properties to update.
+        is_merge_update: bool, optional, default = True
+            If true, then only those properties specified in the body will be updated. If false, then all the
+            properties of the glossary will be replaced with those of the body.
+        for_lineage: bool, optional, default = False
+            Normally false. Used when we want to retrieve elements that have been delete but have a Memento entry.
+        for_duplicate_processing: bool, optional, default = False
+            Normally false. Set true when Egeria is told to skip deduplication because another system will do it.
+
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+
+        Sample body:
+
+            {
+                "class" : "ReferenceableRequestBody",
+                "elementProperties" :
+                    {
+                        "class" : "GlossaryProperties",
+                        "qualifiedName" : "MyGlossary",
+                        "displayName" : "My Glossary",
+                        "description" : "This is an example glossary"
+                    }
+            }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"{glossary_guid}/update?isMergeUpdate={is_merge_update}&forLineage={for_lineage}&"
+            f"forDuplicateProcessing={for_duplicate_processing}"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+        return
+
+    def update_glossary(
+        self,
+        glossary_guid: str,
+        body: dict,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+    ) -> None:
+        """Update Glossary.
+
+        Parameters
+        ----------
+        glossary_guid: str
+            The ID of the glossary to update.
+        body: dict
+            A dict containing the properties to update.
+        is_merge_update: bool, optional, default = True
+            If true, then only those properties specified in the body will be updated. If false, then all the
+            properties of the glossary will be replaced with those of the body.
+        for_lineage: bool, optional, default = False
+            Normally false. Used when we want to retrieve elements that have been delete but have a Memento entry.
+        for_duplicate_processing: bool, optional, default = False
+            Normally false. Set true when Egeria is told to skip deduplication because another system will do it.
+
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+
+        Sample body:
+
+            {
+                "class" : "ReferenceableRequestBody",
+                "elementProperties" :
+                    {
+                        "class" : "GlossaryProperties",
+                        "qualifiedName" : "MyGlossary",
+                        "displayName" : "My Glossary",
+                        "description" : "This is an example glossary"
+                    }
+            }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_glossary(
+                glossary_guid,
+                body,
+                is_merge_update,
+                for_lineage,
+                for_duplicate_processing,
+            )
+        )
+        return
 
     #
     #       Glossaries
@@ -1471,9 +1585,10 @@ class GlossaryManager(GlossaryBrowser):
                 examples = row.get("Examples", None)
                 usage = row.get("Usage", None)
                 version = row.get("Version Identifier", "1.0")
-                status = row.get("Status", "DRAFT").upper()
+                status = row.get("Status", "DRAFT")
+                status = status.upper()
 
-                # process the row
+                # quality check the row
                 if len(term_name) < 2:
                     term_info.append(
                         {
@@ -1494,12 +1609,63 @@ class GlossaryManager(GlossaryBrowser):
                         }
                     )
                     continue
+                if upsert:
+                    # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
+                    # do the update for the row - if there is no qualified name we will treat the row as an insert.
+                    if qualified_name:
+                        term_stuff = self.get_terms_by_name(
+                            qualified_name, glossary_guid
+                        )
+                        if type(term_stuff) is str:
+                            # An existing term was not found with that qualified name
+                            term_info.append(
+                                {
+                                    "term_name": term_name,
+                                    "qualified_name": qualified_name,
+                                    "error": "Matching term not found - skipping",
+                                }
+                            )
+                            continue
+                        else:
+                            # An existing term was found - so update it!
+                            body = {
+                                "class": "ReferenceableRequestBody",
+                                "elementProperties": {
+                                    "class": "GlossaryTermProperties",
+                                    "qualifiedName": qualified_name,
+                                    "displayName": term_name,
+                                    "summary": summary,
+                                    "description": description,
+                                    "abbreviation": abbrev,
+                                    "examples": examples,
+                                    "usage": usage,
+                                    "publishVersionIdentifier": version,
+                                },
+                                "initialStatus": status,
+                            }
+                            term_guid = term_stuff["elementHeader"]["guid"]
+                            self.update_term(
+                                term_guid, body_slimmer(body), is_merge_update=True
+                            )
+                            term_info.append(
+                                {
+                                    "term_name": term_name,
+                                    "qualified_name": qualified_name,
+                                    "term_guid": term_guid,
+                                    "updated": "the term was updated",
+                                }
+                            )
+                            continue
 
+                # Add the term
+                term_qualified_name = (
+                    f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}"
+                )
                 body = {
                     "class": "ReferenceableRequestBody",
                     "elementProperties": {
                         "class": "GlossaryTermProperties",
-                        "qualifiedName": f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}",
+                        "qualifiedName": term_qualified_name,
                         "displayName": term_name,
                         "summary": summary,
                         "description": description,
@@ -1511,9 +1677,6 @@ class GlossaryManager(GlossaryBrowser):
                     "initialStatus": status,
                 }
 
-                # if upsert:
-                #     if len(qualified_name) > 5:
-                #         existing_term =
                 # Add the term
                 term_guid = self.create_controlled_glossary_term(
                     glossary_guid, body_slimmer(body)
@@ -1521,11 +1684,94 @@ class GlossaryManager(GlossaryBrowser):
                 term_info.append(
                     {
                         "term_name": term_name,
-                        "qualified_name": qualified_name,
+                        "qualified_name": term_qualified_name,
                         "term_guid": term_guid,
                     }
                 )
         return term_info
+
+    async def _async_export_glossary_to_csv(
+        self, glossary_guid: str, target_file: str
+    ) -> int:
+        """Export all the terms in a glossary to a CSV file. Async version
+
+        Parameters:
+        -----------
+        glossary_guid: str
+            Identity of the glossary to export.
+        target_file: str
+            Complete file name with path and extension to export to.
+
+        Returns:
+            int: Number of rows exported.
+        """
+
+        term_list = await self._async_get_terms_for_glossary(glossary_guid)
+
+        header = [
+            "Term Name",
+            "Qualified Name",
+            "Abbreviation",
+            "Summary",
+            "Description",
+            "Examples",
+            "Usage",
+            "Version Identifier",
+            "Status",
+        ]
+
+        with open(target_file, mode="w") as file:
+            csv_writer = csv.DictWriter(file, fieldnames=header)
+            csv_writer.writeheader()
+            count = 0
+            for term in term_list:
+                term_name = term["glossaryTermProperties"]["displayName"]
+                qualified_name = term["glossaryTermProperties"]["qualifiedName"]
+                abbrev = term["glossaryTermProperties"]["abbreviation"]
+                summary = term["glossaryTermProperties"]["summary"]
+                description = term["glossaryTermProperties"]["description"]
+                examples = term["glossaryTermProperties"]["examples"]
+                usage = term["glossaryTermProperties"]["usage"]
+                version = term["glossaryTermProperties"]["publishVersionIdentifier"]
+                status = term["elementHeader"]["status"]
+
+                csv_writer.writerow(
+                    {
+                        "Term Name": term_name,
+                        "Qualified Name": qualified_name,
+                        "Abbreviation": abbrev,
+                        "Summary": summary,
+                        "Description": description,
+                        "Examples": examples,
+                        "Usage": usage,
+                        "Version Identifier": version,
+                        "Status": status,
+                    }
+                )
+
+                count += 1
+        return count
+
+    def export_glossary_to_csv(self, glossary_guid: str, target_file: str) -> int:
+        """Export all the terms in a glossary to a CSV file.
+
+        Parameters:
+        -----------
+        glossary_guid: str
+            Identity of the glossary to export.
+        target_file: str
+            Complete file name with path and extension to export to.
+
+        Returns:
+            int: Number of rows exported.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_export_glossary_to_csv(glossary_guid, target_file)
+        )
+
+        return response
 
     async def _async_create_term_copy(
         self,
