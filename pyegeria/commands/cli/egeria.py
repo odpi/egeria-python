@@ -1130,7 +1130,7 @@ def engine_host(ctx):
 
 
 @engine_host.command("status")
-@click.options(
+@click.option(
     "--engine-list",
     default=["*"],
     help="Enter the list of connectors you are interested in or ['*'] for all",
