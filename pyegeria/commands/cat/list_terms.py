@@ -23,6 +23,7 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
+    EgeriaTech,
 )
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 
@@ -45,19 +46,55 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
 def display_glossary_terms(
-    search_string: str,
-    guid: str,
-    server: str,
-    url: str,
-    username: str,
-    user_password: str,
+    search_string: str = "*",
+    glossary_guid: str = None,
+    glossary_name: str = None,
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user_id: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    g_client = GlossaryBrowser(server, url, username, user_password)
+    """Display a table of glossary terms filtered by search_string and glossary, if specified. If no
+        filters then all terms are displayed. If glossary_guid or name is specified, then only terms from that
+        glossary are displayed.
+    Parameters
+    ----------
+    search_string : str, optional
+        The string to search for terms. Defaults to "*".
+    glossary_guid : str, optional
+        The unique identifier of the glossary. Defaults to None. If specified, then only terms from that glossary
+        are displayed. If both glossary_guid and glossary_name are provided then glossary_guid will take precedence.
+    glossary_name : str, optional
+        The display name of the glossary. Defaults to None. If specified, then only terms from that glossary
+        are displayed. If both glossary_guid and glossary_name are provided then glossary_guid will take precedence.
+        Note that the use of glossary display name relies on the qualified name conforming to convention. GUID is more
+        reliable.
+    view_server : str
+        The server where the glossary is hosted. Defaults to EGERIA_VIEW_SERVER.
+    view_url : str
+        The URL of the server where the glossary is hosted. Defaults to EGERIA_VIEW_SERVER_URL.
+    user_id : str
+        The user ID for authentication. Defaults to EGERIA_USER.
+    user_pass : str
+        The user password for authentication. Defaults to EGERIA_USER_PASSWORD.
+    jupyter : bool
+        Flag to indicate if the output should be formatted for Jupyter notebook. Defaults to EGERIA_JUPYTER.
+    width : int
+        The width of the console output. Defaults to EGERIA_WIDTH.
+    """
+    g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
     token = g_client.create_egeria_bearer_token()
+    if (glossary_name is not None) and (glossary_name != "*"):
+        glossary_guid = g_client.__get_guid__(
+            glossary_guid,
+            glossary_name,
+            "qualifiedName",
+            "Glossary",
+        )
 
-    def generate_table(search_string: str = "*") -> Table:
+    def generate_table(search_string: str, glossary_guid: str = None) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
@@ -68,11 +105,11 @@ def display_glossary_terms(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"View Server '{server}' @ Platform - {url}",
+            caption=f"View Server '{view_server}' @ Platform - {view_url}",
             expand=True,
         )
         table.add_column("Term Name")
-        table.add_column("Qualified Name / GUID")
+        table.add_column("Qualified Name / GUID", width=38, no_wrap=True)
         table.add_column("Abbreviation")
         table.add_column("Summary")
         table.add_column("Description")
@@ -82,7 +119,7 @@ def display_glossary_terms(
 
         terms = g_client.find_glossary_terms(
             search_string,
-            guid,
+            glossary_guid,
             starts_with=False,
             ends_with=False,
             status_filter=[],
@@ -107,7 +144,7 @@ def display_glossary_terms(
             display_name = Text(props["displayName"], style=style)
             qualified_name = props["qualifiedName"]
             term_guid = term["elementHeader"]["guid"]
-            q_name = Text(f"{qualified_name}\n\t\t\t&\n{term_guid}", style=style)
+            q_name = Text(f"{qualified_name}\n\t\t&\n{term_guid}", style=style)
             abbrev = Text(props.get("abbreviation", " "), style=style)
             summary = Text(props.get("summary", " "), style=style)
             description = Text(props.get("description", " "), style=style)
@@ -149,7 +186,7 @@ def display_glossary_terms(
             style="bold bright_white on black", width=width, force_terminal=not jupyter
         )
         with console.pager(styles=True):
-            console.print(generate_table(search_string))
+            console.print(generate_table(search_string, glossary_guid))
 
     except (
         InvalidParameterException,
@@ -167,7 +204,7 @@ def main():
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     parser.add_argument("--guid", help="GUID of glossary to search")
-    parser.add_argument("--sustainability", help="Set True for Sustainability Glossary")
+
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
@@ -175,11 +212,17 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = args.guid if args.guid is not None else None
-    guid = sus_guid if args.sustainability else None
 
     try:
         search_string = Prompt.ask("Enter the term you are searching for:", default="*")
-        display_glossary_terms(search_string, guid, server, url, userid, user_pass)
+        glossary_name = Prompt.ask(
+            "Enter the name of the glossary to search or '*' for all glossaries:",
+            default="*",
+        )
+        display_glossary_terms(
+            search_string, guid, glossary_name, server, url, userid, user_pass
+        )
+
     except KeyboardInterrupt:
         pass
 

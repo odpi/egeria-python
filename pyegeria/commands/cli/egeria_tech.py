@@ -12,24 +12,26 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from commands.cat.list_tech_types import display_tech_types
-from commands.cli.ops_config import Config
-from commands.tech.get_guid_info import display_guid
-from commands.tech.get_tech_details import tech_details_viewer
-from commands.tech.list_asset_types import display_asset_types
-from commands.tech.list_registered_services import display_registered_svcs
-from commands.tech.list_relationship_types import display_relationship_types
-from commands.tech.list_tech_templates import display_templates_spec
-from commands.tech.list_valid_metadata_values import display_metadata_values
-from commands.cat.get_tech_type_template import template_viewer
-from commands.tech.list_elements import list_elements
-from commands.tech.get_element_info import display_elements
-from commands.tech.list_related_specification import (
+from pyegeria.commands.cat.list_tech_types import display_tech_types
+from pyegeria.commands.cli.ops_config import Config
+from pyegeria.commands.tech.get_guid_info import display_guid
+from pyegeria.commands.tech.get_tech_details import tech_details_viewer
+from pyegeria.commands.tech.list_asset_types import display_asset_types
+from pyegeria.commands.tech.list_registered_services import display_registered_svcs
+from pyegeria.commands.tech.list_relationship_types import display_relationship_types
+from pyegeria.commands.tech.list_tech_templates import display_templates_spec
+from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
+from pyegeria.commands.cat.get_tech_type_template import template_viewer
+from pyegeria.commands.tech.list_elements import list_elements
+from pyegeria.commands.tech.get_element_info import display_elements
+from pyegeria.commands.tech.list_related_specification import (
     display_related_specification,
 )
-from commands.tech.list_related_elements import list_related_elements
-from commands.tech.list_elements_for_classification import list_classified_elements
-from commands.tech.list_gov_action_processes import display_gov_processes
+from pyegeria.commands.tech.list_related_elements import list_related_elements
+from pyegeria.commands.tech.list_elements_for_classification import (
+    list_classified_elements,
+)
+from pyegeria.commands.tech.list_gov_action_processes import display_gov_processes
 
 # from pyegeria import ServerOps
 

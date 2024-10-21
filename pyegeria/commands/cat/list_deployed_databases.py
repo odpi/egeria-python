@@ -47,20 +47,36 @@ def check_if_template(header: dict) -> bool:
 
 
 def list_deployed_databases(
-    server: str,
-    url: str,
-    username: str,
-    password: str,
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
+    """
+    Parameters
+    ----------
+    view_server : str
+        The view server name to which the Egeria client will connect. By default, this is set to EGERIA_VIEW_SERVER.
+    view_url : str
+        The URL of the Egeria view server. By default, this is set to EGERIA_VIEW_SERVER_URL.
+    user : str
+        The username used for authentication with the Egeria server. By default, it is set to EGERIA_USER.
+    user_pass : str
+        The password used for authentication with the Egeria server. By default, it is set to EGERIA_USER_PASSWORD.
+    jupyter : bool
+        A flag indicating whether the output is displayed within a Jupyter notebook. Default is set to EGERIA_JUPYTER.
+    width : int
+        The width of the output console. By default, it is set to EGERIA_WIDTH.
+    """
+    c_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = c_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            caption=f"Databases found: {url} - {server} @ {time.asctime()}",
+            caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",

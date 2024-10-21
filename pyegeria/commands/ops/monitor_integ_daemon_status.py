@@ -15,6 +15,7 @@ import time
 from rich import box
 from rich.console import Console
 from rich.live import Live
+from rich.prompt import Prompt
 from rich.table import Table
 import nest_asyncio
 from typing import Union
@@ -47,27 +48,8 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 disable_ssl_warnings = True
 
 
-def add_row(
-    table: Union[Table, DataTable],
-    connector_name: str,
-    connector_status: str,
-    last_refresh_time: str,
-    refresh_interval: str,
-    targets_out,
-    exception_msg,
-) -> Table | DataTable:
-    table.add_row(
-        connector_name,
-        connector_status,
-        last_refresh_time,
-        refresh_interval,
-        targets_out,
-        exception_msg,
-    )
-    return table
-
-
 def display_integration_daemon_status(
+    search_list: list[str] = ["*"],
     integ_server: str = EGERIA_INTEGRATION_DAEMON,
     integ_url: str = EGERIA_INTEGRATION_DAEMON_URL,
     view_server: str = EGERIA_VIEW_SERVER,
@@ -78,46 +60,75 @@ def display_integration_daemon_status(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     sort: bool = True,
-    data_table: bool = False,
-) -> Table | DataTable:
+) -> None:
+    """Display the status of connectors running on the specified Integration Daemon OMAG Server.
+
+    Parameters
+    ----------
+    search_list : list[str], optional
+        A list of connector names to search for. Default is ["*"], which returns all connectors.
+
+    integ_server : str, optional
+        The name of the integration daemon server. Default is EGERIA_INTEGRATION_DAEMON.
+
+    integ_url : str, optional
+        The URL of the integration daemon server. Default is EGERIA_INTEGRATION_DAEMON_URL.
+
+    view_server : str, optional
+        The name of the view server. Default is EGERIA_VIEW_SERVER.
+
+    view_url : str, optional
+        The URL of the view server. Default is EGERIA_VIEW_SERVER_URL.
+
+    user : str, optional
+        The username for authentication. Default is EGERIA_USER.
+
+    user_pass : str, optional
+        The password for authenticated access. Default is EGERIA_USER_PASSWORD.
+
+    paging : bool, optional
+        Determines whether to use paging or a live monitor for console output. Default is True.
+
+    jupyter : bool, optional
+        Determines whether running in a Jupyter environment. Default is EGERIA_JUPYTER.
+
+    width : int, optional
+        The width of the console display. Default is EGERIA_WIDTH.
+
+    sort : bool, optional
+        Determines whether to sort the connector reports. Default is True.
+
+    Returns
+    -------
+
+    Nothing
+    """
     s_client = EgeriaTech(view_server, view_url, user, user_pass)
-    nest_asyncio.apply()
+    token = s_client.create_egeria_bearer_token()
 
-    def generate_table() -> Table:
+    def generate_table(search_list: list[str]) -> Table:
         """Make a new table."""
+        table = Table(
+            title=f"Integration Daemon Status @ {time.asctime()}",
+            style="bold white on black",
+            row_styles=["bold white on black"],
+            header_style="white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
+            show_lines=True,
+            box=box.ROUNDED,
+            caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
+            expand=True,
+        )
+        table.add_column("Connector Name", min_width=15)
+        table.add_column("Status", max_width=6)
 
-        if data_table:
-            table = DataTable()
-            table.add_columns(
-                "Connector Name",
-                "Status",
-                "Last Refresh Time",
-                "Min Refresh (Mins)",
-                "Target Element",
-                "Exception Message",
-            )
-        else:
-            table = Table(
-                title=f"Integration Daemon Status @ {time.asctime()}",
-                style="bold white on black",
-                row_styles=["bold white on black"],
-                header_style="white on dark_blue",
-                title_style="bold white on black",
-                caption_style="white on black",
-                show_lines=True,
-                box=box.ROUNDED,
-                caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
-                expand=True,
-            )
-            table.add_column("Connector Name", min_width=15)
-            table.add_column("Status", max_width=6)
-            table.add_column("Last Refresh Time", min_width=12)
-            table.add_column("Min Refresh (mins)", max_width=6)
-            table.add_column("Target Element", min_width=20)
-            table.add_column("Exception Message", min_width=10)
+        table.add_column("Last Refresh Time", min_width=12)
+        table.add_column("Min Refresh (mins)", max_width=6)
+        table.add_column("Target Element", min_width=20)
+        table.add_column("Exception Message", min_width=10)
 
-        # Now get the integration connector report
-        token = s_client.create_egeria_bearer_token()
+        # server_guid = s_client.get_guid_for_name(integ_server)
         daemon_status = s_client.get_server_report(None, integ_server)
 
         reports = daemon_status["integrationConnectorReports"]
@@ -130,6 +141,11 @@ def display_integration_daemon_status(
 
         for connector in connector_reports:
             connector_name = connector.get("connectorName", "---")
+
+            if (connector_name not in search_list) and (search_list != ["*"]):
+                # if specific connectors are requested and it doesn't match, then skip
+                continue
+
             connector_status = connector.get("connectorStatus", "---")
             connector_guid = connector.get("connectorGUID", "---")
             last_refresh_time = connector.get("lastRefreshTime", "---")[:-10]
@@ -168,8 +184,7 @@ def display_integration_daemon_status(
             else:
                 connector_status = f"[yellow]{connector_status}"
 
-            add_row(
-                table,
+            table.add_row(
                 connector_name,
                 connector_status,
                 last_refresh_time,
@@ -177,23 +192,24 @@ def display_integration_daemon_status(
                 targets_out,
                 exception_msg,
             )
+
         return table
 
     try:
         if paging is True:
             console = Console(width=width, force_terminal=not jupyter)
             with console.pager():
-                console.print(generate_table())
+                console.print(generate_table(search_list))
         else:
             with Live(
-                generate_table(),
+                generate_table(search_list),
                 refresh_per_second=1,
                 screen=True,
                 vertical_overflow="visible",
             ) as live:
                 while True:
                     time.sleep(2)
-                    live.update(generate_table())
+                    live.update(generate_table(search_list))
 
     except (
         InvalidParameterException,
@@ -235,15 +251,19 @@ def main_live():
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    search_list = Prompt.ask(
+        "Enter the list of connectors you are interested in or ['*'] for all",
+        default=["*"],
+    )
     display_integration_daemon_status(
+        search_list=search_list,
         integ_server=integ_server,
         integ_url=integ_url,
         view_server=view_server,
         view_url=view_url,
         user=userid,
         user_pass=user_pass,
-        paging=False,
-        data_table=False,
+        paging=True,
     )
 
 
@@ -273,7 +293,12 @@ def main_paging():
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    search_list = Prompt.ask(
+        "Enter the list of connectors you are interested in or ['*'] for all",
+        default="[*]",
+    )
     display_integration_daemon_status(
+        search_list=search_list,
         integ_server=integ_server,
         integ_url=integ_url,
         view_server=view_server,
@@ -281,7 +306,6 @@ def main_paging():
         user=userid,
         user_pass=user_pass,
         paging=True,
-        data_table=False,
     )
 
 

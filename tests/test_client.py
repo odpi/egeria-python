@@ -90,6 +90,17 @@ class TestClient:
             else:
                 assert response.status_code == status_code, "Invalid URL"
 
+    def test_refresh_egeria_bearer_token(self):
+        c = Client(
+            "active-metadata-store", "https://localhost:9443", "erinoverview", "secret"
+        )
+        token = c.create_egeria_bearer_token()
+        token2 = c.refresh_egeria_bearer_token()
+        if type(token2) == str:
+            print(f"The token returned is \n{token}")
+        elif type(token2) is dict:
+            print(f"The returned token is dict:\n{json.dumps(token2, indent =2)}")
+
 
 if __name__ == "__main__":
     print("something")

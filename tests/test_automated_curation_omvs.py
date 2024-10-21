@@ -1349,7 +1349,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_database_guid = "d3109a88-1c7b-4ce2-9baa-7a176d6ea42f"
+            a_postgres_database_guid = "cad99230-9896-4f3b-b15f-93af7b3be470"
 
             start_time = time.perf_counter()
 
@@ -1462,7 +1462,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            uc_server_guid = "61ec007a-4fa3-49ec-b7b8-527efbfd1076"
+            uc_server_guid = "527b7499-fcd0-43e9-8302-b20e8378e63d"
             response = a_client.initiate_uc_server_survey(uc_server_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")

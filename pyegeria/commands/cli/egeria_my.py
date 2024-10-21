@@ -12,13 +12,13 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from commands.cli.ops_config import Config
+from pyegeria.commands.cli.ops_config import Config
 
-from commands.my.monitor_open_todos import display_todos
-from commands.my.monitor_my_todos import display_my_todos
-from commands.my.list_my_profile import display_my_profile
-from commands.my.list_my_roles import display_my_roles
-from commands.my.todo_actions import (
+from pyegeria.commands.my.monitor_open_todos import display_todos
+from pyegeria.commands.my.monitor_my_todos import display_my_todos
+from pyegeria.commands.my.list_my_profile import display_my_profile
+from pyegeria.commands.my.list_my_roles import display_my_roles
+from pyegeria.commands.my.todo_actions import (
     create_todo,
     delete_todo,
     change_todo_status,

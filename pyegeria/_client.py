@@ -10,7 +10,7 @@ import asyncio
 import inspect
 import json
 import os
-
+from pyegeria import body_slimmer
 import httpx
 from httpx import AsyncClient, Response
 
@@ -653,6 +653,72 @@ class Client:
                         if resource_type == "IntegrationConnector":
                             integration_guids[display_name] = resource_guid
                             # print(f"Added {display_name} integration connector with GUID {integration_guids[display_name]}")
+
+    async def __async__get_guid__(
+        self,
+        guid: str = None,
+        name: str = None,
+        property_name: str = "qualifiedName",
+        tech_type: str = None,
+    ) -> str:
+        """Helper function to return a server_guid - one of server_guid or server_name should
+        contain information. If both are None, an exception will be thrown. If both contain
+        values, server_guid will be used. If the tech_type is supplied and the property_name is qualifiedName
+        then the name will be pre-pended with the tech_type name to form a qualifiedName.
+
+        An InvalidParameter Exception is thrown if multiple matches
+        are found for the given property name. If this occurs, use a qualified name for the property name.
+        Async version.
+        """
+        if guid:
+            return guid
+        if name:
+            if (tech_type) and (property_name == "qualifiedName"):
+                name = f"{tech_type}:{name}"
+
+            body = {
+                "class": "NameRequestBody",
+                "name": name,
+                "namePropertyName": property_name,
+                "forLineage": False,
+                "forDuplicateProcessing": False,
+                "effectiveTime": None,
+            }
+            url = (
+                f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
+                f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
+            )
+
+            response: Response = await self._async_make_request(
+                "POST", url, body_slimmer(body), time_out=self.time_out
+            )
+
+            return response.json().get("guid", "No elements found")
+        else:
+            raise InvalidParameterException(
+                "Neither server_guid nor server_name were provided - please provide."
+            )
+
+    def __get_guid__(
+        self,
+        guid: str = None,
+        name: str = None,
+        property_name: str = "qualifiedName",
+        tech_type: str = None,
+    ) -> str:
+        """Helper function to return a server_guid - one of server_guid or server_name should
+        contain information. If both are None, an exception will be thrown. If both contain
+        values, server_guid will be used. If the tech_type is supplied and the property_name is qualifiedName
+        then the name will be pre-pended with the tech_type name to form a qualifiedName.
+
+        An InvalidParameter Exception is thrown if multiple matches
+        are found for the given property name. If this occurs, use a qualified name for the property name.
+        """
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(
+            self.__async__get_guid__(guid, name, property_name, tech_type)
+        )
+        return result
 
 
 if __name__ == "__main__":

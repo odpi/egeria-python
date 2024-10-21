@@ -12,38 +12,38 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 import click
 from trogon import tui
 
-from commands.cat.get_asset_graph import asset_viewer
-from commands.cat.get_collection import collection_viewer
-from commands.cat.get_project_dependencies import project_dependency_viewer
-from commands.cat.get_project_structure import project_structure_viewer
-from commands.cat.get_tech_type_elements import tech_viewer
-from commands.cat.get_tech_type_template import template_viewer
-from commands.cat.glossary_actions import (
+from pyegeria.commands.cat.get_asset_graph import asset_viewer
+from pyegeria.commands.cat.get_collection import collection_viewer
+from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
+from pyegeria.commands.cat.get_project_structure import project_structure_viewer
+from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
+from pyegeria.commands.cat.get_tech_type_template import template_viewer
+from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
     create_term,
     load_terms,
-    list_glossaries,
     export_terms,
 )
-from commands.cat.list_archives import display_archive_list
-from commands.cat.list_assets import display_assets
-from commands.cat.list_cert_types import display_certifications
-from commands.cat.list_deployed_catalogs import list_deployed_catalogs
-from commands.cat.list_deployed_database_schemas import (
+from pyegeria.commands.cat.list_glossaries import display_glossaries
+from pyegeria.commands.cat.list_archives import display_archive_list
+from pyegeria.commands.cat.list_assets import display_assets
+from pyegeria.commands.cat.list_cert_types import display_certifications
+from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from pyegeria.commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
-from commands.cat.list_deployed_databases import list_deployed_databases
-from commands.cat.list_terms import display_glossary_terms
-from commands.cat.list_projects import display_project_list
-from commands.cat.list_relationships import list_relationships
-from commands.cat.list_tech_types import display_tech_types
-from commands.cat.list_todos import display_to_dos as list_todos
-from commands.cat.list_user_ids import list_user_ids
+from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
+from pyegeria.commands.cat.list_terms import display_glossary_terms
+from pyegeria.commands.cat.list_projects import display_project_list
+from pyegeria.commands.cat.list_relationships import list_relationships
+from pyegeria.commands.cat.list_tech_types import display_tech_types
+from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
+from pyegeria.commands.cat.list_user_ids import list_user_ids
 
 # from pyegeria import ServerOps
-from commands.cli.ops_config import Config
-from commands.my.todo_actions import (
+from pyegeria.commands.cli.ops_config import Config
+from pyegeria.commands.my.todo_actions import (
     mark_todo_complete,
     reassign_todo,
     delete_todo,
@@ -288,17 +288,23 @@ def show_assets(ctx, search_string):
     help="List glossary terms similar to search string - minimum of 4 characters",
 )
 @click.option(
-    "--glossary_guid",
+    "--glossary-guid",
     default=None,
     help="Optionally restrict search to glossary with the specified guid",
 )
+@click.option(
+    "--glossary-name",
+    default="*",
+    help="Optionally restrict search to a specific named glossary",
+)
 @click.pass_context
-def show_terms(ctx, search_string, glossary_guid):
+def show_terms(ctx, search_string, glossary_guid, glossary_name):
     """Find and display glossary terms"""
     c = ctx.obj
     display_glossary_terms(
         search_string,
         glossary_guid,
+        glossary_name,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -544,6 +550,23 @@ def list_catalogs(ctx, search_server):
     )
 
 
+@show.command("list-glossaries")
+@click.option("--search_string", default="*", help="Name to search for glossaries")
+@click.pass_context
+def list_glossaries(ctx, search_string):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    display_glossaries(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show.command("list-databases")
 @click.pass_context
 def list_databases(ctx):
@@ -553,8 +576,6 @@ def list_databases(ctx):
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
     )
 
-
-show.add_command(list_glossaries)
 
 #
 #  Tell

@@ -54,20 +54,39 @@ disable_ssl_warnings = True
 
 
 def display_engine_activity_c(
-    server: str,
-    url: str,
-    user: str,
-    user_pass: str,
-    paging: bool,
+    view_server: str = EGERIA_VIEW_SERVER,
+    view_url: str = EGERIA_VIEW_SERVER_URL,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
+    paging: bool = True,
     jupyter: bool = EGERIA_JUPYTER,
-    width=EGERIA_WIDTH,
+    width: int = EGERIA_WIDTH,
 ):
-    g_client = AutomatedCuration(server, url, user, user_pwd=user_pass)
+    """Display governance engine activity as a table.
+
+    Parameters
+    ----------
+    view_server : str
+        The Egeria view server name.
+    view_url : str
+        The URL for the Egeria view server.
+    user : str
+        The user name for authenticating with the Egeria server.
+    user_pass : str
+        The user password for authenticating with the Egeria server.
+    paging : bool, default is True
+        Whether to enable paging mode when displaying the table.
+    jupyter : bool
+        Indicates if the environment is a Jupyter notebook.
+    width : int
+        The width of the console for table printing.
+    """
+    g_client = AutomatedCuration(view_server, view_url, user, user_pwd=user_pass)
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Engine Action Status for Platform {url} @ {time.asctime()}",
+            title=f"Engine Action Status for Platform {view_url} @ {time.asctime()}",
             style="bold white on black",
             row_styles=["bold white on black"],
             header_style="white on dark_blue",
@@ -75,7 +94,7 @@ def display_engine_activity_c(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"Engine Status for Server '{server}' @ Platform - {url}",
+            caption=f"Engine Status for Server '{view_server}' @ Platform - {view_url}",
             expand=True,
         )
         table.add_column("Requested Time")

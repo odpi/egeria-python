@@ -103,7 +103,7 @@ class GlossaryManager(GlossaryBrowser):
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryProperties",
-                "qualifiedName": f"Glossary:{display_name}-{time.asctime()}",
+                "qualifiedName": f"Glossary:{display_name}",
                 "displayName": display_name,
                 "description": description,
                 "language": language,
@@ -1613,21 +1613,6 @@ class GlossaryManager(GlossaryBrowser):
                     # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
                     # do the update for the row - if there is no qualified name we will treat the row as an insert.
                     if qualified_name:
-                        body = {
-                            "class": "ReferenceableRequestBody",
-                            "elementProperties": {
-                                "class": "GlossaryTermProperties",
-                                "qualifiedName": qualified_name,
-                                "displayName": term_name,
-                                "summary": summary,
-                                "description": description,
-                                "abbreviation": abbrev,
-                                "examples": examples,
-                                "usage": usage,
-                                "publishVersionIdentifier": version,
-                            },
-                            "initialStatus": status,
-                        }
                         term_stuff = self.get_terms_by_name(
                             qualified_name, glossary_guid
                         )
@@ -1637,13 +1622,27 @@ class GlossaryManager(GlossaryBrowser):
                                 {
                                     "term_name": term_name,
                                     "qualified_name": qualified_name,
-                                    "term_guid": term_guid,
                                     "error": "Matching term not found - skipping",
                                 }
                             )
                             continue
                         else:
                             # An existing term was found - so update it!
+                            body = {
+                                "class": "ReferenceableRequestBody",
+                                "elementProperties": {
+                                    "class": "GlossaryTermProperties",
+                                    "qualifiedName": qualified_name,
+                                    "displayName": term_name,
+                                    "summary": summary,
+                                    "description": description,
+                                    "abbreviation": abbrev,
+                                    "examples": examples,
+                                    "usage": usage,
+                                    "publishVersionIdentifier": version,
+                                },
+                                "initialStatus": status,
+                            }
                             term_guid = term_stuff["elementHeader"]["guid"]
                             self.update_term(
                                 term_guid, body_slimmer(body), is_merge_update=True
