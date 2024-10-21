@@ -468,7 +468,7 @@ def valid_metadata_values(ctx, property, type_name):
     )
 
 
-@show.command("list-elements")
+@show.command("elements")
 @click.pass_context
 @click.option("--om_type", default="Organization", help="Metadata type to query")
 def list_element_info(ctx, om_type):
@@ -485,7 +485,7 @@ def list_element_info(ctx, om_type):
     )
 
 
-@show.command("list-processes")
+@show.command("processes")
 @click.pass_context
 def list_element_info(ctx):
     """Display the valid metadata values for a property and type"""

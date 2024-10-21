@@ -356,7 +356,7 @@ def get_element_info(ctx, om_type):
     )
 
 
-@show.command("list-elements")
+@show.command("elements")
 @click.pass_context
 @click.option("--om_type", default="Project", help="Metadata type to query")
 def list_element_info(ctx, om_type):
@@ -373,9 +373,9 @@ def list_element_info(ctx, om_type):
     )
 
 
-@show.command("list-processes")
+@show.command("processes")
 @click.pass_context
-def list_element_info(ctx):
+def list_process_info(ctx):
     """Display the valid metadata values for a property and type"""
     c = ctx.obj
     list_elements(
@@ -917,9 +917,9 @@ def show_todos(ctx):
     )
 
 
-@show.command("list-archives")
+@show.command("archives")
 @click.pass_context
-def list_archives(ctx):
+def archives(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_archive_list(
@@ -933,12 +933,12 @@ def list_archives(ctx):
     )
 
 
-@show.command("list-deployed-schemas")
+@show.command("deployed-schemas")
 @click.option(
     "--search_catalog", default="*", help="What database or catalog to search"
 )
 @click.pass_context
-def list_deployed_schemas(search_catalog, ctx):
+def deployed_schemas(search_catalog, ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
@@ -952,10 +952,10 @@ def list_deployed_schemas(search_catalog, ctx):
     )
 
 
-@show.command("list-catalogs")
+@show.command("catalogs")
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
-def list_catalogs(search_server, ctx):
+def catalogs(search_server, ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_catalogs(
@@ -969,9 +969,9 @@ def list_catalogs(search_server, ctx):
     )
 
 
-@show.command("list-databases")
+@show.command("databases")
 @click.pass_context
-def list_databases(ctx):
+def databases(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_databases(
@@ -979,10 +979,10 @@ def list_databases(ctx):
     )
 
 
-@show.command("list-glossaries")
+@show.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
-def list_glossaries(ctx, search_string):
+def glossaries(ctx, search_string):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_glossaries(

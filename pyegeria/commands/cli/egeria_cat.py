@@ -516,10 +516,10 @@ def list_archives(ctx):
     )
 
 
-@show.command("server-schemas")
+@show.command("deployed-schemas")
 @click.option("--catalog", default="*", help="What database or catalog to search")
 @click.pass_context
-def list_deployed_schemas(ctx, catalog):
+def deployed_schemas(ctx, catalog):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
