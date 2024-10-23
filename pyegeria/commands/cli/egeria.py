@@ -27,6 +27,7 @@ from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
 from pyegeria.commands.cat.list_archives import display_archive_list
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.list_my_profile import display_my_profile
 from pyegeria.commands.my.list_my_roles import display_my_roles
@@ -933,12 +934,30 @@ def archives(ctx):
     )
 
 
+@show.command("deployed-servers")
+@click.option(
+    "--search-string", default="*", help="Filter deployed servers by search string"
+)
+@click.pass_context
+def show_deployed_servers(ctx, search_string):
+    c = ctx.obj
+    display_servers_by_dep_imp(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show.command("deployed-schemas")
 @click.option(
     "--search_catalog", default="*", help="What database or catalog to search"
 )
 @click.pass_context
-def deployed_schemas(search_catalog, ctx):
+def deployed_schemas(ctx, search_catalog):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
@@ -955,7 +974,7 @@ def deployed_schemas(search_catalog, ctx):
 @show.command("catalogs")
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
-def catalogs(search_server, ctx):
+def catalogs(ctx, search_server):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_catalogs(

@@ -65,7 +65,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -78,7 +78,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
@@ -94,7 +94,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_qualified_name)
+        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
         url = (
             f"{self.runtime_command_root}/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/connect"
@@ -106,7 +106,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -119,7 +119,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
@@ -137,9 +137,7 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_connect_to_cohort(
-                cohort_name, server_guid, server_qualified_name
-            )
+            self._async_connect_to_cohort(cohort_name, server_guid, qualified_name)
         )
         return
 
@@ -147,7 +145,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Disconnect communications from a specific cohort.  Async version.
 
@@ -157,7 +155,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
@@ -173,7 +171,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_qualified_name)
+        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
         url = (
             f"{self.runtime_command_root}/runtime-manager/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/disconnect"
@@ -185,7 +183,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Disconnect communications from a specific cohort.
 
@@ -195,7 +193,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
@@ -213,9 +211,7 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_disconnect_from_cohort(
-                cohort_name, server_guid, server_qualified_name
-            )
+            self._async_disconnect_from_cohort(cohort_name, server_guid, qualified_name)
         )
         return
 
@@ -223,7 +219,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.  Async version.
 
@@ -233,7 +229,7 @@ class RuntimeManager(Client):
         ----------
          server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name : str
             Name of the cohort to join
@@ -249,7 +245,7 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_qualified_name)
+        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
         url = (
             f"{self.runtime_command_root}/cohort-members/"
             f"{server_guid}/cohorts/{cohort_name}/unregister"
@@ -261,7 +257,7 @@ class RuntimeManager(Client):
         self,
         cohort_name: str,
         server_guid: str = None,
-        server_qualified_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.
             https://egeria-project.org/concepts/cohort-member/
@@ -270,7 +266,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_qualified_name: str, default = None
+        qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid must be.
         cohort_name: str
             Name of the cohort to join
@@ -288,9 +284,7 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_disconnect_from_cohort(
-                cohort_name, server_guid, server_qualified_name
-            )
+            self._async_disconnect_from_cohort(cohort_name, server_guid, qualified_name)
         )
         return
 
@@ -302,24 +296,28 @@ class RuntimeManager(Client):
         self,
         gov_engine_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
             useful if the metadata server has an outage, particularly while the governance server is initializing.
-            This request just ensures that the latest configuration is in use.  Async version.
+            This request just ensures that the latest configuration is in use. If gov_engine_name is None, all engines
+            will be refreshed. Async version.
 
             https://egeria-project.org/concepts/governance-engine-definition/
 
         Parameters
         ----------
+        gov_engine_name: str, default = None
+            If None, then all engines will be refreshed - this is the normal case. If an engine is specified only this
+            engine will be refreshed.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
-        server_name: str, opt, default is None.
-                        Identity of the server to act on. Either the server_guid or server_name must be provided.
-        gov_engine_name : str, Opt
-            Name of the governance engine to refresh. If None, then all governance engines will be refreshed.
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, opt, default is None.
+                        Identity of the server to act on. Either the server_guid , qualified_name, or server_name must
+                        be provided.
 
         Returns
         -------
@@ -332,11 +330,19 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name, "name")
-        url = (
-            f"{self.runtime_command_root}/engine-hosts/"
-            f"{server_guid}/governance_engines/{gov_engine_name}/refresh-config"
+        server_guid = self.__get_guid__(
+            server_guid, display_name, "name", qualified_name, tech_type="Engine Host"
         )
+        if gov_engine_name is None:
+            url = (
+                f"{self.runtime_command_root}/engine-hosts/"
+                f"{server_guid}/governance-engines/refresh-config"
+            )
+        else:
+            url = (
+                f"{self.runtime_command_root}/engine-hosts/"
+                f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
+            )
         await self._async_make_request("GET", url)
         return
 
@@ -344,22 +350,28 @@ class RuntimeManager(Client):
         self,
         gov_engine_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
             useful if the metadata server has an outage, particularly while the governance server is initializing.
-            This request just ensures that the latest configuration is in use.
+            This request just ensures that the latest configuration is in use. If gov_engine_name is None, all engines
+            will be refreshed. Async version.
 
             https://egeria-project.org/concepts/governance-engine-definition/
 
         Parameters
         ----------
+        gov_engine_name: str, default = None
+            If None, then all engines will be refreshed - this is the normal case. If an engine is specified only this
+            engine will be refreshed.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
-        gov_engine_name : str
-            Name of the governance engine to refresh. If None, then all governance engines will be refreshed.
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, opt, default is None.
+                        Identity of the server to act on. Either the server_guid , qualified_name, or server_name must
+                        be provided.
 
         Returns
         -------
@@ -375,7 +387,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_gov_eng_config(
-                gov_engine_name, server_guid, server_name
+                gov_engine_name, server_guid, display_name, qualified_name
             )
         )
         return
@@ -384,7 +396,11 @@ class RuntimeManager(Client):
     #   Integration Connector Methods
     #
     async def _async_get_integ_connector_config_properties(
-        self, connector_name: str, server_guid: str = None, server_name: str = None
+        self,
+        connector_name: str,
+        server_guid: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
             Async version.
@@ -394,9 +410,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str
             Name of the integration connector to retrieve properties for.
 
@@ -412,7 +430,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Integration Daemon"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Integration Daemon",
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
@@ -422,7 +444,11 @@ class RuntimeManager(Client):
         return response.json().get("properties", "No pproperties found")
 
     def get_integ_connector_config_properties(
-        self, connector_name: str, server_guid: str = None, server_name: str = None
+        self,
+        connector_name: str,
+        server_guid: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
             Async version.
@@ -431,12 +457,14 @@ class RuntimeManager(Client):
 
         Parameters
         ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
         connector_name : str
             Name of the integration connector to retrieve properties for.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         Returns
         -------
            None
@@ -451,17 +479,18 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_integ_connector_config_properties(
-                connector_name, server_guid, server_name
+                connector_name, server_guid, display_name, qualified_name
             )
         )
         return response
 
-    async def _async_update_connector_connection(
+    async def _async_update_connector_configuration(
         self,
-        connector_name: str,
+        connector_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
-        merge_update: bool = False,
+        display_name: str = None,
+        qualified_name: str = None,
+        merge_update: bool = True,
         config_properties: dict = None,
     ) -> None:
         """Update the configuration properties of the integration connectors, or specific integration connector
@@ -472,12 +501,15 @@ class RuntimeManager(Client):
 
         Parameters
         ----------
+        connector_name : str, default = None
+            Name of the integration connector to update properties for. If none, all connectors will be updated.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
-        connector_name : str
-            Name of the integration connector to retrieve properties for.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
+
         merge_update : bool, optional, default = False
             Specifies whether properties should be over-written or completely replace existing properties. If False
             the values will be replaced; if True, they will be merged.
@@ -496,11 +528,15 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Connection"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Integration Daemon",
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
-            f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
+            f"{server_guid}/integration-connectors/configuration-properties"
         )
 
         body = {
@@ -509,14 +545,15 @@ class RuntimeManager(Client):
             "mergeUpdate": merge_update,
             "configurationProperties": config_properties,
         }
-        await self._async_make_request("POST", url, body)
+        await self._async_make_request("POST", url, body_slimmer(body))
         return
 
-    def update_connector_connection(
+    def update_connector_configuration(
         self,
         connector_name: str,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
         merge_update: bool = False,
         config_properties: dict = None,
     ) -> None:
@@ -528,9 +565,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str
             Name of the integration connector to retrieve properties for.
         merge_update : bool, optional, default = False
@@ -552,10 +591,11 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_connector_connection(
+            self._async_update_connector_configuration(
                 connector_name,
                 server_guid,
-                server_name,
+                display_name,
+                qualified_name,
                 merge_update,
                 config_properties,
             )
@@ -567,7 +607,8 @@ class RuntimeManager(Client):
         connector_name: str,
         endpoint_address: str,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -577,9 +618,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str
             Name of the integration connector to retrieve properties for.
         endpoint_address : str
@@ -598,7 +641,7 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Connection"
+            server_guid, display_name, "qualifiedName", qualified_name, "Connection"
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
@@ -617,7 +660,8 @@ class RuntimeManager(Client):
         connector_name: str,
         endpoint_address: str,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -627,9 +671,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str
             Name of the integration connector to retrieve properties for.
         endpoint_address : str
@@ -650,7 +696,11 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_endpoint_address(
-                connector_name, endpoint_address, server_guid, server_name
+                connector_name,
+                endpoint_address,
+                server_guid,
+                display_name,
+                qualified_name,
             )
         )
         return
@@ -659,7 +709,8 @@ class RuntimeManager(Client):
         self,
         connector_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified. Async version.
@@ -669,9 +720,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str, opt
             Name of the integration connector to retrieve properties for. If None, all connectors refreshed.
 
@@ -687,7 +740,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Integration Daemon"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Integration Daemon",
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
@@ -705,7 +762,8 @@ class RuntimeManager(Client):
         self,
         connector_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified.
@@ -715,9 +773,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str, opt
             Name of the integration connector to retrieve properties for. If None, all connectors refreshed.
 
@@ -735,7 +795,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_integration_connectors(
-                connector_name, server_guid, server_name
+                connector_name, server_guid, display_name, qualified_name
             )
         )
         return
@@ -744,7 +804,8 @@ class RuntimeManager(Client):
         self,
         connector_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified. Async version.
@@ -754,9 +815,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str, opt
             Name of the integration connector to retrieve properties for. If None, all connectors restarted.
 
@@ -772,7 +835,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Integration Daemon"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Integration Daemon",
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
@@ -790,7 +857,8 @@ class RuntimeManager(Client):
         self,
         connector_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified.
@@ -800,9 +868,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         connector_name : str, opt
             Name of the integration connector to retrieve properties for. If None, all connectors restarted.
 
@@ -820,7 +890,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_restart_integration_connectors(
-                connector_name, server_guid, server_name
+                connector_name, server_guid, display_name, qualified_name
             )
         )
         return
@@ -829,7 +899,8 @@ class RuntimeManager(Client):
         self,
         integ_group_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -841,9 +912,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         integ_group_name : str, opt, default = None
             Name of the integration group to refresh. If None, all groups are refreshed.
 
@@ -859,7 +932,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Integration Daemon"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Integration Daemon",
         )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
@@ -873,7 +950,8 @@ class RuntimeManager(Client):
         self,
         integ_group_name: str = None,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -885,9 +963,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         integ_group_name : str, opt, default = None
             Name of the integration group to refresh. If None, all groups are refreshed.
 
@@ -905,7 +985,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_integ_group_config(
-                integ_group_name, server_guid, server_name
+                integ_group_name, server_guid, display_name, qualified_name
             )
         )
         return
@@ -917,7 +997,8 @@ class RuntimeManager(Client):
         self,
         ol_event: dict,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events. Async version.
@@ -927,9 +1008,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         ol_event : dict
             Dict containing the user specified Open Lineage event.
 
@@ -944,7 +1027,12 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name, "name")
+        server_guid = self.__get_guid__(
+            server_guid,
+            display_name,
+            "name",
+            qualified_name,
+        )
         url = (
             f"{self.runtime_command_root}/integration-daemons/"
             f"{server_guid}/integration-daemons/{server_guid}/open-lineage-events/publish"
@@ -957,7 +1045,8 @@ class RuntimeManager(Client):
         self,
         ol_event: dict,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events.
@@ -967,9 +1056,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         ol_event : dict
             Dict containing the user specified Open Lineage event.
 
@@ -986,7 +1077,7 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_publish_open_lineage_event(ol_event, server_guid, server_name)
+            self._async_publish_open_lineage_event(ol_event, server_guid, display_name)
         )
         return
 
@@ -994,7 +1085,8 @@ class RuntimeManager(Client):
         self,
         archive_content: dict,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
         time_out: int = 60,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1006,9 +1098,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         archive_content : dict
             A dict containing the content of the archive to load.
         time_out : int, optional, default = 60 seconds
@@ -1026,7 +1120,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Metadata Access Server"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Metadata Access Server",
         )
         url = (
             f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/"
@@ -1040,7 +1138,8 @@ class RuntimeManager(Client):
         self,
         archive_content: dict,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
         time_out: int = 60,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1054,10 +1153,11 @@ class RuntimeManager(Client):
         archive_content : dict
             A dict containing the content of the archive to load.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
-
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         time_out : int, optional, default = 60 seconds
             Timeout for the REST call.
 
@@ -1075,7 +1175,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_content(
-                archive_content, server_guid, server_name, time_out=time_out
+                archive_content, server_guid, display_name, qualified_name, time_out
             )
         )
         return
@@ -1084,7 +1184,8 @@ class RuntimeManager(Client):
         self,
         archive_file: str,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
         time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1099,9 +1200,11 @@ class RuntimeManager(Client):
         archive_file: str
             Open metadata archive file to load.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         time_out: int, optional
            Time out for the rest call.
 
@@ -1118,7 +1221,11 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "qualifiedName", "Metadata Access Server"
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Metadata Access Server",
         )
         url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
 
@@ -1131,7 +1238,8 @@ class RuntimeManager(Client):
         self,
         archive_file: str,
         server_guid: str = None,
-        server_name: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
         time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1145,9 +1253,11 @@ class RuntimeManager(Client):
         archive_file: str
             Open metadata archive file to load.
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid or server_name must be.
         time_out: int, optional, default = 60 seconds
 
         Returns
@@ -1166,7 +1276,7 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, server_name, time_out
+                archive_file, server_guid, display_name, qualified_name, time_out
             )
         )
         return
@@ -1175,7 +1285,9 @@ class RuntimeManager(Client):
     # Server & Platform admin
     #
     async def _async_shutdown_and_unregister_server(
-        self, server_guid: str = None, server_name: str = None
+        self,
+        server_guid: str = None,
+        qualified_name: str = None,
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.  Async version.
@@ -1183,9 +1295,9 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name  must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid  must be.
 
         Returns
         -------
@@ -1199,7 +1311,9 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name, "name")
+        server_guid = self.__get_guid__(
+            server_guid, property_name="qualifiedName", qualified_name=qualified_name
+        )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}"
 
         await self._async_make_request("DELETE", url)
@@ -1207,7 +1321,7 @@ class RuntimeManager(Client):
         return
 
     def shutdown_and_unregister_server(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: str = None, qualified_name: str = None
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.
@@ -1215,10 +1329,9 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
-
+            Identity of the server to act on. If not specified, qualified_name  must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid  must be.
         Returns
         -------
         Response
@@ -1233,12 +1346,16 @@ class RuntimeManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_shutdown_and_unregister_server(server_guid, server_name)
+            self._async_shutdown_and_unregister_server(server_guid, qualified_name)
         )
         return
 
     async def _async_activate_server_with_stored_config(
-        self, server_guid: str = None, server_name: str = None, timeout: int = 240
+        self,
+        server_guid: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
+        timeout: int = 240,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store. Async version.
@@ -1248,9 +1365,11 @@ class RuntimeManager(Client):
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name or server_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, default = None
+            Unique name of server to act on. If not specified, server_guid  must be.
         timeout: int, optional, default = 240 seconds
 
         Returns
@@ -1264,14 +1383,21 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name, "name")
+        server_guid = self.__get_guid__(
+            server_guid, display_name, "name", qualified_name
+        )
+
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
         await self._async_make_request("POST", url, time_out=timeout)
         return
 
     def activate_server_with_stored_config(
-        self, server_guid: str = None, server_name: str = None, timeout: int = 240
+        self,
+        server_guid: str = None,
+        display_name: str = None,
+        qualified_name: str = None,
+        timeout: int = 240,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store.
@@ -1282,7 +1408,7 @@ class RuntimeManager(Client):
         ----------
         server_guid : str, default = None
             Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
+        display_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
         timeout: int, optional, default = 240 seconds
 
@@ -1300,22 +1426,22 @@ class RuntimeManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_activate_server_with_stored_config(
-                server_guid, server_name, timeout
+                server_guid, display_name, timeout
             )
         )
         return
 
     async def _async_shutdown_server(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: str = None, qualified_name: str = None
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.  Async version.
 
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name must be.
+        qualified_name: str, default = None
+            Qualified name of server to act on. If not specified, server_guid must be.
 
         Returns
         -------
@@ -1329,22 +1455,26 @@ class RuntimeManager(Client):
         UserNotAuthorizedException
 
         """
-        server_guid = self.__get_guid__(server_guid, server_name, "name")
+        server_guid = self.__get_guid__(
+            server_guid, None, "qualifiedName", qualified_name
+        )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
         await self._async_make_request("DELETE", url)
 
         return
 
-    def shutdown_server(self, server_guid: str = None, server_name: str = None) -> None:
+    def shutdown_server(
+        self, server_guid: str = None, qualified_name: str = None
+    ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.
 
         Parameters
         ----------
         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        server_name: str, default = None
-            Name of server to act on. If not specified, server_guid must be.
+            Identity of the server to act on. If not specified, qualified_name must be.
+        qualified_name: str, default = None
+            Qualified name of server to act on. If not specified, server_guid must be.
 
         Returns
         -------
@@ -1359,7 +1489,9 @@ class RuntimeManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_shutdown_server(server_guid, server_name))
+        loop.run_until_complete(
+            self._async_shutdown_server(server_guid, qualified_name)
+        )
         return
 
     def get_platforms_by_name(
@@ -1731,7 +1863,7 @@ class RuntimeManager(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get("elements", "No platforms found")
+        return response.json().get("element", "No platforms found")
 
     def get_platform_by_guid(
         self,
@@ -1801,7 +1933,7 @@ class RuntimeManager(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get("elements", "No server found")
+        return response.json().get("element", "No server found")
 
     def get_server_by_guid(
         self,
@@ -2124,7 +2256,7 @@ class RuntimeManager(Client):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "name", tech_type="OMAG Server"
+            server_guid, server_name, "name", tech_type="Integration Daemon"
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 

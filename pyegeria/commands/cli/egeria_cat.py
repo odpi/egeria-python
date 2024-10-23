@@ -25,6 +25,7 @@ from pyegeria.commands.cat.glossary_actions import (
     load_terms,
     export_terms,
 )
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
 from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_archives import display_archive_list
 from pyegeria.commands.cat.list_assets import display_assets
@@ -511,6 +512,24 @@ def list_archives(ctx):
         c.userid,
         c.password,
         False,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("deployed-servers")
+@click.option(
+    "--search-string", default="*", help="Filter deployed servers by search string"
+)
+@click.pass_context
+def show_deployed_servers(ctx, search_string):
+    c = ctx.obj
+    display_servers_by_dep_imp(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
         c.jupyter,
         c.width,
     )

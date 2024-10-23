@@ -104,9 +104,13 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str)
         print_exception_response(e)
 
 
+#
+#   This method will be updated based on forthcoming changes on the Egeria server side
+#
 @click.command("refresh")
+@click.option("-engine-host-guid", help="GUID of engine host to refresh.")
 @click.pass_context
-def refresh_gov_eng_config(ctx):
+def refresh_gov_eng_config(ctx, engine_host_guid: str):
     """Start or restart an engine-host from its known configuration"""
     c = ctx.obj
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)

@@ -263,7 +263,7 @@ def main_live():
         view_url=view_url,
         user=userid,
         user_pass=user_pass,
-        paging=True,
+        paging=False,
     )
 
 
