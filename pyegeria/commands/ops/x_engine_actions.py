@@ -98,7 +98,7 @@ def start_server(ctx, server):
         p_client.close_session()
 
 
-@click.command("refresh-gov-eng-config")
+@click.command("refresh")
 @click.pass_context
 # @click.option(
 #     "--engine-host", default=EGERIA_ENGINE_HOST, help="Engine Host to refresh"
@@ -116,7 +116,7 @@ def start_server(ctx, server):
 #     envvar="EGERIA_PASSWORD",
 #     help="Egeria user password",
 # )
-def refresh_gov_eng_config(ctx):
+def refresh(ctx):
     """Start or restart an engine-host from its known configuration"""
     c = ctx.obj
     p_client = EgeriaTech(c.view_server, c.view_server_url, c.userid, c.password)

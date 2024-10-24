@@ -22,9 +22,11 @@ from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
     create_term,
+    delete_term,
     load_terms,
     export_terms,
 )
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
 from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_archives import display_archive_list
 from pyegeria.commands.cat.list_assets import display_assets
@@ -500,7 +502,7 @@ def show_todos(ctx):
     )
 
 
-@show.command("list-archives")
+@show.command("archives")
 @click.pass_context
 def list_archives(ctx):
     """Display a tree graph of information about an asset"""
@@ -516,10 +518,30 @@ def list_archives(ctx):
     )
 
 
-@show.command("list-schemas")
+@show.command("deployed-servers")
+@click.option(
+    "--search-string",
+    default="*",
+    help="Filter deployed for deployed implementation type by search string",
+)
+@click.pass_context
+def show_deployed_servers(ctx, search_string):
+    c = ctx.obj
+    display_servers_by_dep_imp(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("deployed-schemas")
 @click.option("--catalog", default="*", help="What database or catalog to search")
 @click.pass_context
-def list_deployed_schemas(ctx, catalog):
+def deployed_schemas(ctx, catalog):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
@@ -533,7 +555,7 @@ def list_deployed_schemas(ctx, catalog):
     )
 
 
-@show.command("list-catalogs")
+@show.command("catalogs")
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
 def list_catalogs(ctx, search_server):
@@ -550,10 +572,10 @@ def list_catalogs(ctx, search_server):
     )
 
 
-@show.command("list-glossaries")
+@show.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
-def list_glossaries(ctx, search_string):
+def glossaries(ctx, search_string):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_glossaries(
@@ -567,7 +589,7 @@ def list_glossaries(ctx, search_string):
     )
 
 
-@show.command("list-databases")
+@show.command("databases")
 @click.pass_context
 def list_databases(ctx):
     """Display a tree graph of information about an asset"""
@@ -596,6 +618,7 @@ tell.add_command(mark_todo_complete)
 tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
+tell.add_command(delete_term)
 tell.add_command(load_terms)
 tell.add_command(export_terms)
 
@@ -608,19 +631,19 @@ def survey(ctx):
     pass
 
 
-@survey.command("survey-uc-server")
-@click.pass_context
-@click.option(
-    "--uc_endpoint",
-    default="https://localhost:8080",
-    help="Endpoint of the Unity Catalog Server to Survey",
-)
-def survey_uc_server(ctx, uc_endpoint):
-    """Survey the Unity Catalog server at the given endpoint"""
-    c = ctx.obj
-    pass
-    # restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
-    #                   c.userid, c.password)
+# @survey.command("survey-uc-server")
+# @click.pass_context
+# @click.option(
+#     "--uc_endpoint",
+#     default="https://localhost:8080",
+#     help="Endpoint of the Unity Catalog Server to Survey",
+# )
+# def survey_uc_server(ctx, uc_endpoint):
+#     """Survey the Unity Catalog server at the given endpoint"""
+#     c = ctx.obj
+#     pass
+#     # restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
+#     #                   c.userid, c.password)
 
 
 if __name__ == "__main__":

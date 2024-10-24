@@ -47,7 +47,7 @@ def refresh_connector(
         server = "integration-daemon" if server is None else server
 
         s_client.refresh_integration_connectors(
-            connector_name=connector, server_guid=None, server_name=server
+            connector_name=connector, server_guid=None, display_name=server
         )
 
         print(f"\n===> Integration Daemon '{server}' refreshed {statement}.")

@@ -27,6 +27,7 @@ from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
 from pyegeria.commands.cat.list_archives import display_archive_list
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.list_my_profile import display_my_profile
 from pyegeria.commands.my.list_my_roles import display_my_roles
@@ -42,6 +43,7 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_glossary,
     create_term,
     load_terms,
+    delete_term,
     export_terms,
 )
 from pyegeria.commands.cat.list_glossaries import display_glossaries
@@ -356,7 +358,7 @@ def get_element_info(ctx, om_type):
     )
 
 
-@show.command("list-elements")
+@show.command("elements")
 @click.pass_context
 @click.option("--om_type", default="Project", help="Metadata type to query")
 def list_element_info(ctx, om_type):
@@ -373,9 +375,9 @@ def list_element_info(ctx, om_type):
     )
 
 
-@show.command("list-processes")
+@show.command("processes")
 @click.pass_context
-def list_element_info(ctx):
+def list_process_info(ctx):
     """Display the valid metadata values for a property and type"""
     c = ctx.obj
     list_elements(
@@ -917,9 +919,9 @@ def show_todos(ctx):
     )
 
 
-@show.command("list-archives")
+@show.command("archives")
 @click.pass_context
-def list_archives(ctx):
+def archives(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_archive_list(
@@ -933,12 +935,32 @@ def list_archives(ctx):
     )
 
 
-@show.command("list-deployed-schemas")
+@show.command("deployed-servers")
+@click.option(
+    "--search-string",
+    default="*",
+    help="Filter deployed for deployed implementation type by search string",
+)
+@click.pass_context
+def show_deployed_servers(ctx, search_string):
+    c = ctx.obj
+    display_servers_by_dep_imp(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show.command("deployed-schemas")
 @click.option(
     "--search_catalog", default="*", help="What database or catalog to search"
 )
 @click.pass_context
-def list_deployed_schemas(search_catalog, ctx):
+def deployed_schemas(ctx, search_catalog):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_database_schemas(
@@ -952,10 +974,10 @@ def list_deployed_schemas(search_catalog, ctx):
     )
 
 
-@show.command("list-catalogs")
+@show.command("catalogs")
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
-def list_catalogs(search_server, ctx):
+def catalogs(ctx, search_server):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_catalogs(
@@ -969,9 +991,9 @@ def list_catalogs(search_server, ctx):
     )
 
 
-@show.command("list-databases")
+@show.command("databases")
 @click.pass_context
-def list_databases(ctx):
+def databases(ctx):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     list_deployed_databases(
@@ -979,10 +1001,10 @@ def list_databases(ctx):
     )
 
 
-@show.command("list-glossaries")
+@show.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
-def list_glossaries(ctx, search_string):
+def glossaries(ctx, search_string):
     """Display a tree graph of information about an asset"""
     c = ctx.obj
     display_glossaries(
@@ -1016,6 +1038,7 @@ tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
 tell.add_command(load_terms)
+tell.add_command(delete_term)
 tell.add_command(export_terms)
 
 
@@ -1130,7 +1153,7 @@ def engine_host(ctx):
 
 
 @engine_host.command("status")
-@click.options(
+@click.option(
     "--engine-list",
     default=["*"],
     help="Enter the list of connectors you are interested in or ['*'] for all",

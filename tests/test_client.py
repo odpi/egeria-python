@@ -5,6 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 """
+import json
 from contextlib import nullcontext as does_not_raise
 
 import pytest

@@ -64,11 +64,11 @@ def display_status(
             header_style="white on dark_blue",
             title_style="bold white on black",
             caption_style="white on black",
-            caption=f"Status of Platforms - '{url}'",
+            caption=f"Status of Platforms - '{view_url}'",
             show_lines=True,
             # expand=True
         )
-        table.add_column("Platform Name")
+        table.add_column("Platform Name & GUID")
         # table.add_column("Platform GUID")
         table.add_column("Platform URL")
         table.add_column("Platform Origin")
@@ -98,7 +98,7 @@ def display_status(
                 platform_url = platform_report.get("platformURLRoot", " ")
                 platform_origin = platform_report.get("platformOrigin", " ")
                 platform_started = platform_report.get("platformStartTime", " ")
-
+                platform_id = f"{platform_name}\n\n\t\t&\n\n{platform_guid}"
                 servers = platform_report.get("omagservers", None)
 
                 if servers is not None:
@@ -120,7 +120,7 @@ def display_status(
                         # server_list = server_list + serv
 
                     table.add_row(
-                        platform_name,
+                        platform_id,
                         platform_url,
                         platform_origin,
                         platform_desc,

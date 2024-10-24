@@ -1577,13 +1577,24 @@ class GlossaryManager(GlossaryBrowser):
 
             # process each row
             for row in csv_reader:
+                # Parse the file. When the value '---' is encountered, make the value None.git+https:
                 term_name = row.get("Term Name", None)
                 qualified_name = row.get("Qualified Name", None)
-                abbrev = row.get("Abbreviation", None)
-                summary = row.get("Summary", None)
-                description = row.get("Description", None)
-                examples = row.get("Examples", None)
-                usage = row.get("Usage", None)
+                abbrev_in = row.get("Abbreviation", None)
+                abbrev = None if abbrev_in == "---" else abbrev_in
+
+                summary_in = row.get("Summary", None)
+                summary = None if summary_in == "---" else summary_in
+
+                description_in = row.get("Description", None)
+                description = None if description_in == "---" else description_in
+
+                examples_in = row.get("Examples", None)
+                examples = None if examples_in == "---" else examples_in
+
+                usage_in = row.get("Usage", None)
+                usage = None if usage_in == "---" else usage_in
+
                 version = row.get("Version Identifier", "1.0")
                 status = row.get("Status", "DRAFT")
                 status = status.upper()
@@ -1727,12 +1738,14 @@ class GlossaryManager(GlossaryBrowser):
             for term in term_list:
                 term_name = term["glossaryTermProperties"]["displayName"]
                 qualified_name = term["glossaryTermProperties"]["qualifiedName"]
-                abbrev = term["glossaryTermProperties"]["abbreviation"]
-                summary = term["glossaryTermProperties"]["summary"]
-                description = term["glossaryTermProperties"]["description"]
-                examples = term["glossaryTermProperties"]["examples"]
-                usage = term["glossaryTermProperties"]["usage"]
-                version = term["glossaryTermProperties"]["publishVersionIdentifier"]
+                abbrev = term["glossaryTermProperties"].get("abbreviation", "---")
+                summary = term["glossaryTermProperties"].get("summary", "---")
+                description = term["glossaryTermProperties"].get("description", "---")
+                examples = term["glossaryTermProperties"].get("examples", "---")
+                usage = term["glossaryTermProperties"].get("usage", "---")
+                version = term["glossaryTermProperties"].get(
+                    "publishVersionIdentifier", "---"
+                )
                 status = term["elementHeader"]["status"]
 
                 csv_writer.writerow(
@@ -2295,6 +2308,119 @@ class GlossaryManager(GlossaryBrowser):
 
         return
 
+    async def _async_update_term(
+        self,
+        glossary_term_guid: str,
+        body: dict,
+        is_merge_update: bool,
+    ) -> None:
+        """Add the data field values classification to a glossary term
+
+            Async Version.
+
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+            body: dict
+                Body containing information about the data field to add
+            is_merge_update: bool
+                Whether the data field values should be merged with existing definition or replace it.
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+        An example body is:
+
+        {
+            "class" : "ReferenceableRequestBody",
+            "elementProperties" :
+                {
+                    "class" : "GlossaryTermProperties",
+                    "description" : "This is the long description of the term. And this is some more text."
+                },
+                "updateDescription" : "Final updates based on in-house review comments."
+        }
+
+        """
+
+        validate_guid(glossary_term_guid)
+        is_merge_update_s = str(is_merge_update).lower()
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
+            f"update?isMergeUpdate={is_merge_update_s}"
+        )
+
+        await self._async_make_request("POST", url, body)
+        return
+
+    def update_term(
+        self,
+        glossary_term_guid: str,
+        body: dict,
+        is_merge_update: bool,
+    ) -> None:
+        """Add the data field values classification to a glossary term
+
+            Async Version.
+
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+            body: dict
+                Body containing information about the data field to add
+            is_merge_update: bool
+                Whether the data field values should be merged with existing definition or replace it.
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+        An example body is:
+
+        {
+            "class" : "ReferenceableRequestBody",
+            "elementProperties" :
+                {
+                    "class" : "GlossaryTermProperties",
+                    "description" : "This is the long description of the term. And this is some more text."
+                },
+                "updateDescription" : "Final updates based on in-house review comments."
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_term(glossary_term_guid, body, is_merge_update)
+        )
+
+        return
+
     async def _async_update_term_version_id(
         self,
         glossary_term_guid: str,
@@ -2499,30 +2625,26 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
-    async def _async_get_terms_for_glossary(
+    async def _async_delete_term(
         self,
-        glossary_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
+        term_guid: str,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
     ) -> list | str:
-        """Retrieve the list of glossary terms associated with a glossary.
-            The request body also supports the specification of an effective time for the query.
+        """Delete the glossary terms associated with the specified glossary. Async version.
+
         Parameters
         ----------
-            glossary_guid : str
-                Unique identifier for the glossary
-            effective_time : str, optional
-                If specified, terms are potentially included if they are active at the`effective_time.
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
+            term_guid : str,
+                The unique identifier for the term to delete.
+            for_lineage: bool, opt, default = False
+                Set true for lineage processing - generally false.
+            for_duplicate_processing: bool, opt, default = False
+                Set true if duplicate processing handled externally - generally set False.
+
         Returns
         -------
-        dict
-            The glossary definition associated with the glossary_guid
+        None
 
         Raises
         ------
@@ -2536,48 +2658,36 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
 
-        validate_guid(glossary_guid)
-
-        if page_size is None:
-            page_size = self.page_size
+        validate_guid(term_guid)
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
-            f"{glossary_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term_guid}/remove?forLineage={for_lineage}&forDuplicateProcessing={for_duplicate_processing}"
         )
 
-        if effective_time is not None:
-            body = {"effectiveTime": effective_time}
-            response = await self._async_make_request("POST", url, body)
-        else:
-            response = await self._async_make_request("POST", url)
+        await self._async_make_request("POST", url)
+        return
 
-        return response.json().get("elementList", "No terms found")
-
-    def get_terms_for_glossary(
+    def delete_term(
         self,
-        glossary_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
+        term_guid: str,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
     ) -> list | str:
-        """Retrieve the list of glossary terms associated with a glossary.
-            The request body also supports the specification of an effective time for the query.
+        """Delete the glossary terms associated with the specified glossary.
+
         Parameters
         ----------
-            glossary_guid : str
-                Unique identifier for the glossary
-            effective_time : str, optional
-                If specified, terms are potentially returned if they are active at the `effective_time`
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
+            term_guid : str,
+                The unique identifier for the term to delete.
+            for_lineage: bool, opt, default = False
+                Set true for lineage processing - generally false.
+            for_duplicate_processing: bool, opt, default = False
+                Set true if duplicate processing handled externally - generally set False.
+
         Returns
         -------
-        dict
-            The glossary definition associated with the glossary_guid
+        None
 
         Raises
         ------
@@ -2591,13 +2701,11 @@ class GlossaryManager(GlossaryBrowser):
         -----
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_for_glossary(
-                glossary_guid, effective_time, start_from, page_size
-            )
+        loop.run_until_complete(
+            self._async_delete_term(term_guid, for_lineage, for_duplicate_processing)
         )
 
-        return response
+        return
 
     async def _async_get_term_relationships(
         self,

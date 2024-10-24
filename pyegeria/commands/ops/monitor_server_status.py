@@ -70,12 +70,14 @@ def display_status(
             title_style="bold white on black",
             caption_style="white on black",
             caption=f"Server Status from Platform - '{url}'",
-            # show_lines=True,
+            show_lines=True,
         )
 
         table.add_column("Known Server")
         table.add_column("Status")
         if extended:
+            table.add_column("GUID", no_wrap=True)
+            table.add_column("Qualified Name")
             table.add_column("Description")
             table.add_column("Server Type")
             table.add_column("Last Started")
@@ -102,15 +104,31 @@ def display_status(
                 server_status = p_server.get("serverActiveStatus", "UNKNOWN")
                 if server_status in ("RUNNING", "STARTING"):
                     status = "Active"
-                elif server_status in ("INACTIVE", "STOPPING"):
+                elif server_status in ("INACTIVE", "STOPPING", "UNKNOWN"):
                     status = "Inactive"
                 else:
                     status = "UNKNOWN"
 
                 if extended:
+                    #
+                    #  get the qualified name and guid from get_server_by_name?
+                    #
+                    server_info = p_client.get_servers_by_name(server_name)
+                    if type(server_info) is str:
+                        guid = "---"
+                        qualified_name = "---"
+                    else:
+                        guid = ""
+                        qualified_name = ""
+                        for i in server_info:
+                            guid += f"{i["elementHeader"]["guid"]} "
+                            qualified_name += f"{i["properties"]["qualifiedName"]} "
+
                     table.add_row(
                         server_name,
                         "[red]Inactive" if status == "Inactive" else "[green]Active",
+                        guid,
+                        qualified_name,
                         server_desc,
                         server_type,
                         last_start_time,
@@ -144,7 +162,7 @@ def display_status(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--extended", help="Extended Information?")
+    parser.add_argument("--extended", default = True, help="Extended Information?")
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")

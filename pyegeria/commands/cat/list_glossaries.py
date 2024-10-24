@@ -87,7 +87,9 @@ def display_glossaries(
             expand=True,
         )
         table.add_column("Glossary Name")
-        table.add_column("Qualified Name / GUID", width=38, no_wrap=True)
+        table.add_column(
+            "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
+        )
         table.add_column("Language")
         table.add_column("Description")
         table.add_column("Usage")
@@ -101,7 +103,7 @@ def display_glossaries(
                 display_name = glossary["glossaryProperties"]["displayName"]
                 qualified_name = glossary["glossaryProperties"]["qualifiedName"]
                 guid = glossary["elementHeader"]["guid"]
-                q_name = f"{qualified_name}\n\n{guid}"
+                q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
                 language = glossary["glossaryProperties"]["language"]
                 description = glossary["glossaryProperties"]["description"]
                 usage = glossary["glossaryProperties"]["usage"]

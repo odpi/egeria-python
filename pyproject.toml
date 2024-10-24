@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "1.5.1.1.32"
+version = "1.5.1.1.38"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -76,6 +76,7 @@ pytest = "^8.2.2"
     list_glossaries = "pyegeria.commands.cat.list_glossaries:main"
     load_terms_from_file = "pyegeria.commands.cat.glossary_actions:load_terms"
     export_terms_to_file = "pyegeria.commands.cat.glossary_actions:export_terms"
+    list_deployed_servers = "pyegeria.commands.cat.list_servers_deployed_imp.py:main"
 
     monitor_asset_events = "pyegeria.commands.ops.monitor_asset_events:main"
     monitor_coco_status = "pyegeria.commands.ops.monitor_coco_status:main"
@@ -83,7 +84,7 @@ pytest = "^8.2.2"
     list_engine_activity = "pyegeria.commands.ops.monitor_engine_activity:main_paging "
     list_engine_activity_compressed = "pyegeria.commands.ops.monitor_engine_activity_c:main_paging "
     monitor_engine_activity_compressed = "pyegeria.commands.ops.monitor_engine_activity_c:main_live"
-
+    refresh_gov_eng_config = "pyegeria.commands.ops.gov_server_actions:refresh_gov_eng_config"
     monitor_gov_eng_status = "pyegeria.commands.ops.monitor_gov_eng_status:main_live"
     list_gov_eng_status = "pyegeria.commands.ops.monitor_gov_eng_status:main_paging"
     monitor_integ_daemon_status = "pyegeria.commands.ops.monitor_integ_daemon_status:main_live"
