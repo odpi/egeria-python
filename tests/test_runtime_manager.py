@@ -12,10 +12,14 @@ A running Egeria environment is needed to run these tests.
 """
 import json
 import time
+from json import JSONDecodeError
 
+import pytest
+from contextlib import nullcontext as does_not_raise
 from rich import print, print_json
+
 from rich.console import Console
-from rich.pretty import pprint
+from rich.traceback import install, Traceback
 
 from pyegeria import AutomatedCuration, RuntimeManager, EgeriaTech
 from pyegeria._exceptions import (
@@ -28,6 +32,7 @@ from pyegeria._exceptions import (
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
+install()
 console = Console()
 
 
@@ -52,40 +57,98 @@ class TestRuntimeManager:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-    # def test_get_config_properties(self):
-    #     try:
-    #         r_client = RuntimeManager(
-    #             self.good_view_server_1,
-    #             self.good_platform1_url,
-    #             user_id=self.good_user_2,
-    #             user_pwd="secret",
-    #         )
-    #         token = r_client.create_egeria_bearer_token()
-    #         server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"
-    #         connector_name = "UnityCatalogServerSynchronizer"
-    #         start_time = time.perf_counter()
-    #         response = r_client.get_config_properties(server_guid, connector_name)
-    #
-    #         duration = time.perf_counter() - start_time
-    #         print(f"Type of response: {type(response)}")
-    #         print(f"\n\tDuration was {duration} seconds")
-    #         if type(response) is dict:
-    #             print(f"Config Properties:\n{json.dumps(response, indent=4)}")
-    #         elif type(response) is str:
-    #             print(f"String response was {response}")
-    #         assert True
-    #
-    #     except (
-    #         InvalidParameterException,
-    #         PropertyServerException,
-    #         UserNotAuthorizedException,
-    #     ) as e:
-    #         print_exception_response(e)
-    #         assert False, "Invalid request"
-    #
-    #     finally:
-    #         r_client.close_session()
-    def test_get_guid(self):
+    @pytest.mark.parametrize(
+        "display_name, qualified_name, parameter_name, guid, tech_type, expectation",
+        [
+            # (
+            #     "integration-daemon",
+            #     None,
+            #     "qualifiedName",
+            #     None,
+            #     "Integration Daemon",
+            #     does_not_raise(),
+            # ),
+            # (
+            #     "integration-daemon",
+            #     "integration-daemon",
+            #     "qualifiedName",
+            #     None,
+            #     "Integration Daemon",
+            #     does_not_raise(),
+            # ),
+            (
+                None,
+                "Integration Daemon:integration-daemon",
+                "qualifiedName",
+                None,
+                "Integration Daemon",
+                does_not_raise(),
+            ),
+            # (
+            #     None,
+            #     None,
+            #     "qualifiedName",
+            #     "da9844c2-4e1a-4712-9f41-462fa156df43",
+            #     "Integration Daemon",
+            #     does_not_raise(),
+            # ),
+            # (
+            #     "integration-daemon",
+            #     None,
+            #     "qualifiedName",
+            #     "da9844c2-4e1a-4712-9f41-462fa156df43",
+            #     "Integration Daemon",
+            #     does_not_raise(),
+            # ),
+            (
+                "integration-daemon",
+                None,
+                "name",
+                None,
+                "Integration Daemon",
+                does_not_raise(),
+            ),
+        ],
+    )
+    def test_get_guid(
+        self, display_name, qualified_name, parameter_name, guid, tech_type, expectation
+    ):
+        install()
+        console = Console()
+        with expectation as excinfo:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            print(
+                f"\ndisplay_name: {display_name} qualified_name: {qualified_name} parameter_name: {parameter_name}"
+                f" guid: {guid} tech_type: {tech_type}\n"
+            )
+            start_time = time.perf_counter()
+            response = r_client.__get_guid__(
+                guid,
+                display_name,
+                parameter_name,
+                tech_type=tech_type,
+                qualified_name=qualified_name,
+            )
+
+            duration = time.perf_counter() - start_time
+
+            if type(response) is dict:
+                print(f"Config Properties:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response} duration was {duration} seconds")
+            assert True
+
+        if excinfo:
+            console.print(excinfo.value)
+            assert False, "Invalid request"
+
+    def test_refresh_gov_eng_config(self):
         try:
             r_client = RuntimeManager(
                 self.good_view_server_1,
@@ -94,22 +157,16 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            # server_guid = "dd646e7a-e325-441f-a4cd-2b04d53ffe4e"
-            server_guid = None
-            # name = "PostgreSQL Server:LocalPostgreSQL1"
-            # name = "LocalPostgreSQL1"
-            name = "OMAG Server Platform:Default Local OMAG Server Platform"
-            p_name = "qualifiedName"
+            display_name = "engine-host"
             start_time = time.perf_counter()
-            response = r_client.__get_guid__(server_guid, name, p_name)
-
+            response = r_client.refresh_gov_eng_config(display_name=display_name)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                print(f"Config Properties:\n{json.dumps(response, indent=4)}")
-            elif type(response) is str:
-                print(f"String response was {response}")
+            if type(response) is list:
+                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            else:
+                print(f"--> response was {response}")
             assert True
 
         except (
@@ -172,6 +229,38 @@ class TestRuntimeManager:
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Platform Report:\n{json.dumps(response, indent=4)}")
+            else:
+                print(f"--> response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_get_platform_templates_by_type(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            response = r_client.get_platform_templates_by_type()
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Platform template Report:\n{json.dumps(response, indent=4)}")
             else:
                 print(f"--> response was {response}")
             assert True
@@ -270,52 +359,19 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            # filter = "Survey Engine Host"
-            filter = "active-metadata-store"
+            filter = "engine"
+            # filter = "simple-metadata-store"
+
             response = r_client.get_servers_by_name(filter)
+            if type(response) is list:
+                print(f"Servers:\n{json.dumps(response, indent=4)}")
+            else:
+                print(f"--> response was {response}")
 
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
-                print(f"Servers:\n{json.dumps(response, indent=4)}")
-            elif type(response) is str:
-                print(f"String response was {response}")
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            r_client.close_session()
-
-    def test_get_integ_connector_config_properties(self):
-        try:
-            r_client = RuntimeManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_1,
-                user_pwd="secret",
-            )
-            token = r_client.create_egeria_bearer_token()
-
-            start_time = time.perf_counter()
-            connector_name = "UnityCatalogServerSynchronizer"
-            server_guid = None
-            server_name = "integration-daemon"
-            response = r_client.get_integ_connector_config_properties(
-                connector_name, server_guid, server_name
-            )
-
-            duration = time.perf_counter() - start_time
-            print(f"Type of response: {type(response)}")
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
                 print(f"Servers:\n{json.dumps(response, indent=4)}")
             elif type(response) is str:
                 print(f"String response was {response}")
@@ -341,7 +397,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "7c6e733e-c35c-471b-83f7-c853c593a4c3"
+            server_guid = "da9844c2-4e1a-4712-9f41-462fa156df43"
             start_time = time.perf_counter()
             response = r_client.get_server_by_guid(server_guid)
 
@@ -399,6 +455,191 @@ class TestRuntimeManager:
         finally:
             r_client.close_session()
 
+    def test_get_servers_by_dep_imp_type(self):
+        try:
+            r_client = EgeriaTech(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            filter = "*"
+            response = r_client.get_servers_by_dep_impl_type(filter)
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Server Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_get_server_templates_by_dep_imp_type(self):
+        try:
+            r_client = EgeriaTech(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            filter = "*"
+            response = r_client.get_server_templates_by_dep_impl_type(filter)
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Server Report:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_get_integ_connector_config_properties(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            connector_name = "UnityCatalogServerSynchronizer"
+            server_guid = None
+            server_name = "integration-daemon"
+            response = r_client.get_integ_connector_config_properties(
+                connector_name, display_name=server_name
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Servers:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_update_integ_connector_config(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            connector_name = "UnityCatalogServerSynchronizer"
+            # connector_name = None
+            server_guid = None
+            display_name = "integration-daemon"
+            qualified_name = None
+            merge_update = True
+            body = {"refreshTimeInterval": 10}
+
+            response = r_client.update_connector_configuration(
+                connector_name,
+                server_guid,
+                display_name,
+                qualified_name,
+                merge_update,
+                body,
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"Type of response: {type(response)}")
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print(f"Servers:\n{json.dumps(response, indent=4)}")
+            elif type(response) is str:
+                print(f"String response was {response}")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_refresh_integ_integration_connectors(self):
+        try:
+            r_client = RuntimeManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+            server_guid = None
+            server_name = "integration-daemon"
+            connector_name = "UnityCatalogServerSynchronizer"
+            start_time = time.perf_counter()
+            r_client.refresh_integration_connectors(
+                connector_name, server_guid, server_name
+            )
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print("Connector {connector_name} restarted")
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
     def test_restart_integ_daemon_connectors(self):
         try:
             r_client = RuntimeManager(
@@ -410,18 +651,16 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
             server_guid = None
             server_name = "integration-daemon"
+            # connector_name = "UnityCatalogServerSynchronizer"
+            connector_name = None
             start_time = time.perf_counter()
-            response = r_client.restart_integration_connectors(
-                "integration-daemon", server_guid, server_name
+            r_client.restart_integration_connectors(
+                connector_name, server_guid, server_name
             )
 
             duration = time.perf_counter() - start_time
-            print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
-            elif type(response) is str:
-                print(f"String response was {response}")
+            print("Connector {connector_name} restarted")
             assert True
 
         except (
@@ -444,18 +683,15 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "3601a8cd-2325-4992-915e-d454716b155c"  # integ_daemon
-            archive_file = "content-packs/CocoComboArchive.omarchive"
+            server_guid = "da9844c2-4e1a-4712-9f41-462fa156df43"  # simple
+
             start_time = time.perf_counter()
-            response = r_client.shutdown_server(server_guid)
+            r_client.shutdown_server(server_guid)
 
             duration = time.perf_counter() - start_time
-            print(f"Type of response: {type(response)}")
+
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                print(f"Platform Report:\n{json.dumps(response, indent=4)}")
-            elif type(response) is str:
-                print(f"String response was {response}")
+            print(f" Server {server_guid} shut down")
             assert True
 
         except (
@@ -478,9 +714,9 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"  # integ_daemon
-            server_guid = None
-            server_name = "active-metadata-store"
+            server_guid = "da9844c2-4e1a-4712-9f41-462fa156df43"  # simple
+            # server_guid = None
+            server_name = None
             start_time = time.perf_counter()
             response = r_client.activate_server_with_stored_config(
                 server_guid, server_name

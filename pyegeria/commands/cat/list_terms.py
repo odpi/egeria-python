@@ -88,10 +88,7 @@ def display_glossary_terms(
     token = g_client.create_egeria_bearer_token()
     if (glossary_name is not None) and (glossary_name != "*"):
         glossary_guid = g_client.__get_guid__(
-            glossary_guid,
-            glossary_name,
-            "qualifiedName",
-            "Glossary",
+            glossary_guid, glossary_name, "qualifiedName", None, "Glossary"
         )
 
     def generate_table(search_string: str, glossary_guid: str = None) -> Table:
@@ -141,14 +138,20 @@ def display_glossary_terms(
             if props == "None":
                 return table
 
-            display_name = Text(props["displayName"], style=style)
+            display_name = Text(props["displayName"], style=style, justify="center")
             qualified_name = props["qualifiedName"]
             term_guid = term["elementHeader"]["guid"]
-            q_name = Text(f"{qualified_name}\n\t\t&\n{term_guid}", style=style)
-            abbrev = Text(props.get("abbreviation", " "), style=style)
+            q_name = Text(
+                f"{qualified_name}\n&\n{term_guid}", style=style, justify="center"
+            )
+            abbrev = Text(props.get("abbreviation", " "), style=style, justify="center")
             summary = Text(props.get("summary", " "), style=style)
             description = Text(props.get("description", " "), style=style)
-            version = Text(props.get("publishVersionIdentifier", " "), style=style)
+            version = Text(
+                props.get("publishVersionIdentifier", " "),
+                style=style,
+                justify="center",
+            )
 
             classifications = term["elementHeader"]["classifications"]
             glossary_guid = None

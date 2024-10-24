@@ -22,6 +22,7 @@ from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
     create_term,
+    delete_term,
     load_terms,
     export_terms,
 )
@@ -519,7 +520,9 @@ def list_archives(ctx):
 
 @show.command("deployed-servers")
 @click.option(
-    "--search-string", default="*", help="Filter deployed servers by search string"
+    "--search-string",
+    default="*",
+    help="Filter deployed for deployed implementation type by search string",
 )
 @click.pass_context
 def show_deployed_servers(ctx, search_string):
@@ -615,6 +618,7 @@ tell.add_command(mark_todo_complete)
 tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
+tell.add_command(delete_term)
 tell.add_command(load_terms)
 tell.add_command(export_terms)
 

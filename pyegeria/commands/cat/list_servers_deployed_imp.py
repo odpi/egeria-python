@@ -81,10 +81,14 @@ def display_servers_by_dep_imp(
         table.add_column("Description")
         table.add_column("Qualified Name & GUID", no_wrap=True)
 
-        server_list = p_client.get_servers_by_dep_impl_type(filter)
-        if type(server_list) is str:
+        unsorted_server_list = p_client.get_servers_by_dep_impl_type(filter)
+        if type(unsorted_server_list) is str:
             print("No matching Software Servers found?")
             sys.exit(1)
+        server_list = sorted(
+            unsorted_server_list,
+            key=lambda x: x["properties"].get("displayName", "---").lower(),
+        )
 
         for server in server_list:
             display_name = server["properties"].get("displayName", "---")
@@ -144,7 +148,9 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    filter = Prompt.ask("Search string", default="*")
+    filter = Prompt.ask(
+        "Filter deployed for deployed implementation type by search string", default="*"
+    )
     display_servers_by_dep_imp(filter, server, url, userid, user_pass)
 
 
