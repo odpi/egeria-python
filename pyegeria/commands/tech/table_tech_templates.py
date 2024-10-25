@@ -19,38 +19,61 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    RegisteredInfo
+    RegisteredInfo,
 )
 from textual.widgets import DataTable
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-def add_row(table: Union[Table,DataTable], name: str, template_name:str, template_guid: str,
-            placeholder_table: Table) -> Table | DataTable:
-    if isinstance(table, Table):
-        table.add_row(name, template_name, template_guid, placeholder_table)
-    elif isinstance(table, DataTable):
-        table.add_row(name, template_name, template_guid, placeholder_table)
+# def add_row(table: Union[Table,DataTable], name: str, template_name:str, template_guid: str,
+#             placeholder_table: Table) -> Table | DataTable:
+#     if isinstance(table, Table):
+#         table.add_row(name, template_name, template_guid, placeholder_table)
+#     elif isinstance(table, DataTable):
+#         table.add_row(name, template_name, template_guid, placeholder_table)
+#
+#     return table
 
+
+def add_row(
+    table: Union[Table, DataTable],
+    name: str,
+    template_name: str,
+    template_guid: str,
+    placeholder_table: Table,
+) -> Table | DataTable:
+    if placeholder_table:
+        table.add_row(name, template_name, template_guid, placeholder_table)
+    else:
+        table.add_row(name, template_name, template_guid)
     return table
 
-def display_templates_spec(search_string:str, server: str,
-                       url: str, username: str, password: str, jupyter:bool=EGERIA_JUPYTER,
-                    width:int = EGERIA_WIDTH, data_table: bool = False
-    )-> Table | DataTable:
 
+def display_templates_spec(
+    search_string: str,
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+    data_table: bool = False,
+    placeholders: bool = False,
+) -> Table | DataTable:
     a_client = AutomatedCuration(server, url, username)
     nest_asyncio.apply()
     token = a_client.create_egeria_bearer_token(username, password)
@@ -78,21 +101,21 @@ def display_templates_spec(search_string:str, server: str,
 
             table.add_column("Name", width=20)
             table.add_column("Template Name", width=20)
-            table.add_column("Template GUID", width = 38,no_wrap=True)
-            table.add_column("Placeholders")
-
+            table.add_column("Template GUID", width=38, no_wrap=True)
+            if placeholders:
+                table.add_column("Placeholders")
 
         if type(tech_list) is list:
             for item in tech_list:
-                if 'deployedImplementationType' not in item['qualifiedName']:
+                if "deployedImplementationType" not in item["qualifiedName"]:
                     continue
-                placeholder_table = Table(expand=False, show_lines=True)
-                placeholder_table.add_column("Name", width = 20,no_wrap=True)
-                placeholder_table.add_column("Type", width = 10)
-                placeholder_table.add_column("Required", width = 10)
-                placeholder_table.add_column("Example", width = 20)
-                placeholder_table.add_column("Description", width = 40)
-
+                # if placeholders:
+                #     placeholder_table = Table(expand=False, show_lines=True)
+                #     placeholder_table.add_column("Name", width = 20,no_wrap=True)
+                #     placeholder_table.add_column("Type", width = 10)
+                #     placeholder_table.add_column("Required", width = 10)
+                #     placeholder_table.add_column("Example", width = 20)
+                #     placeholder_table.add_column("Description", width = 40)
 
                 name = item.get("name", "none")
 
@@ -106,22 +129,51 @@ def display_templates_spec(search_string:str, server: str,
                     for template in templates:
                         template_name = template.get("name", None)
 
-                        template_name = f"{name}_Template" if template_name is None else template_name
+                        template_name = (
+                            f"{name}_Template"
+                            if template_name is None
+                            else template_name
+                        )
 
                         specification = template["specification"]["placeholderProperty"]
                         template_guid = template["relatedElement"]["guid"]
+                        if placeholders:
+                            placeholder_table = Table(expand=False, show_lines=True)
+                            placeholder_table.add_column("Name", width=20, no_wrap=True)
+                            placeholder_table.add_column("Type", width=10)
+                            placeholder_table.add_column("Required", width=10)
+                            placeholder_table.add_column("Example", width=20)
+                            placeholder_table.add_column("Description", width=40)
 
-                        for placeholder in specification:
-                            placeholder_data_type = placeholder["dataType"]
-                            placeholder_description = placeholder["description"]
-                            placeholder_name = placeholder["placeholderPropertyName"]
-                            placeholder_required = placeholder["required"]
-                            placeholder_example = placeholder.get("example", None)
-                            placeholder_table.add_row(placeholder_name, placeholder_data_type,  placeholder_required,
-                                                      placeholder_example, placeholder_description,)
+                            for placeholder in specification:
+                                placeholder_data_type = placeholder["dataType"]
+                                placeholder_description = placeholder["description"]
+                                placeholder_name = placeholder[
+                                    "placeholderPropertyName"
+                                ]
+                                placeholder_required = placeholder["required"]
+                                placeholder_example = placeholder.get("example", None)
+                                placeholder_table.add_row(
+                                    placeholder_name,
+                                    placeholder_data_type,
+                                    placeholder_required,
+                                    placeholder_example,
+                                    placeholder_description,
+                                )
+                            table = add_row(
+                                table,
+                                name,
+                                template_name,
+                                template_guid,
+                                placeholder_table,
+                            )
+                        else:
+                            table = add_row(
+                                table, name, template_name, template_guid, None
+                            )
 
                         # table.add_row(name, template_name, template_guid, placeholder_table)
-                        table = add_row(table, name, template_name, template_guid, placeholder_table)
+                        # table = add_row(table, name, template_name, template_guid, placeholder_table)
 
             return table
         else:
@@ -137,7 +189,11 @@ def display_templates_spec(search_string:str, server: str,
             with console.pager(styles=True):
                 console.print(generate_table(data_table))
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
@@ -160,14 +216,21 @@ def main():
     guid = None
 
     try:
-        search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
-        display_templates_spec(search_string, server, url, userid, password,data_table=False)
-    except(KeyboardInterrupt):
+        search_string = Prompt.ask(
+            "Enter the technology you are searching for:", default="*"
+        )
+        display_templates_spec(
+            search_string,
+            server,
+            url,
+            userid,
+            password,
+            data_table=False,
+            placeholders=True,
+        )
+    except KeyboardInterrupt:
         pass
 
 
 if __name__ == "__main__":
     main()
-
-
-

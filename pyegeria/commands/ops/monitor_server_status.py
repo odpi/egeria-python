@@ -121,8 +121,8 @@ def display_status(
                         guid = ""
                         qualified_name = ""
                         for i in server_info:
-                            guid += f"{i["elementHeader"]["guid"]} "
-                            qualified_name += f"{i["properties"]["qualifiedName"]} "
+                            guid += f"{i['elementHeader']['guid']} "
+                            qualified_name += f"{i['properties']['qualifiedName']} "
 
                     table.add_row(
                         server_name,
@@ -162,7 +162,7 @@ def display_status(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--extended", default = True, help="Extended Information?")
+    parser.add_argument("--extended", default=True, help="Extended Information?")
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")

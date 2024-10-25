@@ -54,6 +54,7 @@ disable_ssl_warnings = True
 
 
 def display_engine_activity_c(
+    row_limit: int = 0,
     view_server: str = EGERIA_VIEW_SERVER,
     view_url: str = EGERIA_VIEW_SERVER_URL,
     user: str = EGERIA_USER,
@@ -66,6 +67,8 @@ def display_engine_activity_c(
 
     Parameters
     ----------
+    row_limit : int, opt, default = 0
+        If non-zero, limit the number of rows returned
     view_server : str
         The Egeria view server name.
     view_url : str
@@ -125,7 +128,11 @@ def display_engine_activity_c(
                 key=lambda i: i.get("requestedTime", time.asctime()),
                 reverse=True,
             )
+            row_count = 0
             for action in sorted_action_status:
+                if row_limit > 0 and row_count >= row_limit:
+                    break
+                row_count += 1
                 requested_time = action.get("requestedTime", " ")[:-10]
                 start_time = action.get("startTime", " ")[:-10]
                 completion_time = action.get("completionTime", " ")[:-10]
@@ -229,6 +236,9 @@ def display_engine_activity_c(
 
 def main_live():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rowlimit", default=0, help="Number of rows to return; 0 for all"
+    )
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
@@ -240,14 +250,17 @@ def main_live():
     url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-
+    rowlimit = int(args.rowlimit) if args.rowlimit is not None else 0
     display_engine_activity_c(
-        server=server, url=url, user=userid, user_pass=user_pass, paging=False
+        rowlimit, server, url, user=userid, user_pass=user_pass, paging=False
     )
 
 
 def main_paging():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--rowlimit", default=0, help="Number of rows to return; 0 for all"
+    )
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
@@ -259,9 +272,10 @@ def main_paging():
     url = args.url if args.url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    rowlimit = int(args.rowlimit) if args.rowlimit is not None else 0
 
     display_engine_activity_c(
-        server=server, url=url, user=userid, user_pass=user_pass, paging=True
+        rowlimit, server, url, user=userid, user_pass=user_pass, paging=True
     )
 
 

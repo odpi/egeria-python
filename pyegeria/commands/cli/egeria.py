@@ -1185,6 +1185,13 @@ def gov_eng_status(ctx, engine_list, engine_host, list):
 
 @engine_host.command("activity")
 @click.option(
+    "--rowlimit",
+    default=0,
+    type=int,
+    show_default=True,
+    help="If non-zero, limit the number of rows returned",
+)
+@click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
 @click.option(
@@ -1195,11 +1202,12 @@ def gov_eng_status(ctx, engine_list, engine_host, list):
     help="Compressed combines some attributes into a single column",
 )
 @click.pass_context
-def eng_activity_status(ctx, list, compressed):
+def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
     if compressed:
         display_engine_activity_c(
+            rowlimit,
             c.view_server,
             c.view_server_url,
             c.admin_user,
@@ -1210,6 +1218,7 @@ def eng_activity_status(ctx, list, compressed):
         )
     else:
         display_engine_activity(
+            rowlimit,
             c.view_server,
             c.view_server_url,
             c.admin_user,
