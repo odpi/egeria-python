@@ -42,7 +42,7 @@ from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
     create_term,
-    load_terms,
+    import_terms,
     delete_term,
     export_terms,
 )
@@ -1037,7 +1037,7 @@ tell.add_command(mark_todo_complete)
 tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
-tell.add_command(load_terms)
+tell.add_command(import_terms)
 tell.add_command(delete_term)
 tell.add_command(export_terms)
 

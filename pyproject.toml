@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "1.5.1.1.41"
+version = "1.5.1.1.46"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -102,6 +102,7 @@ pytest = "^8.2.2"
     stop_daemon = "pyegeria.commands.ops.engine_actions:stop_daemon"
 
     list_my_profile = "pyegeria.commands.my.list_my_profile:main"
+    list_my_roles = "pyegeria.commands.my.list_my_roles:main"
     monitor_open_todos = "pyegeria.commands.my.monitor_open_todos:main"
     monitor_my_todos = "pyegeria.commands.my.monitor_my_todos:main"
     create_todo = "pyegeria.commands.my.todo_actions:create_todo"

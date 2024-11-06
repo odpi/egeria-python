@@ -7,6 +7,7 @@ added in subsequent versions of the glossary_omvs module.
 
 """
 import asyncio
+import os
 import time
 import csv
 from datetime import datetime
@@ -1534,6 +1535,11 @@ class GlossaryManager(GlossaryBrowser):
         self, glossary_name: str, filename: str, upsert: bool = False
     ) -> List[dict]:
         """This method loads glossary terms into the specified glossary from the indicated file."""
+        # check that the file exists
+        if not os.path.exists(filename):
+            raise InvalidParameterException("File not found")
+            sys.exit(1)
+
         # Check that glossary exists and get guid
         glossaries = self.get_glossaries_by_name(glossary_name)
         if type(glossaries) is not list:
@@ -1575,10 +1581,20 @@ class GlossaryManager(GlossaryBrowser):
                 raise InvalidParameterException("Invalid headers in CSV File")
                 sys.exit(1)
 
-            # process each row
+            # process each row and validate values
             for row in csv_reader:
                 # Parse the file. When the value '---' is encountered, make the value None.git+https:
-                term_name = row.get("Term Name", None)
+                term_name = row.get("Term Name", " ")
+                if len(term_name) < 2:
+                    term_info.append(
+                        {
+                            "term_name": "---",
+                            "qualified_name": "---",
+                            "term_guid": "---",
+                            "error": "missing or invalid term names - skipping",
+                        }
+                    )
+                    continue
                 qualified_name = row.get("Qualified Name", None)
                 abbrev_in = row.get("Abbreviation", None)
                 abbrev = None if abbrev_in == "---" else abbrev_in
@@ -1597,19 +1613,6 @@ class GlossaryManager(GlossaryBrowser):
 
                 version = row.get("Version Identifier", "1.0")
                 status = row.get("Status", "DRAFT")
-                status = status.upper()
-
-                # quality check the row
-                if len(term_name) < 2:
-                    term_info.append(
-                        {
-                            "term_name": "---",
-                            "qualified_name": "---",
-                            "term_guid": "---",
-                            "error": "missing or invalid term names - skipping",
-                        }
-                    )
-                    continue
                 if self.__validate_term_status__(status) is False:
                     term_info.append(
                         {
@@ -1620,6 +1623,8 @@ class GlossaryManager(GlossaryBrowser):
                         }
                     )
                     continue
+                status = status.upper()
+
                 if upsert:
                     # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
                     # do the update for the row - if there is no qualified name we will treat the row as an insert.

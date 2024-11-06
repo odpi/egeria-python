@@ -256,7 +256,7 @@ def create_term(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def load_terms(
+def import_terms(
     glossary_name, file_name, verbose, upsert, server, url, userid, password, timeout
 ):
     """Load terms from file into the glossary specified"""

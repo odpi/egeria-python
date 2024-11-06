@@ -14,9 +14,11 @@ import time
 import sys
 from rich import box
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.table import Table
 from rich.console import Console
 
+from pyegeria import EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -57,7 +59,7 @@ def display_todos(
 ):
     console = Console(width=width, force_terminal=not jupyter)
 
-    m_client = MyProfile(server, url, user_id=user)
+    m_client = EgeriaTech(server, url, user_id=user)
     token = m_client.create_egeria_bearer_token(user, user_pass)
 
     def generate_table(search_string: str = "*") -> Table:
@@ -81,7 +83,7 @@ def display_todos(
         table.add_column("Due")
         table.add_column("Completion")
         table.add_column("Status")
-        table.add_column("Sponsor")
+        table.add_column("Assigned Actors")
 
         todo_items = m_client.find_to_do("*", starts_with=True)
         if type(todo_items) is str:
@@ -95,7 +97,7 @@ def display_todos(
             due = " "
             completed = " "
             status = " "
-            sponsor = " "
+            assigned = " "
         else:
             for item in todo_items:
                 props = item["properties"]
@@ -106,9 +108,15 @@ def display_todos(
                 due = props.get("dueTime", " ")
                 completed = props.get("completionTime", " ")
                 status = props.get("toDoStatus", "---")
-                # assigned_actors = item["assignedActors"]
-                # sponsor = assigned_actors[0].get("uniqueName", " ")
-                sponsor = "erinoverview"
+                assigned_actors = item["assignedActors"]
+
+                assigned = ""
+                if type(assigned_actors) is list:
+                    for actor in assigned_actors:
+                        actor_guid = actor["guid"]
+                        assigned += f"* {m_client.get_actor_for_guid(actor_guid)} "
+                assigned_out = Markdown(assigned)
+
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"
                 elif status in ("INPROGRESS", "COMPLETE"):
@@ -117,7 +125,14 @@ def display_todos(
                     status = f"[red]{status}"
 
                 table.add_row(
-                    name, type_name, created, priority, due, completed, status, sponsor
+                    name,
+                    type_name,
+                    created,
+                    priority,
+                    due,
+                    completed,
+                    status,
+                    assigned_out,
                 )
 
         return table

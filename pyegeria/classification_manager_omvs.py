@@ -660,6 +660,15 @@ class ClassificationManager(Client):
         )
         return response
 
+    def get_actor_for_guid(self, guid: str) -> str:
+        """Get the name of the actor from the supplied guid."""
+        details = self.get_element_by_guid(guid)
+        if type(details) is str:
+            return details
+        if details["elementHeader"]["type"]["typeName"] != "UserIdentity":
+            return "GUID does not represent a UserIdentity"
+        return details["properties"]["userId"]
+
     async def _async_get_element_by_unique_name(
         self,
         name: str,
@@ -951,7 +960,7 @@ class ClassificationManager(Client):
             the requesting user is not authorized to issue this request.
         """
 
-        property_name = ["name", "qualifiedName", "title"]
+        property_name = ["name", "displayName", "title"]
         elements = await self._async_get_elements_by_property_value(
             name, property_name, None
         )

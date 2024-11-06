@@ -68,6 +68,7 @@ def display_my_profile(
 
         profile_props = my_profiles.get("profileProperties", "---")
         name = profile_props["fullName"]
+
         tree = Tree(
             Panel(f"Profile of {name}", title="Personal Profile"),
             expanded=True,
@@ -93,7 +94,10 @@ def display_my_profile(
 
         id_list_md = ""
         for identities in my_profiles["userIdentities"]:
-            id_list_md += f"* {identities['userIdentity']['properties']['userId']}\n"
+            id_list_md += (
+                f"* {identities['userIdentity']['properties']['userId']}\n"
+                f"* {identities['userIdentity']['elementHeader']['guid']}\n"
+            )
         t2 = tree.add(Panel(Markdown(id_list_md), title="Identities", expand=False))
 
         contact_methods = my_profiles["contactMethods"]

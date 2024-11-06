@@ -23,7 +23,7 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_glossary,
     create_term,
     delete_term,
-    load_terms,
+    import_terms,
     export_terms,
 )
 from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
@@ -619,7 +619,7 @@ tell.add_command(reassign_todo)
 tell.add_command(delete_todo)
 tell.add_command(create_todo)
 tell.add_command(delete_term)
-tell.add_command(load_terms)
+tell.add_command(import_terms)
 tell.add_command(export_terms)
 
 

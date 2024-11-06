@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 
-A simple display for my profile
+List the roles for a given user.
 """
 import os
 import argparse
