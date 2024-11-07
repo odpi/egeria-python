@@ -269,7 +269,7 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 @click.option(
     "--verbose",
     is_flag=True,
-    default=False,
+    default=True,
     help="If set, result descriptions are provided",
 )
 @click.option(
@@ -292,13 +292,9 @@ def import_terms(
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        if os.path.exists(file_name):
-            print(f"Found file at: {file_name}\n")
-        else:
-            print(f"File not found at: {file_name}\n")
-            sys.exit(0)
-
-        result = m_client.load_terms_from_file(glossary_name, file_name, upsert=upsert)
+        result = m_client.load_terms_from_file(
+            glossary_name, file_name, upsert=upsert, verbose=verbose
+        )
 
         click.echo(
             f"Loaded terms from  into glossary: {glossary_name} from {file_name}"

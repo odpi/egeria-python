@@ -1532,13 +1532,52 @@ class GlossaryManager(GlossaryBrowser):
         return response
 
     def load_terms_from_file(
-        self, glossary_name: str, filename: str, upsert: bool = False
-    ) -> List[dict]:
-        """This method loads glossary terms into the specified glossary from the indicated file."""
-        # check that the file exists
-        if not os.path.exists(filename):
-            raise InvalidParameterException("File not found")
-            sys.exit(1)
+        self,
+        glossary_name: str,
+        filename: str,
+        upsert: bool = True,
+        verbose: bool = True,
+    ) -> List[dict] | None:
+        """This method loads glossary terms into the specified glossary from the indicated file.
+
+        Parameters
+        ----------
+            glossary_name : str
+                Name of the glossary to import terms into.
+            filename: str
+                Path to the file to import terms from. File is assumed to be in CSV format. The path
+                is relative to where the python method is being called from.
+            upsert: bool, default = True
+                If true, terms from the file are inserted into the glossary if no qualified name is specified;
+                if a qualified name is specified in the file, then the file values for this term will over-ride the
+                values in the glossary. If false, the row in the file will be appended to the glossary, possibly
+                resulting in duplicate term names - which is legal (since the qualified names will be unique).
+
+            verbose: bool, default = True
+                If true, a JSON structure will be returned indicating the import status of each row.
+
+
+        Returns
+        -------
+        [dict]:
+            If verbose is True, import status for each row
+        None:
+            If verbose is False
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+            Keep in mind that the file path is relative to where the python method is being called from -
+            not relative to the Egeria platform.
+
+        """
 
         # Check that glossary exists and get guid
         glossaries = self.get_glossaries_by_name(glossary_name)
@@ -1553,7 +1592,7 @@ class GlossaryManager(GlossaryBrowser):
                     f"Display Name: {g['glossaryProperties']['displayName']}\tQualified Name:"
                     f" {g['glossaryProperties']['qualifiedName']}\n"
                 )
-            raise InvalidParameterException(glossary_error)
+            raise Exception(glossary_error)
             sys.exit(1)
 
         # Now we know we have a single glossary so we can get the guid
@@ -1612,7 +1651,7 @@ class GlossaryManager(GlossaryBrowser):
                 usage = None if usage_in == "---" else usage_in
 
                 version = row.get("Version Identifier", "1.0")
-                status = row.get("Status", "DRAFT")
+                status = row.get("Status", "DRAFT").upper()
                 if self.__validate_term_status__(status) is False:
                     term_info.append(
                         {
@@ -1623,7 +1662,6 @@ class GlossaryManager(GlossaryBrowser):
                         }
                     )
                     continue
-                status = status.upper()
 
                 if upsert:
                     # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
@@ -1704,7 +1742,10 @@ class GlossaryManager(GlossaryBrowser):
                         "term_guid": term_guid,
                     }
                 )
-        return term_info
+        if verbose:
+            return term_info
+        else:
+            return
 
     async def _async_export_glossary_to_csv(
         self, glossary_guid: str, target_file: str

@@ -525,9 +525,9 @@ class TestGlossaryManager:
                 self.good_view_server_1, self.good_platform1_url, self.good_user_3
             )
             token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
-            glossary = "test-glossary"
-            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/Glossary/pets.om-terms"
-            response = g_client.load_terms_from_file(glossary, file_name)
+            glossary = "test"
+            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary/pets.om-terms"
+            response = g_client.load_terms_from_file(glossary, file_name, True)
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
