@@ -1680,6 +1680,15 @@ class GlossaryManager(GlossaryBrowser):
                                 }
                             )
                             continue
+                        elif len(term_stuff) > 1:
+                            term_info.append(
+                                {
+                                    "term_name": term_name,
+                                    "qualified_name": qualified_name,
+                                    "error": "Multiple matching terms - skipping",
+                                }
+                            )
+                            continue
                         else:
                             # An existing term was found - so update it!
                             body = {
@@ -1697,7 +1706,7 @@ class GlossaryManager(GlossaryBrowser):
                                 },
                                 "initialStatus": status,
                             }
-                            term_guid = term_stuff["elementHeader"]["guid"]
+                            term_guid = term_stuff[0]["elementHeader"]["guid"]
                             self.update_term(
                                 term_guid, body_slimmer(body), is_merge_update=True
                             )

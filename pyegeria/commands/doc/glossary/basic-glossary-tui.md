@@ -59,32 +59,41 @@
 ![tui-delete-term 2024-11-07 at 03.51.57.png](tui-delete-term%202024-11-07%20at%2003.51.57.png)
 
 ![out-delete-term 2024-11-07 at 03.57.25.png](out-delete-term%202024-11-07%20at%2003.57.25.png)
-## Export terms to a CSV File
 
+## Import & Export terms 
+We can import terms from a CSV formatted file and export terms to a CSV formatted file. 
+
+### Import terms into example glossary
+
+#### First we'll import terms from the file `Test1.om-terms`
+![tui-import-terms 2024-11-07 at 08.14.02.png](tui-import-terms%202024-11-07%20at%2008.14.02.png)
+Because the *verbose* option is enabled, we will get back a JSON structure reflecting the import status for each row 
+in the file. Note that there must be a blank row at the end of the file because we detect a missing term name and skip
+that row.
+![out-import-terms 2024-11-07 at 08.15.18.png](out-import-terms%202024-11-07%20at%2008.15.18.png)
+Listing the glossary terms shows us the results of the import.
+
+![out-list-terms-for-example 2024-11-06 at 16.40.12.png](out-list-terms-for-example%202024-11-06%20at%2016.40.12.png)
+
+
+### Export terms to a CSV File
+Now we will create a copy of this glossary to a CSV file to use it for further demonstrations.
 ![tui-export-glossary 2024-11-06 at 21.02.16.png](tui-export-glossary%202024-11-06%20at%2021.02.16.png)
 
 ![out-terms-export 2024-11-06 at 21.03.24.png](out-terms-export%202024-11-06%20at%2021.03.24.png)
 
 ![out-exported-terms 2024-11-06 at 21.06.32.png](out-exported-terms%202024-11-06%20at%2021.06.32.png)
 
-## Import terms from a CSV File
+### Demonstrating upsert capability
 
+We will copy the exported file to a new file called **upsert-example.om-terms** and modify the file by
+adding a fourth row and updating the description field of one of the terms.
 
+![upsert-example.om-terms 2024-11-07 at 11.44.05.png](upsert-example.om-terms%202024-11-07%20at%2011.44.05.png)
 
+### Upsert
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+![tui-upsert 2024-11-07 at 11.49.04.png](../tui-upsert%202024-11-07%20at%2011.49.04.png)
 
 
 ----
