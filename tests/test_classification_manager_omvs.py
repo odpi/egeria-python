@@ -171,7 +171,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = "5b0c1309-47d1-423f-a7e6-29fb7a322190"
+    element_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -199,11 +199,40 @@ def test_get_element_by_guid():
         c_client.close_session()
 
 
+def test_get_actor_for_guid():
+    element_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        start_time = time.perf_counter()
+        result = c_client.get_actor_for_guid(element_guid)
+        duration = time.perf_counter() - start_time
+        print(f"\n\tDuration was {duration} seconds")
+        if type(result) is dict:
+            print_json(data=result)
+        elif type(result) is str:
+            console.print("\n\n\t Response is: " + result)
+
+        assert True
+
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
+        print_exception_response(e)
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+
 def test_get_guid_for_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
-    property_value = "unity"
+    property_value = "Sustainability Glossary"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)

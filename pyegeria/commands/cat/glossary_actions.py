@@ -131,7 +131,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        m_client.delete_to_do(glossary_guid)
+        m_client.delete_glossary(glossary_guid)
 
         click.echo(f"Deleted glossary: {glossary_guid}")
 
@@ -234,7 +234,36 @@ def create_term(
         m_client.close_session()
 
 
-@click.command("load-terms-from-file")
+@click.command("delete-term")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.argument("term-guid")
+def delete_term(server, url, userid, password, timeout, term_guid):
+    """Delete a glossary term"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        term_guid = term_guid.strip()
+        term_info = m_client.get_terms_by_guid(term_guid)
+
+        m_client.delete_term(term_guid)
+
+        click.echo(
+            f"Deleted term with GUID: {term_guid} and Display Name: {term_info['glossaryTermProperties']['displayName']}"
+        )
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("import-terms-from-file")
 @click.option("--glossary-name", help="Name of Glossary", required=True)
 @click.option("--file-name", help="Path of CSV file", required=True)
 @click.option(
@@ -303,30 +332,6 @@ def export_terms(glossary_guid, file_name, server, url, userid, password, timeou
         click.echo(
             f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
         )
-
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
-    finally:
-        m_client.close_session()
-
-
-@click.command("delete-term")
-@click.option("--term-guid", help="Unique identity of term", required=True)
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-def delete_term(term_guid, server, url, userid, password, timeout):
-    """Delete the Term specified"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        m_client.delete_term(term_guid)
-
-        click.echo(f"Deleted term:  {term_guid}")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)

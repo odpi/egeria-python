@@ -3045,7 +3045,6 @@ class GlossaryManager(GlossaryBrowser):
         term_guid : str
             The GUID of the glossary term to retrieve.
 
-
         Returns
         -------
         dict | str
@@ -3078,7 +3077,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-
 
         Returns
         -------

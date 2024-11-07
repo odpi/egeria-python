@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- Copyright Contributors to the Egeria project. -->
 # Overview
 
 # Command Line Interfaces
@@ -90,3 +92,6 @@
 | start_daemon                       |         |     |    | ✓   |      |        |
 | stop_daemon                        |         |     |    | ✓   |      |        |
 
+----
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+Copyright Contributors to the Egeria project.
