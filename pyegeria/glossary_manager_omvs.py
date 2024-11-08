@@ -1690,7 +1690,9 @@ class GlossaryManager(GlossaryBrowser):
                             )
                             continue
                         else:
-                            # An existing term was found - so update it!
+                            # An existing term was found - so update it! Get the existing values and overlay
+                            # values from file when present
+
                             body = {
                                 "class": "ReferenceableRequestBody",
                                 "elementProperties": {
@@ -1704,7 +1706,7 @@ class GlossaryManager(GlossaryBrowser):
                                     "usage": usage,
                                     "publishVersionIdentifier": version,
                                 },
-                                "initialStatus": status,
+                                "updateDescription": "Update from file import via upsert",
                             }
                             term_guid = term_stuff[0]["elementHeader"]["guid"]
                             self.update_term(
@@ -2254,7 +2256,9 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         body: dict,
-        is_merge_update: bool,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processig: bool = False,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2266,7 +2270,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            is_merge_update: bool
+            is_merge_update: bool, optional, default = True
                 Whether the data field values should be merged with existing definition or replace it.
 
 
@@ -2300,10 +2304,12 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(glossary_term_guid)
         is_merge_update_s = str(is_merge_update).lower()
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processig).lower()
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
-            f"update?isMergeUpdate={is_merge_update_s}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/{glossary_term_guid}/"
+            f"update?isMergeUpdate={is_merge_update_s}&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
         )
 
         await self._async_make_request("POST", url, body)
@@ -2313,7 +2319,9 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         body: dict,
-        is_merge_update: bool,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processig: bool = False,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2325,7 +2333,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            is_merge_update: bool
+            is_merge_update: bool, optional, default = True
                 Whether the data field values should be merged with existing definition or replace it.
 
 
@@ -2358,120 +2366,13 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term(glossary_term_guid, body, is_merge_update)
-        )
-
-        return
-
-    async def _async_update_term(
-        self,
-        glossary_term_guid: str,
-        body: dict,
-        is_merge_update: bool,
-    ) -> None:
-        """Add the data field values classification to a glossary term
-
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_term_guid: str
-                Unique identifier for the source glossary term.
-            body: dict
-                Body containing information about the data field to add
-            is_merge_update: bool
-                Whether the data field values should be merged with existing definition or replace it.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        An example body is:
-
-        {
-            "class" : "ReferenceableRequestBody",
-            "elementProperties" :
-                {
-                    "class" : "GlossaryTermProperties",
-                    "description" : "This is the long description of the term. And this is some more text."
-                },
-                "updateDescription" : "Final updates based on in-house review comments."
-        }
-
-        """
-
-        validate_guid(glossary_term_guid)
-        is_merge_update_s = str(is_merge_update).lower()
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
-            f"update?isMergeUpdate={is_merge_update_s}"
-        )
-
-        await self._async_make_request("POST", url, body)
-        return
-
-    def update_term(
-        self,
-        glossary_term_guid: str,
-        body: dict,
-        is_merge_update: bool,
-    ) -> None:
-        """Add the data field values classification to a glossary term
-
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_term_guid: str
-                Unique identifier for the source glossary term.
-            body: dict
-                Body containing information about the data field to add
-            is_merge_update: bool
-                Whether the data field values should be merged with existing definition or replace it.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        An example body is:
-
-        {
-            "class" : "ReferenceableRequestBody",
-            "elementProperties" :
-                {
-                    "class" : "GlossaryTermProperties",
-                    "description" : "This is the long description of the term. And this is some more text."
-                },
-                "updateDescription" : "Final updates based on in-house review comments."
-        }
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_term(glossary_term_guid, body, is_merge_update)
+            self._async_update_term(
+                glossary_term_guid,
+                body,
+                is_merge_update,
+                for_lineage,
+                for_duplicate_processig,
+            )
         )
 
         return

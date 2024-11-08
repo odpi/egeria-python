@@ -519,14 +519,47 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_update_term(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_guid = "f9ed697c-04be-4744-aa7c-d302b6d91321"
+            body = {
+                "class": "ReferenceableUpdateRequestBody",
+                "elementProperties": {
+                    "class": "GlossaryTermProperties",
+                    "description": "This is the long description of the term. And this is some more text.",
+                },
+            }
+
+            start_time = time.perf_counter()
+            g_client.update_term(term_guid, body, True)
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
+
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
     def test_load_terms_from_csv(self):
         try:
             g_client = GlossaryManager(
                 self.good_view_server_1, self.good_platform1_url, self.good_user_3
             )
             token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
-            glossary = "test"
-            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary/pets.om-terms"
+            glossary = "example"
+            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary/upsert-example.om-terms"
             response = g_client.load_terms_from_file(glossary, file_name, True)
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -542,6 +575,8 @@ class TestGlossaryManager:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+        except Exception as e:
+            print(e)
 
         finally:
             g_client.close_session()
