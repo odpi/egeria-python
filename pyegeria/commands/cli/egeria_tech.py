@@ -126,13 +126,6 @@ from pyegeria.commands.tech.get_tech_type_template import template_viewer
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--verbose", is_flag=True, default=False, help="Enable verbose mode")
-@click.option(
-    "--paging",
-    is_flag=True,
-    default=False,
-    help="Enable paging snapshots vs live updates",
-)
 @click.option(
     "--jupyter",
     is_flag=True,
@@ -162,8 +155,6 @@ def cli(
     userid,
     password,
     timeout,
-    paging,
-    verbose,
     jupyter,
     width,
 ):
@@ -182,15 +173,11 @@ def cli(
         userid,
         password,
         timeout,
-        paging,
-        verbose,
         jupyter,
         width,
     )
     ctx.max_content_width = 200
     ctx.ensure_object(Config)
-    if verbose:
-        click.echo(f"we are in verbose mode - server is {server}")
 
 
 @cli.group("show")

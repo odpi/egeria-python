@@ -140,13 +140,6 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--verbose", is_flag=True, default=False, help="Enable verbose mode")
-@click.option(
-    "--paging",
-    is_flag=True,
-    default=False,
-    help="Enable paging snapshots vs live updates",
-)
 @click.option(
     "--jupyter",
     is_flag=True,
@@ -176,8 +169,6 @@ def cli(
     userid,
     password,
     timeout,
-    paging,
-    verbose,
     jupyter,
     width,
 ):
@@ -196,15 +187,11 @@ def cli(
         userid,
         password,
         timeout,
-        paging,
-        verbose,
         jupyter,
         width,
     )
     ctx.max_content_width = 200
     ctx.ensure_object(Config)
-    if verbose:
-        click.echo(f"we are in verbose mode - server is {server}")
 
 
 @cli.group("show")
@@ -505,7 +492,7 @@ def show_asset_types(ctx):
 @info.command("user-ids")
 @click.pass_context
 def show_todos(ctx):
-    """Display a tree graph of information about an asset"""
+    """Display a list of known user ids"""
     c = ctx.obj
     list_user_ids(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -527,6 +514,7 @@ def deployed_data(ctx):
 )
 @click.pass_context
 def show_deployed_servers(ctx, search_string):
+    """Display deployed servers"""
     c = ctx.obj
     display_servers_by_dep_imp(
         search_string,
@@ -543,7 +531,7 @@ def show_deployed_servers(ctx, search_string):
 @click.option("--catalog", default="*", help="What database or catalog to search")
 @click.pass_context
 def deployed_schemas(ctx, catalog):
-    """Display a tree graph of information about an asset"""
+    """Display deployed schemas"""
     c = ctx.obj
     list_deployed_database_schemas(
         catalog,
@@ -560,7 +548,7 @@ def deployed_schemas(ctx, catalog):
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
 def list_catalogs(ctx, search_server):
-    """Display a tree graph of information about an asset"""
+    """Display deployed catalogs"""
     c = ctx.obj
     list_deployed_catalogs(
         search_server,
@@ -576,7 +564,7 @@ def list_catalogs(ctx, search_server):
 @deployed_data.command("databases")
 @click.pass_context
 def list_databases(ctx):
-    """Display a tree graph of information about an asset"""
+    """Display deployed databases"""
     c = ctx.obj
     list_deployed_databases(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -607,6 +595,7 @@ tell_glossary.add_command(delete_glossary)
 tell_glossary.add_command(create_term)
 tell_glossary.add_command(import_terms)
 tell_glossary.add_command(export_terms)
+tell_glossary.add_command(delete_term)
 
 
 @tell.group("todo")
@@ -620,7 +609,6 @@ tell_todo.add_command(mark_todo_complete)
 tell_todo.add_command(reassign_todo)
 tell_todo.add_command(delete_todo)
 tell_todo.add_command(create_todo)
-tell_todo.add_command(delete_term)
 
 
 # @tell.group("survey")

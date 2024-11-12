@@ -2,13 +2,24 @@ import click
 
 
 class Config(object):
-    def __init__(self, server: str = None, url: str = None,
-                 view_server: str = 'view-server', view_server_url: str = 'https://localhost:9443',
-                 integration_daemon: str = 'integration-daemon', integration_daemon_url: str = 'https://localhost:9443',
-                 engine_host: str = 'engine-host', engine_host_url: str = 'https://localhost:9443',
-                 admin_user: str = 'garygeeke', admin_user_password: str = 'secret',
-                 userid: str = None, password: str = None,
-                 timeout: int = 30, paging: bool = False, verbose: bool = False, jupyter: bool = False, width:int = 200):
+    def __init__(
+        self,
+        server: str = None,
+        url: str = None,
+        view_server: str = "view-server",
+        view_server_url: str = "https://localhost:9443",
+        integration_daemon: str = "integration-daemon",
+        integration_daemon_url: str = "https://localhost:9443",
+        engine_host: str = "engine-host",
+        engine_host_url: str = "https://localhost:9443",
+        admin_user: str = "garygeeke",
+        admin_user_password: str = "secret",
+        userid: str = None,
+        password: str = None,
+        timeout: int = 30,
+        jupyter: bool = False,
+        width: int = 200,
+    ):
         self.metadata_store = server
         self.metadata_store_url = url
         self.view_server = view_server
@@ -22,8 +33,6 @@ class Config(object):
         self.userid = userid
         self.password = password
         self.timeout = timeout
-        self.paging = paging
-        self.verbose = verbose
         self.jupyter = jupyter
         self.width = width
         self.server = server

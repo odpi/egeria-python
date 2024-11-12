@@ -162,20 +162,20 @@ def display_status(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--extended", default=True, help="Extended Information?")
+    parser.add_argument("--full", default=True, help="Extended Information?")
     parser.add_argument("--server", help="Name of the server to display status for")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    extended = args.extended if args.extended is not None else False
+    full = args.extended if args.extended is not None else False
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
-    display_status(extended, server, url, userid, user_pass)
+    display_status(full, server, url, userid, user_pass)
 
 
 if __name__ == "__main__":
