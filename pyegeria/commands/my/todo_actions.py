@@ -21,9 +21,9 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-erins_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
-peter_guid = "a187bc48-8154-491f-97b4-a2f3c3f1a00e"
-tanya_guid = "26ec1614-bede-4b25-a2a3-f8ed26db3aaa"
+erins_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+peter_guid = "59f0232c-f834-4365-8e06-83695d238d2d"
+tanya_guid = "a987c2d2-c8b6-4882-b344-c47956d2de97"
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

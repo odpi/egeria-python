@@ -1106,11 +1106,13 @@ class TestAutomatedCuration:
             )
             token = a_client.create_egeria_bearer_token()
             postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
+            unity_sync_guid = "06d068d9-9e08-4e67-8c59-073bbf1013af"
+            u2 = "ec069de6-5755-45cd-8b78-9c76452a060f"
             element_guid = "731eb432-e9e9-482a-86fc-0a7407ea78e6"
             rel_guid = "19a5fc39-f928-4a78-8637-ade37e0c5598"
             start_time = time.perf_counter()
 
-            response = a_client.get_catalog_target(rel_guid)
+            response = a_client.get_catalog_target(u2)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1148,10 +1150,10 @@ class TestAutomatedCuration:
             element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
             # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
-            t = INTEGRATION_GUIDS["UnityCatalogInsideCatalogSynchronizer"]
+            t = INTEGRATION_GUIDS["UnityCatalogServerSynchronizer"]
             start_time = time.perf_counter()
             connector_guid = "6bb2181e-7724-4515-ba3c-877cded55980"
-            response = a_client.get_catalog_targets(connector_guid)
+            response = a_client.get_catalog_targets(t)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1161,7 +1163,7 @@ class TestAutomatedCuration:
                 console.log(f"Found {count} elements")
                 print_json(out)
             elif type(response) is str:
-                console.log("\n\n" + response)
+                print(f"\n\nfor {t} got response {response} ")
             assert True
 
         except (

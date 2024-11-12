@@ -173,7 +173,8 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             response = g_client.find_glossaries(
-                "*",
+                # "*",
+                "Sustainability Glossary",
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
@@ -438,6 +439,39 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_get_terms_by_guid(self, server: str = good_view_server_1):
+        server_name = server
+
+        try:
+            g_client = GlossaryManager(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_guid = "50c7668a-9cef-4c1e-bd9d-dde99c03a310"
+            response = g_client.get_terms_by_guid(term_guid)
+
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+                print(
+                    f"Term name is: {response['glossaryTermProperties']['displayName']}"
+                )
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
     def test_find_glossary_terms(self):
         try:
             g_client = GlossaryManager(
@@ -485,15 +519,48 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_update_term(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_guid = "f9ed697c-04be-4744-aa7c-d302b6d91321"
+            body = {
+                "class": "ReferenceableUpdateRequestBody",
+                "elementProperties": {
+                    "class": "GlossaryTermProperties",
+                    "description": "This is the long description of the term. And this is some more text.",
+                },
+            }
+
+            start_time = time.perf_counter()
+            g_client.update_term(term_guid, body, True)
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
+
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
     def test_load_terms_from_csv(self):
         try:
             g_client = GlossaryManager(
                 self.good_view_server_1, self.good_platform1_url, self.good_user_3
             )
             token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
-            glossary = "test-glossary"
-            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/pets.csv"
-            response = g_client.load_terms_from_file(glossary, file_name)
+            glossary = "example"
+            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary/upsert-example.om-terms"
+            response = g_client.load_terms_from_file(glossary, file_name, True)
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -508,6 +575,38 @@ class TestGlossaryManager:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+        except Exception as e:
+            print(e)
 
+        finally:
+            g_client.close_session()
+
+    def test_delete_term(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            term_guid = "50c7668a-9cef-4c1e-bd9d-dde99c03a310"
+            g_client.delete_term(term_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nDeleted term {term_guid}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
         finally:
             g_client.close_session()

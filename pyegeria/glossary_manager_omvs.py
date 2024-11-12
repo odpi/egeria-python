@@ -7,6 +7,7 @@ added in subsequent versions of the glossary_omvs module.
 
 """
 import asyncio
+import os
 import time
 import csv
 from datetime import datetime
@@ -1531,9 +1532,53 @@ class GlossaryManager(GlossaryBrowser):
         return response
 
     def load_terms_from_file(
-        self, glossary_name: str, filename: str, upsert: bool = False
-    ) -> List[dict]:
-        """This method loads glossary terms into the specified glossary from the indicated file."""
+        self,
+        glossary_name: str,
+        filename: str,
+        upsert: bool = True,
+        verbose: bool = True,
+    ) -> List[dict] | None:
+        """This method loads glossary terms into the specified glossary from the indicated file.
+
+        Parameters
+        ----------
+            glossary_name : str
+                Name of the glossary to import terms into.
+            filename: str
+                Path to the file to import terms from. File is assumed to be in CSV format. The path
+                is relative to where the python method is being called from.
+            upsert: bool, default = True
+                If true, terms from the file are inserted into the glossary if no qualified name is specified;
+                if a qualified name is specified in the file, then the file values for this term will over-ride the
+                values in the glossary. If false, the row in the file will be appended to the glossary, possibly
+                resulting in duplicate term names - which is legal (since the qualified names will be unique).
+
+            verbose: bool, default = True
+                If true, a JSON structure will be returned indicating the import status of each row.
+
+
+        Returns
+        -------
+        [dict]:
+            If verbose is True, import status for each row
+        None:
+            If verbose is False
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+            Keep in mind that the file path is relative to where the python method is being called from -
+            not relative to the Egeria platform.
+
+        """
+
         # Check that glossary exists and get guid
         glossaries = self.get_glossaries_by_name(glossary_name)
         if type(glossaries) is not list:
@@ -1547,7 +1592,7 @@ class GlossaryManager(GlossaryBrowser):
                     f"Display Name: {g['glossaryProperties']['displayName']}\tQualified Name:"
                     f" {g['glossaryProperties']['qualifiedName']}\n"
                 )
-            raise InvalidParameterException(glossary_error)
+            raise Exception(glossary_error)
             sys.exit(1)
 
         # Now we know we have a single glossary so we can get the guid
@@ -1575,10 +1620,20 @@ class GlossaryManager(GlossaryBrowser):
                 raise InvalidParameterException("Invalid headers in CSV File")
                 sys.exit(1)
 
-            # process each row
+            # process each row and validate values
             for row in csv_reader:
                 # Parse the file. When the value '---' is encountered, make the value None.git+https:
-                term_name = row.get("Term Name", None)
+                term_name = row.get("Term Name", " ")
+                if len(term_name) < 2:
+                    term_info.append(
+                        {
+                            "term_name": "---",
+                            "qualified_name": "---",
+                            "term_guid": "---",
+                            "error": "missing or invalid term names - skipping",
+                        }
+                    )
+                    continue
                 qualified_name = row.get("Qualified Name", None)
                 abbrev_in = row.get("Abbreviation", None)
                 abbrev = None if abbrev_in == "---" else abbrev_in
@@ -1596,20 +1651,7 @@ class GlossaryManager(GlossaryBrowser):
                 usage = None if usage_in == "---" else usage_in
 
                 version = row.get("Version Identifier", "1.0")
-                status = row.get("Status", "DRAFT")
-                status = status.upper()
-
-                # quality check the row
-                if len(term_name) < 2:
-                    term_info.append(
-                        {
-                            "term_name": "---",
-                            "qualified_name": "---",
-                            "term_guid": "---",
-                            "error": "missing or invalid term names - skipping",
-                        }
-                    )
-                    continue
+                status = row.get("Status", "DRAFT").upper()
                 if self.__validate_term_status__(status) is False:
                     term_info.append(
                         {
@@ -1620,6 +1662,7 @@ class GlossaryManager(GlossaryBrowser):
                         }
                     )
                     continue
+
                 if upsert:
                     # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
                     # do the update for the row - if there is no qualified name we will treat the row as an insert.
@@ -1637,8 +1680,19 @@ class GlossaryManager(GlossaryBrowser):
                                 }
                             )
                             continue
+                        elif len(term_stuff) > 1:
+                            term_info.append(
+                                {
+                                    "term_name": term_name,
+                                    "qualified_name": qualified_name,
+                                    "error": "Multiple matching terms - skipping",
+                                }
+                            )
+                            continue
                         else:
-                            # An existing term was found - so update it!
+                            # An existing term was found - so update it! Get the existing values and overlay
+                            # values from file when present
+
                             body = {
                                 "class": "ReferenceableRequestBody",
                                 "elementProperties": {
@@ -1652,9 +1706,9 @@ class GlossaryManager(GlossaryBrowser):
                                     "usage": usage,
                                     "publishVersionIdentifier": version,
                                 },
-                                "initialStatus": status,
+                                "updateDescription": "Update from file import via upsert",
                             }
-                            term_guid = term_stuff["elementHeader"]["guid"]
+                            term_guid = term_stuff[0]["elementHeader"]["guid"]
                             self.update_term(
                                 term_guid, body_slimmer(body), is_merge_update=True
                             )
@@ -1699,7 +1753,10 @@ class GlossaryManager(GlossaryBrowser):
                         "term_guid": term_guid,
                     }
                 )
-        return term_info
+        if verbose:
+            return term_info
+        else:
+            return
 
     async def _async_export_glossary_to_csv(
         self, glossary_guid: str, target_file: str
@@ -2199,7 +2256,9 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         body: dict,
-        is_merge_update: bool,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processig: bool = False,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2211,7 +2270,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            is_merge_update: bool
+            is_merge_update: bool, optional, default = True
                 Whether the data field values should be merged with existing definition or replace it.
 
 
@@ -2245,10 +2304,12 @@ class GlossaryManager(GlossaryBrowser):
 
         validate_guid(glossary_term_guid)
         is_merge_update_s = str(is_merge_update).lower()
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processig).lower()
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
-            f"update?isMergeUpdate={is_merge_update_s}"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/{glossary_term_guid}/"
+            f"update?isMergeUpdate={is_merge_update_s}&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
         )
 
         await self._async_make_request("POST", url, body)
@@ -2258,7 +2319,9 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         body: dict,
-        is_merge_update: bool,
+        is_merge_update: bool = True,
+        for_lineage: bool = False,
+        for_duplicate_processig: bool = False,
     ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -2270,7 +2333,7 @@ class GlossaryManager(GlossaryBrowser):
                 Unique identifier for the source glossary term.
             body: dict
                 Body containing information about the data field to add
-            is_merge_update: bool
+            is_merge_update: bool, optional, default = True
                 Whether the data field values should be merged with existing definition or replace it.
 
 
@@ -2303,120 +2366,13 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term(glossary_term_guid, body, is_merge_update)
-        )
-
-        return
-
-    async def _async_update_term(
-        self,
-        glossary_term_guid: str,
-        body: dict,
-        is_merge_update: bool,
-    ) -> None:
-        """Add the data field values classification to a glossary term
-
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_term_guid: str
-                Unique identifier for the source glossary term.
-            body: dict
-                Body containing information about the data field to add
-            is_merge_update: bool
-                Whether the data field values should be merged with existing definition or replace it.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        An example body is:
-
-        {
-            "class" : "ReferenceableRequestBody",
-            "elementProperties" :
-                {
-                    "class" : "GlossaryTermProperties",
-                    "description" : "This is the long description of the term. And this is some more text."
-                },
-                "updateDescription" : "Final updates based on in-house review comments."
-        }
-
-        """
-
-        validate_guid(glossary_term_guid)
-        is_merge_update_s = str(is_merge_update).lower()
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/terms/{glossary_term_guid}/"
-            f"update?isMergeUpdate={is_merge_update_s}"
-        )
-
-        await self._async_make_request("POST", url, body)
-        return
-
-    def update_term(
-        self,
-        glossary_term_guid: str,
-        body: dict,
-        is_merge_update: bool,
-    ) -> None:
-        """Add the data field values classification to a glossary term
-
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_term_guid: str
-                Unique identifier for the source glossary term.
-            body: dict
-                Body containing information about the data field to add
-            is_merge_update: bool
-                Whether the data field values should be merged with existing definition or replace it.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        An example body is:
-
-        {
-            "class" : "ReferenceableRequestBody",
-            "elementProperties" :
-                {
-                    "class" : "GlossaryTermProperties",
-                    "description" : "This is the long description of the term. And this is some more text."
-                },
-                "updateDescription" : "Final updates based on in-house review comments."
-        }
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_term(glossary_term_guid, body, is_merge_update)
+            self._async_update_term(
+                glossary_term_guid,
+                body,
+                is_merge_update,
+                for_lineage,
+                for_duplicate_processig,
+            )
         )
 
         return
@@ -3040,7 +2996,6 @@ class GlossaryManager(GlossaryBrowser):
         term_guid : str
             The GUID of the glossary term to retrieve.
 
-
         Returns
         -------
         dict | str
@@ -3073,7 +3028,6 @@ class GlossaryManager(GlossaryBrowser):
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-
 
         Returns
         -------

@@ -144,8 +144,8 @@ def display_my_todos(
         if type(my_roles) is list:
             for role in my_roles:
                 role_guid = role["elementHeader"]["guid"]
-                role_title = role["properties"].get("title", "No Title")
-                add_rows(table, role_guid, role_title)
+                role_id = role["properties"].get("roleId", "No Role Id")
+                add_rows(table, role_guid, role_id)
 
         # m_client.close_session()
         return table

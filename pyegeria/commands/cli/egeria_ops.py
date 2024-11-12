@@ -40,6 +40,7 @@ from pyegeria.commands.ops.monitor_server_status import (
 from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
 from pyegeria.commands.ops.restart_integration_daemon import restart_connector
 from pyegeria.commands.ops.monitor_server_startup import display_startup_status
+from pyegeria.commands.ops.list_archives import display_archive_list
 
 
 # class Config(object):
@@ -128,13 +129,6 @@ from pyegeria.commands.ops.monitor_server_startup import display_startup_status
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--verbose", is_flag=True, default=False, help="Enable verbose mode")
-@click.option(
-    "--paging",
-    is_flag=True,
-    default=False,
-    help="Enable paging snapshots vs live updates",
-)
 @click.option(
     "--jupyter",
     is_flag=True,
@@ -164,8 +158,6 @@ def cli(
     userid,
     password,
     timeout,
-    paging,
-    verbose,
     jupyter,
     width,
 ):
@@ -184,15 +176,11 @@ def cli(
         userid,
         password,
         timeout,
-        paging,
-        verbose,
         jupyter,
         width,
     )
     ctx.max_content_width = 200
     ctx.ensure_object(Config)
-    if verbose:
-        click.echo(f"we are in verbose mode - server is {server}")
 
 
 @cli.group("show")
@@ -204,12 +192,12 @@ def show(ctx):
 
 @show.group("platforms")
 @click.pass_context
-def show_platform(ctx):
+def show_platforms(ctx):
     """Group of commands to show information about Egeria platforms"""
     pass
 
 
-@show_platform.command("status")
+@show_platforms.command("status")
 @click.pass_context
 def show_platform_status(ctx):
     """Display a live status view of known platforms"""
@@ -263,6 +251,22 @@ def show_startup_status(ctx):
     )
 
 
+@show_server.command("archives")
+@click.pass_context
+def list_archives(ctx):
+    """Display a tree graph of information about an asset"""
+    c = ctx.obj
+    display_archive_list(
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        False,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show.group("engines")
 @click.pass_context
 def engine_host(ctx):
@@ -273,7 +277,7 @@ def engine_host(ctx):
 @engine_host.command("status")
 @click.option(
     "--engine-list",
-    default=["*"],
+    default="*",
     help="Enter the list of connectors you are interested in or ['*'] for all",
 )
 @click.option(
@@ -289,7 +293,7 @@ def gov_eng_status(ctx, engine_list, engine_host, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(
-        engine_list,
+        [engine_list],
         engine_host,
         c.view_server,
         c.view_server_url,
@@ -361,7 +365,7 @@ def integrations(ctx):
 @integrations.command("status")
 @click.option(
     "--connector-list",
-    default=["*"],
+    default="*",
     help="Enter the list of connectors you are interested in or ['*'] for all",
 )
 @click.option(
@@ -372,7 +376,7 @@ def integrations_status(ctx, connector_list, list):
     """Display integration-daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
-        connector_list,
+        [connector_list],
         c.integration_daemon,
         c.integration_daemon_url,
         c.view_server,

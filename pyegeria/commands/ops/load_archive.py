@@ -36,7 +36,6 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 @click.command("load-archive")
 @click.option(
     "--file_name",
-    prompt="Enter the name of the archive to load",
     default="content-packs/CocoComboArchive.omarchive",
     help="Full path on the Metadata Server to the archive file to load",
 )

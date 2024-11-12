@@ -25,7 +25,6 @@ from pyegeria import (
     UserNotAuthorizedException,
     EgeriaTech,
 )
-from pyegeria.glossary_browser_omvs import GlossaryBrowser
 
 disable_ssl_warnings = True
 
@@ -84,12 +83,19 @@ def display_glossary_terms(
     width : int
         The width of the console output. Defaults to EGERIA_WIDTH.
     """
+
+    console = Console(
+        style="bold bright_white on black", width=width, force_terminal=not jupyter
+    )
     g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
     token = g_client.create_egeria_bearer_token()
     if (glossary_name is not None) and (glossary_name != "*"):
-        glossary_guid = g_client.__get_guid__(
-            glossary_guid, glossary_name, "qualifiedName", None, "Glossary"
-        )
+        glossary_guid = g_client.get_guid_for_name(glossary_name)
+        if glossary_guid == "No elements found":
+            console.print(
+                f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
+            )
+            sys.exit(0)
 
     def generate_table(search_string: str, glossary_guid: str = None) -> Table:
         """Make a new table."""
@@ -185,9 +191,6 @@ def display_glossary_terms(
         return table
 
     try:
-        console = Console(
-            style="bold bright_white on black", width=width, force_terminal=not jupyter
-        )
         with console.pager(styles=True):
             console.print(generate_table(search_string, glossary_guid))
 

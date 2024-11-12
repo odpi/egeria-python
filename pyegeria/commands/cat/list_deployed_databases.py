@@ -1,4 +1,4 @@
-"""This creates a templates guid file from the core metadata archive"""
+"""This displays deployed databases"""
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 import os
