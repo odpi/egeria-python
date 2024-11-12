@@ -263,7 +263,7 @@ def delete_term(server, url, userid, password, timeout, term_guid):
         m_client.close_session()
 
 
-@click.command("import-terms-from-file")
+@click.command("import-terms")
 @click.option("--glossary-name", help="Name of Glossary", required=True)
 @click.option("--file-name", help="Path of CSV file", required=True)
 @click.option(
@@ -286,7 +286,15 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def import_terms(
-    glossary_name, file_name, verbose, upsert, server, url, userid, password, timeout
+    glossary_name: str,
+    file_name: str,
+    verbose: bool,
+    upsert: bool,
+    server: str,
+    url: str,
+    userid: str,
+    password: str,
+    timeout: int,
 ):
     """Load terms from file into the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
@@ -308,7 +316,7 @@ def import_terms(
         m_client.close_session()
 
 
-@click.command("export-terms-to-file")
+@click.command("export-terms")
 @click.option("--glossary-guid", help="GUID of Glossary to export", required=True)
 @click.option("--file-name", help="Path of CSV file", required=True)
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
@@ -318,7 +326,7 @@ def import_terms(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def export_terms(glossary_guid, file_name, server, url, userid, password, timeout):
+def export_terms(glossary_guid: str, file_name, server, url, userid, password, timeout):
     """Export the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
