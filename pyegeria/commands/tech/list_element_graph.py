@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 Unit tests for the Utils helper functions using the Pytest framework.
 
 
-A simple display for glossary terms
+Retrieve elements based on a search of a specified properties.
 """
 import argparse
 import os
@@ -46,7 +46,7 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "260"))
 disable_ssl_warnings = True
 
 
-def display_elements(
+def display_element_graph(
     search_string: str,
     prop_list: [str],
     server: str,

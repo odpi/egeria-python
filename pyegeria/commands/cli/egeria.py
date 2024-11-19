@@ -23,6 +23,8 @@ from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
 from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_projects import display_project_list
+from pyegeria.commands.tech.list_element_graph import display_element_graph
+from pyegeria.commands.tech.list_elements_x import list_elements_x
 from pyegeria.commands.tech.list_relationships import list_relationships
 from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
@@ -382,6 +384,27 @@ def show_guid_infos(ctx, guid):
     display_guid(guid, c.server, c.url, c.userid, c.password, c.jupyter, c.width)
 
 
+@show_elements.command("element-graph")
+@click.pass_context
+@click.option("--search-string", help="value we are searching for")
+@click.option(
+    "--prop-list", default="anchorTypeName", help="List of properties we are searching"
+)
+def list_element_graph(ctx, search_string: str, prop_list: str):
+    """List elements with the specified properties"""
+    c = ctx.obj
+    display_element_graph(
+        search_string,
+        prop_list,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show_elements.command("related-specifications")
 @click.pass_context
 @click.argument("element-guid")
@@ -664,19 +687,36 @@ def valid_metadata_values(ctx, property, type_name):
 
 @show_elements.command("elements")
 @click.pass_context
+@click.option(
+    "--extended",
+    is_flag=True,
+    default=False,
+    help="If True, feedback information is displayed",
+)
 @click.option("--om_type", default="Organization", help="Metadata type to query")
-def list_element_info(ctx, om_type):
-    """Display the valid metadata values for a property and type"""
+def list_element_info(ctx, om_type, extended):
+    """Display elements of a specific Open Metadata Type"""
     c = ctx.obj
-    list_elements(
-        om_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    if extended:
+        list_elements_x(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
+    else:
+        list_elements(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
 
 
 @show_tech_info.command("processes")
@@ -699,7 +739,7 @@ def list_element_info(ctx):
 @click.pass_context
 @click.option("--om_type", default="Project", help="Metadata type to query")
 def get_element_info(ctx, om_type):
-    """Display the elements for an Open Metadata Type"""
+    """Display a table of elements for an Open Metadata Type"""
     c = ctx.obj
     display_elements(
         om_type,
@@ -941,7 +981,7 @@ def show_certification_types(ctx, search_string):
 @show_cat_info.command("asset-types")
 @click.pass_context
 def show_asset_types(ctx):
-    """Display engine-host status information"""
+    """Display known asset types"""
     c = ctx.obj
     display_asset_types(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -1294,7 +1334,7 @@ def show_tech_type_elements(ctx, tech_type):
 )
 @click.pass_context
 def show_asset_graph(ctx, root_collection):
-    """Display a tree graph of information about an asset"""
+    """Display information about a collection"""
     c = ctx.obj
     collection_viewer(
         root_collection,
@@ -1355,8 +1395,8 @@ def show_todos(ctx, search_string, status):
 
 @show_cat_info.command("user-ids")
 @click.pass_context
-def show_todos(ctx):
-    """Display a tree graph of information about an asset"""
+def show_user_ids(ctx):
+    """Display table of known user ids"""
     c = ctx.obj
     list_user_ids(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width

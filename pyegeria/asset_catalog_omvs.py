@@ -302,7 +302,7 @@ class AssetCatalog(Client):
     # Engine Actions
     #
 
-    async def _async_find_assets_in_domain(
+    async def _async_find_in_asset_domain(
         self,
         search_string: str,
         start_from: int = 0,
@@ -367,7 +367,7 @@ class AssetCatalog(Client):
         response = await self._async_make_request("POST", url, body, time_out=time_out)
         return response.json().get("searchMatches", "no assets found")
 
-    def find_assets_in_domain(
+    def find_in_asset_domain(
         self,
         search_string: str,
         start_from: int = 0,
@@ -416,7 +416,7 @@ class AssetCatalog(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_assets_in_domain(
+            self._async_find_in_asset_domain(
                 search_string,
                 start_from,
                 page_size,

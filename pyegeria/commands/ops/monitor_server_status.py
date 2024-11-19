@@ -169,7 +169,7 @@ def main():
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    full = args.extended if args.extended is not None else False
+    full = args.full if args.full is not None else False
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER

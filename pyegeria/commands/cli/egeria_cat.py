@@ -328,7 +328,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
 def glossaries(ctx, search_string):
-    """Display a tree graph of information about an asset"""
+    """Display information about a collection"""
     c = ctx.obj
     display_glossaries(
         search_string,
@@ -491,7 +491,7 @@ def show_asset_types(ctx):
 
 @info.command("user-ids")
 @click.pass_context
-def show_todos(ctx):
+def show_user_ids(ctx):
     """Display a list of known user ids"""
     c = ctx.obj
     list_user_ids(

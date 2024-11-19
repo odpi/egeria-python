@@ -24,7 +24,6 @@ from pyegeria._exceptions import (
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 
-# from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
 
@@ -71,7 +70,7 @@ class TestCoreAdminServices:
         with expectation as excinfo:
             client = CoreServerConfig(server, url, user)
             config = client.get_stored_configuration()
-            assert type(config) == dict, "There was only an exception response"
+            assert isinstance(config, dict), "There was only an exception response"
             if type(config) is dict:
                 print("\n\n" + json.dumps(config, indent=4))
 
@@ -438,6 +437,38 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
+    def test_add_postgres_log_destinations(self, server: str = good_server_3):
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url, self.good_user_1
+            )
+
+            config_body = {
+                "supportedSeverities": [
+                    "Error",
+                    "Exception",
+                    "Activity",
+                    "Action",
+                    "Decision",
+                ],
+                "databaseURL": "~{postgreSQLDatabaseURL}~?currentSchema=audit_logs",
+                "databaseSchema": "audit_logs",
+                "secretsStore": "~{secretsStore}~",
+                "secretsCollectionName": "~{postgreSQLServerCollectionName}~",
+            }
+
+            o_client.add_postgres_log_destinations(config_body)
+            assert True
+            print(f"\n\n\tServer {server}: Console log destination added")
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
     def test_add_default_log_destinations(self, server: str = good_server_1):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
@@ -535,7 +566,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_get_local_repository_config(self, server: str = good_server_1):
+    def test_get_local_repository_config(self, server: str = good_server_3):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 server, self.good_platform1_url, self.good_user_1
@@ -543,7 +574,7 @@ class TestCoreAdminServices:
 
             config = o_client.get_local_repository_config()
             assert config is not None, "Failed to get repository config"
-            print(f"\n\n\tServer {server}: json.dumps(config, indent=4)")
+            print(f"\n\n\tServer {server}: {json.dumps(config, indent=4)}")
 
         except (
             InvalidParameterException,
@@ -705,6 +736,30 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
+    def test_set_postgres_local_repository(self, server: str = good_server_3):
+        try:
+            o_client: CoreServerConfig = CoreServerConfig(
+                server, self.good_platform1_url, self.good_user_1
+            )
+            full_config_body = {
+                "databaseURL": "~{postgreSQLDatabaseURL}~?currentSchema=repository_active_metadata_store",
+                "databaseSchema": "repository_active_metadata_store",
+                "secretsStore": "~{secretsStore}~",
+                "secretsCollectionName": "~{postgreSQLServerCollectionName}~",
+            }
+            o_client.set_postgres_local_repository(full_config_body)
+            assert True
+
+            print(f"\n\n\t\tServer {server}: Postgres repository type set")
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
     def test_set_plug_in_repository(self, server: str = good_server_2):
         server_name = server
         try:
@@ -780,10 +835,10 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_local_kv_repository(self, server: str = good_server_1):
+    def test_set_xtdb_local_kv_repository(self, server: str = good_server_3):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
-                self.good_server_2, self.good_platform1_url, self.good_user_1
+                server, self.good_platform1_url, self.good_user_1
             )
             o_client.set_xtdb_local_kv_repository()
             assert True
