@@ -87,6 +87,7 @@ def list_deployed_database_schemas(
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
+            title=f"Database Schema List @ {time.asctime()}",
             caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],

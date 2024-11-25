@@ -23,7 +23,7 @@ from pyegeria.commands.tech.list_relationship_types import display_relationship_
 from pyegeria.commands.tech.list_tech_templates import display_templates_spec
 from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
 from pyegeria.commands.tech.get_tech_type_template import template_viewer
-from pyegeria.commands.tech.list_element_graph import display_element_graph
+from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
 from pyegeria.commands.tech.list_elements import list_elements
 
 from pyegeria.commands.tech.get_element_info import display_elements
@@ -214,7 +214,7 @@ def show_elements(ctx):
 @click.argument("guid", nargs=1)
 @click.pass_context
 def show_guid_infos(ctx, guid):
-    """Display a live status view of known platforms
+    """Display guid information
 
     Usage: show guid-info <a guid>
 
@@ -249,7 +249,7 @@ def show_related_specifications(ctx, element_guid):
 def list_element_graph(ctx, search_string: str, prop_list: str):
     """List elements with the specified properties"""
     c = ctx.obj
-    display_element_graph(
+    display_anchored_elements(
         search_string,
         prop_list,
         c.view_server,
@@ -400,7 +400,7 @@ def show_relationship_types(ctx, rel_type):
 )
 @click.pass_context
 def show_elements_by_classification(ctx, om_type, classification):
-    """Show information about the specified relationship type"""
+    """Show elements by classification"""
     c = ctx.obj
     list_classified_elements(
         om_type,
@@ -430,8 +430,8 @@ def show_elements_by_classification(ctx, om_type, classification):
     help="Relationship type to follow.",
 )
 @click.pass_context
-def show_relationship_types(ctx, element_guid, om_type, rel_type):
-    """Show information about the specified relationship type"""
+def show_related_elements(ctx, element_guid, om_type, rel_type):
+    """Show information about related elements"""
     c = ctx.obj
     list_related_elements(
         element_guid,

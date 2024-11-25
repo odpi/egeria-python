@@ -46,7 +46,7 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "260"))
 disable_ssl_warnings = True
 
 
-def display_element_graph(
+def display_anchored_elements(
     search_string: str,
     prop_list: [str],
     server: str,
@@ -187,11 +187,11 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     time_out = args.time_out if args.time_out is not None else 60
     try:
-        search_string = Prompt.ask("Enter an asset search string:", default="")
+        search_string = Prompt.ask("Enter an property search string:", default="")
         prop_list = Prompt.ask(
             "Enter the list of properties to search", default="anchorTypeName"
         )
-        display_elements(
+        display_anchored_elements(
             search_string, [prop_list], server, url, userid, user_pass, time_out
         )
     except KeyboardInterrupt:
