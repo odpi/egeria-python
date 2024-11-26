@@ -87,7 +87,7 @@ def list_deployed_database_schemas(
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Database Schema List @ {time.asctime()}",
+            title=f"Catalog Schema List @ {time.asctime()}",
             caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
@@ -96,17 +96,12 @@ def list_deployed_database_schemas(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            # title=f"Elements for Open Metadata Type: '{om_type}' ",
             expand=True,
             # width=500
         )
 
         table.add_column("Schema in Catalog")
         table.add_column("Schema Properties")
-
-        # table.add_column("Home Store")
-        # table.add_column("GUID", width=38, no_wrap=True)
-        # table.add_column("Properties")
         table.add_column("Cataloged Resource")
 
         om_type = "DeployedDatabaseSchema"
@@ -145,8 +140,11 @@ def list_deployed_database_schemas(
                     el_anchor_type_name = c["classificationProperties"][
                         "anchorTypeName"
                     ]
+                    el_anchor_domain_name = c["classificationProperties"][
+                        "anchorDomainName"
+                    ]
                     el_cat_name = "---"
-                    if el_anchor_type_name == "Catalog":
+                    if el_anchor_domain_name == "SoftwareCapability":
                         el_cat = c_client.get_element_by_guid(el_anchor_guid)
                         el_cat_name = el_cat["properties"].get("name", None)
                         if el_cat_name is None:
@@ -203,10 +201,6 @@ def list_deployed_database_schemas(
 
             table.add_row(
                 el_schema_id,
-                # el_type,
-                # el_created_out,
-                # el_home,
-                # el_guid,
                 el_props_out,
                 rel_el_out,
             )
