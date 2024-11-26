@@ -139,18 +139,18 @@ def list_deployed_database_schemas(
             # get the information about the catalog we are part of
             el_classification = header["classifications"]
             for c in el_classification:
+                el_cat_guid = "---"
                 if c["type"]["typeName"] == "Anchors":
                     el_anchor_guid = c["classificationProperties"]["anchorGUID"]
                     el_anchor_type_name = c["classificationProperties"][
                         "anchorTypeName"
                     ]
+                    el_cat_name = "---"
                     if el_anchor_type_name == "Catalog":
                         el_cat = c_client.get_element_by_guid(el_anchor_guid)
                         el_cat_name = el_cat["properties"].get("name", None)
                         if el_cat_name is None:
-                            el_cat_name = el_cat["properties"].get(
-                                "qualifiedName", "---"
-                            )
+                            el_cat_name = el_cat["properties"].get("qualifiedName", "")
                         el_cat_guid = el_cat["elementHeader"]["guid"]
             el_schema_id = (
                 f"{el_name}\n{el_guid}\n\n\t\tin\n\n{el_cat_name}\n{el_cat_guid}"

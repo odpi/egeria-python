@@ -54,11 +54,17 @@ def collection_viewer(
     """A simple collection viewer"""
 
     def walk_collection_hierarchy(
-        collection_client: CollectionManager, root_collection_name: str, tree: Tree
+        tree: Tree,
+        collection_client: CollectionManager,
+        root_collection_guid: str = None,
+        root_collection_name: str = None,
+        root_collection_qname: str = None,
     ) -> None:
         """Recursively build a Tree with collection contents."""
-        members = collection_client.get_member_list(root_collection_name)
-        if members:
+        members = collection_client.get_member_list(
+            root_collection_guid, root_collection_name, root_collection_qname
+        )
+        if type(members) is list:
             for member in members:
                 style = "bold white on black"
                 text_collection_name = Text(
@@ -78,16 +84,16 @@ def collection_viewer(
                 )
                 tt = tree.add(p, style=style)
 
-                children = collection_client.get_collection_members(member["guid"])
+                children = collection_client.get_collection_members(
+                    collection_guid=member["guid"]
+                )
                 if type(children) is list:
                     branch = tt.add(
                         f"[bold magenta on black]Members",
                         style=style,
                         guide_style=style,
                     )
-                    walk_collection_hierarchy(
-                        collection_client, member["qualifiedName"], branch
-                    ),
+                    walk_collection_hierarchy(branch, collection_client, member["guid"])
         else:
             tt = tree.add(
                 f"[bold magenta on black]No collections match {root_collection_name}"
@@ -100,7 +106,7 @@ def collection_viewer(
         c_client = CollectionManager(server_name, platform_url, user_id=user)
 
         token = c_client.create_egeria_bearer_token(user, user_password)
-        walk_collection_hierarchy(c_client, root, tree)
+        walk_collection_hierarchy(tree, c_client, None, root)
         print(tree)
 
     except (

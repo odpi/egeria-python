@@ -903,15 +903,15 @@ def glossaries(ctx, search_string):
     )
 
 
-@show_cat_info.command("collection")
+@show_cat_info.command("collection-graph")
 @click.option(
     "--root_collection",
-    default="Root Sustainability Collection",
+    default="Coco Pharmaceuticals Governance Domains",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
 def show_collection(ctx, root_collection):
-    """Display a collection"""
+    """Display collection graph"""
     c = ctx.obj
     collection_viewer(
         root_collection,
@@ -1315,8 +1315,8 @@ def show_tech_type_elements(ctx, tech_type):
 
 @show_cat_info.command("collection")
 @click.option(
-    "--root_collection",
-    default="Root Sustainability Collection",
+    "--root-collection",
+    default="Coco Pharmaceuticals Governance Domains",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
