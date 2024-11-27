@@ -100,9 +100,7 @@ def collection_viewer(
             )
 
     try:
-        tree = Tree(
-            f"[bold bright green on black]{root}", guide_style="bold bright_blue"
-        )
+        tree = Tree(f"[bold bright green]{root}", guide_style="bold bright_blue")
         c_client = CollectionManager(server_name, platform_url, user_id=user)
 
         token = c_client.create_egeria_bearer_token(user, user_password)
@@ -134,7 +132,7 @@ def main():
     try:
         root_collection = Prompt.ask(
             "Enter the Root Collection to start from:",
-            default="Root Sustainability Collection",
+            default="Digital Products Root",
         )
         collection_viewer(root_collection, server, url, userid, user_pass)
     except KeyboardInterrupt:

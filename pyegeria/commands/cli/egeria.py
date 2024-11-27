@@ -772,11 +772,11 @@ def show_tech_types(ctx, tech_type):
 @show_cat_info.command("collections")
 @click.option("--collection", default="*", help="Collection to search for")
 @click.pass_context
-def show_collections(ctx, collections):
+def show_collections(ctx, collection):
     """List Collections"""
     c = ctx.obj
     display_collections(
-        collections, c.view_server, c.view_server_url, c.userid, c.password
+        collection, c.view_server, c.view_server_url, c.userid, c.password
     )
 
 
