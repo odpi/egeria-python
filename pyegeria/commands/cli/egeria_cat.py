@@ -222,11 +222,11 @@ def show_tech_types(ctx, tech_type):
 @info.command("collections")
 @click.option("--collection", default="*", help="Collection to search for")
 @click.pass_context
-def show_collections(ctx, collections):
+def show_collections(ctx, collection):
     """List Collections"""
     c = ctx.obj
     display_collections(
-        collections, c.view_server, c.view_server_url, c.userid, c.password
+        collection, c.view_server, c.view_server_url, c.userid, c.password
     )
 
 
@@ -356,7 +356,7 @@ def glossaries(ctx, search_string):
 @info.command("collection")
 @click.option(
     "--root_collection",
-    default="Root Sustainability Collection",
+    default="Digital Product Root",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
