@@ -39,6 +39,7 @@ from pyegeria.commands.cat.list_projects import display_project_list
 from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
+from pyegeria.commands.cat.list_collections import display_collections
 
 # from pyegeria import ServerOps
 from pyegeria.commands.cli.ops_config import Config
@@ -218,6 +219,17 @@ def show_tech_types(ctx, tech_type):
     )
 
 
+@info.command("collections")
+@click.option("--collection", default="*", help="Collection to search for")
+@click.pass_context
+def show_collections(ctx, collection):
+    """List Collections"""
+    c = ctx.obj
+    display_collections(
+        collection, c.view_server, c.view_server_url, c.userid, c.password
+    )
+
+
 @show.group("assets")
 @click.pass_context
 def asset_group(ctx):
@@ -328,7 +340,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
 def glossaries(ctx, search_string):
-    """Display a tree graph of information about an asset"""
+    """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
         search_string,
@@ -344,12 +356,12 @@ def glossaries(ctx, search_string):
 @info.command("collection")
 @click.option(
     "--root_collection",
-    default="Root Sustainability Collection",
+    default="Digital Product Root",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
-def show_asset_graph(ctx, root_collection):
-    """Display a tree graph of information about an asset"""
+def show_collection(ctx, root_collection):
+    """Display a collection"""
     c = ctx.obj
     collection_viewer(
         root_collection,
@@ -391,9 +403,7 @@ def show_projects(ctx, search_string):
 @click.option("--search-string", default="CertificationType", help="")
 @click.pass_context
 def show_certification_types(ctx, search_string):
-    """Show certification types
-    - generally stay with the default.
-    """
+    """Show certification types"""
     c = ctx.obj
     display_certifications(
         search_string,
@@ -465,7 +475,7 @@ def show_project_dependencies(ctx, project):
 )
 @click.pass_context
 def show_todos(ctx, search_string, status):
-    """Display a tree graph of information about an asset"""
+    """Display a list of To Dos"""
     c = ctx.obj
     list_todos(
         search_string,
@@ -491,7 +501,7 @@ def show_asset_types(ctx):
 
 @info.command("user-ids")
 @click.pass_context
-def show_todos(ctx):
+def show_user_ids(ctx):
     """Display a list of known user ids"""
     c = ctx.obj
     list_user_ids(

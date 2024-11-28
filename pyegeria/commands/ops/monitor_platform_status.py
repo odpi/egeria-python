@@ -12,6 +12,7 @@ import time
 
 from rich.console import Console
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import RuntimeManager
@@ -97,8 +98,20 @@ def display_status(
                 platform_report = r_client.get_platform_report(platform_guid)
                 platform_url = platform_report.get("platformURLRoot", " ")
                 platform_origin = platform_report.get("platformOrigin", " ")
+                platform_build = platform_report.get("platformBuildProperties", " ")
+                platform_build_md = ""
+                if type(platform_build) is dict:
+                    for prop in platform_build:
+                        platform_build_md = (
+                            f"{platform_build_md}\n* {prop}: {platform_build[prop]}"
+                        )
+                    platform_build_out = Markdown(platform_build_md)
+                else:
+                    platform_build_out = platform_origin
+                platform_desc = f"{platform_desc}\n\n\t\t&\n\n{platform_build}"
                 platform_started = platform_report.get("platformStartTime", " ")
                 platform_id = f"{platform_name}\n\n\t\t&\n\n{platform_guid}"
+
                 servers = platform_report.get("omagservers", None)
 
                 if servers is not None:
@@ -117,12 +130,11 @@ def display_status(
                         server_list += (
                             f"{status_flag}{server_types[server_type]}: {server_name}\n"
                         )
-                        # server_list = server_list + serv
 
                     table.add_row(
                         platform_id,
                         platform_url,
-                        platform_origin,
+                        platform_build_out,
                         platform_desc,
                         platform_started,
                         server_list,

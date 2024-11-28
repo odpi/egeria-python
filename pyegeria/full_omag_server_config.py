@@ -42,7 +42,7 @@ class FullServerConfig(CoreServerConfig):
         user_pwd: str = None,
     ):
         self.full_config_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        CoreServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.full_config_command_root = (
             self.platform_url + "/open-metadata/admin-services/users/" + user_id
         )

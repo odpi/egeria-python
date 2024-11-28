@@ -818,6 +818,42 @@ class CoreServerConfig(Client):
         )
         self.make_request("POST", url, severities)
 
+    def add_postgres_log_destinations(
+        self, config_body: dict, server_name: str = None
+    ) -> None:
+        """Adds a postgres log destination to a server.
+
+        Parameters
+        ----------
+        config_body : str
+            Configuration of the postgres database for the audit log destination.
+        server_name : str
+            Name of the server to update.
+
+        Returns
+        -------
+        Void
+
+        Raises
+        ------
+
+        InvalidParameterException:
+            If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException:
+            Raised when configuration parameters passed on earlier calls turn out to be
+            invalid or make the new call invalid.
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = f"{self.core_command_root}/servers/{server_name}/audit-log-destinations/postgres"
+        self.make_request("POST", url, config_body)
+
     def add_slf4j_log_destination(
         self, severities: [str] = None, server_name: str = None
     ) -> None:
@@ -1211,6 +1247,52 @@ class CoreServerConfig(Client):
         )
         self.make_request("POST", url)
 
+    def set_postgres_local_repository(
+        self, config_body: dict, server_name: str = None
+    ) -> None:
+        """Set up the local repository to use the PostgreSQL Repository implementation.
+
+        Parameters
+        ----------
+        config_body : dict
+            The configuration body for the repository. This should contain the necessary parameters for
+            connecting to the repository.
+
+        server_name : str, optional
+            The name of the server. If not provided, the default server name will be used.
+
+        Returns
+        -------
+        None
+            This method does not return anything.
+
+        Raises
+        ------
+        InvalidParameterException
+            If the response code is not 200.
+        PropertyServerException:
+            Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException:
+            The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        Sample body:
+        {
+            "databaseURL": "{{postgreSQLDatabaseURL}}",
+            "databaseSchema": "repository_{{server}}",
+            "secretsStore": "{{secretsStore}}",
+            "secretsCollectionName": "{{postgreSQLServerCollectionName}}"
+        }
+
+        """
+        if server_name is None:
+            server_name = self.server_name
+
+        url = f"{self.core_command_root}/servers/{server_name}/local-repository/mode/postgres-repository"
+        self.make_request("POST", url, config_body)
+
     def set_plug_in_repository(
         self, config_body: dict, server_name: str = None
     ) -> None:
@@ -1410,7 +1492,7 @@ class CoreServerConfig(Client):
 
         # If the database does not exist, create it
         if not database_exists:
-            cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(pg_db)))
+            cursor.execute(sql.SQL("CREATE DATABASE { }").format(sql.Identifier(pg_db)))
             print(f"Database '{pg_db}' created.")
         else:
             print(f"Database '{pg_db}' already exists.")

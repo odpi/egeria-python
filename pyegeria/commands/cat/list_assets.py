@@ -24,35 +24,47 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AssetCatalog
+    AssetCatalog,
 )
+
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
 disable_ssl_warnings = True
 
 
-def display_assets(search_string: str, server: str, url: str, username: str, user_password: str, time_out: int = 60,
-                   jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+def display_assets(
+    search_string: str,
+    server: str,
+    url: str,
+    username: str,
+    user_password: str,
+    time_out: int = 60,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
     if (search_string is None) or (len(search_string) < 3):
-        raise ValueError("Invalid Search String - must be greater than four characters long")
+        raise ValueError(
+            "Invalid Search String - must be greater than four characters long"
+        )
     g_client = AssetCatalog(server, url, username)
     token = g_client.create_egeria_bearer_token(username, user_password)
 
-
-    def generate_table(search_string:str = None) -> Table:
+    def generate_table(search_string: str = None) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Assets containing the string  {search_string} @ {time.asctime()}",
@@ -64,7 +76,7 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             show_lines=True,
             box=box.ROUNDED,
             caption=f"View Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
         table.add_column("Display Name", max_width=15)
         table.add_column("Type Name")
@@ -73,21 +85,26 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
         # table.add_column("Qualified Name",max_width=15)
         table.add_column("Matching Elements")
 
-
-        assets = g_client.find_assets_in_domain(search_string, starts_with=True,
-                                             ends_with=False, ignore_case=True, page_size=100, time_out=time_out)
+        assets = g_client.find_in_asset_domain(
+            search_string,
+            starts_with=True,
+            ends_with=False,
+            ignore_case=True,
+            page_size=100,
+            time_out=time_out,
+        )
         if type(assets) is str:
             return table
 
         for element in assets:
-            properties = element['properties']
-            header = element['elementHeader']
-            nested = element.get('matchingElements','---')
+            properties = element["properties"]
+            header = element["elementHeader"]
+            nested = element.get("matchingElements", "---")
 
-            display_name = properties.get("displayName",'---')
+            display_name = properties.get("displayName", "---")
             # qualified_name = properties["qualifiedName"] # we decided that qualified name wasn't useful
             type_name = header["type"]["typeName"]
-            tech_type = properties.get("deployedImplementationType",'---')
+            tech_type = properties.get("deployedImplementationType", "---")
             guid = header["guid"]
             #### We decided that path wasn't useful
             # path_name = element.get("extendedProperties", None)
@@ -103,20 +120,17 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
             match_tab.add_column("Properties")
 
             for match_t in nested:
-                match = match_t['elementHeader']
-                match_type_name = match['type']['typeName']
-                matching_guid = match['guid']
-                match_props = match_t['properties']
+                match = match_t["elementHeader"]
+                match_type_name = match["type"]["typeName"]
+                matching_guid = match["guid"]
+                match_props = match_t["properties"]
                 match_details_md = ""
                 for key in match_props.keys():
                     match_details_md += f"* {key}: {match_props[key]}\n"
                 match_details_out = Markdown(match_details_md)
                 match_tab.add_row(match_type_name, matching_guid, match_details_out)
 
-
-            table.add_row(
-                display_name, type_name,guid, tech_type, match_tab
-            )
+            table.add_row(display_name, type_name, guid, tech_type, match_tab)
 
         g_client.close_session()
         return table
@@ -130,13 +144,18 @@ def display_assets(search_string: str, server: str, url: str, username: str, use
         with console.pager(styles=True):
             console.print(generate_table(search_string), soft_wrap=True)
 
-
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         console.print_exception()
         sys.exit(1)
 
     except ValueError as e:
-        console.print(f"\n\n====> Invalid Search String - must be greater than four characters long")
+        console.print(
+            f"\n\n====> Invalid Search String - must be greater than four characters long"
+        )
         sys.exit(1)
 
 
@@ -158,7 +177,9 @@ def main():
     try:
         search_string = Prompt.ask("Enter an asset search string:", default="")
         display_assets(search_string, server, url, userid, user_pass, time_out)
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
+
+
 if __name__ == "__main__":
     main()

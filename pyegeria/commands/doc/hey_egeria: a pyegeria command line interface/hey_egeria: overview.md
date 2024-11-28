@@ -245,6 +245,14 @@ we also have subsets of **hey_egeria** available for the major roles/perspective
 The structure and use of these is quite similar to **hey_egeria** - however, these commands can be a bit
 simpler if you focus on one of the above areas.
 
+## When to upgrade - and how
+
+**pyegeria** is in active development. New methods are added in conjunction with new capabilities in Egeria, methods
+are updated to reflect Egeria's evolution and commands are added or updated to support the community. To support this 
+active lifecycle, are *moving* to a naming convention where the version of pyegeria is aligned with the version of 
+Egeria. Thus version 5.2 of Egeria will be aligned with version 5.2.x.x.x of pyegeria. The 3rd digit of the version will
+be a 0 for SNAPSHOT (in-progress) releases of Egeria and non-zero for production releases.
+
 # Adapting to your environment
 
 Commands in the hey_egeria TUI have parameters to adapt to your environment. These parameters set 

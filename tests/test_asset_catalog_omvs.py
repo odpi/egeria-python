@@ -64,7 +64,7 @@ class TestAssetCatalog:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-    def test_find_asset_in_domain(self):
+    def test_find_in_asset_domain(self):
         try:
             g_client = AssetCatalog(
                 self.good_view_server_1,
@@ -75,7 +75,7 @@ class TestAssetCatalog:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             search_string = "Set up new clinical trial"
-            response = g_client.find_assets_in_domain(
+            response = g_client.find_in_asset_domain(
                 search_string, starts_with=True, ends_with=False, ignore_case=True
             )
             duration = time.perf_counter() - start_time
@@ -91,6 +91,46 @@ class TestAssetCatalog:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_find_several_in_asset_domain(self):
+        try:
+            g_client = AssetCatalog(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            asset = ["Set up new clinical trial", "unity", "number", "week"]
+            for a in asset:
+                for a in asset:
+                    start_time = time.perf_counter()
+                    response = g_client.find_in_asset_domain(
+                        a, starts_with=True, ends_with=False, ignore_case=True
+                    )
+                    duration = time.perf_counter() - start_time
+                    print(f"{a} took {duration} seconds\n")
+                    if type(response) is list:
+                        # print("\n\n" + json.dumps(response, indent=4))
+                        count = len(response)
+                        print(f"Found {count} asset")
+                        for i in range(count):
+                            # print(f"Found asset: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}")
+                            print(json.dumps(response[i], indent=4))
+                    elif type(response) is str:
+                        print("\n\n" + response)
+                    assert True
 
         except (
             InvalidParameterException,
@@ -135,7 +175,7 @@ class TestAssetCatalog:
     def test_get_asset_lineage_graph(self, server: str = good_view_server_1):
         try:
             server_name = server
-            asset_guid = "8285b149-5419-4cee-94d2-12eae983c605"
+            asset_guid = "04adab3e-1708-4d37-ba15-a947ff8619d4"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )

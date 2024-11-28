@@ -254,7 +254,7 @@ def show_startup_status(ctx):
 @show_server.command("archives")
 @click.pass_context
 def list_archives(ctx):
-    """Display a tree graph of information about an asset"""
+    """Display a list of archives"""
     c = ctx.obj
     display_archive_list(
         c.view_server,

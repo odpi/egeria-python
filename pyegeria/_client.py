@@ -693,6 +693,11 @@ class Client:
             result = await self._async_make_request("POST", url, body_slimmer(body))
             return result.json().get("guid", "No elements found")
 
+        try:
+            view_server = self.view_server
+        except AttributeError:
+            view_server = os.environ.get("VIEW_SERVER", "view-server")
+
         if (not qualified_name) and display_name:
             if (tech_type) and (property_name == "qualifiedName"):
                 name = f"{tech_type}:{display_name}"
@@ -705,7 +710,7 @@ class Client:
                     "effectiveTime": None,
                 }
                 url = (
-                    f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
+                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
                 )
 
@@ -721,7 +726,7 @@ class Client:
                     "effectiveTime": None,
                 }
                 url = (
-                    f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
+                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
                 )
 

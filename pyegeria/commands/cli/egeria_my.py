@@ -193,11 +193,7 @@ def show_my_profile(ctx):
 @show.command("my-roles")
 @click.pass_context
 def show_my_roles(ctx):
-    """Display my profiles
-
-    Usage: show my-profile
-
-    """
+    """Display my roles"""
     c = ctx.obj
     display_my_roles(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width

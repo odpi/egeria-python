@@ -81,7 +81,8 @@ def list_deployed_catalogs(
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            caption=f"Databases found: {view_url} - {view_server} @ {time.asctime()}",
+            title=f"Catalog List @ {time.asctime()}",
+            caption=f"Catalogs found: {view_url} - {view_server} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",
@@ -100,11 +101,11 @@ def list_deployed_catalogs(
         table.add_column("Catalog Schemas")
 
         if catalog_server in [None, "*"]:
-            cats = c_client.get_elements_by_classification("Anchors", "Catalog")
+            cats = c_client.get_elements_by_classification("Anchors", "DataManager")
         else:
             server_guid = c_client.get_guid_for_name(catalog_server)
             cats = c_client.get_elements_by_classification_with_property_value(
-                "Anchors", server_guid, ["anchorGUID"], "Catalog"
+                "Anchors", server_guid, ["anchorGUID"], "DataManager"
             )
         if type(cats) is list:
             for cat in cats:

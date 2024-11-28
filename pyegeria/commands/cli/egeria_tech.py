@@ -17,12 +17,15 @@ from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.tech.get_guid_info import display_guid
 from pyegeria.commands.tech.get_tech_details import tech_details_viewer
 from pyegeria.commands.tech.list_asset_types import display_asset_types
+from pyegeria.commands.tech.list_elements_x import list_elements_x
 from pyegeria.commands.tech.list_registered_services import display_registered_svcs
 from pyegeria.commands.tech.list_relationship_types import display_relationship_types
 from pyegeria.commands.tech.list_tech_templates import display_templates_spec
 from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
 from pyegeria.commands.tech.get_tech_type_template import template_viewer
+from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
 from pyegeria.commands.tech.list_elements import list_elements
+
 from pyegeria.commands.tech.get_element_info import display_elements
 from pyegeria.commands.tech.list_related_specification import (
     display_related_specification,
@@ -211,7 +214,7 @@ def show_elements(ctx):
 @click.argument("guid", nargs=1)
 @click.pass_context
 def show_guid_infos(ctx, guid):
-    """Display a live status view of known platforms
+    """Display guid information
 
     Usage: show guid-info <a guid>
 
@@ -228,6 +231,27 @@ def show_related_specifications(ctx, element_guid):
     c = ctx.obj
     display_related_specification(
         element_guid,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_elements.command("element-graph")
+@click.pass_context
+@click.option("--search-string", help="value we are searching for")
+@click.option(
+    "--prop-list", default="anchorTypeName", help="List of properties we are searching"
+)
+def list_element_graph(ctx, search_string: str, prop_list: str):
+    """List elements with the specified properties"""
+    c = ctx.obj
+    display_anchored_elements(
+        search_string,
+        prop_list,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -301,7 +325,7 @@ def show_tech_type_templates(ctx, tech_type):
 @show_info.command("asset-types")
 @click.pass_context
 def show_asset_types(ctx):
-    """Display engine-host status information"""
+    """Display known asset types"""
     c = ctx.obj
     display_asset_types(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -376,7 +400,7 @@ def show_relationship_types(ctx, rel_type):
 )
 @click.pass_context
 def show_elements_by_classification(ctx, om_type, classification):
-    """Show information about the specified relationship type"""
+    """Show elements by classification"""
     c = ctx.obj
     list_classified_elements(
         om_type,
@@ -406,8 +430,8 @@ def show_elements_by_classification(ctx, om_type, classification):
     help="Relationship type to follow.",
 )
 @click.pass_context
-def show_relationship_types(ctx, element_guid, om_type, rel_type):
-    """Show information about the specified relationship type"""
+def show_related_elements(ctx, element_guid, om_type, rel_type):
+    """Show information about related elements"""
     c = ctx.obj
     list_related_elements(
         element_guid,
@@ -499,19 +523,36 @@ def valid_metadata_values(ctx, property, type_name):
 
 @show_elements.command("elements")
 @click.pass_context
+@click.option(
+    "--extended",
+    is_flag=True,
+    default=False,
+    help="If True, feedback information is displayed",
+)
 @click.option("--om_type", default="Organization", help="Metadata type to query")
-def list_element_info(ctx, om_type):
-    """Display the valid metadata values for a property and type"""
+def list_element_info(ctx, om_type, extended):
+    """Display elements of a specific Open Metadata Type"""
     c = ctx.obj
-    list_elements(
-        om_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    if extended:
+        list_elements_x(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
+    else:
+        list_elements(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
 
 
 @show_info.command("processes")
