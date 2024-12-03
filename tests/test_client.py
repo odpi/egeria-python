@@ -102,6 +102,19 @@ class TestClient:
         elif type(token2) is dict:
             print(f"The returned token is dict:\n{json.dumps(token2, indent =2)}")
 
+    def test_get_guid(self):
+        """This doesn't work since the method needs to be called from an omvs based class"""
+        c = Client(
+            "active-metadata-store", "https://localhost:9443", "erinoverview", "secret"
+        )
+        display_name = "Coco Pharmaceuticals Governance Domains"
+        qname = None
+        guid = None
+        property_name = "displayName"
+        response = c.__get_guid__(guid, display_name, property_name, qname)
+        if type(response) == str:
+            print(f"The response returned is \n{response}")
+
 
 if __name__ == "__main__":
     print("something")

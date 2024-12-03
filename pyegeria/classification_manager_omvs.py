@@ -1,8 +1,7 @@
 """PDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-This module contains an initial version of the classification_manager_omvs
-module.
+This module provides access to the classification_manager_omvs module.
 
 """
 
@@ -71,7 +70,7 @@ class ClassificationManager(Client):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        self.classification_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
+        self.classification_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
         Client.__init__(
             self,
             view_server,

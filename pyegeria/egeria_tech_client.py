@@ -23,6 +23,7 @@ from pyegeria import (
     RuntimeManager,
     TEMPLATE_GUIDS,
     INTEGRATION_GUIDS,
+    MetadataExplorer,
 )
 
 
@@ -34,6 +35,7 @@ class EgeriaTech(
     RegisteredInfo,
     RuntimeManager,
     ValidMetadataManager,
+    MetadataExplorer,
 ):
     """
     Client for technical Egeria users.
@@ -80,6 +82,9 @@ class EgeriaTech(
             self, view_server, platform_url, user_id, user_pwd, token
         )
         ValidMetadataManager.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+        )
+        MetadataExplorer.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
 

@@ -682,7 +682,7 @@ class TestCoreAdminServices:
     #
     #   Local Repository Config
     #
-    def test_set_in_mem_local_repository(self, server: str = good_server_1):
+    def test_set_in_mem_local_repository(self, server: str = "active-metadata-store"):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 server, self.good_platform1_url, self.good_user_1

@@ -7,7 +7,6 @@ A simple display for collections
 """
 import argparse
 import os
-import sys
 import time
 
 from rich import box
@@ -92,7 +91,7 @@ def display_collections(
         table.add_column("Collection Type")
 
         collections = m_client.find_collections(
-            search_string, None, False, ends_with=False, ignore_case=True
+            search_string.strip(), None, False, ends_with=False, ignore_case=True
         )
         if type(collections) is list:
             sorted_collection_list = sorted(
@@ -121,8 +120,14 @@ def display_collections(
                 force_terminal=not jupyter,
             )
             console.print(table)
+        else:
+            print("==> No collections with that name found")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (
+        InvalidParameterException,
+        UserNotAuthorizedException,
+        PropertyServerException,
+    ) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()
@@ -145,7 +150,7 @@ def main():
     try:
         search_string = Prompt.ask(
             "Enter the collection you are searching for or '*' for all:", default="*"
-        )
+        ).strip()
 
         display_collections(search_string, server, url, userid, user_pass)
 

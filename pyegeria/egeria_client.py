@@ -28,6 +28,7 @@ from pyegeria import (
     ValidMetadataManager,
     FullServerConfig,
     EgeriaConfig,
+    MetadataExplorer,
 )
 
 
@@ -48,6 +49,7 @@ class Egeria(
     RegisteredInfo,
     # TemplateManager,
     ValidMetadataManager,
+    MetadataExplorer,
 ):
     """
     Client to issue Runtime status requests.

@@ -506,6 +506,40 @@ class AssetCatalog(Client):
         )
         return response
 
+    def get_asset_mermaid_graph(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+    ) -> str:
+        """Return the asset graph as mermaid markdown string.
+         Parameters
+         ----------
+         asset_guid : str
+             The unique identity of the asset to get the graph for.
+
+         start_from : int, optional
+             The index from which to start fetching the engine actions. Default is 0.
+
+         page_size : int, optional
+             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+         Returns
+         -------
+        str
+             A mermaid string representing the asset graph.
+
+         Raises:
+         ------
+         InvalidParameterException
+         PropertyServerException
+         UserNotAuthorizedException
+
+        """
+
+        asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
+        return asset_graph.get("mermaidGraph")
+
     async def _async_get_asset_lineage_graph(
         self,
         asset_guid: str,

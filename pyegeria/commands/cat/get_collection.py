@@ -112,7 +112,12 @@ def collection_viewer(
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:
-        print_exception_response(e)
+        if e.exception_error_message_parameters[1] == "No elements found":
+            print("The collection was not found.")
+        else:
+            print_exception_response(e)
+    finally:
+        c_client.close_session()
 
 
 def main():
