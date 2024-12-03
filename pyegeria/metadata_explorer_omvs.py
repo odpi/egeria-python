@@ -16,7 +16,6 @@ from pyegeria import body_slimmer
 
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import default_time_out
-from tests.test_classification_manager_omvs import element_guid
 
 
 def query_seperator(current_string):
