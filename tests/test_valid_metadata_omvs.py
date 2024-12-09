@@ -116,7 +116,7 @@ class TestValidMetadataOMVs:
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")

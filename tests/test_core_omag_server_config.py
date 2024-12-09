@@ -913,10 +913,10 @@ class TestCoreAdminServices:
             o_client: CoreServerConfig = CoreServerConfig(
                 self.good_server_3, self.good_platform1_url, self.good_user_1
             )
-            host = "host.docker.internal"
-            port = "5442"
+            host = "localhostl"
+            port = "5432"
             pg_user = "postgres"
-            pg_pwd = "egeria"
+            pg_pwd = "notingres"
 
             o_client.set_xtdb_pg_repository(host, port, pg_user, pg_pwd)
             assert True

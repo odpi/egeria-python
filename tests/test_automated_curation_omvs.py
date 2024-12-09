@@ -501,7 +501,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            action_guid = ""
+            action_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
             start_time = time.perf_counter()
             response = a_client.get_governance_action_process_by_guid(action_guid)
             duration = time.perf_counter() - start_time
@@ -536,7 +536,7 @@ class TestAutomatedCuration:
             )
             token = a_client.create_egeria_bearer_token()
             # action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
-            action_guid = "508d3878-8eae-47e5-8507-ee936f33b418"
+            action_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
             start_time = time.perf_counter()
             response = a_client.get_gov_action_process_graph(action_guid)
             duration = time.perf_counter() - start_time

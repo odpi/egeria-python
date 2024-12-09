@@ -40,6 +40,31 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-explorer"
 
 
+def process_related_element_list(response: Response, mermaid_only: bool) -> str | dict:
+    """Process the result payload
+
+    Parameters
+    ----------
+    response
+    mermaid_only
+
+    Returns
+    -------
+
+    """
+    elements = response.json().get("relatedElementList", "No elements found")
+    if isinstance(elements, str):
+        return "No elements found"
+    el_list = elements.get("elementList", "No elements found")
+    if isinstance(el_list, str):
+        return el_list
+    if mermaid_only:
+        return elements.get("mermaidGraph", "No mermaid graph found")
+    if len(el_list) == 0:
+        return "No elements returned"
+    return elements
+
+
 class MetadataExplorer(Client):
     """MetadataExplorer is a class that extends the Client class. The Metadata Explorer OMVS provides APIs for
       supporting the search, query and retrieval of open metadata. It is an advanced API for users that understands
@@ -208,6 +233,7 @@ class MetadataExplorer(Client):
         self,
         guid: str,
         effective_time: str = None,
+        as_of_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
     ) -> dict | str:
@@ -220,6 +246,8 @@ class MetadataExplorer(Client):
             - unique identifier of the element to retrieve
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+            - Query the element as of this time. If None, then use current time.
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -248,8 +276,9 @@ class MetadataExplorer(Client):
         )
 
         body = {
-            "class": "EffectiveTimeRequestBody",
+            "class": "AnyTimeRequestBody",
             "effectiveTime": effective_time,
+            "asOfTime": as_of_time,
         }
 
         url = (
@@ -265,6 +294,7 @@ class MetadataExplorer(Client):
         self,
         guid: str,
         effective_time: str = None,
+        as_of_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
     ) -> dict | str:
@@ -277,6 +307,8 @@ class MetadataExplorer(Client):
             - unique identifier of the element to retrieve
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+            - Query the element as of this time. If None, then use current time.
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -304,6 +336,188 @@ class MetadataExplorer(Client):
             )
         )
         return response
+
+    async def _async_get_metadata_element_graph(
+        self,
+        guid: str,
+        effective_time: str = None,
+        as_of_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        mermaid_only: bool = False,
+    ) -> dict | str:
+        """
+        Retrieve the metadata element and all of its anchored elements using its unique identifier. Async version.
+
+        Parameters
+        ----------
+        guid : str
+            - unique identifier of the element to retrieve
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+            - Query the element as of this time. If None, then use current time.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
+        Returns
+        -------
+        dict | str
+            If the element is found, and mermaid_only is False, a dict of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+            ]
+        )
+
+        body = {
+            "class": "AnyTimeRequestBody",
+            "effectiveTime": effective_time,
+            "asOfTime": as_of_time,
+        }
+
+        url = (
+            f"{base_path(self, self.view_server)}/metadata-elements/{guid}/with-anchored-elements"
+            f"{possible_query_params}"
+        )
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body)
+        )
+        # if mermaid_only:
+        #     return response.json()["elementGraph"].get(
+        #         "mermaidGraph", "No elements found"
+        #     )
+        # else:
+        #     return response.json().get("elementGraph", "No elements found")
+        if isinstance(response, str):
+            return "No elements found"
+        el_list = response.json().get("elementGraph", "No elements found")
+        if isinstance(el_list, str):
+            return el_list
+        if mermaid_only:
+            return el_list.get("mermaidGraph", "No mermaid graph found")
+        if len(el_list) == 0:
+            return "No elements returned"
+        return el_list
+
+    def get_metadata_element_graph(
+        self,
+        guid: str,
+        effective_time: str = None,
+        as_of_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        mermaid_only: bool = False,
+    ) -> dict | str:
+        """
+        Retrieve the metadata element and all of its anchored elements using its unique identifier. Async version.
+
+        Parameters
+        ----------
+        guid : str
+            - unique identifier of the element to retrieve
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+            - Query the element as of this time. If None, then use current time.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
+        Returns
+        -------
+        dict | str
+            If the element is found, and mermaid_only is False, a dict of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_metadata_element_graph(
+                guid,
+                effective_time,
+                as_of_time,
+                for_lineage,
+                for_duplicate_processing,
+                mermaid_only,
+            )
+        )
+        return response
+
+    # def get_metadata_element_mermaid_graph(
+    #     self,
+    #     guid: str,
+    #     effective_time: str = None,
+    #     as_of_time: str = None,
+    #     for_lineage: bool = None,
+    #     for_duplicate_processing: bool = None,
+    # ) -> dict | str:
+    #     """
+    #     Retrieve the metadata element using its unique identifier.
+    #
+    #     Parameters
+    #     ----------
+    #     guid : str
+    #         - unique identifier of the element to retrieve
+    #     effective_time: str, default = None
+    #         - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #     as_of_time: str, default = None
+    #         - Query the element as of this time. If None, then use current time.
+    #     for_lineage: bool, default is set by server
+    #         - determines if elements classified as Memento should be returned - normally false
+    #     for_duplicate_processing: bool, default is set by server
+    #         - Normally false. Set true when the caller is part of a deduplication function
+    #
+    #     Returns
+    #     -------
+    #     dict | str
+    #         If the element is found, a dict of the element details is returned. Otherwise the string "No element found".
+    #
+    #     Raises
+    #     ------
+    #     InvalidParameterException
+    #         one of the parameters is null or invalid or
+    #     PropertyServerException
+    #         There is a problem adding the element properties to the metadata repository or
+    #     UserNotAuthorizedException
+    #         the requesting user is not authorized to issue this request.
+    #     """
+    #
+    #     response = self.get_metadata_element_graph(
+    #         guid, effective_time, as_of_time, for_lineage, for_duplicate_processing
+    #     )
+    #     return response.get("mermaidGraph", "No elements found")
 
     async def _async_get_metadata_element_by_unique_name(
         self,
@@ -738,6 +952,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the metadata elements connected to the supplied element.
@@ -761,6 +976,9 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
 
         Returns
         -------
@@ -808,12 +1026,7 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-
-        elements = response.json().get("elementList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        return process_related_element_list(response, mermaid_only)
 
     def get_all_related_metadata_elements(
         self,
@@ -825,6 +1038,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the metadata elements connected to the supplied element.
@@ -847,6 +1061,9 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
 
         Returns
         -------
@@ -886,6 +1103,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -901,6 +1119,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the metadata elements connected to the supplied element.
@@ -926,6 +1145,8 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
@@ -974,11 +1195,7 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        return process_related_element_list(response, mermaid_only)
 
     def get_related_metadata_elements(
         self,
@@ -991,6 +1208,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the metadata elements connected to the supplied element.
@@ -1015,6 +1233,8 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
@@ -1055,6 +1275,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -1070,6 +1291,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -1095,6 +1317,9 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
 
         Returns
         -------
@@ -1144,11 +1369,7 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        return process_related_element_list(response, mermaid_only)
 
     def get_all_metadata_element_relationships(
         self,
@@ -1161,6 +1382,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -1185,6 +1407,8 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
@@ -1225,6 +1449,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -1241,6 +1466,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -1268,6 +1494,8 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
@@ -1317,11 +1545,7 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        return process_related_element_list(response, mermaid_only)
 
     def get_metadata_element_relationships(
         self,
@@ -1335,6 +1559,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve the relationships linking the supplied elements.
@@ -1361,6 +1586,9 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
+
 
         Returns
         -------
@@ -1402,6 +1630,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -1828,6 +2057,7 @@ class MetadataExplorer(Client):
         self,
         guid: str,
         effective_time: str = None,
+        as_of_time: str = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
     ) -> dict | str:
@@ -1868,8 +2098,9 @@ class MetadataExplorer(Client):
         )
 
         body = {
-            "class": "EffectiveTimeRequestBody",
+            "class": "AnyTimeRequestBody",
             "effectiveTime": effective_time,
+            "asOfTime": as_of_time,
         }
 
         url = (
@@ -1937,6 +2168,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve all the versions of a relationship. Async version.
@@ -1962,6 +2194,8 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
@@ -2003,12 +2237,11 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-
-        elements = response.json().get("elementList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        rel = response.json().get("relationshipList", "No elements found")
+        if isinstance(rel, (list, dict)):
+            return rel.get("elementList", "No elements found")
+        else:
+            return rel
 
     def get_relationship_history(
         self,
@@ -2022,6 +2255,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve all the versions of a relationship.
@@ -2047,6 +2281,8 @@ class MetadataExplorer(Client):
              - maximum number of elements to return.
          time_out: int, default = default_time_out
              - http request timeout for this request
+         mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
          Returns
          -------
@@ -2076,6 +2312,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response

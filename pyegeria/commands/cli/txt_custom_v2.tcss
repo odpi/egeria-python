@@ -1,0 +1,19 @@
+.uprompt {
+    width: auto;
+    height: auto;
+}
+.uimput {
+    border: solid white;
+    height: auto;
+    width: auto;
+}
+.DataTable {
+    color: black
+}
+.DataTable.Row {
+    width: 20%;
+    height: auto;
+}
+#table {
+    color: black
+}

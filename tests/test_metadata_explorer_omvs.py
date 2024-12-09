@@ -11,16 +11,13 @@ A running Egeria environment is needed to run these tests.
 
 """
 
+import json
 import time
 
-import pytest
-import asyncio
-import json
 from rich import print, print_json
 from rich.console import Console
 
-from contextlib import nullcontext as does_not_raise
-
+from pyegeria import MetadataExplorer
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -28,14 +25,9 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-from pyegeria.core_omag_server_config import CoreServerConfig
-
-from pyegeria.classification_manager_omvs import ClassificationManager
-from pyegeria import MetadataExplorer
-from tests.test_classification_manager_omvs import relationship_type
-
 disable_ssl_warnings = True
 
+active_metadata_store = "929ea364-cead-456d-b9f1-1016202196ed"
 
 console = Console()
 
@@ -70,10 +62,46 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_metadata_guid_by_unique_name(name, property_name)
-
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
             if type(response) is list:
-                print(f"\n\tElement count is: {len(response)}")
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    # active-metadata-store is a3603c04-3697-49d1-ad79-baf3ea3db61f
+    def test_get_element_by_guid(self):
+        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
+        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+        guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        try:
+            m_client = MetadataExplorer(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_metadata_element_by_guid(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+
+            if type(response) is dict:
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is" + response)
@@ -90,20 +118,61 @@ class TestMetadataExplorer:
         finally:
             m_client.close_session()
 
-    def test_get_element_by_guid(self):
-        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
-        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+    def test_get_element_graph(self):
         guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        # guid = "f28a154b-ecdc-49b1-bfac-29da9d44fb99"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
-            response = m_client.get_metadata_element_by_guid(guid)
+            start_time = time.perf_counter()
+            response = m_client.get_metadata_element_graph(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is dict:
                 print_json(data=response)
             elif type(response) is str:
-                console.print("\n\n\t Response is" + response)
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_element_mermaid_graph(self):
+        guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
+        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        # guid = "f28a154b-ecdc-49b1-bfac-29da9d44fb99"
+        try:
+            m_client = MetadataExplorer(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            # response = m_client.get_metadata_element_mermaid_graph(guid)
+            response = m_client.get_metadata_element_graph(guid, mermaid_only=True)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+
+            if type(response) is dict:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -123,8 +192,13 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_metadata_element_by_unique_name(
                 name, "qualifiedName"
+            )
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
             )
 
             if type(response) is dict:
@@ -145,12 +219,18 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_metadata_element_history(self):
-        guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
+        guid = "929ea364-cead-456d-b9f1-1016202196ed"  # active-metadata-store
+        # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_metadata_element_history(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is list:
                 print(f"\n\tElement count is: {len(response)}")
@@ -173,10 +253,10 @@ class TestMetadataExplorer:
     def test_find_metadata_elements_with_string(self):
         body = {
             "class": "SearchStringRequestBody",
-            "searchString": "ProcessL",
+            "searchString": "Process",
             "typeName": "ValidValueDefinition",
             "effectiveTime": None,
-            "limitResultsByStatus": ["ACTIVE"],
+            "limitResultsByStatus": [],
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
@@ -186,7 +266,12 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.find_metadata_elements_with_string(body, page_size=1000)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is list:
                 print(f"\n\tElement count is: {len(response)}\n")
@@ -207,9 +292,10 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements(self):
+        guid = "929ea364-cead-456d-b9f1-1016202196ed"  # active-metadata-store
         # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
-        guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # sustainability glossary
-        guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # Clinical trials project
+        # guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # sustainability glossary
+        # guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # Clinical trials project
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
@@ -223,9 +309,16 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
-            response = m_client.get_all_related_metadata_elements(guid, body)
+            start_time = time.perf_counter()
+            response = m_client.get_all_related_metadata_elements(
+                guid, body, mermaid_only=True
+            )
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
-            if type(response) is list:
+            if isinstance(response, (dict, list)):
                 print(f"\n\tElement count is: {len(response)}\n")
                 print_json(data=response, indent=4)
             elif type(response) is str:
@@ -244,8 +337,8 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements2(self):
-        guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
-
+        guid = "929ea364-cead-456d-b9f1-1016202196ed"
+        # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
@@ -259,9 +352,14 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_all_related_metadata_elements(guid, body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
-            if type(response) is list:
+            if isinstance(response, (dict, list)):
                 print(f"\n\tElement count is: {len(response)}\n")
                 print_json(data=response, indent=4)
             elif type(response) is str:
@@ -280,7 +378,8 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_related_metadata_elements(self):
-        guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
+        guid = "929ea364-cead-456d-b9f1-1016202196ed"
+        # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
         relationship_type = "SourcedFrom"
         body = {
             "class": "ResultsRequestBody",
@@ -295,11 +394,16 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_related_metadata_elements(
                 guid, relationship_type, body
             )
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print(f"\n\tElement count is: {len(response)}\n")
                 print_json(data=response, indent=4)
             elif type(response) is str:
@@ -334,11 +438,16 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_all_metadata_element_relationships(
                 end1_guid, end2_guid, body
             )
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
-            if type(response) is list:
+            if isinstance(response, (list, dict)):
                 print(f"\n\tElement count is: {len(response)}\n")
                 print_json(data=response, indent=4)
             elif type(response) is str:
@@ -373,8 +482,13 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_metadata_element_relationships(
                 end1_guid, end2_guid, relationship_type, body
+            )
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
             )
 
             if type(response) is list:
@@ -413,7 +527,8 @@ class TestMetadataExplorer:
                                     "value": {
                                         "class": "PrimitiveTypePropertyValue",
                                         "typeName": "string",
-                                        "primitiveValue": "isd11fd82f-49f4-4b81-ad42-d5012863cf39",
+                                        # "primitiveValue": "d11fd82f-49f4-4b81-ad42-d5012863cf39",
+                                        "primitiveValue": "a3603c04-3697-49d1-ad79-baf3ea3db61f",
                                     },
                                 }
                             ],
@@ -429,7 +544,12 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.find_metadata_elements(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is list:
                 print(f"\n\tElement count is: {len(response)}\n")
@@ -451,6 +571,7 @@ class TestMetadataExplorer:
 
     def test_find_metadata_elements_party(self):
         """find glossary elements containing party"""
+        page_size = 1000
         body = {
             "class": "FindRequestBody",
             "searchProperties": {
@@ -508,7 +629,7 @@ class TestMetadataExplorer:
                         },
                     }
                 ],
-                "matchCriteria": "ANY",
+                "matchCriteria": "ALL",
             },
         }
 
@@ -516,7 +637,12 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
-            response = m_client.find_metadata_elements(body)
+            start_time = time.perf_counter()
+            response = m_client.find_metadata_elements(body, page_size=page_size)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Page Size {page_size}, Element count is {len(response)}"
+            )
 
             if type(response) is list:
                 print(f"\n\tElement count is: {len(response)}\n")
@@ -536,36 +662,150 @@ class TestMetadataExplorer:
         finally:
             m_client.close_session()
 
-    def test_find_relationships_between_elements(self):
+    def test_find_metadata_elements_anchored_mdr(self):
+        """findMetadataElements anchored to the SoftwareServer entity for active-metadata-store"""
+        active_metadata_store = "929ea364-cead-456d-b9f1-1016202196ed"
         body = {
-            "class": "FindRelationshipRequestBody",
-            "relationshipTypeName": "CommunityMembership",
-            "searchProperties": {
-                "class": "SearchProperties",
+            "class": "FindRequestBody",
+            "matchClassifications": {
+                "class": "SearchClassifications",
                 "conditions": [
                     {
-                        "nestedConditions": {
+                        "name": "Anchors",
+                        "searchProperties": {
                             "class": "SearchProperties",
                             "conditions": [
                                 {
-                                    "property": "membershipType",
+                                    "property": "anchorGUID",
                                     "operator": "EQ",
                                     "value": {
                                         "class": "PrimitiveTypePropertyValue",
                                         "typeName": "string",
-                                        "primitiveValue": "Privacy",
+                                        "primitiveValue": active_metadata_store,
                                     },
                                 }
                             ],
                             "matchCriteria": "ALL",
-                        }
+                        },
+                    }
+                ],
+                "matchCriteria": "ALL",
+            },
+        }
+
+        try:
+            m_client = MetadataExplorer(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.find_metadata_elements(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+
+            if type(response) is list:
+                print(f"\n\tElement count is: {len(response)}\n")
+                print_json(data=response, indent=4)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_find_glossary_terms_cim(self):
+        """findMetadataElements anchored to the SoftwareServer entity for active-metadata-store"""
+        page_size = 500
+        cim_glossary_guid = "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"
+        body = {
+            "class": "FindRequestBody",
+            "metadataElementTypeName": "GlossaryTerm",
+            "matchClassifications": {
+                "class": "SearchClassifications",
+                "conditions": [
+                    {
+                        "name": "Anchors",
+                        "searchProperties": {
+                            "class": "SearchProperties",
+                            "conditions": [
+                                {
+                                    "property": "anchorGUID",
+                                    "operator": "EQ",
+                                    "value": {
+                                        "class": "PrimitiveTypePropertyValue",
+                                        "typeName": "string",
+                                        "primitiveValue": cim_glossary_guid,
+                                    },
+                                }
+                            ],
+                            "matchCriteria": "ALL",
+                        },
+                    }
+                ],
+                "matchCriteria": "ALL",
+            },
+        }
+
+        try:
+            m_client = MetadataExplorer(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.find_metadata_elements(body, page_size=page_size)
+            duration = time.perf_counter() - start_time
+
+            console.print(
+                f"\nDuration was {duration:.2f} seconds,  Page Size {page_size}, Element count is {len(response)}\n"
+            )
+
+            if type(response) is list:
+                print_json(data=response, indent=4)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_find_relationships_between_elements(self):
+        body = {
+            "class": "FindRelationshipRequestBody",
+            "relationshipTypeName": "License",
+            "searchProperties": {
+                "class": "SearchProperties",
+                "conditions": [
+                    {
+                        "property": "licensee",
+                        "operator": "EQ",
+                        "value": {
+                            "class": "PrimitiveTypePropertyValue",
+                            "typeName": "string",
+                            "primitiveValue": "tessatube",
+                        },
                     }
                 ],
                 "matchCriteria": "ANY",
             },
-            "effectiveTime": None,
+            "effectiveTime": "{{$isoTimestamp}}",
             "limitResultsByStatus": ["ACTIVE"],
-            "asOfTime": None,
+            "asOfTime": "{{$isoTimestamp}}",
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
         }
@@ -574,7 +814,12 @@ class TestMetadataExplorer:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
-            response = m_client.find_metadata_elements(body)
+            start_time = time.perf_counter()
+            response = m_client.find_relationships_between_elements(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is list:
                 print(f"\n\tElement count is: {len(response)}\n")
@@ -595,12 +840,17 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_relationship_by_guid(self):
-        guid = "c53a5670-08c1-46dc-afd1-bca25fe91e04"
+        guid = "dbda2d45-47be-43bd-a5a3-2bde11349cff"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_relationship_by_guid(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
             if type(response) is dict:
                 print_json(data=response)
@@ -620,14 +870,19 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_relationship_history(self):
-        guid = "c53a5670-08c1-46dc-afd1-bca25fe91e04"
+        guid = "dbda2d45-47be-43bd-a5a3-2bde11349cff"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
             response = m_client.get_relationship_history(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
 
-            if type(response) is dict:
+            if isinstance(response, (list, dict)):
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
