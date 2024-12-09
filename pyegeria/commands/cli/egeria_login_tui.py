@@ -13,22 +13,40 @@ from os import system
 from textual.reactive import Reactive
 
 from textual.app import App, ComposeResult
-from textual.containers import Container, Vertical, HorizontalScroll, VerticalScroll, ScrollableContainer
+from textual.containers import (
+    Container,
+    Vertical,
+    HorizontalScroll,
+    VerticalScroll,
+    ScrollableContainer,
+)
 from textual import on, work
-from textual.screen import  ModalScreen, Screen
-from textual.widgets import Input, Static, Button, RichLog, Label, Tree,  Footer, DataTable, Header
+from textual.screen import ModalScreen, Screen
+from textual.widgets import (
+    Input,
+    Static,
+    Button,
+    RichLog,
+    Label,
+    Tree,
+    Footer,
+    DataTable,
+    Header,
+)
 
 from typing import Any
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 
 disable_ssl_warnings = True
 
@@ -36,18 +54,18 @@ TITLE = "User Access"
 
 
 class UserInfo(Screen):
-    """ A screen to request user access info - required
-        If no information is supplied the access defaults to a set of
-        demo/test values:
-        User: erinoverview
-        Password: Secret
-        Platform URL: https://localhost:9443
-        View Server Name: view-server"""
+    """A screen to request user access info - required
+    If no information is supplied the access defaults to a set of
+    demo/test values:
+    User: erinoverview
+    Password: Secret
+    Platform URL: https://localhost:9443
+    View Server Name: view-server"""
 
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
 
     def __init__(self) -> None:
-        """ Initialize the UserInfo Screen variables """
+        """Initialize the UserInfo Screen variables"""
         self.app.dark = True
         self.user = ""
         self.password = ""
@@ -76,14 +94,13 @@ class UserInfo(Screen):
         yield RichLog()
         yield Footer()
 
-
     def action_toggle_dark(self) -> None:
         """An action to toggle dark mode."""
 
         self.app.dark = not self.app.dark
 
     def on_input_changed(self, event: Input.Changed) -> None:
-        """ Detect input changed events and capture input value"""
+        """Detect input changed events and capture input value"""
 
         try:
             ivalue = str(event.value)
@@ -102,7 +119,7 @@ class UserInfo(Screen):
 
     @on(Button.Pressed, "#submit")
     async def on_submit(self) -> []:
-        """ This processes the user input. """
+        """This processes the user input."""
 
         global EGERIA_USER
         global EGERIA_USER_PASSWORD
@@ -111,14 +128,22 @@ class UserInfo(Screen):
 
         result = [" meow", "woof", "neigh", "hoot"]
 
-        if self.user: result[0] = self.user
-        else: result[0] = "erinoverview"
-        if self.password: result[1] = self.password
-        else: result[1] = "secret"
-        if self.platformu: result[2] = self.platformu
-        else: result[2] = "https://localhost:9443"
-        if self.view_server: result[3] = self.view_server
-        else: result[3] = "view-server"
+        if self.user:
+            result[0] = self.user
+        else:
+            result[0] = "erinoverview"
+        if self.password:
+            result[1] = self.password
+        else:
+            result[1] = "secret"
+        if self.platformu:
+            result[2] = self.platformu
+        else:
+            result[2] = "https://localhost:9443"
+        if self.view_server:
+            result[3] = self.view_server
+        else:
+            result[3] = "view-server"
 
         # Also store the input in global variables
 
@@ -151,7 +176,7 @@ class ExitScreen(ModalScreen):
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
 
     def __init__(self) -> None:
-        """ Initialize the UserInfo Screen variables """
+        """Initialize the UserInfo Screen variables"""
         super().__init__()
 
     def action_toggle_dark(self) -> None:
@@ -166,15 +191,16 @@ class ExitScreen(ModalScreen):
             yield Footer()
             yield RichLog()
 
-    @on (Button.Pressed, "#no")
+    @on(Button.Pressed, "#no")
     def on_no(self) -> None:
-        """ No the user pressed the exit button in error """
+        """No the user pressed the exit button in error"""
         self.action_dismiss()
 
-    @on (Button.Pressed, "#yes")
+    @on(Button.Pressed, "#yes")
     def on_yes(self) -> None:
-        """ Yes the user wants to quit the app """
+        """Yes the user wants to quit the app"""
         self.app.exit()
+
 
 class Egeria_login(App):
     """main app class"""
@@ -190,20 +216,29 @@ class Egeria_login(App):
         self.template: Any = None
 
     def compose(self) -> ComposeResult:
-        """ Compose the main display"""
+        """Compose the main display"""
 
         yield Label(f"User: {EGERIA_USER}, password: {EGERIA_USER_PASSWORD}")
-        yield Label(f"Platform: {EGERIA_PLATFORM_URL}, View Server: {EGERIA_VIEW_SERVER}")
+        yield Label(
+            f"Platform: {EGERIA_PLATFORM_URL}, View Server: {EGERIA_VIEW_SERVER}"
+        )
         yield Button("Finish", "success", id="finish")
         yield RichLog()
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> (str, str, str, str):
-        """ Yes the user wants to quit the app """
+        """Yes the user wants to quit the app"""
 
-        self.exit((EGERIA_USER, EGERIA_USER_PASSWORD, EGERIA_PLATFORM_URL, EGERIA_VIEW_SERVER),
-                  200,
-                  "Finished")
+        self.exit(
+            (
+                EGERIA_USER,
+                EGERIA_USER_PASSWORD,
+                EGERIA_PLATFORM_URL,
+                EGERIA_VIEW_SERVER,
+            ),
+            200,
+            "Finished",
+        )
 
     def action_toggle_dark(self) -> None:
         """An action to toggle dark and light mode."""
@@ -211,7 +246,7 @@ class Egeria_login(App):
 
     async def on_mount(self) -> None:
         """Main Program flow control start routine
-        Pushes the user info popup with an associated call back routine """
+        Pushes the user info popup with an associated call back routine"""
 
         global EGERIA_USER
         global EGERIA_USER_PASSWORD
@@ -223,9 +258,8 @@ class Egeria_login(App):
         self.install_screen(UserInfo(), name="userinfo")
         await self.push_screen(UserInfo(), self.input_userinfo_callback)
 
-
-    async def input_userinfo_callback(self, user_input) -> (str, str,str, str):
-        """ Prompt for user id and password, callback routine
+    async def input_userinfo_callback(self, user_input) -> (str, str, str, str):
+        """Prompt for user id and password, callback routine
         This routine is invoked when user input is completed
         """
 
@@ -235,16 +269,36 @@ class Egeria_login(App):
         global EGERIA_VIEW_SERVER
         global TECH_NAME
 
-        if user_input[0] !=None: EGERIA_USER = user_input[0]
-        else: EGERIA_USER = "erinoverview"
-        if user_input[1] !=None: EGERIA_USER_PASSWORD = user_input[1]
-        else: EGERIA_USER_PASSWORD = "secret"
-        if user_input[2] != None: EGERIA_PLATFORM_URL = user_input[2]
-        else: EGERIA_PLATFORM_URL = "https://localhost:9443"
-        if user_input[3] !=None: EGERIA_VIEW_SERVER = user_input[3]
-        else: EGERIA_VIEW_SERVER = "view-server"
+        if user_input[0] != None:
+            EGERIA_USER = user_input[0]
+        else:
+            EGERIA_USER = "erinoverview"
+        if user_input[1] != None:
+            EGERIA_USER_PASSWORD = user_input[1]
+        else:
+            EGERIA_USER_PASSWORD = "secret"
+        if user_input[2] != None:
+            EGERIA_PLATFORM_URL = user_input[2]
+        else:
+            EGERIA_PLATFORM_URL = "https://localhost:9443"
+        if user_input[3] != None:
+            EGERIA_VIEW_SERVER = user_input[3]
+        else:
+            EGERIA_VIEW_SERVER = "view-server"
 
-        return(EGERIA_USER, EGERIA_USER_PASSWORD, EGERIA_PLATFORM_URL, EGERIA_VIEW_SERVER)
+        return (
+            EGERIA_USER,
+            EGERIA_USER_PASSWORD,
+            EGERIA_PLATFORM_URL,
+            EGERIA_VIEW_SERVER,
+        )
+
+
+def login() -> None:
+    app = Egeria_login()
+    app.run()
+    return
+
 
 if __name__ == "__main__":
     app = Egeria_login()

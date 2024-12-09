@@ -11,7 +11,7 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 """
 import click
 from trogon import tui
-from pyegeria.commands.cli.egeria_login_tui import Egeria_login
+from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
@@ -238,7 +238,7 @@ def cli(
 @cli.command("alogin")
 @click.pass_context
 def login(ctx):
-    Egeria_login()
+    login()
 
 
 #
