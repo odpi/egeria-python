@@ -2664,7 +2664,7 @@ class CollectionManager(Client):
             collection_guid, collection_name, collection_qname
         )
         if type(members) is str:
-            return False
+            return "No members found"
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]

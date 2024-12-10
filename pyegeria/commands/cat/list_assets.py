@@ -3,10 +3,8 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
+List assets
 
-
-A simple display for glossary terms
 """
 import argparse
 import os
@@ -18,6 +16,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.markdown import Markdown
 from rich.table import Table
+from rich.text import Text
 
 from pyegeria import (
     InvalidParameterException,
@@ -78,9 +77,8 @@ def display_assets(
             caption=f"View Server '{server}' @ Platform - {url}",
             expand=True,
         )
-        table.add_column("Display Name", max_width=15)
+        table.add_column("Display Name / Qualified Name / GUID", width=36)
         table.add_column("Type Name")
-        table.add_column("GUID", no_wrap=True)
         table.add_column("Technology Type")
         # table.add_column("Qualified Name",max_width=15)
         table.add_column("Matching Elements")
@@ -100,23 +98,16 @@ def display_assets(
             properties = element["properties"]
             header = element["elementHeader"]
             nested = element.get("matchingElements", "---")
+            qualified_name = properties["qualifiedName"]
+            display_name = Text(f"{properties.get("displayName", "---")}\n\n{qualified_name}\n\n"
+                                f"{header['guid']}", justify="center")
 
-            display_name = properties.get("displayName", "---")
-            # qualified_name = properties["qualifiedName"] # we decided that qualified name wasn't useful
             type_name = header["type"]["typeName"]
             tech_type = properties.get("deployedImplementationType", "---")
-            guid = header["guid"]
-            #### We decided that path wasn't useful
-            # path_name = element.get("extendedProperties", None)
-            # if path_name:
-            #     path = path_name.get("pathName"," ")
-            # else:
-            #     path = " "
-            match_md = ""
 
             match_tab = Table(expand=True)
             match_tab.add_column("Type Name")
-            match_tab.add_column("GUID", no_wrap=True, width=36)
+            match_tab.add_column("GUID", width=36)
             match_tab.add_column("Properties")
 
             for match_t in nested:
@@ -130,7 +121,7 @@ def display_assets(
                 match_details_out = Markdown(match_details_md)
                 match_tab.add_row(match_type_name, matching_guid, match_details_out)
 
-            table.add_row(display_name, type_name, guid, tech_type, match_tab)
+            table.add_row(display_name, type_name, tech_type, match_tab)
 
         g_client.close_session()
         return table
