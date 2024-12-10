@@ -302,8 +302,7 @@ class Egeria_login(App):
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-def login(userid: str, password: str) -> None:
+def login(userid: str, password: str, server, url) -> None:
     app = Egeria_login()
     app.run()
     return
