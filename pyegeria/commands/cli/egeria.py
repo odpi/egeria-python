@@ -235,7 +235,13 @@ def cli(
     ctx.ensure_object(Config)
 
 
-cli.add_command(login)
+# cli.add_command(login)
+@cli.command("login")
+@click.pass_context
+def egeria_login(ctx):
+    """Login to Egeria platform"""
+    user = login()
+    ctx.obj.userid = user
 
 
 #

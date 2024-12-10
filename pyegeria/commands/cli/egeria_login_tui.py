@@ -295,17 +295,17 @@ class Egeria_login(App):
         )
 
 
-@click.command("egeria-login")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-def login(userid: str, password: str, server, url) -> None:
+# @click.command("egeria-login")
+# @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+# @click.option(
+#     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+# )
+# @click.option("--userid", default=EGERIA_USER, help="Egeria user")
+# @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+def login(userid: str, password: str, server: str, url: str) -> None:
     app = Egeria_login()
     app.run()
-    return
+    return "peterprofile"
 
 
 if __name__ == "__main__":
