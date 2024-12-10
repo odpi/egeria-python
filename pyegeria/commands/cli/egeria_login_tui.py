@@ -9,7 +9,7 @@ Peter Coldicott
 
 import os
 from os import system
-
+import click
 from textual.reactive import Reactive
 
 from textual.app import App, ComposeResult
@@ -35,6 +35,7 @@ from textual.widgets import (
 )
 
 from typing import Any
+
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -294,7 +295,15 @@ class Egeria_login(App):
         )
 
 
-def login() -> None:
+@click.command("egeria-login")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def login(userid: str, password: str) -> None:
     app = Egeria_login()
     app.run()
     return

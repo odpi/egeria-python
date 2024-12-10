@@ -235,9 +235,7 @@ def cli(
     ctx.ensure_object(Config)
 
 
-@cli.command("alogin")
-def login():
-    login()
+cli.add_command(login)
 
 
 #
