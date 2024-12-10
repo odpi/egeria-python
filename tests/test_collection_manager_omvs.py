@@ -4,8 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the core OMAG config class and methods
-The routines assume that pytest is being used as the test tool and framework.
+This module tests the CollectionManager class and methods
 
 A running Egeria environment is needed to run these tests.
 
@@ -230,7 +229,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "59b4d6b2-110c-488d-88d9-2975ed51506c"
+            collection_guid = "d85163e3-ee6a-40f5-a27d-ee7c1f372c2b"
 
             response = c_client.get_collection(collection_guid)
             duration = time.perf_counter() - start_time

@@ -2669,8 +2669,11 @@ class CollectionManager(Client):
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
             member_resp = await self._async_get_collection(member_guid)
-            member = member_resp["element"]
+            member = member_resp.get("element", None)
+            if member is None:
+                continue
             # print(json.dumps(member, indent = 4))
+
             member_instance = {
                 "name": member["properties"]["name"],
                 "qualifiedName": member["properties"]["qualifiedName"],
