@@ -120,6 +120,7 @@ pytest = "^8.2.2"
     hey_egeria_tech = "pyegeria.commands.cli.egeria_tech:cli"
     hey_egeria_my = "pyegeria.commands.cli.egeria_my:cli"
     hey_egeria = "pyegeria.commands.cli.egeria:cli"
+    login = "pyegeria.commands.cli.egeria_login_tui:login"
 
     get_guid_info = "pyegeria.commands.tech.get_guid_info:main"
     get_tech_details = "pyegeria.commands.tech.get_tech_details:main"

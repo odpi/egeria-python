@@ -294,7 +294,7 @@ class Egeria_login(App):
         )
 
 
-def login(unexpected) -> None:
+def login() -> None:
     app = Egeria_login()
     app.run()
     return
