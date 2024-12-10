@@ -240,7 +240,7 @@ def cli(
 @click.pass_context
 def egeria_login(ctx):
     """Login to Egeria platform"""
-    user = login()
+    user = login(ctx.obj.userid,ctx.obj.password,ctx.obj.view_server, ctx.obj.view_server_url)
     ctx.obj.userid = user
 
 
