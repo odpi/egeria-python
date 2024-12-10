@@ -240,8 +240,11 @@ def cli(
 @click.pass_context
 def egeria_login(ctx):
     """Login to Egeria platform"""
-    user = login(ctx.obj.userid,ctx.obj.password,ctx.obj.view_server, ctx.obj.view_server_url)
+    user = login(
+        ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
+    )
     ctx.obj.userid = user
+    click.echo(f" user is {ctx.obj.userid}")
 
 
 #
@@ -1840,4 +1843,8 @@ def repository(ctx):
 repository.add_command(load_archive)
 
 if __name__ == "__main__":
-    cli()
+    while True:
+        try:
+            cli()
+        except Exception as e:
+            click.echo(f"Error: {e}")
