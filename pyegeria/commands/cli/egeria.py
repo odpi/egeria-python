@@ -236,8 +236,7 @@ def cli(
 
 
 @cli.command("alogin")
-@click.pass_context
-def login(ctx):
+def login():
     login()
 
 
