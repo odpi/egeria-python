@@ -159,17 +159,17 @@ class TestGlossaryBrowser:
             # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
             # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
             glossary_guid = (
-                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
+                "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # larger sustainability glossary
             )
 
             start_time = time.perf_counter()
             response = g_client.get_terms_for_glossary(
-                glossary_guid, page_size=500, effective_time=None
+                glossary_guid, page_size=1000, effective_time=None
             )
             print(f"Duration is {time.perf_counter()-start_time} seconds")
             print(f"type is {type(response)}")
             if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
+                # print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} terms")
             elif type(response) is str:
@@ -257,19 +257,20 @@ class TestGlossaryBrowser:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
             glossary_guid = (
-                "f9b78b26-6025-43fa-9299-a905cc6d1575"  # sustainability glossary
+                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
             )
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "*",
+                "Global Warming Potential",
                 # glossary_guid=glossary_guid,
                 None,
-                starts_with=True,
+                starts_with=False,
                 ends_with=False,
+                ignore_case=True,
                 for_lineage=False,
                 for_duplicate_processing=True,
                 status_filter=[],
-                page_size=10,
+                page_size=100,
                 effective_time=None,
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")

@@ -107,7 +107,7 @@ def display_certifications(
             title = properties.get("title", "---")
             cert_guid = element["elementHeader"]["guid"]
 
-            related = g_client.get_all_related_elements(cert_guid)
+            related = g_client.get_related_elements(cert_guid)
             if (len(related) > 0) and (type(related) is list):
                 rel_md = ""
                 for rel in related:

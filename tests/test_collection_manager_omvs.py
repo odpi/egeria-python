@@ -4,8 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the core OMAG config class and methods
-The routines assume that pytest is being used as the test tool and framework.
+This module tests the CollectionManager class and methods
 
 A running Egeria environment is needed to run these tests.
 
@@ -230,7 +229,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "59b4d6b2-110c-488d-88d9-2975ed51506c"
+            collection_guid = "d85163e3-ee6a-40f5-a27d-ee7c1f372c2b"
 
             response = c_client.get_collection(collection_guid)
             duration = time.perf_counter() - start_time
@@ -698,8 +697,10 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
-
-            response = c_client.get_collection_members(collection_guid)
+            # cname = "Coco Pharmaceuticals Governance Domains"
+            cname = "Sentinel 2"
+            cname = "Digital Products Root"
+            response = c_client.get_collection_members(collection_name=cname)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -920,10 +921,11 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             guid = "bfac5ae3-f300-46d0-b9cb-bcfec2614df2"
-            name = "Root Sustainability Collection"
+            # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
+            name = "Sentinel 2"
 
-            response = c_client.get_member_list(guid)
+            response = c_client.get_member_list(collection_name=name)
 
             duration = time.perf_counter() - start_time
             if type(response) is list:

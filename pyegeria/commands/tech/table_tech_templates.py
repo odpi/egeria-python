@@ -181,6 +181,7 @@ def display_templates_spec(
             sys.exit(1)
 
     try:
+        start_time = time.perf_counter()
         if data_table:
             return generate_table(data_table)
         else:
@@ -188,7 +189,8 @@ def display_templates_spec(
 
             with console.pager(styles=True):
                 console.print(generate_table(data_table))
-
+        duration = time.perf_counter() - start_time
+        print(f"\n\n\t Search string {search_string}\tDuration was {duration:.2f}\n")
     except (
         InvalidParameterException,
         PropertyServerException,

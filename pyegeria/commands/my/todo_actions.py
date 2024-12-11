@@ -13,7 +13,6 @@ from datetime import datetime
 
 import click
 
-# from ops_config import Config, pass_config
 from pyegeria import MyProfile
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -52,19 +51,15 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--name", prompt="Todo Name", help="Name of Todo", required=True)
+@click.option("--name", help="Name of Todo", required=True)
 @click.option(
     "--description",
-    prompt="Description",
     help="Brief description of To Do item",
     required=True,
 )
-@click.option(
-    "--type", prompt="Todo Type", help="Type of Todo", required=True, default="forMe"
-)
+@click.option("--type", help="Type of Todo", required=True, default="forMe")
 @click.option(
     "--priority",
-    prompt="Todo Priority",
     type=int,
     help="Priority of Todo",
     required=True,
@@ -72,14 +67,12 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 )
 @click.option(
     "--due",
-    prompt="Due Date",
     help="Due date of Todo (yyyy-mm-dd)",
     default=datetime.now().strftime("%Y-%m-%d"),
     required=True,
 )
 @click.option(
     "--assigned-to",
-    prompt="Assigned to",
     help="Party the Todo is assigned to",
     required=True,
     default=peter_guid,
@@ -99,7 +92,7 @@ def create_todo(
 ):
     """Create a new ToDo item"""
     m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
+    m_client.create_egeria_bearer_token()
     try:
         body = {
             "properties": {
@@ -141,7 +134,7 @@ def create_todo(
 def delete_todo(server, url, userid, password, timeout, todo_guid):
     """Delete the todo item specified"""
     m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
+    m_client.create_egeria_bearer_token()
     try:
         m_client.delete_to_do(todo_guid)
 
@@ -176,7 +169,7 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 def change_todo_status(server, url, userid, password, timeout, todo_guid, new_status):
     """Update a ToDo item status"""
     m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
+    m_client.create_egeria_bearer_token()
     try:
         body = {"class": "ToDoProperties", "toDoStatus": new_status}
 
@@ -205,7 +198,7 @@ def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
     """Mark the specified todo as complete"""
     m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
     try:
-        token = m_client.create_egeria_bearer_token()
+        m_client.create_egeria_bearer_token()
         body = {
             "class": "ToDoProperties",
             "completionTime": time.asctime(),
@@ -237,7 +230,7 @@ def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
 def reassign_todo(server, url, userid, password, timeout, todo_guid, new_actor_guid):
     """Reassign ToDo item to new actor"""
     m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
+    m_client.create_egeria_bearer_token()
     try:
         m_client.reassign_to_do(todo_guid, new_actor_guid)
 

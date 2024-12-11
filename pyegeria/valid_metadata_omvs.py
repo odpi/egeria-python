@@ -1421,7 +1421,7 @@ class ValidMetadataManager(Client):
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types"
 
         resp = await self._async_make_request("GET", url)
-        return resp.json().get("typeDefs", "No TypeDefs Found")
+        return resp.json()
 
     def get_all_entity_types(self) -> list | str:
         """Returns the list of different types of metadata organized into two groups.  The first are the

@@ -119,6 +119,7 @@ def display_glossary_terms(
         table.add_column("Version Id")
         table.add_column("Glossary")
         table.add_column("Status")
+        table.add_column("Example")
 
         terms = g_client.find_glossary_terms(
             search_string,
@@ -158,6 +159,7 @@ def display_glossary_terms(
                 style=style,
                 justify="center",
             )
+            example = Text(props.get("example", " "), style=style)
 
             classifications = term["elementHeader"]["classifications"]
             glossary_guid = None
@@ -184,6 +186,7 @@ def display_glossary_terms(
                 version,
                 glossary_name,
                 term_status,
+                example,
                 style="bold white on black",
             )
 

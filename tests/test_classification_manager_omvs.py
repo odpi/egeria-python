@@ -45,7 +45,8 @@ password = "secret"
 # element_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663'
 # element_guid = "a2915132-9d9a-4449-846f-43a871b5a6a0"
 # element_guid = "b359e297-a565-414a-8213-fa423312ab36" # clinical trials management
-element_guid = "25b1791f-c2fb-4b93-b236-cad53739a9a2"  # Approved Hospital
+# element_guid = "25b1791f-c2fb-4b93-b236-cad53739a9a2"  # Approved Hospital
+element_guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
 relationship_type = "GovernedBy"
 
 # bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -232,7 +233,8 @@ def test_get_guid_for_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
-    property_value = "Sustainability Glossary"
+    # property_value = "Sustainability Glossary"
+    property_value = "Coco Pharmaceuticals Governance Domains"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -252,7 +254,8 @@ def test_get_guid_for_name():
 def test_get_element_guid_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
-    property_value = "simple-metadata-store"
+    # property_value = "simple-metadata-store"
+    property_value = "Coco Pharmaceuticals Governance Domains"
 
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -317,8 +320,8 @@ def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
     open_metadata_type_name = None
     classification = "Anchors"
-    property_value = "5b0c1309-47d1-423f-a7e6-29fb7a322190"
-    property_names = ["anchorGUID"]
+    property_value = "Collection"
+    property_names = ["anchorTypeName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -400,7 +403,8 @@ def test_get_all_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
-    element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
+    # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
+
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name

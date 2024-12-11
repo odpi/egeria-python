@@ -11,7 +11,7 @@ This is an emerging capability based on the **click** package. Feedback welcome!
 """
 import click
 from trogon import tui
-
+from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
@@ -23,6 +23,8 @@ from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
 from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_projects import display_project_list
+from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
+from pyegeria.commands.tech.list_elements_x import list_elements_x
 from pyegeria.commands.tech.list_relationships import list_relationships
 from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
@@ -37,6 +39,7 @@ from pyegeria.commands.my.monitor_open_todos import display_todos
 from pyegeria.commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
+from pyegeria.commands.cat.list_collections import display_collections
 from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
 from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
 from pyegeria.commands.cat.glossary_actions import (
@@ -106,7 +109,7 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 
 @tui()
 # @tui('menu', 'menu', 'A textual command line interface')
-@click.version_option("0.0.1", prog_name="egeria_ops")
+@click.version_option("0.5.2 ", prog_name="hey_egeria")
 @click.group()
 @click.option(
     "--server",
@@ -178,13 +181,6 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-# @click.option("--verbose", is_flag=True, default=False, help="Enable verbose mode")
-# @click.option(
-#     "--paging",
-#     is_flag=True,
-#     default=False,
-#     help="Enable paging snapshots vs live updates",
-# )
 @click.option(
     "--jupyter",
     is_flag=True,
@@ -239,6 +235,18 @@ def cli(
     ctx.ensure_object(Config)
 
 
+# cli.add_command(login)
+@cli.command("login")
+@click.pass_context
+def egeria_login(ctx):
+    """Login to Egeria platform"""
+    user = login(
+        ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
+    )
+    ctx.obj.userid = user
+    click.echo(f" user is {ctx.obj.userid}")
+
+
 #
 #  my: Show
 #
@@ -273,11 +281,7 @@ def show_my_profile(ctx):
 @my_show.command("my-roles")
 @click.pass_context
 def show_my_roles(ctx):
-    """Display my profiles
-
-    Usage: show my-profile
-
-    """
+    """Display my roles"""
     c = ctx.obj
     display_my_roles(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -301,12 +305,7 @@ def show_my_todos(ctx):
 @my_show.command("open-to-dos")
 @click.pass_context
 def show_open_todos(ctx):
-    """Display a live status view of Egeria servers for the specified Egeria platform
-
-    Usage: show tech-details <tech-name>
-
-           tech-name is a valid technology name (see 'show tech-types')
-    """
+    """Display Open Todo items"""
     c = ctx.obj
     display_todos(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -372,14 +371,35 @@ def show_elements(ctx):
 @show_elements.command("guid-info")
 @click.argument("guid", nargs=1)
 @click.pass_context
-def show_guid_infos(ctx, guid):
-    """Display a live status view of known platforms
+def show_guid_info(ctx, guid):
+    """Display guid information
 
     Usage: show guid-info <a guid>
 
     """
     c = ctx.obj
     display_guid(guid, c.server, c.url, c.userid, c.password, c.jupyter, c.width)
+
+
+@show_elements.command("anchored-elements")
+@click.pass_context
+@click.option("--search-string", help="value we are searching for")
+@click.option(
+    "--prop-list", default="anchorTypeName", help="List of properties we are searching"
+)
+def list_anchored_elements(ctx, search_string: str, prop_list: str):
+    """List elements with the specified properties"""
+    c = ctx.obj
+    display_anchored_elements(
+        search_string,
+        prop_list,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
 
 
 @show_elements.command("related-specifications")
@@ -421,12 +441,7 @@ def show_tech_types(ctx, search_string):
 @click.argument("tech-name")
 @click.pass_context
 def show_tech_details(ctx, tech_name):
-    """Display a live status view of Egeria servers for the specified Egeria platform
-
-    Usage: show tech-details <tech-name>
-
-           tech-name is a valid technology name (see 'show tech-types')
-    """
+    """Show technology type details"""
     c = ctx.obj
     tech_details_viewer(
         tech_name,
@@ -463,7 +478,7 @@ def show_tech_type_templates(ctx, tech_type):
 @show_tech_info.command("asset-types")
 @click.pass_context
 def show_asset_types(ctx):
-    """Display engine-host status information"""
+    """Display asset types"""
     c = ctx.obj
     display_asset_types(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -511,7 +526,7 @@ def show_registered_services(ctx, services):
 )
 @click.pass_context
 def show_relationship_types(ctx, rel_type):
-    """Show information about the specified relationship type"""
+    """Show information about the specified relationship types"""
     c = ctx.obj
     display_relationship_types(
         rel_type,
@@ -538,7 +553,7 @@ def show_relationship_types(ctx, rel_type):
 )
 @click.pass_context
 def show_elements_by_classification(ctx, om_type, classification):
-    """Show information about the specified relationship type"""
+    """Show elements by classification"""
     c = ctx.obj
     list_classified_elements(
         om_type,
@@ -568,8 +583,8 @@ def show_elements_by_classification(ctx, om_type, classification):
     help="Relationship type to follow.",
 )
 @click.pass_context
-def show_relationship_types(ctx, element_guid, om_type, rel_type):
-    """Show information about the specified relationship type"""
+def show_related_elements(ctx, element_guid, om_type, rel_type):
+    """Show elements related to specified guid"""
     c = ctx.obj
     list_related_elements(
         element_guid,
@@ -664,25 +679,42 @@ def valid_metadata_values(ctx, property, type_name):
 
 @show_elements.command("elements")
 @click.pass_context
+@click.option(
+    "--extended",
+    is_flag=True,
+    default=False,
+    help="If True, feedback information is displayed",
+)
 @click.option("--om_type", default="Organization", help="Metadata type to query")
-def list_element_info(ctx, om_type):
-    """Display the valid metadata values for a property and type"""
+def list_element_info(ctx, om_type, extended):
+    """Display elements of a specific Open Metadata Type"""
     c = ctx.obj
-    list_elements(
-        om_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    if extended:
+        list_elements_x(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
+    else:
+        list_elements(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
 
 
 @show_tech_info.command("processes")
 @click.pass_context
 def list_element_info(ctx):
-    """Display the valid metadata values for a property and type"""
+    """Display the governance action processes"""
     c = ctx.obj
     list_elements(
         "GovernanceActionProcess",
@@ -699,7 +731,7 @@ def list_element_info(ctx):
 @click.pass_context
 @click.option("--om_type", default="Project", help="Metadata type to query")
 def get_element_info(ctx, om_type):
-    """Display the elements for an Open Metadata Type"""
+    """Display a table of elements of an Open Metadata Type"""
     c = ctx.obj
     display_elements(
         om_type,
@@ -746,6 +778,17 @@ def show_tech_types(ctx, tech_type):
     c = ctx.obj
     display_tech_types(
         tech_type, c.view_server, c.view_server_url, c.userid, c.password
+    )
+
+
+@show_cat_info.command("collections")
+@click.option("--collection", default="*", help="Collection to search for")
+@click.pass_context
+def show_collections(ctx, collection):
+    """List Collections"""
+    c = ctx.obj
+    display_collections(
+        collection, c.view_server, c.view_server_url, c.userid, c.password
     )
 
 
@@ -859,7 +902,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
 def glossaries(ctx, search_string):
-    """Display a tree graph of information about an asset"""
+    """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
         search_string,
@@ -872,15 +915,15 @@ def glossaries(ctx, search_string):
     )
 
 
-@show_cat_info.command("collection")
+@show_cat_info.command("collection-graph")
 @click.option(
     "--root_collection",
-    default="Root Sustainability Collection",
+    default="Coco Pharmaceuticals Governance Domains",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
-def show_asset_graph(ctx, root_collection):
-    """Display a tree graph of information about an asset"""
+def show_collection(ctx, root_collection):
+    """Display collection graph"""
     c = ctx.obj
     collection_viewer(
         root_collection,
@@ -922,9 +965,7 @@ def show_projects(ctx, search_string):
 @click.option("--search-string", default="CertificationType", help="")
 @click.pass_context
 def show_certification_types(ctx, search_string):
-    """Show certification types
-    - generally stay with the default.
-    """
+    """Show certification types"""
     c = ctx.obj
     display_certifications(
         search_string,
@@ -941,7 +982,7 @@ def show_certification_types(ctx, search_string):
 @show_cat_info.command("asset-types")
 @click.pass_context
 def show_asset_types(ctx):
-    """Display engine-host status information"""
+    """Display known asset types"""
     c = ctx.obj
     display_asset_types(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -1006,7 +1047,7 @@ def show_project_dependencies(ctx, project):
 )
 @click.pass_context
 def show_todos(ctx, search_string, status):
-    """Display a tree graph of information about an asset"""
+    """Display list of To Dost"""
     c = ctx.obj
     list_todos(
         search_string,
@@ -1023,7 +1064,7 @@ def show_todos(ctx, search_string, status):
 @show_cat_info.command("user-ids")
 @click.pass_context
 def show_todos(ctx):
-    """Display a list of known user ids"""
+    """Display a list of known user-ids"""
     c = ctx.obj
     list_user_ids(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -1157,9 +1198,7 @@ def show_tech_types(ctx, tech_type):
 @click.option("--search-string", default="CertificationType", help="")
 @click.pass_context
 def show_certification_types(ctx, search_string):
-    """Show certification types
-    - generally stay with the default..
-    """
+    """Show certification types"""
     c = ctx.obj
     display_certifications(
         search_string,
@@ -1288,13 +1327,13 @@ def show_tech_type_elements(ctx, tech_type):
 
 @show_cat_info.command("collection")
 @click.option(
-    "--root_collection",
-    default="Root Sustainability Collection",
+    "--root-collection",
+    default="Coco Pharmaceuticals Governance Domains",
     help="View of tree of collections from a given root",
 )
 @click.pass_context
-def show_asset_graph(ctx, root_collection):
-    """Display a tree graph of information about an asset"""
+def show_collection(ctx, root_collection):
+    """Display information about a collection"""
     c = ctx.obj
     collection_viewer(
         root_collection,
@@ -1339,7 +1378,7 @@ def show_projects(ctx, search_string):
 )
 @click.pass_context
 def show_todos(ctx, search_string, status):
-    """Display a tree graph of information about an asset"""
+    """Display a list of To Dos"""
     c = ctx.obj
     list_todos(
         search_string,
@@ -1355,8 +1394,8 @@ def show_todos(ctx, search_string, status):
 
 @show_cat_info.command("user-ids")
 @click.pass_context
-def show_todos(ctx):
-    """Display a tree graph of information about an asset"""
+def show_user_ids(ctx):
+    """Display table of known user ids"""
     c = ctx.obj
     list_user_ids(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -1366,7 +1405,7 @@ def show_todos(ctx):
 @show_server.command("archives")
 @click.pass_context
 def archives(ctx):
-    """Display a tree graph of information about an asset"""
+    """Display a list of archivest"""
     c = ctx.obj
     display_archive_list(
         c.view_server,
@@ -1387,6 +1426,7 @@ def archives(ctx):
 )
 @click.pass_context
 def show_deployed_servers(ctx, search_string):
+    """Show list of deployed servers"""
     c = ctx.obj
     display_servers_by_dep_imp(
         search_string,
@@ -1405,7 +1445,7 @@ def show_deployed_servers(ctx, search_string):
 )
 @click.pass_context
 def deployed_schemas(ctx, search_catalog):
-    """Display a tree graph of information about an asset"""
+    """Display a list of deployed schemas"""
     c = ctx.obj
     list_deployed_database_schemas(
         search_catalog,
@@ -1422,7 +1462,7 @@ def deployed_schemas(ctx, search_catalog):
 @click.option("--search_server", default="*", help="Server to search for catalogs")
 @click.pass_context
 def catalogs(ctx, search_server):
-    """Display a tree graph of information about an asset"""
+    """Display a list of deployed catalogs"""
     c = ctx.obj
     list_deployed_catalogs(
         search_server,
@@ -1438,7 +1478,7 @@ def catalogs(ctx, search_server):
 @deployed_data.command("databases")
 @click.pass_context
 def databases(ctx):
-    """Display a tree graph of information about an asset"""
+    """Display a list of deployed databases"""
     c = ctx.obj
     list_deployed_databases(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
@@ -1449,7 +1489,7 @@ def databases(ctx):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.pass_context
 def glossaries(ctx, search_string):
-    """Display a tree graph of information about an asset"""
+    """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
         search_string,
@@ -1803,4 +1843,8 @@ def repository(ctx):
 repository.add_command(load_archive)
 
 if __name__ == "__main__":
-    cli()
+    while True:
+        try:
+            cli()
+        except Exception as e:
+            click.echo(f"Error: {e}")

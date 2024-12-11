@@ -2179,7 +2179,9 @@ class CollectionManager(Client):
 
     async def _async_get_collection_members(
         self,
-        collection_guid: str,
+        collection_guid: str = None,
+        collection_name: str = None,
+        collection_qname: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
@@ -2189,12 +2191,16 @@ class CollectionManager(Client):
         Parameters
         ----------
         collection_guid: str,
-            identity of the collection to return members for.
+            identity of the collection to return members for. If none, collection_name or
+            collection_qname are used.
+        collection_name: str,
+            display name of the collection to return members for. If none, collection_guid
+            or collection_qname are used.
+        collection_qname: str,
+            qualified name of the collection to return members for. If none, collection_guid
+            or collection_name are used.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -2220,7 +2226,13 @@ class CollectionManager(Client):
 
         if page_size is None:
             page_size = self.page_size
-
+        collection_guid = self.__get_guid__(
+            collection_guid,
+            collection_name,
+            "name",
+            collection_qname,
+            None,
+        )
         url = (
             f"{self.collection_command_root}/{collection_guid}/"
             f"members?startFrom={start_from}&pageSize={page_size}"
@@ -2231,27 +2243,33 @@ class CollectionManager(Client):
 
     def get_collection_members(
         self,
-        collection_guid: str,
+        collection_guid: str = None,
+        collection_name: str = None,
+        collection_qname: str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
-        """Return a list of elements that are a member of a collection.
+        """Return a list of elements that are a member of a collection. Async version.
 
-        Parameters
-        ----------
-        collection_guid: str,
-            identity of the collection to return members for.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
-
-
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
+               Parameters
+               ----------
+               collection_guid: str,
+                   identity of the collection to return members for. If none, collection_name or
+                   collection_qname are used.
+               collection_name: str,
+                   display name of the collection to return members for. If none, collection_guid
+                   or collection_qname are used.
+               collection_qname: str,
+                   qualified name of the collection to return members for. If none, collection_guid
+                   or collection_name are used.
+               effective_time: str, [default=None], optional
+                   Effective time of the query. If not specified will default to any time.
+               start_from: int, [default=0], optional
+                           When multiple pages of results are available, the page number to start from.
+               page_size: int, [default=None]
+                   The number of items to return in a single page. If not specified, the default will be taken from
+                   the class instance.
         Returns
         -------
         List | str
@@ -2272,7 +2290,12 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collection_members(
-                collection_guid, effective_time, start_from, page_size
+                collection_guid,
+                collection_name,
+                collection_qname,
+                effective_time,
+                start_from,
+                page_size,
             )
         )
 
@@ -2602,20 +2625,29 @@ class CollectionManager(Client):
         )
         return
 
-    async def _async_get_member_list(self, root_collection_guid: str) -> list | bool:
+    async def _async_get_member_list(
+        self,
+        collection_guid: str = None,
+        collection_name: str = None,
+        collection_qname: str = None,
+    ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
-        root_collection_guid : str
-            The unique GUID of the root collection.
-
-
-            The name of the server. If not provided, the default server name will be used.
+        collection_guid: str,
+           identity of the collection to return members for. If none, collection_name or
+           collection_qname are used.
+        collection_name: str,
+           display name of the collection to return members for. If none, collection_guid
+           or collection_qname are used.
+        collection_qname: str,
+           qualified name of the collection to return members for. If none, collection_guid
+           or collection_name are used.
 
         Returns
         -------
-        list | bool
-            The list of member information if successful, otherwise False.
+        list | str
+            The list of member information if successful, otherwise the string "No members found"
 
         Raises
         ------
@@ -2628,15 +2660,20 @@ class CollectionManager(Client):
 
         # now find the members of the collection
         member_list = []
-        members = await self._async_get_collection_members(root_collection_guid)
-        if type(members) is str:
-            return False
+        members = await self._async_get_collection_members(
+            collection_guid, collection_name, collection_qname
+        )
+        if (type(members) is str) or (len(members) == 0):
+            return "No members found"
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
             member_resp = await self._async_get_collection(member_guid)
-            member = member_resp["element"]
+            member = member_resp.get("element", None)
+            if member is None:
+                continue
             # print(json.dumps(member, indent = 4))
+
             member_instance = {
                 "name": member["properties"]["name"],
                 "qualifiedName": member["properties"]["qualifiedName"],
@@ -2646,18 +2683,26 @@ class CollectionManager(Client):
             }
             member_list.append(member_instance)
 
-        return member_list
+        return member_list if len(member_list) > 0 else "No members found"
 
-    def get_member_list(self, root_collection_guid: str) -> list | bool:
-        """Get the member list for the collection.
+    def get_member_list(
+        self,
+        collection_guid: str = None,
+        collection_name: str = None,
+        collection_qname: str = None,
+    ) -> list | bool:
+        """Get the member list for the collection - async version.
         Parameters
         ----------
-        root_collection_guid : str
-            The GUID of the root collection.
-
-
-            The name of the server. If not provided, the default server name will be used.
-
+        collection_guid: str,
+           identity of the collection to return members for. If none, collection_name or
+           collection_qname are used.
+        collection_name: str,
+           display name of the collection to return members for. If none, collection_guid
+           or collection_qname are used.
+        collection_qname: str,
+           qualified name of the collection to return members for. If none, collection_guid
+           or collection_name are used.
         Returns
         -------
         list | bool
@@ -2671,7 +2716,9 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_member_list(root_collection_guid)
+            self._async_get_member_list(
+                collection_guid, collection_name, collection_qname
+            )
         )
         return resp
 

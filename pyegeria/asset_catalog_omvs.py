@@ -302,7 +302,7 @@ class AssetCatalog(Client):
     # Engine Actions
     #
 
-    async def _async_find_assets_in_domain(
+    async def _async_find_in_asset_domain(
         self,
         search_string: str,
         start_from: int = 0,
@@ -367,7 +367,7 @@ class AssetCatalog(Client):
         response = await self._async_make_request("POST", url, body, time_out=time_out)
         return response.json().get("searchMatches", "no assets found")
 
-    def find_assets_in_domain(
+    def find_in_asset_domain(
         self,
         search_string: str,
         start_from: int = 0,
@@ -416,7 +416,7 @@ class AssetCatalog(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_assets_in_domain(
+            self._async_find_in_asset_domain(
                 search_string,
                 start_from,
                 page_size,
@@ -505,6 +505,40 @@ class AssetCatalog(Client):
             self._async_get_asset_graph(asset_guid, start_from, page_size)
         )
         return response
+
+    def get_asset_mermaid_graph(
+        self,
+        asset_guid: str,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+    ) -> str:
+        """Return the asset graph as mermaid markdown string.
+         Parameters
+         ----------
+         asset_guid : str
+             The unique identity of the asset to get the graph for.
+
+         start_from : int, optional
+             The index from which to start fetching the engine actions. Default is 0.
+
+         page_size : int, optional
+             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+         Returns
+         -------
+        str
+             A mermaid string representing the asset graph.
+
+         Raises:
+         ------
+         InvalidParameterException
+         PropertyServerException
+         UserNotAuthorizedException
+
+        """
+
+        asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
+        return asset_graph.get("mermaidGraph")
 
     async def _async_get_asset_lineage_graph(
         self,
