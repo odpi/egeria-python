@@ -697,7 +697,9 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
-            cname = "Coco Pharmaceuticals Governance Domains"
+            # cname = "Coco Pharmaceuticals Governance Domains"
+            cname = "Sentinel 2"
+            cname = "Digital Products Root"
             response = c_client.get_collection_members(collection_name=cname)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -919,8 +921,9 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             guid = "bfac5ae3-f300-46d0-b9cb-bcfec2614df2"
-            name = "Earth Observation Data Collection"
+            # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
+            name = "Sentinel 2"
 
             response = c_client.get_member_list(collection_name=name)
 
