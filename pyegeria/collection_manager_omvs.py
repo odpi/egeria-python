@@ -2646,8 +2646,8 @@ class CollectionManager(Client):
 
         Returns
         -------
-        list | bool
-            The list of member information if successful, otherwise False.
+        list | str
+            The list of member information if successful, otherwise the string "No members found"
 
         Raises
         ------
@@ -2663,7 +2663,7 @@ class CollectionManager(Client):
         members = await self._async_get_collection_members(
             collection_guid, collection_name, collection_qname
         )
-        if type(members) is str:
+        if (type(members) is str) or (len(members) == 0):
             return "No members found"
         # finally, construct a list of  member information
         for member_rel in members:
@@ -2683,7 +2683,7 @@ class CollectionManager(Client):
             }
             member_list.append(member_instance)
 
-        return member_list
+        return member_list if len(member_list) > 0 else "No members found"
 
     def get_member_list(
         self,

@@ -96,7 +96,7 @@ def collection_viewer(
                     walk_collection_hierarchy(branch, collection_client, member["guid"])
         else:
             tt = tree.add(
-                f"[bold magenta on black]No collections match {root_collection_name}"
+                f"[bold magenta on black]No collections found in {root_collection_name}"
             )
 
     try:
