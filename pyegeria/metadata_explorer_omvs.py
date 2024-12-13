@@ -1742,7 +1742,7 @@ class MetadataExplorer(Client):
         )
 
         url = (
-            f"{base_path(self, self.view_server)}/metadata-elements/by-search-specification"
+            f"{base_path(self, self.view_server)}/metadata-elements/by-search-conditions"
             f"{possible_query_params}"
         )
 
@@ -1951,7 +1951,7 @@ class MetadataExplorer(Client):
         )
 
         url = (
-            f"{base_path(self, self.view_server)}/relationships/by-search-specification"
+            f"{base_path(self, self.view_server)}/relationships/by-search-conditions"
             f"{possible_query_params}"
         )
 
@@ -1959,7 +1959,7 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
+        elements = response.json().get("relationshipList", "No elements found")
         if type(elements) is list:
             if len(elements) == 0:
                 return "No elements found"

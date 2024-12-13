@@ -56,7 +56,7 @@ def display_integration_daemon_status(
     view_url: str = EGERIA_VIEW_SERVER_URL,
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    paging: bool = True,
+    paging: bool = False,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     sort: bool = True,
@@ -197,7 +197,7 @@ def display_integration_daemon_status(
 
     try:
         if paging is True:
-            console = Console(width=width, force_terminal=not jupyter)
+            console = Console(width=width)  # main_pagig, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table(search_list))
         else:
@@ -235,6 +235,8 @@ def main_live():
     parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+    # parser.add_argument("--paging", help="Paging")
+
     args = parser.parse_args()
 
     integ_server = (
@@ -251,6 +253,7 @@ def main_live():
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    # paging = args.paging if args.paging is not None else False
     search_list = Prompt.ask(
         "Enter the list of connectors you are interested in or ['*'] for all",
         default=["*"],
@@ -277,6 +280,8 @@ def main_paging():
     parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+    # parser.add_argument("--paging", help="Paging")
+
     args = parser.parse_args()
 
     integ_server = (
@@ -293,6 +298,8 @@ def main_paging():
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    # paging = args.paging if args.paging is not None else True
+
     search_list = Prompt.ask(
         "Enter the list of connectors you are interested in or ['*'] for all",
         default="[*]",

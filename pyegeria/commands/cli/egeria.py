@@ -1325,27 +1325,6 @@ def show_tech_type_elements(ctx, tech_type):
     tech_viewer(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
 
 
-@show_cat_info.command("collection")
-@click.option(
-    "--root-collection",
-    default="Coco Pharmaceuticals Governance Domains",
-    help="View of tree of collections from a given root",
-)
-@click.pass_context
-def show_collection(ctx, root_collection):
-    """Display information about a collection"""
-    c = ctx.obj
-    collection_viewer(
-        root_collection,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
-
-
 @show_project_group.command("projects")
 @click.option("--search-string", default="*", help="List Projects by Search String")
 @click.pass_context
