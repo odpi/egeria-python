@@ -2470,7 +2470,70 @@ class GlossaryManager(GlossaryBrowser):
             )
         )
 
-        return
+    async def _async_undo_term_update(self, glossary_term_guid: str) -> None:
+        """Undo an update to a glossary term
+
+            Async Version.
+
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+        This creates a new version with the state of the term before the last update.
+
+        """
+
+        validate_guid(glossary_term_guid)
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+            f"{glossary_term_guid}/undo"
+        )
+
+        await self._async_make_request("POST", url)
+
+    def undo_term_update(self, glossary_term_guid: str) -> None:
+        """Undo an update to a glossary term
+
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+        This creates a new version with the state of the term before the last update.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_undo_term_update(glossary_term_guid))
 
     async def _async_get_terms_for_category(
         self,

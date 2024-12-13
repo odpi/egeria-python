@@ -276,7 +276,7 @@ def test_get_element_guid_by_unique_name():
 def test_get_element_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
-    property_value = "Erin Overview"
+    property_value = "coco_sustainability"
 
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -297,7 +297,7 @@ def test_get_element_by_unique_name():
 def test_get_elements_by_classification():
     # open_metadata_type_name = "Project"
     # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = None
+    open_metadata_type_name = "Catalog"
     # classification = "GovernanceProject"
     classification = "Anchors"
     c_client = ClassificationManager(view_server, platform_url)

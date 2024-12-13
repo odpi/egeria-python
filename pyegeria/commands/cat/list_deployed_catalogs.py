@@ -101,11 +101,13 @@ def list_deployed_catalogs(
         table.add_column("Catalog Schemas")
 
         if catalog_server in [None, "*"]:
-            cats = c_client.get_elements_by_classification("Anchors", "DataManager")
+            cats = c_client.get_elements_by_classification(
+                "Anchors", "DataAccessManager"
+            )
         else:
             server_guid = c_client.get_guid_for_name(catalog_server)
             cats = c_client.get_elements_by_classification_with_property_value(
-                "Anchors", server_guid, ["anchorGUID"], "DataManager"
+                "Anchors", server_guid, ["anchorGUID"], "DataAccessManager"
             )
         if type(cats) is list:
             for cat in cats:

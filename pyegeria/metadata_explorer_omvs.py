@@ -17,6 +17,8 @@ from pyegeria import body_slimmer
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import default_time_out
 
+NO_ELEMENTS_FOUND = "No_elements_found"
+
 
 def query_seperator(current_string):
     if current_string == "":
@@ -40,26 +42,38 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-explorer"
 
 
-def process_related_element_list(response: Response, mermaid_only: bool) -> str | dict:
+def process_related_element_list(
+    response: Response, mermaid_only: bool, relationship_list: bool = False
+) -> str | dict:
     """Process the result payload
 
     Parameters
     ----------
-    response
-    mermaid_only
+    response: Response
+        - the response payload from the API call
+    mermaid_only: bool
+        - if true, only return the Mermaid graph
+    relationship_list: bool
+        - if True, look for "relationshipList" otherwise look for "relatedElementList"
 
     Returns
     -------
 
     """
-    elements = response.json().get("relatedElementList", "No elements found")
+    if relationship_list:
+        elements = response.json().get("relationshipList", "No relationship list found")
+    else:
+        elements = response.json().get("relatedElementList", NO_ELEMENTS_FOUND)
+
     if isinstance(elements, str):
-        return "No elements found"
-    el_list = elements.get("elementList", "No elements found")
-    if isinstance(el_list, str):
-        return el_list
+        return NO_ELEMENTS_FOUND
     if mermaid_only:
         return elements.get("mermaidGraph", "No mermaid graph found")
+
+    el_list = elements.get("elementList", NO_ELEMENTS_FOUND)
+    if isinstance(el_list, str):
+        return el_list
+
     if len(el_list) == 0:
         return "No elements returned"
     return elements
@@ -174,7 +188,7 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body)
         )
-        return response.json().get("guid", "No elements found")
+        return response.json().get("guid", NO_ELEMENTS_FOUND)
 
     def get_metadata_guid_by_unique_name(
         self,
@@ -288,7 +302,7 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body)
         )
-        return response.json().get("element", "No elements found")
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_metadata_element_by_guid(
         self,
@@ -403,13 +417,13 @@ class MetadataExplorer(Client):
         )
         # if mermaid_only:
         #     return response.json()["elementGraph"].get(
-        #         "mermaidGraph", "No elements found"
+        #         "mermaidGraph", NO_ELEMENTS_FOUND
         #     )
         # else:
-        #     return response.json().get("elementGraph", "No elements found")
+        #     return response.json().get("elementGraph", NO_ELEMENTS_FOUND)
         if isinstance(response, str):
-            return "No elements found"
-        el_list = response.json().get("elementGraph", "No elements found")
+            return NO_ELEMENTS_FOUND
+        el_list = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
         if isinstance(el_list, str):
             return el_list
         if mermaid_only:
@@ -517,7 +531,7 @@ class MetadataExplorer(Client):
     #     response = self.get_metadata_element_graph(
     #         guid, effective_time, as_of_time, for_lineage, for_duplicate_processing
     #     )
-    #     return response.get("mermaidGraph", "No elements found")
+    #     return response.get("mermaidGraph", NO_ELEMENTS_FOUND)
 
     async def _async_get_metadata_element_by_unique_name(
         self,
@@ -580,7 +594,7 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body)
         )
-        return response.json().get("element", "No elements found")
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_metadata_element_by_unique_name(
         self,
@@ -647,6 +661,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element. Async version.
@@ -676,7 +691,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -714,10 +731,10 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
+        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_metadata_element_history(
@@ -732,6 +749,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """
         Retrieve all the versions of a metadata element.
@@ -761,7 +779,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -786,6 +806,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -866,10 +887,10 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
+        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_metadata_elements_with_string(
@@ -983,8 +1004,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
-
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
         Raises
         ------
         InvalidParameterException
@@ -1068,7 +1090,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1151,7 +1175,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1239,7 +1265,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1324,7 +1352,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1413,7 +1443,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1500,7 +1532,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1593,7 +1627,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1750,10 +1786,10 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", "No elements found")
+        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_metadata_elements(
@@ -1874,6 +1910,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """Return a list of relationships that match the requested conditions.
             The results can be received as a series of pages. Async version.
@@ -1892,11 +1929,15 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -1959,11 +2000,9 @@ class MetadataExplorer(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("relationshipList", "No elements found")
-        if type(elements) is list:
-            if len(elements) == 0:
-                return "No elements found"
-        return elements
+        return process_related_element_list(
+            response, mermaid_only, relationship_list=True
+        )
 
     def find_relationships_between_elements(
         self,
@@ -1973,6 +2012,7 @@ class MetadataExplorer(Client):
         start_from: int = 0,
         page_size: int = max_paging_size,
         time_out: int = default_time_out,
+        mermaid_only: bool = False,
     ) -> list | str:
         """Return a list of relationships that match the requested conditions.
             The results can be received as a series of pages.
@@ -1991,11 +2031,15 @@ class MetadataExplorer(Client):
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
+        mermaid_only: bool, default is False
+            - if true only a string representing the mermaid graph will be returned
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -2049,6 +2093,7 @@ class MetadataExplorer(Client):
                 start_from,
                 page_size,
                 time_out,
+                mermaid_only,
             )
         )
         return response
@@ -2110,7 +2155,7 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body)
         )
-        return response.json().get("element", "No elements found")
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_relationship_by_guid(
         self,
@@ -2200,7 +2245,9 @@ class MetadataExplorer(Client):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
         Raises
         ------
@@ -2237,9 +2284,9 @@ class MetadataExplorer(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        rel = response.json().get("relationshipList", "No elements found")
+        rel = response.json().get("relationshipList", NO_ELEMENTS_FOUND)
         if isinstance(rel, (list, dict)):
-            return rel.get("elementList", "No elements found")
+            return rel.get("elementList", NO_ELEMENTS_FOUND)
         else:
             return rel
 
@@ -2287,7 +2334,9 @@ class MetadataExplorer(Client):
          Returns
          -------
          [dict] | str
-             Returns a string if no elements found and a list of dict of elements with the results.
+            If the element is found, and mermaid_only is False, a [dict] of the element details is returned.
+            If mermaid_only is True, a string representing the mermaid graph will be returned.
+            If no elements found, string "No element found".
 
          Raises
          ------

@@ -235,7 +235,6 @@ def main_live(paging: bool = False) -> None:
     parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
-    # parser.add_argument("--paging", help="Paging")
 
     args = parser.parse_args()
 
@@ -253,7 +252,7 @@ def main_live(paging: bool = False) -> None:
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    # paging = args.paging if args.paging is not None else False
+
     search_list = Prompt.ask(
         "Enter the list of connectors you are interested in or ['*'] for all",
         default=["*"],
@@ -280,7 +279,6 @@ def main_paging(paging: bool = True) -> None:
     parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
-    # parser.add_argument("--paging", help="Paging")
 
     args = parser.parse_args()
 
@@ -298,7 +296,6 @@ def main_paging(paging: bool = True) -> None:
     view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    # paging = args.paging if args.paging is not None else False
     search_list = Prompt.ask(
         "Enter the list of connectors you are interested in or ['*'] for all",
         default=["*"],
