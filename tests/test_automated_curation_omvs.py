@@ -962,15 +962,13 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "PostgreSQL", starts_with=True, ignore_case=True
+                "Unity", starts_with=True, ignore_case=True
             )
             duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
             print(f"Type of response was {type(response)}")
             if type(response) is list:
                 out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
                 print_json(out)
             elif type(response) is str:
                 console.log("\n\n" + response)

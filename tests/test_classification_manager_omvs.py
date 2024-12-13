@@ -136,8 +136,8 @@ def test_find_elements_by_property_value():
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
     # open_metadata_type_name = None
-    # open_metadata_type_name = "Asset"
-    open_metadata_type_name = None
+    open_metadata_type_name = "Asset"
+    # open_metadata_type_name = None
     property_names = ["name"]
     property_value = "Set up new clinical trial"
 

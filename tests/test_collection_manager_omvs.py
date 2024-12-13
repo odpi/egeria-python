@@ -48,7 +48,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "a277414f-d714-452d-a805-d42bd20956dc"
+            parent_guid = "eefedc09-98d6-4f65-9a3e-b2c546571f44"
 
             response = c_client.get_linked_collections(parent_guid)
             duration = time.perf_counter() - start_time
@@ -124,14 +124,16 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Sentinel"
 
             response = c_client.find_collections(
                 search_string, None, True, ignore_case=False
             )
             duration = time.perf_counter() - start_time
 
-            print(f"\n\tDuration was {duration} seconds")
+            print(
+                f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds"
+            )
             if type(response) is list:
                 print(f"Found {len(response)} collections {type(response)}\n\n")
                 print_json("\n\n" + json.dumps(response, indent=4))
@@ -198,9 +200,10 @@ class TestCollectionManager:
             response = c_client.get_collections_by_type(collection_type)
             duration = time.perf_counter() - start_time
 
-            print(f"\n\tDuration was {duration} seconds")
+            print(
+                f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds"
+            )
             if type(response) is list:
-                print(f"Type was list - found {len(response)} elements\n")
                 print_json(json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")
@@ -703,7 +706,9 @@ class TestCollectionManager:
             response = c_client.get_collection_members(collection_name=cname)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
+            print(
+                f"\n\tNumber of elements returned was {len(response)} & Duration was {duration:.2f} seconds\n"
+            )
             if type(response) is list:
                 print_json(json.dumps(response, indent=4))
             elif type(response) is str:
