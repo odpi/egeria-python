@@ -14,6 +14,7 @@ import time
 
 from rich import box
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.table import Table
 from rich.console import Console
 
@@ -65,7 +66,7 @@ def display_my_todos(
             return
 
         for item in todo_items:
-            assigned_actors = [" "]
+            assigned_actors = ''
             if todo_items is None:
                 name = " "
                 type_name = " "
@@ -88,7 +89,8 @@ def display_my_todos(
                 status = props.get("toDoStatus")
 
                 for actor in item["assignedActors"]:
-                    assigned_actors.append(actor.get("uniqueName", "NoOne"))
+                    assigned_actors+=f"{actor.get("uniqueName", "NoOne")}\n"
+                assigned_actors_out = Markdown(assigned_actors)
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"
                 elif status in ("INPROGRESS", "COMPLETE"):
@@ -106,7 +108,7 @@ def display_my_todos(
                 due,
                 completed,
                 status,
-                str(assigned_actors),
+                assigned_actors_out,
             )
 
     def generate_table() -> Table:
@@ -137,8 +139,18 @@ def display_my_todos(
         my_title = my_profile["profileProperties"].get("jobTitle", "No Title")
         user_ids = []
         for id in my_ids:
-            user_ids.append(id["userIdentity"]["properties"].get("userId", "NoOne"))
+            user_ids.append(id["userIdentity"]["properties"].get("userid", "NoOne"))
+            add_rows(
+                table,
+                id["userIdentity"]["elementHeader"]["guid"],
+                id["userIdentity"]["properties"]["userId"],
+            )
+
         add_rows(table, my_guid, user_ids)
+
+        # user_id_guid = my_profile["userIdentity"]["guid"]
+        # user_id_name = my_profile["userIdentity"]["properties"]["userid"]
+        # add_rows(table, user_id_guid, user_id_name)
 
         my_roles = my_profile["roles"]
         if type(my_roles) is list:
@@ -179,7 +191,7 @@ def main():
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else EGERIA_USER
+    userid = args.userid if args.userid is not None else "peterprofile"
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:

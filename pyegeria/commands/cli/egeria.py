@@ -1611,14 +1611,14 @@ def gov_eng_status(ctx, engine_list, engine_host, list):
     c = ctx.obj
     display_gov_eng_status(
         [engine_list],
-        engine_host,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        list,
-        c.jupyter,
-        c.width,
+        engine_host=engine_host,
+        view_server=c.view_server,
+        url=c.view_server_url,
+        username=c.userid,
+        user_pass=c.password,
+        paging=list,
+        jupyter=c.jupyter,
+        width=c.width,
     )
 
 

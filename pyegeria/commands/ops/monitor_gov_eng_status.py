@@ -53,6 +53,7 @@ disable_ssl_warnings = True
 
 def display_gov_eng_status(
     search_list: list[str] = ["*"],
+    status_filter=["*"],
     engine_host: str = EGERIA_ENGINE_HOST,
     view_server: str = EGERIA_VIEW_SERVER,
     url: str = EGERIA_VIEW_SERVER_URL,
@@ -67,8 +68,11 @@ def display_gov_eng_status(
 
     Parameters
     ----------
+
     search_list : list of str
         List of governance engine names to search for. Defaults to ["*"] which returns all governance engines.
+    status_filter: list of str, default is all
+        List of status values to filter by.
     engine_host : str
         The host name of the governance engine.
     view_server : str
@@ -150,6 +154,8 @@ def display_gov_eng_status(
             else:
                 eng_req_type_out = " "
             status = engine["governanceEngineStatus"]
+            if (status not in status_filter) and (status_filter != ["*"]):
+                continue
             if status in ("RUNNING"):
                 eng_status = f"[green]{status}"
             elif status in ("FAILED"):
@@ -218,8 +224,19 @@ def main_live():
         "Enter the list of engines you are interested in or ['*'] for all",
         default=["*"],
     )
+    status_filter = Prompt.ask(
+        "Enter a list of status values to filter for or ['*'] for all",
+        default=["*"],
+    )
     display_gov_eng_status(
-        search_list, engine_host, view_server, url, userid, user_pass, paging
+        search_list,
+        engine_host=engine_host,
+        view_server=view_server,
+        url=url,
+        username=userid,
+        user_pass=user_pass,
+        paging=paging,
+        status_filter=status_filter,
     )
 
 
@@ -248,9 +265,19 @@ def main_paging():
         "Enter the list of engines you are interested in or ['*'] for all",
         default=["*"],
     )
-
+    status_filter = Prompt.ask(
+        "Enter a list of status values to filter for or ['*'] for all",
+        default=["*"],
+    )
     display_gov_eng_status(
-        search_list, engine_host, view_server, url, userid, user_pass, paging
+        search_list,
+        engine_host=engine_host,
+        view_server=view_server,
+        url=url,
+        username=userid,
+        user_pass=user_pass,
+        paging=paging,
+        status_filter=status_filter,
     )
 
 
