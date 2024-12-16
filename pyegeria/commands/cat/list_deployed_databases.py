@@ -151,7 +151,6 @@ def list_deployed_databases(
                     el_q_name,
                     el_type,
                     el_created_out,
-                    el_home,
                     el_guid,
                     el_props_out,
                     rel_el_out,
