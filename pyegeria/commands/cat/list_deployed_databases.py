@@ -93,7 +93,6 @@ def list_deployed_databases(
         table.add_column("Qualified Name")
         table.add_column("Type")
         table.add_column("Created", width=23)
-        table.add_column("Home Store")
         table.add_column("GUID", width=38, no_wrap=True)
         table.add_column("Properties")
         table.add_column("Schemas")
@@ -114,7 +113,8 @@ def list_deployed_databases(
                 el_created_by = header["versions"]["createdBy"]
                 el_created_md = (
                     f"* **Created By**: {el_created_by}\n"
-                    f"* **Created Time**: {el_create_time}"
+                    f"* **Created Time**: {el_create_time}\n"
+                    f"* **Home Store**: {el_home}"
                 )
                 el_created_out = Markdown(el_created_md)
 
