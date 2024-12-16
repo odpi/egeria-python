@@ -1564,7 +1564,7 @@ class ClassificationManager(Client):
             "propertyNames": property_names,
             "effectiveTime": effective_time,
         }
-
+        print(body)
         url = (
             f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
             f"with-property-value-search{possible_query_params}"
