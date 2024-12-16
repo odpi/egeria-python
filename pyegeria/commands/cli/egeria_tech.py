@@ -248,14 +248,26 @@ def show_related_specifications(ctx, element_guid):
     help="value we are searching for",
 )
 @click.option(
-    "--prop-list", default=["anchorTypeName"], help="List of properties we are searching"
+    "--prop-list",
+    default=["anchorTypeName"],
+    help="List of properties we are searching",
 )
 def list_anchored_elements(ctx, search_string: str, prop_list: [str]):
     """List elements with the specified properties"""
     c = ctx.obj
+    # put guards around this to make it a list?
+    if type(prop_list) is str:
+        property_names = prop_list.split(",")
+    elif type(prop_list) is list:
+        property_names = prop_list
+    else:
+        property_names = []
+        print(f"\nError --> Invalid property list - must be a string or list")
+        sys.exit(4)
+
     display_anchored_elements(
         search_string,
-        prop_list,
+        property_names,
         c.view_server,
         c.view_server_url,
         c.userid,

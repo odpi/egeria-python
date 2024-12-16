@@ -389,7 +389,9 @@ def show_guid_info(ctx, guid):
     help="value we are searching for",
 )
 @click.option(
-    "--prop-list", default=["anchorTypeName"], help="List of properties we are searching"
+    "--prop-list",
+    default=["anchorTypeName"],
+    help="List of properties we are searching",
 )
 def list_anchored_elements(ctx, search_string: str, prop_list: [str]):
     """List elements with the specified properties"""
