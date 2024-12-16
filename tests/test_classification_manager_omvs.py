@@ -378,7 +378,7 @@ def test_find_elements_by_classification_with_property_value():
 def test_find_anchored_elements_with_property_value():
     classification = "Anchors"
     open_metadata_type_name = None
-    property_value = "Set up"
+    property_value = "PostgreSQL Server"
     # property_names = ["ServerCapability", "anchorTypeName"]
     property_names = ["name"]
     c_client = ClassificationManager(view_server, platform_url)

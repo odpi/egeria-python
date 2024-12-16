@@ -256,6 +256,7 @@ def list_element_graph(ctx, search_string: str, prop_list: str):
         c.view_server_url,
         c.userid,
         c.password,
+        c.time_out,
         c.jupyter,
         c.width,
     )

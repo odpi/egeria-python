@@ -59,9 +59,10 @@ def display_anchored_elements(
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
     if (search_string is None) or (len(search_string) < 3):
-        raise ValueError(
-            "Invalid Search String - must be greater than four characters long"
+        print(
+            "\nError --> Invalid Search String - must be greater than four characters long"
         )
+        sys.exit(3)
     g_client = EgeriaTech(server, url, username, user_password)
     token = g_client.create_egeria_bearer_token()
 
@@ -148,11 +149,6 @@ def display_anchored_elements(
         return table
 
     try:
-        # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-        #     while True:
-        #         time.sleep(2)
-        #         live.update(generate_table())
-
         with console.pager(styles=True):
             console.print(generate_table(search_string, prop_list), soft_wrap=True)
 
@@ -164,7 +160,7 @@ def display_anchored_elements(
         console.print_exception()
         sys.exit(1)
 
-    except ValueError as e:
+    except Exception as e:
         console.print(
             f"\n\n====> Invalid Search String - must be greater than four characters long"
         )
@@ -191,9 +187,16 @@ def main():
         prop_list = Prompt.ask(
             "Enter the list of properties to search", default="anchorTypeName"
         )
-        display_anchored_elements(
-            search_string, [prop_list], server, url, userid, user_pass, time_out
-        )
+        if search_string == "":
+            print("\nError --> Search string can't be empty")
+            sys.exit(1)
+        elif len(search_string) <= 4:
+            print("\nError --> Search string must be greater than four characters long")
+            sys.exit(2)
+        else:
+            display_anchored_elements(
+                search_string, [prop_list], server, url, userid, user_pass, time_out
+            )
     except KeyboardInterrupt:
         pass
 

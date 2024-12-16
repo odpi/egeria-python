@@ -397,6 +397,7 @@ def list_anchored_elements(ctx, search_string: str, prop_list: str):
         c.view_server_url,
         c.userid,
         c.password,
+        c..timeout,
         c.jupyter,
         c.width,
     )
