@@ -381,13 +381,17 @@ def show_guid_info(ctx, guid):
     display_guid(guid, c.server, c.url, c.userid, c.password, c.jupyter, c.width)
 
 
-@show_elements.command("anchored-elements")
+@show_elements.command("anchored_elements")
 @click.pass_context
-@click.option("--search-string", help="value we are searching for")
+@click.option(
+    "--search-string",
+    default=["DeployedDatabaseSchema"],
+    help="value we are searching for",
+)
 @click.option(
     "--prop-list", default="anchorTypeName", help="List of properties we are searching"
 )
-def list_anchored_elements(ctx, search_string: str, prop_list: str):
+def list_anchored_elements(ctx, search_string: str, prop_list: [str]):
     """List elements with the specified properties"""
     c = ctx.obj
     display_anchored_elements(

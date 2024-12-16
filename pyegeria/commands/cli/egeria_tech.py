@@ -240,13 +240,17 @@ def show_related_specifications(ctx, element_guid):
     )
 
 
-@show_elements.command("element-graph")
+@show_elements.command("anchored-elements")
 @click.pass_context
-@click.option("--search-string", help="value we are searching for")
+@click.option(
+    "--search-string",
+    default=["DeployedDatabaseSchema"],
+    help="value we are searching for",
+)
 @click.option(
     "--prop-list", default="anchorTypeName", help="List of properties we are searching"
 )
-def list_element_graph(ctx, search_string: str, prop_list: str):
+def list_anchored_elements(ctx, search_string: str, prop_list: [str]):
     """List elements with the specified properties"""
     c = ctx.obj
     display_anchored_elements(

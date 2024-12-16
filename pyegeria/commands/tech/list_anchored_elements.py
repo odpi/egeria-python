@@ -69,7 +69,7 @@ def display_anchored_elements(
     def generate_table(search_string: str, prop_list: [str]) -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Assets containing the string  {search_string} @ {time.asctime()}",
+            title=f"Elements containing the string  {search_string} @ {time.asctime()}",
             header_style="white on dark_blue",
             style="bold white on black",
             row_styles=["bold white on black"],
