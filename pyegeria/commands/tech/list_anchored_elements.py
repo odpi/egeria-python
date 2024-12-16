@@ -91,15 +91,7 @@ def display_anchored_elements(
         open_type_name = None
         property_value = search_string
 
-        # put guards around this to make it a list?
-        if type(prop_list) is str:
-            property_names = prop_list.split(",")
-        elif type(prop_list) is list:
-            property_names = prop_list
-        else:
-            property_names = []
-            print(f"\nError --> Invalid property list - must be a string or list")
-            sys.exit(4)
+        property_names = prop_list
 
         elements = g_client.find_elements_by_classification_with_property_value(
             classification, property_value, property_names, open_type_name
