@@ -9,6 +9,8 @@ A command line interface for Egeria Data techs.
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import sys
+
 import click
 from trogon import tui
 
@@ -244,15 +246,15 @@ def show_related_specifications(ctx, element_guid):
 @click.pass_context
 @click.option(
     "--search-string",
-    default="DeployedDatabaseSchema",
+    default="SoftwareCapability",
     help="value we are searching for",
 )
 @click.option(
     "--prop-list",
-    default=["anchorTypeName"],
+    default="anchorDomainName",
     help="List of properties we are searching",
 )
-def list_anchored_elements(ctx, search_string: str, prop_list: [str]):
+def list_anchored_elements(ctx, search_string: str, prop_list: str):
     """List elements with the specified properties"""
     c = ctx.obj
     # put guards around this to make it a list?
