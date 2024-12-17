@@ -9,6 +9,8 @@ A command line interface for Egeria Catalog User functions
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import os
+
 import click
 from trogon import tui
 
@@ -17,6 +19,7 @@ from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
@@ -41,7 +44,7 @@ from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
 from pyegeria.commands.cat.list_collections import display_collections
 
-# from pyegeria import ServerOps
+
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.todo_actions import (
     mark_todo_complete,
@@ -50,20 +53,6 @@ from pyegeria.commands.my.todo_actions import (
     create_todo,
 )
 from pyegeria.commands.tech.list_asset_types import display_asset_types
-
-
-# class Config(object):
-#     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
-#                  timeout:int = 30, paging: bool = False):
-#         self.server = server
-#         self.url = url
-#         self.userid = userid
-#         self.password = password
-#         self.timeout = timeout
-#         self.paging = paging
-#
-#
-# pass_config = click.make_pass_decorator(Config)
 
 
 # @tui
@@ -154,6 +143,11 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     envvar="EGERIA_WIDTH",
     help="Screen width, in characters, to use",
 )
+@click.option(
+    "--home_glossary_guid",
+    envvar="EGERIA_HOME_GLOSSARY_GUID",
+    help="Glossary guid to use as the home glossary",
+)
 @click.pass_context
 def cli(
     ctx,
@@ -172,6 +166,7 @@ def cli(
     timeout,
     jupyter,
     width,
+    home_glossary_guid,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -190,8 +185,9 @@ def cli(
         timeout,
         jupyter,
         width,
+        home_glossary_guid,
     )
-    ctx.max_content_width = 200
+    ctx.max_content_width = 250
     ctx.ensure_object(Config)
 
 
@@ -238,6 +234,21 @@ def asset_group(ctx):
 
 
 @asset_group.command("tech-type-elements")
+@click.option(
+    "--tech_type",
+    default="PostgreSQL Server",
+    help="Specific tech type to get elements for",
+)
+@click.pass_context
+def list_tech_type_elements(ctx, tech_type):
+    """List technology type elements"""
+    c = ctx.obj
+    list_tech_elements(
+        tech_type, c.view_server, c.view_server_url, c.userid, c.password
+    )
+
+
+@asset_group.command("elements-of-tech-type")
 @click.option(
     "--tech_type",
     default="PostgreSQL Server",
@@ -311,7 +322,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--glossary-guid",
-    default=None,
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID"),
     help="Optionally restrict search to glossary with the specified guid",
 )
 @click.option(

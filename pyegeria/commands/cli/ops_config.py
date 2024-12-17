@@ -19,6 +19,7 @@ class Config(object):
         timeout: int = 30,
         jupyter: bool = False,
         width: int = 200,
+        home_glossary_guid: str = None,
     ):
         self.metadata_store = server
         self.metadata_store_url = url
@@ -37,6 +38,7 @@ class Config(object):
         self.width = width
         self.server = server
         self.url = url
+        self.home_glossary_guid = home_glossary_guid
 
 
 pass_config = click.make_pass_decorator(Config)

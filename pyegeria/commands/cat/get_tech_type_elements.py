@@ -163,7 +163,7 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
         tech_name = Prompt.ask(
-            "Enter the Asset Name to view:", default="Apache Kafka Server"
+            "Enter the Asset Name to view:", default="PostgreSQL Server"
         )
         tech_viewer(tech_name, server, url, userid, user_pass)
     except KeyboardInterrupt:

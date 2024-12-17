@@ -13,12 +13,14 @@ import sys
 
 import click
 from trogon import tui
+
 from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cli.egeria_ops import show_server
 from pyegeria.commands.tech.get_tech_type_template import template_viewer
 from pyegeria.commands.cat.list_assets import display_assets
@@ -174,7 +176,10 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
     help="Egeria admin password",
 )
 @click.option(
-    "--userid", default="erinoverview", envvar="EGERIA_USER", help="Egeria user"
+    "--userid",
+    default="erinoverview",
+    envvar="EGERIA_USER",
+    help="Egeria user",
 )
 @click.option(
     "--password",
@@ -196,6 +201,11 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
     envvar="EGERIA_WIDTH",
     help="Screen width, in characters, to use",
 )
+@click.option(
+    "--home_glossary_guid",
+    envvar="EGERIA_HOME_GLOSSARY_GUID",
+    help="Glossary guid to use as the home glossary",
+)
 @click.pass_context
 def cli(
     ctx,
@@ -214,6 +224,7 @@ def cli(
     timeout,
     jupyter,
     width,
+    home_glossary_guid,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -232,21 +243,10 @@ def cli(
         timeout,
         jupyter,
         width,
+        home_glossary_guid,
     )
-    ctx.max_content_width = 200
+    ctx.max_content_width = 250
     ctx.ensure_object(Config)
-
-
-# cli.add_command(login)
-# @cli.command("login")
-# @click.pass_context
-# def egeria_login(ctx):
-#     """Login to Egeria platform"""
-#     user = login(
-#         ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
-#     )
-#     ctx.obj.userid = user
-#     click.echo(f" user is {ctx.obj.userid}")
 
 
 #
@@ -816,7 +816,7 @@ def asset_group(ctx):
     pass
 
 
-@asset_group.command("elements-of-type")
+@asset_group.command("elements-of-tech-type")
 @click.option(
     "--tech_type",
     default="PostgreSQL Server",
@@ -1336,10 +1336,12 @@ def show_asset_graph(ctx, asset_guid):
     help="Specific tech type to get elements for",
 )
 @click.pass_context
-def show_tech_type_elements(ctx, tech_type):
+def list_tech_type_elements(ctx, tech_type):
     """List technology type elements"""
     c = ctx.obj
-    tech_viewer(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
+    list_tech_elements(
+        tech_type, c.view_server, c.view_server_url, c.userid, c.password
+    )
 
 
 @show_project_group.command("projects")

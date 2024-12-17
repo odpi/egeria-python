@@ -2,7 +2,8 @@
 <!-- Copyright Contributors to the Egeria project. -->
 
 The Commands in this directory provide a simple but useful command line interface for the Egeria environment. They 
-are built with the **Rich** python package and demonstrate the use of **pyegeria** .
+are built with the **Rich** python package and demonstrate the use of **pyegeria**. More detailed documentation can be 
+found in the `doc` folder.
 
 The commands can either be invoked from one of the command line interfaces or executed directly as python scripts.
 To invoke the commands directly, install them with pipx by invoking:

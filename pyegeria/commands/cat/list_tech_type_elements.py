@@ -5,13 +5,18 @@ Copyright Contributors to the ODPi Egeria project.
 
 Display the status of cataloged platforms and servers.
 """
-import sys
-import time
 import argparse
 import os
+import sys
+import time
 
-from rich import json
+import rich.box as box
+from rich import print
+from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.table import Table
 
 from pyegeria import (
     InvalidParameterException,
@@ -20,15 +25,6 @@ from pyegeria import (
     print_exception_response,
     AutomatedCuration,
 )
-from rich.table import Table
-from rich.live import Live
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.tree import Tree
-from rich.prompt import Prompt
-from rich.panel import Panel
-from rich.text import Text
-from rich import print
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -52,7 +48,7 @@ console = Console(width=200)
 guid_list = []
 
 
-def tech_viewer(
+def list_tech_elements(
     tech_name: str,
     server_name: str,
     platform_url: str,
@@ -61,6 +57,11 @@ def tech_viewer(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
+    console = Console(width=width, force_terminal=not jupyter)
+
+    a_client = AutomatedCuration(server_name, platform_url, user_id=user)
+    token = a_client.create_egeria_bearer_token(user, user_pass)
+
     def build_classifications(classification: dict) -> Markdown:
         class_md = "\n"
         for c in classification:
@@ -79,12 +80,25 @@ def tech_viewer(
             output = class_md
         return output
 
-    try:
-        console = Console(width=width, force_terminal=not jupyter)
+    def generate_table() -> Table:
+        """Make a new table."""
+        table = Table(
+            title=f"Tech Type Elements for {tech_name} @ {time.asctime()}",
+            caption=f"{platform_url} - {server_name} @ {time.asctime()}",
+            style="bold bright_white on black",
+            row_styles=["bold bright_white on black"],
+            header_style="white on dark_blue",
+            title_style="bold bright_white on black",
+            caption_style="white on black",
+            show_lines=True,
+            box=box.ROUNDED,
+            expand=True,
+        )
 
-        a_client = AutomatedCuration(server_name, platform_url, user_id=user)
+        table.add_column("Qualified Name/GUID", width=38, no_wrap=True)
+        table.add_column("Properties", width=40)
+        table.add_column("Classifications", width=50)
 
-        token = a_client.create_egeria_bearer_token(user, user_pass)
         tech_elements = a_client.get_technology_type_elements(
             tech_name, get_templates=False
         )
@@ -92,11 +106,6 @@ def tech_viewer(
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)
 
-        tree = Tree(
-            f"Deployed Technology Type: {tech_name}",
-            style="bold bright_white on black",
-            guide_style="bold bright_blue",
-        )
         note: str = " "
         for element in tech_elements:
             header = element["elementHeader"]
@@ -116,13 +125,10 @@ def tech_viewer(
                 ex_md += f"* {key}: {value}\n"
 
             note = (
-                f"* Qualified Name: {tech_qualified_name}\n"
-                f"* GUID: {tech_guid}\n"
+                f"{ex_md}\n"
                 f"* Created by: {tech_created_by}\n"
                 f"* Created at: {tech_created_at}\n"
                 f"* Home Collection: {tech_collection}\n"
-                f"{class_md}\n"
-                f"{ex_md}\n"
             )
 
             interfaces = extended.get("connectorInterfaces", None)
@@ -135,10 +141,17 @@ def tech_viewer(
                         f"\t* Type: {interfaces['arrayValues']['propertyValueMap'][str(i)]['typeName']}"
                         f"\tName: {interfaces['arrayValues']['propertiesAsStrings'][str(i)]}\n"
                     )
-            note_md = Panel.fit(Markdown(note), style="bold bright_white")
-            t = tree.add(note_md)
+            note_md = Markdown(note)
+            qn = Markdown(f"\n{tech_qualified_name}\n \n--- \n\n\n{tech_guid}")
+            cm = Markdown(class_md)
+            table.add_row(qn, note_md, cm)
+        return table
 
-        print(tree)
+    try:
+        console = Console(width=width, force_terminal=not jupyter)
+
+        with console.pager(styles=True):
+            console.print(generate_table())
 
     except (
         InvalidParameterException,
@@ -146,6 +159,9 @@ def tech_viewer(
         UserNotAuthorizedException,
     ) as e:
         print_exception_response(e)
+        print("\n\nPerhaps the type name isn't known")
+    finally:
+        a_client.close_session()
 
 
 def main():
@@ -163,9 +179,9 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
         tech_name = Prompt.ask(
-            "Enter the Asset Name to view:", default="Apache Kafka Server"
+            "Enter the tech type to view:", default="PostgreSQL Server"
         )
-        tech_viewer(tech_name, server, url, userid, user_pass)
+        list_tech_elements(tech_name, server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

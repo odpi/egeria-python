@@ -47,6 +47,7 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 200)
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
+EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
 
 @click.command("create-glossary")
@@ -125,7 +126,7 @@ def create_glossary(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.argument("glossary-guid")
+@click.argument("glossary-guid", default=EGERIA_HOME_GLOSSARY_GUID)
 def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     """Delete the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
@@ -317,7 +318,12 @@ def import_terms(
 
 
 @click.command("export-terms")
-@click.option("--glossary-guid", help="GUID of Glossary to export", required=True)
+@click.option(
+    "--glossary-guid",
+    default=EGERIA_HOME_GLOSSARY_GUID,
+    help="GUID of Glossary to export",
+    required=True,
+)
 @click.option("--file-name", help="Path of CSV file", required=True)
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
 @click.option(
