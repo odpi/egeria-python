@@ -126,7 +126,7 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
+    "--integration_daemon",
     default="integration-daemon",
     envvar="EGERIA_INTEGRATION_DAEMON",
     help="Egeria integration daemon to work with",
@@ -1706,7 +1706,7 @@ def integrations(ctx):
 )
 @click.pass_context
 def integrations_status(ctx, connector_list, list, sorted):
-    """Display integration-daemon status information"""
+    """Display integration_daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
         [connector_list],
@@ -1755,7 +1755,7 @@ def tell_ops(ctx):
 @tell_ops.group("integration-daemon")
 @click.pass_context
 def tell_integration_daemon(ctx):
-    """Group of commands to an integration-daemon"""
+    """Group of commands to an integration_daemon"""
     pass
 
 

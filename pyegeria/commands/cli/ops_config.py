@@ -8,7 +8,7 @@ class Config(object):
         url: str = None,
         view_server: str = "view-server",
         view_server_url: str = "https://localhost:9443",
-        integration_daemon: str = "integration-daemon",
+        integration_daemon: str = "integration_daemon",
         integration_daemon_url: str = "https://localhost:9443",
         engine_host: str = "engine-host",
         engine_host_url: str = "https://localhost:9443",

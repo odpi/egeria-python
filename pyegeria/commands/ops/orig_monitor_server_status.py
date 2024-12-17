@@ -20,26 +20,36 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ServerOps
+    ServerOps,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get('EGERIA_INTEGRATION_DAEMON_URL', 'https://localhost:9443')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_status(server: str, url: str, username: str, user_pass: str, jupyter: bool = EGERIA_JUPYTER,
-                   width: int = EGERIA_WIDTH):
+def display_status(
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     p_client = ServerOps(server, url, username, user_pass)
 
     def generate_table() -> Table:
@@ -69,9 +79,10 @@ def display_status(server: str, url: str, username: str, user_pass: str, jupyter
             else:
                 status = "Inactive"
 
-            table.add_row(server,
-                          "[red]Inactive" if status == "Inactive" else "[green]Active",
-                          )
+            table.add_row(
+                server,
+                "[red]Inactive" if status == "Inactive" else "[green]Active",
+            )
         # p_client.close_session()
         return table
 
@@ -81,7 +92,11 @@ def display_status(server: str, url: str, username: str, user_pass: str, jupyter
                 time.sleep(2)
                 live.update(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
     except KeyboardInterrupt:
         pass

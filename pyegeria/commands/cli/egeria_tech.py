@@ -74,7 +74,7 @@ from pyegeria.commands.tech.get_tech_type_template import template_viewer
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
+    "--integration_daemon",
     default="integration-daemon",
     envvar="EGERIA_INTEGRATION_DAEMON",
     help="Egeria integration daemon to work with",

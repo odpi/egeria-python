@@ -74,7 +74,7 @@ from pyegeria.commands.ops.list_archives import display_archive_list
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
+    "--integration_daemon",
     default="integration-daemon",
     envvar="EGERIA_INTEGRATION_DAEMON",
     help="Egeria integration daemon to work with",
@@ -373,7 +373,7 @@ def integrations(ctx):
 )
 @click.pass_context
 def integrations_status(ctx, connector_list, list):
-    """Display integration-daemon status information"""
+    """Display integration_daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
         [connector_list],
@@ -432,7 +432,7 @@ servers.add_command(stop_server)
 @tell.group("integration-daemon")
 @click.pass_context
 def integration_daemon(ctx):
-    """Group of commands to an integration-daemon"""
+    """Group of commands to an integration_daemon"""
     pass
 
 

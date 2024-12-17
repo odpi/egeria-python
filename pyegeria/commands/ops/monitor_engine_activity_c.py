@@ -41,7 +41,7 @@ EGERIA_ENGINE_HOST_URL = os.environ.get(
     "EGERIA_ENGINE_HOST_URL", "https://localhost:9443"
 )
 EGERIA_INTEGRATION_DAEMON = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
+    "EGERIA_INTEGRATION_DAEMON", "integration_daemon"
 )
 EGERIA_ADMIN_USER = os.environ.get("EGERIA_ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("EGERIA_ADMIN_PASSWORD", "secret")

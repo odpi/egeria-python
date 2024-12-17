@@ -58,7 +58,7 @@ from pyegeria.commands.my.todo_actions import (
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
+    "--integration_daemon",
     default="integration-daemon",
     envvar="EGERIA_INTEGRATION_DAEMON",
     help="Egeria integration daemon to work with",

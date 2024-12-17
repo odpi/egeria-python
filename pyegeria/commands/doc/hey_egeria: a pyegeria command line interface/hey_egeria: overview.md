@@ -271,7 +271,7 @@ Here is a list of the variables and their defaults:
 | EGERIA_ADMIN_PASSWORD         | secret                 | --admin_user_password    | Admin password                                             |
 | EGERIA_ENGINE_HOST            | engine-host            | --engine_host            | Egeria Engine host to use for governance actions/processes |
 | EGERIA_ENGINE_HOST_URL        | https://localhost:9443 | --engine_host_url        | Platform URL where Engine host is running                  |
-| EGERIA_INTEGRATION_DAEMON     | integration-daemon     | --integration-daemon     | Egeria integration daemon to use                           |
+| EGERIA_INTEGRATION_DAEMON     | integration_daemon     | --integration_daemon     | Egeria integration daemon to use                           |
 | EGERIA_INTEGRATION_DAEMON_URL | https://localhost:9443 | --integration_daemon_url | Platform URL where Integration daemon is running           |
 | EGERIA_VIEW_SERVER            | view-server            | --view_server            | Egeria view server to use                                  |
 | EGERIA_VIEW_SERVER_URL        | https://localhost:9443 | --view_server_url        | Platform URL where view server is running                  |
