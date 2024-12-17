@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.2.0.39"
+version = "5.2.0.40"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"

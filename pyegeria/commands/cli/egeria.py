@@ -238,15 +238,15 @@ def cli(
 
 
 # cli.add_command(login)
-@cli.command("login")
-@click.pass_context
-def egeria_login(ctx):
-    """Login to Egeria platform"""
-    user = login(
-        ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
-    )
-    ctx.obj.userid = user
-    click.echo(f" user is {ctx.obj.userid}")
+# @cli.command("login")
+# @click.pass_context
+# def egeria_login(ctx):
+#     """Login to Egeria platform"""
+#     user = login(
+#         ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
+#     )
+#     ctx.obj.userid = user
+#     click.echo(f" user is {ctx.obj.userid}")
 
 
 #
@@ -769,7 +769,7 @@ def get_element_info(ctx, om_type):
 @cli.group("cat")
 @click.pass_context
 def cat(ctx):
-    """Commands for the more tech user"""
+    """Commands for all users"""
     pass
 
 

@@ -1,8 +1,34 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
 # Overview
+**hey_egeria** is a command line interface (CLI) for Egeria with both a scriptable component and a textual user interface to guide
+users through the different commands and options. This interface is being actively maintained and enhanced. There are
+currently about 70 commands in the interface and new ones are added based on perceived need and community feedback.
+
+The CLI is written in python using the [click](https://click.palletsprojects.com/en/stable/) package with [trogon](https://github.com/Textualize/trogon) 
+providing the textual user interface. The commands are written using [pyegeria](https://github.com/odpi/egeria-python) or
+https://pypi.org/project/pyegeria/. The commands are also available standalone. Simple standalone installation instructions are
+documented at [pyegeria](https://egeria-project.org/concepts/pyegeria). pyegeria and hey_egeria are pre-installed within
+the **Egeria Workspaces** environment - [Egeria Workspaces](https://github.com/odpi/egeria-workspaces).
+
+
 
 # Command Line Interfaces
+
+A command line interface provides a simple language for users to invoke commands. In the case of **hey_egeria**, once it is installed, you can 
+start simply by typing `hey_egeria` on the command line and it will provide a list of options and commands that you can
+use to interact with it. Commands are often arranged hierarchically - so, for instance if we type just `hey_egeria`, the 
+command options presented to us are:
+
+```aiignore
+Commands:
+  cat    Commands for the more tech user
+  login  Login to Egeria platform
+  my     Work with my information
+  ops    Commands to understand and manage operations
+  tech   Commands for tech Users
+  tui    Open Textual TUI.
+```
 
 ## hey_egeria
 
