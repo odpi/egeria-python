@@ -71,7 +71,7 @@ def display_registered_svcs(
     def generate_table(svc_list) -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Technology Types for: {url} @ {time.asctime()}",
+            title=f"Services for: {url} @ {time.asctime()}",
             style="bold bright_white on black",
             row_styles=["bold bright_white on black"],
             header_style="white on dark_blue",

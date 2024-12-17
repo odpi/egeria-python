@@ -102,13 +102,13 @@ def list_elements_x(
                 if type(tags) is list:
                     for tag in tags:
                         tags_md += (
-                            f"* tag: {tag.get('name','---')}\n"
+                            f"* tag: {tag.get('name','')}\n"
                             f"\t description: {tag.get('description','---')}\n"
                             f"\t assigned by: {tag.get('user','---')}\n"
                         )
 
                 else:
-                    tags_md = "---"
+                    tags_md = ""
 
                 likes = c_client.get_attached_likes(el_guid)
                 likes_md = "Likes:\b"
@@ -122,9 +122,12 @@ def list_elements_x(
                         )
 
                 else:
-                    likes_md = "---"
+                    likes_md = ""
 
-                feedback_out = f"{tags_md}\n --- \n{likes_md}"
+                if len(tags_md) > 0 and len(likes_md) > 0:
+                    feedback_out = f"{tags_md}\n --- \n{likes_md}"
+                else:
+                    feedback_out = ""
 
                 comments_out = " "
 

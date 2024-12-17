@@ -56,7 +56,7 @@ def display_integration_daemon_status(
     view_url: str = EGERIA_VIEW_SERVER_URL,
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    paging: bool = True,
+    paging: bool = False,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     sort: bool = True,
@@ -197,7 +197,7 @@ def display_integration_daemon_status(
 
     try:
         if paging is True:
-            console = Console(width=width, force_terminal=not jupyter)
+            console = Console(width=width)  # main_pagig, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table(search_list))
         else:
@@ -225,7 +225,7 @@ def display_integration_daemon_status(
         s_client.close_session()
 
 
-def main_live():
+def main_live(paging: bool = False) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--integ_server", help="Name of the integration server to display status for"
@@ -235,6 +235,51 @@ def main_live():
     parser.add_argument("--view_url", help="view server URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+
+    args = parser.parse_args()
+
+    integ_server = (
+        args.integ_server
+        if args.integ_server is not None
+        else EGERIA_INTEGRATION_DAEMON
+    )
+    integ_url = (
+        args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
+    )
+    view_server = (
+        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+    )
+    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+
+    search_list = Prompt.ask(
+        "Enter the list of connectors you are interested in or ['*'] for all",
+        default=["*"],
+    )
+    display_integration_daemon_status(
+        search_list=search_list,
+        integ_server=integ_server,
+        integ_url=integ_url,
+        view_server=view_server,
+        view_url=view_url,
+        user=userid,
+        user_pass=user_pass,
+        paging=paging,
+    )
+
+
+def main_paging(paging: bool = True) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--integ_server", help="Name of the integration server to display status for"
+    )
+    parser.add_argument("--integ_url", help="URL Platform to connect to")
+    parser.add_argument("--view_server", help="Name of the view server to use")
+    parser.add_argument("--view_url", help="view server URL Platform to connect to")
+    parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
+
     args = parser.parse_args()
 
     integ_server = (
@@ -263,54 +308,12 @@ def main_live():
         view_url=view_url,
         user=userid,
         user_pass=user_pass,
-        paging=False,
-    )
-
-
-def main_paging():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--integ_server", help="Name of the integration server to display status for"
-    )
-    parser.add_argument("--integ_url", help="URL Platform to connect to")
-    parser.add_argument("--view_server", help="Name of the view server to use")
-    parser.add_argument("--view_url", help="view server URL Platform to connect to")
-    parser.add_argument("--userid", help="User Id")
-    parser.add_argument("--password", help="User Password")
-    args = parser.parse_args()
-
-    integ_server = (
-        args.integ_server
-        if args.integ_server is not None
-        else EGERIA_INTEGRATION_DAEMON
-    )
-    integ_url = (
-        args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
-    )
-    view_server = (
-        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
-    )
-    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
-    userid = args.userid if args.userid is not None else EGERIA_USER
-    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    search_list = Prompt.ask(
-        "Enter the list of connectors you are interested in or ['*'] for all",
-        default="[*]",
-    )
-    display_integration_daemon_status(
-        search_list=search_list,
-        integ_server=integ_server,
-        integ_url=integ_url,
-        view_server=view_server,
-        view_url=view_url,
-        user=userid,
-        user_pass=user_pass,
         paging=True,
     )
 
 
 if __name__ == "__main__":
-    main_live()
+    main_live(paging=False)
 
 if __name__ == "__main_paging__":
-    main_paging()
+    main_paging(paging=True)

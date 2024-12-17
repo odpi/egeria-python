@@ -526,17 +526,43 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "f9ed697c-04be-4744-aa7c-d302b6d91321"
+            term_guid = "a27b20a9-3c1a-4d80-b92f-9c877c193385"  # meow
             body = {
                 "class": "ReferenceableUpdateRequestBody",
                 "elementProperties": {
                     "class": "GlossaryTermProperties",
-                    "description": "This is the long description of the term. And this is some more text.",
+                    "description": "Woof Woof",
                 },
             }
 
             start_time = time.perf_counter()
             g_client.update_term(term_guid, body, True)
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
+
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_undo_update_term(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_guid = "a27b20a9-3c1a-4d80-b92f-9c877c193385"  # meow
+
+            start_time = time.perf_counter()
+            g_client.undo_term_update(term_guid)
             print(f"Duration is {time.perf_counter() - start_time} seconds")
 
             assert True

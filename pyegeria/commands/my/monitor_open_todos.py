@@ -114,7 +114,7 @@ def display_todos(
                 if type(assigned_actors) is list:
                     for actor in assigned_actors:
                         actor_guid = actor["guid"]
-                        assigned += f"* {m_client.get_actor_for_guid(actor_guid)} "
+                        assigned += f"{m_client.get_actor_for_guid(actor_guid)} \n ({actor_guid}"
                 assigned_out = Markdown(assigned)
 
                 if status in ("WAITING", "OPEN"):

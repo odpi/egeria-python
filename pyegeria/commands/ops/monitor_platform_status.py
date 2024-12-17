@@ -42,7 +42,7 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 disable_ssl_warnings = True
-console = Console(width=200)
+console = Console(width=EGERIA_WIDTH)
 
 
 def display_status(

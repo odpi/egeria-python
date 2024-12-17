@@ -93,7 +93,8 @@ class TestMyProfile:
             )
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            actor = "b1f21e62-4d71-4f9b-8339-66ecd5795149"
+            # actor = "b1f21e62-4d71-4f9b-8339-66ecd5795149"
+            actor = "9a304921-6844-4ea8-b513-76620ca15a99"  # peter
 
             response = m_client.get_assigned_actions(actor)
 

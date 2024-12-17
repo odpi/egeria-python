@@ -9,6 +9,8 @@ A command line interface for Egeria Users - all commands
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import sys
+
 import click
 from trogon import tui
 from pyegeria.commands.cli.egeria_login_tui import login
@@ -236,15 +238,15 @@ def cli(
 
 
 # cli.add_command(login)
-@cli.command("login")
-@click.pass_context
-def egeria_login(ctx):
-    """Login to Egeria platform"""
-    user = login(
-        ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
-    )
-    ctx.obj.userid = user
-    click.echo(f" user is {ctx.obj.userid}")
+# @cli.command("login")
+# @click.pass_context
+# def egeria_login(ctx):
+#     """Login to Egeria platform"""
+#     user = login(
+#         ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
+#     )
+#     ctx.obj.userid = user
+#     click.echo(f" user is {ctx.obj.userid}")
 
 
 #
@@ -381,15 +383,29 @@ def show_guid_info(ctx, guid):
     display_guid(guid, c.server, c.url, c.userid, c.password, c.jupyter, c.width)
 
 
-@show_elements.command("anchored-elements")
+@show_elements.command("anchored_elements")
 @click.pass_context
-@click.option("--search-string", help="value we are searching for")
 @click.option(
-    "--prop-list", default="anchorTypeName", help="List of properties we are searching"
+    "--search-string",
+    default="DeployedDatabaseSchema",
+    help="value we are searching for",
+)
+@click.option(
+    "--prop-list",
+    default="anchorTypeName",
+    help="List of properties we are searching",
 )
 def list_anchored_elements(ctx, search_string: str, prop_list: str):
     """List elements with the specified properties"""
     c = ctx.obj
+    if type(prop_list) is str:
+        property_names = prop_list.split(",")
+    elif type(prop_list) is list:
+        property_names = prop_list
+    else:
+        property_names = []
+        print(f"\nError --> Invalid property list - must be a string or list")
+        sys.exit(4)
     display_anchored_elements(
         search_string,
         prop_list,
@@ -397,6 +413,7 @@ def list_anchored_elements(ctx, search_string: str, prop_list: str):
         c.view_server_url,
         c.userid,
         c.password,
+        c.timeout,
         c.jupyter,
         c.width,
     )
@@ -752,7 +769,7 @@ def get_element_info(ctx, om_type):
 @cli.group("cat")
 @click.pass_context
 def cat(ctx):
-    """Commands for the more tech user"""
+    """Commands for all users"""
     pass
 
 
@@ -1325,27 +1342,6 @@ def show_tech_type_elements(ctx, tech_type):
     tech_viewer(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
 
 
-@show_cat_info.command("collection")
-@click.option(
-    "--root-collection",
-    default="Coco Pharmaceuticals Governance Domains",
-    help="View of tree of collections from a given root",
-)
-@click.pass_context
-def show_collection(ctx, root_collection):
-    """Display information about a collection"""
-    c = ctx.obj
-    collection_viewer(
-        root_collection,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
-
-
 @show_project_group.command("projects")
 @click.option("--search-string", default="*", help="List Projects by Search String")
 @click.pass_context
@@ -1632,14 +1628,14 @@ def gov_eng_status(ctx, engine_list, engine_host, list):
     c = ctx.obj
     display_gov_eng_status(
         [engine_list],
-        engine_host,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        list,
-        c.jupyter,
-        c.width,
+        engine_host=engine_host,
+        view_server=c.view_server,
+        url=c.view_server_url,
+        username=c.userid,
+        user_pass=c.password,
+        paging=list,
+        jupyter=c.jupyter,
+        width=c.width,
     )
 
 

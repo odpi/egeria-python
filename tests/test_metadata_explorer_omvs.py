@@ -4,7 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the classification manager view service class and methods.
+This module is for testing the metadata explorer view service class and methods.
 The routines assume that pytest is being used as the test tool and framework.
 
 A running Egeria environment is needed to run these tests.
@@ -311,7 +311,7 @@ class TestMetadataExplorer:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_related_metadata_elements(
-                guid, body, mermaid_only=True
+                guid, body, mermaid_only=False
             )
             duration = time.perf_counter() - start_time
             print(
@@ -724,7 +724,7 @@ class TestMetadataExplorer:
 
     def test_find_glossary_terms_cim(self):
         """findMetadataElements anchored to the SoftwareServer entity for active-metadata-store"""
-        page_size = 500
+        page_size = 100
         cim_glossary_guid = "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"
         body = {
             "class": "FindRequestBody",
@@ -787,25 +787,23 @@ class TestMetadataExplorer:
     def test_find_relationships_between_elements(self):
         body = {
             "class": "FindRelationshipRequestBody",
-            "relationshipTypeName": "License",
+            "relationshipTypeName": "ResourceList",
             "searchProperties": {
                 "class": "SearchProperties",
                 "conditions": [
                     {
-                        "property": "licensee",
+                        "property": "resourceUse",
                         "operator": "EQ",
                         "value": {
                             "class": "PrimitiveTypePropertyValue",
                             "typeName": "string",
-                            "primitiveValue": "tessatube",
+                            "primitiveValue": "Survey Resource",
                         },
                     }
                 ],
-                "matchCriteria": "ANY",
+                "matchCriteria": "ALL",
             },
-            "effectiveTime": "{{$isoTimestamp}}",
             "limitResultsByStatus": ["ACTIVE"],
-            "asOfTime": "{{$isoTimestamp}}",
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
         }
@@ -815,15 +813,17 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_relationships_between_elements(body)
+            response = m_client.find_relationships_between_elements(
+                body, mermaid_only=False
+            )
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
             )
 
-            if type(response) is list:
+            if isinstance(response, dict):
                 print(f"\n\tElement count is: {len(response)}\n")
-                print_json(data=response, indent=4)
+                print_json(data=response["elementList"], indent=4)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
 

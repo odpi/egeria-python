@@ -9,6 +9,8 @@ A command line interface for Egeria Data techs.
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import sys
+
 import click
 from trogon import tui
 
@@ -213,7 +215,7 @@ def show_elements(ctx):
 @show_elements.command("guid-info")
 @click.argument("guid", nargs=1)
 @click.pass_context
-def show_guid_infos(ctx, guid):
+def show_guid_info(ctx, guid):
     """Display guid information
 
     Usage: show guid-info <a guid>
@@ -240,22 +242,39 @@ def show_related_specifications(ctx, element_guid):
     )
 
 
-@show_elements.command("element-graph")
+@show_elements.command("anchored-elements")
 @click.pass_context
-@click.option("--search-string", help="value we are searching for")
 @click.option(
-    "--prop-list", default="anchorTypeName", help="List of properties we are searching"
+    "--search-string",
+    default="SoftwareCapability",
+    help="value we are searching for",
 )
-def list_element_graph(ctx, search_string: str, prop_list: str):
+@click.option(
+    "--prop-list",
+    default="anchorDomainName",
+    help="List of properties we are searching",
+)
+def list_anchored_elements(ctx, search_string: str, prop_list: str):
     """List elements with the specified properties"""
     c = ctx.obj
+    # put guards around this to make it a list?
+    if type(prop_list) is str:
+        property_names = prop_list.split(",")
+    elif type(prop_list) is list:
+        property_names = prop_list
+    else:
+        property_names = []
+        print(f"\nError --> Invalid property list - must be a string or list")
+        sys.exit(4)
+
     display_anchored_elements(
         search_string,
-        prop_list,
+        property_names,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
+        c.timeout,
         c.jupyter,
         c.width,
     )
