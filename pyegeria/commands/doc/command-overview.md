@@ -3,7 +3,7 @@
 
 # Overview
 
-**hey_egeria** is a command line interface (CLI) for Egeria with both a scriptable component and a textual user
+**hey_egeria** is a friendly, easy to use, command line interface (CLI) for Egeria with both a scriptable component and a textual user
 interface to guide
 users through the different commands and options. This interface is being actively maintained and enhanced. There are
 currently about 70 commands in the interface and new ones are added based on perceived need and community feedback.
@@ -53,36 +53,8 @@ And the command to list all glossaries is:
 ## Options & Parameters
 
 Each command has a number of optional, and often some mandatory parameters. There are really two groups of options.
-* General options - that are present for every command
+* General options - that are present for every command. Sensible defaults based on environment variables are set for each.
 * Command specific optons & parameters
-
-### General Options
-These options define the environment the command will execute in - the URL of the Egeria View Server that we are using,
-the user name and password to use for the command etc. Here is a list:
-
-| Parameter              | Default Value | Environment Variable |   |
-|------------------------|---------------|----------------------|---|
-| server                 |               |                      |   |
-| url                    |               |                      |   |
-| integration_daemon     |               |                      |   |
-| integration_daemon url |               |                      |   |
-| view_s                 |               |                      |   |
-|                        |               |                      |   |
-|                        |               |                      |   |
-|                        |               |                      |   |
-|                        |               |                      |   |
-
-
-
-## hey_egeria
-
-## hey_egeria_cat
-
-## hey_egeria_my
-
-## hey_egeria_ops
-
-## hey_egeria_tech
 
 # Command Reference
 
@@ -165,6 +137,9 @@ the user name and password to use for the command etc. Here is a list:
 | start_daemon                       | Start or restart an OMAG server from its known configuration |     |    | ✓   |      |        |
 | stop_daemon                        | Stop an OMAG server daemon                                   |     |    | ✓   |      |        |
 
+
+# Visual Command Reference
+A visual command reference of all the `hey_egeria` **show** commands can be found in 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 Copyright Contributors to the Egeria project.
