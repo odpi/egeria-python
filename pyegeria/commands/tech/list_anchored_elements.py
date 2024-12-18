@@ -48,7 +48,7 @@ disable_ssl_warnings = True
 
 def display_anchored_elements(
     search_string: str,
-    prop_list: [str],
+    prop_list: list[str],
     server: str,
     url: str,
     username: str,
