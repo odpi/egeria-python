@@ -9,6 +9,7 @@ A command line interface for Egeria Users - all commands
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import os
 import sys
 
 import click
@@ -147,7 +148,7 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 )
 @click.option(
     "--view_server_url",
-    default="https://localhost:9443",
+    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
     envvar="EGERIA_VIEW_SERVER_URL",
     help="URL of Egeria view server platform to connect to",
 )
@@ -177,13 +178,13 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 )
 @click.option(
     "--userid",
-    default="erinoverview",
+    # default="erinoverview",
     envvar="EGERIA_USER",
     help="Egeria user",
 )
 @click.option(
     "--password",
-    default="secret",
+    # default="secret",
     envvar="EGERIA_PASSWORD",
     help="Egeria user password",
 )
