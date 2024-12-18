@@ -65,6 +65,7 @@ def display_anchored_elements(
         sys.exit(3)
     g_client = EgeriaTech(server, url, username, user_password)
     token = g_client.create_egeria_bearer_token()
+    print(f"search string is {search_string} and prop_list is {prop_list}\n")
 
     def generate_table(search_string: str, prop_list: [str]) -> Table:
         """Make a new table."""

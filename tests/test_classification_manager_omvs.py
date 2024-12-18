@@ -320,7 +320,9 @@ def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
     open_metadata_type_name = None
     classification = "Anchors"
-    property_value = "Collection"
+    # property_value = "Collection"
+    # property_names = ["anchorTypeName"]
+    property_value = "DeployedDatabaseSchema"
     property_names = ["anchorTypeName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -358,15 +360,20 @@ def test_find_elements_by_classification_with_property_value():
     classification = "Anchors"
     # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
-    property_value = "Unity Catalog 1"
-    property_names = ["name", "qualifiedName"]
+    property_value = "SoftwareCapability"
+    property_names = ["anchorDomainName"]
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+
+    start_time = time.perf_counter()
     response = c_client.find_elements_by_classification_with_property_value(
         classification, property_value, property_names, open_metadata_type_name
     )
-
+    duration = time.perf_counter() - start_time
+    print(
+        f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+    )
     if type(response) is list:
         print_json(data=response)
     elif type(response) is str:
@@ -404,7 +411,7 @@ def test_get_all_related_elements():
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
-
+    element_guid = "41bc6c53-effe-4dd4-9fef-ee8d86fa6b42"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name

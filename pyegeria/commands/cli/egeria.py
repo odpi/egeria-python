@@ -168,19 +168,19 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 )
 @click.option(
     "--userid",
-    default=os.environ.get("EGERIA_USER", "peterprofile"),
+    default=os.environ.get("EGERIA_USER", "erinoverview"),
     help="Egeria user",
 )
 @click.option(
     "--password",
-    default=os.environ.get("EGERIA_PASSWORD", "secret"),
+    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--jupyter",
     is_flag=True,
-    default = os.environ.get("EGERIA_JUPYTER", "False"),
+    default=os.environ.get("EGERIA_JUPYTER", "False"),
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
@@ -190,7 +190,7 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 )
 @click.option(
     "--home_glossary_guid",
-    default= os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
     help="Glossary guid to use as the home glossary",
 )
 @click.pass_context

@@ -186,60 +186,142 @@ Input:
 Input:
 * userid (required) - default is "erinoverview", one of the fictitious Coco Pharmaceuticals employees.
 
+Note:
+Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
+
 ![my_profile  2024-12-14 at 16.29.27@2x.png](my/show/my_profile%20%202024-12-14%20at%2016.29.27%402x.png)
 
+#### 3.0.2 my-roles: displays the roles of the user identity the command runs under
+Input:
+ userid (required) - default is "erinoverview", one of the fictitious Coco Pharmaceuticals employees.
+
+Note:
+Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
 
 ![my_roles 2024-12-14 at 16.32.10@2x.png](my/show/my_roles%202024-12-14%20at%2016.32.10%402x.png)
 
+#### 3.03 my-to-dos: displays to-do items that have been assigned to the current user identity
+
+Input:
+ userid (required) - default is "erinoverview", one of the fictitious Coco Pharmaceuticals employees.
+
+Note:
+Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
 
 ![my_todos  2024-12-15 at 16.24.13@2x.png](my/show/my_todos%20%202024-12-15%20at%2016.24.13%402x.png)
 
+#### 3.04 open-to-dos: displays a list of all open to-do items
 
 ![open_todos 2024-12-14 at 16.36.12@2x.png](my/show/open_todos%202024-12-14%20at%2016.36.12%402x.png)
 
 
 
 
-## ops - information about Egeria operations and configurations
+## 4.0 ops - information about Egeria operations and configurations
 
-### engines
+### 4.1 engines
+
+#### 4.1.1 activity: display the current engine activity as a static, paged list in a compressed view
+Input:
+* rowlimit - limits the number of rows to display, default is 0, which means return all rows.
+* list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
+* compressed (checkbox) - if checked, a compressed version of the display is provided, default is not checked.
+
+Note:
+To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
 
 ![list_engine_activity compressed 2024-12-15 at 16.48.48@2x.png](ops/show/engines/list_engine_activity%20compressed%202024-12-15%20at%2016.48.48%402x.png)
 
-![monitor_engine_activity compressed  2024-12-15 at 16.38.29@2x.png](ops/show/engines/monitor_engine_activity%20compressed%20%202024-12-15%20at%2016.38.29%402x.png)
+#### 4.1.2 activity: display the current engine activity as a live monitor in a compressed view
+Input:
+* rowlimit - limits the number of rows to display, default is 0, which means return all rows.
+* list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
+* compressed (checkbox) - if checked, a compressed version of the display is provided, default is not checked.
 
+Note:
+To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
+
+
+
+![monitor_engine_activity compressed  2024-12-15 at 16.38.29@2x.png](ops/show/engines/monitor_engine_activity%20compressed%20%202024-12-15%20at%2016.38.29%402x.png)
+#### 4.1.3 activity: display the current engine activity as a live monitor 
+Input:
+* rowlimit - limits the number of rows to display, default is 0, which means return all rows.
+* list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
+* compressed (checkbox) - if checked, a compressed version of the display is provided, default is not checked.
+
+Note:
+To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
 ![monitor_engine_activity  2024-12-15 at 16.32.55@2x.png](ops/show/engines/monitor_engine_activity%20%202024-12-15%20at%2016.32.55%402x.png)
 
+#### 4.1.4 status: display the current status of governance engines either as a live monitor or as a static, paged list
+Input:
+* engine-list - list of engines to include in the display, default is "*" (all)
+* list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
+
+
+Note:
+To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
 ![monitor_engine_status 2024-12-15 at 16.51.26.jpeg](ops/show/engines/monitor_engine_status%202024-12-15%20at%2016.51.26.jpeg)
 
 
 
-### integrations
+### 4.2 integrations
+
+#### 4.2.1 status: display the integration daemon status either as a live monitor or as a static, paged list
+Input:
+* connector-list - list of connectors to include in the display, default is "*" (all)
+* list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
+* sorted (checkbox) - if checked, the list of connectors will be sorted; default is checked.
 
 ![monitor_integration_daemon_status  2024-12-15 at 16.57.12@2x.png](ops/show/integrations/monitor_integration_daemon_status%20%202024-12-15%20at%2016.57.12%402x.png)
 
+
+#### 4.2.2 targets: display a list of catalog targets and their details
+Input:
+* connector (required) - a valid connector name must be provided - typically selected using the previous 'integration daemon status' command.
+
+
 ![monitor_integration_targets  2024-12-15 at 17.02.19@2x.png](ops/show/integrations/monitor_integration_targets%20%202024-12-15%20at%2017.02.19%402x.png)
 
-### platforms
+### 4.3 platforms
+#### 4.3.1 status: display the platform status as a live monitor
 
 ![monitor_platform_status  2024-12-15 at 19.53.18@2x.png](ops/show/platforms/monitor_platform_status%20%202024-12-15%20at%2019.53.18%402x.png)
 
 
 
-### servers
+### 4.4 servers
+
+#### 4.4.1 status: show the status of servers running on the default platform with full details
+Input:
+* full (checkbox) - if check shows a full description of the servers, otherwise just the status is displayed; default is unchecked.
+* url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
 
 ![monitor_server_status full 2024-12-15 at 20.01.57@2x.png](ops/show/servers/monitor_server_status%20full%202024-12-15%20at%2020.01.57%402x.png)
 
+#### 4.4.2 status: show the status of servers running on the default platform with only status
+Input:
+* full (checkbox) - if check shows a full description of the servers, otherwise just the status is displayed; default is unchecked.
+* url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
+
 ![monitor_server_status  2024-12-15 at 19.59.39@2x.png](ops/show/servers/monitor_server_status%20%202024-12-15%20at%2019.59.39%402x.png)
+
+#### 4.4.3 startup: display a summary server status view using direct platform information.
+Input:
+* url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
+
 
 ![monitor_startup_servers 2024-12-15 at 19.56.07@2x.png](ops/show/servers/monitor_startup_servers%202024-12-15%20at%2019.56.07%402x.png)
 
 
 
 
-## tech - more technical information of use to technologists
+## 5.0 tech: information for technologists
 
-### elements - different ways to explore and display metadata elements managed by Egeria
+### 5.1 elements: different ways to explore and display metadata elements managed by Egeria
+
+#### 5.1.1 anchored_elements - 
 
 ![get_anchored_elements 2024-12-15 at 21.25.41@2x.png](tech/show/elements/get_anchored_elements%202024-12-15%20at%2021.25.41%402x.png)
 
