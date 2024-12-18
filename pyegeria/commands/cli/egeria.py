@@ -149,7 +149,7 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 @click.option(
     "--view_server_url",
     default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
-    envvar="EGERIA_VIEW_SERVER_URL",
+    # envvar="EGERIA_VIEW_SERVER_URL",
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
@@ -178,14 +178,14 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 )
 @click.option(
     "--userid",
-    # default="erinoverview",
-    envvar="EGERIA_USER",
+    default=os.environ.get("EGERIA_USER", "peterprofile"),
+    # envvar="EGERIA_USER",
     help="Egeria user",
 )
 @click.option(
     "--password",
-    # default="secret",
-    envvar="EGERIA_PASSWORD",
+    default=os.environ.get("EGERIA_PASSWORD","secret"),
+    # envvar="EGERIA_PASSWORD",
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
