@@ -531,11 +531,11 @@ def show_registered_services(ctx, services):
     help="Relationship type to get information about",
 )
 @click.pass_context
-def show_relationship_types(ctx, rel_type):
+def show_relationship_types(ctx, om_type):
     """Show information about the specified relationship types"""
     c = ctx.obj
     display_relationship_types(
-        rel_type,
+        om_type,
         c.view_server,
         c.view_server_url,
         c.userid,
