@@ -1,5 +1,20 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
+# **hey_egeria:** A Visual Reference Summary
+
+This summary has embeds links and commentary for the Egeria CLI (**hey_egeria**).
+It is organized in the same manner as the CLI itself to simplify learning how to navigate the CLI.
+
+The commands and the structure of **hey_egeria** continue to evolve and expand based on the needs of the community.
+For this reason, each screenshot is time-stamped. A visual time-line of each command will be kept in the directories below
+but this document will continue to refer to only the current version.
+
+You will note that in most screenshots, the command used to generate the screenshot is displayed (usually in purple) with
+a purple arrow pointing to it.
+
+As always, we welcome your feedback and contributions to this work.
+
+ ---
 
 <!-- TOC -->
 * [**hey_egeria:** A Visual Reference Summary](#hey_egeria-a-visual-reference-summary)
@@ -52,23 +67,30 @@
       * [4.4.3 startup: display a summary server status view using direct platform information.](#443-startup-display-a-summary-server-status-view-using-direct-platform-information)
   * [5.0 tech: information for technologists](#50-tech-information-for-technologists)
     * [5.1 elements: different ways to explore and display metadata elements managed by Egeria](#51-elements-different-ways-to-explore-and-display-metadata-elements-managed-by-egeria)
-      * [5.1.1 anchored_elements -](#511-anchored_elements---)
-    * [tech-info](#tech-info)
-    * [tech-types](#tech-types)
+      * [5.1.1 anchored_elements: List anchored elements that match a specified value for a property.](#511-anchored_elements-list-anchored-elements-that-match-a-specified-value-for-a-property)
+      * [5.1.2 elements: List of elements of the specified Egeria Open Metadata type](#512-elements-list-of-elements-of-the-specified-egeria-open-metadata-type)
+      * [5.1.3 elements - extended: List of elements of the specified Egeria Open Metadata type with the extended columns](#513-elements---extended-list-of-elements-of-the-specified-egeria-open-metadata-type-with-the-extended-columns)
+      * [5.1.4 elements of om_type by classification](#514-elements-of-om_type-by-classification)
+      * [5.1.5 get_elements: a list of elements of the specified om_type](#515-get_elements-a-list-of-elements-of-the-specified-om_type)
+      * [5.1.6 guid-info: information about the element identified by the supplied GUID](#516-guid-info-information-about-the-element-identified-by-the-supplied-guid)
+      * [5.1.7 related-elements: lists elements related to specified element](#517-related-elements-lists-elements-related-to-specified-element)
+      * [5.1.8 related-specifications: display template specification parameters](#518-related-specifications-display-template-specification-parameters)
+    * [5.2 tech-info](#52-tech-info)
+      * [5.2.1 asset-types: List defined asset types](#521-asset-types-list-defined-asset-types)
+      * [5.2.2 gov-action-processes: displays details about identified governance action processes](#522-gov-action-processes-displays-details-about-identified-governance-action-processes)
+      * [5.2.3 processes: lists all governance action processes](#523-processes-lists-all-governance-action-processes)
+      * [5.2.4 registered-services: lists the services registered with the Egeria OMAG Platform](#524-registered-services-lists-the-services-registered-with-the-egeria-omag-platform)
+      * [5.2.5 relationship-types: lists the relationship types from the specified Egeria Open Metadata type](#525-relationship-types-lists-the-relationship-types-from-the-specified-egeria-open-metadata-type)
+      * [5.2.6 relationships <placeholder>](#526-relationships-placeholder)
+      * [5.2.7 valid-metadata-values: display valid metadata value for the specified property of a type](#527-valid-metadata-values-display-valid-metadata-value-for-the-specified-property-of-a-type)
+    * [5.3 tech-types](#53-tech-types)
+      * [5.3.1 details - Display details for the specified technology type.](#531-details---display-details-for-the-specified-technology-type)
+      * [5.3.2 list - list the deployed technology types specified by the search string](#532-list---list-the-deployed-technology-types-specified-by-the-search-string)
+      * [5.3.3 template-spec - list the template specification details for the specified technology type](#533-template-spec---list-the-template-specification-details-for-the-specified-technology-type)
+      * [5.3.4 templates - display details of technology type templates for the specified technology type](#534-templates---display-details-of-technology-type-templates-for-the-specified-technology-type)
 <!-- TOC -->
-# **hey_egeria:** A Visual Reference Summary
 
-This summary has embeds links and commentary for the Egeria CLI (**hey_egeria**).
-It is organized in the same manner as the CLI itself to simplify learning how to navigate the CLI.
-
-The commands and the structure of **hey_egeria** continue to evolve and expand based on the needs of the community.
-For this reason, each screenshot is time-stamped. A visual time-line of each command will be kept in the directories below
-but this document will continue to refer to only the current version.
-
-You will note that in most screenshots, the command used to generate the screenshot is displayed (usually in purple) with
-a purple arrow pointing to it.
-
-As always, we welcome your feedback and contributions to this work.
+ ---
 
 ## 1. Top level
 This image is a composite of screenshots showing the full list and organization of **hey_egeria** commands.
@@ -433,19 +455,52 @@ Input:
 #### 5.2.5 relationship-types: lists the relationship types from the specified Egeria Open Metadata type
 Input:
 
-![list_relationship_types 2024-12-16 at 16.20.34@2x.png](tech/show/tech-info/list_relationship_types%202024-12-16%20at%2016.20.34%402x.png)
+* om_type (required) - Egeria Open Metadata type to search for; default is "AssetOwner".
+
+![relationship_types 2024-12-19 at 10.51.54@2x.png](tech/show/tech-info/relationship_types%202024-12-19%20at%2010.51.54%402x.png)
+
+#### 5.2.6 relationships <placeholder>
+Input:
+
+* relationships (reqired) - relationship to search for; default is "Certification".
+
+
+#### 5.2.7 valid-metadata-values: display valid metadata value for the specified property of a type
+Input:
+
+* property (required) - valid value property to return the value for; default is "projectHealth".
+* type-name (required) - metadata type to search the valid values for; default is "Project"
 
 ![valid_metadata_values 2024-12-16 at 15.31.56@2x.png](tech/show/tech-info/valid_metadata_values%202024-12-16%20at%2015.31.56%402x.png)
 
 
 
-### tech-types
+### 5.3 tech-types
+
+#### 5.3.1 details - Display details for the specified technology type.
+Input:
+
+* tech_name (required) - technology name to get details for.
+
+![tech_type_details 2024-12-16 at 15.37.21@2x.png](tech/show/tech-types/tech_type_details%202024-12-16%20at%2015.37.21%402x.png)
+
+
+#### 5.3.2 list - list the deployed technology types specified by the search string
+Input:
+* search-string - search for technology types containing the search-string; default is "*" (all).
+
+[list_technology_types 2024-12-16 at 15.39.20@2x.png](tech/show/tech-types/list_technology_types%202024-12-16%20at%2015.39.20%402x.png)
+
+#### 5.3.3 template-spec - list the template specification details for the specified technology type
+
+Input:
+* search-string - search for templates associated with technology types containing the search-string; default is "*" (all).
 
 ![list_tech_type_template_specs  2024-12-16 at 16.03.22@2x.png](tech/show/tech-types/list_tech_type_template_specs%20%202024-12-16%20at%2016.03.22%402x.png)
 
-![list_technology_types 2024-12-16 at 15.39.20@2x.png](tech/show/tech-types/list_technology_types%202024-12-16%20at%2015.39.20%402x.png)
-
-![tech_type_details 2024-12-16 at 15.37.21@2x.png](tech/show/tech-types/tech_type_details%202024-12-16%20at%2015.37.21%402x.png)
+#### 5.3.4 templates - display details of technology type templates for the specified technology type
+Input:
+* tech-type - name of the technology type to display templates for; default is "PostgreSQL Server"
 
 ![tech_type_templates 2024-12-16 at 16.11.48@2x.png](tech/show/tech-types/tech_type_templates%202024-12-16%20at%2016.11.48%402x.png)
 
