@@ -387,7 +387,7 @@ def integrations_status(ctx, connector_list, list):
     )
 
 
-@integrations.command("targets")
+@integrations.command("--targets")
 @click.pass_context
 @click.argument("connector", nargs=1)
 def integrations_status(ctx, connector):
