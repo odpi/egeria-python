@@ -74,7 +74,7 @@ def display_relationship_types(
         table.add_column("Status")
         table.add_column("Description")
         table.add_column("Description Wiki", no_wrap=True)
-        table.add_column("Attributes")
+        table.add_column("Attributes", min_width=50)
 
         types_list = p_client.get_valid_relationship_types(type_name)
 
