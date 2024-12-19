@@ -180,12 +180,12 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 @click.option(
     "--jupyter",
     is_flag=True,
-    default=os.environ.get("EGERIA_JUPYTER", "False"),
+    default=os.environ.get("EGERIA_JUPYTER", False),
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=os.environ.get("EGERIA_WIDTH", "200"),
+    default=os.environ.get("EGERIA_WIDTH", 200),
     help="Screen width, in characters, to use",
 )
 @click.option(
