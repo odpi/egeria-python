@@ -82,10 +82,10 @@ def build_global_guid_lists(
                     )
             #
             #   Ok - now lets harvest integration connectors using get_integration_daemon_status from ServerOps
-            #   Assume that integration daemon called integration-daemon
+            #   Assume that integration daemon called integration_daemon
             #
             s_client = ServerOps(
-                "integration-daemon", url, user_id=user_id, user_pwd=user_pwd
+                "integration_daemon", url, user_id=user_id, user_pwd=user_pwd
             )
             integ_status = s_client.get_integration_daemon_status()
 

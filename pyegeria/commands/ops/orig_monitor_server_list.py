@@ -33,7 +33,7 @@ EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
     "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
 )

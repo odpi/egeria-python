@@ -8,7 +8,7 @@ class Config(object):
         url: str = None,
         view_server: str = "view-server",
         view_server_url: str = "https://localhost:9443",
-        integration_daemon: str = "integration-daemon",
+        integration_daemon: str = "integration_daemon",
         integration_daemon_url: str = "https://localhost:9443",
         engine_host: str = "engine-host",
         engine_host_url: str = "https://localhost:9443",
@@ -19,6 +19,7 @@ class Config(object):
         timeout: int = 30,
         jupyter: bool = False,
         width: int = 200,
+        home_glossary_guid: str = None,
     ):
         self.metadata_store = server
         self.metadata_store_url = url
@@ -37,6 +38,7 @@ class Config(object):
         self.width = width
         self.server = server
         self.url = url
+        self.home_glossary_guid = home_glossary_guid
 
 
 pass_config = click.make_pass_decorator(Config)

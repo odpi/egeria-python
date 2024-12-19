@@ -25,6 +25,7 @@ from pyegeria import (
     UserNotAuthorizedException,
     EgeriaTech,
 )
+from pyegeria.commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 
 disable_ssl_warnings = True
 
@@ -35,18 +36,19 @@ EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
 
 def display_glossary_terms(
     search_string: str = "*",
-    glossary_guid: str = None,
+    glossary_guid: str = EGERIA_HOME_GLOSSARY_GUID,
     glossary_name: str = None,
     view_server: str = EGERIA_VIEW_SERVER,
     view_url: str = EGERIA_VIEW_SERVER_URL,
@@ -220,7 +222,7 @@ def main():
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    guid = args.guid if args.guid is not None else None
+    guid = args.guid if args.guid is not None else EGERIA_HOME_GLOSSARY_GUID
 
     try:
         search_string = Prompt.ask("Enter the term you are searching for:", default="*")

@@ -3,8 +3,6 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
-
 
 Retrieve elements based on a search of a specified properties.
 """
@@ -34,7 +32,7 @@ EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -48,7 +46,7 @@ disable_ssl_warnings = True
 
 def display_anchored_elements(
     search_string: str,
-    prop_list: [str],
+    prop_list: list[str],
     server: str,
     url: str,
     username: str,
@@ -65,6 +63,7 @@ def display_anchored_elements(
         sys.exit(3)
     g_client = EgeriaTech(server, url, username, user_password)
     token = g_client.create_egeria_bearer_token()
+    print(f"search string is {search_string} and prop_list is {prop_list}\n")
 
     def generate_table(search_string: str, prop_list: [str]) -> Table:
         """Make a new table."""

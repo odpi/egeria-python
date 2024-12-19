@@ -9,6 +9,8 @@ A command line interface for Egeria operations.
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import os
+
 import click
 from trogon import tui
 
@@ -63,84 +65,80 @@ from pyegeria.commands.ops.list_archives import display_archive_list
 @click.group()
 @click.option(
     "--server",
-    default="active-metadata-store",
-    envvar="EGERIA_METADATA_STORE",
+    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default="https://localhost:9443",
-    envvar="EGERIA_PLATFORM_URL",
+    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
-    default="integration-daemon",
-    envvar="EGERIA_INTEGRATION_DAEMON",
+    "--integration_daemon",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_INTEGRATION_DAEMON_URL",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default="view-server",
-    envvar="EGERIA_VIEW_SERVER",
+    default=os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_VIEW_SERVER_URL",
+    default=os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default="engine-host",
-    envvar="EGERIA_ENGINE_HOST",
+    default=os.environ.get("EGERIA_ENGINE_HOST", "engine-host"),
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_ENGINE_HOST_URL",
+    default=os.environ.get("EGERIA_ENGINE_HOST_URL", "https://localhost:9443"),
     help="URL of Egeria engine host platform to connect to",
 )
 @click.option(
     "--admin_user",
-    default="garygeeke",
-    envvar="EGERIA_ADMIN_USER",
+    default=os.environ.get("EGERIA_ADMIN_USER", "garygeeke"),
     help="Egeria admin user",
 )
 @click.option(
     "--admin_user_password",
-    default="secret",
-    envvar="EGERIA_ADMIN_PASSWORD",
+    default=os.environ.get("EGERIA_ADMIN_PASSWORD", "secret"),
     help="Egeria admin password",
 )
-@click.option("--userid", default="garygeeke", envvar="EGERIA_USER", help="Egeria user")
+@click.option(
+    "--userid",
+    default=os.environ.get("EGERIA_USER", "peterprofile"),
+    help="Egeria user",
+)
 @click.option(
     "--password",
-    default="secret",
-    envvar="EGERIA_USER_PASSWORD",
+    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--jupyter",
     is_flag=True,
-    default=False,
-    envvar="EGERIA_JUPYTER",
+    default=os.environ.get("EGERIA_JUPYTER", "False"),
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=200,
-    envvar="EGERIA_WIDTH",
+    default=os.environ.get("EGERIA_WIDTH", "200"),
     help="Screen width, in characters, to use",
+)
+@click.option(
+    "--home_glossary_guid",
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
+    help="Glossary guid to use as the home glossary",
 )
 @click.pass_context
 def cli(
@@ -373,7 +371,7 @@ def integrations(ctx):
 )
 @click.pass_context
 def integrations_status(ctx, connector_list, list):
-    """Display integration-daemon status information"""
+    """Display integration_daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
         [connector_list],
@@ -432,7 +430,7 @@ servers.add_command(stop_server)
 @tell.group("integration-daemon")
 @click.pass_context
 def integration_daemon(ctx):
-    """Group of commands to an integration-daemon"""
+    """Group of commands to an integration_daemon"""
     pass
 
 

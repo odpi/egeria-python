@@ -9,16 +9,19 @@ A command line interface for Egeria Users - all commands
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import os
 import sys
 
 import click
 from trogon import tui
+
 from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cli.egeria_ops import show_server
 from pyegeria.commands.tech.get_tech_type_template import template_viewer
 from pyegeria.commands.cat.list_assets import display_assets
@@ -115,86 +118,82 @@ from pyegeria.commands.tech.list_gov_action_processes import display_gov_process
 @click.group()
 @click.option(
     "--server",
-    default="active-metadata-store",
-    envvar="EGERIA_METADATA_STORE",
+    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default="https://localhost:9443",
-    envvar="EGERIA_PLATFORM_URL",
+    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
-    "--integration-daemon",
-    default="integration-daemon",
-    envvar="EGERIA_INTEGRATION_DAEMON",
+    "--integration_daemon",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_INTEGRATION_DAEMON_URL",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default="view-server",
-    envvar="EGERIA_VIEW_SERVER",
+    default=os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_VIEW_SERVER_URL",
+    default=os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default="engine-host",
-    envvar="EGERIA_ENGINE_HOST",
+    default=os.environ.get("EGERIA_ENGINE_HOST", "engine-host"),
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_ENGINE_HOST_URL",
+    default=os.environ.get("EGERIA_ENGINE_HOST_URL", "https://localhost:9443"),
     help="URL of Egeria engine host platform to connect to",
 )
 @click.option(
     "--admin_user",
-    default="garygeeke",
-    envvar="EGERIA_ADMIN_USER",
+    default=os.environ.get("EGERIA_ADMIN_USER", "garygeeke"),
     help="Egeria admin user",
 )
 @click.option(
     "--admin_user_password",
-    default="secret",
-    envvar="EGERIA_ADMIN_PASSWORD",
+    default=os.environ.get("EGERIA_ADMIN_PASSWORD", "secret"),
     help="Egeria admin password",
 )
 @click.option(
-    "--userid", default="erinoverview", envvar="EGERIA_USER", help="Egeria user"
+    "--userid",
+    default=os.environ.get("EGERIA_USER", "erinoverview"),
+    help="Egeria user",
 )
 @click.option(
     "--password",
-    default="secret",
-    envvar="EGERIA_PASSWORD",
+    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--jupyter",
     is_flag=True,
-    default=False,
-    envvar="EGERIA_JUPYTER",
+    type=bool,
+    default=os.environ.get("EGERIA_JUPYTER", False),
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=200,
-    envvar="EGERIA_WIDTH",
+    default=os.environ.get("EGERIA_WIDTH", 200),
+    type=int,
     help="Screen width, in characters, to use",
+)
+@click.option(
+    "--home_glossary_guid",
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
+    help="Glossary guid to use as the home glossary",
 )
 @click.pass_context
 def cli(
@@ -214,6 +213,7 @@ def cli(
     timeout,
     jupyter,
     width,
+    home_glossary_guid,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -232,21 +232,10 @@ def cli(
         timeout,
         jupyter,
         width,
+        home_glossary_guid,
     )
-    ctx.max_content_width = 200
+    ctx.max_content_width = 250
     ctx.ensure_object(Config)
-
-
-# cli.add_command(login)
-# @cli.command("login")
-# @click.pass_context
-# def egeria_login(ctx):
-#     """Login to Egeria platform"""
-#     user = login(
-#         ctx.obj.userid, ctx.obj.password, ctx.obj.view_server, ctx.obj.view_server_url
-#     )
-#     ctx.obj.userid = user
-#     click.echo(f" user is {ctx.obj.userid}")
 
 
 #
@@ -408,7 +397,7 @@ def list_anchored_elements(ctx, search_string: str, prop_list: str):
         sys.exit(4)
     display_anchored_elements(
         search_string,
-        prop_list,
+        [prop_list],
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -537,16 +526,16 @@ def show_registered_services(ctx, services):
 
 @show_tech_info.command("relationship-types")
 @click.option(
-    "--rel-type",
+    "--om-type",
     default="AssetOwner",
     help="Relationship type to get information about",
 )
 @click.pass_context
-def show_relationship_types(ctx, rel_type):
+def show_relationship_types(ctx, om_type):
     """Show information about the specified relationship types"""
     c = ctx.obj
     display_relationship_types(
-        rel_type,
+        om_type,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -816,7 +805,7 @@ def asset_group(ctx):
     pass
 
 
-@asset_group.command("elements-of-type")
+@asset_group.command("elements-of-tech-type")
 @click.option(
     "--tech_type",
     default="PostgreSQL Server",
@@ -1336,10 +1325,12 @@ def show_asset_graph(ctx, asset_guid):
     help="Specific tech type to get elements for",
 )
 @click.pass_context
-def show_tech_type_elements(ctx, tech_type):
+def list_tech_type_elements(ctx, tech_type):
     """List technology type elements"""
     c = ctx.obj
-    tech_viewer(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
+    list_tech_elements(
+        tech_type, c.view_server, c.view_server_url, c.userid, c.password
+    )
 
 
 @show_project_group.command("projects")
@@ -1706,7 +1697,7 @@ def integrations(ctx):
 )
 @click.pass_context
 def integrations_status(ctx, connector_list, list, sorted):
-    """Display integration-daemon status information"""
+    """Display integration_daemon status information"""
     c = ctx.obj
     display_integration_daemon_status(
         [connector_list],
@@ -1755,7 +1746,7 @@ def tell_ops(ctx):
 @tell_ops.group("integration-daemon")
 @click.pass_context
 def tell_integration_daemon(ctx):
-    """Group of commands to an integration-daemon"""
+    """Group of commands to an integration_daemon"""
     pass
 
 

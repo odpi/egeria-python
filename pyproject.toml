@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.2.0.40"
+version = "5.2.0.42"
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -61,6 +61,7 @@ pytest = "^8.2.2"
     get_collection = "pyegeria.commands.cat.get_collection:main"
     list_terms = "pyegeria.commands.cat.list_terms:main"
     get_tech_type_elements = "pyegeria.commands.cat.get_tech_type_elements:main"
+    list_tech_type_elements = "pyegeria.commands.cat.list_tech_type_elements:main"
     list_projects = "pyegeria.commands.cat.list_projects:main"
     list_todos = "pyegeria.commands.cat.list_todos:main"
     list_cert_types = "pyegeria.commands.cat.list_cert_types:main"

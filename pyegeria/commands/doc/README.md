@@ -1,44 +1,60 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
+
 # Overview
-**hey_egeria** is a command line interface (CLI) for Egeria with both a scriptable component and a textual user interface to guide
+
+**hey_egeria** is a friendly, easy to use, command line interface (CLI) for Egeria with both a scriptable component and a textual user
+interface to guide
 users through the different commands and options. This interface is being actively maintained and enhanced. There are
 currently about 70 commands in the interface and new ones are added based on perceived need and community feedback.
 
-The CLI is written in python using the [click](https://click.palletsprojects.com/en/stable/) package with [trogon](https://github.com/Textualize/trogon) 
-providing the textual user interface. The commands are written using [pyegeria](https://github.com/odpi/egeria-python) or
-https://pypi.org/project/pyegeria/. The commands are also available standalone. Simple standalone installation instructions are
+The CLI is written in python using the [click](https://click.palletsprojects.com/en/stable/) package
+with [trogon](https://github.com/Textualize/trogon)
+providing the textual user interface. The commands are written using [pyegeria](https://github.com/odpi/egeria-python)
+or
+https://pypi.org/project/pyegeria/. Commands are also available standalone. Simple standalone installation instructions
+are
 documented at [pyegeria](https://egeria-project.org/concepts/pyegeria). pyegeria and hey_egeria are pre-installed within
 the **Egeria Workspaces** environment - [Egeria Workspaces](https://github.com/odpi/egeria-workspaces).
 
-
-
 # Command Line Interfaces
-
-A command line interface provides a simple language for users to invoke commands. In the case of **hey_egeria**, once it is installed, you can 
+## Commands
+A command line interface provides a simple language for users to invoke commands. In the case of **hey_egeria**, once it
+is installed, you can
 start simply by typing `hey_egeria` on the command line and it will provide a list of options and commands that you can
-use to interact with it. Commands are often arranged hierarchically - so, for instance if we type just `hey_egeria`, the 
+use to interact with it. Commands are often arranged hierarchically - so, for instance if we type just `hey_egeria`, the
 command options presented to us are:
 
 ```aiignore
 Commands:
-  cat    Commands for the more tech user
-  login  Login to Egeria platform
-  my     Work with my information
-  ops    Commands to understand and manage operations
-  tech   Commands for tech Users
-  tui    Open Textual TUI.
+  cat   Commands for all users
+  my    Work with my information
+  ops   Commands to understand and manage operations
+  tech  Commands for tech Users
+  tui   Open Textual TUI
 ```
 
-## hey_egeria
+"cat", "my", "ops", and "tech" represent groups of commands oriented towards particular roles. If a user wants to only
+use commands from a single role they can use a variant of hey_egeria that follows the pattern `hey_egeria_xxx`. So,
+for example, `hey_egeria_cat` is the entry point for general catalog users.
 
-## hey_egeria_cat
+Within each of these categories, commands are further split between **show** and **tell**. **Show** commands display
+information to the user on the terminal and **tell** commands instruct Egeria to take some action. Commands may be further
+sub-divided into topics.
 
-## hey_egeria_my
+So for example the command to display the status of the Egeria Platform is:
 
-## hey_egeria_ops
+`hey_egeria ops show platforms status` 
 
-## hey_egeria_tech
+And the command to list all glossaries is:
+
+`hey_egeria cat show glossary glossaries`
+
+## Options & Parameters
+
+Each command has a number of optional, and often some mandatory parameters. There are really two groups of options.
+* General options - that are present for every command. Sensible defaults based on environment variables are set for each.
+* Command specific optons & parameters
 
 # Command Reference
 
@@ -121,6 +137,9 @@ Commands:
 | start_daemon                       | Start or restart an OMAG server from its known configuration |     |    | ✓   |      |        |
 | stop_daemon                        | Stop an OMAG server daemon                                   |     |    | ✓   |      |        |
 
+
+# Visual Command Reference
+A visual command reference of all the `hey_egeria` **show** commands can be found in 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 Copyright Contributors to the Egeria project.

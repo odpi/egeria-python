@@ -354,7 +354,7 @@ class ServerOps(Platform):
         if server is None:
             server = self.server_name
 
-        url = f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/{self.user_id}/status"
+        url = f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/{self.user_id}/status"
         response = await self._async_make_request("GET", url)
         return response.json().get("integrationDaemonStatus", "No Integration Groups")
         # return response.json()
@@ -377,7 +377,7 @@ class ServerOps(Platform):
         validate_name(connector_name)
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/{self.user_id}/"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/{self.user_id}/"
             f"integration-connectors/{connector_name}/configuration-properties"
         )
 
@@ -411,7 +411,7 @@ class ServerOps(Platform):
             server = self.server_name
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/"
             f"{self.user_id}/integration-connectors/restart"
         )
         body = {"class": "NameRequestBody", "name": connector_name}
@@ -439,7 +439,7 @@ class ServerOps(Platform):
             connector_name = None
 
         url = (
-            f"{self.platform_url}/servers/{server}/open-metadata/integration-daemon/users/"
+            f"{self.platform_url}/servers/{server}/open-metadata/integration_daemon/users/"
             f"{self.user_id}/integration-connectors/refresh"
         )
         if connector_name:

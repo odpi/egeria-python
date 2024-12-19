@@ -23,28 +23,37 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AutomatedCuration
+    AutomatedCuration,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get('KAFKA_ENDPOINT', 'localhost:9092')
-EGERIA_PLATFORM_URL = os.environ.get('EGERIA_PLATFORM_URL', 'https://localhost:9443')
-EGERIA_VIEW_SERVER = os.environ.get('VIEW_SERVER', 'view-server')
-EGERIA_VIEW_SERVER_URL = os.environ.get('EGERIA_VIEW_SERVER_URL', 'https://localhost:9443')
-EGERIA_INTEGRATION_DAEMON = os.environ.get('INTEGRATION_DAEMON', 'integration-daemon')
-EGERIA_ADMIN_USER = os.environ.get('ADMIN_USER', 'garygeeke')
-EGERIA_ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'secret')
-EGERIA_USER = os.environ.get('EGERIA_USER', 'erinoverview')
-EGERIA_USER_PASSWORD = os.environ.get('EGERIA_USER_PASSWORD', 'secret')
-EGERIA_JUPYTER = bool(os.environ.get('EGERIA_JUPYTER', 'False'))
-EGERIA_WIDTH = int(os.environ.get('EGERIA_WIDTH', '200'))
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get(
+    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
+)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
 disable_ssl_warnings = True
 
 
-def display_tech_types(search_string:str, server: str, url: str, username: str, user_pass: str,
-                       jupyter: bool = EGERIA_JUPYTER, width: int = EGERIA_WIDTH):
+def display_tech_types(
+    search_string: str,
+    server: str,
+    url: str,
+    username: str,
+    user_pass: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
+):
     a_client = AutomatedCuration(server, url, username)
     token = a_client.create_egeria_bearer_token(username, user_pass)
     tech_list = a_client.find_technology_types(search_string, page_size=0)
@@ -61,7 +70,7 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
             show_lines=True,
             box=box.ROUNDED,
             caption=f"Technology Types from Server '{server}' @ Platform - {url}",
-            expand=True
+            expand=True,
         )
 
         table.add_column("Name")
@@ -69,23 +78,20 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
         table.add_column("Category")
         table.add_column("Description")
 
-
         name = " "
         description = " "
         version = " "
         super_type = " "
         if type(tech_list) is list:
             for item in tech_list:
-                if 'deployedImplementationType' not in item['qualifiedName']:
+                if "deployedImplementationType" not in item["qualifiedName"]:
                     continue
                 qualified_name = item.get("qualifiedName", " ")
                 name = item.get("name", "none")
                 category = item.get("category", "none")
                 description = item.get("description", "none")
 
-                table.add_row(
-                    name, qualified_name, category, description
-                )
+                table.add_row(name, qualified_name, category, description)
             return table
         else:
             print("Unknown technology type")
@@ -96,7 +102,11 @@ def display_tech_types(search_string:str, server: str, url: str, username: str, 
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException) as e:
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+    ) as e:
         print_exception_response(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
@@ -118,9 +128,11 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
-        search_string = Prompt.ask("Enter the technology you are searching for:", default="*")
+        search_string = Prompt.ask(
+            "Enter the technology you are searching for:", default="*"
+        )
         display_tech_types(search_string, server, url, userid, user_pass)
-    except (KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
 
 

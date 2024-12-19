@@ -9,6 +9,8 @@ A command line interface for Egeria Catalog User functions
 This is an emerging capability based on the **click** package. Feedback welcome!
 
 """
+import os
+
 import click
 from trogon import tui
 
@@ -17,6 +19,7 @@ from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
     delete_glossary,
@@ -41,7 +44,7 @@ from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
 from pyegeria.commands.cat.list_collections import display_collections
 
-# from pyegeria import ServerOps
+
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.todo_actions import (
     mark_todo_complete,
@@ -52,20 +55,6 @@ from pyegeria.commands.my.todo_actions import (
 from pyegeria.commands.tech.list_asset_types import display_asset_types
 
 
-# class Config(object):
-#     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
-#                  timeout:int = 30, paging: bool = False):
-#         self.server = server
-#         self.url = url
-#         self.userid = userid
-#         self.password = password
-#         self.timeout = timeout
-#         self.paging = paging
-#
-#
-# pass_config = click.make_pass_decorator(Config)
-
-
 # @tui
 # @tui('menu','menu','A textual command line interface')
 @tui()
@@ -73,86 +62,80 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
 @click.group()
 @click.option(
     "--server",
-    default="active-metadata-store",
-    envvar="EGERIA_METADATA_STORE",
+    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default="https://localhost:9443",
-    envvar="EGERIA_PLATFORM_URL",
+    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
     "--integration_daemon",
-    default="integration-daemon",
-    envvar="EGERIA_INTEGRATION_DAEMON",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_INTEGRATION_DAEMON_URL",
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default="view-server",
-    envvar="EGERIA_VIEW_SERVER",
+    default=os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_VIEW_SERVER_URL",
+    default=os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default="engine-host",
-    envvar="EGERIA_ENGINE_HOST",
+    default=os.environ.get("EGERIA_ENGINE_HOST", "engine-host"),
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default="https://localhost:9443",
-    envvar="EGERIA_ENGINE_HOST_URL",
+    default=os.environ.get("EGERIA_ENGINE_HOST_URL", "https://localhost:9443"),
     help="URL of Egeria engine host platform to connect to",
 )
 @click.option(
     "--admin_user",
-    default="garygeeke",
-    envvar="EGERIA_ADMIN_USER",
+    default=os.environ.get("EGERIA_ADMIN_USER", "garygeeke"),
     help="Egeria admin user",
 )
 @click.option(
     "--admin_user_password",
-    default="secret",
-    envvar="EGERIA_ADMIN_PASSWORD",
+    default=os.environ.get("EGERIA_ADMIN_PASSWORD", "secret"),
     help="Egeria admin password",
 )
 @click.option(
-    "--userid", default="erinoverview", envvar="EGERIA_USER", help="Egeria user"
+    "--userid",
+    default=os.environ.get("EGERIA_USER", "peterprofile"),
+    help="Egeria user",
 )
 @click.option(
     "--password",
-    default="secret",
-    envvar="EGERIA_PASSWORD",
+    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--jupyter",
     is_flag=True,
-    default=False,
-    envvar="EGERIA_JUPYTER",
+    default=os.environ.get("EGERIA_JUPYTER", "False"),
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=200,
-    envvar="EGERIA_WIDTH",
+    default=os.environ.get("EGERIA_WIDTH", "200"),
     help="Screen width, in characters, to use",
+)
+@click.option(
+    "--home_glossary_guid",
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
+    help="Glossary guid to use as the home glossary",
 )
 @click.pass_context
 def cli(
@@ -172,6 +155,7 @@ def cli(
     timeout,
     jupyter,
     width,
+    home_glossary_guid,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -190,8 +174,9 @@ def cli(
         timeout,
         jupyter,
         width,
+        home_glossary_guid,
     )
-    ctx.max_content_width = 200
+    ctx.max_content_width = 250
     ctx.ensure_object(Config)
 
 
@@ -238,6 +223,21 @@ def asset_group(ctx):
 
 
 @asset_group.command("tech-type-elements")
+@click.option(
+    "--tech_type",
+    default="PostgreSQL Server",
+    help="Specific tech type to get elements for",
+)
+@click.pass_context
+def list_tech_type_elements(ctx, tech_type):
+    """List technology type elements"""
+    c = ctx.obj
+    list_tech_elements(
+        tech_type, c.view_server, c.view_server_url, c.userid, c.password
+    )
+
+
+@asset_group.command("elements-of-tech-type")
 @click.option(
     "--tech_type",
     default="PostgreSQL Server",
@@ -311,7 +311,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--glossary-guid",
-    default=None,
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID"),
     help="Optionally restrict search to glossary with the specified guid",
 )
 @click.option(
