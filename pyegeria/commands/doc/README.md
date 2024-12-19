@@ -139,7 +139,7 @@ Each command has a number of optional, and often some mandatory parameters. Ther
 
 
 # Visual Command Reference
-A visual command reference of all the `hey_egeria` **show** commands can be found in 
+A visual command reference of all the `hey_egeria` **show** commands can be found [Visual Command Reference](https://github.com/odpi/egeria-python/tree/main/pyegeria/commands/doc/Visual%20Command%20Reference)
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 Copyright Contributors to the Egeria project.
