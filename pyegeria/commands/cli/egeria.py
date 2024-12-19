@@ -395,7 +395,7 @@ def list_anchored_elements(ctx, search_string: str, prop_list: str):
         sys.exit(4)
     display_anchored_elements(
         search_string,
-        prop_list,
+        [prop_list],
         c.view_server,
         c.view_server_url,
         c.userid,
