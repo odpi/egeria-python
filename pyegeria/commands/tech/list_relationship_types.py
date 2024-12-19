@@ -115,7 +115,7 @@ def display_relationship_types(
                     att_md = False
             att_out = att_table if att_md else " "
 
-            table.add_row(name, qstatus, description, description_wiki, att_out)
+            table.add_row(name, status, description, description_wiki, att_out)
         p_client.close_session()
         return table
 
