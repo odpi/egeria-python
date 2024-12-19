@@ -16,6 +16,7 @@ import time
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
@@ -23,6 +24,7 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException,
     ClassificationManager,
+    max_paging_size,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -87,7 +89,7 @@ def list_relationships(
         table.add_column("Properties", min_width=40)
 
         rel_list = g_client.get_relationships(
-            search_string, page_size=100, time_out=time_out
+            search_string, page_size=max_paging_size, time_out=time_out
         )
         if type(rel_list) is str:
             return table
@@ -164,8 +166,10 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     time_out = args.time_out if args.time_out is not None else 60
     try:
-        # search_string = Prompt.ask("Enter an asset search string:", default="*")
-        search_string = "Certification"
+        search_string = Prompt.ask(
+            "Enter an asset search string:", default="Certification"
+        )
+
         list_relationships(search_string, server, url, userid, user_pass, time_out)
     except KeyboardInterrupt:
         pass

@@ -381,7 +381,7 @@ def show_registered_services(ctx, services):
 
 @show_info.command("relationship-types")
 @click.option(
-    "--rel-type",
+    "--om-type",
     default="AssetOwner",
     help="Relationship type to get information about",
 )

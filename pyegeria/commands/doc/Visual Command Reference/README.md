@@ -1,26 +1,61 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
+
 <!-- TOC -->
 * [**hey_egeria:** A Visual Reference Summary](#hey_egeria-a-visual-reference-summary)
-  * [Top level](#top-level)
-  * [cat: Commands for the catalog user](#cat-commands-for-the-catalog-user)
-    * [assets: display information about assets](#assets-display-information-about-assets)
-    * [deployed-data: display information about deployed data resources Egeria has been told about](#deployed-data-display-information-about-deployed-data-resources-egeria-has-been-told-about)
-    * [glossary: display information about glossaries and glossary terms](#glossary-display-information-about-glossaries-and-glossary-terms)
-    * [info: a mix of other information and Egeria structures](#info-a-mix-of-other-information-and-egeria-structures)
-    * [projects: information about projects that Egeria represents](#projects-information-about-projects-that-egeria-represents)
-  * [my - a personal view](#my---a-personal-view)
-  * [ops - information about Egeria operations and configurations](#ops---information-about-egeria-operations-and-configurations)
-    * [engines](#engines)
-    * [integrations](#integrations)
-    * [platforms](#platforms)
-    * [servers](#servers)
-  * [tech - more technical information of use to technologists](#tech---more-technical-information-of-use-to-technologists)
-    * [elements - different ways to explore and display metadata elements managed by Egeria](#elements---different-ways-to-explore-and-display-metadata-elements-managed-by-egeria)
+  * [1. Top level](#1-top-level)
+  * [2. cat: Commands for the catalog user](#2-cat-commands-for-the-catalog-user)
+    * [2.1 assets: display information about assets](#21-assets-display-information-about-assets)
+      * [2.1.1 asset-graph - displays information about the asset and the elements related to it](#211-asset-graph---displays-information-about-the-asset-and-the-elements-related-to-it)
+      * [2.1.2 assets-in-domain - search for occurrences of search-string in the asset domain](#212-assets-in-domain---search-for-occurrences-of-search-string-in-the-asset-domain)
+      * [2.1.3 elements-of-type - display elements for a specified technology type](#213-elements-of-type---display-elements-for-a-specified-technology-type)
+      * [2.1.4 tech-type-elements - list the elements of the specified technology type](#214-tech-type-elements---list-the-elements-of-the-specified-technology-type)
+    * [2.2 deployed-data: display information about deployed data resources Egeria has been told about](#22-deployed-data-display-information-about-deployed-data-resources-egeria-has-been-told-about)
+      * [2.2.1 deployed-data-catalogs - lists the known deployed catalogs](#221-deployed-data-catalogs---lists-the-known-deployed-catalogs)
+      * [2.2.2 deployed-schemas: lists information about schemas, optionally filtered by catalog name](#222-deployed-schemas-lists-information-about-schemas-optionally-filtered-by-catalog-name)
+      * [2.2.3 deployed-servers: lists the deployed software servers](#223-deployed-servers-lists-the-deployed-software-servers)
+      * [2.2.4 deployed-databases: lists the known, deployed databases](#224-deployed-databases-lists-the-known-deployed-databases)
+    * [2.3 glossary: display information about glossaries and glossary terms](#23-glossary-display-information-about-glossaries-and-glossary-terms)
+      * [2.3.1 list-glossaries: lists the known glossaries](#231-list-glossaries-lists-the-known-glossaries)
+      * [2.3.2 list-glossary-terms: lists glossary terms, optionally filtered by glossary](#232-list-glossary-terms-lists-glossary-terms-optionally-filtered-by-glossary)
+    * [2,4 info: a mix of other information and Egeria structures](#24-info-a-mix-of-other-information-and-egeria-structures)
+      * [2.4.1 asset-types: list the types of assets Egeria knows about](#241-asset-types-list-the-types-of-assets-egeria-knows-about)
+      * [2.4.2 certification-types: list the types of certifications that have been defined](#242-certification-types-list-the-types-of-certifications-that-have-been-defined)
+      * [2.4.3 collection-graph: display a graph of collection from a specified root collection](#243-collection-graph-display-a-graph-of-collection-from-a-specified-root-collection)
+      * [2.4.4 collections: lists collections filtered by the optional search string](#244-collections-lists-collections-filtered-by-the-optional-search-string)
+      * [2.4.5 to-dos: list to-do items optionally filtered by a search string](#245-to-dos-list-to-do-items-optionally-filtered-by-a-search-string)
+      * [2.4.6 user-ids: list all known user ids](#246-user-ids-list-all-known-user-ids)
+      * [2.4.7 tech-types: list technology types optionally filtered by a search-string](#247-tech-types-list-technology-types-optionally-filtered-by-a-search-string)
+    * [2.5 projects: information about projects that Egeria represents](#25-projects-information-about-projects-that-egeria-represents)
+      * [2.5.1 project-dependencies: display a dependency graph of projects starting from the specified project](#251-project-dependencies-display-a-dependency-graph-of-projects-starting-from-the-specified-project)
+      * [2.5.2 project-structure: display the structure of the project specified, including sub-projects and relationships](#252-project-structure-display-the-structure-of-the-project-specified-including-sub-projects-and-relationships)
+      * [2.5.3 projects: display a list of projects optionally filtered by a search string](#253-projects-display-a-list-of-projects-optionally-filtered-by-a-search-string)
+  * [3.0 my: a personal view](#30-my-a-personal-view)
+      * [3.0.1 my-profile: displays the profile of the user identity the command runs under](#301-my-profile-displays-the-profile-of-the-user-identity-the-command-runs-under)
+      * [3.0.2 my-roles: displays the roles of the user identity the command runs under](#302-my-roles-displays-the-roles-of-the-user-identity-the-command-runs-under)
+      * [3.03 my-to-dos: displays to-do items that have been assigned to the current user identity](#303-my-to-dos-displays-to-do-items-that-have-been-assigned-to-the-current-user-identity)
+      * [3.04 open-to-dos: displays a list of all open to-do items](#304-open-to-dos-displays-a-list-of-all-open-to-do-items)
+  * [4.0 ops - information about Egeria operations and configurations](#40-ops---information-about-egeria-operations-and-configurations)
+    * [4.1 engines](#41-engines)
+      * [4.1.1 activity: display the current engine activity as a static, paged list in a compressed view](#411-activity-display-the-current-engine-activity-as-a-static-paged-list-in-a-compressed-view)
+      * [4.1.2 activity: display the current engine activity as a live monitor in a compressed view](#412-activity-display-the-current-engine-activity-as-a-live-monitor-in-a-compressed-view)
+      * [4.1.3 activity: display the current engine activity as a live monitor](#413-activity-display-the-current-engine-activity-as-a-live-monitor-)
+      * [4.1.4 status: display the current status of governance engines either as a live monitor or as a static, paged list](#414-status-display-the-current-status-of-governance-engines-either-as-a-live-monitor-or-as-a-static-paged-list)
+    * [4.2 integrations](#42-integrations)
+      * [4.2.1 status: display the integration daemon status either as a live monitor or as a static, paged list](#421-status-display-the-integration-daemon-status-either-as-a-live-monitor-or-as-a-static-paged-list)
+      * [4.2.2 targets: display a list of catalog targets and their details](#422-targets-display-a-list-of-catalog-targets-and-their-details)
+    * [4.3 platforms](#43-platforms)
+      * [4.3.1 status: display the platform status as a live monitor](#431-status-display-the-platform-status-as-a-live-monitor)
+    * [4.4 servers](#44-servers)
+      * [4.4.1 status: show the status of servers running on the default platform with full details](#441-status-show-the-status-of-servers-running-on-the-default-platform-with-full-details)
+      * [4.4.2 status: show the status of servers running on the default platform with only status](#442-status-show-the-status-of-servers-running-on-the-default-platform-with-only-status)
+      * [4.4.3 startup: display a summary server status view using direct platform information.](#443-startup-display-a-summary-server-status-view-using-direct-platform-information)
+  * [5.0 tech: information for technologists](#50-tech-information-for-technologists)
+    * [5.1 elements: different ways to explore and display metadata elements managed by Egeria](#51-elements-different-ways-to-explore-and-display-metadata-elements-managed-by-egeria)
+      * [5.1.1 anchored_elements -](#511-anchored_elements---)
     * [tech-info](#tech-info)
     * [tech-types](#tech-types)
 <!-- TOC -->
-
 # **hey_egeria:** A Visual Reference Summary
 
 This summary has embeds links and commentary for the Egeria CLI (**hey_egeria**).
@@ -321,35 +356,84 @@ Input:
 
 ### 5.1 elements: different ways to explore and display metadata elements managed by Egeria
 
-#### 5.1.1 anchored_elements - 
+#### 5.1.1 anchored_elements: List anchored elements that match a specified value for a property.
+Input:
+* search-string (required) - value to search for, default is "DeployedDatabaseSchema"
+* prop-list (required) - properties to search for the the above search-string. This is a list of strings separated by comma. Default is "anchorTypeName".
 
 ![get_anchored_elements 2024-12-15 at 21.25.41@2x.png](tech/show/elements/get_anchored_elements%202024-12-15%20at%2021.25.41%402x.png)
 
-![get_elements_of_om_type  2024-12-16 at 14.39.59@2x.png](tech/show/elements/get_elements_of_om_type%20%202024-12-16%20at%2014.39.59%402x.png)
 
-![info_for_guid  2024-12-16 at 11.35.29@2x.png](tech/show/elements/info_for_guid%20%202024-12-16%20at%2011.35.29%402x.png)
-
-![list_elements_by_om-type extended  2024-12-16 at 14.28.46@2x.png](tech/show/elements/list_elements_by_om-type%20extended%20%202024-12-16%20at%2014.28.46%402x.png)
+#### 5.1.2 elements: List of elements of the specified Egeria Open Metadata type
+Input:
+* extended (checkbox) - if checked additional feedback columns are displayed; default is unchecked.
+* om_type (required) - the Egeria Open Metadata type to return elements for; default is "Organization"
 
 ![list_elements_by_om-type  2024-12-16 at 14.24.18@2x.png](tech/show/elements/list_elements_by_om-type%20%202024-12-16%20at%2014.24.18%402x.png)
 
+#### 5.1.3 elements - extended: List of elements of the specified Egeria Open Metadata type with the extended columns
+Input:
+* extended (checkbox) - if checked additional feedback columns are displayed; default is unchecked.
+* om_type (required) - the Egeria Open Metadata type to return elements for; default is "Organization"
+
+![list_elements_by_om-type extended  2024-12-16 at 14.28.46@2x.png](tech/show/elements/list_elements_by_om-type%20extended%20%202024-12-16%20at%2014.28.46%402x.png)
+
+#### 5.1.4 elements of om_type by classification
+Input:
+* om_type (required) - Egeria Open Metadata type to search for; default is "Project".
+* classification - Egeria classification to search within; default is "GovernanceProject".
+
 ![list_elements_of_om_type_by_classification  2024-12-16 at 14.35.26@2x.png](tech/show/elements/list_elements_of_om_type_by_classification%20%202024-12-16%20at%2014.35.26%402x.png)
 
+#### 5.1.5 get_elements: a list of elements of the specified om_type
+Input: 
+* om_type (required) - Egeria Open Metadata type to search for; default is "Project".
+![get_elements_of_om_type  2024-12-16 at 14.39.59@2x.png](tech/show/elements/get_elements_of_om_type%20%202024-12-16%20at%2014.39.59%402x.png)
+
+
+#### 5.1.6 guid-info: information about the element identified by the supplied GUID
+Input:
+* guid (required) - the unique identifier of the element to return information about.
+
+![info_for_guid  2024-12-16 at 11.35.29@2x.png](tech/show/elements/info_for_guid%20%202024-12-16%20at%2011.35.29%402x.png)
+
+#### 5.1.7 related-elements: lists elements related to specified element
+Input:
+* guid (required) - the unique identifier of the element to return information about.
+* om_type (required) - Egeria Open Metadata type to search for; default is "Project".
+* rel_type (requited) - Egeria relationship type to filter by; default is "Certification".
 ![related_elements 2024-12-16 at 14.55.01@2x.png](tech/show/elements/related_elements%202024-12-16%20at%2014.55.01%402x.png)
+
+
+#### 5.1.8 related-specifications: display template specification parameters
+Input:
+* guid (required) - the unique identifier of the element to return information about.
 
 ![show_related_specifications 2024-12-16 at 15.04.55@2x.png](tech/show/elements/show_related_specifications%202024-12-16%20at%2015.04.55%402x.png)
 
-### tech-info
+### 5.2 tech-info
+#### 5.2.1 asset-types: List defined asset types
 
 ![asset_types 2024-12-16 at 15.10.16@2x.png](tech/show/tech-info/asset_types%202024-12-16%20at%2015.10.16%402x.png)
 
+#### 5.2.2 gov-action-processes: displays details about identified governance action processes
+Input:
+* search-string (required) - value to search for, default is "*" (all)
+
 ![detailed_governance_action_processes  2024-12-16 at 15.16.26@2x.png](tech/show/tech-info/detailed_governance_action_processes%20%202024-12-16%20at%2015.16.26%402x.png)
 
+#### 5.2.3 processes: lists all governance action processes
 ![governance_action_processes 2024-12-16 at 15.13.01@2x.png](tech/show/tech-info/governance_action_processes%202024-12-16%20at%2015.13.01%402x.png)
 
-![list_relationship_types 2024-12-16 at 16.20.34@2x.png](tech/show/tech-info/list_relationship_types%202024-12-16%20at%2016.20.34%402x.png)
-
+#### 5.2.4 registered-services: lists the services registered with the Egeria OMAG Platform
+Input:
+* services: one of all, access-services, common-services, engine-services, governance-services, integration-services, view-services; default is "all".
 ![registered_services 2024-12-16 at 16.44.54@2x.png](tech/show/tech-info/registered_services%202024-12-16%20at%2016.44.54%402x.png)
+
+#### 5.2.5 relationship-types: lists the relationship types from the specified Egeria Open Metadata type
+Input:
+
+![list_relationship_types 2024-12-16 at 16.20.34@2x.png](tech/show/tech-info/list_relationship_types%202024-12-16%20at%2016.20.34%402x.png)
 
 ![valid_metadata_values 2024-12-16 at 15.31.56@2x.png](tech/show/tech-info/valid_metadata_values%202024-12-16%20at%2015.31.56%402x.png)
 
