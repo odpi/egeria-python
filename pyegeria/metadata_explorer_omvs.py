@@ -351,7 +351,7 @@ class MetadataExplorer(Client):
         )
         return response
 
-    async def _async_get_metadata_element_graph(
+    async def _async_get_anchored_metadata_element_graph(
         self,
         guid: str,
         effective_time: str = None,
@@ -432,7 +432,7 @@ class MetadataExplorer(Client):
             return "No elements returned"
         return el_list
 
-    def get_metadata_element_graph(
+    def get_anchored_metadata_element_graph(
         self,
         guid: str,
         effective_time: str = None,
@@ -478,7 +478,7 @@ class MetadataExplorer(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_element_graph(
+            self._async_get_anchored_metadata_element_graph(
                 guid,
                 effective_time,
                 as_of_time,

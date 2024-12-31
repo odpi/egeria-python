@@ -1716,7 +1716,7 @@ def integrations_status(ctx, connector_list, list, sorted):
 
 @integrations.command("targets")
 @click.pass_context
-@click.argument("connector", nargs=1)
+@click.argument("--connector", nargs=1)
 def integrations_status(ctx, connector):
     """Display Catalog Targets for a connector"""
     c = ctx.obj

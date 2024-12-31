@@ -665,9 +665,7 @@ class TemplateManager(Client):
         await self._async_make_request("POST", url, body_slimmer(body))
         return
 
-    def update_metadata_element_effectivity_in_store(
-        self, element_guid: str, body: dict
-    ) -> None:
+    def archive_metadata_element_in_store(self, element_guid: str, body: dict) -> None:
         """Archive a specific metadata element.
 
         Parameters

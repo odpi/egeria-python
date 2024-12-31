@@ -817,7 +817,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_in_mem_repository(self, server: str = good_server_1):
+    def test_set_xtdb_in_mem_repository(self, server: str = "active-metadata-store"):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 self.good_server_2, self.good_platform1_url, self.good_user_1
@@ -853,7 +853,7 @@ class TestCoreAdminServices:
             print_exception_response(e)
             assert False, "Invalid request"
 
-    def test_set_xtdb_local_repository(self, server: str = good_server_3):
+    def test_set_xtdb_local_repository(self, server: str = "active-metadata-store"):
         try:
             o_client: CoreServerConfig = CoreServerConfig(
                 self.good_server_3, self.good_platform1_url, self.good_user_1
@@ -865,19 +865,24 @@ class TestCoreAdminServices:
                     "connectorProviderClassName": "org.odpi.egeria.connectors.juxt.xtdb.repositoryconnector.XtdbOMRSRepositoryConnectorProvider",
                 },
                 "configurationProperties": {
-                    "xtdbConfigEDN": """{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "data/servers/active-metadata-store/rdb-index"}}
-                                            :xtdb.lucene/lucene-store {:db-dir "data/servers/active-metadata-store/lucene"
-                                                                         :indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer}
-                                                                         :analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}}
-                                              :xtdb.jdbc/connection-pool {:dialect {:xtdb/module xtdb.jdbc.psql/->dialect}
-                                                                          :db-spec {:jdbcUrl "jdbc:postgresql://host.docker.internal:5442/active-metadata-store?user=postgres&password=egeria"}}
-                                              :xtdb/tx-log {:xtdb/module xtdb.jdbc/->tx-log
-                                                            :connection-pool :xtdb.jdbc/connection-pool
-                                                            :poll-sleep-duration "PT1S"}
-                                              :xtdb/document-store {:xtdb/module xtdb.jdbc/->document-store
-                                                                    :connection-pool :xtdb.jdbc/connection-pool}}""",
-                    "syncIndex": True,
-                },
+                    "xtdbConfigEDN": """{ :xtdb.lucene/lucene-store {:indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer}
+                                                                         :analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}
+                                                                         }"""
+                }
+                # "configurationProperties": {
+                #     "xtdbConfigEDN": """{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "data/servers/active-metadata-store/rdb-index"}}
+                #                             :xtdb.lucene/lucene-store {:db-dir "data/servers/active-metadata-store/lucene"
+                #                                                          :indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer}
+                #                                                          :analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}}
+                #                               :xtdb.jdbc/connection-pool {:dialect {:xtdb/module xtdb.jdbc.psql/->dialect}
+                #                                                           :db-spec {:jdbcUrl "jdbc:postgresql://host.docker.internal:5442/active-metadata-store?user=postgres&password=egeria"}}
+                #                               :xtdb/tx-log {:xtdb/module xtdb.jdbc/->tx-log
+                #                                             :connection-pool :xtdb.jdbc/connection-pool
+                #                                             :poll-sleep-duration "PT1S"}
+                #                               :xtdb/document-store {:xtdb/module xtdb.jdbc/->document-store
+                #                                                     :connection-pool :xtdb.jdbc/connection-pool}}""",
+                #     "syncIndex": True,
+                # },
             }
 
             # body = {
