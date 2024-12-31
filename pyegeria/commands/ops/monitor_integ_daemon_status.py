@@ -36,7 +36,7 @@ EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration_daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
     "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
 )
@@ -254,11 +254,11 @@ def main_live(paging: bool = False) -> None:
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     search_list = Prompt.ask(
-        "Enter the list of connectors you are interested in or ['*'] for all",
-        default=["*"],
+        "Enter the list of connectors you are interested in or '*' for all",
+        default="*",
     )
     display_integration_daemon_status(
-        search_list=search_list,
+        search_list=[search_list],
         integ_server=integ_server,
         integ_url=integ_url,
         view_server=view_server,
@@ -297,18 +297,18 @@ def main_paging(paging: bool = True) -> None:
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     search_list = Prompt.ask(
-        "Enter the list of connectors you are interested in or ['*'] for all",
-        default=["*"],
+        "Enter the list of connectors you are interested in or '*' for all",
+        default="*",
     )
     display_integration_daemon_status(
-        search_list=search_list,
+        search_list=[search_list],
         integ_server=integ_server,
         integ_url=integ_url,
         view_server=view_server,
         view_url=view_url,
         user=userid,
         user_pass=user_pass,
-        paging=True,
+        paging=paging,
     )
 
 
