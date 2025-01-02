@@ -311,7 +311,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--glossary-guid",
-    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID"),
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
     help="Optionally restrict search to glossary with the specified guid",
 )
 @click.option(
