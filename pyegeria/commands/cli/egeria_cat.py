@@ -129,7 +129,8 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
 )
 @click.option(
     "--width",
-    default=os.environ.get("EGERIA_WIDTH", "200"),
+    default=os.environ.get("EGERIA_WIDTH", 200),
+    type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(

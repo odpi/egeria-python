@@ -1535,6 +1535,7 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_name: str,
         filename: str,
+        file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
         upsert: bool = True,
         verbose: bool = True,
     ) -> List[dict] | None:
@@ -1544,6 +1545,9 @@ class GlossaryManager(GlossaryBrowser):
         ----------
             glossary_name : str
                 Name of the glossary to import terms into.
+            file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
+                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
+                prepended to the filename parameter to form the full path to the file.
             filename: str
                 Path to the file to import terms from. File is assumed to be in CSV format. The path
                 is relative to where the python method is being called from.
@@ -1609,8 +1613,18 @@ class GlossaryManager(GlossaryBrowser):
             "Version Identifier",
             "Status",
         }
+
+        if file_path:
+            full_file_path = os.path.join(file_path, filename)
+        else:
+            full_file_path = filename
+
+        if not os.path.isfile(full_file_path):
+            raise FileNotFoundError(
+                f"Did not find file with path {file_path} and name {filename}"
+            )
         # process file
-        with open(filename, mode="r") as file:
+        with open(full_file_path, mode="r") as file:
             # Create a CSV reader object
             csv_reader = csv.DictReader(file)
             headers = csv_reader.fieldnames
@@ -1618,7 +1632,6 @@ class GlossaryManager(GlossaryBrowser):
             # check that the column headers are known
             if all(header in term_properties for header in headers) is False:
                 raise InvalidParameterException("Invalid headers in CSV File")
-                sys.exit(1)
 
             # process each row and validate values
             for row in csv_reader:
@@ -1759,7 +1772,10 @@ class GlossaryManager(GlossaryBrowser):
             return
 
     async def _async_export_glossary_to_csv(
-        self, glossary_guid: str, target_file: str
+        self,
+        glossary_guid: str,
+        target_file: str,
+        file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
     ) -> int:
         """Export all the terms in a glossary to a CSV file. Async version
 
@@ -1769,6 +1785,9 @@ class GlossaryManager(GlossaryBrowser):
             Identity of the glossary to export.
         target_file: str
             Complete file name with path and extension to export to.
+        file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
+                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
+                prepended to the filename parameter to form the full path to the file.
 
         Returns:
             int: Number of rows exported.
@@ -1787,8 +1806,12 @@ class GlossaryManager(GlossaryBrowser):
             "Version Identifier",
             "Status",
         ]
+        if file_path:
+            full_file_path = os.path.join(file_path, target_file)
+        else:
+            full_file_path = target_file
 
-        with open(target_file, mode="w") as file:
+        with open(full_file_path, mode="w") as file:
             csv_writer = csv.DictWriter(file, fieldnames=header)
             csv_writer.writeheader()
             count = 0
@@ -1822,7 +1845,12 @@ class GlossaryManager(GlossaryBrowser):
                 count += 1
         return count
 
-    def export_glossary_to_csv(self, glossary_guid: str, target_file: str) -> int:
+    def export_glossary_to_csv(
+        self,
+        glossary_guid: str,
+        target_file: str,
+        file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
+    ) -> int:
         """Export all the terms in a glossary to a CSV file.
 
         Parameters:
@@ -1831,6 +1859,9 @@ class GlossaryManager(GlossaryBrowser):
             Identity of the glossary to export.
         target_file: str
             Complete file name with path and extension to export to.
+        file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
+                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
+                prepended to the filename parameter to form the full path to the file.
 
         Returns:
             int: Number of rows exported.
@@ -1838,7 +1869,7 @@ class GlossaryManager(GlossaryBrowser):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_export_glossary_to_csv(glossary_guid, target_file)
+            self._async_export_glossary_to_csv(glossary_guid, target_file, file_path)
         )
 
         return response

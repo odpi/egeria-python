@@ -585,8 +585,9 @@ class TestGlossaryManager:
             )
             token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
             glossary = "example"
-            file_name = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary/upsert-example.om-terms"
-            response = g_client.load_terms_from_file(glossary, file_name, True)
+            file_path = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary"
+            file_name = "pets.om-terms"
+            response = g_client.load_terms_from_file(glossary, file_name, file_path)
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -598,6 +599,7 @@ class TestGlossaryManager:
             InvalidParameterException,
             PropertyServerException,
             UserNotAuthorizedException,
+            FileNotFoundError,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
