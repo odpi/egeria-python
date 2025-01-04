@@ -48,6 +48,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 200)
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
+EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 
 
 @click.command("create-glossary")
@@ -265,8 +266,11 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 
 
 @click.command("import-terms")
-@click.option("--glossary-name", help="Name of Glossary", required=True)
-@click.option("--file-name", help="Path of CSV file", required=True)
+@click.option("--glossary_name", help="Name of Glossary", required=True)
+@click.option("--file_name", help="Path of CSV file", required=True)
+@click.option(
+    "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+)
 @click.option(
     "--verbose",
     is_flag=True,
@@ -288,6 +292,7 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def import_terms(
     glossary_name: str,
+    file_path: str,
     file_name: str,
     verbose: bool,
     upsert: bool,
@@ -302,7 +307,11 @@ def import_terms(
     token = m_client.create_egeria_bearer_token()
     try:
         result = m_client.load_terms_from_file(
-            glossary_name, file_name, upsert=upsert, verbose=verbose
+            glossary_name,
+            file_name,
+            file_path=file_path,
+            upsert=upsert,
+            verbose=verbose,
         )
 
         click.echo(
@@ -319,12 +328,15 @@ def import_terms(
 
 @click.command("export-terms")
 @click.option(
-    "--glossary-guid",
+    "--glossary_guid",
     default=EGERIA_HOME_GLOSSARY_GUID,
     help="GUID of Glossary to export",
     required=True,
 )
-@click.option("--file-name", help="Path of CSV file", required=True)
+@click.option("--file_name", help="Path of CSV file", required=True)
+@click.option(
+    "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+)
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
 @click.option(
     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
@@ -332,12 +344,14 @@ def import_terms(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def export_terms(glossary_guid: str, file_name, server, url, userid, password, timeout):
+def export_terms(
+    glossary_guid: str, file_name, file_path, server, url, userid, password, timeout
+):
     """Export the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        result = m_client.export_glossary_to_csv(glossary_guid, file_name)
+        result = m_client.export_glossary_to_csv(glossary_guid, file_name, file_path)
 
         click.echo(
             f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"

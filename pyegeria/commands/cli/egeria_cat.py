@@ -129,7 +129,8 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
 )
 @click.option(
     "--width",
-    default=os.environ.get("EGERIA_WIDTH", "200"),
+    default=os.environ.get("EGERIA_WIDTH", 200),
+    type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
@@ -311,7 +312,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--glossary-guid",
-    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID"),
+    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
     help="Optionally restrict search to glossary with the specified guid",
 )
 @click.option(
