@@ -4,22 +4,23 @@ import click
 class Config(object):
     def __init__(
         self,
-        server: str = None,
-        url: str = None,
-        view_server: str = "view-server",
-        view_server_url: str = "https://localhost:9443",
-        integration_daemon: str = "integration_daemon",
-        integration_daemon_url: str = "https://localhost:9443",
-        engine_host: str = "engine-host",
-        engine_host_url: str = "https://localhost:9443",
-        admin_user: str = "garygeeke",
-        admin_user_password: str = "secret",
-        userid: str = None,
-        password: str = None,
-        timeout: int = 30,
-        jupyter: bool = False,
-        width: int = 200,
-        home_glossary_guid: str = None,
+        server: str ,
+        url: str ,
+        view_server: str ,
+        view_server_url: str,
+        integration_daemon: str,
+        integration_daemon_url: str,
+        engine_host: str,
+        engine_host_url: str,
+        admin_user: str ,
+        admin_user_password: str ,
+        userid: str ,
+        password: str ,
+        timeout: int ,
+        jupyter: bool ,
+        width: int ,
+        home_glossary_guid: str ,
+        glossary_path: str,
     ):
         self.metadata_store = server
         self.metadata_store_url = url
@@ -39,6 +40,6 @@ class Config(object):
         self.server = server
         self.url = url
         self.home_glossary_guid = home_glossary_guid
-
+        self.glossary_path = glossary_path
 
 pass_config = click.make_pass_decorator(Config)
