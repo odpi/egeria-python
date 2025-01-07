@@ -143,6 +143,10 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
+<<<<<<< HEAD
+=======
+
+>>>>>>> 20fca6d (Evaluating removing glossary guid default from commands and adding glossary_path.)
 @click.pass_context
 def cli(
     ctx,
@@ -162,7 +166,11 @@ def cli(
     jupyter,
     width,
     home_glossary_guid,
+<<<<<<< HEAD
     glossary_path,
+=======
+    glossary_path
+>>>>>>> 20fca6d (Evaluating removing glossary guid default from commands and adding glossary_path.)
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -629,27 +637,7 @@ tell_todo.add_command(delete_todo)
 tell_todo.add_command(create_todo)
 
 
-# @tell.group("survey")
-# @click.pass_context
-# def survey(ctx):
-#     """Refresh the specified integration connector or ALL connectors if not specified"""
-#     c = ctx.obj
-#     pass
 
-
-# @survey.command("survey-uc-server")
-# @click.pass_context
-# @click.option(
-#     "--uc_endpoint",
-#     default="https://localhost:8080",
-#     help="Endpoint of the Unity Catalog Server to Survey",
-# )
-# def survey_uc_server(ctx, uc_endpoint):
-#     """Survey the Unity Catalog server at the given endpoint"""
-#     c = ctx.obj
-#     pass
-#     # restart_connector(connector, c.integration_daemon, c.integration_daemon_url,
-#     #                   c.userid, c.password)
 
 
 if __name__ == "__main__":
