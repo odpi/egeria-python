@@ -42,5 +42,4 @@ class Config(object):
         self.home_glossary_guid = home_glossary_guid
         self.glossary_path = glossary_path
 
-
 pass_config = click.make_pass_decorator(Config)

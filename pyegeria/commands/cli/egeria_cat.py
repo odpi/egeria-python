@@ -143,10 +143,7 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
-<<<<<<< HEAD
-=======
 
->>>>>>> 20fca6d (Evaluating removing glossary guid default from commands and adding glossary_path.)
 @click.pass_context
 def cli(
     ctx,
@@ -166,11 +163,8 @@ def cli(
     jupyter,
     width,
     home_glossary_guid,
-<<<<<<< HEAD
     glossary_path,
-=======
-    glossary_path
->>>>>>> 20fca6d (Evaluating removing glossary guid default from commands and adding glossary_path.)
+   
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
