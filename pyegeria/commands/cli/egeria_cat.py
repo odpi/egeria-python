@@ -163,7 +163,7 @@ def cli(
     jupyter,
     width,
     home_glossary_guid,
-    glossary_path
+    glossary_path,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
