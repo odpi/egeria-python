@@ -127,7 +127,7 @@ def create_glossary(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.argument("glossary-guid", default=EGERIA_HOME_GLOSSARY_GUID)
+@click.argument("glossary-guid")
 def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     """Delete the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
@@ -164,7 +164,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     "--status",
     help="Status",
     type=click.Choice(
-        ["DRAFT", "ACTIVE", "DEPRACATED", "OBSOLETE", "OTHER"], case_sensitive=False
+        ["DRAFT", "ACTIVE", "DEPRECATED", "OBSOLETE", "OTHER"], case_sensitive=False
     ),
     default="DRAFT",
 )
@@ -329,7 +329,6 @@ def import_terms(
 @click.command("export-terms")
 @click.option(
     "--glossary_guid",
-    default=EGERIA_HOME_GLOSSARY_GUID,
     help="GUID of Glossary to export",
     required=True,
 )
