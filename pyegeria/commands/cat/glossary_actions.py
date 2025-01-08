@@ -164,7 +164,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     "--status",
     help="Status",
     type=click.Choice(
-        ["DRAFT", "ACTIVE", "DEPRACATED", "OBSOLETE", "OTHER"], case_sensitive=False
+        ["DRAFT", "ACTIVE", "DEPRECATED", "OBSOLETE", "OTHER"], case_sensitive=False
     ),
     default="DRAFT",
 )
