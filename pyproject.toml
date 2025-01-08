@@ -1,6 +1,8 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.0.1"
+
+version = "5.3.0.dev1"
+
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
 readme = "README.md"
@@ -27,21 +29,20 @@ packages = [
 #python = "^3.11" # 3.12 seemed to fail
 python = "^3.12.3"
 #python = "^3.13" Need to upgrade jupyter image
-httpx = "^0.27"
-rich = "^13"
-validators = "^0.32.0"
-urllib3 = "^2.2.2"
-requests = "^2.32.3"
+httpx = "*"
+rich = "*"
+validators = "*"
+urllib3 = "*"
+requests = "*"
 confluent-kafka = "^2.5.0"
 pytest = "^8.2.2"
-jupyter = "^1.0.0"
-click = "^8.1.7"
+jupyter = "*"
+click = "*"
 trogon = "^0.6.0"
-#textual-forms = "^0.3.0"
-textual = "^0.86"
-mermaid-py = "^0.5.3"
+textual = "*"
+mermaid-py = "*"
 psycopg2-binary = "^2.9.9"
-rich-pixels = "^3.0.1"
+
 
 [build-system]
 requires = ["poetry-core"]
