@@ -696,7 +696,7 @@ class Client:
         try:
             view_server = self.view_server
         except AttributeError:
-            view_server = os.environ.get("VIEW_SERVER", "view-server")
+            view_server = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
 
         if (not qualified_name) and display_name:
             if (tech_type) and (property_name == "qualifiedName"):

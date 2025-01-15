@@ -140,6 +140,11 @@ from pyegeria.commands.ops.list_archives import display_archive_list
     default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
     help="Glossary guid to use as the home glossary",
 )
+@click.option(
+    "--glossary_path",
+    default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
+    help="Path to glossary import/export files",
+)
 @click.pass_context
 def cli(
     ctx,
@@ -158,6 +163,8 @@ def cli(
     timeout,
     jupyter,
     width,
+    home_glossary_guid,
+    glossary_path,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -176,6 +183,8 @@ def cli(
         timeout,
         jupyter,
         width,
+        home_glossary_guid,
+        glossary_path
     )
     ctx.max_content_width = 200
     ctx.ensure_object(Config)
@@ -248,12 +257,17 @@ def show_startup_status(ctx):
         c.width,
     )
 
-
-@show_server.command("archives")
+@show.group("repository")
 @click.pass_context
-def list_archives(ctx):
-    """Display a list of archives"""
-    c = ctx.obj
+def show_repo(ctx):
+    """Group of commands to show repository information"""
+    pass
+
+
+@show_repo.command("archives")
+@click.pass_context
+def show_archives(ctx):
+    c= ctx.obj
     display_archive_list(
         c.view_server,
         c.view_server_url,
