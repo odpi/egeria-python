@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.0.dev"
+version = "5.3.1"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -33,7 +33,7 @@ rich = "*"
 validators = "*"
 urllib3 = "*"
 requests = "*"
-confluent-kafka = "^2.5.0"
+confluent-kafka = "*"
 pytest = "^8.2.2"
 jupyter = "*"
 click = "*"

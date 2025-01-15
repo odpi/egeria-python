@@ -32,11 +32,11 @@ from pyegeria._exceptions import (
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
 EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
     "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
 )
@@ -50,15 +50,15 @@ disable_ssl_warnings = True
 
 def display_integration_daemon_status(
     search_list: list[str] = ["*"],
-    integ_server: str = EGERIA_INTEGRATION_DAEMON,
-    integ_url: str = EGERIA_INTEGRATION_DAEMON_URL,
-    view_server: str = EGERIA_VIEW_SERVER,
-    view_url: str = EGERIA_VIEW_SERVER_URL,
-    user: str = EGERIA_USER,
-    user_pass: str = EGERIA_USER_PASSWORD,
+    integ_server: str = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
+    integ_url: str = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
+    view_server: str = os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
+    view_url: str = os.environ.get('EGERIA_VIEW_SERVER_URL', "https://localhost:9443"),
+    user: str = os.environ.get("EGERIA_USER"),
+    user_pass: str = os.environ.get("EGERIA_USER_PASSWORD"),
     paging: bool = False,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = os.environ.get("EGERIA_JUPYTER", "False"),
+    width: int = os.environ.get("EGERIA_WIDTH","150"),
     sort: bool = True,
 ) -> None:
     """Display the status of connectors running on the specified Integration Daemon OMAG Server.

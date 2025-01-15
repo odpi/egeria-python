@@ -1396,21 +1396,6 @@ def show_user_ids(ctx):
     )
 
 
-@show_server.command("archives")
-@click.pass_context
-def archives(ctx):
-    """Display a list of archivest"""
-    c = ctx.obj
-    display_archive_list(
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        False,
-        c.jupyter,
-        c.width,
-    )
-
 
 @deployed_data.command("deployed-servers")
 @click.option(
@@ -1537,6 +1522,26 @@ def show_ops(ctx):
     """Display an Egeria Object"""
     pass
 
+@show_ops.group("repository")
+@click.pass_context
+def show_repo(ctx):
+    """Group of commands to show repository information"""
+    pass
+
+
+@show_repo.command("archives")
+@click.pass_context
+def show_archives(ctx):
+    c= ctx.obj
+    display_archive_list(
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        False,
+        c.jupyter,
+        c.width,
+    )
 
 @show_ops.group("platforms")
 @click.pass_context
