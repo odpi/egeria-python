@@ -1809,7 +1809,7 @@ class ValidMetadataManager(Client):
         return resp.json().get("typeDefs", "No TypeDefs Found")
 
     def get_valid_classification_types(self, entity_type: str) -> list | str:
-        """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
+        """Returns all the TypeDefs for classifications that can be attached to the requested entity type.
                     Async version.
 
             Parameters

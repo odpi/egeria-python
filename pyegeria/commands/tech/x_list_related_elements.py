@@ -153,7 +153,7 @@ def main():
             "Enter the relationship to search",
             default="SpecificationPropertyAssignment",
         )
-        om_type = Prompt.ask("Enter an optional Open Metadata Type", default=None)
+        om_type = Prompt.ask("Enter an optional Open Metadata Type", default="Referenceable")
         display_related_elements(
             element_guid, relationship, om_type, server, url, userid, password
         )

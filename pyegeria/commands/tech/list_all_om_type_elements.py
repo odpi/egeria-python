@@ -1,4 +1,4 @@
-"""This creates a templates guid file from the core metadata archive"""
+"""This lists all elemeents of an oopen metadata type"""
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 import os
@@ -157,7 +157,7 @@ def main():
 
     try:
         om_type = Prompt.ask(
-            "Enter the Open Metadata Type to find elements of:", default="GlossaryTerm"
+            "Enter the Open Metadata Type to find elements of:", default="Referenceable"
         )
         list_elements(om_type, server, url, userid, password)
     except KeyboardInterrupt:

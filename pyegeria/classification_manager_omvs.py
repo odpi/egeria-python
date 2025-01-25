@@ -802,7 +802,7 @@ class ClassificationManager(Client):
     async def _async_get_element_guid_by_unique_name(
         self,
         name: str,
-        property_name: str = None,
+        property_name: str = 'qualifiedName',
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         effective_time: str = None,
@@ -816,7 +816,7 @@ class ClassificationManager(Client):
         ----------
         name: str
             - element name to be searched.
-        property_name: str, optional
+        property_name: str, optional, default = "qualifiedName"
             - optional name of property to search. If not specified, defaults to qualifiedName
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
@@ -873,7 +873,7 @@ class ClassificationManager(Client):
     def get_element_guid_by_unique_name(
         self,
         name: str,
-        property_name: str = None,
+        property_name: str = "qualifiedName",
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         effective_time: str = None,
@@ -887,7 +887,7 @@ class ClassificationManager(Client):
         ----------
         name: str
             - element name to be searched.
-        property_name: str, optional
+        property_name: str, optional, default = "qualifiedName"
             - optional name of property to search. If not specified, defaults to qualifiedName
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
