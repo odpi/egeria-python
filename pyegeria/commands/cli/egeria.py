@@ -1757,7 +1757,7 @@ def engine_host(ctx):
 )
 
 @click.pass_context
-def gov_eng_status(ctx, engine_list, engine_host, list):
+def gov_eng_status(ctx, engine_list, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(

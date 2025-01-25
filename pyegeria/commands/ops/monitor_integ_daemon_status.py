@@ -150,7 +150,7 @@ def display_integration_daemon_status(
             connector_guid = connector.get("connectorGUID", "---")
             last_refresh_time = connector.get("lastRefreshTime", "---")[:-10]
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
-            exception_msg = " "
+            exception_msg = connector.get("failingExceptionMessage", " ")
             if connector_guid != "---":
                 targets = s_client.get_catalog_targets(connector_guid)
                 tgt_tab = Table()

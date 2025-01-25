@@ -81,7 +81,7 @@ class TestPlatform:
                 "active-metadata-server",
                 "https://localhost:9443",
                 "garygeeke",
-                "nothing",
+                "secret",
                 does_not_raise(),
             ),
             # (

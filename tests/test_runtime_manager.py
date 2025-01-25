@@ -47,13 +47,13 @@ class TestRuntimeManager:
     bad_user_2 = ""
 
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "laz_kv"
+    good_server_2 = "qs-metadata-store"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
 
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "cocoView1"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -78,7 +78,7 @@ class TestRuntimeManager:
             # ),
             (
                 None,
-                "Integration Daemon:integration-daemon",
+                "Integration Daemon:qs-integration-daemon",
                 "qualifiedName",
                 None,
                 "Integration Daemon",
@@ -117,7 +117,7 @@ class TestRuntimeManager:
         console = Console()
         with expectation as excinfo:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -424,13 +424,14 @@ class TestRuntimeManager:
     def test_get_server_report(self):
         try:
             r_client = EgeriaTech(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
-                user_id=self.good_user_1,
+                user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            name = "integration-daemon"
+            name = "qs-integration-daemon"
+
             start_time = time.perf_counter()
             server_guid = None
             print(f"\n\tServer GUID is {server_guid}")
