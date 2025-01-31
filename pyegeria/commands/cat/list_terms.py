@@ -218,9 +218,11 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    # server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    server = args.server if args.server is not None else 'qs-view-server'
+
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else EGERIA_USER
+    userid = args.userid if args.userid is not None else 'EGERIA_USER'
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = args.guid if args.guid is not None else EGERIA_HOME_GLOSSARY_GUID
 

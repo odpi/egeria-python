@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-Retrieve elements based on a search of a specified properties.
+Retrieve anchored elements based on a search of a specified properties.
 """
 import argparse
 import os
@@ -45,7 +45,7 @@ disable_ssl_warnings = True
 
 
 def display_anchored_elements(
-    search_string: str,
+    property_value: str,
     prop_list: list[str],
     server: str,
     url: str,
@@ -56,19 +56,19 @@ def display_anchored_elements(
     width: int = EGERIA_WIDTH,
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
-    if (search_string is None) or (len(search_string) < 3):
+    if (property_value is None) or (len(property_value) < 3):
         print(
             "\nError --> Invalid Search String - must be greater than four characters long"
         )
         sys.exit(3)
     g_client = EgeriaTech(server, url, username, user_password)
     token = g_client.create_egeria_bearer_token()
-    print(f"search string is {search_string} and prop_list is {prop_list}\n")
+    print(f"search value is {property_value} and prop_list is {prop_list}\n")
 
-    def generate_table(search_string: str, prop_list: [str]) -> Table:
+    def generate_table(property_value: str, prop_list: [str]) -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Elements containing the string  {search_string} @ {time.asctime()}",
+            title=f"Elements containing the string  {property_value} @ {time.asctime()}",
             header_style="white on dark_blue",
             style="bold white on black",
             row_styles=["bold white on black"],
@@ -88,7 +88,7 @@ def display_anchored_elements(
 
         classification = "Anchors"
         open_type_name = None
-        property_value = search_string
+        property_value = property_value
 
         property_names = prop_list
 
@@ -150,7 +150,7 @@ def display_anchored_elements(
 
     try:
         with console.pager(styles=True):
-            console.print(generate_table(search_string, prop_list), soft_wrap=True)
+            console.print(generate_table(property_value, prop_list), soft_wrap=True)
 
     except (
         InvalidParameterException,
@@ -183,19 +183,19 @@ def main():
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     time_out = args.time_out if args.time_out is not None else 60
     try:
-        search_string = Prompt.ask("Enter an property search string:", default="")
+        property_value = Prompt.ask("Enter an property search string:", default="")
         prop_list = Prompt.ask(
             "Enter the list of properties to search", default="anchorTypeName"
         )
-        if search_string == "":
+        if property_value == "":
             print("\nError --> Search string can't be empty")
             sys.exit(1)
-        elif len(search_string) <= 4:
+        elif len(property_value) <= 4:
             print("\nError --> Search string must be greater than four characters long")
             sys.exit(2)
         else:
             display_anchored_elements(
-                search_string, [prop_list], server, url, userid, user_pass, time_out
+                property_value, [prop_list], server, url, userid, user_pass, time_out
             )
     except KeyboardInterrupt:
         pass

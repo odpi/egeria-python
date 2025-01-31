@@ -47,7 +47,7 @@ from pyegeria.server_operations import ServerOps
 
 class TestPlatform:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://egeria.pdr-associates.com:7443"
+    good_platform2_url = "https://localhost:8443"
     good_platform3_url = "https://egeria.pdr-associates.com:9443"
     bad_platform1_url = "https://localhost:9443"
 
@@ -81,7 +81,7 @@ class TestPlatform:
                 "active-metadata-server",
                 "https://localhost:9443",
                 "garygeeke",
-                "nothing",
+                "secret",
                 does_not_raise(),
             ),
             # (
@@ -177,9 +177,9 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_get_known_servers(self, server: str = good_server_2):
+    def test_get_known_servers(self, server: str = good_server_3):
         try:
-            p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            p_client = Platform(server, self.good_platform2_url, self.good_user_1)
             response = p_client.get_known_servers()
             print(f"\n\n\t response = {response}")
             assert len(response) > 0, "Empty server list"

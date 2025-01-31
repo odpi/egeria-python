@@ -51,7 +51,7 @@ class TestValidMetadataOMVs:
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -353,7 +353,7 @@ class TestValidMetadataOMVs:
     def test_get_valid_classification_types(self):
         try:
             m_client = ValidMetadataManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
@@ -388,13 +388,13 @@ class TestValidMetadataOMVs:
     def test_get_typedef_by_name(self):
         try:
             m_client = ValidMetadataManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            entity_type = "Catalog"
+            entity_type = "Anchors"
 
             response = m_client.get_typedef_by_name(entity_type)
             duration = time.perf_counter() - start_time

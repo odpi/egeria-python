@@ -292,21 +292,17 @@ def engine_host(ctx):
     default="*",
     help="Enter the list of connectors you are interested in or ['*'] for all",
 )
-@click.option(
-    "--engine-host",
-    default="engine-host",
-    help="Name of the Engine Host to get status for",
-)
+
 @click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
 @click.pass_context
-def gov_eng_status(ctx, engine_list, engine_host, list):
+def gov_eng_status(ctx, engine_list, list):
     """Display engine-host status information"""
     c = ctx.obj
     display_gov_eng_status(
         [engine_list],
-        engine_host=engine_host,
+        engine_host=c.engine_host,
         view_server=c.view_server,
         url=c.view_server_url,
         username=c.userid,

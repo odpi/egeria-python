@@ -20,45 +20,29 @@ from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.tech.get_guid_info import display_guid
 from pyegeria.commands.tech.get_tech_details import tech_details_viewer
 from pyegeria.commands.tech.list_asset_types import display_asset_types
-from pyegeria.commands.tech.list_elements_x import list_elements_x
 from pyegeria.commands.tech.list_registered_services import display_registered_svcs
 from pyegeria.commands.tech.list_relationship_types import display_relationship_types
 from pyegeria.commands.tech.list_tech_templates import display_templates_spec
 from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
-from pyegeria.commands.tech.get_tech_type_template import template_viewer
 from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
-from pyegeria.commands.tech.list_elements import list_elements
+from pyegeria.commands.tech.list_all_om_type_elements import list_elements
+from pyegeria.commands.tech.list_all_om_type_elements_x import list_elements_x
+from pyegeria.commands.tech.list_elements_by_classification_by_property_value import find_elements_by_classification_by_prop_value
+from pyegeria.commands.tech.list_elements_by_property_value import find_elements_by_prop_value
+from pyegeria.commands.tech.list_elements_by_property_value_x import find_elements_by_prop_value_x
+from pyegeria.commands.tech.list_related_elements_with_prop_value import list_related_elements_with_prop_value
 
 from pyegeria.commands.tech.get_element_info import display_elements
 from pyegeria.commands.tech.list_related_specification import (
     display_related_specification,
 )
-from pyegeria.commands.tech.list_related_elements import list_related_elements
+from pyegeria.commands.tech.list_all_related_elements import list_related_elements
 from pyegeria.commands.tech.list_elements_for_classification import (
     list_classified_elements,
 )
 from pyegeria.commands.tech.list_gov_action_processes import display_gov_processes
 from pyegeria.commands.tech.get_tech_type_template import template_viewer
 
-# from pyegeria import ServerOps
-
-
-# class Config(object):
-#     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
-#                  timeout:int = 30, paging: bool = False):
-#         self.server = server
-#         self.url = url
-#         self.userid = userid
-#         self.password = password
-#         self.timeout = timeout
-#         self.paging = paging
-#
-#
-# pass_config = click.make_pass_decorator(Config)
-
-
-# @tui
-# @tui('menu', 'menu', 'A textual command line interface')
 @tui()
 @click.version_option("0.0.1", prog_name="egeria_ops")
 @click.group()
@@ -229,6 +213,227 @@ def show_guid_info(ctx, guid):
     display_guid(guid, c.server, c.url, c.userid, c.password, c.jupyter, c.width)
 
 
+@show_elements.command("anchored_elements")
+@click.pass_context
+@click.option(
+    "--property_value",
+    default="DeployedDatabaseSchema",
+    help="value we are searching for",
+)
+@click.option(
+    "--prop-list",
+    default="anchorTypeName",
+    help="List of properties we are searching",
+)
+def list_anchored_elements(ctx, property_value: str, prop_list: str):
+    """List anchored elements with the specified properties"""
+    c = ctx.obj
+    if type(prop_list) is str:
+        property_names = prop_list.split(",")
+    elif type(prop_list) is list:
+        property_names = prop_list
+    else:
+        property_names = []
+        print(f"\nError --> Invalid property list - must be a string or list")
+        sys.exit(4)
+    display_anchored_elements(
+        property_value,
+        [prop_list],
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.timeout,
+        c.jupyter,
+        c.width,
+    )
+
+@show_elements.command("elements-by-classification")
+@click.option(
+    "--om-type",
+    default="Referenceable",
+    help="Open Metadata type to filter by",
+)
+@click.option(
+    "--classification",
+    default="GovernanceProject",
+    help="Classification to filter byt",
+)
+@click.pass_context
+def show_elements_by_classification(ctx, om_type, classification):
+    """Show elements by classification"""
+    c = ctx.obj
+    list_classified_elements(
+        om_type,
+        classification,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+@show_elements.command("elements-by-classification-by-prop-value")
+@click.option(
+    "--classification",
+    default="GovernanceProject",
+    help="Classification to filter by",
+    )
+@click.option(
+    "--property_value",
+    help="Property value to filter by",
+)
+@click.option(
+    "--property_names",
+    help="List of properties to search by",
+)
+@click.option(
+    "--om-type",
+    default="Referenceable",
+    help="Open Metadata type to filter by",
+)
+@click.pass_context
+def show_elements_by_classification_by_prop(ctx,  classification, property_value, property_names, om_type):
+    """Show elements by classification and property value"""
+    c = ctx.obj
+    find_elements_by_classification_by_prop_value(
+        om_type,
+        classification,
+        property_value,
+        [property_names],
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+@show_elements.command("elements-by-prop-value")
+@click.option(
+    "--property_value",
+    help="Property value to filter by",
+)
+@click.option(
+    "--property_names",
+    help="List of properties to search by",
+)
+@click.option(
+    "--om-type",
+    default="Referenceable",
+    help="Open Metadata type to filter by",
+)
+@click.option(
+    "--extended",
+    is_flag=True,
+    default=False,
+    help="If True, feedback information is displayed",
+)
+@click.pass_context
+def show_elements_by_classification_by_prop(ctx,property_value, property_names, om_type, extended):
+    """Show elements by classification and property value"""
+    c = ctx.obj
+    if extended:
+        find_elements_by_prop_value_x(
+            om_type,
+            property_value,
+            [property_names],
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+        )
+    else:
+        find_elements_by_prop_value(
+            om_type,
+            property_value,
+            [property_names],
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width,
+            )
+
+@show_elements.command("related-elements")
+@click.option(
+    "--element-guid",
+    help="GUID of the Element to navigate from.",
+)
+@click.option(
+    "--om-type",
+    default="Referenceable",
+    help="Open metadata type to filter by.",
+)
+@click.option(
+    "--rel-type",
+    default="Certification",
+    help="Relationship type to follow.",
+)
+@click.pass_context
+def show_related_elements(ctx, element_guid, om_type, rel_type):
+    """Show all elements related to specified guid"""
+    c = ctx.obj
+    list_related_elements(
+        element_guid,
+        om_type,
+        rel_type,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_elements.command("related-elements_by_prop")
+@click.option(
+    "--element-guid",
+    help="GUID of the Element to navigate from.",
+)
+@click.option(
+    "--rel-type",
+    default="Certification",
+    help="Relationship type to follow.",
+)
+@click.option(
+    "--property_value",
+    help="Property value to filter by",
+)
+@click.option(
+    "--property_names",
+    help="List of properties to search by",
+)
+@click.option(
+    "--om-type",
+    default="Referenceable",
+    help="Open metadata type to filter by.",
+)
+
+@click.pass_context
+def show_related_elements(ctx, element_guid, rel_type, property_value, property_names, om_type):
+    """Show elements related to specified guid and property value"""
+    c = ctx.obj
+    list_related_elements_with_prop_value(
+        element_guid,
+        rel_type,
+        property_value,
+        [property_names],
+        om_type,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
 @show_elements.command("related-specifications")
 @click.pass_context
 @click.argument("element-guid")
@@ -241,44 +446,6 @@ def show_related_specifications(ctx, element_guid):
         c.view_server_url,
         c.userid,
         c.password,
-        c.jupyter,
-        c.width,
-    )
-
-
-@show_elements.command("anchored-elements")
-@click.pass_context
-@click.option(
-    "--search-string",
-    default="SoftwareCapability",
-    help="value we are searching for",
-)
-@click.option(
-    "--prop-list",
-    default="anchorDomainName",
-    help="List of properties we are searching",
-)
-def list_anchored_elements(ctx, search_string: str, prop_list: str):
-    """List elements with the specified properties"""
-    c = ctx.obj
-    # put guards around this to make it a list?
-    if type(prop_list) is str:
-        property_names = prop_list.split(",")
-    elif type(prop_list) is list:
-        property_names = prop_list
-    else:
-        property_names = []
-        print(f"\nError --> Invalid property list - must be a string or list")
-        sys.exit(4)
-
-    display_anchored_elements(
-        search_string,
-        property_names,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.timeout,
         c.jupyter,
         c.width,
     )
@@ -391,7 +558,7 @@ def show_registered_services(ctx, services):
 @show_info.command("relationship-types")
 @click.option(
     "--om-type",
-    default="AssetOwner",
+    default="Referenceable",
     help="Relationship type to get information about",
 )
 @click.pass_context
@@ -410,63 +577,6 @@ def show_relationship_types(ctx, rel_type):
     )
 
 
-@show_elements.command("elements-by-classification")
-@click.option(
-    "--om-type",
-    default="Project",
-    help="Open Metadata type to filter by",
-)
-@click.option(
-    "--classification",
-    default="GovernanceProject",
-    help="Classification to filter byt",
-)
-@click.pass_context
-def show_elements_by_classification(ctx, om_type, classification):
-    """Show elements by classification"""
-    c = ctx.obj
-    list_classified_elements(
-        om_type,
-        classification,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
-
-
-@show_elements.command("related-elements")
-@click.option(
-    "--element-guid",
-    help="GUID of the Element to navigate from.",
-)
-@click.option(
-    "--om-type",
-    default="Project",
-    help="Open metadata type to filter by.",
-)
-@click.option(
-    "--rel-type",
-    default="Certification",
-    help="Relationship type to follow.",
-)
-@click.pass_context
-def show_related_elements(ctx, element_guid, om_type, rel_type):
-    """Show information about related elements"""
-    c = ctx.obj
-    list_related_elements(
-        element_guid,
-        om_type,
-        rel_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
 
 
 @show_tech.command("tech-templates")
@@ -544,44 +654,12 @@ def valid_metadata_values(ctx, property, type_name):
     )
 
 
-@show_elements.command("elements")
-@click.pass_context
-@click.option(
-    "--extended",
-    is_flag=True,
-    default=False,
-    help="If True, feedback information is displayed",
-)
-@click.option("--om_type", default="Organization", help="Metadata type to query")
-def list_element_info(ctx, om_type, extended):
-    """Display elements of a specific Open Metadata Type"""
-    c = ctx.obj
-    if extended:
-        list_elements_x(
-            om_type,
-            c.view_server,
-            c.view_server_url,
-            c.userid,
-            c.password,
-            c.jupyter,
-            c.width,
-        )
-    else:
-        list_elements(
-            om_type,
-            c.view_server,
-            c.view_server_url,
-            c.userid,
-            c.password,
-            c.jupyter,
-            c.width,
-        )
 
 
 @show_info.command("processes")
 @click.pass_context
 def list_element_info(ctx):
-    """Display the valid metadata values for a property and type"""
+    """Display processes"""
     c = ctx.obj
     list_elements(
         "GovernanceActionProcess",
@@ -596,9 +674,9 @@ def list_element_info(ctx):
 
 @show_elements.command("get-elements")
 @click.pass_context
-@click.option("--om_type", default="Project", help="Metadata type to query")
+@click.option("--om_type", default="Referenceable", help="Metadata type to query")
 def get_element_info(ctx, om_type):
-    """Display the elements for an Open Metadata Type"""
+    """Display graph of elements for an Open Metadata Type"""
     c = ctx.obj
     display_elements(
         om_type,
@@ -610,6 +688,38 @@ def get_element_info(ctx, om_type):
         c.width,
     )
 
+@show_elements.command("elements")
+@click.pass_context
+@click.option(
+    "--extended",
+    is_flag=True,
+    default=False,
+    help="If True, feedback information is displayed",
+)
+@click.option("--om_type", default="Referenceable", help="Metadata type to query")
+def list_all_om_type_elements(ctx, om_type, extended):
+    """Display all elements of a specific Open Metadata Type"""
+    c = ctx.obj
+    if extended:
+        list_elements_x(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width
+        )
+    else:
+        list_elements(
+            om_type,
+            c.view_server,
+            c.view_server_url,
+            c.userid,
+            c.password,
+            c.jupyter,
+            c.width
+        )
 
 #
 #  Tell

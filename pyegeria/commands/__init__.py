@@ -20,3 +20,9 @@ from .cat.list_terms import display_glossary_terms
 from .cat.list_deployed_catalogs import list_deployed_catalogs
 from .cat.list_deployed_database_schemas import list_deployed_database_schemas
 from .cat.list_deployed_databases import list_deployed_databases
+from .tech.list_elements_by_property_value import EGERIA_WIDTH
+
+
+def list_integration_daemon_status(search_list:str, width:int=EGERIA_WIDTH, sort:bool = True):
+    table_integ_daemon_status(search_list = search_list, paging=True,
+                              width=width, sort=sort)

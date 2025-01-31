@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.1"
+version = "5.3.3.7"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -130,10 +130,16 @@ pytest = "^8.2.2"
     list_relationship_types = "pyegeria.commands.tech.list_relationship_types:main"
     list_tech_templates = "pyegeria.commands.tech.list_tech_templates:main"
     get_element_info = "pyegeria.commands.tech.get_element_info:main"
-    list_elements = "pyegeria.commands.tech.list_elements:main"
+    list_elements = "pyegeria.commands.tech.list_all_om_type_elements:main"
+    list_elements_x = "pyegeria.commands.tech.list_all_om_type_elements_x:main"
+    list_elements_by_classification_by_prop_value = "pyegeria.commands.tech.list_elements_by_classification_by_property_value:main"
+    list_elements_by_prop_value = "pyegeria.commands.tech.list_elements_by_property_value:main"
+    list_elements_by_prop_value_x = "pyegeria.commands.tech.list_elements_by_property_value_x:main"
     list_related_specification = "pyegeria.commands.tech.list_related_specification:main"
     list_elements_for_classification = "pyegeria.commands.tech.list_elements_for_classification:main"
-    list_related_elements = "pyegeria.commands.tech.list_related_elements:main"
+    list_all_related_elements = "pyegeria.commands.tech.list_all_related_elements:main"
+    list_related_elements_with_prop_value = "pyegeria.commands.tech.list_related_elements_with_prop_value:main"
+
     get_tech_type_template = "pyegeria.commands.tech.get_tech_type_template:main"
     list_relationships = "pyegeria.commands.tech.list_relationships:main"
 

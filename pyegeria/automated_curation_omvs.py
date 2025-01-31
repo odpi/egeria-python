@@ -1997,7 +1997,7 @@ class AutomatedCuration(Client):
             datetime.datetime.now() if start_time is None else start_time
         )
 
-        url = f"{self.curation_command_root}/governance-action-processes/" f"initiate"
+        url = f"{self.curation_command_root}/governance-action-processes/initiate"
         body = {
             "class": "GovernanceActionProcessRequestBody",
             "processQualifiedName": action_type_qualified_name,

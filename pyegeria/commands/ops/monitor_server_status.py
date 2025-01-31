@@ -50,10 +50,10 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 def display_status(
     extended: bool,
-    view_server: str,
-    url: str,
-    username: str,
-    user_pass: str,
+    view_server: str = EGERIA_VIEW_SERVER,
+    url: str = EGERIA_VIEW_SERVER_URL,
+    username:str = EGERIA_USER,
+    user_pass: str= EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
@@ -172,7 +172,7 @@ def main():
     full = args.full if args.full is not None else False
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
+    userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     display_status(full, server, url, userid, user_pass)

@@ -35,7 +35,7 @@ from pyegeria.classification_manager_omvs import ClassificationManager
 disable_ssl_warnings = True
 
 platform_url = "https://localhost:9443"
-view_server = "view-server"
+view_server = "qs-view-server"
 
 # c_client = ClassificationManager(view_server, platform_url)
 
@@ -72,7 +72,8 @@ def valid_guid(guid):
 def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
     #
-    open_metadata_type_name = "DeployedDatabaseSchema"
+    # open_metadata_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = "ArchiveFile"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -136,10 +137,13 @@ def test_find_elements_by_property_value():
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
     # open_metadata_type_name = None
-    open_metadata_type_name = "Asset"
+    # open_metadata_type_name = "ArchiveFile"
+    open_metadata_type_name = "Person"
     # open_metadata_type_name = None
+    # property_names = ["name"]
+    # property_value = "Set up new clinical trial"
     property_names = ["name"]
-    property_value = "Set up new clinical trial"
+    property_value = ("Rob")
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -360,7 +364,7 @@ def test_find_elements_by_classification_with_property_value():
     classification = "Anchors"
     # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
-    property_value = "SoftwareCapability"
+    property_value = "Asset"
     property_names = ["anchorDomainName"]
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -410,8 +414,6 @@ def test_get_all_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
-    # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
-    element_guid = "41bc6c53-effe-4dd4-9fef-ee8d86fa6b42"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name
@@ -432,9 +434,9 @@ def test_get_related_elements():
     # open_metadata_type_name = "Organization"
     # open_metadata_type_name = "CSVFile"
     open_metadata_type_name = None
-    element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
+    # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    relationship_type = "ReferenceableFacet"
+    # relationship_type = "ReferenceableFacet"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -495,10 +497,10 @@ def test_get_related_elements_with_property_value():
 def test_find_related_elements_with_property_value():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
-    # property_value = 'Clinical Trials Management'
-    # property_names = ["name", "qualifiedName"]
-    property_value = "Partner"
-    property_names = ["teamType"]
+    property_value = 'Clinical Trials Management'
+    property_names = ["name", "qualifiedName"]
+    # property_value = "Partner"
+    # property_names = ["teamType"]
 
     c_client = ClassificationManager(view_server, platform_url)
 
