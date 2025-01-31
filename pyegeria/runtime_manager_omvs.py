@@ -53,7 +53,8 @@ class RuntimeManager(Client):
         self.time_out = time_out
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.runtime_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
-        self.platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"  # this is platform @ 9443 from the core content archive
+        # self.platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"  # this is platform @ 9443 from the core content archive
+        self.platform_guid = None
         self.default_platform_name = (
             "Default Local OMAG Server Platform"  # this from the core content archive
         )

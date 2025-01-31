@@ -38,7 +38,7 @@ console = Console()
 
 class TestRuntimeManager:
     good_platform1_url = "https://localhost:9443"
-    good_platform2_url = "https://localhost:9444"
+    good_platform2_url = "https://localhost:8443"
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
@@ -216,7 +216,7 @@ class TestRuntimeManager:
         try:
             r_client = RuntimeManager(
                 self.good_view_server_1,
-                self.good_platform1_url,
+                self.good_platform2_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )

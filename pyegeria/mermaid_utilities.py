@@ -42,13 +42,34 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
+# Check Mermaid.js version
+def check_mermaid_version():
+    """Check the version of Mermaid.js loaded in Jupyter Notebook"""
+    display(HTML("""
+    <script>
+        function checkMermaid() {
+            if (window.mermaid && typeof window.mermaid.version !== "undefined") {
+                console.log("Mermaid.js version:", mermaid.version);
+                alert("Mermaid.js version: " + mermaid.version);
+            } else {
+                console.warn("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
+                alert("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
+            }
+        }
+        // Delay execution to ensure Mermaid.js has had time to load
+        setTimeout(checkMermaid, 1000);
+    </script>
+    """))
+
+# another site to get mermaid from is "https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js";
+
 def load_mermaid():
     """Inject Mermaid.js library"""
     mermaid_js = """
     <script type="text/javascript">
         if (!window.mermaid) {
             var mermaidScript = document.createElement('script');
-            mermaidScript.src = "https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js";
+            mermaidScript.src = https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"
             document.head.appendChild(mermaidScript);
         }
     </script>
