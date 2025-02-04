@@ -48,7 +48,7 @@ def valid_guid(guid):
 class TestMetadataExplorer:
     good_view_server_1 = "view-server"
     platform_url = "https://localhost:9443"
-    view_server = "view-server"
+    view_server = "qs-view-server"
     user = "erinoverview"
     password = "secret"
 
@@ -119,7 +119,8 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_graph(self):
-        guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
         # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
         # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
         # guid = "f28a154b-ecdc-49b1-bfac-29da9d44fb99"
@@ -128,7 +129,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_graph(guid)
+            response = m_client.get_anchored_metadata_element_graph(guid, mermaid_only=False)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -337,7 +338,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements2(self):
-        guid = "929ea364-cead-456d-b9f1-1016202196ed"
+        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
         # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
         body = {
             "class": "ResultsRequestBody",
@@ -353,7 +354,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_all_related_metadata_elements(guid, body)
+            response = m_client.get_all_related_metadata_elements(guid, body, mermaid_only=True)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

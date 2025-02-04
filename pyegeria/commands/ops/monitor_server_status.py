@@ -139,13 +139,16 @@ def display_status(
                         "[red]Inactive" "" if status == "Inactive" else "[green]Active",
                         # server_status,
                     )
-        # p_client.close_session()
+        p_client.refresh_egeria_bearer_token()
         return table
 
     try:
-        with Live(generate_table(), refresh_per_second=4, screen=True) as live:
+        # with Live(generate_table(), refresh_per_second=1, screen=True) as live:
+        print(f" Started at {time.asctime()} \n")
+        with Live(generate_table(), refresh_per_second=4, screen=True, transient=True) as live:
+
             while True:
-                time.sleep(2)
+                time.sleep(5)
                 live.update(generate_table())
 
     except (

@@ -90,16 +90,16 @@ def display_glossary_terms(
         style="bold bright_white on black", width=width, force_terminal=not jupyter
     )
     g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
-    token = g_client.create_egeria_bearer_token()
+    token = g_client.create_egeria_bearer_token(user_id, user_pass)
     if (glossary_name is not None) and (glossary_name != "*"):
         glossary_guid = g_client.get_guid_for_name(glossary_name)
-        if glossary_guid == "No elements found":
+        if glossary_guid == "Glossary guid not found":
             console.print(
                 f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
             )
-            sys.exit(0)
+            sys.exit(1)
 
-    def generate_table(search_string: str, glossary_guid: str = None) -> Table:
+    def generate_table(search_string: str, glossary_guid: str) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Glossary Definitions for Terms like  {search_string} @ {time.asctime()}",
@@ -133,7 +133,7 @@ def display_glossary_terms(
         )
 
         if type(terms) is str:
-            print(f"No terms found!")
+            print(f"No terms found! - {search_string} : {glossary_guid} ")
             sys.exit(0)
         sorted_terms = sorted(
             terms, key=lambda k: k["glossaryTermProperties"]["displayName"]
@@ -219,10 +219,10 @@ def main():
     args = parser.parse_args()
 
     # server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    server = args.server if args.server is not None else 'qs-view-server'
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
 
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else 'EGERIA_USER'
+    userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = args.guid if args.guid is not None else EGERIA_HOME_GLOSSARY_GUID
 
@@ -233,7 +233,8 @@ def main():
             default="*",
         )
         display_glossary_terms(
-            search_string, guid, glossary_name, server, url, userid, user_pass
+            search_string, guid, glossary_name, server, url,
+            userid, user_pass
         )
 
     except KeyboardInterrupt:

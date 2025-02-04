@@ -40,40 +40,58 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-
+EGERIA_MERMAID_FOLDER = os.environ.get("EGERIA_MERMAID_FOLDER", "./work/mermaid_graphs")
 
 # Check Mermaid.js version
-def check_mermaid_version():
-    """Check the version of Mermaid.js loaded in Jupyter Notebook"""
-    display(HTML("""
-    <script>
-        function checkMermaid() {
-            if (window.mermaid && typeof window.mermaid.version !== "undefined") {
-                console.log("Mermaid.js version:", mermaid.version);
-                alert("Mermaid.js version: " + mermaid.version);
-            } else {
-                console.warn("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
-                alert("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
-            }
-        }
-        // Delay execution to ensure Mermaid.js has had time to load
-        setTimeout(checkMermaid, 1000);
-    </script>
-    """))
+# def check_mermaid_version():
+#     """Check the version of Mermaid.js loaded in Jupyter Notebook"""
+#     display(HTML("""
+#     <script>
+#         function checkMermaid() {
+#             if (window.mermaid && typeof window.mermaid.version !== "undefined") {
+#                 console.log("Mermaid.js version:", mermaid.version);
+#                 alert("Mermaid.js version: " + mermaid.version);
+#             } else {
+#                 console.warn("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
+#                 alert("Mermaid.js is not loaded yet. Please ensure it's properly injected.");
+#             }
+#         }
+#         // Delay execution to ensure Mermaid.js has had time to load
+#         setTimeout(checkMermaid, 1000);
+#     </script>
+#     """))
 
 # another site to get mermaid from is "https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js";
-
+# below was:
+#<script src="https://unpkg.com/mermaid@11.4.0/dist/mermaid.min.js"></script>
+# <script type="text/javascript">
+    #     if (!window.mermaid) {
+    #         var mermaidScript = document.createElement('script');
+    #         mermaidScript.src = https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"
+    #         document.head.appendChild(mermaidScript);
+    #     }
+    # </script>
 def load_mermaid():
     """Inject Mermaid.js library"""
+    # Alternative CDN URL via unpkg
     mermaid_js = """
-    <script type="text/javascript">
-        if (!window.mermaid) {
-            var mermaidScript = document.createElement('script');
-            mermaidScript.src = https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"
-            document.head.appendChild(mermaidScript);
-        }
+    <script src="https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({startOnLoad: true});
+        });
     </script>
+
     """
+    # mermaid_js = """
+    # <script src="https://unpkg.com/mermaid@11.4.0/dist/mermaid.min.js"></script>
+    # <script>
+    #     document.addEventListener('DOMContentLoaded', function() {{
+    #     mermaid.initialize({{"startOnLoad": true}});
+    #     }});
+    # </script>
+    #
+    # """
     display(HTML(mermaid_js))
 
 
@@ -91,6 +109,36 @@ def render_mermaid(mermaid_code):
     </script>
     """
     display(HTML(mermaid_html))
+
+def save_mermaid_graph(title, mermaid_code, folder:str = EGERIA_MERMAID_FOLDER):
+    """Save a Mermaid diagram to a file"""
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    mermaid_file = os.path.join(folder, title + ".mmd")
+    mermaid_code = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="mermaid">
+    {mermaid_code}
+  </div>
+""" \
++ \
+"""
+  <script>
+    mermaid.initialize({startOnLoad:true});
+  </script>
+</body>
+</html>
+"""
+
+    with open(mermaid_file, "w") as f:
+        f.write(mermaid_code)
+    return mermaid_file
+
 
 
 def generate_process_graph(

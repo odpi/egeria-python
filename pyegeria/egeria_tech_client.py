@@ -24,7 +24,8 @@ from pyegeria import (
     TEMPLATE_GUIDS,
     INTEGRATION_GUIDS,
     MetadataExplorer,
-)
+    SolutionArchitect,
+    )
 
 
 class EgeriaTech(
@@ -36,6 +37,7 @@ class EgeriaTech(
     RuntimeManager,
     ValidMetadataManager,
     MetadataExplorer,
+    SolutionArchitect,
 ):
     """
     Client for technical Egeria users.
@@ -87,7 +89,9 @@ class EgeriaTech(
         MetadataExplorer.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
-
+        SolutionArchitect.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
 
 if __name__ == "__main__":
     print("Main-Tech Client")

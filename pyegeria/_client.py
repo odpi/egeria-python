@@ -10,6 +10,8 @@ import asyncio
 import inspect
 import json
 import os
+from datetime import datetime
+
 from pyegeria import body_slimmer
 import httpx
 from httpx import AsyncClient, Response
@@ -469,7 +471,7 @@ class Client:
                 msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
                     "message_template"
                 ].format(
-                    str(response.status_code),
+                    str(response.status_code) + " " + datetime.now().strftime("%H: %M: %S") ,
                     caller_method,
                     class_name,
                     endpoint,

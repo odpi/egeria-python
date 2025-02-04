@@ -73,7 +73,7 @@ def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
     #
     # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "ArchiveFile"
+    open_metadata_type_name = "InformationSupplyChain"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -138,12 +138,12 @@ def test_find_elements_by_property_value():
     # open_metadata_type_name = "ValidValueDefinition"
     # open_metadata_type_name = None
     # open_metadata_type_name = "ArchiveFile"
-    open_metadata_type_name = "Person"
+    open_metadata_type_name = "InformationSupplyChain"
     # open_metadata_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
-    property_names = ["name"]
-    property_value = ("Rob")
+    property_names = ["displayName"]
+    property_value = ("Clinical")
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -322,11 +322,11 @@ def test_get_elements_by_classification():
 
 def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
-    open_metadata_type_name = None
+    open_metadata_type_name = "InformationSupplyChain"
     classification = "Anchors"
     # property_value = "Collection"
     # property_names = ["anchorTypeName"]
-    property_value = "DeployedDatabaseSchema"
+    property_value = "InformationSupplyChain"
     property_names = ["anchorTypeName"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -364,8 +364,8 @@ def test_find_elements_by_classification_with_property_value():
     classification = "Anchors"
     # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
-    property_value = "Asset"
-    property_names = ["anchorDomainName"]
+    property_value = "Clinical Trial Treatment Validation"
+    property_names = ["displayName"]
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -430,13 +430,14 @@ def test_get_all_related_elements():
 
 def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
-
+    element_guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
     # open_metadata_type_name = "Organization"
     # open_metadata_type_name = "CSVFile"
-    open_metadata_type_name = None
+    open_metadata_type_name = "InformationSupplyChain"
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
     # relationship_type = "ReferenceableFacet"
+    relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
