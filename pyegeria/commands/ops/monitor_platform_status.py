@@ -146,7 +146,7 @@ def display_status(
             platform_url = " "
             platform_origin = " "
             platform_started = " "
-
+        token = r_client.refresh_egeria_bearer_token()
         return table
 
     try:

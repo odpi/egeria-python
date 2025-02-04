@@ -82,6 +82,7 @@ def display_engine_activity(
         The width of the console for table printing.
     """
     g_client = AutomatedCuration(view_server, view_url, user, user_pwd=user_pass)
+    token = g_client.create_egeria_bearer_token()
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -108,7 +109,7 @@ def display_engine_activity(
         table.add_column("Process Name")
         table.add_column("Completion Message")
 
-        token = g_client.create_egeria_bearer_token()
+
         action_status = g_client.get_engine_actions()
 
         if type(action_status) is str:
@@ -186,7 +187,7 @@ def display_engine_activity(
         else:
             print("Egeria integration daemon not running")
             sys.exit()
-
+        g_client.refresh_egeria_bearer_token()
         return table
 
     try:

@@ -134,7 +134,7 @@ def display_todos(
                     status,
                     assigned_out,
                 )
-
+        token = m_client.refresh_egeria_bearer_token()
         return table
 
     try:

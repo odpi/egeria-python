@@ -489,49 +489,6 @@ class MetadataExplorer(Client):
         )
         return response
 
-    # def get_metadata_element_mermaid_graph(
-    #     self,
-    #     guid: str,
-    #     effective_time: str = None,
-    #     as_of_time: str = None,
-    #     for_lineage: bool = None,
-    #     for_duplicate_processing: bool = None,
-    # ) -> dict | str:
-    #     """
-    #     Retrieve the metadata element using its unique identifier.
-    #
-    #     Parameters
-    #     ----------
-    #     guid : str
-    #         - unique identifier of the element to retrieve
-    #     effective_time: str, default = None
-    #         - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-    #     as_of_time: str, default = None
-    #         - Query the element as of this time. If None, then use current time.
-    #     for_lineage: bool, default is set by server
-    #         - determines if elements classified as Memento should be returned - normally false
-    #     for_duplicate_processing: bool, default is set by server
-    #         - Normally false. Set true when the caller is part of a deduplication function
-    #
-    #     Returns
-    #     -------
-    #     dict | str
-    #         If the element is found, a dict of the element details is returned. Otherwise the string "No element found".
-    #
-    #     Raises
-    #     ------
-    #     InvalidParameterException
-    #         one of the parameters is null or invalid or
-    #     PropertyServerException
-    #         There is a problem adding the element properties to the metadata repository or
-    #     UserNotAuthorizedException
-    #         the requesting user is not authorized to issue this request.
-    #     """
-    #
-    #     response = self.get_metadata_element_graph(
-    #         guid, effective_time, as_of_time, for_lineage, for_duplicate_processing
-    #     )
-    #     return response.get("mermaidGraph", NO_ELEMENTS_FOUND)
 
     async def _async_get_metadata_element_by_unique_name(
         self,

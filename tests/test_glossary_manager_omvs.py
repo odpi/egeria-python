@@ -47,7 +47,7 @@ class TestGlossaryManager:
     bad_user_2 = ""
     good_user_2_pwd = "secret"
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "laz_kv"
+    good_server_2 = "qs-view-server"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
     good_server_5 = "fluffy_kv"
@@ -475,7 +475,7 @@ class TestGlossaryManager:
     def test_find_glossary_terms(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+                self.good_view_server_2, self.good_platform1_url, self.good_user_2
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")

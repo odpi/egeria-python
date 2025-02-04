@@ -74,6 +74,7 @@ from .egeria_cat_client import EgeriaCat
 from .egeria_tech_client import EgeriaTech
 from .egeria_config_client import EgeriaConfig
 from .egeria_client import Egeria
+from .solution_architect_omvs import SolutionArchitect
 
 
 #

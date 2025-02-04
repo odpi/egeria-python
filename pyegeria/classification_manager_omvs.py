@@ -1547,6 +1547,8 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
+        if property_value is '*':
+            property_value = None
 
         possible_query_params = query_string(
             [

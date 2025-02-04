@@ -159,7 +159,7 @@ def display_my_todos(
                 role_id = role["properties"].get("roleId", "No Role Id")
                 add_rows(table, role_guid, role_id)
 
-        # m_client.close_session()
+        token = m_client.refresh_egeria_bearer_token()
         return table
 
     try:
