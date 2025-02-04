@@ -29,6 +29,7 @@ from pyegeria import (
     FullServerConfig,
     EgeriaConfig,
     MetadataExplorer,
+    SolutionArchitect
 )
 
 
@@ -50,6 +51,7 @@ class Egeria(
     # TemplateManager,
     ValidMetadataManager,
     MetadataExplorer,
+    SolutionArchitect,
 ):
     """
     Client to issue Runtime status requests.
@@ -115,3 +117,6 @@ class Egeria(
         ValidMetadataManager.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
+        SolutionArchitect.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )

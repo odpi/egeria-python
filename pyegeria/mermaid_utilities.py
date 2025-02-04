@@ -40,7 +40,7 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-
+EGERIA_MERMAID_FOLDER = os.environ.get("EGERIA_MERMAID_FOLDER", "./work/mermaid_graphs")
 
 # Check Mermaid.js version
 # def check_mermaid_version():
@@ -109,6 +109,36 @@ def render_mermaid(mermaid_code):
     </script>
     """
     display(HTML(mermaid_html))
+
+def save_mermaid_graph(title, mermaid_code, folder:str = EGERIA_MERMAID_FOLDER):
+    """Save a Mermaid diagram to a file"""
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    mermaid_file = os.path.join(folder, title + ".mmd")
+    mermaid_code = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="mermaid">
+    {mermaid_code}
+  </div>
+""" \
++ \
+"""
+  <script>
+    mermaid.initialize({startOnLoad:true});
+  </script>
+</body>
+</html>
+"""
+
+    with open(mermaid_file, "w") as f:
+        f.write(mermaid_code)
+    return mermaid_file
+
 
 
 def generate_process_graph(

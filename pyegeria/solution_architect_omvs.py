@@ -16,7 +16,6 @@ from pyegeria._client import Client, max_paging_size
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from pyegeria import SolutionArchitect
 
 NO_ELEMENTS_FOUND = "No Elements Found"
 

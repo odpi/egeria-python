@@ -9,7 +9,7 @@ A simple viewer for Information Supply Chains
 
 import argparse
 import os
-from datetime import time
+import time
 
 from rich import print, box
 from rich.console import Console
@@ -17,6 +17,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
+from rich.text import Text
 from rich.tree import Tree
 from pyegeria.solution_architect_omvs import SolutionArchitect
 from pyegeria import (
@@ -34,7 +35,7 @@ disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
 EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
@@ -44,7 +45,7 @@ EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "150"))
 
 
 def supply_chain_viewer(
@@ -58,8 +59,10 @@ def supply_chain_viewer(
     timeout: int = 30,
 ):
     """A Supply Chain viewer"""
+    client = SolutionArchitect(server_name, platform_url, user, user_password)
+    token = client.create_egeria_bearer_token()
 
-    def display_supply_chains(supply_chains: list[dict] ) -> Table:
+    def generate_table() -> Table | str:
         table = Table(
             title=f"Supply Chains matching  {search_string} @ {time.asctime()}",
             style="bright_white on black",
@@ -72,106 +75,40 @@ def supply_chain_viewer(
             expand=True,
             )
         table.add_column("Supply Chain Name")
-        table.add_column("Qualified Name / GUID", width=38, no_wrap=True)
+        table.add_column("Qualified Name \n/\n GUID", width=38, no_wrap=False)
         table.add_column("Purpose")
-        table.add_column("Scope")
+        table.add_column("Scope\n/\n Mermaid Link")
         table.add_column("Description")
+
+        supply_chains = client.find_information_supply_chains(search_string)
+        if isinstance(supply_chains, list) is False:
+            return "No Supply Chains found"
 
         for sc in supply_chains:
             sc_name = sc["properties"].get("displayName", '---')
-            sc_qname = sc["elementHeader"]["qualifiedName"]
+            sc_qname = sc["properties"].get("qualifiedName", '---')
             sc_guid = sc["elementHeader"]["guid"]
             sc_purpose = sc["properties"].get("purposes",'---')
+            if isinstance(sc_purpose, list):
+                sc_purpose_str = "\n* ".join(sc_purpose)
+            else:
+                sc_purpose_str = sc_purpose
             sc_scope = sc["properties"].get("scope",'---')
             sc_desc = sc["properties"].get("description",'---')
-            sc_unique_name = f"\t{sc_qname}\n\t/\n\t{sc_guid}"
-            table.add_row(sc_name, sc_unique_name, sc_purpose, sc_scope, sc_desc)
+            sc_unique_name = f"{sc_qname}\n\n\t\t/\n\n{sc_guid}"
+            sc_mermaid = sc.get("mermaid",'---')
+
+            table.add_row(sc_name, sc_unique_name, sc_purpose_str, sc_scope, sc_desc)
 
         return table
 
 
-    def walk_project_hierarchy(
-        project_client: ProjectManager,
-        project_name: str,
-        tree: Tree,
-        root: bool = False,
-    ) -> None:
-        """Recursively build a Tree with collection contents."""
-        t = None
-        style = "bright_white on black"
 
-        project = project_client.get_projects_by_name(project_name)
-        if type(project) is list:
-            proj_guid = project[0]["elementHeader"]["guid"]
-            proj_props = project[0]["properties"]
-
-            proj_type = proj_props.get("typeName", "---")
-            proj_unique = proj_props.get("qualifiedName", "---")
-            proj_identifier = proj_props.get("identifier", "---")
-            proj_name = proj_props.get("name", "---")
-            proj_desc = proj_props.get("description", "---")
-            proj_status = proj_props.get("projectStatus", "---")
-            proj_priority = proj_props.get("priority", "---")
-            proj_start = proj_props.get("startDate", "---")[:-10]
-            proj_props_md = (
-                f"* Name: {proj_name}\n"
-                f"* Identifier: {proj_identifier}\n"
-                f"* Type: {proj_type}\n"
-                f"* Status: {proj_status}\n"
-                f"* priority: {proj_priority}\n"
-                f"* Start:    {proj_start}\n"
-                f"* Description: {proj_desc}\n"
-                f"* GUID: {proj_guid}"
-            )
-        else:
-            return
-
-        team = project_client.get_project_team(proj_guid)
-        member_md = ""
-        if type(team) is list:
-            for member in team:
-                member_guid = member["member"]["guid"]
-                member_unique = member["member"]["uniqueName"]
-                member_md += f"* Member Unique Name: {member_unique}\n* Member GUID: {member_guid}"
-            proj_props_md += f"\n### Team Members\n {member_md}"
-
-        proj_props_out = Markdown(proj_props_md)
-        p = Panel.fit(proj_props_out, style=style, title=project_name)
-        t = tree.add(p)
-
-        linked_projects = project_client.get_linked_projects(proj_guid)
-        if type(linked_projects) is list:
-            for proj in linked_projects:
-                child_md = ""
-                child_guid = proj["elementHeader"]["guid"]
-                child_name = proj["properties"]["name"]
-                relationship = proj["relatedElement"]["relationshipHeader"]["type"][
-                    "typeName"
-                ]
-                if relationship != "ProjectDependency":
-                    continue
-                walk_project_hierarchy(project_client, child_name, t)
-
-        else:
-            return t
 
     try:
         console = Console(width=width, force_terminal=not jupyter)
-        tree = Tree(
-            f"[bold bright green on black]Supply Chains containing: {search_string}", guide_style="bold bright_blue"
-        )
-        client = SolutionArchitect(server_name, platform_url, user, user_password)
-
-        token = client.create_egeria_bearer_token()
-
-        sc = client.find_all_information_supply_chains(search_string, start_from=0)
-
-        if (isinstance(sc, list)):
-            t = tree.add(display_supply_chains(sc))
-        else:
-            t = tree.add(type(sc))
-        # walk_project_hierarchy(p_client, root, tree, root=True)
-        print(tree)
+        with console.pager():
+            console.print(generate_table())
 
     except (
         InvalidParameterException,
