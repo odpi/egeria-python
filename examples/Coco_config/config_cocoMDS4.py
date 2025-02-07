@@ -10,14 +10,11 @@ This script creates and configures the cocoMDS4 - Data Lake Users
 
 """
 
-
 import json
 
-from globals import cocoMDS4Name, dataLakePlatformURL, cocoCohort, max_paging_size
-from pyegeria import CoreServerConfig, Platform
-from pyegeria import (
-    print_exception_response,
-)
+from globals import cocoCohort, cocoMDS4Name, dataLakePlatformURL, max_paging_size
+
+from pyegeria import CoreServerConfig, Platform, print_exception_response
 
 disable_ssl_warnings = True
 

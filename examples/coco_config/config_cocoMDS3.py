@@ -10,13 +10,11 @@ This script creates and configures the cocoMDS3 - Research server.
 
 """
 
-
 import json
 
-from globals import cocoMDS3Name, corePlatformURL, cocoCohort, max_paging_size
-from pyegeria import (
-    print_exception_response,
-)
+from globals import cocoCohort, cocoMDS3Name, corePlatformURL, max_paging_size
+
+from pyegeria import print_exception_response
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.platform_services import Platform
 

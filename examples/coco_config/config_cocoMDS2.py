@@ -11,22 +11,18 @@ This script creates and configures the cocoMDS2 - Governance metadata server
 
 """
 
-
 import json
 
 from globals import (
+    cocoCohort,
     cocoMDS2Name,
     corePlatformURL,
-    cocoCohort,
     devCohort,
     iotCohort,
     max_paging_size,
 )
-from pyegeria import CoreServerConfig, Platform
-from pyegeria import (
-    print_exception_response,
-)
 
+from pyegeria import CoreServerConfig, Platform, print_exception_response
 
 disable_ssl_warnings = True
 

@@ -12,4 +12,3 @@ the server platform and servers.
 """
 
 import orig_globals
-

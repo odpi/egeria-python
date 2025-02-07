@@ -75,10 +75,11 @@ def supply_chain_viewer(
             expand=True,
         )
         table.add_column("Supply Chain Name")
-        table.add_column("Qualified Name \n/\n GUID", width=38, no_wrap=False)
+        table.add_column("Qualified Name \n/\n GUID", justify = 'center', width=38, no_wrap=False)
         table.add_column("Purposes")
-        table.add_column("Scope\n/\n Mermaid Link")
-        table.add_column("Description")
+        table.add_column("Scope\n/\n Mermaid Link", justify = 'center')
+        table.add_column("Description", justify = 'center')
+        table.add_column("Segments", justify = 'center')
 
         supply_chains = client.find_information_supply_chains(search_string)
         if isinstance(supply_chains, list) is False:
@@ -101,13 +102,28 @@ def supply_chain_viewer(
                 link = save_mermaid_html(
                     sc_name, sc_mermaid, f"{EGERIA_MERMAID_FOLDER}/supply-chains"
                 )
-                sc_mermaid_link = f"file://:{link}"
-                # print("Visit my [link=https://www.willmcgugan.com]blog[/link]!")
-                # sc_scope = Text(f"{sc_scope}\n\t\t/\n{sc_mermaid_link}")
-                sc_scope = f"{sc_scope}\n\t\t/\n![{sc_mermaid_link}]({sc_mermaid_link})"
-                # sc_scope.stylize("link =" + sc_mermaid_link)
+                sc_mermaid_link = Text(f"file://:{link}", style="blue link " + link)
+                sc_scope = Text(f"{sc_scope}\n\n/\n\n{sc_mermaid_link}",  justify = "center")
 
-            table.add_row(sc_name, sc_unique_name, sc_purpose_str, sc_scope, sc_desc)
+
+            sc_segments = sc.get("segments", "---")
+            if sc_segments != "---":
+                first_segment = True
+                sc_segments_md = ""
+                for segment in sc_segments:
+                    seg_prop = segment['properties']
+                    if first_segment:
+                        first_segment = False
+                    else:
+                        sc_segments_md += "----\n\n"  # add a seperator from previous segment
+
+                    for key in seg_prop.keys():
+                        sc_segments_md += f"* **{key}**: {seg_prop[key]}\n"
+                sc_segments_md = Markdown(sc_segments_md)
+            else:
+                sc_segments_md = "---"
+
+            table.add_row(sc_name, sc_unique_name, sc_purpose_str, sc_scope, sc_desc, sc_segments_md)
 
         return table
 

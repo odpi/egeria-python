@@ -120,20 +120,21 @@ def blueprint_list(
                 )
                 comp_type = comp_props.get("solutionComponentType", "---")
 
-                comp_actors = comp_props.get("actors", [])
-                comp_actors_list = ""
+                comp_actors = comp.get("actors", [])
+                comp_actors_list = f"{len(comp_actors)}\n"
                 for actor in comp_actors:
                     comp_actor_role = actor["relationshipProperties"].get("role", "---")
                     comp_actor_props = actor["relatedElement"].get("properties", {})
-                    comp_actor_props_md = f"* Role: {comp_actor_role}\n"
+                    comp_actor_props_md = f"\n\t* Role: {comp_actor_role}\n"
                     for prop in comp_actor_props.keys():
-                        comp_actor_props_md += f"* {prop}: {comp_actor_props[prop]}\n"
+                        comp_actor_props_md += f"\n\t\t* {prop}: {comp_actor_props[prop]}"
                     comp_actors_list += comp_actor_props_md
                 if first_comp:
                     first_comp = False
                 else:
                     comp_md += "\n\n---\n\n"
-                comp_md = f"Solution Component {comp_name}\n\n"
+                comp_md += f"Solution Component {comp_name}\n\n"
+                comp_md += f"* Type: {comp_type}\n"
                 comp_md += f"* Description: {comp_description}\n"
                 comp_md += f"* Planned Deployment: {comp_planned}\n"
                 comp_md += f"* Actors: {comp_actors_list}\n"

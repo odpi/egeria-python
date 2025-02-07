@@ -10,14 +10,11 @@ This script creates and configures the cocoMDSx server.
 
 """
 
-
 import json
 
-from globals import cocoMDSxName, devPlatformURL, cocoCohort, iotCohort
-from pyegeria import CoreServerConfig, Platform
-from pyegeria import (
-    print_exception_response,
-)
+from globals import cocoCohort, cocoMDSxName, devPlatformURL, iotCohort
+
+from pyegeria import CoreServerConfig, Platform, print_exception_response
 
 # from pyegeria.admin_services import FullServerConfig
 

@@ -121,18 +121,19 @@ def solution_role_list(
             comp_props_md = ""
             first_comp = True
             for component in role_components:
-                comp = component.get("relatedElement", "")
-                if isinstance(comp, dict) is False:
-                    continue
-                comp_props = comp.get("properties", {})
-                comp_props_md = ""
-                for prop in comp_props.keys():
-                    comp_props_md += f"* **{prop}**: {comp_props[prop]}\n"
-
                 if first_comp:
                     first_comp = False
                 else:
                     comp_props_md += "\n\n---\n\n"
+                comp = component.get("relatedElement", "")
+                if isinstance(comp, dict) is False:
+                    continue
+                comp_props = comp.get("properties", {})
+
+                for prop in comp_props.keys():
+                    comp_props_md += f"* **{prop}**: {comp_props[prop]}\n"
+
+
 
             comp_props_out = Markdown(comp_props_md)
             table.add_row(

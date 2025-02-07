@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.3.10"
+version = "5.3.4.9"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -53,6 +53,12 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pytest = "^8.2.2"
 
+
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.1.1"
+black = "^25.1.0"
+isort = "^6.0.0"
 
 [tool.poetry.scripts]
     list_assets = "pyegeria.commands.cat.list_assets:main"
@@ -148,3 +154,6 @@ pytest = "^8.2.2"
     list_gov_action_processes = "pyegeria.commands.tech.list_gov_action_processes:main"
 
     list_info_supply_chains = "pyegeria.commands.tech.list_information_supply_chains:main"
+    list_solution_blueprints = "pyegeria.commands.tech.list_solution_blueprints:main"
+    list_solution_roles = "pyegeria.commands.tech.list_solution_roles:main"
+    list_solution_components = "pyegeria.commands.tech.list_solution_components:main"

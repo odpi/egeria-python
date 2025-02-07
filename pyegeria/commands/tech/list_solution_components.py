@@ -97,7 +97,7 @@ def solution_component_list(
                 .get("extendedProperties", {})
                 .get("plannedDeployedImplementationType", "---")
             )
-            component_info = f"Type: {component_type}\n\n--\n\nPlanned Deployment Type: {planned_deployment_type}"
+            component_info = f"Type: {component_type}\n\n--\n\nPlanned Deployment Type: \n{planned_deployment_type}"
 
             component_qname = component["properties"].get("qualifiedName", "---")
             component_guid = component["elementHeader"]["guid"]

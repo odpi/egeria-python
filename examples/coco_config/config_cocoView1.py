@@ -8,13 +8,11 @@ This script creates and configures the cocoView1 server.
 
 """
 
-
 import json
 
 from globals import cocoMDS2Name, corePlatformURL, dataLakePlatformURL, devPlatformURL
-from pyegeria import (
-    print_exception_response,
-)
+
+from pyegeria import print_exception_response
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.platform_services import Platform
 

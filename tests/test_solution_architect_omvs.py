@@ -85,6 +85,46 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
+    def test_find_information_supply_chains_body(self):
+        filter = "Clinical"
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+            body = {
+                "effective_time": None,
+                "limitResultsByStatus": ["ACTIVE"],
+                "asOfTime": "2021-12-19T07:20:40.038+00:00",
+                "sequencingOrder": None,
+                "sequencingProperty": None,
+                "filter": filter,
+                }
+            start_time = time.perf_counter()
+            response = s_client.find_information_supply_chains(filter, body=body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_find_all_information_supply_chains(self):
 
         try:
