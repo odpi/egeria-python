@@ -11,17 +11,17 @@ A simple status display for the Integration Daemon.
 import argparse
 import os
 import time
+from typing import Union
 
+import nest_asyncio
 from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.prompt import Prompt
 from rich.table import Table
-import nest_asyncio
-from typing import Union
 from textual.widgets import DataTable
 
-from pyegeria import EgeriaTech, AutomatedCuration
+from pyegeria import AutomatedCuration, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -36,7 +36,9 @@ EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
 EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON = os.environ.get(
+    "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
+)
 EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
     "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
 )
@@ -50,15 +52,19 @@ disable_ssl_warnings = True
 
 def display_integration_daemon_status(
     search_list: list[str] = ["*"],
-    integ_server: str = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
-    integ_url: str = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
+    integ_server: str = os.environ.get(
+        "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
+    ),
+    integ_url: str = os.environ.get(
+        "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
+    ),
     view_server: str = os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
-    view_url: str = os.environ.get('EGERIA_VIEW_SERVER_URL', "https://localhost:9443"),
+    view_url: str = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
     user: str = os.environ.get("EGERIA_USER"),
     user_pass: str = os.environ.get("EGERIA_USER_PASSWORD"),
     paging: bool = False,
     jupyter: bool = os.environ.get("EGERIA_JUPYTER", "False"),
-    width: int = os.environ.get("EGERIA_WIDTH","150"),
+    width: int = os.environ.get("EGERIA_WIDTH", "150"),
     sort: bool = True,
 ) -> None:
     """Display the status of connectors running on the specified Integration Daemon OMAG Server.

@@ -8,10 +8,10 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 List the roles for a given user.
 """
-import os
 import argparse
-import time
+import os
 import sys
+import time
 
 from rich import box
 from rich.console import Console

@@ -12,6 +12,7 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
 import time
 from datetime import datetime
@@ -20,7 +21,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import AutomatedCuration, INTEGRATION_GUIDS
+from pyegeria import INTEGRATION_GUIDS, AutomatedCuration
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,

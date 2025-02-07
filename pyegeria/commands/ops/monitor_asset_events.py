@@ -5,17 +5,18 @@ Copyright Contributors to the ODPi Egeria project.
 
 Display the status of cataloged platforms and servers.
 """
+import argparse
 import json
 import os
 import time
-import argparse
 from datetime import datetime
+
+from confluent_kafka import Consumer, KafkaException
+from rich.console import Console
+from rich.live import Live
+from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
-from rich.live import Live
-from rich.console import Console
-from rich.markdown import Markdown
-from confluent_kafka import Consumer, KafkaException
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9192")

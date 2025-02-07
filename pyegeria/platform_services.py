@@ -12,15 +12,15 @@ import json
 
 import httpx
 
-from pyegeria import Client, enable_ssl_check
-from pyegeria._validators import validate_user_id
+from pyegeria._client import Client, enable_ssl_check
 from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
     InvalidParameterException,
-    UserNotAuthorizedException,
+    OMAGCommonErrorCode,
     PropertyServerException,
+    UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria._validators import validate_user_id
 
 
 class Platform(Client):

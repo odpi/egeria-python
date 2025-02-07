@@ -1,0 +1,185 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Information Supply Chain - Physical Inventory Tracking </title>
+        <h3 style="text-align: center;">Information Supply Chain - Physical Inventory Tracking </h3>
+        GUID : 7480a3b1-8d6c-4062-ae59-f3b81e146ed0
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+7480a3b1-8d6c-4062-ae59-f3b81e146ed0@{ shape: flip-tri, label: "*Information Supply Chain*
+**Physical Inventory Tracking**"}
+6c5b256b-61c7-4c70-bc99-62309d507432@{ shape: text, label: "*Description*
+**Managing information take tracks physical goods from suppliers, to depot and manufacturing.**"}
+7480a3b1-8d6c-4062-ae59-f3b81e146ed0~~~6c5b256b-61c7-4c70-bc99-62309d507432
+83f8f010-5aff-4d6a-8e22-007b7fe24a3a@{ shape: text, label: "*Purpose*
+**Ensuring effective management of physical inventory.**"}
+6c5b256b-61c7-4c70-bc99-62309d507432~~~83f8f010-5aff-4d6a-8e22-007b7fe24a3a
+9de88d39-a5c5-49dc-9db7-1b6eb3aafd0e@{ shape: text, label: "*Purpose*
+**Ensuring hazardous materials are properly identified, reported and managed.**"}
+83f8f010-5aff-4d6a-8e22-007b7fe24a3a~~~9de88d39-a5c5-49dc-9db7-1b6eb3aafd0e
+db144477-e6cb-4fd1-9521-4a577de9af04@{ shape: rounded, label: "*Software Server*
+**System:procurement03**"}
+11071e76-23a8-4f3d-bd07-3b9aa9781bda@{ shape: rounded, label: "*Software Server*
+**System:coco-ledgers**"}
+db144477-e6cb-4fd1-9521-4a577de9af04-->|"invoice [Data Flow]"|11071e76-23a8-4f3d-bd07-3b9aa9781bda
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4@{ shape: rounded, label: "*Software Server*
+**System:MFCTRL9482**"}
+9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2@{ shape: rounded, label: "*Software Server*
+**System:aus-inventory**"}
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4-->|"goods received [Data Flow]"|9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2
+23fb5e33-11c9-4eb6-91d6-f2e873f8da68@{ shape: rounded, label: "*Software Server*
+**System:procurement04**"}
+9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2-->|"procurement request [Data Flow]"|23fb5e33-11c9-4eb6-91d6-f2e873f8da68
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b@{ shape: rounded, label: "*Software Server*
+**System:ed-mfg-control**"}
+467dd9a0-89d6-4796-a058-c079bf54b6c7@{ shape: rounded, label: "*Software Server*
+**System:coco-inventory**"}
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b-->|"goods received [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+a5abdf72-0e5f-4366-8072-fac3bbb41ea6@{ shape: rounded, label: "*Software Server*
+**System:procurement05**"}
+467dd9a0-89d6-4796-a058-c079bf54b6c7-->|"procurement request [Data Flow]"|a5abdf72-0e5f-4366-8072-fac3bbb41ea6
+23fb5e33-11c9-4eb6-91d6-f2e873f8da68-->|"invoice [Data Flow]"|11071e76-23a8-4f3d-bd07-3b9aa9781bda
+cbe8c0bb-0e27-4d2a-825f-f017ee939028@{ shape: rounded, label: "*Software Server*
+**System:procurement01**"}
+467dd9a0-89d6-4796-a058-c079bf54b6c7-->|"procurement request [Data Flow]"|cbe8c0bb-0e27-4d2a-825f-f017ee939028
+0f59833f-8a8a-488b-808a-9ea24618bb6c@{ shape: rounded, label: "*Software Server*
+**System:winch-mfg-control**"}
+0f59833f-8a8a-488b-808a-9ea24618bb6c-->|"goods request [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+a5abdf72-0e5f-4366-8072-fac3bbb41ea6-->|"goods in [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+cbe8c0bb-0e27-4d2a-825f-f017ee939028-->|"invoice [Data Flow]"|11071e76-23a8-4f3d-bd07-3b9aa9781bda
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b-->|"goods request [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+a5abdf72-0e5f-4366-8072-fac3bbb41ea6-->|"invoice [Data Flow]"|11071e76-23a8-4f3d-bd07-3b9aa9781bda
+cbe8c0bb-0e27-4d2a-825f-f017ee939028-->|"goods in [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4-->|"goods request [Data Flow]"|9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2
+0f59833f-8a8a-488b-808a-9ea24618bb6c-->|"goods received [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+db144477-e6cb-4fd1-9521-4a577de9af04-->|"goods in [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+467dd9a0-89d6-4796-a058-c079bf54b6c7-->|"procurement request [Data Flow]"|db144477-e6cb-4fd1-9521-4a577de9af04
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b-->|"goods produced [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4-->|"goods produced [Data Flow]"|9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2
+0f59833f-8a8a-488b-808a-9ea24618bb6c-->|"goods produced [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+23fb5e33-11c9-4eb6-91d6-f2e873f8da68-->|"goods in [Data Flow]"|9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2
+25e2e56d-2e2f-4f6f-a1ed-019dd76d589a@{ shape: rounded, label: "*Software Server*
+**System:manufacturing-planning**"}
+25e2e56d-2e2f-4f6f-a1ed-019dd76d589a-->|"planned orders [Data Flow]"|467dd9a0-89d6-4796-a058-c079bf54b6c7
+style a5abdf72-0e5f-4366-8072-fac3bbb41ea6 color:#000000, fill:#e0ab18, stroke:#004563
+style 83f8f010-5aff-4d6a-8e22-007b7fe24a3a color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4 color:#000000, fill:#e0ab18, stroke:#004563
+style bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b color:#000000, fill:#e0ab18, stroke:#004563
+style 9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2 color:#000000, fill:#e0ab18, stroke:#004563
+style 7480a3b1-8d6c-4062-ae59-f3b81e146ed0 color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style db144477-e6cb-4fd1-9521-4a577de9af04 color:#000000, fill:#e0ab18, stroke:#004563
+style 6c5b256b-61c7-4c70-bc99-62309d507432 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 11071e76-23a8-4f3d-bd07-3b9aa9781bda color:#000000, fill:#e0ab18, stroke:#004563
+style cbe8c0bb-0e27-4d2a-825f-f017ee939028 color:#000000, fill:#e0ab18, stroke:#004563
+style 25e2e56d-2e2f-4f6f-a1ed-019dd76d589a color:#000000, fill:#e0ab18, stroke:#004563
+style 467dd9a0-89d6-4796-a058-c079bf54b6c7 color:#000000, fill:#e0ab18, stroke:#004563
+style 23fb5e33-11c9-4eb6-91d6-f2e873f8da68 color:#000000, fill:#e0ab18, stroke:#004563
+style 0f59833f-8a8a-488b-808a-9ea24618bb6c color:#000000, fill:#e0ab18, stroke:#004563
+style 9de88d39-a5c5-49dc-9db7-1b6eb3aafd0e color:#000000, fill:#F9F7ED, stroke:#b7c0c7`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

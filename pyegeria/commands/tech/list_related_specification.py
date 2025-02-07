@@ -19,11 +19,11 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    ClassificationManager,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ClassificationManager,
 )
 
 console = Console()

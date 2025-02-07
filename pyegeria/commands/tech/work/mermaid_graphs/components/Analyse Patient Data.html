@@ -1,0 +1,133 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Solution Component - Analyse Patient Data </title>
+        <h3 style="text-align: center;">Solution Component - Analyse Patient Data </h3>
+        GUID : b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+9c4907e4-57c5-401f-b0aa-eb923dafbc84@{ shape: text, label: "*Description*
+**ML Flow based analytics pipeline to run the variety of models over the patient data.**"}
+b5c8da4c-f925-4cf1-8294-e43cd2c1a584@{ shape: stadium, label: "*Solution Component*
+**Analyse Patient Data**"}
+d48f579f-76d3-4c49-b1b4-575f5645a9d0@{ shape: rect, label: "*Solution Component*
+**Treatment Validation Sandbox**"}
+d48f579f-76d3-4c49-b1b4-575f5645a9d0-->|"Solution Linking Wire"|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+ece17806-836c-4756-b3a2-2d12dde215f6@{ shape: trap-t, label: "*Solution Actor Role*
+**New Treatment Data Scientist**"}
+ece17806-836c-4756-b3a2-2d12dde215f6-->|"Data Analyser"|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+0c757e35-8a42-4d5f-b01b-c72a6cea65cc@{ shape: trap-t, label: "*Solution Actor Role*
+**New Treatment Researcher.**"}
+0c757e35-8a42-4d5f-b01b-c72a6cea65cc-->|"Results Interpreter"|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+style 0c757e35-8a42-4d5f-b01b-c72a6cea65cc color:#FFFFFF, fill:#AA00FF, stroke:#E1D5E7
+style b5c8da4c-f925-4cf1-8294-e43cd2c1a584 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style ece17806-836c-4756-b3a2-2d12dde215f6 color:#FFFFFF, fill:#AA00FF, stroke:#E1D5E7
+style d48f579f-76d3-4c49-b1b4-575f5645a9d0 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 9c4907e4-57c5-401f-b0aa-eb923dafbc84 color:#000000, fill:#F9F7ED, stroke:#b7c0c7`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

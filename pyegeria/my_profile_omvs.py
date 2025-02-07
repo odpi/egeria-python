@@ -3,10 +3,11 @@
 This module contains the MyProfile class and its methods.
 
 """
+
 import asyncio
 import json
 
-from pyegeria import body_slimmer
+from pyegeria.utils import body_slimmer
 from pyegeria._client import Client
 from pyegeria._validators import validate_name, validate_search_string
 

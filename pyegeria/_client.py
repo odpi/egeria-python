@@ -6,32 +6,30 @@ This is a simple class to create and manage a connection to an Egeria backend. I
 different client capabilities. It also provides the common methods used to make restful self.session to Egeria.
 
 """
+
 import asyncio
 import inspect
 import json
 import os
 from datetime import datetime
 
-from pyegeria import body_slimmer
 import httpx
 from httpx import AsyncClient, Response
 
+from pyegeria.utils import body_slimmer
 from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
     InvalidParameterException,
+    OMAGCommonErrorCode,
     PropertyServerException,
     UserNotAuthorizedException,
 )
-from pyegeria._globals import (
-    max_paging_size,
-    enable_ssl_check,
-)
+from pyegeria._globals import enable_ssl_check, max_paging_size
 from pyegeria._validators import (
+    is_json,
     validate_name,
     validate_server_name,
     validate_url,
     validate_user_id,
-    is_json,
 )
 
 ...
@@ -471,7 +469,9 @@ class Client:
                 msg = OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
                     "message_template"
                 ].format(
-                    str(response.status_code) + " " + datetime.now().strftime("%H: %M: %S") ,
+                    str(response.status_code)
+                    + " "
+                    + datetime.now().strftime("%H: %M: %S"),
                     caller_method,
                     class_name,
                     endpoint,

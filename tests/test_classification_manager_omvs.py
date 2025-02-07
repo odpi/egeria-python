@@ -11,15 +11,14 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import time
-
-import pytest
 import asyncio
 import json
+import time
+from contextlib import nullcontext as does_not_raise
+
+import pytest
 from rich import print, print_json
 from rich.console import Console
-
-from contextlib import nullcontext as does_not_raise
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -27,10 +26,8 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-
-from pyegeria.core_omag_server_config import CoreServerConfig
-
 from pyegeria.classification_manager_omvs import ClassificationManager
+from pyegeria.core_omag_server_config import CoreServerConfig
 
 disable_ssl_warnings = True
 
@@ -143,7 +140,7 @@ def test_find_elements_by_property_value():
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
     property_names = ["displayName"]
-    property_value = ("Clinical")
+    property_value = "Clinical"
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -498,7 +495,7 @@ def test_get_related_elements_with_property_value():
 def test_find_related_elements_with_property_value():
     # open_metadata_type_name = 'Project'
     open_metadata_type_name = None
-    property_value = 'Clinical Trials Management'
+    property_value = "Clinical Trials Management"
     property_names = ["name", "qualifiedName"]
     # property_value = "Partner"
     # property_names = ["teamType"]

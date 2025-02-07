@@ -6,7 +6,8 @@ Client to configure the Egeria platform and servers
 
 """
 
-from pyegeria import FullServerConfig, ServerOps
+from pyegeria.full_omag_server_config import FullServerConfig
+from pyegeria.server_operations import  ServerOps
 
 
 class EgeriaConfig(FullServerConfig, ServerOps):

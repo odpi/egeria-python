@@ -9,33 +9,31 @@ Peter Coldicott
 
 import os
 from os import system
-import click
-from textual.reactive import Reactive
+from typing import Any
 
+import click
+from textual import on, work
 from textual.app import App, ComposeResult
 from textual.containers import (
     Container,
-    Vertical,
     HorizontalScroll,
-    VerticalScroll,
     ScrollableContainer,
+    Vertical,
+    VerticalScroll,
 )
-from textual import on, work
+from textual.reactive import Reactive
 from textual.screen import ModalScreen, Screen
 from textual.widgets import (
-    Input,
-    Static,
     Button,
-    RichLog,
-    Label,
-    Tree,
-    Footer,
     DataTable,
+    Footer,
     Header,
+    Input,
+    Label,
+    RichLog,
+    Static,
+    Tree,
 )
-
-from typing import Any
-
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

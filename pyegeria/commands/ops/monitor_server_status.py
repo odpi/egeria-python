@@ -24,9 +24,9 @@ from rich.table import Table
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
+    RuntimeManager,
     UserNotAuthorizedException,
     print_exception_response,
-    RuntimeManager,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -52,8 +52,8 @@ def display_status(
     extended: bool,
     view_server: str = EGERIA_VIEW_SERVER,
     url: str = EGERIA_VIEW_SERVER_URL,
-    username:str = EGERIA_USER,
-    user_pass: str= EGERIA_USER_PASSWORD,
+    username: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
@@ -145,7 +145,9 @@ def display_status(
     try:
         # with Live(generate_table(), refresh_per_second=1, screen=True) as live:
         print(f" Started at {time.asctime()} \n")
-        with Live(generate_table(), refresh_per_second=4, screen=True, transient=True) as live:
+        with Live(
+            generate_table(), refresh_per_second=4, screen=True, transient=True
+        ) as live:
 
             while True:
                 time.sleep(5)

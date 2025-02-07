@@ -1,0 +1,142 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Information Supply Chain - Clinical Trial Subject Onboarding </title>
+        <h3 style="text-align: center;">Information Supply Chain - Clinical Trial Subject Onboarding </h3>
+        GUID : 39a035f0-3b2b-45fe-adb8-ee8a19581f6a
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+39a035f0-3b2b-45fe-adb8-ee8a19581f6a@{ shape: flip-tri, label: "*Information Supply Chain*
+**Clinical Trial Subject Onboarding**"}
+4d1bc82f-f119-4e07-94e8-001551ce98a4@{ shape: text, label: "*Description*
+**Delivering the data necessary to add a person as a subject in a clinical trial.**"}
+39a035f0-3b2b-45fe-adb8-ee8a19581f6a~~~4d1bc82f-f119-4e07-94e8-001551ce98a4
+a281d858-5e7e-4811-bc4f-e907bdac63f7@{ shape: text, label: "*Purpose*
+**Ensure patient subject is aware of the process and potential risks in participation.**"}
+4d1bc82f-f119-4e07-94e8-001551ce98a4~~~a281d858-5e7e-4811-bc4f-e907bdac63f7
+1fb0bb9c-7167-4610-85fa-d8564e14bad2@{ shape: text, label: "*Purpose*
+**Ensure patient subject has given permission for Coco Pharmaceuticals to acquire, store and process their personal data needed for the clinical trial.**"}
+a281d858-5e7e-4811-bc4f-e907bdac63f7~~~1fb0bb9c-7167-4610-85fa-d8564e14bad2
+3620e5be-691b-4273-8bba-608710651e95@{ shape: text, label: "*Purpose*
+**Ensure incoming data is validated and catalogued.**"}
+1fb0bb9c-7167-4610-85fa-d8564e14bad2~~~3620e5be-691b-4273-8bba-608710651e95
+722967f1-7906-443e-99cf-c9e9edafe847@{ shape: text, label: "*Purpose*
+**Ensure data and process owners are informed of key milestones and issues requiring attention.**"}
+3620e5be-691b-4273-8bba-608710651e95~~~722967f1-7906-443e-99cf-c9e9edafe847
+0fb2c7aa-1624-4852-97d0-8b9eaf0e83fe@{ shape: text, label: "*Purpose*
+**Ensure the process of data capture and validation is transparent and auditable.**"}
+722967f1-7906-443e-99cf-c9e9edafe847~~~0fb2c7aa-1624-4852-97d0-8b9eaf0e83fe
+style 39a035f0-3b2b-45fe-adb8-ee8a19581f6a color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style 1fb0bb9c-7167-4610-85fa-d8564e14bad2 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style a281d858-5e7e-4811-bc4f-e907bdac63f7 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 3620e5be-691b-4273-8bba-608710651e95 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 4d1bc82f-f119-4e07-94e8-001551ce98a4 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 0fb2c7aa-1624-4852-97d0-8b9eaf0e83fe color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 722967f1-7906-443e-99cf-c9e9edafe847 color:#000000, fill:#F9F7ED, stroke:#b7c0c7`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

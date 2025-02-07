@@ -5,18 +5,22 @@ Copyright Contributors to the ODPi Egeria project.
  Automated Curation View Service Methods
 
 """
+
 import asyncio
 import datetime
 
 from httpx import Response
 
-from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS
+from pyegeria.utils import body_slimmer
+from pyegeria._client import Client
+from pyegeria import TEMPLATE_GUIDS, max_paging_size
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
 )
-from ._validators import validate_name, validate_guid, validate_search_string
+
+from ._validators import validate_guid, validate_name, validate_search_string
 
 
 class AutomatedCuration(Client):

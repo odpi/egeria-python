@@ -24,7 +24,6 @@ from pyegeria._exceptions import (
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 
-
 disable_ssl_warnings = True
 
 
@@ -868,7 +867,7 @@ class TestCoreAdminServices:
                     "xtdbConfigEDN": """{ :xtdb.lucene/lucene-store {:indexer {:xtdb/module xtdb.lucene.egeria/->egeria-indexer}
                                                                          :analyzer {:xtdb/module xtdb.lucene.egeria/->ci-analyzer}
                                                                          }"""
-                }
+                },
                 # "configurationProperties": {
                 #     "xtdbConfigEDN": """{:xtdb/index-store {:kv-store {:xtdb/module xtdb.rocksdb/->kv-store :db-dir "data/servers/active-metadata-store/rdb-index"}}
                 #                             :xtdb.lucene/lucene-store {:db-dir "data/servers/active-metadata-store/lucene"

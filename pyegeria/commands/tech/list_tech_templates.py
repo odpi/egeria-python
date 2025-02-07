@@ -13,8 +13,8 @@ from rich.prompt import Prompt
 from rich.table import Table
 from textual.widgets import DataTable
 
-from pyegeria import AutomatedCuration
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,

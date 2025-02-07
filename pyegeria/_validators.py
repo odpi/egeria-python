@@ -2,14 +2,14 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 """
+
 import inspect
 import json
-import validators
 from json import JSONDecodeError
-from pyegeria._exceptions import (
-    OMAGCommonErrorCode,
-    InvalidParameterException,
-)
+
+import validators
+
+from pyegeria._exceptions import InvalidParameterException, OMAGCommonErrorCode
 
 """
 This package contains internally used validators.

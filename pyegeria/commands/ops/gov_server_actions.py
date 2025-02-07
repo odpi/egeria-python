@@ -9,11 +9,12 @@ This script restarts an integration daemon.
 """
 
 import os
+
+import click
 from rich import print, print_json
 from rich.console import Console
 
-import click
-from pyegeria import EgeriaTech, AutomatedCuration, INTEGRATION_GUIDS
+from pyegeria import INTEGRATION_GUIDS, AutomatedCuration, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,

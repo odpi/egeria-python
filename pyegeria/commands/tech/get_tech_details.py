@@ -7,7 +7,8 @@ A simple viewer for collections - provide the root and we display the hierarchy
 
 """
 import argparse
-import os, sys
+import os
+import sys
 
 from rich import print
 from rich.console import Console
@@ -18,14 +19,12 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
-    UserNotAuthorizedException,
-    PropertyServerException,
-    InvalidParameterException,
     AutomatedCuration,
+    InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException,
 )
-from pyegeria._exceptions import (
-    print_exception_response,
-)
+from pyegeria._exceptions import print_exception_response
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

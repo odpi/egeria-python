@@ -1,0 +1,150 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Information Supply Chain - Personalized Treatment Ordering </title>
+        <h3 style="text-align: center;">Information Supply Chain - Personalized Treatment Ordering </h3>
+        GUID : adbae740-57a3-41b8-a722-266b895794e6
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+adbae740-57a3-41b8-a722-266b895794e6@{ shape: flip-tri, label: "*Information Supply Chain*
+**Personalized Treatment Ordering**"}
+7cd65cf6-a0e8-4965-b5ca-3eee70be8e34@{ shape: text, label: "*Description*
+**Delivering information about a new personalized medicine order so that it fulfilled and invoiced.**"}
+adbae740-57a3-41b8-a722-266b895794e6~~~7cd65cf6-a0e8-4965-b5ca-3eee70be8e34
+2fa17248-c13c-4913-bddd-0ed4bdd2ff67@{ shape: text, label: "*Purpose*
+**Ensuring orders are fulfilled effectively.**"}
+7cd65cf6-a0e8-4965-b5ca-3eee70be8e34~~~2fa17248-c13c-4913-bddd-0ed4bdd2ff67
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b@{ shape: rounded, label: "*Software Server*
+**System:ed-mfg-control**"}
+25e2e56d-2e2f-4f6f-a1ed-019dd76d589a@{ shape: rounded, label: "*Software Server*
+**System:manufacturing-planning**"}
+bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b-->|"manufacturing complete [Data Flow]"|25e2e56d-2e2f-4f6f-a1ed-019dd76d589a
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4@{ shape: rounded, label: "*Software Server*
+**System:MFCTRL9482**"}
+c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4-->|"manufacturing complete [Data Flow]"|25e2e56d-2e2f-4f6f-a1ed-019dd76d589a
+0f59833f-8a8a-488b-808a-9ea24618bb6c@{ shape: rounded, label: "*Software Server*
+**System:winch-mfg-control**"}
+0f59833f-8a8a-488b-808a-9ea24618bb6c-->|"manufacturing complete [Data Flow]"|25e2e56d-2e2f-4f6f-a1ed-019dd76d589a
+a2e43afa-386a-4acd-ba1d-7773b368c34a@{ shape: rounded, label: "*Software Server*
+**System:globalCRM**"}
+11071e76-23a8-4f3d-bd07-3b9aa9781bda@{ shape: rounded, label: "*Software Server*
+**System:coco-ledgers**"}
+a2e43afa-386a-4acd-ba1d-7773b368c34a-->|"new sales [Data Flow]"|11071e76-23a8-4f3d-bd07-3b9aa9781bda
+a2e43afa-386a-4acd-ba1d-7773b368c34a-->|"new orders [Data Flow]"|25e2e56d-2e2f-4f6f-a1ed-019dd76d589a
+25e2e56d-2e2f-4f6f-a1ed-019dd76d589a-->|"manufacturing request [Data Flow]"|c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4
+style 2fa17248-c13c-4913-bddd-0ed4bdd2ff67 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style c24e9ea0-171a-46d8-a5d8-3fedcfe97aa4 color:#000000, fill:#e0ab18, stroke:#004563
+style a2e43afa-386a-4acd-ba1d-7773b368c34a color:#000000, fill:#e0ab18, stroke:#004563
+style adbae740-57a3-41b8-a722-266b895794e6 color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style bdf60c10-e8f8-4b49-9f92-e0c6a40b0d7b color:#000000, fill:#e0ab18, stroke:#004563
+style 11071e76-23a8-4f3d-bd07-3b9aa9781bda color:#000000, fill:#e0ab18, stroke:#004563
+style 0f59833f-8a8a-488b-808a-9ea24618bb6c color:#000000, fill:#e0ab18, stroke:#004563
+style 7cd65cf6-a0e8-4965-b5ca-3eee70be8e34 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 25e2e56d-2e2f-4f6f-a1ed-019dd76d589a color:#000000, fill:#e0ab18, stroke:#004563`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

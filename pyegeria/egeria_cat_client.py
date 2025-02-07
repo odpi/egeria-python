@@ -6,14 +6,11 @@ This class is meant to be a client for catalog users and currently inherits from
 AssetCatalog, CollectionManager, GlossaryManager, and ProjectManager.
 
 """
-
-from pyegeria import (
-    AssetCatalog,
-    CollectionManager,
-    EgeriaMy,
-    GlossaryManager,
-    ProjectManager,
-)
+from pyegeria.egeria_my_client import EgeriaMy
+from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.collection_manager_omvs import CollectionManager
+from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.project_manager_omvs import ProjectManager
 
 
 class EgeriaCat(

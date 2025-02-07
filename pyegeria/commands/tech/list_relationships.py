@@ -20,10 +20,10 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    ClassificationManager,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    ClassificationManager,
     max_paging_size,
 )
 

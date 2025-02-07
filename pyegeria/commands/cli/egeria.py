@@ -15,64 +15,58 @@ import sys
 import click
 from trogon import tui
 
-from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
-from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
-from pyegeria.commands.cli.egeria_ops import show_server
-from pyegeria.commands.tech.get_tech_type_template import template_viewer
+from pyegeria.commands.cat.glossary_actions import (
+    create_glossary,
+    create_term,
+    delete_glossary,
+    delete_term,
+    export_terms,
+    import_terms,
+)
 from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
-from pyegeria.commands.cat.list_terms import display_glossary_terms
+from pyegeria.commands.cat.list_collections import display_collections
+from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from pyegeria.commands.cat.list_deployed_database_schemas import (
+    list_deployed_database_schemas,
+)
+from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
+from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_projects import display_project_list
-from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
-from pyegeria.commands.tech.list_relationships import list_relationships
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.list_tech_types import display_tech_types
+from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
-from pyegeria.commands.ops.list_archives import display_archive_list
-from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
+from pyegeria.commands.cli.egeria_login_tui import login
+from pyegeria.commands.cli.egeria_ops import show_server
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.list_my_profile import display_my_profile
 from pyegeria.commands.my.list_my_roles import display_my_roles
 from pyegeria.commands.my.monitor_my_todos import display_my_todos
 from pyegeria.commands.my.monitor_open_todos import display_todos
-from pyegeria.commands.cat.list_deployed_database_schemas import (
-    list_deployed_database_schemas,
-)
-from pyegeria.commands.cat.list_collections import display_collections
-from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
-from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
-from pyegeria.commands.cat.glossary_actions import (
-    create_glossary,
-    delete_glossary,
-    create_term,
-    import_terms,
-    delete_term,
-    export_terms,
-)
-from pyegeria.commands.cat.list_glossaries import display_glossaries
-
 from pyegeria.commands.my.todo_actions import (
-    mark_todo_complete,
     change_todo_status,
-    reassign_todo,
-    delete_todo,
     create_todo,
+    delete_todo,
+    mark_todo_complete,
+    reassign_todo,
 )
-
-
 from pyegeria.commands.ops.gov_server_actions import (
     add_catalog_target,
-    remove_catalog_target,
-    update_catalog_target,
     refresh_gov_eng_config,
-    stop_server,
+    remove_catalog_target,
     start_server,
+    stop_server,
+    update_catalog_target,
 )
+from pyegeria.commands.ops.list_archives import display_archive_list
 from pyegeria.commands.ops.list_catalog_targets import display_catalog_targets
 from pyegeria.commands.ops.load_archive import load_archive
 from pyegeria.commands.ops.monitor_engine_activity import display_engine_activity
@@ -84,38 +78,49 @@ from pyegeria.commands.ops.monitor_integ_daemon_status import (
 from pyegeria.commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
+from pyegeria.commands.ops.monitor_server_startup import display_startup_status
 from pyegeria.commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
 from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
 from pyegeria.commands.ops.restart_integration_daemon import restart_connector
-from pyegeria.commands.ops.monitor_server_startup import display_startup_status
-
 from pyegeria.commands.tech.get_element_info import display_elements
 from pyegeria.commands.tech.get_guid_info import display_guid
 from pyegeria.commands.tech.get_tech_details import tech_details_viewer
+from pyegeria.commands.tech.get_tech_type_template import template_viewer
+from pyegeria.commands.tech.list_all_om_type_elements import list_elements
+from pyegeria.commands.tech.list_all_om_type_elements_x import list_elements_x
+from pyegeria.commands.tech.list_all_related_elements import list_related_elements
+from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
 from pyegeria.commands.tech.list_asset_types import display_asset_types
+from pyegeria.commands.tech.list_elements_by_classification_by_property_value import (
+    find_elements_by_classification_by_prop_value,
+)
+from pyegeria.commands.tech.list_elements_by_property_value import (
+    find_elements_by_prop_value,
+)
+from pyegeria.commands.tech.list_elements_by_property_value_x import (
+    find_elements_by_prop_value_x,
+)
 from pyegeria.commands.tech.list_elements_for_classification import (
     list_classified_elements,
 )
-from pyegeria.commands.tech.list_all_om_type_elements import list_elements
-from pyegeria.commands.tech.list_all_om_type_elements_x import list_elements_x
-from pyegeria.commands.tech.list_elements_by_classification_by_property_value import find_elements_by_classification_by_prop_value
-from pyegeria.commands.tech.list_elements_by_property_value import find_elements_by_prop_value
-from pyegeria.commands.tech.list_elements_by_property_value_x import find_elements_by_prop_value_x
-from pyegeria.commands.tech.list_related_elements_with_prop_value import list_related_elements_with_prop_value
-
-
+from pyegeria.commands.tech.list_gov_action_processes import display_gov_processes
+from pyegeria.commands.tech.list_information_supply_chains import supply_chain_viewer
 from pyegeria.commands.tech.list_registered_services import display_registered_svcs
+from pyegeria.commands.tech.list_related_elements_with_prop_value import (
+    list_related_elements_with_prop_value,
+)
 from pyegeria.commands.tech.list_related_specification import (
     display_related_specification,
 )
-from pyegeria.commands.tech.list_all_related_elements import list_related_elements
-
 from pyegeria.commands.tech.list_relationship_types import display_relationship_types
+from pyegeria.commands.tech.list_relationships import list_relationships
+from pyegeria.commands.tech.list_solution_blueprints import blueprint_list
+from pyegeria.commands.tech.list_solution_components import solution_component_list
+from pyegeria.commands.tech.list_solution_roles import solution_role_list
 from pyegeria.commands.tech.list_tech_templates import display_templates_spec
 from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
-from pyegeria.commands.tech.list_gov_action_processes import display_gov_processes
 
 
 @tui()
@@ -372,6 +377,12 @@ def show_elements(ctx):
     """Show information about Egeria elements"""
 
 
+@show_tech.group("supply-chains")
+@click.pass_context
+def show_supply_chains(ctx):
+    """Show information about Information Supply Chainss"""
+
+
 @show_elements.command("guid-info")
 @click.argument("guid", nargs=1)
 @click.pass_context
@@ -410,7 +421,7 @@ def list_anchored_elements(ctx, property_value: str, prop_list: str):
         sys.exit(4)
     display_anchored_elements(
         property_value,
-        [prop_list],
+        [property_names],
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -419,6 +430,7 @@ def list_anchored_elements(ctx, property_value: str, prop_list: str):
         c.jupyter,
         c.width,
     )
+
 
 @show_elements.command("elements-by-classification")
 @click.option(
@@ -446,12 +458,13 @@ def show_elements_by_classification(ctx, om_type, classification):
         c.width,
     )
 
+
 @show_elements.command("elements-by-classification-by-prop-value")
 @click.option(
     "--classification",
     default="GovernanceProject",
     help="Classification to filter by",
-    )
+)
 @click.option(
     "--property_value",
     help="Property value to filter by",
@@ -466,7 +479,9 @@ def show_elements_by_classification(ctx, om_type, classification):
     help="Open Metadata type to filter by",
 )
 @click.pass_context
-def show_elements_by_classification_by_prop(ctx,  classification, property_value, property_names, om_type):
+def show_elements_by_classification_by_prop(
+    ctx, classification, property_value, property_names, om_type
+):
     """Show elements by classification and property value"""
     c = ctx.obj
     find_elements_by_classification_by_prop_value(
@@ -481,6 +496,7 @@ def show_elements_by_classification_by_prop(ctx,  classification, property_value
         c.jupyter,
         c.width,
     )
+
 
 @show_elements.command("elements-by-prop-value")
 @click.option(
@@ -503,7 +519,9 @@ def show_elements_by_classification_by_prop(ctx,  classification, property_value
     help="If True, feedback information is displayed",
 )
 @click.pass_context
-def show_elements_by_classification_by_prop(ctx,property_value, property_names, om_type, extended):
+def show_elements_by_classification_by_prop(
+    ctx, property_value, property_names, om_type, extended
+):
     """Show elements by classification and property value"""
     c = ctx.obj
     if extended:
@@ -529,7 +547,8 @@ def show_elements_by_classification_by_prop(ctx,property_value, property_names, 
             c.password,
             c.jupyter,
             c.width,
-            )
+        )
+
 
 @show_elements.command("related-elements")
 @click.option(
@@ -586,9 +605,10 @@ def show_related_elements(ctx, element_guid, om_type, rel_type):
     default="Referenceable",
     help="Open metadata type to filter by.",
 )
-
 @click.pass_context
-def show_related_elements(ctx, element_guid, rel_type, property_value, property_names, om_type):
+def show_related_elements(
+    ctx, element_guid, rel_type, property_value, property_names, om_type
+):
     """Show elements related to specified guid and property value"""
     c = ctx.obj
     list_related_elements_with_prop_value(
@@ -744,9 +764,6 @@ def show_relationship_types(ctx, om_type):
     )
 
 
-
-
-
 @show_tech_type.command("template-spec")
 @click.pass_context
 @click.option(
@@ -845,7 +862,7 @@ def list_all_om_type_elements(ctx, om_type, extended):
             c.userid,
             c.password,
             c.jupyter,
-            c.width
+            c.width,
         )
     else:
         list_elements(
@@ -855,7 +872,7 @@ def list_all_om_type_elements(ctx, om_type, extended):
             c.userid,
             c.password,
             c.jupyter,
-            c.width
+            c.width,
         )
 
 
@@ -883,6 +900,74 @@ def get_element_info(ctx, om_type):
     c = ctx.obj
     display_elements(
         om_type,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_supply_chains.command("supply-chains")
+@click.option("--search-string", default="*", help="Search string")
+@click.pass_context
+def list_supply_chains(ctx, search_string):
+    """Display supply chains"""
+    c = ctx.obj
+    supply_chain_viewer(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_supply_chains.command("blueprints")
+@click.option("--search-string", default="*", help="Search string")
+@click.pass_context
+def list_blueprints(ctx, search_string):
+    """Display solution blueprints"""
+    c = ctx.obj
+    blueprint_list(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_supply_chains.command("solution-roles")
+@click.option("--search-string", default="*", help="Search string")
+@click.pass_context
+def list_solution_roles(ctx, search_string):
+    """Display solution roles"""
+    c = ctx.obj
+    solution_role_list(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+    )
+
+
+@show_supply_chains.command("solution-components")
+@click.option("--search-string", default="*", help="Search string")
+@click.pass_context
+def list_solution_components(ctx, search_string):
+    """Display solution componentss"""
+    c = ctx.obj
+    solution_component_list(
+        search_string,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -1531,7 +1616,6 @@ def show_user_ids(ctx):
     )
 
 
-
 @deployed_data.command("deployed-servers")
 @click.option(
     "--search-string",
@@ -1657,6 +1741,7 @@ def show_ops(ctx):
     """Display an Egeria Object"""
     pass
 
+
 @show_ops.group("repository")
 @click.pass_context
 def show_repo(ctx):
@@ -1667,7 +1752,7 @@ def show_repo(ctx):
 @show_repo.command("archives")
 @click.pass_context
 def show_archives(ctx):
-    c= ctx.obj
+    c = ctx.obj
     display_archive_list(
         c.view_server,
         c.view_server_url,
@@ -1677,6 +1762,7 @@ def show_archives(ctx):
         c.jupyter,
         c.width,
     )
+
 
 @show_ops.group("platforms")
 @click.pass_context
@@ -1755,7 +1841,6 @@ def engine_host(ctx):
 @click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )
-
 @click.pass_context
 def gov_eng_status(ctx, engine_list, list):
     """Display engine-host status information"""

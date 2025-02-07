@@ -21,8 +21,8 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.table import Table
 
-from pyegeria import AutomatedCuration
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -86,6 +86,7 @@ def display_engine_activity_c(
     """
     g_client = AutomatedCuration(view_server, view_url, user, user_pwd=user_pass)
     token = g_client.create_egeria_bearer_token()
+
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
@@ -108,7 +109,6 @@ def display_engine_activity_c(
         table.add_column("Completion Time")
         table.add_column("Core Results")
         # table.add_column("Completion Message")
-
 
         action_status = g_client.get_engine_actions()
 

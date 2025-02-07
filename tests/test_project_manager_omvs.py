@@ -10,6 +10,7 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
 import time
 
@@ -17,10 +18,10 @@ from rich import print, print_json
 
 from pyegeria import (
     InvalidParameterException,
+    ProjectManager,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ProjectManager,
 )
 
 # from pyegeria.admin_services import FullServerConfig

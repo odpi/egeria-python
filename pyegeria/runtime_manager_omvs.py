@@ -5,17 +5,14 @@ Copyright Contributors to the ODPi Egeria project.
 Runtime manager is a view service that supports user interaction with the running platforms.
 
 """
+
 import asyncio
 
 from requests import Response
-
-from pyegeria import (
-    Client,
-    max_paging_size,
-    body_slimmer,
-    InvalidParameterException,
-    default_time_out,
-)
+from pyegeria.utils import body_slimmer
+from pyegeria._client import Client
+from pyegeria import TEMPLATE_GUIDS, max_paging_size,default_time_out
+from pyegeria._exceptions import InvalidParameterException
 
 
 class RuntimeManager(Client):

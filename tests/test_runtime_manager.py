@@ -10,18 +10,18 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
 import time
+from contextlib import nullcontext as does_not_raise
 from json import JSONDecodeError
 
 import pytest
-from contextlib import nullcontext as does_not_raise
 from rich import print, print_json
-
 from rich.console import Console
-from rich.traceback import install, Traceback
+from rich.traceback import Traceback, install
 
-from pyegeria import AutomatedCuration, RuntimeManager, EgeriaTech
+from pyegeria import AutomatedCuration, EgeriaTech, RuntimeManager
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,

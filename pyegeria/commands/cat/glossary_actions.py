@@ -7,20 +7,20 @@ Copyright Contributors to the ODPi Egeria project.
 Execute Glossary actions.
 
 """
+
 import csv
 import json
 import os
 import sys
 import time
 from datetime import datetime
+
+import click
 from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-
-import click
-
 
 from pyegeria import EgeriaTech, body_slimmer
 from pyegeria._exceptions import (
@@ -28,7 +28,6 @@ from pyegeria._exceptions import (
     PropertyServerException,
     print_exception_response,
 )
-
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

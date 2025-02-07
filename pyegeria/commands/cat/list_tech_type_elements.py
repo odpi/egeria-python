@@ -19,11 +19,11 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AutomatedCuration,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

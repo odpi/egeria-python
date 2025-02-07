@@ -13,16 +13,16 @@ import time
 
 from rich import box
 from rich.console import Console
-from rich.prompt import Prompt
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    EgeriaTech,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

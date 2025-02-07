@@ -13,17 +13,17 @@ import time
 
 from rich import box
 from rich.console import Console
-from rich.prompt import Prompt
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
+    AssetCatalog,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AssetCatalog,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -99,8 +99,11 @@ def display_assets(
             header = element["elementHeader"]
             nested = element.get("matchingElements", "---")
             qualified_name = properties["qualifiedName"]
-            display_name = Text(f"{properties.get("displayName", "---")}\n\n{qualified_name}\n\n"
-                                f"{header['guid']}", justify="center")
+            display_name = Text(
+                f"{properties.get("displayName", "---")}\n\n{qualified_name}\n\n"
+                f"{header['guid']}",
+                justify="center",
+            )
 
             type_name = header["type"]["typeName"]
             tech_type = properties.get("deployedImplementationType", "---")

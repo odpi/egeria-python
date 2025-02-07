@@ -12,23 +12,21 @@ import json
 import os
 import sys
 
-from rich import print, box
+from rich import box, print
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
-
 from rich.prompt import Prompt
 from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
+    ClassificationManager,
+    Client,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    Client,
-    ClassificationManager,
 )
-
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

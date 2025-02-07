@@ -10,24 +10,21 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
-import time
 
-import pytest
 import asyncio
 import json
-
+import time
 from contextlib import nullcontext as does_not_raise
 
+import pytest
+
+from pyegeria import INTEGRATION_GUIDS, TEMPLATE_GUIDS
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-
-from pyegeria import TEMPLATE_GUIDS, INTEGRATION_GUIDS
-
-
 from pyegeria.asset_catalog_omvs import AssetCatalog
 
 # from pyegeria.utils import print_json_list_as_table

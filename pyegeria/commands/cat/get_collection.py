@@ -9,6 +9,7 @@ A simple viewer for collections - provide the root and we display the hierarchy
 
 import argparse
 import os
+
 from rich import print
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -17,13 +18,11 @@ from rich.tree import Tree
 
 from pyegeria import (
     CollectionManager,
-    UserNotAuthorizedException,
-    PropertyServerException,
     InvalidParameterException,
+    PropertyServerException,
+    UserNotAuthorizedException,
 )
-from pyegeria._exceptions import (
-    print_exception_response,
-)
+from pyegeria._exceptions import print_exception_response
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

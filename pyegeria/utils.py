@@ -5,9 +5,11 @@ Copyright Contributors to the ODPi Egeria project.
 General utility functions in support of the Egeria Python Client package.
 
 """
+
 import json
-from rich import print, print_json
 from datetime import datetime
+
+from rich import print, print_json
 from rich.console import Console
 
 console = Console(width=200)

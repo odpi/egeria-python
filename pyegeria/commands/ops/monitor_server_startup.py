@@ -8,20 +8,20 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple server status display using the OMAS services.
 """
+import argparse
 import os
 import time
-import argparse
+
+from rich.live import Live
+from rich.table import Table
 
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
+    ServerOps,
     UserNotAuthorizedException,
     print_exception_response,
-    ServerOps,
 )
-from rich.table import Table
-from rich.live import Live
-
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

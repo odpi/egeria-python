@@ -19,11 +19,11 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    ClassificationManager,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    ClassificationManager,
 )
 
 console = Console()
@@ -153,7 +153,9 @@ def main():
             "Enter the relationship to search",
             default="SpecificationPropertyAssignment",
         )
-        om_type = Prompt.ask("Enter an optional Open Metadata Type", default="Referenceable")
+        om_type = Prompt.ask(
+            "Enter an optional Open Metadata Type", default="Referenceable"
+        )
         display_related_elements(
             element_guid, relationship, om_type, server, url, userid, password
         )

@@ -1,21 +1,23 @@
 """This creates a templates guid file from the core metadata archive"""
-from jedi import Project
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-import os
+
 import argparse
-import time
+import os
 import sys
+import time
+
+from jedi import Project
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    EgeriaTech,
 )
 
 console = Console()

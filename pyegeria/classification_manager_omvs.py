@@ -9,7 +9,7 @@ import asyncio
 
 from httpx import Response
 
-from pyegeria import body_slimmer
+from pyegeria.utils import body_slimmer
 
 # import json
 from pyegeria._client import Client, max_paging_size
@@ -70,7 +70,9 @@ class ClassificationManager(Client):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        self.classification_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
+        self.classification_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
+        )
         Client.__init__(
             self,
             view_server,
@@ -802,7 +804,7 @@ class ClassificationManager(Client):
     async def _async_get_element_guid_by_unique_name(
         self,
         name: str,
-        property_name: str = 'qualifiedName',
+        property_name: str = "qualifiedName",
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
         effective_time: str = None,
@@ -1547,7 +1549,7 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if property_value is '*':
+        if property_value is "*":
             property_value = None
 
         possible_query_params = query_string(

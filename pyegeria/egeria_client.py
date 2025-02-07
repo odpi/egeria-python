@@ -11,26 +11,23 @@ for all use cases..using the more role based clients is often appropriate:
     * EgeriaTech - for technical users such as data scientists and engineers
 
 """
+from pyegeria.x_action_author_omvs import ActionAuthor
+from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.collection_manager_omvs import CollectionManager
+from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.classification_manager_omvs import ClassificationManager
+from pyegeria.template_manager_omvs import TemplateManager
+from pyegeria.runtime_manager_omvs import RuntimeManager
+from pyegeria.full_omag_server_config import FullServerConfig
+from pyegeria.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.egeria_my_client import EgeriaMy
+from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.server_operations import ServerOps
+from pyegeria.registered_info import RegisteredInfo
+from pyegeria.valid_metadata_omvs import ValidMetadataManager
 
-from pyegeria import (
-    AssetCatalog,
-    CollectionManager,
-    EgeriaCat,
-    EgeriaMy,
-    GlossaryManager,
-    ProjectManager,
-    RuntimeManager,
-    ServerOps,
-    ActionAuthor,
-    AutomatedCuration,
-    ClassificationManager,
-    RegisteredInfo,
-    ValidMetadataManager,
-    FullServerConfig,
-    EgeriaConfig,
-    MetadataExplorer,
-    SolutionArchitect
-)
 
 
 class Egeria(
@@ -119,4 +116,4 @@ class Egeria(
         )
         SolutionArchitect.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
-            )
+        )

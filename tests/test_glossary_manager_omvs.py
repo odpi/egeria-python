@@ -10,24 +10,22 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
-import time
 
-import pytest
 import asyncio
 import json
-
+import time
 from contextlib import nullcontext as does_not_raise
 
+import pytest
+
+from pyegeria import GlossaryManager
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-
 from pyegeria.core_omag_server_config import CoreServerConfig
-
-from pyegeria import GlossaryManager
 from tests.test_feedback_manager_omvs import password
 
 # from pyegeria.admin_services import FullServerConfig

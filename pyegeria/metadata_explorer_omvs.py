@@ -11,9 +11,7 @@ import asyncio
 
 from httpx import Response
 
-from pyegeria import body_slimmer
-
-
+from pyegeria.utils import body_slimmer
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import default_time_out
 
@@ -112,7 +110,9 @@ class MetadataExplorer(Client):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        self.metadata_explorer_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-explorer"
+        self.metadata_explorer_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-explorer"
+        )
         Client.__init__(
             self,
             view_server,
@@ -488,7 +488,6 @@ class MetadataExplorer(Client):
             )
         )
         return response
-
 
     async def _async_get_metadata_element_by_unique_name(
         self,

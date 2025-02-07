@@ -8,25 +8,27 @@ https://egeria-project.org/concepts/information-supply-chain
 """
 
 import asyncio
+import os
+import sys
 
 from httpx import Response
 
-from pyegeria import body_slimmer
+from pyegeria.utils import body_slimmer
 from pyegeria._client import Client, max_paging_size
-import sys
-import os
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 NO_ELEMENTS_FOUND = "No Elements Found"
 
 DEFAULT_BODY_SKELETON = {
-    'effective_time' :  None,
-    'limitResultsByStatus' : ['ACTIVE'],
-    'asOfTime' : None,
-    'sequencingOrder' : None,
-    'sequencingProperty' : None,
-    'filter' : None
-    }
+    "effective_time": None,
+    "limitResultsByStatus": ["ACTIVE"],
+    "asOfTime": None,
+    "sequencingOrder": None,
+    "sequencingProperty": None,
+    "filter": None,
+}
+
 
 def query_seperator(current_string):
     if current_string == "":
@@ -83,8 +85,10 @@ class SolutionArchitect(Client):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
-                                                     f"/api/open-metadata/solution-architect")
+        self.solution_architect_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}"
+            f"/api/open-metadata/solution-architect"
+        )
         Client.__init__(
             self,
             view_server,
@@ -98,15 +102,17 @@ class SolutionArchitect(Client):
     #
     #
 
-    async def _async_find_information_supply_chains(self,
-                                                    filter: str = "*",
-                                                    starts_with: bool = True,
-                                                    ends_with: bool = False,
-                                                    ignore_case: bool = False,
-                                                    start_from: int = 0,
-                                                    page_size: int = max_paging_size,
-                                                    body: dict = None,) ->list[dict] | str:
-
+    async def _async_find_information_supply_chains(
+        self,
+        filter: str = "*",
+        add_implementation: bool = True,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the list of information supply chain metadata elements that contain the search string.
            https://egeria-project.org/concepts/information-supply-chain
            Async version.
@@ -115,6 +121,8 @@ class SolutionArchitect(Client):
         ----------
         filter : str
             - search_filter string to search for.
+        add_implementation : bool, [default=True], optional
+            - add_implementation flag to include information supply chain implementations details..
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -141,6 +149,7 @@ class SolutionArchitect(Client):
 
         possible_query_params = query_string(
             [
+                ("addImplementation", add_implementation),
                 ("startFrom", start_from),
                 ("pageSize", page_size),
                 ("startsWith", starts_with),
@@ -170,15 +179,17 @@ class SolutionArchitect(Client):
         )
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def find_information_supply_chains(self,
-                                           filter: str = "*",
-                                           starts_with: bool = True,
-                                           ends_with: bool = False,
-                                           ignore_case: bool = False,
-                                           start_from: int = 0,
-                                           page_size: int = max_paging_size,
-                                           body: dict = None) -> list[dict] | str:
-
+    def find_information_supply_chains(
+        self,
+        filter: str = "*",
+        add_implementation: bool = True,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the list of information supply chain metadata elements that contain the search string.
           https://egeria-project.org/concepts/information-supply-chain
 
@@ -186,6 +197,8 @@ class SolutionArchitect(Client):
         ----------
         filter: str
             - search_filterstring to search for.
+        add_implementation : bool, [default=True], optional
+            - add_implementation flag to include information supply chain implementations details..
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -214,35 +227,38 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(
             self._async_find_information_supply_chains(
                 filter,
+                add_implementation,
                 starts_with,
                 ends_with,
                 ignore_case,
                 start_from,
                 page_size,
-                body,)
+                body,
+            )
         )
         return response
 
+    def find_all_information_supply_chains(
+        self, start_from: int = 0, page_size: int = max_paging_size
+    ) -> list[dict] | str:
+        """Retrieve a list of all information supply chains
+        https://egeria-project.org/concepts/information-supply-chain
+        """
 
-    def find_all_information_supply_chains(self, start_from: int = 0, page_size: int = max_paging_size) \
-            -> list[dict] | str:
-       """Retrieve a list of all information supply chains
-          https://egeria-project.org/concepts/information-supply-chain
-       """
+        return self.find_information_supply_chains(
+            "*", start_from=start_from, page_size=page_size
+        )
 
-       return (self.find_information_supply_chains('*', start_from = start_from, page_size = page_size ))
-
-
-
-    async def _async_find_solution_blueprints(self,
-                                              filter: str = "*",
-                                              starts_with: bool = True,
-                                              ends_with: bool = False,
-                                              ignore_case: bool = False,
-                                              start_from: int = 0,
-                                              page_size: int = max_paging_size,
-                                              body: dict = None,) ->list[dict] | str:
-
+    async def _async_find_solution_blueprints(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
            Async version.
@@ -285,7 +301,7 @@ class SolutionArchitect(Client):
             ]
         )
 
-        if filter is None or filter== "*":
+        if filter is None or filter == "*":
             search_filter = None
         else:
             search_filter = filter
@@ -306,15 +322,16 @@ class SolutionArchitect(Client):
         )
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def find_solution_blueprints(self,
-                                 filter: str = "*",
-                                 starts_with: bool = True,
-                                 ends_with: bool = False,
-                                 ignore_case: bool = False,
-                                 start_from: int = 0,
-                                 page_size: int = max_paging_size,
-                                 body: dict = None) -> list[dict] | str:
-
+    def find_solution_blueprints(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the list of solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
 
@@ -355,27 +372,31 @@ class SolutionArchitect(Client):
                 ignore_case,
                 start_from,
                 page_size,
-                body,)
+                body,
+            )
         )
         return response
 
-    def find_all_solution_blueprints(self, start_from: int = 0, page_size: int = max_paging_size) \
-            -> list[dict] | str:
+    def find_all_solution_blueprints(
+        self, start_from: int = 0, page_size: int = max_paging_size
+    ) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
-        return (self.find_solution_blueprints('*', start_from = start_from, page_size = page_size ))
+        return self.find_solution_blueprints(
+            "*", start_from=start_from, page_size=page_size
+        )
 
-
-    async def _async_find_solution_roles(self,
-                                         filter: str = "*",
-                                         starts_with: bool = True,
-                                         ends_with: bool = False,
-                                         ignore_case: bool = False,
-                                         start_from: int = 0,
-                                         page_size: int = max_paging_size,
-                                         body: dict = None,) ->list[dict] | str:
-
+    async def _async_find_solution_roles(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the solutio nrole elements that contain the search string.
            https://egeria-project.org/concepts/actor
            Async version.
@@ -418,7 +439,7 @@ class SolutionArchitect(Client):
             ]
         )
 
-        if filter is None or filter== "*":
+        if filter is None or filter == "*":
             search_filter = None
         else:
             search_filter = filter
@@ -439,15 +460,16 @@ class SolutionArchitect(Client):
         )
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def find_solution_roles(self,
-                            filter: str = "*",
-                            starts_with: bool = True,
-                            ends_with: bool = False,
-                            ignore_case: bool = False,
-                            start_from: int = 0,
-                            page_size: int = max_paging_size,
-                            body: dict = None) -> list[dict] | str:
-
+    def find_solution_roles(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the list of solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
 
@@ -488,28 +510,29 @@ class SolutionArchitect(Client):
                 ignore_case,
                 start_from,
                 page_size,
-                body,)
+                body,
+            )
         )
         return response
 
-    def find_all_solution_roles(self, start_from: int = 0, page_size: int = max_paging_size) \
-            -> list[dict] | str:
+    def find_all_solution_roles(
+        self, start_from: int = 0, page_size: int = max_paging_size
+    ) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
-           https://egeria-project.org/concepts/actor
+        https://egeria-project.org/concepts/actor
         """
-        return (self.find_solution_roles('*', start_from = start_from, page_size = page_size ))
+        return self.find_solution_roles("*", start_from=start_from, page_size=page_size)
 
-
-
-    async def _async_find_solution_components(self,
-                                              filter: str = "*",
-                                              starts_with: bool = True,
-                                              ends_with: bool = False,
-                                              ignore_case: bool = False,
-                                              start_from: int = 0,
-                                              page_size: int = max_paging_size,
-                                              body: dict = None,) ->list[dict] | str:
-
+    async def _async_find_solution_components(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the solution component elements that contain the search string.
            https://egeria-project.org/concepts/solution-components
            Async version.
@@ -552,7 +575,7 @@ class SolutionArchitect(Client):
             ]
         )
 
-        if filter is None or filter== "*":
+        if filter is None or filter == "*":
             search_filter = None
         else:
             search_filter = filter
@@ -573,15 +596,16 @@ class SolutionArchitect(Client):
         )
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def find_solution_components(self,
-                                 filter: str = "*",
-                                 starts_with: bool = True,
-                                 ends_with: bool = False,
-                                 ignore_case: bool = False,
-                                 start_from: int = 0,
-                                 page_size: int = max_paging_size,
-                                 body: dict = None) -> list[dict] | str:
-
+    def find_solution_components(
+        self,
+        filter: str = "*",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        body: dict = None,
+    ) -> list[dict] | str:
         """Retrieve the list of solution component elements that contain the search string.
            https://egeria-project.org/concepts/solution-components
 
@@ -622,20 +646,20 @@ class SolutionArchitect(Client):
                 ignore_case,
                 start_from,
                 page_size,
-                body,)
+                body,
+            )
         )
         return response
 
-    def find_all_solution_components(self, start_from: int = 0, page_size: int = max_paging_size) \
-            -> list[dict] | str:
+    def find_all_solution_components(
+        self, start_from: int = 0, page_size: int = max_paging_size
+    ) -> list[dict] | str:
         """Retrieve a list of all solution component elements
-           https://egeria-project.org/concepts/solution-components
+        https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components('*', start_from = start_from, page_size = page_size )
-
-
-
-
+        return self.find_solution_components(
+            "*", start_from=start_from, page_size=page_size
+        )
 
 
 if __name__ == "__main__":

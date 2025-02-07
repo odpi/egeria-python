@@ -1,0 +1,145 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Information Supply Chain - New Employee Onboarding </title>
+        <h3 style="text-align: center;">Information Supply Chain - New Employee Onboarding </h3>
+        GUID : 022009d9-53cb-4469-afeb-16ee81d8f9bc
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+022009d9-53cb-4469-afeb-16ee81d8f9bc@{ shape: flip-tri, label: "*Information Supply Chain*
+**New Employee Onboarding**"}
+781357a1-5149-4330-99ba-14c3fa7c676b@{ shape: text, label: "*Description*
+**Adding information about a new employee to all appropriate systems and directories.**"}
+022009d9-53cb-4469-afeb-16ee81d8f9bc~~~781357a1-5149-4330-99ba-14c3fa7c676b
+892dec52-16d8-4ed8-acb2-fcea8a8b47b8@{ shape: text, label: "*Purpose*
+**Ensure a new employee is productive and engaged in a timely manner.**"}
+781357a1-5149-4330-99ba-14c3fa7c676b~~~892dec52-16d8-4ed8-acb2-fcea8a8b47b8
+88c42780-6fb1-49e2-a584-8af90cdc7728@{ shape: rounded, label: "*Software Server*
+**System:coco-hrim**"}
+ae0c7768-c01e-4bd1-8a47-fbacfccf2f63@{ shape: rounded, label: "*Software Server*
+**System:Netherlands payroll**"}
+88c42780-6fb1-49e2-a584-8af90cdc7728-->|"payment authorization [Data Flow]"|ae0c7768-c01e-4bd1-8a47-fbacfccf2f63
+a47906f0-67f0-46ed-890d-85cb049ffa60@{ shape: rounded, label: "*Software Server*
+**System:cocopages**"}
+88c42780-6fb1-49e2-a584-8af90cdc7728-->|"employee directory [Data Flow]"|a47906f0-67f0-46ed-890d-85cb049ffa60
+35bef6c5-25d7-47b1-91db-f9bce0238612@{ shape: rounded, label: "*Software Server*
+**System:Canadian payroll**"}
+88c42780-6fb1-49e2-a584-8af90cdc7728-->|"payment authorization [Data Flow]"|35bef6c5-25d7-47b1-91db-f9bce0238612
+12c9d1a4-2a5d-4e7c-a640-97f206270425@{ shape: rounded, label: "*Software Server*
+**System:UK payroll**"}
+88c42780-6fb1-49e2-a584-8af90cdc7728-->|"payment authorization [Data Flow]"|12c9d1a4-2a5d-4e7c-a640-97f206270425
+style 022009d9-53cb-4469-afeb-16ee81d8f9bc color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style 892dec52-16d8-4ed8-acb2-fcea8a8b47b8 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style ae0c7768-c01e-4bd1-8a47-fbacfccf2f63 color:#000000, fill:#e0ab18, stroke:#004563
+style 88c42780-6fb1-49e2-a584-8af90cdc7728 color:#000000, fill:#e0ab18, stroke:#004563
+style 12c9d1a4-2a5d-4e7c-a640-97f206270425 color:#000000, fill:#e0ab18, stroke:#004563
+style 781357a1-5149-4330-99ba-14c3fa7c676b color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style a47906f0-67f0-46ed-890d-85cb049ffa60 color:#000000, fill:#e0ab18, stroke:#004563
+style 35bef6c5-25d7-47b1-91db-f9bce0238612 color:#000000, fill:#e0ab18, stroke:#004563`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

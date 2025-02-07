@@ -16,15 +16,15 @@ from trogon import tui
 
 # from pyegeria import ServerOps
 from pyegeria.commands.cli.ops_config import Config
-
 from pyegeria.commands.ops.gov_server_actions import (
     add_catalog_target,
-    remove_catalog_target,
-    update_catalog_target,
     refresh_gov_eng_config,
+    remove_catalog_target,
     start_server,
     stop_server,
+    update_catalog_target,
 )
+from pyegeria.commands.ops.list_archives import display_archive_list
 from pyegeria.commands.ops.list_catalog_targets import display_catalog_targets
 from pyegeria.commands.ops.load_archive import load_archive
 from pyegeria.commands.ops.monitor_engine_activity import display_engine_activity
@@ -36,14 +36,12 @@ from pyegeria.commands.ops.monitor_integ_daemon_status import (
 from pyegeria.commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
+from pyegeria.commands.ops.monitor_server_startup import display_startup_status
 from pyegeria.commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
 from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
 from pyegeria.commands.ops.restart_integration_daemon import restart_connector
-from pyegeria.commands.ops.monitor_server_startup import display_startup_status
-from pyegeria.commands.ops.list_archives import display_archive_list
-
 
 # class Config(object):
 #     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
@@ -184,7 +182,7 @@ def cli(
         jupyter,
         width,
         home_glossary_guid,
-        glossary_path
+        glossary_path,
     )
     ctx.max_content_width = 200
     ctx.ensure_object(Config)
@@ -257,6 +255,7 @@ def show_startup_status(ctx):
         c.width,
     )
 
+
 @show.group("repository")
 @click.pass_context
 def show_repo(ctx):
@@ -267,7 +266,7 @@ def show_repo(ctx):
 @show_repo.command("archives")
 @click.pass_context
 def show_archives(ctx):
-    c= ctx.obj
+    c = ctx.obj
     display_archive_list(
         c.view_server,
         c.view_server_url,
@@ -292,7 +291,6 @@ def engine_host(ctx):
     default="*",
     help="Enter the list of connectors you are interested in or ['*'] for all",
 )
-
 @click.option(
     "--list", is_flag=True, default=False, help="If True, a paged list will be shown"
 )

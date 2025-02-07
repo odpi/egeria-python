@@ -15,19 +15,17 @@ import click
 from trogon import tui
 
 from pyegeria.commands.cli.ops_config import Config
-
-from pyegeria.commands.my.monitor_open_todos import display_todos
-from pyegeria.commands.my.monitor_my_todos import display_my_todos
 from pyegeria.commands.my.list_my_profile import display_my_profile
 from pyegeria.commands.my.list_my_roles import display_my_roles
+from pyegeria.commands.my.monitor_my_todos import display_my_todos
+from pyegeria.commands.my.monitor_open_todos import display_todos
 from pyegeria.commands.my.todo_actions import (
+    change_todo_status,
     create_todo,
     delete_todo,
-    change_todo_status,
     mark_todo_complete,
     reassign_todo,
 )
-
 
 # class Config(object):
 #     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
@@ -129,7 +127,6 @@ from pyegeria.commands.my.todo_actions import (
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
-
 @click.pass_context
 def cli(
     ctx,

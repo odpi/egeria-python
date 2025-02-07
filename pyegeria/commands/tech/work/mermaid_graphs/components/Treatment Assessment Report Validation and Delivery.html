@@ -1,0 +1,129 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Solution Component - Treatment Assessment Report Validation and Delivery </title>
+        <h3 style="text-align: center;">Solution Component - Treatment Assessment Report Validation and Delivery </h3>
+        GUID : 0bf2547c-937c-41b6-814f-6284849271a1
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+32757980-1bac-4694-8a0b-61f2e9c8f851@{ shape: text, label: "*Description*
+**An expert review, presentation, discussions relating to the results of the clinical trial.**"}
+0bf2547c-937c-41b6-814f-6284849271a1@{ shape: odd, label: "*Solution Component*
+**Treatment Assessment Report Validation and Delivery**"}
+72a86eec-9734-4bc0-babb-4fec0aa7c9ff@{ shape: rect, label: "*Solution Component*
+**Assemble Treatment Assessment Report**"}
+72a86eec-9734-4bc0-babb-4fec0aa7c9ff-->|"Solution Linking Wire"|0bf2547c-937c-41b6-814f-6284849271a1
+f6bc847b-868d-43cc-b767-41f5fe3e47d1@{ shape: trap-t, label: "*Solution Actor Role*
+**Clinical Trial Sponsor**"}
+f6bc847b-868d-43cc-b767-41f5fe3e47d1-->|"Reviewer"|0bf2547c-937c-41b6-814f-6284849271a1
+style 32757980-1bac-4694-8a0b-61f2e9c8f851 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 0bf2547c-937c-41b6-814f-6284849271a1 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style f6bc847b-868d-43cc-b767-41f5fe3e47d1 color:#FFFFFF, fill:#AA00FF, stroke:#E1D5E7
+style 72a86eec-9734-4bc0-babb-4fec0aa7c9ff color:#FFFFFF, fill:#838cc7, stroke:#3079ab`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

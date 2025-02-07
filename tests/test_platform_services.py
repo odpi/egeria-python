@@ -21,14 +21,19 @@ available may fail..
 
 """
 
-import time
-import pytest
 import json
+import time
+from contextlib import nullcontext as does_not_raise
 from time import sleep
 
-from contextlib import nullcontext as does_not_raise
+import pytest
 
 disable_ssl_warnings = True
+
+from rich import inspect
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -36,11 +41,6 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from rich.console import Console
-from rich.table import Table
-from rich.live import Live
-from rich import inspect
-
 from pyegeria.platform_services import Platform
 from pyegeria.server_operations import ServerOps
 

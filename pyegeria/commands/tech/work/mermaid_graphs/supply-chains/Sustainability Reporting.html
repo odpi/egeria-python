@@ -1,0 +1,210 @@
+
+    <!DOCTYPE html>
+    <html>
+        <head>
+          <style type="text/css">
+            #mySvgId {
+            width: 100%;
+            height: 600px;
+            overflow: scroll;
+            border: 2px solid #ccc;
+            position: relative;
+            margin-bottom: 10px;
+            }
+            svg {
+            cursor: grab;
+            }
+    
+          </style>
+        </head>
+    
+        <title>Information Supply Chain - Sustainability Reporting </title>
+        <h3 style="text-align: center;">Information Supply Chain - Sustainability Reporting </h3>
+        GUID : dd15b286-a38d-4f03-8625-aaded8596048
+
+    
+        <body>
+        
+          <div id="graphDiv"></div>
+          <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.min.js"></script>
+          <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    
+            mermaid.initialize({startOnLoad: false});
+            await mermaid.run({
+              querySelector: '.mermaid',
+              postRenderCallback: (id) => {
+                const container = document.getElementById("diagram-container");
+                const svgElement = container.querySelector("svg");
+    
+                // Initialize Panzoom
+                const panzoomInstance = Panzoom(svgElement, {
+                  maxScale: 5,
+                  minScale: 0.5,
+                  step: 0.1,
+                });
+    
+                // Add mouse wheel zoom
+                container.addEventListener("wheel", (event) => {
+                  panzoomInstance.zoomWithWheel(event);
+                });
+              }
+            });
+    
+    
+            const drawDiagram = async function () {
+              const element = document.querySelector('#graphDiv');
+              const graphDefinition = `
+    flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+dd15b286-a38d-4f03-8625-aaded8596048@{ shape: flip-tri, label: "*Information Supply Chain*
+**Sustainability Reporting**"}
+c3c621d5-f42e-46dd-8d6b-06f45d7382d5@{ shape: text, label: "*Description*
+**Delivering information to the sustainability reporting tools.**"}
+dd15b286-a38d-4f03-8625-aaded8596048~~~c3c621d5-f42e-46dd-8d6b-06f45d7382d5
+06eb1345-7d61-4c48-8948-98d2f3c01c16@{ shape: text, label: "*Purpose*
+**Ensuring sustainability reporting is accurate.**"}
+c3c621d5-f42e-46dd-8d6b-06f45d7382d5~~~06eb1345-7d61-4c48-8948-98d2f3c01c16
+af07dc2b-ae07-442b-9b06-43d4ef52138a@{ shape: hex, label: "*Information Supply Chain Segment*
+**Sustainability Report Delivery**"}
+a491accc-aaaa-455b-893e-b6f7b0bf0afb@{ shape: hex, label: "*Information Supply Chain Segment*
+**Sustainability Assessment**"}
+a491accc-aaaa-455b-893e-b6f7b0bf0afb-->|"publish report,
+[Information Supply Chain Link]"|af07dc2b-ae07-442b-9b06-43d4ef52138a
+9fb47e51-4121-495d-be31-f766a1f70856@{ shape: hex, label: "*Information Supply Chain Segment*
+**Sustainability Data Gathering**"}
+9fb47e51-4121-495d-be31-f766a1f70856-->|"deliver data,
+[Information Supply Chain Link]"|a491accc-aaaa-455b-893e-b6f7b0bf0afb
+d50a6f1f-49d2-47c3-a55e-5844464bd26f@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Sustainability Dashboards:V1.0**"}
+fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Sustainability Operational Data Store (ODS):V1.0**"}
+fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4-->|"travel inventory,
+[Solution Linking Wire]"|d50a6f1f-49d2-47c3-a55e-5844464bd26f
+06edd666-06fd-43ef-b7bd-22e2651c334f@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Sustainability Calculators:V1.0**"}
+06edd666-06fd-43ef-b7bd-22e2651c334f-->|"results publishing,
+[Solution Linking Wire]"|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4-->|"raw data request,
+[Solution Linking Wire]"|06edd666-06fd-43ef-b7bd-22e2651c334f
+2c0f5a4e-bb02-4081-a80e-3072ca99a1aa@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Accounting ledgers:V1.0**"}
+2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-->|"spending types,
+[Solution Linking Wire]"|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+25fd5be7-692d-4752-9dc7-30068a7d665e@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Hazardous Materials (HazMat) Inventory:V1.0**"}
+25fd5be7-692d-4752-9dc7-30068a7d665e-->|"publish hazmat levels,
+[Solution Linking Wire]"|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+50768e61-43b6-4241-96a3-4c413582ec1f@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Goods Inventory:V1.0**"}
+50768e61-43b6-4241-96a3-4c413582ec1f-->|"goods movement,
+[Solution Linking Wire]"|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+02cdce9a-7630-479a-90de-fd7698d098f1@{ shape: rect, label: "*Solution Component*
+**SolutionComponent:Employee Expense Tool:V1.0**"}
+02cdce9a-7630-479a-90de-fd7698d098f1-->|"travel inventory,
+[Solution Linking Wire]"|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+8a578f0d-f7ae-4255-b4a5-236241fa5449@{ shape: rounded, label: "*Software Server*
+**System:coco-sus**"}
+5a2927f3-eed6-4509-bceb-2c29aa415090@{ shape: rounded, label: "*Software Server*
+**System:coco-sus-dashboards**"}
+8a578f0d-f7ae-4255-b4a5-236241fa5449-->|"data request [Data Flow]"|5a2927f3-eed6-4509-bceb-2c29aa415090
+11071e76-23a8-4f3d-bd07-3b9aa9781bda@{ shape: rounded, label: "*Software Server*
+**System:coco-ledgers**"}
+11071e76-23a8-4f3d-bd07-3b9aa9781bda-->|"spending types [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+ad8eab54-c2f7-494d-82d0-bf5985e5a58d@{ shape: rounded, label: "*Software Server*
+**System:coco-expenses**"}
+ad8eab54-c2f7-494d-82d0-bf5985e5a58d-->|"travel inventory [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+047691ac-8628-472d-aca0-82bedc947ef4@{ shape: rounded, label: "*Software Server*
+**System:austin-haz-mat**"}
+047691ac-8628-472d-aca0-82bedc947ef4-->|"publish hazmat [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+3dbe7e96-c9e5-4336-a29a-9342258e50f8@{ shape: rounded, label: "*Software Server*
+**System:coco-sus-calculators**"}
+3dbe7e96-c9e5-4336-a29a-9342258e50f8-->|"results publishing [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2@{ shape: rounded, label: "*Software Server*
+**System:aus-inventory**"}
+9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2-->|"goods movement [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+8a578f0d-f7ae-4255-b4a5-236241fa5449-->|"data request [Data Flow]"|3dbe7e96-c9e5-4336-a29a-9342258e50f8
+6e786315-ae54-445b-b516-f3c1f0e5f289@{ shape: rounded, label: "*Software Server*
+**System:coco-haz-mat**"}
+6e786315-ae54-445b-b516-f3c1f0e5f289-->|"publish hazmat [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+467dd9a0-89d6-4796-a058-c079bf54b6c7@{ shape: rounded, label: "*Software Server*
+**System:coco-inventory**"}
+467dd9a0-89d6-4796-a058-c079bf54b6c7-->|"goods movement [Data Flow]"|8a578f0d-f7ae-4255-b4a5-236241fa5449
+style dd15b286-a38d-4f03-8625-aaded8596048 color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style ad8eab54-c2f7-494d-82d0-bf5985e5a58d color:#000000, fill:#e0ab18, stroke:#004563
+style 9e29ee1f-01d3-482c-9d1b-8b3f36ce62d2 color:#000000, fill:#e0ab18, stroke:#004563
+style 06eb1345-7d61-4c48-8948-98d2f3c01c16 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 11071e76-23a8-4f3d-bd07-3b9aa9781bda color:#000000, fill:#e0ab18, stroke:#004563
+style 8a578f0d-f7ae-4255-b4a5-236241fa5449 color:#000000, fill:#e0ab18, stroke:#004563
+style fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 25fd5be7-692d-4752-9dc7-30068a7d665e color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 3dbe7e96-c9e5-4336-a29a-9342258e50f8 color:#000000, fill:#e0ab18, stroke:#004563
+style 06edd666-06fd-43ef-b7bd-22e2651c334f color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 02cdce9a-7630-479a-90de-fd7698d098f1 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style af07dc2b-ae07-442b-9b06-43d4ef52138a color:#004563, fill:#b7c0c7, stroke:#004563
+style 047691ac-8628-472d-aca0-82bedc947ef4 color:#000000, fill:#e0ab18, stroke:#004563
+style d50a6f1f-49d2-47c3-a55e-5844464bd26f color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style c3c621d5-f42e-46dd-8d6b-06f45d7382d5 color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 6e786315-ae54-445b-b516-f3c1f0e5f289 color:#000000, fill:#e0ab18, stroke:#004563
+style 467dd9a0-89d6-4796-a058-c079bf54b6c7 color:#000000, fill:#e0ab18, stroke:#004563
+style 50768e61-43b6-4241-96a3-4c413582ec1f color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style a491accc-aaaa-455b-893e-b6f7b0bf0afb color:#004563, fill:#b7c0c7, stroke:#004563
+style 5a2927f3-eed6-4509-bceb-2c29aa415090 color:#000000, fill:#e0ab18, stroke:#004563
+style 2c0f5a4e-bb02-4081-a80e-3072ca99a1aa color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 9fb47e51-4121-495d-be31-f766a1f70856 color:#004563, fill:#b7c0c7, stroke:#004563`;
+              const {svg} = await mermaid.render('mySvgId', graphDefinition);
+              element.innerHTML = svg.replace(/( )*max-width:( 0-9\.)*px;/i, '');
+    
+              var doPan = false;
+              var eventsHandler;
+              var panZoom;
+              var mousepos;
+    
+              eventsHandler = {
+                haltEventListeners: ['mousedown', 'mousemove', 'mouseup']
+    
+                , mouseDownHandler: function (ev) {
+                  if (event.target.className == "[object SVGAnimatedString]") {
+                    doPan = true;
+                    mousepos = {x: ev.clientX, y: ev.clientY}
+                  }
+
+                }
+    
+                , mouseMoveHandler: function (ev) {
+                  if (doPan) {
+                    panZoom.panBy({x: ev.clientX - mousepos.x, y: ev.clientY - mousepos.y});
+                    mousepos = {x: ev.clientX, y: ev.clientY};
+                    window.getSelection().removeAllRanges();
+                  }
+                }
+    
+                , mouseUpHandler: function (ev) {
+                  doPan = false;
+                }
+    
+                , init: function (options) {
+                  options.svgElement.addEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.addEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.addEventListener('mouseup', this.mouseUpHandler, false);
+                }
+    
+                , destroy: function (options) {
+                  options.svgElement.removeEventListener('mousedown', this.mouseDownHandler, false);
+                  options.svgElement.removeEventListener('mousemove', this.mouseMoveHandler, false);
+                  options.svgElement.removeEventListener('mouseup', this.mouseUpHandler, false);
+                }
+              }
+              panZoom = svgPanZoom('#mySvgId', {
+                zoomEnabled: true
+                , controlIconsEnabled: true
+                , fit: 1
+                , center: 1
+                , customEventsHandler: eventsHandler
+              })
+            };
+            await drawDiagram();
+          </script>
+        </body>    
+    

@@ -20,8 +20,8 @@ from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria import AutomatedCuration
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
@@ -108,7 +108,6 @@ def display_engine_activity(
         table.add_column("Completion Time")
         table.add_column("Process Name")
         table.add_column("Completion Message")
-
 
         action_status = g_client.get_engine_actions()
 

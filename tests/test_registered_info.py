@@ -10,7 +10,9 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
+
 import pytest
 from rich import print as rprint
 from rich.console import Console

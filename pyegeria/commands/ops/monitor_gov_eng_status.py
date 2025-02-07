@@ -20,10 +20,10 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    EgeriaTech,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

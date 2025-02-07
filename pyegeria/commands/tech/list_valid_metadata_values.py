@@ -9,13 +9,12 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-import os
 import argparse
 import json
+import os
 import time
 
-from rich import box
-from rich import print
+from rich import box, print
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
@@ -24,9 +23,9 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
+    ValidMetadataManager,
     print_exception_response,
 )
-from pyegeria import ValidMetadataManager
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
