@@ -19,31 +19,31 @@ Note that not all of the definitions are currently used - they merely serve as p
 
 
 class EgeriaErrorCode(Enum):
-    """ Egeria error codes """
+    """Egeria error codes"""
 
     def __str__(self):
         return (
-                "http_error_code="
-                + self.value["http_error_code"]
-                + "messageId="
-                + self.value["message_id"]
-                + ", message="
-                + self.value["message_template"]
-                + ", systemAction="
-                + self.value["system_action"]
-                + ", userAction="
-                + self.value["user_action"]
+            "http_error_code="
+            + self.value["http_error_code"]
+            + "messageId="
+            + self.value["message_id"]
+            + ", message="
+            + self.value["message_template"]
+            + ", systemAction="
+            + self.value["system_action"]
+            + ", userAction="
+            + self.value["user_action"]
         )
 
 
 class OMAGServerInstanceErrorCode(EgeriaErrorCode):
-    """ OMAGServer instance error codes """
+    """OMAGServer instance error codes"""
 
     BAD_SERVER_SECURITY_CONNECTION = dict(
         https_error_code="400",
         message_id="OMAG-MULTI-TENANT-400-001",
         message_template="The OMAG server {0} has been configured with a bad connection to its security connector."
-                         + " Error message is {1}. Connection is {2}",
+        + " Error message is {1}. Connection is {2}",
         system_action="The system is unable to validate the users issuing requests to this server.",
         user_action="Review the error message to determine the cause of the problem.",
     )
@@ -55,11 +55,11 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
     SERVICES_NOT_SHUTDOWN = dict(
         https_error_code="400",
         message_id="OMAG-MULTI-TENANT-400-002",
-        message_template="The OMAG server {0} has been requested to shutdown but the following services " +
-                         "are still running: {1}",
+        message_template="The OMAG server {0} has been requested to shutdown but the following services "
+        + "are still running: {1}",
         system_action="The system is unable to shutdown the server correctly.",
         user_action="Review other error messages to determine the cause of the problem."
-                    + " This is likely to be a logic error in the services listed in the message",
+        + " This is likely to be a logic error in the services listed in the message",
     )
 
     """
@@ -70,8 +70,8 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
         https_error_code="400",
         message_id="OMAG-MULTI-TENANT-400-003",
         message_template="Method {0} called on behalf of the {1} service is unable to create a client-side open "
-                         + "metadata topic connection because the topic name is not configured in the configuration "
-                         + "for this service.",
+        + "metadata topic connection because the topic name is not configured in the configuration "
+        + "for this service.",
         system_action="This is a configuration error and an exception is sent to the requester.",
         user_action="Correct the configuration of the access service to include the name of the topic.",
     )
@@ -84,10 +84,10 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
         https_error_code="400",
         message_id="OMAG-MULTI-TENANT-400-004",
         message_template="The connector provider class name {0} does not create a connector of class {1} which is"
-                         + " required for the {2}",
+        + " required for the {2}",
         system_action="An invalid parameter exception is returned to the caller.",
         user_action="Either change the connector or the hosting environment because the current"
-                    + " combination is not compatible.",
+        + " combination is not compatible.",
     )
 
     """
@@ -98,9 +98,9 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
         message_id="OMAG-MULTI-TENANT-404-001",
         message_template="The OMAG Server {0} is not available to service a request from user {1}",
         system_action="The system is unable to process the request because the server"
-                      + " is not running on the called platform.",
+        + " is not running on the called platform.",
         user_action="Verify that the correct server is being called on the correct platform and that this server "
-                    + "is running. Retry the request when the server is available.",
+        + "is running. Retry the request when the server is available.",
     )
 
     """
@@ -112,8 +112,8 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
         message_template="The {0} service is not available on OMAG Server {1} to handle a request from user {2}",
         system_action="The system is unable to process the request because the service is not available.",
         user_action="Verify that the correct server is being called on the correct platform and that the "
-                    + "requested service is configured to run there.  "
-                    + "Once the correct environment is in place, retry the request.",
+        + "requested service is configured to run there.  "
+        + "Once the correct environment is in place, retry the request.",
     )
 
     """
@@ -136,7 +136,7 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
         message_id="OMAG-MULTI-TENANT-404-004",
         message_template="The open metadata repository services are not initialized for the {0} operation",
         system_action="The system is unable to connect to the open metadata repository services because"
-                      + " they are not running in this server.",
+        + " they are not running in this server.",
         user_action="Check that the server where the called service is running initialized correctly.  "
         + "Correct any errors discovered and retry the request when the open metadata services are available.",
     )
@@ -150,10 +150,10 @@ class OMAGServerInstanceErrorCode(EgeriaErrorCode):
             message_id="OMAG-MULTI-TENANT-404-005",
             message_template="The open metadata repository services are not available for the {0} operation",
             system_action="The system is unable to connect to the open metadata repository services because"
-                          " they are not in the correct state to be called.",
+            " they are not in the correct state to be called.",
             user_action="Check that the server where the called service is running initialized correctly and is not"
-                        + " in the process of shutting down. Correct any errors discovered and retry the"
-                        + " request when the open metadata repository services are available.",
+            + " in the process of shutting down. Correct any errors discovered and retry the"
+            + " request when the open metadata repository services are available.",
         ),
     )
 
@@ -177,12 +177,12 @@ class OMAGCommonErrorCode(EgeriaErrorCode):
         http_error_code="503",
         message_id="CLIENT-SIDE-REST-API-CONNECTOR-503-002",
         message_template="A client-side error {0} was received by method {1} from API call {2} during the call {3}."
-                         + " The error message was {4}",
+        + " The error message was {4}",
         system_action="The client has issued a call to the open metadata access service REST API in a remote server"
-                      + " and has received an exception from the local client libraries.",
+        + " and has received an exception from the local client libraries.",
         user_action="Review the error message to determine the cause of the error. Check that the server is running"
-                    + " and the URL is correct. Look for errors in the local server's console to understand and"
-                    + " correct the cause of the error. Then rerun the request",
+        + " and the URL is correct. Look for errors in the local server's console to understand and"
+        + " correct the cause of the error. Then rerun the request",
     )
 
     EXCEPTION_RESPONSE_FROM_API = dict(
@@ -190,10 +190,10 @@ class OMAGCommonErrorCode(EgeriaErrorCode):
         message_id="SERVER-SIDE-REST-API-ERROR-503-003 ",
         message_template="A {0} exception was received from REST API call {1} to server {2}: error message was: {3}",
         system_action="The system has issued a call to an open metadata access service REST API in a remote server"
-                      + " and has received an exception response.",
+        + " and has received an exception response.",
         user_action="The error message should indicate the cause of the error. "
-                    + "Otherwise look for errors in the remote server's audit log and console to understand and "
-                    + "correct the source of the error.",
+        + "Otherwise look for errors in the remote server's audit log and console to understand and "
+        + "correct the source of the error.",
     )
 
     SERVER_URL_NOT_SPECIFIED = dict(
@@ -256,7 +256,7 @@ class OMAGCommonErrorCode(EgeriaErrorCode):
         http_error_code="400",
         message_id="OMAG-COMMON-400-008",
         message_template="The starting point for the results {0}, passed on the {1} parameter of the {2}"
-                         + " operation, is negative",
+        + " operation, is negative",
         system_action="The system is unable to process the request with this invalid value."
         + "It should be zero for the start of the values, or a number greater than 0"
         + "to start partway down the list.",
@@ -266,10 +266,10 @@ class OMAGCommonErrorCode(EgeriaErrorCode):
     NEGATIVE_PAGE_SIZE = dict(
         http_error_code="400",
         message_id="OMAG-COMMON-400-009",
-        message_template="The page size for the results {0}, passed on the {1} parameter of the {2} operation, " +
-                         "is negative",
+        message_template="The page size for the results {0}, passed on the {1} parameter of the {2} operation, "
+        + "is negative",
         system_action="The system is unable to process the request with this invalid value. "
-                      + "It should be zero to return all the result, or greater than zero to set a maximum.",
+        + "It should be zero to return all the result, or greater than zero to set a maximum.",
         user_action="Correct the code in the caller to provide a non-negative value for the page size.",
     )
 
@@ -277,8 +277,8 @@ class OMAGCommonErrorCode(EgeriaErrorCode):
         http_error_code="400",
         message_id="OMAG-COMMON-400-010",
         message_template=(
-                "The number of records to return, {0}, passed on the {1} parameter of the {2} operation, "
-                + "is greater than the allowable maximum of {3}"
+            "The number of records to return, {0}, passed on the {1} parameter of the {2} operation, "
+            + "is greater than the allowable maximum of {3}"
         ),
         system_action="The system is unable to process the request with this page size value.",
         user_action="Correct the code in the caller to provide a smaller page size.",
@@ -322,6 +322,7 @@ class EgeriaException(Exception):
     Define the Egeria exceptions raised during error handling. Modeled on the exceptions defined in the Egeria core.
 
     """
+
     raw_error_message = ""
 
     def __init__(self, response_body) -> None:
@@ -331,12 +332,20 @@ class EgeriaException(Exception):
         self.exception_class_name = response_dict["exceptionClassName"]
         self.action_description = response_dict["actionDescription"]
         self.exception_error_message = response_dict["exceptionErrorMessage"]
-        self.exception_error_message_id = response_dict.get("exceptionErrorMessageId", "UNKNOWN-ERROR-CODE")
+        self.exception_error_message_id = response_dict.get(
+            "exceptionErrorMessageId", "UNKNOWN-ERROR-CODE"
+        )
 
         # self.exception_error_message_id = response_dict["exceptionErrorMessageId"]
-        self.exception_error_message_parameters = response_dict.get("exceptionErrorMessageParameters", "{}")
-        self.exception_system_action = response_dict.get("exceptionSystemAction", "UNKNOWN-SYSTEM-ACTION")
-        self.exception_user_action = response_dict.get("exceptionUserAction", "UNKNOWN-USER-ACTION")
+        self.exception_error_message_parameters = response_dict.get(
+            "exceptionErrorMessageParameters", "{}"
+        )
+        self.exception_system_action = response_dict.get(
+            "exceptionSystemAction", "UNKNOWN-SYSTEM-ACTION"
+        )
+        self.exception_user_action = response_dict.get(
+            "exceptionUserAction", "UNKNOWN-USER-ACTION"
+        )
 
     def __str__(self):
         return self.exception_error_message
@@ -364,7 +373,7 @@ class UserNotAuthorizedException(EgeriaException):
 
 
 def print_exception_response(e: EgeriaException):
-    """ Prints the exception response """
+    """Prints the exception response"""
 
     if isinstance(e, EgeriaException):
         print(f"\n\nException: {e.response_class}")

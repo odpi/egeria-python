@@ -10,6 +10,7 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import time
 
 from rich import print_json

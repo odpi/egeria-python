@@ -9,18 +9,18 @@ import argparse
 import os
 import sys
 
+from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.tree import Tree
-from rich import print
 
 from pyegeria import (
+    AssetCatalog,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    AssetCatalog,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

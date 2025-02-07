@@ -18,7 +18,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 # import json
 from pyegeria._client import Client
 from pyegeria._globals import enable_ssl_check
-from pyegeria._validators import validate_name, validate_guid, validate_url
+from pyegeria._validators import validate_guid, validate_name, validate_url
 
 
 class CoreServerConfig(Client):

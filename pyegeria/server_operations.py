@@ -10,7 +10,7 @@ import asyncio
 
 from requests import Response
 
-from pyegeria import Platform
+from pyegeria.platform_services import Platform
 from pyegeria._validators import validate_name
 
 

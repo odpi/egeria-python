@@ -1,22 +1,24 @@
 """This finds all elements related to the specified element by the specified relationship type,
-    that match the property value for the properties specified"""
-from jedi import Project
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-import os
+that match the property value for the properties specified"""
+
 import argparse
-import time
+import os
 import sys
+import time
+
+from jedi import Project
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    EgeriaTech,
 )
 
 console = Console()
@@ -185,20 +187,32 @@ def main():
     server = args.server.strip() if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url.strip if args.url is not None else EGERIA_PLATFORM_URL
     userid = args.userid.strip() if args.userid is not None else EGERIA_USER
-    password = args.password.strip() if args.password is not None else EGERIA_USER_PASSWORD
+    password = (
+        args.password.strip() if args.password is not None else EGERIA_USER_PASSWORD
+    )
 
     try:
         element_guid = Prompt.ask("Guid of base element").strip()
         relationship_type = Prompt.ask("Enter the relationship type to follow").strip()
         property_value = Prompt.ask("Enter the property value to search for").strip()
-        property_names = Prompt.ask("Enter a comma seperated list of properties to search").strip()
+        property_names = Prompt.ask(
+            "Enter a comma seperated list of properties to search"
+        ).strip()
         om_type = Prompt.ask(
             "Enter the Open Metadata Type to find elements of", default="Referenceable"
-            )
+        )
         om_type = om_type.strip() if type(om_type) is str else None
-        list_related_elements_with_prop_value(element_guid, relationship_type, property_value,
-                                              [property_names], om_type, server, url,
-                                              userid,password)
+        list_related_elements_with_prop_value(
+            element_guid,
+            relationship_type,
+            property_value,
+            [property_names],
+            om_type,
+            server,
+            url,
+            userid,
+            password,
+        )
     except KeyboardInterrupt:
         pass
 

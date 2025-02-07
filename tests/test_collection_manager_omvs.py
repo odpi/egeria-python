@@ -9,17 +9,18 @@ This module tests the CollectionManager class and methods
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
 import time
 
 from rich import print, print_json
 
 from pyegeria import (
+    CollectionManager,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    CollectionManager,
 )
 
 disable_ssl_warnings = True

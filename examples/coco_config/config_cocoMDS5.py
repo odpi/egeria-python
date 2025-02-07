@@ -10,8 +10,30 @@ This script creates and configures the cocoMDS5 - Business Systems
 
 """
 
-
 import json
+
+from globals import (
+    adminUserId,
+    cocoCohort,
+    cocoMDS1Name,
+    cocoMDS2Name,
+    cocoMDS3Name,
+    cocoMDS4Name,
+    cocoMDS5Name,
+    cocoMDS6Name,
+    cocoMDSxName,
+    cocoOLS1Name,
+    cocoView1Name,
+    corePlatformName,
+    corePlatformURL,
+    dataLakePlatformName,
+    dataLakePlatformURL,
+    devCohort,
+    devPlatformName,
+    devPlatformURL,
+    iotCohort,
+    max_paging_size,
+)
 
 from pyegeria import (
     InvalidParameterException,
@@ -19,33 +41,8 @@ from pyegeria import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.platform_services import Platform
-
-from globals import (
-    adminUserId,
-    cocoMDS1Name,
-    cocoMDS2Name,
-    cocoMDS3Name,
-    cocoMDS4Name,
-    cocoMDS5Name,
-    cocoMDS6Name,
-    cocoView1Name,
-    cocoOLS1Name,
-    cocoMDSxName,
-    devPlatformName,
-    dataLakePlatformName,
-    corePlatformName,
-    corePlatformURL,
-    dataLakePlatformURL,
-    devPlatformURL,
-    cocoCohort,
-    devCohort,
-    iotCohort,
-    max_paging_size,
-)
-
 
 disable_ssl_warnings = True
 

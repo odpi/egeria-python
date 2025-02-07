@@ -14,10 +14,10 @@ A running Egeria environment is needed to run these tests.
 import asyncio
 import json
 import os
-import pytest
 import time
-
 from contextlib import nullcontext as does_not_raise
+
+import pytest
 
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -25,9 +25,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-
 from pyegeria.core_omag_server_config import CoreServerConfig
-
 from pyegeria.feedback_manager_omvs import FeedbackManager
 
 disable_ssl_warnings = True

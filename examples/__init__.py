@@ -5,5 +5,3 @@ Copyright Contributors to the ODPi Egeria project.
 Pyegeria examples package
 
 """
-
-

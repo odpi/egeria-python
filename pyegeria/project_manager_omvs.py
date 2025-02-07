@@ -6,15 +6,13 @@ Copyright Contributors to the ODPi Egeria project.
     https://egeria-project.org/concepts/project
 
 """
+
 import asyncio
 import time
 
 # import json
 from pyegeria._client import Client
-from pyegeria._validators import (
-    validate_guid,
-    validate_search_string,
-)
+from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.utils import body_slimmer
 
 

@@ -20,10 +20,10 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    EgeriaTech,
 )
 from pyegeria.commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 
@@ -233,8 +233,7 @@ def main():
             default="*",
         )
         display_glossary_terms(
-            search_string, guid, glossary_name, server, url,
-            userid, user_pass
+            search_string, guid, glossary_name, server, url, userid, user_pass
         )
 
     except KeyboardInterrupt:

@@ -5,15 +5,13 @@ Copyright Contributors to the ODPi Egeria project.
     Maintain and explore the contents of nested collections.
 
 """
+
 import asyncio
 import time
 
 # import json
 from pyegeria._client import Client
-from pyegeria._validators import (
-    validate_guid,
-    validate_search_string,
-)
+from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.utils import body_slimmer
 
 
@@ -52,7 +50,9 @@ class CollectionManager(Client):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        self.collection_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+        self.collection_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+        )
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #

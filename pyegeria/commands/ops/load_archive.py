@@ -9,7 +9,9 @@ This script refreshed an integration daemon.
 """
 
 import os
+
 import click
+
 from pyegeria import AutomatedCuration, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,

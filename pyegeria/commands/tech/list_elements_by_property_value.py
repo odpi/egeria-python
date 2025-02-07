@@ -1,22 +1,23 @@
 """This creates a templates guid file from the core metadata archive"""
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-import os
+
 import argparse
-import time
+import os
 import sys
+import time
+
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    EgeriaTech,
 )
-
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -36,15 +37,15 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
 def find_elements_by_prop_value(
-        om_type: str,
-        property_value: str,
-        property_names: [str],
-        server: str,
-        url: str,
-        username: str,
-        password: str,
-        jupyter: bool = EGERIA_JUPYTER,
-        width: int = EGERIA_WIDTH,
+    om_type: str,
+    property_value: str,
+    property_names: [str],
+    server: str,
+    url: str,
+    username: str,
+    password: str,
+    jupyter: bool = EGERIA_JUPYTER,
+    width: int = EGERIA_WIDTH,
 ):
     c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
@@ -55,9 +56,9 @@ def find_elements_by_prop_value(
             f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}"
         )
         sys.exit(1)
-    elements = c_client.find_elements_by_property_value(property_value, property_names,
-                                                        om_type
-                                                        )
+    elements = c_client.find_elements_by_property_value(
+        property_value, property_names, om_type
+    )
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -71,7 +72,7 @@ def find_elements_by_prop_value(
             show_lines=True,
             box=box.ROUNDED,
             title=f"Elements for Open Metadata Type: {om_type}, property value: {property_value}, "
-                  f"properties: {property_names}",
+            f"properties: {property_names}",
             expand=True,
             width=width,
         )
@@ -165,8 +166,12 @@ def main():
             "Enter the Open Metadata Type to find elements of", default="Referenceable"
         )
         property_value = Prompt.ask("Enter the property value to search for")
-        property_names = Prompt.ask("Enter a comma seperated list of properties to search")
-        find_elements_by_prop_value(om_type, property_value, [property_names], server, url, userid, password)
+        property_names = Prompt.ask(
+            "Enter a comma seperated list of properties to search"
+        )
+        find_elements_by_prop_value(
+            om_type, property_value, [property_names], server, url, userid, password
+        )
     except KeyboardInterrupt:
         pass
 

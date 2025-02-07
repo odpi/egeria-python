@@ -21,12 +21,11 @@ from rich.table import Table
 from rich.text import Text
 from rich_pixels import Pixels
 
-
 from pyegeria import (
+    EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    EgeriaTech,
     print_exception_response,
 )
 

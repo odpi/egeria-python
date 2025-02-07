@@ -5,30 +5,28 @@ Copyright Contributors to the ODPi Egeria project.
 
 Display the status of cataloged platforms and servers.
 """
-import sys
-import time
 import argparse
 import os
+import sys
+import time
 
-from rich import json
+from rich import json, print
+from rich.console import Console
+from rich.live import Live
+from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.text import Text
+from rich.tree import Tree
 
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AutomatedCuration,
 )
-from rich.table import Table
-from rich.live import Live
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.tree import Tree
-from rich.prompt import Prompt
-from rich.panel import Panel
-from rich.text import Text
-from rich import print
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

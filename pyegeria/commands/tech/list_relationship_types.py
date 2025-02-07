@@ -11,8 +11,7 @@ import argparse
 import os
 import time
 
-from rich import box
-from rich import print
+from rich import box, print
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.prompt import Prompt
@@ -22,9 +21,9 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
+    ValidMetadataManager,
     print_exception_response,
 )
-from pyegeria import ValidMetadataManager
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

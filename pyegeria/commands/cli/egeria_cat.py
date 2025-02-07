@@ -19,38 +19,36 @@ from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
 from pyegeria.commands.cat.get_project_structure import project_structure_viewer
 from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
-from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.glossary_actions import (
     create_glossary,
-    delete_glossary,
     create_term,
+    delete_glossary,
     delete_term,
-    import_terms,
     export_terms,
+    import_terms,
 )
-from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
-from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
+from pyegeria.commands.cat.list_collections import display_collections
 from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
 from pyegeria.commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
 from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
-from pyegeria.commands.cat.list_terms import display_glossary_terms
+from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_projects import display_project_list
+from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
+from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.list_tech_types import display_tech_types
+from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
-from pyegeria.commands.cat.list_collections import display_collections
-
-
 from pyegeria.commands.cli.ops_config import Config
 from pyegeria.commands.my.todo_actions import (
+    create_todo,
+    delete_todo,
     mark_todo_complete,
     reassign_todo,
-    delete_todo,
-    create_todo,
 )
 from pyegeria.commands.tech.list_asset_types import display_asset_types
 
@@ -143,7 +141,6 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
-
 @click.pass_context
 def cli(
     ctx,
@@ -164,7 +161,6 @@ def cli(
     width,
     home_glossary_guid,
     glossary_path,
-   
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -629,9 +625,6 @@ tell_todo.add_command(mark_todo_complete)
 tell_todo.add_command(reassign_todo)
 tell_todo.add_command(delete_todo)
 tell_todo.add_command(create_todo)
-
-
-
 
 
 if __name__ == "__main__":

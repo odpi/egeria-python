@@ -1,24 +1,23 @@
-"""List elements """
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-import os
+"""List elements"""
+
 import argparse
-import time
+import os
 import sys
+import time
+
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    EgeriaTech,  # ClassificationManager,; FeedbackManager,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    # ClassificationManager,
-    # FeedbackManager,
-    EgeriaTech,
 )
-
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

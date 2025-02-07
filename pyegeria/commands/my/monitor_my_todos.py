@@ -8,15 +8,15 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple status display of a user's todos
 """
-import os
 import argparse
+import os
 import time
 
 from rich import box
+from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.table import Table
-from rich.console import Console
 
 from pyegeria import (
     InvalidParameterException,
@@ -66,7 +66,7 @@ def display_my_todos(
             return
 
         for item in todo_items:
-            assigned_actors = ''
+            assigned_actors = ""
             if todo_items is None:
                 name = " "
                 type_name = " "
@@ -89,7 +89,7 @@ def display_my_todos(
                 status = props.get("toDoStatus")
 
                 for actor in item["assignedActors"]:
-                    assigned_actors+=f"{actor.get("uniqueName", "NoOne")}\n"
+                    assigned_actors += f"{actor.get("uniqueName", "NoOne")}\n"
                 assigned_actors_out = Markdown(assigned_actors)
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"

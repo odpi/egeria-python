@@ -9,8 +9,8 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for glossary terms
 """
-import os
 import argparse
+import os
 import time
 
 from rich import box

@@ -5,10 +5,10 @@ class Config(object):
     def __init__(
         self,
         server: str,
-        url: str ,
-        view_server: str ,
-        view_server_url: str ,
-        integration_daemon: str ,
+        url: str,
+        view_server: str,
+        view_server_url: str,
+        integration_daemon: str,
         integration_daemon_url: str,
         engine_host: str,
         engine_host_url: str,
@@ -41,5 +41,6 @@ class Config(object):
         self.url = url
         self.home_glossary_guid = home_glossary_guid
         self.glossary_path = glossary_path
+
 
 pass_config = click.make_pass_decorator(Config)

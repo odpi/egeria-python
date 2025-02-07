@@ -52,7 +52,7 @@ class TestAdminServices:
                         "typeId": "954421eb-33a6-462d-a8ca-b5709a1bd0d4",
                         "typeName": "ConnectorType",
                         "typeVersion": 1,
-                        "typeDescription": "A set of properties describing a type of connector."
+                        "typeDescription": "A set of properties describing a type of connector.",
                     },
                     "guid": "4afac741-3dcc-4c60-a4ca-a6dede994e3f",
                     "qualifiedName": "Egeria:AuditLogDestinationConnector:Console",
@@ -64,9 +64,7 @@ class TestAdminServices:
                     "connectorInterfaces": [
                         "org.odpi.openmetadata.repositoryservices.connectors.stores.auditlogstore.OMRSAuditLogStore"
                     ],
-                    "recognizedConfigurationProperties": [
-                        "supportedSeverities"
-                    ]
+                    "recognizedConfigurationProperties": ["supportedSeverities"],
                 },
                 "configurationProperties": {
                     "supportedSeverities": [
@@ -78,32 +76,25 @@ class TestAdminServices:
                         "Startup",
                         "Shutdown",
                     ]
-                }
+                },
             },
             {
                 "class": "Connection",
                 "connectorType": {
                     "class": "ConnectorType",
-                    "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.auditlogstore.file.FileBasedAuditLogStoreProvider"
+                    "connectorProviderClassName": "org.odpi.openmetadata.adapters.repositoryservices.auditlogstore.file.FileBasedAuditLogStoreProvider",
                 },
-                "endpoint": {
-                    "class": "Endpoint",
-                    "address": "data/servers/auditlog"
-                },
+                "endpoint": {"class": "Endpoint", "address": "data/servers/auditlog"},
                 "configurationProperties": {
-                    "supportedSeverities": [
-                        "Error",
-                        "Exception",
-                        "Security"
-                    ]
-                }
-            }
+                    "supportedSeverities": ["Error", "Exception", "Security"]
+                },
+            },
         ]
 
         try:
             o_client = FullServerConfig(
-                self.good_server_2, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_2, self.good_platform1_url, self.good_user_1
+            )
 
             response = o_client.set_audit_log_destinations(audit_log_dest)
 
@@ -111,8 +102,8 @@ class TestAdminServices:
             assert response is not None, "Failed to set audit log destinations"
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
+            InvalidParameterException,
+            PropertyServerException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -120,36 +111,35 @@ class TestAdminServices:
     def test_get_access_services_topic_names(self):
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
             response = o_client.get_access_services_topic_names("Asset Owner OMAS")
 
-            assert (response is not None and type(response) is dict), "No topic names"
+            assert response is not None and type(response) is dict, "No topic names"
 
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
+            InvalidParameterException,
+            PropertyServerException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
-
     def test_all_get_access_services_topic_names(self):
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
             response = o_client.get_all_access_services_topic_names()
 
-            assert (response is not None and type(response) is dict), "No topic names"
+            assert response is not None and type(response) is dict, "No topic names"
 
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
+            InvalidParameterException,
+            PropertyServerException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -158,17 +148,19 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
             response = o_client.get_event_bus()
 
-            assert (response is not None and type(response) is dict), "No event bus returned"
+            assert (
+                response is not None and type(response) is dict
+            ), "No event bus returned"
 
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
+            InvalidParameterException,
+            PropertyServerException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -177,17 +169,17 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
 
             o_client.set_event_bus("EventBusConfig", "egeria.omag")
             assert True
             print("\n\n\t\tSet event bus configuration")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -196,8 +188,8 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
             archive_config_body = {
                 "class": "Connection",
                 "headerVersion": 0,
@@ -209,7 +201,7 @@ class TestAdminServices:
                         "typeId": "954421eb-33a6-462d-a8ca-b5709a1bd0d4",
                         "typeName": "ConnectorType",
                         "typeVersion": 1,
-                        "typeDescription": "A set of properties describing a type of connector."
+                        "typeDescription": "A set of properties describing a type of connector.",
                     },
                     "guid": "f4b49aa8-4f8f-4e0d-a725-fef8fa6ae722",
                     "qualifiedName": "Egeria:OpenMetadataArchiveStoreConnector:File",
@@ -221,14 +213,14 @@ class TestAdminServices:
                     "connectorInterfaces": [
                         "org.odpi.openmetadata.frameworks.connectors.SecureConnectorExtension",
                         "org.odpi.openmetadata.frameworks.auditlog.AuditLoggingComponent",
-                        "org.odpi.openmetadata.repositoryservices.connectors.stores.archivestore.OpenMetadataArchiveStore"
-                    ]
+                        "org.odpi.openmetadata.repositoryservices.connectors.stores.archivestore.OpenMetadataArchiveStore",
+                    ],
                 },
                 "endpoint": {
                     "class": "Endpoint",
                     "headerVersion": 0,
-                    "address": "content-packs/OpenConnectorsArchive.omarchive"
-                }
+                    "address": "content-packs/OpenConnectorsArchive.omarchive",
+                },
             }
             o_client.add_startup_open_metadata_archive_file(archive_config_body)
             assert True
@@ -236,9 +228,9 @@ class TestAdminServices:
             print("\n\n\t\tArchives added")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -247,12 +239,12 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
             view_config_body = iew_svc_body = {
                 "class": "SolutionViewServiceConfig",
                 "omagserverName": "fluffy",
-                "omagserverPlatformRootURL": "https://lex.local:9443"
+                "omagserverPlatformRootURL": "https://lex.local:9443",
             }
 
             o_client.config_view_service("glossary-author", view_config_body)
@@ -261,9 +253,9 @@ class TestAdminServices:
             print("\n\n\t\tView service set")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -272,12 +264,12 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_view_server_2, self.good_platform1_url,
-                self.good_user_1)
+                self.good_view_server_2, self.good_platform1_url, self.good_user_1
+            )
             view_svc_body = {
                 "class": "SolutionViewServiceConfig",
                 "omagserverName": "fluffy",
-                "omagserverPlatformRootURL": "https://lex.local:9443"
+                "omagserverPlatformRootURL": "https://lex.local:9443",
             }
 
             o_client.config_view_service("glossary-author", view_svc_body)
@@ -286,9 +278,9 @@ class TestAdminServices:
             print("\n\n\t\tView service set")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -297,8 +289,8 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
 
             o_client.clear_server_type()
             assert True
@@ -306,9 +298,9 @@ class TestAdminServices:
             print("\n\n\t\tService type cleared")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -317,8 +309,8 @@ class TestAdminServices:
 
         try:
             o_client: FullServerConfig = FullServerConfig(
-                self.good_server_1, self.good_platform1_url,
-                self.good_user_1)
+                self.good_server_1, self.good_platform1_url, self.good_user_1
+            )
 
             o_client.set_max_page_size(5000)
             assert True
@@ -326,9 +318,9 @@ class TestAdminServices:
             print("\n\n\t\tService type cleared")
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

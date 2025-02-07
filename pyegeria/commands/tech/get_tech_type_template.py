@@ -6,8 +6,8 @@ Copyright Contributors to the ODPi Egeria project.
 Display the status of cataloged platforms and servers.
 """
 import argparse
-
 import os
+
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -16,11 +16,11 @@ from rich.prompt import Prompt
 from rich.tree import Tree
 
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    AutomatedCuration,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

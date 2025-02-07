@@ -6,16 +6,13 @@ This module contains an initial version of the glossary_browser omvs module. The
 added in subsequent versions of the glossary_omvs module.
 
 """
+
 import asyncio
 from datetime import datetime
 
 # import json
 from pyegeria._client import Client
-from pyegeria._validators import (
-    validate_name,
-    validate_guid,
-    validate_search_string,
-)
+from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
 
 

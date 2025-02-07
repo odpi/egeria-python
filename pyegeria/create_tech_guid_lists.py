@@ -6,11 +6,13 @@ Script to create a new file to initiate tech guids.
 These GUIDS should be copied into the pyegeria/__init__.py.
 
 """
+
 from datetime import datetime
 
 from rich.console import Console
 
-from pyegeria import AutomatedCuration, ServerOps
+from pyegeria.server_operations import ServerOps
+from pyegeria.automated_curation_omvs import AutomatedCuration
 
 console = Console(width=200)
 

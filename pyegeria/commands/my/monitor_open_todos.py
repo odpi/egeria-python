@@ -8,15 +8,16 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple status display for Open To Dos
 """
-import os
 import argparse
-import time
+import os
 import sys
+import time
+
 from rich import box
+from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.table import Table
-from rich.console import Console
 
 from pyegeria import EgeriaTech
 from pyegeria._exceptions import (
@@ -25,7 +26,6 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-
 from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True

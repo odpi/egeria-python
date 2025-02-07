@@ -5,27 +5,35 @@ Copyright Contributors to the ODPi Egeria project.
 Runtime manager is a view service that supports user interaction with the running platforms.
 
 """
-
-from pyegeria._exceptions import (
-    InvalidParameterException,
-)
+from pyegeria.x_action_author_omvs import ActionAuthor
+from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.collection_manager_omvs import CollectionManager
+from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.classification_manager_omvs import ClassificationManager
+from pyegeria.template_manager_omvs import TemplateManager
+from pyegeria.runtime_manager_omvs import RuntimeManager
+from pyegeria.full_omag_server_config import FullServerConfig
+from pyegeria.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.egeria_my_client import EgeriaMy
+from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.server_operations import ServerOps
+from pyegeria.registered_info import RegisteredInfo
+from pyegeria.valid_metadata_omvs import ValidMetadataManager
+from pyegeria.egeria_cat_client import EgeriaCat
+from pyegeria.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.feedback_manager_omvs import FeedbackManager
+from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.utils import body_slimmer
 from pyegeria import (
-    max_paging_size,
-    body_slimmer,
-    MyProfile,
-    FeedbackManager,
-    EgeriaCat,
-    ValidMetadataManager,
-    AutomatedCuration,
-    # ActionAuthor,
-    ClassificationManager,
-    RegisteredInfo,
-    RuntimeManager,
-    TEMPLATE_GUIDS,
     INTEGRATION_GUIDS,
-    MetadataExplorer,
-    SolutionArchitect,
-    )
+    TEMPLATE_GUIDS,  # ActionAuthor,
+    max_paging_size,
+)
+from pyegeria._exceptions import InvalidParameterException
 
 
 class EgeriaTech(
@@ -91,7 +99,8 @@ class EgeriaTech(
         )
         SolutionArchitect.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
-            )
+        )
+
 
 if __name__ == "__main__":
     print("Main-Tech Client")

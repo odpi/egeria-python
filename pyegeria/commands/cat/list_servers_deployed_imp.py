@@ -25,9 +25,9 @@ from rich.text import Text
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
+    RuntimeManager,
     UserNotAuthorizedException,
     print_exception_response,
-    RuntimeManager,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

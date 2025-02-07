@@ -10,17 +10,18 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
+
 import json
 import time
 
 from rich import print, print_json
 
 from pyegeria import (
+    EgeriaCat,
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-    EgeriaCat,
 )
 
 disable_ssl_warnings = True

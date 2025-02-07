@@ -8,15 +8,16 @@ Copyright Contributors to the ODPi Egeria project.
  This file is in active development...
 
 """
+
 import asyncio
 import json
 
 from httpx import Response
+from pyegeria.utils import body_slimmer
+from pyegeria._client import Client
+from pyegeria import TEMPLATE_GUIDS, max_paging_size
+from pyegeria._exceptions import InvalidParameterException
 
-from pyegeria import Client, max_paging_size, body_slimmer, TEMPLATE_GUIDS
-from pyegeria._exceptions import (
-    InvalidParameterException,
-)
 from ._validators import validate_search_string
 
 

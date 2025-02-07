@@ -13,24 +13,28 @@ This script creates and configures the Data Lake
 """
 
 
-import json
 import argparse
+import json
+
 import httpx
 from globals import (
-    cocoMDS2Name,
-    corePlatformURL,
+    adminUserId,
     cocoCohort,
+    cocoMDS1Name,
+    cocoMDS2Name,
+    cocoMDS4Name,
+    corePlatformURL,
+    dataLakePlatformURL,
     devCohort,
+    fileSystemRoot,
     iotCohort,
     max_paging_size,
-    cocoMDS1Name,
-    cocoMDS4Name,
-    dataLakePlatformURL,
-    fileSystemRoot,
-    adminUserId,
 )
-from pyegeria import CoreServerConfig, Platform, FullServerConfig
+
 from pyegeria import (
+    CoreServerConfig,
+    FullServerConfig,
+    Platform,
     print_exception_response,
 )
 

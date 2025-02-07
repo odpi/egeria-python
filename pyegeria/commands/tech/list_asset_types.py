@@ -8,8 +8,8 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for my profile
 """
-import os
 import argparse
+import os
 import time
 
 from rich import box
@@ -19,9 +19,9 @@ from rich.table import Table
 from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
+    RegisteredInfo,
     UserNotAuthorizedException,
     print_exception_response,
-    RegisteredInfo,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

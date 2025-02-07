@@ -34,4 +34,3 @@ star_ratings = (
 
 TEMPLATE_GUIDS: dict = {}
 INTEGRATION_GUIDS: dict = {}
-

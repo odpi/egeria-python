@@ -7,13 +7,10 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 
-from requests import Response
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-)
-from pyegeria import Platform, AutomatedCuration
-import asyncio
+from requests import Response
+from pyegeria.automated_curation_omvs import AutomatedCuration
+
 
 
 class ActionAuthor(AutomatedCuration):

@@ -7,7 +7,8 @@ Display the status of cataloged platforms and servers.
 """
 
 import argparse
-import os, sys
+import os
+import sys
 import time
 
 from rich.console import Console

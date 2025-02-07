@@ -10,19 +10,17 @@ This script creates and configures the exchangeDL01 integration daemon.
 
 """
 
-
 import json
 
 from globals import (
+    adminUserId,
     corePlatformURL,
     dataLakePlatformURL,
-    max_paging_size,
     fileSystemRoot,
-    adminUserId,
+    max_paging_size,
 )
-from pyegeria import (
-    print_exception_response,
-)
+
+from pyegeria import print_exception_response
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.platform_services import Platform
 

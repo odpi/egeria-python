@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-A simple viewer for Information Supply Chains
+A simple viewer for Information Solution Components
 
 """
 
@@ -22,12 +22,13 @@ from rich.tree import Tree
 
 from pyegeria import (
     InvalidParameterException,
+    ProjectManager,
     PropertyServerException,
     UserNotAuthorizedException,
-    save_mermaid_graph,
     save_mermaid_html,
 )
 from pyegeria._exceptions import print_exception_response
+from pyegeria.mermaid_utilities import EGERIA_MERMAID_FOLDER
 from pyegeria.solution_architect_omvs import SolutionArchitect
 
 disable_ssl_warnings = True
@@ -48,7 +49,7 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "150"))
 EGERIA_MERMAID_FOLDER = os.environ.get("EGERIA_MERMAID_FOLDER", "work/mermaid_graphs")
 
 
-def supply_chain_viewer(
+def solution_component_list(
     search_string: str,
     server_name: str,
     platform_url: str,
@@ -58,13 +59,13 @@ def supply_chain_viewer(
     width: int = EGERIA_WIDTH,
     timeout: int = 30,
 ):
-    """A Supply Chain viewer"""
+    """A Solution Component viewer"""
     client = SolutionArchitect(server_name, platform_url, user, user_password)
     token = client.create_egeria_bearer_token()
 
     def generate_table() -> Table | str:
         table = Table(
-            title=f"Supply Chains matching  {search_string} @ {time.asctime()}",
+            title=f"Solution Components matching  {search_string} @ {time.asctime()}",
             style="bright_white on black",
             header_style="bright_white on dark_blue",
             title_style="bold white on black",
@@ -74,56 +75,75 @@ def supply_chain_viewer(
             caption=f"View Server '{server_name}' @ Platform - {platform_url}",
             expand=True,
         )
-        table.add_column("Supply Chain Name")
-        table.add_column("Qualified Name \n/\n GUID", justify = 'center', width=38, no_wrap=False)
-        table.add_column("Purposes")
-        table.add_column("Scope\n/\n Mermaid Link", justify = 'center')
-        table.add_column("Description", justify = 'center')
-        table.add_column("Segments", justify = 'center')
+        table.add_column(
+            "Component Name  /  Diagram Link", justify="center", no_wrap=False
+        )
+        table.add_column("Component Type / Planned Deployment Type", justify="center")
+        table.add_column(
+            "Qualified Name   /  GUID", justify="center", width=38, no_wrap=False
+        )
+        table.add_column("Description / HeadCount", justify="center")
+        table.add_column("Sub-Components", justify="center")
 
-        supply_chains = client.find_information_supply_chains(search_string)
-        if isinstance(supply_chains, list) is False:
-            return "No Supply Chains found"
+        components = client.find_solution_components(search_string)
+        if isinstance(components, list) is False:
+            return "No components found"
 
-        for sc in supply_chains:
-            sc_name = sc["properties"].get("displayName", "---")
-            sc_qname = sc["properties"].get("qualifiedName", "---")
-            sc_guid = sc["elementHeader"]["guid"]
-            sc_purpose = sc["properties"].get("purposes", "---")
-            if isinstance(sc_purpose, list):
-                sc_purpose_str = "\n* ".join(sc_purpose)
-            else:
-                sc_purpose_str = sc_purpose
-            sc_scope = sc["properties"].get("scope", "---")
-            sc_desc = sc["properties"].get("description", "---")
-            sc_unique_name = f"{sc_qname}\n\n\t\t/\n\n{sc_guid}"
-            sc_mermaid = sc.get("mermaidGraph", "---")
-            if sc_mermaid != "---":
+        for component in components:
+            component_name = component["properties"].get("displayName", "---")
+            component_type = component["properties"].get("solutionComponentType", "---")
+            planned_deployment_type = (
+                component["properties"]
+                .get("extendedProperties", {})
+                .get("plannedDeployedImplementationType", "---")
+            )
+            component_info = f"Type: {component_type}\n\n--\n\nPlanned Deployment Type: \n{planned_deployment_type}"
+
+            component_qname = component["properties"].get("qualifiedName", "---")
+            component_guid = component["elementHeader"]["guid"]
+            component_unique_name = f"{component_qname}\n\n--\n\n{component_guid}"
+
+            component_desc = component["properties"].get("description", "---")
+
+            component_mermaid = component.get("mermaidGraph", "---")
+            if component_mermaid != "---":
                 link = save_mermaid_html(
-                    sc_name, sc_mermaid, f"{EGERIA_MERMAID_FOLDER}/supply-chains"
+                    component_name,
+                    component_mermaid,
+                    f"{EGERIA_MERMAID_FOLDER}/components",
                 )
-                sc_mermaid_link = Text(f"file://:{link}", style="blue link " + link)
-                sc_scope = Text(f"{sc_scope}\n\n/\n\n{sc_mermaid_link}",  justify = "center")
+                link = f"file://:{link}"
+                component_mermaid = Text(link, style="blue link " + link)
 
+            component_mermaid_label = Text(
+                f"{component_name}\n\n--\n\n{component_mermaid}"
+            )
 
-            sc_segments = sc.get("segments", "---")
-            if sc_segments != "---":
-                first_segment = True
-                sc_segments_md = ""
-                for segment in sc_segments:
-                    seg_prop = segment['properties']
-                    if first_segment:
-                        first_segment = False
-                    else:
-                        sc_segments_md += "----\n\n"  # add a seperator from previous segment
+            component_components = component.get("solutionComponents", [])
+            comp_props_md = ""
+            first_comp = True
+            for component in component_components:
+                comp = component.get("relatedElement", "")
+                if isinstance(comp, dict) is False:
+                    continue
+                comp_props = comp.get("properties", {})
+                comp_props_md = ""
+                for prop in comp_props.keys():
+                    comp_props_md += f"* **{prop}**: {comp_props[prop]}\n"
 
-                    for key in seg_prop.keys():
-                        sc_segments_md += f"* **{key}**: {seg_prop[key]}\n"
-                sc_segments_md = Markdown(sc_segments_md)
-            else:
-                sc_segments_md = "---"
+                if first_comp:
+                    first_comp = False
+                else:
+                    comp_props_md += "\n\n---\n\n"
 
-            table.add_row(sc_name, sc_unique_name, sc_purpose_str, sc_scope, sc_desc, sc_segments_md)
+            comp_props_out = Markdown(comp_props_md)
+            table.add_row(
+                component_mermaid_label,
+                component_info,
+                component_unique_name,
+                component_desc,
+                comp_props_out,
+            )
 
         return table
 
@@ -156,7 +176,7 @@ def main():
 
     try:
         search_string = Prompt.ask("Enter a search string:", default="*")
-        supply_chain_viewer(search_string, server, url, userid, user_pass)
+        solution_component_list(search_string, server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

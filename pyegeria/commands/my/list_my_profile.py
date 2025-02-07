@@ -8,17 +8,17 @@ Unit tests for the Utils helper functions using the Pytest framework.
 
 A simple display for my profile
 """
-import os
 import argparse
-import time
+import os
 import sys
+import time
 
 from rich import box, print
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
 from rich.table import Table
 from rich.tree import Tree
-from rich.panel import Panel
-from rich.markdown import Markdown
 
 from pyegeria import (
     InvalidParameterException,

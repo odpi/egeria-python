@@ -14,11 +14,8 @@ It is managing the capture of lineage for the governance actions and external pr
 import json
 
 from globals import dataLakePlatformURL, fileSystemRoot
-from pyegeria import FullServerConfig
-from pyegeria import Platform
-from pyegeria import (
-    print_exception_response,
-)
+
+from pyegeria import FullServerConfig, Platform, print_exception_response
 
 daemon_server_name = "monitorGov01"
 daemon_server_platform = dataLakePlatformURL

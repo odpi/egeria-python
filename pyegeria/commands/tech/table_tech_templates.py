@@ -1,27 +1,30 @@
 """This creates a templates guid file from the core metadata archive"""
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-import os
-from pyegeria import AutomatedCuration, _client
-from datetime import datetime
+
 import argparse
-import time
-import sys
-from rich import box
-from rich.console import Console
-from rich.table import Table
 import asyncio
-import nest_asyncio
+import os
+import sys
+import time
+from datetime import datetime
 from typing import Union
 
+import nest_asyncio
+from rich import box
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
+from rich.table import Table
+from textual.widgets import DataTable
+
 from pyegeria import (
+    AutomatedCuration,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
     RegisteredInfo,
+    UserNotAuthorizedException,
+    _client,
+    print_exception_response,
 )
-from textual.widgets import DataTable
 
 console = Console()
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
