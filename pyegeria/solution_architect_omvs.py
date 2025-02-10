@@ -15,10 +15,10 @@ from httpx import Response
 
 from pyegeria.utils import body_slimmer
 from pyegeria._client import Client, max_paging_size
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-NO_ELEMENTS_FOUND = "No Elements Found"
+
 
 DEFAULT_BODY_SKELETON = {
     "effective_time": None,

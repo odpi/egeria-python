@@ -14,7 +14,7 @@ from datetime import datetime
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class GlossaryBrowser(Client):
     """

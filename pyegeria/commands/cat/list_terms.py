@@ -98,6 +98,8 @@ def display_glossary_terms(
                 f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
             )
             sys.exit(1)
+    elif (glossary_guid is not None) and (len(glossary_guid) < 10):
+            glossary_guid = None
 
     def generate_table(search_string: str, glossary_guid: str) -> Table:
         """Make a new table."""

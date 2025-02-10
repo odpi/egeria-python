@@ -9,7 +9,7 @@ Template manager is a view service that supports managing metadata elements usin
 import asyncio
 
 from pyegeria._client import Client
-from pyegeria._globals import default_time_out
+from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.utils import body_slimmer
 
 

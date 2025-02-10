@@ -13,7 +13,7 @@ from pyegeria.utils import body_slimmer
 
 # import json
 from pyegeria._client import Client, max_paging_size
-from pyegeria._globals import default_time_out
+from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 
 
 def query_seperator(current_string):
@@ -155,10 +155,10 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_elements(
@@ -304,10 +304,10 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_elements_by_property_value(
@@ -462,10 +462,10 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_elements_by_property_value(
@@ -602,7 +602,7 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("element", "No elements found")
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
 
         return elements
 
@@ -740,7 +740,7 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        return response.json().get("element", "No elements found")
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_element_by_unique_name(
         self,
@@ -870,7 +870,7 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        return response.json().get("guid", "No elements found")
+        return response.json().get("guid", NO_ELEMENTS_FOUND)
 
     def get_element_guid_by_unique_name(
         self,
@@ -968,7 +968,7 @@ class ClassificationManager(Client):
 
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
             elif len(elements) > 1:
                 raise Exception("Multiple elements found for supplied name!")
             elif len(elements) == 1:
@@ -1090,10 +1090,10 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_elements_by_property_value(
@@ -1248,10 +1248,10 @@ class ClassificationManager(Client):
         response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_elements_by_classification(
@@ -1407,10 +1407,10 @@ class ClassificationManager(Client):
         response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_elements_by_classification_with_property_value(
@@ -1549,7 +1549,7 @@ class ClassificationManager(Client):
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
         """
-        if property_value is "*":
+        if property_value == "*":
             property_value = None
 
         possible_query_params = query_string(
@@ -1576,10 +1576,10 @@ class ClassificationManager(Client):
         response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_elements_by_classification_with_property_value(
@@ -1755,10 +1755,10 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_related_elements(
@@ -1931,10 +1931,10 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def get_related_elements_with_property_value(
@@ -2117,10 +2117,10 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elements", "No elements found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return elements
 
     def find_related_elements_with_property_value(
@@ -2282,7 +2282,7 @@ class ClassificationManager(Client):
 
         if type(rels) is list:
             if len(rels) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return rels
 
     def get_relationships(
@@ -2426,10 +2426,10 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        rels = response.json().get("relationships", "No elements found")
+        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list:
             if len(rels) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return rels
 
     def get_relationships_with_property_value(
@@ -2582,10 +2582,10 @@ class ClassificationManager(Client):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        rels = response.json().get("relationships", "No elements found")
+        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list:
             if len(rels) == 0:
-                return "No elements found"
+                return NO_ELEMENTS_FOUND
         return rels
 
     def find_relationships_with_property_value(
@@ -2723,7 +2723,7 @@ class ClassificationManager(Client):
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
-        element = response.json().get("element", "No elements found")
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
         return element
 
     def retrieve_instance_for_guid(

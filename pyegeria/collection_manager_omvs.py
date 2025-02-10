@@ -13,7 +13,7 @@ import time
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.utils import body_slimmer
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class CollectionManager(Client):
     """
@@ -202,7 +202,7 @@ class CollectionManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body)
-        # result = resp.json().get("elements","No elements found")
+        # result = resp.json().get("elements",NO_ELEMENTS_FOUND)
         result = resp.json().get("elements", "No Elements to return")
         return result
 
@@ -325,7 +325,7 @@ class CollectionManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def find_collections(
         self,
@@ -450,7 +450,7 @@ class CollectionManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_collections_by_name(
         self,
@@ -564,7 +564,7 @@ class CollectionManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_collections_by_type(
         self,
@@ -2239,7 +2239,7 @@ class CollectionManager(Client):
         )
 
         resp = await self._async_make_request("GET", url)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_collection_members(
         self,

@@ -13,7 +13,7 @@ import os
 import time
 from datetime import datetime
 from typing import List
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._exceptions import InvalidParameterException
 
 # import json
@@ -21,7 +21,7 @@ from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 from pyegeria.utils import body_slimmer
-
+from pyegeria._globals import NO_CATEGORIES_FOUND,NO_TERMS_FOUND, NO_GLOSSARIES_FOUND
 
 class GlossaryManager(GlossaryBrowser):
     """
@@ -2619,7 +2619,7 @@ class GlossaryManager(GlossaryBrowser):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get("elementList", "No terms found")
+        return response.json().get("elementList", NO_TERMS_FOUND)
 
     def get_terms_for_category(
         self,
@@ -2807,7 +2807,7 @@ class GlossaryManager(GlossaryBrowser):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get("elementList", "No terms found")
+        return response.json().get("elementList", NO_TERMS_FOUND)
 
     def get_term_relationships(
         self,
@@ -2976,7 +2976,7 @@ class GlossaryManager(GlossaryBrowser):
         Returns
         -------
         list
-            A list of terms matching the search criteria. If no terms are found, it returns the string "No terms found".
+            A list of terms matching the search criteria. If no terms are found, it returns the string NO_TERMS_FOUND.
 
         Raises
         ------
@@ -3014,7 +3014,7 @@ class GlossaryManager(GlossaryBrowser):
         # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No terms found")
+        return response.json().get("elementList", NO_TERMS_FOUND)
 
     def get_terms_by_name(
         self,
@@ -3054,7 +3054,7 @@ class GlossaryManager(GlossaryBrowser):
         -------
         list
             A list of terms matching the search criteria. If no terms are found,
-            it returns the string "No terms found".
+            it returns the string NO_TERMS_FOUND.
 
         Raises
         ------
@@ -3488,7 +3488,7 @@ class GlossaryManager(GlossaryBrowser):
             "effectiveTime": effective_time,
             "limitResultsByStatus": status_filter,
         }
-        # body = body_slimmer(body)
+        body = body_slimmer(body)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
@@ -3501,7 +3501,7 @@ class GlossaryManager(GlossaryBrowser):
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get(
-            "elementList", "No terms found"
+            "elementList", NO_TERMS_FOUND
         )  # return response.text
 
     def find_glossary_terms(

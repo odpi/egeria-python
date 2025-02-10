@@ -13,7 +13,7 @@ from rich.console import Console
 
 from pyegeria.server_operations import ServerOps
 from pyegeria.automated_curation_omvs import AutomatedCuration
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 console = Console(width=200)
 
 

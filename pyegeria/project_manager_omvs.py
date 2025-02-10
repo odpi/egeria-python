@@ -14,7 +14,7 @@ import time
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.utils import body_slimmer
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class ProjectManager(Client):
     """
@@ -332,7 +332,7 @@ class ProjectManager(Client):
 
         resp = await self._async_make_request("POST", url, body_s)
 
-        result = resp.json().get("elements", "No elements found")
+        result = resp.json().get("elements", NO_ELEMENTS_FOUND)
         return result
 
     def get_project_team(
@@ -465,7 +465,7 @@ class ProjectManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def find_projects(
         self,
@@ -586,7 +586,7 @@ class ProjectManager(Client):
         )
 
         resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No elements found")
+        return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_projects_by_name(
         self,

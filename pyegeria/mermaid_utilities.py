@@ -21,12 +21,13 @@ nest_asyncio.apply()
 from IPython.display import HTML, display
 from rich.console import Console
 
-from pyegeria import (
-    AutomatedCuration,
+from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
 )
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
