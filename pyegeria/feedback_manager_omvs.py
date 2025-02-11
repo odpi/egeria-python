@@ -11,7 +11,7 @@ import json
 
 # import json
 from pyegeria._client import Client, max_paging_size
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 def jprint(info, comment=None):
     if comment:

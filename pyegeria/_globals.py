@@ -34,3 +34,12 @@ star_ratings = (
 
 TEMPLATE_GUIDS: dict = {}
 INTEGRATION_GUIDS: dict = {}
+
+NO_ELEMENTS_FOUND = "No elements found"
+NO_ASSETS_FOUND = "No assets found"
+NO_SERVERS_FOUND = "No servers found"
+NO_CATALOGS_FOUND = "No catalogs found"
+NO_GLOSSARIES_FOUND = "No glossaries found"
+NO_TERMS_FOUND = "No terms found"
+NO_CATEGORIES_FOUND = "No categories found"
+NO_ELEMENT_FOUND = "No element found"

@@ -1108,7 +1108,7 @@ class ValidMetadataManager(Client):
         )
 
         resp = await self._async_make_request("GET", url)
-        return resp.json().get("elementList", "No elements found")
+        return resp.json().get("elementList", NO_ELEMENTS_FOUND)
 
     def get_valid_metadata_values(
         self,
@@ -1211,7 +1211,7 @@ class ValidMetadataManager(Client):
         )
 
         resp = await self._async_make_request("GET", url)
-        return resp.json().get("elementList", "No elements found")
+        return resp.json().get("elementList", NO_ELEMENTS_FOUND)
 
     def get_consistent_metadata_values(
         self,

@@ -57,7 +57,7 @@ class TestAssetCatalog:
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -102,7 +102,7 @@ class TestAssetCatalog:
     def test_find_several_in_asset_domain(self):
         try:
             g_client = AssetCatalog(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )

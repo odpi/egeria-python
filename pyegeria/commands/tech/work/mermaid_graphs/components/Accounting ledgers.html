@@ -1,0 +1,145 @@
+
+    <div id="mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-wrapper" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: stretch;">
+        
+        <!-- Title/Heading -->
+        
+        
+        <h3 id="mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
+            Solution Component - Accounting ledgers 
+        </h3>
+        <p id="mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
+            GUID: 2c0f5a4e-bb02-4081-a80e-3072ca99a1aa
+        </p>
+        
+        <!-- Mermaid Diagram -->
+        <div id="mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-container" class="diagram-container"
+             style="width: 100%; flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <div id="mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa" class="mermaid"
+                 style="width: 100%; height: 100%; cursor: grab; user-select: none; margin: 0; padding: 0;">
+                flowchart TD
+%%{init: {&quot;flowchart&quot;: {&quot;htmlLabels&quot;: false}} }%%
+
+2a980c62-71e7-4f2c-a851-a982fb973a8a@{ shape: text, label: &quot;*Description*
+**Application for recording and tracing the income and spending of Coco Pharmaceuticals.  This can help to identify how much the company is spending on particular materials and activities.**&quot;}
+2c0f5a4e-bb02-4081-a80e-3072ca99a1aa@{ shape: subproc, label: &quot;*Solution Component*
+**Accounting ledgers**&quot;}
+fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4@{ shape: rect, label: &quot;*Solution Component*
+**Sustainability Operational Data Store (ODS)**&quot;}
+2c0f5a4e-bb02-4081-a80e-3072ca99a1aa==&gt;|&quot;spending types,
+[Solution Linking Wire]&quot;|fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4
+9fb47e51-4121-495d-be31-f766a1f70856@{ shape: hex, label: &quot;*Information Supply Chain Segment*
+**Sustainability Data Gathering**&quot;}
+9fb47e51-4121-495d-be31-f766a1f70856==&gt;|&quot;ImplementedBy&quot;|2c0f5a4e-bb02-4081-a80e-3072ca99a1aa
+dd15b286-a38d-4f03-8625-aaded8596048@{ shape: flip-tri, label: &quot;*Information Supply Chain*
+**Sustainability Reporting**&quot;}
+dd15b286-a38d-4f03-8625-aaded8596048==&gt;|&quot;InformationSupplyChainComposition&quot;|9fb47e51-4121-495d-be31-f766a1f70856
+style dd15b286-a38d-4f03-8625-aaded8596048 color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style fc55ef2d-a88d-44ee-94cb-3fca9b9af8b4 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 2c0f5a4e-bb02-4081-a80e-3072ca99a1aa color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 2a980c62-71e7-4f2c-a851-a982fb973a8a color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 9fb47e51-4121-495d-be31-f766a1f70856 color:#004563, fill:#b7c0c7, stroke:#004563
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Ensure no margins or padding for the body or html in Jupyter */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        /* General reset for Jupyter Notebook's extra spacing */
+        #notebook, .container, .cell, .output_area {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .diagram-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars during zoom/pan */
+        }
+        h2 {
+            margin: 0;
+            padding: 10px;
+            font-size: 24px;
+            text-align: center;
+            flex: 0 0 auto; /* Fix height explicitly for heading */
+        }
+        .mermaid {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    
+    <script>
+        (function() {
+            const graphId = "mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa";  // Pass the graph ID
+
+            function loadScript(url, callback) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = callback;
+                document.head.appendChild(script);
+            }
+            
+            // Initialize Mermaid and render the diagram
+            function initializeMermaid() {
+                mermaid.initialize({startOnLoad: false});
+                mermaid.init(undefined, "#" + graphId);
+
+                setTimeout(() => {
+                    const container = document.getElementById(graphId);
+                    if (!container) {
+                        console.error("Container not found for graph:", graphId);
+                        return;
+                    }
+
+                    const svg = container.querySelector("svg");
+                    if (!svg) {
+                        console.error("SVG not rendered by Mermaid.");
+                        return;
+                    }
+
+                    console.log("SVG rendered. Applying pan & zoom.");
+
+                    // Adjust to container size
+                    const containerElement = document.getElementById("mermaid-graph-2c0f5a4e-bb02-4081-a80e-3072ca99a1aa-container");
+                    svg.setAttribute("width", containerElement.offsetWidth);
+                    svg.setAttribute("height", containerElement.offsetHeight);
+
+                    // Add pan/zoom functionality
+                    loadScript("https://cdn.jsdelivr.net/npm/svg-pan-zoom/dist/svg-pan-zoom.min.js", () => {
+                        const panZoom = svgPanZoom(svg, {
+                            zoomEnabled: true,
+                            controlIconsEnabled: true,
+                            fit: true,
+                            center: true,
+                            minZoom: 0.5,
+                            maxZoom: 10
+                        });
+
+                        // Reinitialize pan-zoom on window resize
+                        function onResize() {
+                            panZoom.resize();
+                            panZoom.fit();
+                            panZoom.center();
+                        }
+                        window.addEventListener('resize', onResize);
+
+                        console.log("Pan & zoom initialized successfully.");
+                    });
+                }, 500);
+            }
+
+            // Load Mermaid.js and initialize
+            if (typeof mermaid === "undefined") {
+                loadScript("https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js", initializeMermaid);
+            } else {
+                initializeMermaid();
+            }
+        })();
+    </script>
+
+    

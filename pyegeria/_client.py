@@ -23,7 +23,7 @@ from pyegeria._exceptions import (
     PropertyServerException,
     UserNotAuthorizedException,
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size
+from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria._validators import (
     is_json,
     validate_name,
@@ -693,7 +693,7 @@ class Client:
             )
 
             result = await self._async_make_request("POST", url, body_slimmer(body))
-            return result.json().get("guid", "No elements found")
+            return result.json().get("guid", NO_ELEMENTS_FOUND)
 
         try:
             view_server = self.view_server
@@ -717,7 +717,7 @@ class Client:
                 )
 
                 result = await self._async_make_request("POST", url, body_slimmer(body))
-                return result.json().get("guid", "No elements found")
+                return result.json().get("guid", NO_ELEMENTS_FOUND)
             else:
                 body = {
                     "class": "NameRequestBody",
@@ -733,7 +733,7 @@ class Client:
                 )
 
                 result = await self._async_make_request("POST", url, body_slimmer(body))
-                return result.json().get("guid", "No elements found")
+                return result.json().get("guid", NO_ELEMENTS_FOUND)
         else:
             raise InvalidParameterException(
                 "Neither server_guid nor server_name were provided - please provide."

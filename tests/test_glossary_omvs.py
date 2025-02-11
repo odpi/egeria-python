@@ -149,7 +149,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_terms_for_glossary(self, server: str = good_view_server_1):
+    def test_get_terms_for_glossary(self, server: str = good_view_server_2):
         server_name = server
         try:
             g_client = GlossaryBrowser(
@@ -252,7 +252,7 @@ class TestGlossaryBrowser:
     def test_find_glossary_terms(self):
         try:
             g_client = GlossaryBrowser(
-                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+                self.good_view_server_2, self.good_platform1_url, self.good_user_2
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
@@ -262,7 +262,7 @@ class TestGlossaryBrowser:
             )
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "Global Warming Potential",
+                "*",
                 # glossary_guid=glossary_guid,
                 None,
                 starts_with=False,

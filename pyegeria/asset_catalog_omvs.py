@@ -17,7 +17,7 @@ from pyegeria.utils import body_slimmer
 from pyegeria._client import Client
 from pyegeria import TEMPLATE_GUIDS, max_paging_size
 from pyegeria._exceptions import InvalidParameterException
-
+from pyegeria._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from ._validators import validate_search_string
 
 
@@ -366,7 +366,7 @@ class AssetCatalog(Client):
         )
         body = {"filter": search_string}
         response = await self._async_make_request("POST", url, body, time_out=time_out)
-        return response.json().get("searchMatches", "no assets found")
+        return response.json().get("searchMatches", "NO_ASSETS_FOUND")
 
     def find_in_asset_domain(
         self,
@@ -700,7 +700,7 @@ class AssetCatalog(Client):
         body = {"filter": type_name, "effectiveTime": effective_time}
         body_s = body_slimmer(body)
         response = await self._async_make_request("POST", url, body_s)
-        return response.json().get("assets", "no assets found")
+        return response.json().get("assets", "NO_ASSETS_FOUND")
 
     def get_assets_by_metadata_collection_id(
         self,
@@ -778,7 +778,7 @@ class AssetCatalog(Client):
 
         response = await self._async_make_request("GET", url)
 
-        return response.json().get("types", "No assets found")
+        return response.json().get("types", "NO_ASSETS_FOUND")
 
     def get_asset_catalog_types(self) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to

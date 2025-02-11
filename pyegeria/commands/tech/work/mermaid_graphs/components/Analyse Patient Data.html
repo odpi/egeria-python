@@ -1,0 +1,158 @@
+
+    <div id="mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584-wrapper" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: stretch;">
+        
+        <!-- Title/Heading -->
+        
+        
+        <h3 id="mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
+            Solution Component - Analyse Patient Data 
+        </h3>
+        <p id="mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
+            GUID: b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+        </p>
+        
+        <!-- Mermaid Diagram -->
+        <div id="mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584-container" class="diagram-container"
+             style="width: 100%; flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <div id="mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584" class="mermaid"
+                 style="width: 100%; height: 100%; cursor: grab; user-select: none; margin: 0; padding: 0;">
+                flowchart TD
+%%{init: {&quot;flowchart&quot;: {&quot;htmlLabels&quot;: false}} }%%
+
+31d4e4e5-670a-43ec-af47-1f64663a7b5a@{ shape: text, label: &quot;*Description*
+**ML Flow based analytics pipeline to run the variety of models over the patient data.**&quot;}
+b5c8da4c-f925-4cf1-8294-e43cd2c1a584@{ shape: stadium, label: &quot;*Solution Component*
+**Analyse Patient Data**&quot;}
+d48f579f-76d3-4c49-b1b4-575f5645a9d0@{ shape: rect, label: &quot;*Solution Component*
+**Treatment Validation Sandbox**&quot;}
+d48f579f-76d3-4c49-b1b4-575f5645a9d0==&gt;|&quot;retrieve patient data,
+[Solution Linking Wire]&quot;|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+48bc201e-3d4e-4beb-bdb2-0fd9d134f6d5@{ shape: rect, label: &quot;*Solution Component*
+**Treatment Efficacy Evidence**&quot;}
+b5c8da4c-f925-4cf1-8294-e43cd2c1a584==&gt;|&quot;publish results,
+[Solution Linking Wire]&quot;|48bc201e-3d4e-4beb-bdb2-0fd9d134f6d5
+ece17806-836c-4756-b3a2-2d12dde215f6@{ shape: trap-t, label: &quot;*Solution Actor Role*
+**New Treatment Data Scientist**&quot;}
+ece17806-836c-4756-b3a2-2d12dde215f6==&gt;|&quot;Data Analyser&quot;|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+0c757e35-8a42-4d5f-b01b-c72a6cea65cc@{ shape: trap-t, label: &quot;*Solution Actor Role*
+**New Treatment Researcher**&quot;}
+0c757e35-8a42-4d5f-b01b-c72a6cea65cc==&gt;|&quot;Results Interpreter&quot;|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+04ae768e-3816-47bc-bddb-c9ae25018684@{ shape: hex, label: &quot;*Information Supply Chain Segment*
+**Hospital Delivers Patient Weekly Readings**&quot;}
+04ae768e-3816-47bc-bddb-c9ae25018684==&gt;|&quot;InformationSupplyChainLink&quot;|b5c8da4c-f925-4cf1-8294-e43cd2c1a584
+1f71e403-1187-4f03-a1dd-ae7dc105f06f@{ shape: flip-tri, label: &quot;*Information Supply Chain*
+**Clinical Trial Treatment Validation**&quot;}
+1f71e403-1187-4f03-a1dd-ae7dc105f06f==&gt;|&quot;InformationSupplyChainComposition&quot;|04ae768e-3816-47bc-bddb-c9ae25018684
+style 48bc201e-3d4e-4beb-bdb2-0fd9d134f6d5 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 0c757e35-8a42-4d5f-b01b-c72a6cea65cc color:#FFFFFF, fill:#AA00FF, stroke:#E1D5E7
+style b5c8da4c-f925-4cf1-8294-e43cd2c1a584 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style ece17806-836c-4756-b3a2-2d12dde215f6 color:#FFFFFF, fill:#AA00FF, stroke:#E1D5E7
+style d48f579f-76d3-4c49-b1b4-575f5645a9d0 color:#FFFFFF, fill:#838cc7, stroke:#3079ab
+style 1f71e403-1187-4f03-a1dd-ae7dc105f06f color:#FFFFFF, fill:#004563, stroke:#b7c0c7
+style 31d4e4e5-670a-43ec-af47-1f64663a7b5a color:#000000, fill:#F9F7ED, stroke:#b7c0c7
+style 04ae768e-3816-47bc-bddb-c9ae25018684 color:#004563, fill:#b7c0c7, stroke:#004563
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Ensure no margins or padding for the body or html in Jupyter */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        /* General reset for Jupyter Notebook's extra spacing */
+        #notebook, .container, .cell, .output_area {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .diagram-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars during zoom/pan */
+        }
+        h2 {
+            margin: 0;
+            padding: 10px;
+            font-size: 24px;
+            text-align: center;
+            flex: 0 0 auto; /* Fix height explicitly for heading */
+        }
+        .mermaid {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    
+    <script>
+        (function() {
+            const graphId = "mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584";  // Pass the graph ID
+
+            function loadScript(url, callback) {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = callback;
+                document.head.appendChild(script);
+            }
+            
+            // Initialize Mermaid and render the diagram
+            function initializeMermaid() {
+                mermaid.initialize({startOnLoad: false});
+                mermaid.init(undefined, "#" + graphId);
+
+                setTimeout(() => {
+                    const container = document.getElementById(graphId);
+                    if (!container) {
+                        console.error("Container not found for graph:", graphId);
+                        return;
+                    }
+
+                    const svg = container.querySelector("svg");
+                    if (!svg) {
+                        console.error("SVG not rendered by Mermaid.");
+                        return;
+                    }
+
+                    console.log("SVG rendered. Applying pan & zoom.");
+
+                    // Adjust to container size
+                    const containerElement = document.getElementById("mermaid-graph-b5c8da4c-f925-4cf1-8294-e43cd2c1a584-container");
+                    svg.setAttribute("width", containerElement.offsetWidth);
+                    svg.setAttribute("height", containerElement.offsetHeight);
+
+                    // Add pan/zoom functionality
+                    loadScript("https://cdn.jsdelivr.net/npm/svg-pan-zoom/dist/svg-pan-zoom.min.js", () => {
+                        const panZoom = svgPanZoom(svg, {
+                            zoomEnabled: true,
+                            controlIconsEnabled: true,
+                            fit: true,
+                            center: true,
+                            minZoom: 0.5,
+                            maxZoom: 10
+                        });
+
+                        // Reinitialize pan-zoom on window resize
+                        function onResize() {
+                            panZoom.resize();
+                            panZoom.fit();
+                            panZoom.center();
+                        }
+                        window.addEventListener('resize', onResize);
+
+                        console.log("Pan & zoom initialized successfully.");
+                    });
+                }, 500);
+            }
+
+            // Load Mermaid.js and initialize
+            if (typeof mermaid === "undefined") {
+                loadScript("https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js", initializeMermaid);
+            } else {
+                initializeMermaid();
+            }
+        })();
+    </script>
+
+    
