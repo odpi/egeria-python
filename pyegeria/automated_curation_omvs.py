@@ -2461,7 +2461,7 @@ class AutomatedCuration(Client):
                 {
                     "class": "NewActionTarget",
                     "actionTargetName": "serverToSurvey",
-                    "actionTargetGUID": resource_guid,
+                    "actionTargetGUID": resource_guid.strip(),
                 }
             ],
         }
@@ -2473,7 +2473,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurveys:survey-postgres-database", postgres_database_guid
+                "PostgreSQLSurvey:survey-postgres-database", postgres_database_guid
             )
         )
         return response
@@ -2483,7 +2483,7 @@ class AutomatedCuration(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_survey(
-                "PostgreSQLSurveys:survey-postgres-server", postgres_server_guid
+                "PostgreSQLSurvey:survey-postgres-server", postgres_server_guid
             )
         )
         return response

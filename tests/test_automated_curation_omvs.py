@@ -51,7 +51,7 @@ class TestAutomatedCuration:
 
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -99,16 +99,16 @@ class TestAutomatedCuration:
     def test_create_folder_asset(self) -> str:
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            path_name = "/deployments/landing-area"
-            folder_name = "landing-area"
-            file_system = "laz"
-            description = "Folder for incoming data"
+            path_name = "/deployments"
+            folder_name = "deployments"
+            file_system = None
+            description = "Folder for egeria container"
             version = "0.1"
             start_time = time.perf_counter()
             response = a_client.create_folder_element_from_template(
@@ -215,7 +215,7 @@ class TestAutomatedCuration:
     def test_create_postgres_database_element_from_template(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -224,13 +224,13 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.create_postgres_database_element_from_template(
-                "coco_ods",
-                "cray-postgres-5432",
-                "cray.local",
-                "5432",
-                db_user="postgres",
-                db_pwd="notingres",
-                description="An operational datastore for Coco Pharmaceuticals",
+                "egeria",
+                "LocalPostgreSQL1",
+                "host.docker.internal",
+                "5442",
+                db_user="egeria_user",
+                db_pwd="user4egeria",
+                description="Egeria Repository"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1309,13 +1309,13 @@ class TestAutomatedCuration:
     def test_initiate_postgres_server_survey(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "60e4c944-fc0b-4d48-a191-80803ad99dc8"
+            a_postgres_server_guid = "d34544cd-7cc0-4258-ad19-2c32f1f1ffed "
             start_time = time.perf_counter()
 
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
@@ -1344,13 +1344,13 @@ class TestAutomatedCuration:
     def test_initiate_postgres_database_survey(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_database_guid = "cad99230-9896-4f3b-b15f-93af7b3be470"
+            a_postgres_database_guid = "da160627-8d5d-4778-89fe-6d1df7843e30"
 
             start_time = time.perf_counter()
 
@@ -1382,7 +1382,7 @@ class TestAutomatedCuration:
     def test_initiate_file_folder_survey(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -1391,9 +1391,9 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # file_folder_guid = "58ef1911-1e85-43cc-a6cb-a8990112e591"
-            file_folder_guid = "d349b01e-52ff-42ca-ac2a-23b876cb4ed7"
+            file_folder_guid = "7c28d5cb-c745-4663-bdaa-19c0bf962ecf"
             response = a_client.initiate_file_folder_survey(
-                file_folder_guid, "FileSurveys:survey-all-folders"
+                file_folder_guid, "FileSurvey:survey-all-folders-and-files"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")

@@ -63,25 +63,57 @@ def load_mermaid():
 
 
 def render_mermaid(mermaid_code):
-    return display(HTML(construct_mermaid_html(mermaid_code)))
+    title_label, guid, mermaid_code = parse_mermaid_code(mermaid_code)
+    graph_id = f"mermaid-graph-{guid}-{str(uuid.uuid4())[:4]}"
+    escaped_header = html.escape(title_label) if title_label else ""  # Sanitize the header safely
+    escaped_mermaid_code = html.escape(mermaid_code)
+    header_html = f"""
+                <h3 id="{graph_id}-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
+                    {escaped_header}
+                </h3>
+                <p id="{graph_id}-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
+                    GUID: {guid}
+                </p>
+                """ if title_label else ""
 
+    mermaid_html = f"""
+    <div>{header_html}</div>
+    <div class="mermaid">
+        {escaped_mermaid_code}
+    </div>
+    <script type="text/javascript">
+        if (window.mermaid) {{
+    mermaid.initialize({{startOnLoad: true}});
+    mermaid.contentLoaded();
+    }}
+    </script>
+    """
+    display(HTML(mermaid_html))
+
+
+def render_mermaid_adv(mermaid_code):
+    return display(HTML(construct_mermaid_web(mermaid_code)),)
 
 def parse_mermaid_code(mermaid_code):
     parts = mermaid_code.split("---", maxsplit=3)
+    guid = None
     if len(parts) == 3:
         full_title = parts[1].strip()
-        title_l = full_title.split("[")[0]
-        title = title_l.replace("title: ", "")
-        guid = full_title.split("[")[1].split("]")[0]
-        guid = " " if guid is None else guid
+        if "[" in full_title:
+            title_l = full_title.split("[")[0]
+            title = title_l.replace("title: ", "")
+            guid = full_title.split("[")[1].split("]")[0]
+        else:
+            title = full_title.replace("title: ", "")
         mermaid_code = parts[2].strip()
     else:
-        title = "Unlabeled diagram"
-        guid = " "
+        title = None
+    if guid is None:
+        guid = str(uuid.uuid4())[:8]
     return title, guid, mermaid_code
 
 
-def old_construct_mermaid_html(mermaid_str: str) -> str:
+def construct_mermaid_web(mermaid_str: str) -> str:
     """Function to display a HTML code in a Jupyter notebook"""
     title_label, guid, mermaid_code = parse_mermaid_code(mermaid_str)
 
@@ -205,8 +237,7 @@ def old_construct_mermaid_html(mermaid_str: str) -> str:
 
     return html_section1 + html_section2 + html_section3 + mermaid_code + html_section4
 
-
-def construct_mermaid_html(mermaid_str: str) -> str:
+def construct_mermaid_jup(mermaid_str: str) -> str:
     """Function to display a HTML code in a Jupyter notebook
 
     Constructs HTML for a single Mermaid graph with pan and zoom support.
@@ -219,140 +250,764 @@ def construct_mermaid_html(mermaid_str: str) -> str:
     """
     title_label, guid, mermaid_code = parse_mermaid_code(mermaid_str)
 
-    graph_id = f"mermaid-graph-{guid}"
+    graph_id = f"mermaid-graph-{guid}-{str(uuid.uuid4())[:4]}"
     escaped_header = html.escape(title_label) if title_label else ""  # Sanitize the header safely
     escaped_mermaid_code = html.escape(mermaid_code)
-
     header_html = f"""
-        <h3 id="{graph_id}-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
-            {escaped_header}
-        </h3>
-        <p id="{graph_id}-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
-            GUID: {guid}
-        </p>
-        """ if title_label else ""
+                <h3 id="{graph_id}-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
+                    {escaped_header}
+                </h3>
+                <p id="{graph_id}-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
+                    GUID: {guid}
+                </p>
+                """ if title_label else ""
 
     html_content = f"""
-    <div id="{graph_id}-wrapper" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: stretch;">
-        
-        <!-- Title/Heading -->
-        
-        {header_html if header_html else ""}
-        <!-- Mermaid Diagram -->
-        <div id="{graph_id}-container" class="diagram-container"
-             style="width: 100%; flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            <div id="{graph_id}" class="mermaid"
-                 style="width: 100%; height: 100%; cursor: grab; user-select: none; margin: 0; padding: 0;">
-                {escaped_mermaid_code}
-            </div>
-        </div>
-    </div>
-    
-    <style>
-        /* Ensure no margins or padding for the body or html in Jupyter */
-        body, html {{
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }}
-        /* General reset for Jupyter Notebook's extra spacing */
-        #notebook, .container, .cell, .output_area {{
-            margin: 0 !important;
-            padding: 0 !important;
-        }}
+            <style>
+        /* Style for the diagram container */
         .diagram-container {{
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Prevent scrollbars during zoom/pan */
+            position: relative;
+            width: 100%; /* Adjust the diagram container width */
+            height: 500px; /* Set a fixed height for the container */
+            margin: 0 auto;
+            border: 1px solid #ccc; /* Optional border for visualization */
+            overflow: hidden; /* Prevent content overflow outside the container */
         }}
-        h2 {{
-            margin: 0;
-            padding: 10px;
-            font-size: 24px;
-            text-align: center;
-            flex: 0 0 auto; /* Fix height explicitly for heading */
+
+        /* Style for zoom controls */
+        .svg-pan-zoom_controls {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }}
-        .mermaid {{
-            margin: 0;
-            padding: 0;
+        .svg-pan-zoom_controls button {{
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }}
+        .svg-pan-zoom_controls button:hover {{
+            background-color: #0056b3;
         }}
     </style>
-    
-    <script>
-        (function() {{
-            const graphId = "{graph_id}";  // Pass the graph ID
 
-            function loadScript(url, callback) {{
-                const script = document.createElement('script');
-                script.src = url;
-                script.onload = callback;
-                document.head.appendChild(script);
-            }}
-            
-            // Initialize Mermaid and render the diagram
-            function initializeMermaid() {{
-                mermaid.initialize({{startOnLoad: false}});
-                mermaid.init(undefined, "#" + graphId);
+    <div id="{graph_id}-container" class="diagram-container">
+        <!-- Mermaid diagram will be dynamically rendered here -->
+        {header_html}
+        <div id="{graph_id}" class="mermaid">
+            {escaped_mermaid_code}
+        </div>
+    </div>
 
-                setTimeout(() => {{
-                    const container = document.getElementById(graphId);
-                    if (!container) {{
-                        console.error("Container not found for graph:", graphId);
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {{
+                // Initialize Mermaid and Pan-Zoom functionality
+                const graph_id = "{graph_id}";
+
+                function initializeMermaid(graph_id) {{
+                    const containerElement = document.getElementById(`${{graph_id}}-container`);
+
+                    if (!containerElement) {{
+                        console.error(`Container with ID "${{graph_id}}-container" not found.`);
                         return;
                     }}
 
-                    const svg = container.querySelector("svg");
-                    if (!svg) {{
-                        console.error("SVG not rendered by Mermaid.");
-                        return;
-                    }}
+                    // Configure Mermaid
+                    mermaid.initialize({{ startOnLoad: false, logLevel: "debug" }});
+                    mermaid.init(undefined, `#${{graph_id}}`);
 
-                    console.log("SVG rendered. Applying pan & zoom.");
+                    setTimeout(() => {{
+                        const svg = containerElement.querySelector("svg");
+                        if (!svg) {{
+                            console.error(`SVG not rendered for ID "${{graph_id}}".`);
+                            return;
+                        }}
 
-                    // Adjust to container size
-                    const containerElement = document.getElementById("{graph_id}-container");
-                    svg.setAttribute("width", containerElement.offsetWidth);
-                    svg.setAttribute("height", containerElement.offsetHeight);
+                        // Set initial size
+                        svg.setAttribute("width", "100%");
+                        svg.setAttribute("height", "100%");
 
-                    // Add pan/zoom functionality
-                    loadScript("https://cdn.jsdelivr.net/npm/svg-pan-zoom/dist/svg-pan-zoom.min.js", () => {{
+                        // Initialize Pan-Zoom
                         const panZoom = svgPanZoom(svg, {{
                             zoomEnabled: true,
-                            controlIconsEnabled: true,
+                            controlIconsEnabled: false,
                             fit: true,
                             center: true,
                             minZoom: 0.5,
-                            maxZoom: 10
+                            maxZoom: 10,
+                            contain: true
                         }});
 
-                        // Reinitialize pan-zoom on window resize
-                        function onResize() {{
-                            panZoom.resize();
-                            panZoom.fit();
-                            panZoom.center();
-                        }}
-                        window.addEventListener('resize', onResize);
+                        // Add custom controls
+                        const controlsContainer = document.createElement("div");
+                        controlsContainer.className = "svg-pan-zoom_controls";
+                        controlsContainer.innerHTML = `
+                            <button id="${{graph_id}}-zoom-in">+</button>
+                            <button id="${{graph_id}}-zoom-out">-</button>
+                            <button id="${{graph_id}}-reset">Reset</button>
+                        `;
+                        containerElement.appendChild(controlsContainer);
 
-                        console.log("Pan & zoom initialized successfully.");
+                        // Handle controls
+                        document.getElementById(`${{graph_id}}-zoom-in`).addEventListener("click", () => panZoom.zoomIn());
+                        document.getElementById(`${{graph_id}}-zoom-out`).addEventListener("click", () => panZoom.zoomOut());
+                        document.getElementById(`${{graph_id}}-reset`).addEventListener("click", () => {{
+                            panZoom.resetZoom();
+                            panZoom.center();
+                        }});
+                    }}, 500);
+                }}
+
+                if (typeof mermaid === "undefined") {{
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js";
+                    script.onload = () => initializeMermaid(graph_id);
+                    document.head.appendChild(script);
+                }} else {{
+                    initializeMermaid(graph_id);
+                }}
+            }});
+        </script>
+
+    """
+    return html_content
+
+
+
+
+def not_working_construct_mermaid_html(mermaid_str: str) -> str:
+    """Function to display a HTML code in a Jupyter notebook
+
+    Constructs HTML for a single Mermaid graph with pan and zoom support.
+    Each call overwrites the previous graph.
+
+    :param mermaid_code: The Mermaid code for the graph.
+    :param graph_id: An optional unique graph ID (default is 'mermaid-graph').
+    :return: The HTML content for the Mermaid graph with pan and zoom enabled.
+
+    """
+    title_label, guid, mermaid_code = parse_mermaid_code(mermaid_str)
+
+    graph_id = f"mermaid-graph-{guid}-{str(uuid.uuid4())[:4]}"
+    escaped_header = html.escape(title_label) if title_label else ""  # Sanitize the header safely
+    escaped_mermaid_code = html.escape(mermaid_code)
+    header_html = f"""
+            <h3 id="{graph_id}-heading" style="margin: 20px 0; font-size: 1.5em; text-align: center;">
+                {escaped_header}
+            </h3>
+            <p id="{graph_id}-subheading" style="margin: 0; padding: 5px; font-size: 1em; text-align: center; color: gray; flex: 0 0 auto;">
+                GUID: {guid}
+            </p>
+            """ if title_label else ""
+
+    html_content = f"""
+        <style>
+    /* Style for the diagram container */
+    .diagram-container {{
+        position: relative;
+        width: 100%; /* Adjust the diagram container width */
+        height: 500px; /* Set a fixed height for the container */
+        margin: 0 auto;
+        border: 1px solid #ccc; /* Optional border for visualization */
+        overflow: hidden; /* Prevent content overflow outside the container */
+    }}
+
+    /* Style for zoom controls */
+    .svg-pan-zoom_controls {{
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }}
+    .svg-pan-zoom_controls button {{
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+    }}
+    .svg-pan-zoom_controls button:hover {{
+        background-color: #0056b3;
+    }}
+</style>
+
+<div id="{graph_id}-container" class="diagram-container">
+    <!-- Mermaid diagram will be dynamically rendered here -->
+    {header_html}
+    <div id="{graph_id}" class="mermaid">
+        {escaped_mermaid_code}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {{
+            // Initialize Mermaid and Pan-Zoom functionality
+            const graph_id = "{graph_id}";
+
+            function initializeMermaid(graph_id) {{
+                const containerElement = document.getElementById(`${{graph_id}}-container`);
+
+                if (!containerElement) {{
+                    console.error(`Container with ID "${{graph_id}}-container" not found.`);
+                    return;
+                }}
+
+                // Configure Mermaid
+                mermaid.initialize({{ startOnLoad: false, logLevel: "debug" }});
+                mermaid.init(undefined, `#${{graph_id}}`);
+
+                setTimeout(() => {{
+                    const svg = containerElement.querySelector("svg");
+                    if (!svg) {{
+                        console.error(`SVG not rendered for ID "${{graph_id}}".`);
+                        return;
+                    }}
+
+                    // Set initial size
+                    svg.setAttribute("width", "100%");
+                    svg.setAttribute("height", "100%");
+
+                    // Initialize Pan-Zoom
+                    const panZoom = svgPanZoom(svg, {{
+                        zoomEnabled: true,
+                        controlIconsEnabled: false,
+                        fit: true,
+                        center: true,
+                        minZoom: 0.5,
+                        maxZoom: 10,
+                        contain: true
+                    }});
+
+                    // Add custom controls
+                    const controlsContainer = document.createElement("div");
+                    controlsContainer.className = "svg-pan-zoom_controls";
+                    controlsContainer.innerHTML = `
+                        <button id="${{graph_id}}-zoom-in">+</button>
+                        <button id="${{graph_id}}-zoom-out">-</button>
+                        <button id="${{graph_id}}-reset">Reset</button>
+                    `;
+                    containerElement.appendChild(controlsContainer);
+
+                    // Handle controls
+                    document.getElementById(`${{graph_id}}-zoom-in`).addEventListener("click", () => panZoom.zoomIn());
+                    document.getElementById(`${{graph_id}}-zoom-out`).addEventListener("click", () => panZoom.zoomOut());
+                    document.getElementById(`${{graph_id}}-reset`).addEventListener("click", () => {{
+                        panZoom.resetZoom();
+                        panZoom.center();
                     }});
                 }}, 500);
             }}
 
-            // Load Mermaid.js and initialize
             if (typeof mermaid === "undefined") {{
-                loadScript("https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js", initializeMermaid);
+                const script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js";
+                script.onload = () => initializeMermaid(graph_id);
+                document.head.appendChild(script);
             }} else {{
-                initializeMermaid();
+                initializeMermaid(graph_id);
             }}
-        }})();
+        }});
     </script>
 
-    """
+"""
+#
+#     return html_content
+# This one almost works - no controls and diagram too small
+    # html_content = f"""
+# <!DOCTYPE html>
+# <html>
+# <head>
+#     <style>
+#         /* Set consistent sizing and prevent shrinking for the container and parents */
+#         html, body, #{graph_id}-wrapper {{
+#             margin: 0;
+#             padding: 0;
+#             height: 100%; /* Ensure the entire root hierarchy respects 100% height */
+#             width: 100%;
+#         }}
+#
+#         /* Ensure diagram container maintains full height and prevents overflow */
+#         #{graph_id}-container {{
+#             position: relative;
+#             width: 100%;
+#             height: 100%;
+#             overflow: hidden; /* Prevent content from breaking layout */
+#             display: flex;
+#             align-items: center; /* Centers the diagram vertically */
+#             justify-content: center; /* Centers the diagram horizontally */
+#         }}
+#
+#         /* Ensure SVG always stretches to match container */
+#         #{graph_id} svg {{
+#             width: 100%;
+#             height: 100%;
+#             display: block; /* Avoid unwanted inline space issues */
+#         }}
+#
+#         /* Optional custom pan/zoom controls (if dynamically added) */
+#         .svg-pan-zoom_controls {{
+#             position: absolute;
+#             bottom: 10px; /* Adjust based on desired placement */
+#             right: 10px;
+#             z-index: 10;
+#             display: flex;
+#             gap: 5px;
+#         }}
+#
+#         .svg-pan-zoom_controls button {{
+#             border: 1px solid #ccc;
+#             background-color: #fff;
+#             color: #000;
+#             padding: 5px 10px;
+#             cursor: pointer;
+#             font-size: 16px;
+#         }}
+#
+#         .svg-pan-zoom_controls button:hover {{
+#             background-color: #f0f0f0;
+#         }}
+#     </style>
+#     </head>
+#     <body>
+#     <div id="{graph_id}-wrapper">
+#         <!-- Title/Heading (optional; include as needed) -->
+#         {escaped_header if escaped_header else ""}
+#
+#         <!-- Mermaid Diagram Container -->
+#         <div id="{graph_id}-container">
+#             <div id="{graph_id}" class="mermaid">
+#                 {escaped_mermaid_code}
+#             </div>
+#         </div>
+#     </div>
+#
+#     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+#     <script>
+#         document.addEventListener("DOMContentLoaded", () => {{
+#                                                              // Define the graph ID dynamically passed via Python
+#         const graph_id = "{graph_id}";
+#
+#         // Function to load external scripts dynamically
+#         function loadScript(url, callback) {{
+#             const script = document.createElement('script');
+#         script.src = url;
+#         script.async = true;
+#         script.onload = callback;
+#         script.onerror = () => console.error("Error loading script:", url);
+#         document.head.appendChild(script);
+#         }}
+#
+#         // Function to initialize Mermaid
+#         function initializeMermaid(graph_id) {{
+#                                               // Look for the container ID generated dynamically by the template
+#         const containerElement = document.getElementById(`${{graph_id}}-container`);
+#         if (!containerElement) {{
+#         console.error(`Container element with id "${{graph_id}}-container" not found.`);
+#         return;
+#         }}
+#
+#         // Initialize Mermaid.js with default configuration
+#         mermaid.initialize({{ startOnLoad: false, logLevel: "debug" }});
+#         mermaid.init(undefined, `#${{graph_id}}`); // Initialize element with id matching `graph_id`
+#
+#                      // Add a timeout to ensure the SVG is rendered
+#         setTimeout(() => {{
+#             const svg = containerElement.querySelector("svg");
+#
+#         // Handle errors if SVG rendering fails
+#         if (!svg) {{
+#             console.error(`SVG not rendered for ID "${{graph_id}}". Check Mermaid syntax or rendering issues.`);
+#         console.log("Container content:", containerElement.innerHTML); // Log the container's content
+#         return;
+#         }}
+#
+#         // Set SVG attributes for full container fit
+#         svg.setAttribute("width", "100%");
+#         svg.setAttribute("height", "100%");
+#
+#         // Initialize SVG Pan-Zoom functionality
+#         const panZoom = svgPanZoom(svg, {{
+#         zoomEnabled: true,
+#         controlIconsEnabled: true, // Display default controls if enabled
+#         fit: true,  // Fit diagram within the container
+#         center: true, // Center the diagram
+#         minZoom: 0.5, // Prevent too much zooming out
+#         maxZoom: 10,  // Prevent extreme zooming in
+#                                          contain: true // Keep the diagram fully within bounds
+#         }});
+#
+#         // Optional: Add custom pan/zoom controls dynamically
+#             const controlsContainer = document.createElement("div");
+#             controlsContainer.classList.add("svg-pan-zoom_controls");
+#             controlsContainer.innerHTML = `
+#                                         <button id="${{graph_id}}-zoom-in">+</button>
+#                                         <button id="${{graph_id}}-zoom-out">-</button>
+#                                         <button id="${{graph_id}}-reset">Reset</button>
+#                                          `;
+#             containerElement.appendChild(controlsContainer);
+#
+#         // Add event listeners for the custom controls
+#         document.getElementById(`${{graph_id}}-zoom-in`).addEventListener("click", () => panZoom.zoomIn());
+#         document.getElementById(`${{graph_id}}-zoom-out`).addEventListener("click", () => panZoom.zoomOut());
+#         document.getElementById(`${{graph_id}}-reset`).addEventListener("click", () => {{
+#                 panZoom.resetZoom();
+#                 panZoom.center();
+#                 }});
+#             }}, 500); // Short delay to ensure SVG rendering is complete
+#         }}
+#
+#         // Load Mermaid.js if not already loaded
+#         if (typeof mermaid === "undefined") {{
+#             loadScript("https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js", () => {{
+#             console.log("Mermaid.js loaded successfully");
+#             initializeMermaid(graph_id); // Call initialization after Mermaid.js is loaded
+#         }});
+#             }} else {{
+#                 initializeMermaid(graph_id); // If Mermaid.js is already loaded, proceed immediately
+#             }}
+#         }});
+#     </script>
+#
+#
+#     </body>
+#     </html>
+#     """
+
+
+
 
 
     return html_content
-    # mermaid_html = f"""
+
+    # // Check if Mermaid and SVG-Pan-Zoom are loaded
+    # const loadMermaid = typeof mermaid === "undefined";
+    # const loadSvgPanZoom = typeof svgPanZoom === "undefined";
+    #
+    # if (loadMermaid || loadSvgPanZoom) {{
+    #     const promises = [];
+    #
+    #     // Load Mermaid.js if not already loaded
+    #     if (loadMermaid) {{
+    #         promises.push(new Promise((resolve) => {{
+    #             const script = document.createElement("script");
+    #             script.src = "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js";
+    #             script.onload = resolve;
+    #             document.head.appendChild(script);
+    #         }}));
+    #     }}
+    #
+    #     // Load SVG-Pan-Zoom if not already loaded
+    #     if (loadSvgPanZoom) {{
+    #         promises.push(new Promise((resolve) => {{
+    #             const script = document.createElement("script");
+    #             script.src = "https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js";
+    #             script.onload = resolve;
+    #             document.head.appendChild(script);
+    #         }}));
+    #     }}
+    #
+    #     Promise.all(promises).then(() => initializeMermaid(graph_id));
+    # }} else {{
+    #     initializeMermaid(graph_id);
+    # }}
+    # }})();
+
+
+#     html_content = f"""
+# <style>
+#     /* Style for the diagram container */
+#     .diagram-container {{
+#         position: relative;
+#         width: 100%; /* Adjust the diagram container width */
+#         height: 500px; /* Set a fixed height for the container */
+#         margin: 0 auto;
+#         border: 1px solid #ccc; /* Optional border for visualization */
+#         overflow: hidden; /* Prevent content overflow outside the container */
+#     }}
+#
+#     /* Style for zoom controls */
+#     .svg-pan-zoom_controls {{
+#         position: absolute;
+#         top: 10px;
+#         right: 10px;
+#         display: flex;
+#         flex-direction: column;
+#         gap: 5px;
+#     }}
+#     .svg-pan-zoom_controls button {{
+#         background-color: #007bff;
+#         color: white;
+#         border: none;
+#         padding: 5px 10px;
+#         border-radius: 3px;
+#         cursor: pointer;
+#         font-size: 14px;
+#     }}
+#     .svg-pan-zoom_controls button:hover {{
+#         background-color: #0056b3;
+#     }}
+# </style>
+#
+# <div id="{graph_id}-container" class="diagram-container">
+#     <!-- Mermaid diagram will be dynamically rendered here -->
+#     <div id="{graph_id}" class="mermaid">
+#         {mermaid_code}
+#     </div>
+# </div>
+#
+# <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+#     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+#     <script>
+#         document.addEventListener("DOMContentLoaded", () => {{
+#             // Initialize Mermaid and Pan-Zoom functionality
+#             const graph_id = "{graph_id}";
+#
+#             function initializeMermaid(graph_id) {{
+#                 const containerElement = document.getElementById(`${{graph_id}}-container`);
+#
+#                 if (!containerElement) {{
+#                     console.error(`Container with ID "${{graph_id}}-container" not found.`);
+#                     return;
+#                 }}
+#
+#                 // Configure Mermaid
+#                 mermaid.initialize({{ startOnLoad: false, logLevel: "debug" }});
+#                 mermaid.init(undefined, `#${{graph_id}}`);
+#
+#                 setTimeout(() => {{
+#                     const svg = containerElement.querySelector("svg");
+#                     if (!svg) {{
+#                         console.error(`SVG not rendered for ID "${{graph_id}}".`);
+#                         return;
+#                     }}
+#
+#                     // Set initial size
+#                     svg.setAttribute("width", "100%");
+#                     svg.setAttribute("height", "100%");
+#
+#                     // Initialize Pan-Zoom
+#                     const panZoom = svgPanZoom(svg, {{
+#                         zoomEnabled: true,
+#                         controlIconsEnabled: false,
+#                         fit: true,
+#                         center: true,
+#                         minZoom: 0.5,
+#                         maxZoom: 10,
+#                         contain: true
+#                     }});
+#
+#                     // Add custom controls
+#                     const controlsContainer = document.createElement("div");
+#                     controlsContainer.className = "svg-pan-zoom_controls";
+#                     controlsContainer.innerHTML = `
+#                         <button id="${{graph_id}}-zoom-in">+</button>
+#                         <button id="${{graph_id}}-zoom-out">-</button>
+#                         <button id="${{graph_id}}-reset">Reset</button>
+#                     `;
+#                     containerElement.appendChild(controlsContainer);
+#
+#                     // Handle controls
+#                     document.getElementById(`${{graph_id}}-zoom-in`).addEventListener("click", () => panZoom.zoomIn());
+#                     document.getElementById(`${{graph_id}}-zoom-out`).addEventListener("click", () => panZoom.zoomOut());
+#                     document.getElementById(`${{graph_id}}-reset`).addEventListener("click", () => {{
+#                         panZoom.resetZoom();
+#                         panZoom.center();
+#                     }});
+#                 }}, 500);
+#             }}
+#
+#             if (typeof mermaid === "undefined") {{
+#                 const script = document.createElement('script');
+#                 script.src = "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js";
+#                 script.onload = () => initializeMermaid(graph_id);
+#                 document.head.appendChild(script);
+#             }} else {{
+#                 initializeMermaid(graph_id);
+#             }}
+#         }});
+#     </script>
+#
+# """
+#
+#     return html_content
+# This one almost works - no controls and diagram too small
+    # html_content = f"""
+# <!DOCTYPE html>
+# <html>
+# <head>
+#     <style>
+#         /* Set consistent sizing and prevent shrinking for the container and parents */
+#         html, body, #{graph_id}-wrapper {{
+#             margin: 0;
+#             padding: 0;
+#             height: 100%; /* Ensure the entire root hierarchy respects 100% height */
+#             width: 100%;
+#         }}
+#
+#         /* Ensure diagram container maintains full height and prevents overflow */
+#         #{graph_id}-container {{
+#             position: relative;
+#             width: 100%;
+#             height: 100%;
+#             overflow: hidden; /* Prevent content from breaking layout */
+#             display: flex;
+#             align-items: center; /* Centers the diagram vertically */
+#             justify-content: center; /* Centers the diagram horizontally */
+#         }}
+#
+#         /* Ensure SVG always stretches to match container */
+#         #{graph_id} svg {{
+#             width: 100%;
+#             height: 100%;
+#             display: block; /* Avoid unwanted inline space issues */
+#         }}
+#
+#         /* Optional custom pan/zoom controls (if dynamically added) */
+#         .svg-pan-zoom_controls {{
+#             position: absolute;
+#             bottom: 10px; /* Adjust based on desired placement */
+#             right: 10px;
+#             z-index: 10;
+#             display: flex;
+#             gap: 5px;
+#         }}
+#
+#         .svg-pan-zoom_controls button {{
+#             border: 1px solid #ccc;
+#             background-color: #fff;
+#             color: #000;
+#             padding: 5px 10px;
+#             cursor: pointer;
+#             font-size: 16px;
+#         }}
+#
+#         .svg-pan-zoom_controls button:hover {{
+#             background-color: #f0f0f0;
+#         }}
+#     </style>
+#     </head>
+#     <body>
+#     <div id="{graph_id}-wrapper">
+#         <!-- Title/Heading (optional; include as needed) -->
+#         {escaped_header if escaped_header else ""}
+#
+#         <!-- Mermaid Diagram Container -->
+#         <div id="{graph_id}-container">
+#             <div id="{graph_id}" class="mermaid">
+#                 {escaped_mermaid_code}
+#             </div>
+#         </div>
+#     </div>
+#
+#     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+#     <script>
+#         document.addEventListener("DOMContentLoaded", () => {{
+#                                                              // Define the graph ID dynamically passed via Python
+#         const graph_id = "{graph_id}";
+#
+#         // Function to load external scripts dynamically
+#         function loadScript(url, callback) {{
+#             const script = document.createElement('script');
+#         script.src = url;
+#         script.async = true;
+#         script.onload = callback;
+#         script.onerror = () => console.error("Error loading script:", url);
+#         document.head.appendChild(script);
+#         }}
+#
+#         // Function to initialize Mermaid
+#         function initializeMermaid(graph_id) {{
+#                                               // Look for the container ID generated dynamically by the template
+#         const containerElement = document.getElementById(`${{graph_id}}-container`);
+#         if (!containerElement) {{
+#         console.error(`Container element with id "${{graph_id}}-container" not found.`);
+#         return;
+#         }}
+#
+#         // Initialize Mermaid.js with default configuration
+#         mermaid.initialize({{ startOnLoad: false, logLevel: "debug" }});
+#         mermaid.init(undefined, `#${{graph_id}}`); // Initialize element with id matching `graph_id`
+#
+#                      // Add a timeout to ensure the SVG is rendered
+#         setTimeout(() => {{
+#             const svg = containerElement.querySelector("svg");
+#
+#         // Handle errors if SVG rendering fails
+#         if (!svg) {{
+#             console.error(`SVG not rendered for ID "${{graph_id}}". Check Mermaid syntax or rendering issues.`);
+#         console.log("Container content:", containerElement.innerHTML); // Log the container's content
+#         return;
+#         }}
+#
+#         // Set SVG attributes for full container fit
+#         svg.setAttribute("width", "100%");
+#         svg.setAttribute("height", "100%");
+#
+#         // Initialize SVG Pan-Zoom functionality
+#         const panZoom = svgPanZoom(svg, {{
+#         zoomEnabled: true,
+#         controlIconsEnabled: true, // Display default controls if enabled
+#         fit: true,  // Fit diagram within the container
+#         center: true, // Center the diagram
+#         minZoom: 0.5, // Prevent too much zooming out
+#         maxZoom: 10,  // Prevent extreme zooming in
+#                                          contain: true // Keep the diagram fully within bounds
+#         }});
+#
+#         // Optional: Add custom pan/zoom controls dynamically
+#             const controlsContainer = document.createElement("div");
+#             controlsContainer.classList.add("svg-pan-zoom_controls");
+#             controlsContainer.innerHTML = `
+#                                         <button id="${{graph_id}}-zoom-in">+</button>
+#                                         <button id="${{graph_id}}-zoom-out">-</button>
+#                                         <button id="${{graph_id}}-reset">Reset</button>
+#                                          `;
+#             containerElement.appendChild(controlsContainer);
+#
+#         // Add event listeners for the custom controls
+#         document.getElementById(`${{graph_id}}-zoom-in`).addEventListener("click", () => panZoom.zoomIn());
+#         document.getElementById(`${{graph_id}}-zoom-out`).addEventListener("click", () => panZoom.zoomOut());
+#         document.getElementById(`${{graph_id}}-reset`).addEventListener("click", () => {{
+#                 panZoom.resetZoom();
+#                 panZoom.center();
+#                 }});
+#             }}, 500); // Short delay to ensure SVG rendering is complete
+#         }}
+#
+#         // Load Mermaid.js if not already loaded
+#         if (typeof mermaid === "undefined") {{
+#             loadScript("https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js", () => {{
+#             console.log("Mermaid.js loaded successfully");
+#             initializeMermaid(graph_id); // Call initialization after Mermaid.js is loaded
+#         }});
+#             }} else {{
+#                 initializeMermaid(graph_id); // If Mermaid.js is already loaded, proceed immediately
+#             }}
+#         }});
+#     </script>
+#
+#
+#     </body>
+#     </html>
+#     """
+
+    
+
+        # mermaid_html = f"""
     #     <h2 style="text-align: center; color: #007acc; margin-bottom: 16px;">
     #         {escaped_header}
     #     </h2>
@@ -465,7 +1120,7 @@ def save_mermaid_html(
         os.makedirs(folder)
     mermaid_file = os.path.join(folder, title + ".html")
 
-    payload = construct_mermaid_html(mermaid_str)
+    payload = construct_mermaid_web(mermaid_str)
 
     with open(mermaid_file, "w") as f:
         f.write(payload)

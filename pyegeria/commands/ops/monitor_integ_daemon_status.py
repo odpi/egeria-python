@@ -45,7 +45,7 @@ EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", 200))
 
 disable_ssl_warnings = True
 
@@ -64,7 +64,7 @@ def display_integration_daemon_status(
     user_pass: str = os.environ.get("EGERIA_USER_PASSWORD"),
     paging: bool = False,
     jupyter: bool = os.environ.get("EGERIA_JUPYTER", "False"),
-    width: int = os.environ.get("EGERIA_WIDTH", "150"),
+    width: int = EGERIA_WIDTH,
     sort: bool = True,
 ) -> None:
     """Display the status of connectors running on the specified Integration Daemon OMAG Server.
@@ -135,6 +135,8 @@ def display_integration_daemon_status(
         table.add_column("Exception Message", min_width=10)
 
         # server_guid = s_client.get_guid_for_name(integ_server)
+
+        token = s_client.refresh_egeria_bearer_token()
         daemon_status = s_client.get_server_report(None, integ_server)
 
         reports = daemon_status["integrationConnectorReports"]
@@ -202,8 +204,8 @@ def display_integration_daemon_status(
         return table
 
     try:
+        console = Console(width=width)  # main_pagig, force_terminal=not jupyter)
         if paging is True:
-            console = Console(width=width)  # main_pagig, force_terminal=not jupyter)
             with console.pager():
                 console.print(generate_table(search_list))
         else:

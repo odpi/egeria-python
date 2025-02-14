@@ -165,6 +165,7 @@ def display_gov_eng_status(
 
             table.add_row(gov_eng, eng_type, eng_desc, eng_status, eng_req_type_out)
 
+        token = s_client.create_egeria_bearer_token()
         return table
 
     try:

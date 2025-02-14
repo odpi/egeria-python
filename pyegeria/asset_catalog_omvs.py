@@ -467,7 +467,7 @@ class AssetCatalog(Client):
         )
 
         response = await self._async_make_request("GET", url)
-        return response.json().get("assetGraph", "no asset found")
+        return response.json().get("assetGraph", NO_ASSETS_FOUND)
 
     def get_asset_graph(
         self,
@@ -578,7 +578,7 @@ class AssetCatalog(Client):
         )
 
         response = await self._async_make_request("POST", url)
-        return response.json().get("assetLineageGraph", "no asset found")
+        return response.json().get("assetLineageGraph", NO_ASSETS_FOUND)
 
     def get_asset_lineage_graph(
         self,

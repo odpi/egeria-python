@@ -13,21 +13,22 @@ from rich.console import Console
 
 from pyegeria.server_operations import ServerOps
 from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria._globals import NO_ELEMENTS_FOUND
 console = Console(width=200)
-
+integration_server = "qs-integration-daemon"
 
 def build_global_guid_lists(
-    server: str = "view-server",
+    server: str = "qs-view-server",
     url: str = "https://localhost:9443",
-    user_id: str = "erinoverview",
+    user_id: str = "garygeeke",
     user_pwd: str = "secret",
 ) -> None:
     """This is a utility function that builds arrays of guid lists for Templates & Connectors"""
 
     cur_time = datetime.now().strftime("%d-%m-%Y %H:%M")
     file_name = f"./tech_guids_{cur_time}.py"
-    a_client = AutomatedCuration(server, url, user_id=user_id, user_pwd=user_pwd)
+    a_client = EgeriaTech(server, url, user_id=user_id, user_pwd=user_pwd)
     token = a_client.create_egeria_bearer_token()
     # get all technology types
 
@@ -86,11 +87,11 @@ def build_global_guid_lists(
             #   Ok - now lets harvest integration connectors using get_integration_daemon_status from ServerOps
             #   Assume that integration daemon called integration_daemon
             #
-            s_client = ServerOps(
-                "integration_daemon", url, user_id=user_id, user_pwd=user_pwd
-            )
-            integ_status = s_client.get_integration_daemon_status()
-
+            # s_client = ServerOps(
+            #     "integration_daemon", url, user_id=user_id, user_pwd=user_pwd
+            # )
+            # integ_status = s_client.get_integration_daemon_status()
+            integ_status = a_client.get_server_report(None, integration_server)
             if type(integ_status) is dict:
                 connections = integ_status["integrationConnectorReports"]
                 for connection in connections:
