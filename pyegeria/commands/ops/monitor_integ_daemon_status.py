@@ -135,6 +135,8 @@ def display_integration_daemon_status(
         table.add_column("Exception Message", min_width=10)
 
         # server_guid = s_client.get_guid_for_name(integ_server)
+
+        token = s_client.refresh_egeria_bearer_token()
         daemon_status = s_client.get_server_report(None, integ_server)
 
         reports = daemon_status["integrationConnectorReports"]

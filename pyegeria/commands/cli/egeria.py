@@ -38,7 +38,7 @@ from pyegeria.commands.cat.list_deployed_database_schemas import (
 from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
 from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_projects import display_project_list
-from pyegeria.commands.cat.list_servers_deployed_imp import display_servers_by_dep_imp
+from pyegeria.commands.cat.list_deployed_servers import display_servers_by_dep_imp
 from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_terms import display_glossary_terms

@@ -43,7 +43,7 @@ class TestServerOperations:
     bad_user_2 = ""
 
     good_server_1 = "active-metadata-store"
-    good_server_2 = "integration-daemon"
+    good_server_2 = "qs-integration-daemon"
     good_server_3 = "exchangeDL01"
     good_server_4 = "engine-host"
     bad_server_1 = "coco"

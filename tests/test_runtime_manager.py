@@ -33,7 +33,7 @@ from pyegeria._exceptions import (
 
 disable_ssl_warnings = True
 install()
-console = Console()
+console = Console(width=200)
 
 
 class TestRuntimeManager:
@@ -49,7 +49,7 @@ class TestRuntimeManager:
     good_server_1 = "simple-metadata-store"
     good_server_2 = "qs-metadata-store"
     good_server_3 = "active-metadata-store"
-    good_server_4 = "integration-daemon"
+    good_server_4 = "qs-integration-daemon"
 
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
@@ -440,7 +440,7 @@ class TestRuntimeManager:
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
-                print(f"Server Report:\n{json.dumps(response, indent=4)}")
+                print(f"Server Report:\n{json.dumps(response, indent=2)}")
             elif type(response) is str:
                 print(f"String response was {response}")
             assert True
