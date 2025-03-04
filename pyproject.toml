@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.4.24"
+version = "5.3.5.1"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -33,8 +33,7 @@ rich = "*"
 validators = "*"
 urllib3 = "*"
 requests = "*"
-confluent-kafka = "*"
-pytest = "^8.2.2"
+pytest = "*"
 jupyter = "*"
 click = "*"
 trogon = "^0.6.0"
@@ -85,6 +84,10 @@ isort = "^6.0.0"
     list_glossaries = "pyegeria.commands.cat.list_glossaries:main"
     load_terms_from_file = "pyegeria.commands.cat.glossary_actions:load_terms"
     export_terms_to_file = "pyegeria.commands.cat.glossary_actions:export_terms"
+    create_category = "pyegeria.commands.cat.glossary_actions:create_category"
+    update_category = "pyegeria.commands.cat.glossary_actions:update_category"
+    delete_category = "pyegeria.commands.cat.glossary_actions:delete_category"
+
 
     list_collections = "pyegeria.commands.cat.list_collections:main"
 

@@ -21,7 +21,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 from pyegeria._validators import validate_user_id
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class Platform(Client):
     """

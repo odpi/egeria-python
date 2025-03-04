@@ -14,7 +14,6 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 
-from rich import print, print_json
 
 from pyegeria import (
     InvalidParameterException,
@@ -44,7 +43,7 @@ class TestProjectManager:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
     good_integ_1 = "fluffy_integration"
-    good_server_1 = "simple-metadata-store"
+    good_server_1 = "qs-metadata-store"
     good_server_2 = "laz_kv"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
@@ -52,7 +51,7 @@ class TestProjectManager:
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -75,10 +74,10 @@ class TestProjectManager:
 
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -115,11 +114,11 @@ class TestProjectManager:
                 t = response[0]
                 count = len(t)
                 print(f"Found {count} projects {type(t)}\n\n")
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is list:
                 count = len(response)
                 print(f"Found {count} projects\n\n")
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
@@ -154,7 +153,7 @@ class TestProjectManager:
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Found {len(response)} projects {type(response)}\n\n")
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -186,10 +185,10 @@ class TestProjectManager:
 
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -222,10 +221,10 @@ class TestProjectManager:
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Type was list - found {len(response)} elements\n")
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}")
-                print_json("\n\n" + json.dumps(response, indent=4))
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -261,10 +260,10 @@ class TestProjectManager:
 
             if type(response) is dict:
                 print("dict:\n\n")
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}\n\n")
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -283,7 +282,7 @@ class TestProjectManager:
     def test_create_project(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
@@ -321,7 +320,7 @@ class TestProjectManager:
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
             if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -368,7 +367,7 @@ class TestProjectManager:
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
             if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -439,7 +438,7 @@ class TestProjectManager:
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
             if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -473,7 +472,7 @@ class TestProjectManager:
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
             if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -535,9 +534,9 @@ class TestProjectManager:
             print(f"\n\tDuration was {duration} seconds\n")
             print(f"Result type is: {type(response)}")
             if type(response) is list:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is tuple:
-                print_json(json.dumps(response, indent=4))
+                print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True

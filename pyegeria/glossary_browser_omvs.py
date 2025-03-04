@@ -10,6 +10,7 @@ added in subsequent versions of the glossary_omvs module.
 import asyncio
 from datetime import datetime
 
+from pyegeria import NO_GLOSSARIES_FOUND
 # import json
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
@@ -386,15 +387,14 @@ class GlossaryBrowser(Client):
 
         body = {
             "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
+            "effectiveTime": effective_time
         }
-
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/retrieve"
         )
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No glossaries found")
+        return response.json().get("element", NO_GLOSSARIES_FOUND)
 
     def get_glossary_by_guid(
         self, glossary_guid: str, effective_time: str = None
@@ -512,7 +512,7 @@ class GlossaryBrowser(Client):
             When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
-            he class instance.
+            the class instance.
 
         Returns
         -------

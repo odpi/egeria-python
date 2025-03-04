@@ -52,7 +52,7 @@ class TestGlossaryManager:
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "view-server"
-    good_view_server_2 = "fluffy_view"
+    good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
 
@@ -160,6 +160,107 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_create_categoryy(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            display_name = "category1"
+            description = "A category used for test"
+            glossary_guid = "2acae812-5a0d-431f-806d-a874cd2da64d" # Egeria-Markdown
+            response = g_client.create_category(
+                glossary_guid,display_name, description,
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nNew category {display_name} created with GUID of {response}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_update_category(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            category_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
+            display_name = "puddys-universe"
+            description = "A category used for testing"
+            update_description = "Updated description and display name"
+
+            start_time = time.perf_counter()
+
+
+            g_client.update_category(category_guid, display_name, description, update_description=update_description
+                                     )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nUpdated glossary {display_name}, {category_guid}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_delete_category(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            glossary_guid = "2a7b7423-335b-4b0f-9dfe-af73621b465d"
+            g_client.delete_glossary(glossary_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nDeleted glossary {glossary_guid}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
     def test_find_glossaries(self):
         try:
             g_client = GlossaryManager(
@@ -205,7 +306,7 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
-    def test_get_glossary_by_guid(self, server: str = good_view_server_1):
+    def test_get_glossary_by_guid(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryManager(
@@ -214,15 +315,14 @@ class TestGlossaryManager:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
-            glossary_guid = (
-                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # This is pdr glossary
-            )
-            response = g_client.get_glossary_by_guid(glossary_guid, server_name)
+            # glossary_guid = (
+            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
+            # )
+            glossary_guid = '805afd91-7ed2-4fb8-bc2e-c2d4def5b98f'
+            response = g_client.get_glossary_by_guid(glossary_guid)
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
-                count = len(response)
-                print(f"Found {count} terms")
             elif type(response) is str:
                 print("\n\n" + response)
             assert True

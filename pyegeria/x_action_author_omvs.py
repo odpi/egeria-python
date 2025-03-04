@@ -10,7 +10,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 from requests import Response
 from pyegeria.automated_curation_omvs import AutomatedCuration
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 
 class ActionAuthor(AutomatedCuration):

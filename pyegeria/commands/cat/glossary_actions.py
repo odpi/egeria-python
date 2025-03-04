@@ -16,11 +16,7 @@ import time
 from datetime import datetime
 
 import click
-from rich import box
-from rich.console import Console
-from rich.prompt import Prompt
-from rich.table import Table
-from rich.text import Text
+
 
 from pyegeria import EgeriaTech, body_slimmer
 from pyegeria._exceptions import (
@@ -354,6 +350,110 @@ def export_terms(
         click.echo(
             f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
         )
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("create-category")
+@click.option("--name", help="Name of glossary Category", required=True)
+@click.option("--glossary_name", help="Glossary name", required=True)
+@click.option(
+    "--description",
+    help="Description of Category",
+    default="A description goes here",
+)
+@click.option(
+    "--is_root",
+    help="Is this a root category?",
+    default=False,
+    is_flag=True,
+)
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def create_category(
+    server: str,
+    url: str,
+    userid: str,
+    password: str,
+    timeout: int,
+    name: str,
+    glossary_name: str,
+    description: str,
+    is_root: bool,
+) -> None:
+    """Create a new Glossary Category"""
+
+    try:
+        m_client = EgeriaTech(server, url, userid, password)
+        token = m_client.create_egeria_bearer_token()
+
+        existing_glossary = m_client.find_glossaries(glossary_name)
+        if type(existing_glossary) is str:
+            click.echo(existing_glossary)
+            sys.exit(0)
+        if type(existing_glossary) is list and len(existing_glossary) == 1:
+            q_name = existing_glossary["glossaryProperties"]["qualifiedName"]
+            glossary_guid = existing_glossary["elementHeader"]["guid"]
+        category_guid = m_client.create_category(glossary_guid,name,description, is_root)
+        print(f"New categry \'{name}\' created with id of \'{category_guid}\'")
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("update-category")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.argument("category-guid")
+@click.option("--name", help="Name of glossary Category", required=True)
+@click.option("--glossary_name", help="Glossary name", required=True)
+@click.option("--description", help="Description of Category", default="A description goes here")
+def update_category(category_guid, name, description, server, url, userid, password, timeout, ):
+    """Delete the glossary specified"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        m_client.update_category(category_guid, name, description)
+
+        click.echo(f"Updated glossary: {category_guid}")
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+@click.command("delete-category")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.argument("category-guid")
+def delete_category(server, url, userid, password, timeout, category_guid):
+    """Delete the glossary specified"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        m_client.delete_category(category_guid)
+
+        click.echo(f"Deleted glossary: {category_guid}")
 
     except (InvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)

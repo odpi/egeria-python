@@ -21,7 +21,7 @@ from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 from pyegeria.utils import body_slimmer
-from pyegeria._globals import NO_CATEGORIES_FOUND,NO_TERMS_FOUND, NO_GLOSSARIES_FOUND
+from pyegeria._globals import NO_CATEGORIES_FOUND,NO_TERMS_FOUND, NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND
 
 class GlossaryManager(GlossaryBrowser):
     """
@@ -315,6 +315,7 @@ class GlossaryManager(GlossaryBrowser):
         type_name: str = None,
         start_from: int = 0,
         page_size: int = None,
+        output_format: str = "JSON",
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
@@ -346,6 +347,9 @@ class GlossaryManager(GlossaryBrowser):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, [default="JSON"]
+            One of JSON or MD for now
+
         Returns
         -------
         List | str
@@ -394,7 +398,10 @@ class GlossaryManager(GlossaryBrowser):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No Glossaries found")
+        if output_format == "JSON":
+            return response.json().get("elementList", "No Glossaries found")
+        elif output_format == "MD":
+
 
     def find_glossaries(
         self,
@@ -588,6 +595,7 @@ class GlossaryManager(GlossaryBrowser):
         glossary_guid: str,
         display_name: str,
         description: str,
+        is_root_category: bool = False,
     ) -> str:
         """Create a new category within the specified glossary. Async Version.
 
@@ -599,6 +607,8 @@ class GlossaryManager(GlossaryBrowser):
             Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
         description: str,
             Description for the category.
+        is_root_category: bool, [default=False], optional
+            Is this category a root category?
 
 
         Returns
@@ -621,7 +631,7 @@ class GlossaryManager(GlossaryBrowser):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"{glossary_guid}/categories"
+            f"{glossary_guid}/categories?isRootCategory={is_root_category}"
         )
         body = {
             "class": "ReferenceableRequestBody",
@@ -640,6 +650,7 @@ class GlossaryManager(GlossaryBrowser):
         glossary_guid: str,
         display_name: str,
         description: str,
+        is_root_category: bool = False,
     ) -> str:
         """Create a new category within the specified glossary.
 
@@ -651,7 +662,8 @@ class GlossaryManager(GlossaryBrowser):
             Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
         description: str,
             Description for the category.
-
+        is_root_category: bool, [default=False], optional
+            Is this category a root category?
 
         Returns
         -------
@@ -672,9 +684,204 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
+            self._async_create_category(glossary_guid, display_name, description, is_root_category)
+        )
+        return response
+
+    async def _async_update_category(
+        self,
+        category_guid: str,
+        display_name: str,
+        description: str,
+        qualified_name: str = None,
+        effective_time: str = None,
+        update_description: str = None,
+        is_merge_update: bool = True,
+    ) :
+        """Create a new category within the specified glossary. Async Version.
+
+        Parameters
+        ----------
+        category_guid: str,
+            Unique identifier for the glossary.
+        display_name: str,
+            Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
+        description: str,
+            Description for the category.
+        qualified_name: str, [default=None], optional
+            Unique identifier for the glossary category. Must be specified if not a merge update.
+        effective_time: datetime, [default=None], optional
+            Time when the category becomes effective.
+        update_description: str, [default=None], optional
+            Description of the update to the category.
+        is_merge_update: bool, [default=True], optional
+            Should this be a merge or a replace?
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+        if not is_merge_update:
+            if qualified_name is None:
+                raise ValueError('qualified_name must be specified for a replace update')
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{category_guid}/update?isMergeUpdate={is_merge_update}"
+        )
+        body = {
+            "class": "ReferenceableUpdateRequestBody",
+            "effectiveTime": effective_time,
+            "updateDescription": update_description,
+            "elementProperties": {
+                "class": "GlossaryCategoryProperties",
+                "qualifiedName": qualified_name ,
+                "displayName": display_name,
+                "description": description
+            },
+        }
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return response.json().get("guid", None)
+
+    def update_category(
+        self,
+        glossary_guid: str,
+        display_name: str,
+        description: str,
+        qualified_name: str = None,
+        effective_time: str = None,
+        update_description: str = None,
+        is_merge_update: bool = True,
+    ) -> str:
+        """Create a new category within the specified glossary.
+
+        Parameters
+        ----------
+        glossary_guid: str,
+            Unique identifier for the glossary.
+        display_name: str,
+            Display name for the glossary category. Will be used as the base for a constructed unique qualified name.
+        description: str,
+            Description for the category.
+        qualified_name: str, [default=None], optional
+            Unique identifier for the glossary category. Must be specified if not a merge update.
+        effective_time: datetime, [default=None], optional
+            Time when the category becomes effective.
+        update_description: str, [default=None], optional
+            Description of the update to the category.
+        is_merge_update: bool, [default=True], optional
+            Should this be a merge or a replace?
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
             self._async_create_category(glossary_guid, display_name, description)
         )
         return response
+
+
+    async def _async_delete_category(
+        self,
+        category_guid: str,
+    ) -> None:
+        """Delete a category. Async Version.
+
+        Parameters
+        ----------
+        category_guid: str,
+            Unique identifier for the category.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{category_guid}/remove"
+        )
+
+        await self._async_make_request("POST", url)
+
+
+    def delete_category(
+        self,
+        category_guid: str,
+    ) -> None:
+        """Delete a category.
+
+        Parameters
+        ----------
+        category_guid: str,
+            Unique identifier for the category.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_delete_category(category_guid)
+        )
+
+
+
 
     async def _async_get_glossary_for_category(
         self,
