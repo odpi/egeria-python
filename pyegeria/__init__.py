@@ -27,6 +27,7 @@ from ._globals import (
     NO_TERMS_FOUND,
     NO_CATEGORIES_FOUND,
     NO_ELEMENT_FOUND,
+    NO_PROJECTS_FOUND,
 )
 
 if disable_ssl_warnings:

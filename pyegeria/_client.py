@@ -147,6 +147,10 @@ class Client:
 
         return False  # allows exceptions to propagate
 
+    def __str__(self):
+        return (f"EgeriaClient(server_name={self.server_name}, platform_url={self.platform_url}, "
+                f"user_id={self.user_id}, page_size={self.page_size})")
+
     async def _async_close_session(self) -> None:
         """Close the session"""
         await self.session.aclose()

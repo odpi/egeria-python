@@ -100,13 +100,13 @@ def display_glossaries(
                 glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
             )
             for glossary in sorted_glossary_list:
-                display_name = glossary["glossaryProperties"]["displayName"]
+                display_name = glossary["glossaryProperties"].get("displayName",'---')
                 qualified_name = glossary["glossaryProperties"]["qualifiedName"]
                 guid = glossary["elementHeader"]["guid"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                language = glossary["glossaryProperties"]["language"]
-                description = glossary["glossaryProperties"]["description"]
-                usage = glossary["glossaryProperties"]["usage"]
+                language = glossary["glossaryProperties"].get("language",'---')
+                description = glossary["glossaryProperties"].get("description",'---')
+                usage = glossary["glossaryProperties"].get("usage",'---')
                 table.add_row(display_name, q_name, language, description, usage)
             console = Console(
                 style="bold bright_white on black",

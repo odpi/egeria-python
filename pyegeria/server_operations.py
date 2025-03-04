@@ -12,7 +12,7 @@ from requests import Response
 
 from pyegeria.platform_services import Platform
 from pyegeria._validators import validate_name
-
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class ServerOps(Platform):
     """

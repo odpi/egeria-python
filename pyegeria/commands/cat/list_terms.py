@@ -138,7 +138,7 @@ def display_glossary_terms(
             print(f"No terms found! - {search_string} : {glossary_guid} ")
             sys.exit(0)
         sorted_terms = sorted(
-            terms, key=lambda k: k["glossaryTermProperties"]["displayName"]
+            terms, key=lambda k: k["glossaryTermProperties"].get("displayName","---")
         )
         style = "bright_white on black"
         if type(terms) is str:
@@ -149,7 +149,7 @@ def display_glossary_terms(
             if props == "None":
                 return table
 
-            display_name = Text(props["displayName"], style=style, justify="center")
+            display_name = Text(props.get("displayName","---"), style=style, justify="center")
             qualified_name = props["qualifiedName"]
             term_guid = term["elementHeader"]["guid"]
             q_name = Text(
@@ -180,7 +180,7 @@ def display_glossary_terms(
             else:
                 glossary_name = "---"
 
-            term_status = term["elementHeader"]["status"]
+            term_status = term["elementHeader"].get("status","---")
             table.add_row(
                 display_name,
                 q_name,
