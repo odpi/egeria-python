@@ -544,6 +544,11 @@ class AssetCatalog(Client):
     async def _async_get_asset_lineage_graph(
         self,
         asset_guid: str,
+        effective_time: str = None,
+        as_of_time: str = None,
+        relationship_types: [str] = None,
+        limit_to_isc_q_name: str = None,
+        hilight_isc_q_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | dict:
@@ -552,6 +557,16 @@ class AssetCatalog(Client):
          ----------
          asset_guid : str
              The unique identity of the asset to get the graph for.
+         effective_time: str, default is None
+            Effective time to query on. If not specified, the current time is used.
+         as_of_time: str = None
+            as_of_time to query on. If not specified, the current time is used.
+         relationship_types: [str], default is None,
+            relationship types to include in the lineage graph. If not specified, all relationship types are included.
+         limit_to_isc_q_name: str = None,
+            if specified, filters results to only include information supply chains with the given name.
+         hilight_isc_q_name: str = None,
+            if specified, highlights the information supply chain with the given name.
 
          start_from : int, optional
              The index from which to start fetching the engine actions. Default is 0.
@@ -576,27 +591,48 @@ class AssetCatalog(Client):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
             f"as-lineage-graph?startFrom={start_from}&pageSize={page_size}"
         )
-
-        response = await self._async_make_request("POST", url)
+        body = {
+            "effectiveTime": effective_time,
+            "asOfTime": as_of_time,
+            "relationshipTypes": relationship_types,
+            "limitToISCQualifiedName": limit_to_isc_q_name,
+            "highlightISCQualifiedName": hilight_isc_q_name,
+            }
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get("assetLineageGraph", NO_ASSETS_FOUND)
 
     def get_asset_lineage_graph(
         self,
         asset_guid: str,
+        effective_time: str = None,
+        as_of_time: str = None,
+        relationship_types: [str] = None,
+        limit_to_isc_q_name: str = None,
+        hilight_isc_q_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | dict:
+        ) -> str | dict:
         """Return the asset lineage including a mermaid markdown string. Async Version.
          Parameters
          ----------
          asset_guid : str
              The unique identity of the asset to get the graph for.
+        effective_time: str, default is None
+            Effective time to query on. If not specified, the current time is used.
+        as_of_time: str = None
+            as_of_time to query on. If not specified, the current time is used.
+        relationship_types: [str], default is None,
+            relationship types to include in the lineage graph. If not specified, all relationship types are included.
+        limit_to_isc_q_name: str = None,
+            if specified, filters results to only include information supply chains with the given name.
+        hilight_isc_q_name: str = None,
+            if speficied, highlights the information supply chain with the given name.
 
          start_from : int, optional
              The index from which to start fetching the engine actions. Default is 0.
 
          page_size : int, optional
-             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+             The maximum number of elements to fetch in a single request. Default is `max_paging_size`.
 
          Returns
          -------
@@ -613,29 +649,46 @@ class AssetCatalog(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_lineage_graph(asset_guid, start_from, page_size)
+            self._async_get_asset_lineage_graph(asset_guid, effective_time, as_of_time, relationship_types,
+                                                limit_to_isc_q_name, hilight_isc_q_name, start_from, page_size)
         )
         return response
 
     def get_asset_lineage_mermaid_graph(
         self,
         asset_guid: str,
+        effective_time: str = None,
+        as_of_time: str = None,
+        relationship_types: [str] = None,
+        limit_to_isc_q_name: str = None,
+        hilight_isc_q_name: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str:
-        """Return the lineage as mermaid markdown string. Async Version.
+        ) -> str:
+        """Return the asset lineage including a mermaid markdown string. Async Version.
          Parameters
          ----------
          asset_guid : str
              The unique identity of the asset to get the graph for.
+        effective_time: str, default is None
+            Effective time to query on. If not specified, the current time is used.
+        as_of_time: str = None
+            as_of_time to query on. If not specified, the current time is used.
+        relationship_types: [str], default is None,
+            relationship types to include in the lineage graph. If not specified, all relationship types are included.
+        limit_to_isc_q_name: str = None,
+            if specified, filters results to only include information supply chains with the given name.
+        hilight_isc_q_name: str = None,
+            if specified, highlights the information supply chain with the given name.
 
          start_from : int, optional
              The index from which to start fetching the engine actions. Default is 0.
 
          page_size : int, optional
-             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+             The maximum number of elements to fetch in a single request.
+             Default is `max_paging_size`.
 
-         Returns
+        Returns
          -------
         str
              A mermaid string representing the lineage.
@@ -646,9 +699,12 @@ class AssetCatalog(Client):
          PropertyServerException
          UserNotAuthorizedException
 
-        """
+    """
 
-        asset_graph = self.get_asset_lineage_graph(asset_guid, start_from, page_size)
+        asset_graph = self.get_asset_lineage_graph(asset_guid, effective_time,
+                                                   as_of_time, relationship_types,
+                                                   limit_to_isc_q_name, hilight_isc_q_name,
+                                                   start_from, page_size)
         return asset_graph.get("mermaidGraph")
 
     async def _async_get_assets_by_metadata_collection_id(

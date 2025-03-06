@@ -260,9 +260,9 @@ def delete_term(server, url, userid, password, timeout, term_guid):
         m_client.close_session()
 
 
-@click.command("import-terms")
+@click.command("import-terms-from-csv")
 @click.option("--glossary_name", help="Name of Glossary", required=True)
-@click.option("--file_name", help="Path of CSV file", required=True)
+@click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
     "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
 )
@@ -285,7 +285,7 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def import_terms(
+def import_terms_csv(
     glossary_name: str,
     file_path: str,
     file_name: str,
@@ -301,7 +301,7 @@ def import_terms(
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        result = m_client.load_terms_from_file(
+        result = m_client.load_terms_from_csv_file(
             glossary_name,
             file_name,
             file_path=file_path,
@@ -321,13 +321,13 @@ def import_terms(
         m_client.close_session()
 
 
-@click.command("export-terms")
+@click.command("export-terms-csv")
 @click.option(
     "--glossary_guid",
     help="GUID of Glossary to export",
     required=True,
 )
-@click.option("--file_name", help="Path of CSV file", required=True)
+@click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
     "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
 )
@@ -338,7 +338,7 @@ def import_terms(
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def export_terms(
+def export_terms_csv(
     glossary_guid: str, file_name, file_path, server, url, userid, password, timeout
 ):
     """Export the glossary specified"""

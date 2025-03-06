@@ -401,6 +401,7 @@ class GlossaryManager(GlossaryBrowser):
         if output_format == "JSON":
             return response.json().get("elementList", "No Glossaries found")
         elif output_format == "MD":
+            pass
 
 
     def find_glossaries(
@@ -805,7 +806,8 @@ class GlossaryManager(GlossaryBrowser):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_category(glossary_guid, display_name, description)
+            self._async_update_category(glossary_guid, display_name, description,
+                                        qualified_name, effective_time, update_description, is_merge_update)
         )
         return response
 
@@ -973,633 +975,633 @@ class GlossaryManager(GlossaryBrowser):
         )
         return response
 
-    async def _async_find_glossary_categories(
-        self,
-        search_string: str,
-        effective_time: str = None,
-        starts_with: bool = False,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve the list of glossary category metadata elements that contain the search string.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-            Async version.
-
-        Parameters
-        ----------
-        search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
-
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of glossary definitions active in the server.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-
-        validate_search_string(search_string)
-
-        if search_string == "*":
-            search_string = None
-
-        body = {
-            "class": "SearchStringRequestBody",
-            "searchString": search_string,
-            "effectiveTime": effective_time,
-        }
-        body = body_slimmer(body)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-            f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
-        )
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No Categories found")
-
-    def find_glossary_categories(
-        self,
-        search_string: str,
-        effective_time: str = None,
-        starts_with: bool = False,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve the list of glossary category metadata elements that contain the search string.
-         The search string is located in the request body and is interpreted as a plain string.
-         The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-
-        Parameters
-        ----------
-        search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
-
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-         start_from: int, [default=0], optional
-             When multiple pages of results are available, the page number to start from.
-         page_size: int, [default=None]
-             The number of items to return in a single page. If not specified, the default will be taken from
-             the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of glossary definitions active in the server.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_glossary_categories(
-                search_string,
-                effective_time,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-            )
-        )
-
-        return response
-
-    async def _async_get_categories_for_glossary(
-        self,
-        glossary_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Return the list of categories associated with a glossary.
-            Async version.
-
-        Parameters
-        ----------
-        glossary_guid: str,
-            Unique identity of the glossary
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories associated with a glossary.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No Categories found")
-
-    def get_categories_for_glossary(
-        self,
-        glossary_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Return the list of categories associated with a glossary.
-
-        Parameters
-        ----------
-        glossary_guid: str,
-            Unique identity of the glossary
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories associated with a glossary.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_categories_for_glossary(
-                glossary_guid, start_from, page_size
-            )
-        )
-        return response
-
-    async def _async_get_categories_for_term(
-        self,
-        glossary_term_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Return the list of categories associated with a glossary term.
-            Async version.
-
-        Parameters
-        ----------
-        glossary_term_guid: str,
-            Unique identity of a glossary term
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories associated with a glossary term.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
-            f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No Categories found")
-
-    def get_categories_for_term(
-        self,
-        glossary_term_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Return the list of categories associated with a glossary term.
-
-        Parameters
-        ----------
-        glossary_term_guid: str,
-            Unique identity of a glossary term
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories associated with a glossary term.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_categories_for_term(
-                glossary_term_guid, start_from, page_size
-            )
-        )
-        return response
-
-    async def _async_get_categories_by_name(
-        self,
-        name: str,
-        glossary_guid: str = None,
-        status: [str] = ["ACTIVE"],
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
-            The name to search for is located in the request body and is interpreted as a plain string.
-            The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
-
-            Async version.
-
-        Parameters
-        ----------
-        name: str,
-            category name to search for.
-        glossary_guid: str, optional
-            The identity of the glossary to search. If not specified, all glossaries will be searched.
-        status: [str], optional
-            A list of statuses to optionally restrict results. Default is Active
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories with the corresponding display name or qualified name.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-        validate_name(name)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
-            f"by-name?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        body = {
-            "class": "GlossaryNameRequestBody",
-            "name": name,
-            "glossaryGUID": glossary_guid,
-            "limitResultsByStatus": status,
-        }
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No Categories found")
-
-    def get_categories_by_name(
-        self,
-        name: str,
-        glossary_guid: str = None,
-        status: [str] = ["ACTIVE"],
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
-            The name to search for is located in the request body and is interpreted as a plain string.
-            The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
-
-        Parameters
-        ----------
-        name: str,
-            category name to search for.
-        glossary_guid: str, optional
-            The identity of the glossary to search. If not specified, all glossaries will be searched.
-        status: [str], optional
-            A list of statuses to optionally restrict results. Default is Active
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of categories with the corresponding display name or qualified name.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_categories_by_name(
-                name, glossary_guid, status, start_from, page_size
-            )
-        )
-        return response
-
-    async def _async_get_categories_by_guid(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> list | str:
-        """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
-        time for the query..
-
-        Async version.
-
-        Parameters
-        ----------
-        glossary_category_guid: str
-            The identity of the glossary category to search.
-        effective_time: str, optional
-            If specified, the category should only be returned if it was effective at the specified time.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        Returns
-        -------
-        List | str
-
-        Details for the category with the glossary category GUID.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
-            f"{glossary_category_guid}/retrieve"
-        )
-
-        body = {
-            "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
-        }
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "No Category found")
-
-    def get_categories_by_guid(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> list | str:
-        """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
-        time for the query..
-
-        Parameters
-        ----------
-        glossary_category_guid: str
-            The identity of the glossary category to search.
-        effective_time, datetime, optional
-            If specified, the category should only be returned if it was effective at the specified time.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        Returns
-        -------
-        List | str
-
-        Details for the category with the glossary category GUID.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_categories_by_guid(glossary_category_guid, effective_time)
-        )
-        return response
-
-    async def _async_get_category_parent(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> list | str:
-        """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
-            element for the glossary category with the supplied unique identifier.  If the requested category
-            does not have a parent category, null is returned.  The optional request body contain an effective time
-            for the query.
-
-        Async version.
-
-        Parameters
-        ----------
-        glossary_category_guid: str
-            The identity of the glossary category to search.
-        effective_time, datetime, optional
-            If specified, the category should only be returned if it was effective at the specified time.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        Returns
-        -------
-        List | str
-
-        Details for the parent category with the glossary category GUID.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
-            f"{glossary_category_guid}/parent/retrieve"
-        )
-
-        body = {
-            "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
-        }
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "No Parent Category found")
-
-    def get_category_parent(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> list | str:
-        """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
-            element for the glossary category with the supplied unique identifier.  If the requested category
-            does not have a parent category, null is returned.  The optional request body contain an effective time
-            for the query.
-
-        Parameters
-        ----------
-        glossary_category_guid: str
-            The identity of the glossary category to search.
-        effective_time, datetime, optional
-            If specified, the category should only be returned if it was effective at the specified time.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-
-        Returns
-        -------
-        List | str
-
-        Details for the parent category with the glossary category GUID.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_category_parent(glossary_category_guid, effective_time)
-        )
-        return response
+    # async def _async_find_glossary_categories(
+    #     self,
+    #     search_string: str,
+    #     effective_time: str = None,
+    #     starts_with: bool = False,
+    #     ends_with: bool = False,
+    #     ignore_case: bool = False,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Retrieve the list of glossary category metadata elements that contain the search string.
+    #         The search string is located in the request body and is interpreted as a plain string.
+    #         The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    #         Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     search_string: str,
+    #         Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+    #
+    #     effective_time: str, [default=None], optional
+    #         Effective time of the query. If not specified will default to any time. Time format is
+    #         "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #
+    #     starts_with : bool, [default=False], optional
+    #         Starts with the supplied string.
+    #     ends_with : bool, [default=False], optional
+    #         Ends with the supplied string
+    #     ignore_case : bool, [default=False], optional
+    #         Ignore case when searching
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of glossary definitions active in the server.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     if page_size is None:
+    #         page_size = self.page_size
+    #     starts_with_s = str(starts_with).lower()
+    #     ends_with_s = str(ends_with).lower()
+    #     ignore_case_s = str(ignore_case).lower()
+    #
+    #     validate_search_string(search_string)
+    #
+    #     if search_string == "*":
+    #         search_string = None
+    #
+    #     body = {
+    #         "class": "SearchStringRequestBody",
+    #         "searchString": search_string,
+    #         "effectiveTime": effective_time,
+    #     }
+    #     body = body_slimmer(body)
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+    #         f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+    #         f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
+    #     )
+    #
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("elementList", "No Categories found")
+    #
+    # def find_glossary_categories(
+    #     self,
+    #     search_string: str,
+    #     effective_time: str = None,
+    #     starts_with: bool = False,
+    #     ends_with: bool = False,
+    #     ignore_case: bool = False,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Retrieve the list of glossary category metadata elements that contain the search string.
+    #      The search string is located in the request body and is interpreted as a plain string.
+    #      The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    #
+    #     Parameters
+    #     ----------
+    #     search_string: str,
+    #         Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+    #
+    #     effective_time: str, [default=None], optional
+    #         Effective time of the query. If not specified will default to any time. Time format is
+    #         "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #
+    #     starts_with : bool, [default=False], optional
+    #         Starts with the supplied string.
+    #     ends_with : bool, [default=False], optional
+    #         Ends with the supplied string
+    #     ignore_case : bool, [default=False], optional
+    #         Ignore case when searching
+    #      start_from: int, [default=0], optional
+    #          When multiple pages of results are available, the page number to start from.
+    #      page_size: int, [default=None]
+    #          The number of items to return in a single page. If not specified, the default will be taken from
+    #          the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of glossary definitions active in the server.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_find_glossary_categories(
+    #             search_string,
+    #             effective_time,
+    #             starts_with,
+    #             ends_with,
+    #             ignore_case,
+    #             start_from,
+    #             page_size,
+    #         )
+    #     )
+    #
+    #     return response
+
+    # async def _async_get_categories_for_glossary(
+    #     self,
+    #     glossary_guid: str,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Return the list of categories associated with a glossary.
+    #         Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_guid: str,
+    #         Unique identity of the glossary
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories associated with a glossary.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     if page_size is None:
+    #         page_size = self.page_size
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
+    #         f"{glossary_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
+    #     )
+    #
+    #     response = await self._async_make_request("POST", url)
+    #     return response.json().get("elementList", "No Categories found")
+    #
+    # def get_categories_for_glossary(
+    #     self,
+    #     glossary_guid: str,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Return the list of categories associated with a glossary.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_guid: str,
+    #         Unique identity of the glossary
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories associated with a glossary.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_categories_for_glossary(
+    #             glossary_guid, start_from, page_size
+    #         )
+    #     )
+    #     return response
+    #
+    # async def _async_get_categories_for_term(
+    #     self,
+    #     glossary_term_guid: str,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Return the list of categories associated with a glossary term.
+    #         Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_term_guid: str,
+    #         Unique identity of a glossary term
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories associated with a glossary term.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     if page_size is None:
+    #         page_size = self.page_size
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+    #         f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}"
+    #     )
+    #
+    #     response = await self._async_make_request("POST", url)
+    #     return response.json().get("elementList", "No Categories found")
+    #
+    # def get_categories_for_term(
+    #     self,
+    #     glossary_term_guid: str,
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Return the list of categories associated with a glossary term.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_term_guid: str,
+    #         Unique identity of a glossary term
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories associated with a glossary term.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_categories_for_term(
+    #             glossary_term_guid, start_from, page_size
+    #         )
+    #     )
+    #     return response
+    #
+    # async def _async_get_categories_by_name(
+    #     self,
+    #     name: str,
+    #     glossary_guid: str = None,
+    #     status: [str] = ["ACTIVE"],
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
+    #         The name to search for is located in the request body and is interpreted as a plain string.
+    #         The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
+    #
+    #         Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     name: str,
+    #         category name to search for.
+    #     glossary_guid: str, optional
+    #         The identity of the glossary to search. If not specified, all glossaries will be searched.
+    #     status: [str], optional
+    #         A list of statuses to optionally restrict results. Default is Active
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories with the corresponding display name or qualified name.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     if page_size is None:
+    #         page_size = self.page_size
+    #     validate_name(name)
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
+    #         f"by-name?startFrom={start_from}&pageSize={page_size}"
+    #     )
+    #
+    #     body = {
+    #         "class": "GlossaryNameRequestBody",
+    #         "name": name,
+    #         "glossaryGUID": glossary_guid,
+    #         "limitResultsByStatus": status,
+    #     }
+    #
+    #     response = await self._async_make_request("POST", url)
+    #     return response.json().get("elementList", "No Categories found")
+    #
+    # def get_categories_by_name(
+    #     self,
+    #     name: str,
+    #     glossary_guid: str = None,
+    #     status: [str] = ["ACTIVE"],
+    #     start_from: int = 0,
+    #     page_size: int = None,
+    # ) -> list | str:
+    #     """Retrieve the list of glossary category metadata elements that either have the requested qualified name or display name.
+    #         The name to search for is located in the request body and is interpreted as a plain string.
+    #         The request body also supports the specification of a glossaryGUID to restrict the search to within a single glossary.
+    #
+    #     Parameters
+    #     ----------
+    #     name: str,
+    #         category name to search for.
+    #     glossary_guid: str, optional
+    #         The identity of the glossary to search. If not specified, all glossaries will be searched.
+    #     status: [str], optional
+    #         A list of statuses to optionally restrict results. Default is Active
+    #
+    #     start_from: int, [default=0], optional
+    #                 When multiple pages of results are available, the page number to start from.
+    #     page_size: int, [default=None]
+    #         The number of items to return in a single page. If not specified, the default will be taken from
+    #         the class instance.
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     A list of categories with the corresponding display name or qualified name.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_categories_by_name(
+    #             name, glossary_guid, status, start_from, page_size
+    #         )
+    #     )
+    #     return response
+    #
+    # async def _async_get_categories_by_guid(
+    #     self,
+    #     glossary_category_guid: str,
+    #     effective_time: str = None,
+    # ) -> list | str:
+    #     """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
+    #     time for the query..
+    #
+    #     Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_category_guid: str
+    #         The identity of the glossary category to search.
+    #     effective_time: str, optional
+    #         If specified, the category should only be returned if it was effective at the specified time.
+    #         Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #
+    #
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     Details for the category with the glossary category GUID.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
+    #         f"{glossary_category_guid}/retrieve"
+    #     )
+    #
+    #     body = {
+    #         "class": "EffectiveTimeQueryRequestBody",
+    #         "effectiveTime": effective_time,
+    #     }
+    #
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("element", "No Category found")
+    #
+    # def get_categories_by_guid(
+    #     self,
+    #     glossary_category_guid: str,
+    #     effective_time: str = None,
+    # ) -> list | str:
+    #     """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
+    #     time for the query..
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_category_guid: str
+    #         The identity of the glossary category to search.
+    #     effective_time, datetime, optional
+    #         If specified, the category should only be returned if it was effective at the specified time.
+    #         Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #
+    #
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     Details for the category with the glossary category GUID.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_categories_by_guid(glossary_category_guid, effective_time)
+    #     )
+    #     return response
+    #
+    # async def _async_get_category_parent(
+    #     self,
+    #     glossary_category_guid: str,
+    #     effective_time: str = None,
+    # ) -> list | str:
+    #     """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
+    #         element for the glossary category with the supplied unique identifier.  If the requested category
+    #         does not have a parent category, null is returned.  The optional request body contain an effective time
+    #         for the query.
+    #
+    #     Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_category_guid: str
+    #         The identity of the glossary category to search.
+    #     effective_time, datetime, optional
+    #         If specified, the category should only be returned if it was effective at the specified time.
+    #         Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+    #
+    #
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     Details for the parent category with the glossary category GUID.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
+    #         f"{glossary_category_guid}/parent/retrieve"
+    #     )
+    #
+    #     body = {
+    #         "class": "EffectiveTimeQueryRequestBody",
+    #         "effectiveTime": effective_time,
+    #     }
+    #
+    #     response = await self._async_make_request("POST", url, body)
+    #     return response.json().get("element", "No Parent Category found")
+    #
+    # def get_category_parent(
+    #     self,
+    #     glossary_category_guid: str,
+    #     effective_time: str = None,
+    # ) -> list | str:
+    #     """Glossary categories can be organized in a hierarchy. Retrieve the parent glossary category metadata
+    #         element for the glossary category with the supplied unique identifier.  If the requested category
+    #         does not have a parent category, null is returned.  The optional request body contain an effective time
+    #         for the query.
+    #
+    #     Parameters
+    #     ----------
+    #     glossary_category_guid: str
+    #         The identity of the glossary category to search.
+    #     effective_time, datetime, optional
+    #         If specified, the category should only be returned if it was effective at the specified time.
+    #         Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+    #
+    #
+    #     Returns
+    #     -------
+    #     List | str
+    #
+    #     Details for the parent category with the glossary category GUID.
+    #
+    #     Raises
+    #     ------
+    #
+    #     InvalidParameterException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     PropertyServerException
+    #       Raised by the server when an issue arises in processing a valid request
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_category_parent(glossary_category_guid, effective_time)
+    #     )
+    #     return response
 
     #
     #  Terms
@@ -1735,7 +1737,7 @@ class GlossaryManager(GlossaryBrowser):
 
         return response
 
-    def load_terms_from_file(
+    def load_terms_from_csv_file(
         self,
         glossary_name: str,
         filename: str,

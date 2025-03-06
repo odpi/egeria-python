@@ -202,17 +202,26 @@ class TestAssetCatalog:
         finally:
             a_client.close_session()
 
-    def test_get_asset_lineage_graph(self, server: str = good_view_server_1):
+    def test_get_asset_lineage_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "04adab3e-1708-4d37-ba15-a947ff8619d4"
+            asset_guid = "8a578f0d-f7ae-4255-b4a5-236241fa5449"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_lineage_graph(asset_guid)
+            effective_time = None
+            as_of_time = None
+            relationship_types = None
+            limit_to_isc_q_name = "InformationSupplyChain:Sustainability Reporting"
+            hilight_isc_q_name = None
+
+            response = a_client.get_asset_lineage_graph(asset_guid, effective_time,
+                                                        as_of_time, relationship_types,
+                                                        limit_to_isc_q_name, hilight_isc_q_name,
+                                                        )
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))

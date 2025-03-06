@@ -10,7 +10,7 @@ added in subsequent versions of the glossary_omvs module.
 import asyncio
 from datetime import datetime
 
-from pyegeria import NO_GLOSSARIES_FOUND
+from pyegeria import NO_GLOSSARIES_FOUND, NO_CATEGORIES_FOUND
 # import json
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
@@ -713,7 +713,7 @@ class GlossaryBrowser(Client):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No Categories found")
+        return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def find_glossary_categories(
         self,
