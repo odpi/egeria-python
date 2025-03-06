@@ -35,7 +35,7 @@ class TestGlossaryBrowser:
     bad_user_2 = ""
     good_integ_1 = "fluffy_integration"
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "laz_kv"
+    good_server_2 = "qs-view-server"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
     good_server_5 = "fluffy_kv"
@@ -280,6 +280,95 @@ class TestGlossaryBrowser:
                 # print_json_list_as_table(response)
                 count = len(response)
                 print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_categories_by_guid(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = (
+            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
+            # )
+            glossary_guid = '264432d9-609f-4b88-a484-af482895c0a5'
+            response = g_client.get_categories_by_guid(glossary_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_categories_by_name(self, server: str = good_view_server_1):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                "qs-view-server", self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            category_name = "category1"
+            response = g_client.get_categories_by_name(category_name)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_categories_for_glossary(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                "qs-view-server", self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            glossary_guid = "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"
+            response = g_client.get_categories_for_glossary(glossary_guid)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
             elif type(response) is str:
                 print("\n\n" + response)
             assert True

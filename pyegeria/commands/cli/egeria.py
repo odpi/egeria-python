@@ -25,8 +25,8 @@ from pyegeria.commands.cat.glossary_actions import (
     create_term,
     delete_glossary,
     delete_term,
-    export_terms,
-    import_terms,
+    export_terms_csv,
+    import_terms_csv,
 )
 from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
@@ -1399,8 +1399,8 @@ tell_glossary.add_command(create_glossary)
 tell_glossary.add_command(delete_glossary)
 tell_glossary.add_command(delete_term)
 tell_glossary.add_command(create_term)
-tell_glossary.add_command(import_terms)
-tell_glossary.add_command(export_terms)
+tell_glossary.add_command(import_terms_csv)
+tell_glossary.add_command(export_terms_csv)
 
 
 @tell_cat.group("todo")
