@@ -15,7 +15,7 @@ import json
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria._globals import NO_ELEMENTS_FOUND, NO_CATALOGS_FOUND, NO_CATEGORIES_FOUND, NO_TERMS_FOUND
 MD_SEPERATOR = "\n---\n\n"
 
 class GlossaryBrowser(Client):
@@ -121,6 +121,44 @@ class GlossaryBrowser(Client):
             elements_md += f"## Examples\n{examples}\n\n"
             elements_md += f"## Usage\n{usage}\n\n"
             elements_md += f"## Published Version\n{pub_version}\n\n"
+            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
+            elements_md += f"## GUID\n{guid}\n\n"
+            elements_md += MD_SEPERATOR
+        return elements_md
+
+    def generate_categories_md(self, elements: list, search_string: str, form:bool = True)-> str:
+        if form:
+            elements_md = f"# Update Categories Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = "Update Category"
+        else:
+            elements_md = f"# Categories Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = None
+        search_string = search_string if search_string else "All Categories"
+        elements_md += f"Categories found from the search string:  `{search_string}`\n\n"
+
+        for element in elements:
+            guid = element['elementHeader'].get("guid", None)
+            properties = element['glossaryCategoryProperties']
+            display_name = properties.get("displayName", None)
+            description = properties.get("description", None)
+            qualified_name = properties.get("qualifiedName", None)
+
+            classification_props = element["elementHeader"]['classifications'][0].get('classificationProperties', None)
+            glossary_qualified_name = '---'
+            if classification_props is not None:
+                glossary_guid = classification_props.get('anchorGUID', '---')
+                glossary_qualified_name = (
+                    self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
+
+            if form:
+                elements_md += f"# {elements_action}\n\n"
+                elements_md += f"## Category Name \n{display_name}\n\n"
+            else:
+                elements_md += f"# Category Name: {display_name}\n\n"
+
+
+            elements_md += f"## Description\n{description}\n\n"
+            elements_md += f"## In Glossary (Qualified Name)\n{glossary_qualified_name}\n\n"
             elements_md += f"## Qualified Name\n{qualified_name}\n\n"
             elements_md += f"## GUID\n{guid}\n\n"
             elements_md += MD_SEPERATOR
@@ -482,13 +520,13 @@ class GlossaryBrowser(Client):
 
         body = {
             "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time
+            "effectiveTime" : effective_time
         }
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"{glossary_guid}/retrieve"
         )
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get("element", NO_GLOSSARIES_FOUND)
 
     def get_glossary_by_guid(
@@ -738,6 +776,8 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True,
     ) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -765,6 +805,12 @@ class GlossaryBrowser(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
+
         Returns
         -------
         List | str
@@ -807,8 +853,16 @@ class GlossaryBrowser(Client):
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
 
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        category_elements = response.json().get("elementList", NO_GLOSSARIES_FOUND)
+        if category_elements == NO_CATEGORIES_FOUND:
+            return NO_CATEGORIES_FOUND
+        if md:  # return a simplified markdown representation
+            return self.generate_categories_md(category_elements, search_string, form)
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
+
+
+
 
     def find_glossary_categories(
         self,
@@ -819,6 +873,8 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True
     ) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
          The search string is located in the request body and is interpreted as a plain string.
@@ -846,6 +902,12 @@ class GlossaryBrowser(Client):
          page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
              the class instance.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
+
         Returns
         -------
         List | str
@@ -873,6 +935,8 @@ class GlossaryBrowser(Client):
                 ignore_case,
                 start_from,
                 page_size,
+                md,
+                form
             )
         )
 

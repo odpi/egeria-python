@@ -26,7 +26,14 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_term,
     export_terms_csv,
     import_terms_csv,
+    create_category,
+    update_category,
+    delete_category,
 )
+from pyegeria.commands.cat.freddie_jup import process_jupyter_notebook
+from pyegeria.commands.cat.freddie_md import process_markdown_file
+
+from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
 from pyegeria.commands.cat.list_collections import display_collections
@@ -410,6 +417,38 @@ def glossaries(ctx, search_string, markdown, form):
         form,
     )
 
+@glossary_group.command("glossary-categories")
+@click.option("--search_string", default="*", help="Name to search for categories")
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally display category list in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally display category list as an update form",
+    )
+@click.pass_context
+def categories(ctx, search_string, markdown, form):
+    """Display a list of categories"""
+    c = ctx.obj
+    display_categories(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+        markdown,
+        form,
+    )
+
+
+
 
 @info.command("collection")
 @click.option(
@@ -664,6 +703,9 @@ tell_glossary.add_command(create_term)
 tell_glossary.add_command(import_terms_csv)
 tell_glossary.add_command(export_terms_csv)
 tell_glossary.add_command(delete_term)
+tell_glossary.add_command(create_category)
+tell_glossary.add_command(delete_category)
+tell_glossary.add_command(update_category)
 
 
 @tell.group("todo")
