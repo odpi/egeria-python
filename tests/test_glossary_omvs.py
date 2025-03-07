@@ -92,7 +92,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_glossary_by_guid(self, server: str = good_view_server_1):
+    def test_get_glossary_by_guid(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryBrowser(
@@ -100,10 +100,11 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
-            response = g_client.get_glossary_by_guid(glossary_guid, server_name)
+            # glossary_guid = "5d45b499-d0d5-4fad-bc23-763bc4073296"  # This is the sustainability glossary
+            glossary_guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"
+            response = g_client.get_glossary_by_guid(glossary_guid, None)
             print(f"type is {type(response)}")
-            if type(response) is list:
+            if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} terms")
@@ -297,6 +298,50 @@ class TestGlossaryBrowser:
             print_exception_response(e)
             assert False, "Invalid request"
 
+        finally:
+            g_client.close_session()
+
+    def test_find_categories(self):
+        try:
+            g_client = GlossaryBrowser(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            search_string = "*"
+            start_time = time.perf_counter()
+            response = g_client.find_glossary_categories(
+                search_string,
+                starts_with=False,
+                ends_with=False,
+                ignore_case=True,
+                page_size=0,
+                effective_time=None,
+                md = True,
+                form = True
+            )
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                # print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} categories")
+
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
         finally:
             g_client.close_session()
 

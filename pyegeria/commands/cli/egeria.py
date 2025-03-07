@@ -27,7 +27,14 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_term,
     export_terms_csv,
     import_terms_csv,
+    create_category,
+    update_category,
+    delete_category,
 )
+from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
+from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
+
+from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets
 from pyegeria.commands.cat.list_cert_types import display_certifications
 from pyegeria.commands.cat.list_collections import display_collections
@@ -44,6 +51,7 @@ from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
+
 from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cli.egeria_ops import show_server
 from pyegeria.commands.cli.ops_config import Config
@@ -220,12 +228,12 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 
 @click.option(
     "--inbox_path",
-    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/freddies-inbox"),
+    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox"),
     help="Path to outbox files",
 )
 @click.option(
     "--outbox_path",
-    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/freddies-outbox"),
+    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/dr_egeria_outbox"),
     help="Path to outbox files",
 )
 
@@ -1168,6 +1176,35 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name, markdown, form)
         form,
     )
 
+@glossary_group.command("glossary-categories")
+@click.option("--search_string", default="*", help="Name to search for categories")
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally display category list in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally display category list as an update form",
+    )
+@click.pass_context
+def categories(ctx, search_string, markdown, form):
+    """Display a list of categories"""
+    c = ctx.obj
+    display_categories(
+        search_string,
+        c.view_server,
+        c.view_server_url,
+        c.userid,
+        c.password,
+        c.jupyter,
+        c.width,
+        markdown,
+        form,
+    )
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
@@ -1453,6 +1490,9 @@ tell_glossary.add_command(delete_term)
 tell_glossary.add_command(create_term)
 tell_glossary.add_command(import_terms_csv)
 tell_glossary.add_command(export_terms_csv)
+tell_glossary.add_command(create_category)
+tell_glossary.add_command(delete_category)
+tell_glossary.add_command(update_category)
 
 
 @tell_cat.group("todo")

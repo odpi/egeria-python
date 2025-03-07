@@ -1,28 +1,16 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
-import json
-import mistune
-from jupyter_notebook_parser import JupyterNotebookParser
-import nbformat
 import os
-import re
-from pyegeria import EgeriaTech
-from rich import box, print
+from rich import print
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-from rich.table import Table
-from freddie_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                        get_current_datetime_string, process_per_proj_upsert_command, commands)
+from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+                                          get_current_datetime_string, process_per_proj_upsert_command, commands)
 
 import click
-from pyegeria import EgeriaTech, body_slimmer, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
-)
+from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+                      get_current_datetime_string, process_per_proj_upsert_command, commands,EgeriaTech
+                      )
 from datetime import datetime
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -45,8 +33,8 @@ EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/freddies-inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/freddies-outbox")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
 
 console = Console(width=int(EGERIA_WIDTH))
 

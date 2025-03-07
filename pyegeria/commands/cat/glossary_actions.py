@@ -368,7 +368,7 @@ def export_terms_csv(
 @click.option(
     "--is_root",
     help="Is this a root category?",
-    default=False,
+    default=True,
     is_flag=True,
 )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
