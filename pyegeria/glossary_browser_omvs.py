@@ -10,12 +10,13 @@ added in subsequent versions of the glossary_omvs module.
 import asyncio
 from datetime import datetime
 
-from pyegeria import NO_GLOSSARIES_FOUND, NO_CATEGORIES_FOUND
-# import json
+from pyegeria import NO_GLOSSARIES_FOUND, NO_CATEGORIES_FOUND, NO_TERMS_FOUND
+import json
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
 from pyegeria._globals import NO_ELEMENTS_FOUND
+MD_SEPERATOR = "\n---\n\n"
 
 class GlossaryBrowser(Client):
     """
@@ -51,6 +52,79 @@ class GlossaryBrowser(Client):
         self.g_browser_command_root: str
 
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+
+    def generate_glossaries_md(self, elements: list, search_string: str, form:bool = True)-> str:
+        if form:
+            elements_md = f"# Update Glossaries Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = "Update Glossary"
+        else:
+            elements_md = f"# Glossaries Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = None
+        search_string = search_string if search_string else "All Glossaries"
+        elements_md += f"Glossaries found from the search string:  `{search_string}`\n\n"
+
+        for element in elements:
+            guid = element['elementHeader'].get("guid", None)
+            properties = element['glossaryProperties']
+            display_name = properties.get("displayName", None)
+            description = properties.get("description", None)
+            language = properties.get("language", None)
+            usage = properties.get("usage", None)
+            qualified_name = properties.get("qualifiedName", None)
+
+            if form:
+                elements_md += f"# {elements_action}\n\n"
+                elements_md += f"## Glossary Name \n{display_name}\n\n"
+            else:
+                elements_md += f"# Glossary Name: {display_name}\n\n"
+
+
+            elements_md += f"## Description\n{description}\n\n"
+            elements_md += f"## Language\n{language}\n\n"
+            elements_md += f"## Usage\n{usage}\n\n"
+            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
+            elements_md += f"## GUID\n{guid}\n\n"
+            elements_md += MD_SEPERATOR
+        return elements_md
+
+    def generate_terms_md(self, elements: list, search_string: str, form:bool = True)-> str:
+        if form:
+            elements_md = f"# Update terms Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = "Update Terms"
+        else:
+            elements_md = f"# Glossary Terms Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            elements_action = None
+        search_string = search_string if search_string else "All Terms"
+        elements_md += f"Terms found from the search string:  `{search_string}`\n\n"
+
+        for element in elements:
+            guid = element['elementHeader'].get("guid", None)
+            element_properties = element['glossaryTermProperties']
+            display_name = element_properties.get("displayName", None)
+            summary = element_properties.get("summary", None)
+            description = element_properties.get("description", None)
+            examples = element_properties.get("examples", None)
+            usage = element_properties.get("usage", None)
+            pub_version = element_properties.get("publishedVersionIdentifier", None)
+            qualified_name = element_properties.get("qualifiedName", None)
+            status = element['elementHeader']['classifications'][0].get('status', None)
+
+            if form:
+                elements_md += f"# {elements_action}\n\n"
+                elements_md += f"## Term Name \n{display_name}\n\n"
+            else:
+                elements_md += f"# Term Name: {display_name}\n\n"
+
+            elements_md += f"## Status\n{status}\n\n"
+            elements_md += f"## Summary\n{summary}\n\n"
+            elements_md += f"## Description\n{description}\n\n"
+            elements_md += f"## Examples\n{examples}\n\n"
+            elements_md += f"## Usage\n{usage}\n\n"
+            elements_md += f"## Published Version\n{pub_version}\n\n"
+            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
+            elements_md += f"## GUID\n{guid}\n\n"
+            elements_md += MD_SEPERATOR
+        return elements_md
 
     #
     #       Get Valid Values for Enumerations
@@ -193,6 +267,8 @@ class GlossaryBrowser(Client):
         type_name: str = None,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
@@ -225,6 +301,12 @@ class GlossaryBrowser(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
+
         Returns
         -------
         List | str
@@ -263,7 +345,6 @@ class GlossaryBrowser(Client):
             "typeName": type_name,
         }
         body = body_slimmer(body)
-        # print(f"\n\nBody is: \n{body}")
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
@@ -273,7 +354,12 @@ class GlossaryBrowser(Client):
         )
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No Glossaries found")
+        glossary_elements = response.json().get("elementList", NO_GLOSSARIES_FOUND)
+        if glossary_elements == NO_GLOSSARIES_FOUND:
+            return NO_GLOSSARIES_FOUND
+        if md: # return a simplified markdown representation
+            return self.generate_glossaries_md(glossary_elements, search_string,form)
+        return response.json().get("elementList", NO_GLOSSARIES_FOUND)
 
     def find_glossaries(
         self,
@@ -287,6 +373,8 @@ class GlossaryBrowser(Client):
         type_name: str = None,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string.
                 The search string is located in the request body and is interpreted as a plain string.
@@ -320,6 +408,11 @@ class GlossaryBrowser(Client):
          page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
              the class instance.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
         Returns
         -------
         List | str
@@ -350,6 +443,8 @@ class GlossaryBrowser(Client):
                 type_name,
                 start_from,
                 page_size,
+                md,
+                form
             )
         )
 
@@ -2162,6 +2257,8 @@ class GlossaryBrowser(Client):
         for_duplicate_processing: bool = False,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True,
     ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
@@ -2193,6 +2290,11 @@ class GlossaryBrowser(Client):
             Page of results to start from
         page_size : int, optional
             Number of elements to return per page - if None, then default for class will be used.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
 
         Returns
         -------
@@ -2238,7 +2340,7 @@ class GlossaryBrowser(Client):
             "effectiveTime": effective_time,
             "limitResultsByStatus": status_filter,
         }
-        # body = body_slimmer(body)
+        body = body_slimmer(body)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
@@ -2247,12 +2349,14 @@ class GlossaryBrowser(Client):
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
 
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
         response = await self._async_make_request("POST", url, body)
-        return response.json().get(
-            "elementList", "No terms found"
-        )  # return response.text
+        term_elements = response.json().get("elementList", NO_TERMS_FOUND)
+        if term_elements == NO_TERMS_FOUND:
+            return NO_TERMS_FOUND
+        if md:  # return a simplified markdown representation
+            return self.generate_terms_md(term_elements, search_string, form)
+        return response.json().get("elementList", NO_TERMS_FOUND)
+
 
     def find_glossary_terms(
         self,
@@ -2267,6 +2371,8 @@ class GlossaryBrowser(Client):
         for_duplicate_processing: bool = False,
         start_from: int = 0,
         page_size: int = None,
+        md: bool = False,
+        form: bool = True,
     ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
@@ -2299,6 +2405,11 @@ class GlossaryBrowser(Client):
             Page of results to start from
         page_size : int, optional
             Number of elements to return per page - if None, then default for class will be used.
+        md: bool, [default=False]
+            If true, a simplified markdown representation of the glossary will be returned
+        form: bool, [default=True]
+            If true and md is true, a form for the glossaries will be returned as a markdown string.
+            If false and md is true, a report for the glossaries will be returned.
 
         Returns
         -------
@@ -2337,6 +2448,8 @@ class GlossaryBrowser(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
+                md,
+                form,
             )
         )
 

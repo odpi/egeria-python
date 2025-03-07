@@ -518,7 +518,7 @@ def process_per_proj_upsert_command(egeria_client: EgeriaTech, element_dictionar
                 msg += f"* {ERROR}Project {project_name} does not exist\n"
                 valid = False
             if len(project_details) > 1 and project_exists:
-                msg += f"* {ERROR}More than one projecty with name {project_name} found\n"
+                msg += f"* {ERROR}More than one project with name {project_name} found\n"
                 valid = False
             if len(project_details) == 1:
                 known_guid = project_details[0]['elementHeader'].get('guid', None)
