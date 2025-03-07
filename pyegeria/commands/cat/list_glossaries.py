@@ -43,6 +43,11 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/freddies-inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/freddies-outbox")
+
 
 
 def display_glossaries(
@@ -53,6 +58,8 @@ def display_glossaries(
     user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
+    md: bool = False,
+    form: bool = False,
 ):
     """Display either a specified glossary or all glossaries if the search_string is '*'.
     Parameters
@@ -71,10 +78,36 @@ def display_glossaries(
         A boolean indicating whether the output is intended for a Jupyter notebook (default is EGERIA_JUPYTER).
     width : int, optional
         The width of the console output (default is EGERIA_WIDTH).
+    md: bool, [default=False]
+        If true, a simplified markdown report of the glossaries will be created. Filename is Glossaries-<DATE>-<ACTION>
+        The filepath is derived from the environment variables EGERIA_ROOT_PATH and EGERIA_OUTPUT_PATH, respectively.
+    form: bool, [default=False]
+        If true and md is true, a form for the glossaries will be created as a markdown file.
+        If false and md is true, a markdown report for the glossaries will be created.
     """
     m_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token()
+
+
     try:
+        if md:
+            if form:
+                action = "Update-Form"
+            else:
+                action = "Report"
+            file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
+            file_name = f"Glossaries-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
+            full_file_path = os.path.join(file_path, file_name)
+            os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
+            output = m_client.find_glossaries(search_string, md=md, form=form)
+            if output == "NO_GLOSSARIES_FOUND":
+                print(f"\n==> No glossaries found for search string '{search_string}'")
+                return
+            with open(full_file_path, 'w') as f:
+                f.write(output)
+            print(f"\n==> Glossaries output written to {full_file_path}")
+            return
+
         table = Table(
             title=f"Glossary List @ {time.asctime()}",
             style="bright_white on black",
@@ -139,8 +172,14 @@ def main():
         search_string = Prompt.ask(
             "Enter the glossary you are searching for or '*' for all:", default="*"
         )
+        mdq = Prompt.ask("Do you want to create a markdown report?", choices=["y", "n"], default="n")
+        md = True if mdq.lower() == "y" else False
 
-        display_glossaries(search_string, server, url, userid, user_pass)
+        formq = Prompt.ask("Do you want to create a form?", choices=["y", "n"], default="n")
+        form = True if formq.lower() == "y" else False
+
+        display_glossaries(search_string, server, url, userid,
+                           user_pass, md = md, form = form)
 
     except KeyboardInterrupt:
         pass

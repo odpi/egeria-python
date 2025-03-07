@@ -21,6 +21,9 @@ class Config(object):
         width: int,
         home_glossary_guid: str,
         glossary_path: str,
+        root_path: str,
+        inbox_path: str,
+        outbox_path: str
     ):
         self.metadata_store = server
         self.metadata_store_url = url
@@ -41,6 +44,9 @@ class Config(object):
         self.url = url
         self.home_glossary_guid = home_glossary_guid
         self.glossary_path = glossary_path
+        self.root_path = root_path
+        self.inbox_path = inbox_path
+        self.outbox_path = outbox_path
 
 
 pass_config = click.make_pass_decorator(Config)

@@ -211,6 +211,24 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
+
+@click.option(
+    "--root_path",
+    default=os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan"),
+    help="Root path to use for file operations",
+)
+
+@click.option(
+    "--inbox_path",
+    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/freddies-inbox"),
+    help="Path to outbox files",
+)
+@click.option(
+    "--outbox_path",
+    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/freddies-outbox"),
+    help="Path to outbox files",
+)
+
 @click.pass_context
 def cli(
     ctx,
@@ -231,6 +249,9 @@ def cli(
     width,
     home_glossary_guid,
     glossary_path,
+    root_path,
+    inbox_path,
+    outbox_path,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -251,6 +272,9 @@ def cli(
         width,
         home_glossary_guid,
         glossary_path,
+        root_path,
+        inbox_path,
+        outbox_path
     )
     ctx.max_content_width = 250
     ctx.ensure_object(Config)
@@ -1114,8 +1138,20 @@ def glossary_group(ctx):
     default="*",
     help="Optionally restrict search to a specific named glossary",
 )
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally write file in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally write file as an update form",
+    )
 @click.pass_context
-def show_terms(ctx, search_string, glossary_guid, glossary_name):
+def show_terms(ctx, search_string, glossary_guid, glossary_name, markdown, form):
     """Find and display glossary terms"""
     c = ctx.obj
     display_glossary_terms(
@@ -1128,13 +1164,27 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name):
         c.password,
         c.jupyter,
         c.width,
+        markdown,
+        form,
     )
 
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list as an update form",
+    )
 @click.pass_context
-def glossaries(ctx, search_string):
+def glossaries(ctx, search_string, markdown, form):
     """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
@@ -1145,6 +1195,8 @@ def glossaries(ctx, search_string):
         c.password,
         c.jupyter,
         c.width,
+        markdown,
+        form,
     )
 
 
@@ -1489,38 +1541,6 @@ def show_project_dependencies(ctx, project):
     )
 
 
-@glossary_group.command("glossary-terms")
-@click.option(
-    "--search-string",
-    default="*",
-    help="List glossary terms similar to search string - minimum of 4 characters",
-)
-@click.option(
-    "--glossary-guid",
-    default=None,
-    help="Optionally restrict search to glossary with the specified guid",
-)
-@click.option(
-    "--glossary-name",
-    default="*",
-    help="Optionally restrict search to a specific named glossary",
-)
-@click.pass_context
-def show_terms(ctx, search_string, glossary_guid, glossary_name):
-    """Find and display glossary terms"""
-    c = ctx.obj
-    display_glossary_terms(
-        search_string,
-        glossary_guid,
-        glossary_name,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
-
 
 @asset_group.command("asset-graph")
 @click.argument("asset_guid", nargs=1)
@@ -1680,23 +1700,6 @@ def databases(ctx):
     c = ctx.obj
     list_deployed_databases(
         c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
-
-
-@glossary_group.command("glossaries")
-@click.option("--search_string", default="*", help="Name to search for glossaries")
-@click.pass_context
-def glossaries(ctx, search_string):
-    """Display a list of glossaries"""
-    c = ctx.obj
-    display_glossaries(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
     )
 
 

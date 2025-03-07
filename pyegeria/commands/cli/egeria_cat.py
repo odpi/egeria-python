@@ -141,6 +141,24 @@ from pyegeria.commands.tech.list_asset_types import display_asset_types
     default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
     help="Path to glossary import/export files",
 )
+
+@click.option(
+    "--root_path",
+    default=os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan"),
+    help="Root path to use for file operations",
+)
+
+@click.option(
+    "--inbox_path",
+    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/freddies-inbox"),
+    help="Path to inbox files",
+)
+@click.option(
+    "--outbox_path",
+    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/freddies-outbox"),
+    help="Path to outbox files",
+)
+
 @click.pass_context
 def cli(
     ctx,
@@ -161,6 +179,9 @@ def cli(
     width,
     home_glossary_guid,
     glossary_path,
+    root_path,
+    inbox_path,
+    outbox_path,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -181,6 +202,9 @@ def cli(
         width,
         home_glossary_guid,
         glossary_path,
+        root_path,
+        inbox_path,
+        outbox_path
     )
     ctx.max_content_width = 250
     ctx.ensure_object(Config)
@@ -325,8 +349,20 @@ def glossary_group(ctx):
     default="*",
     help="Optionally restrict search to a specific named glossary",
 )
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list as an update form",
+    )
 @click.pass_context
-def show_terms(ctx, search_string, glossary_guid, glossary_name):
+def show_terms(ctx, search_string, glossary_guid, glossary_name, markdown, form):
     """Find and display glossary terms"""
     c = ctx.obj
     display_glossary_terms(
@@ -339,13 +375,27 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name):
         c.password,
         c.jupyter,
         c.width,
+        markdown,
+        form,
     )
 
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
+@click.option(
+    "--markdown",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list in markdown format",
+    )
+@click.option(
+    "--form",
+    flag_value=True,
+    default=False,
+    help="Optionally display glossary list as an update form",
+    )
 @click.pass_context
-def glossaries(ctx, search_string):
+def glossaries(ctx, search_string, markdown, form):
     """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
@@ -356,6 +406,8 @@ def glossaries(ctx, search_string):
         c.password,
         c.jupyter,
         c.width,
+        markdown,
+        form,
     )
 
 

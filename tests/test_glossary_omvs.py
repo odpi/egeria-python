@@ -63,6 +63,8 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
+                md = True,
+                form = False
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -257,14 +259,15 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
-            glossary_guid = (
-                "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
-            )
+            # glossary_guid = (
+            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
+            # )
+            glossary_guid = "5d45b499-d0d5-4fad-bc23-763bc4073296"
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
                 "*",
                 # glossary_guid=glossary_guid,
-                None,
+                glossary_guid=glossary_guid,
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
@@ -273,6 +276,8 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
+                md = True,
+                form = True
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:

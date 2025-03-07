@@ -44,8 +44,8 @@ EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_FREDDIE_INBOX_PATH = os.environ.get("EGERIA_FREDDIE_INBOX_PATH", "pyegeria/commands/cat/freddies-inbox")
-EGERIA_FREDDIE_OUTBOX_PATH = os.environ.get("EGERIA_FREDDIE_OUTBOX_PATH", "pyegeria/commands/cat/freddies-outbox")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/freddies-inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/freddies-outbox")
 
 console = Console(width=int(EGERIA_WIDTH))
 
@@ -76,7 +76,7 @@ def process_jupyter_notebook(
 
     try:
         updated = False
-        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_FREDDIE_INBOX_PATH, file_path)
+        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, file_path)
         click.echo(f"Processing notebook: {full_file_path}")
         with open(full_file_path, 'r') as f:
             nb = nbformat.read(f, as_version=4)
@@ -112,7 +112,7 @@ def process_jupyter_notebook(
         if updated:
             path, filename = os.path.split(file_path)  # Get both parts
             new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
-            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_FREDDIE_OUTBOX_PATH, new_filename)  # Construct the new path
+            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 
 
