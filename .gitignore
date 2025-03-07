@@ -161,3 +161,6 @@ dmypy.json
 .pyre/
 
 .run/
+
+/pyegeria/commands/cat/dr_egeria_inbox/
+/pyegeria/commands/cat/dr_egeria_outbox/

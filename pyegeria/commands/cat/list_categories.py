@@ -45,8 +45,8 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "150"))
 EGERIA_category_PATH = os.environ.get("EGERIA_category_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/freddies-inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/freddies-outbox")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
 
 
 

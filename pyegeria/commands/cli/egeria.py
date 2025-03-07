@@ -31,8 +31,8 @@ from pyegeria.commands.cat.glossary_actions import (
     update_category,
     delete_category,
 )
-from pyegeria.commands.cat.freddie_jup import process_jupyter_notebook
-from pyegeria.commands.cat.freddie_md import process_markdown_file
+from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
+from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
 
 from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets
@@ -228,12 +228,12 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 
 @click.option(
     "--inbox_path",
-    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/freddies-inbox"),
+    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox"),
     help="Path to outbox files",
 )
 @click.option(
     "--outbox_path",
-    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/freddies-outbox"),
+    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/dr_egeria_outbox"),
     help="Path to outbox files",
 )
 

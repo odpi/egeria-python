@@ -8,13 +8,10 @@ These GUIDS should be copied into the pyegeria/__init__.py.
 """
 
 from datetime import datetime
-
 from rich.console import Console
-
-from pyegeria.server_operations import ServerOps
-from pyegeria.automated_curation_omvs import AutomatedCuration
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria._globals import NO_ELEMENTS_FOUND
+
 console = Console(width=200)
 integration_server = "qs-integration-daemon"
 
@@ -35,7 +32,7 @@ def build_global_guid_lists(
     tech_types = a_client.get_all_technology_types()
     if type(tech_types) is list:
         with open(file_name, "w") as f:
-            out = f"global template_guids, integration_guids\n"
+            out = "global template_guids, integration_guids\n"
             f.write(out)
             for tech_type in tech_types:
                 # get tech type details
