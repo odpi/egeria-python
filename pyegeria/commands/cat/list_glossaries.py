@@ -58,8 +58,7 @@ def display_glossaries(
     user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
-    md: bool = False,
-    form: bool = False,
+    output_format: str = "JSON"
 ):
     """Display either a specified glossary or all glossaries if the search_string is '*'.
     Parameters
@@ -78,28 +77,24 @@ def display_glossaries(
         A boolean indicating whether the output is intended for a Jupyter notebook (default is EGERIA_JUPYTER).
     width : int, optional
         The width of the console output (default is EGERIA_WIDTH).
-    md: bool, [default=False]
-        If true, a simplified markdown report of the glossaries will be created. Filename is Glossaries-<DATE>-<ACTION>
-        The filepath is derived from the environment variables EGERIA_ROOT_PATH and EGERIA_OUTPUT_PATH, respectively.
-    form: bool, [default=False]
-        If true and md is true, a form for the glossaries will be created as a markdown file.
-        If false and md is true, a markdown report for the glossaries will be created.
+    output_format: str, optional, default is 'JSON'
+        One of TABLE, FORM, REPORT
     """
     m_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token()
 
 
     try:
-        if md:
-            if form:
-                action = "Update-Form"
-            else:
-                action = "Report"
+        if output_format == "FORM":
+            action = "Update-Form"
+        elif output_format == "REPORT":
+            action = "Report"
+        if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
             file_name = f"Glossaries-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = m_client.find_glossaries(search_string, md=md, form=form)
+            output = m_client.find_glossaries(search_string,  None, output_format=output_format)
             if output == "NO_GLOSSARIES_FOUND":
                 print(f"\n==> No glossaries found for search string '{search_string}'")
                 return
@@ -172,14 +167,9 @@ def main():
         search_string = Prompt.ask(
             "Enter the glossary you are searching for or '*' for all:", default="*"
         )
-        mdq = Prompt.ask("Do you want to create a markdown report?", choices=["y", "n"], default="n")
-        md = True if mdq.lower() == "y" else False
-
-        formq = Prompt.ask("Do you want to create a form?", choices=["y", "n"], default="n")
-        form = True if formq.lower() == "y" else False
-
+        output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"], default="TABLE")
         display_glossaries(search_string, server, url, userid,
-                           user_pass, md = md, form = form)
+                           user_pass, output_format=output_format)
 
     except KeyboardInterrupt:
         pass

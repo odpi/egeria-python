@@ -53,15 +53,48 @@ class GlossaryBrowser(Client):
 
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
-    def generate_glossaries_md(self, elements: list, search_string: str, form:bool = True)-> str:
-        if form:
-            elements_md = f"# Update Glossaries Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            elements_action = "Update Glossary"
-        else:
-            elements_md = f"# Glossaries Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+
+    def make_preamble(self, obj_type, search_string, output_format: str = 'MD')-> tuple[str, str | None]:
+        """
+        Creates a preamble string and an elements action based on the given object type, search string,
+        and output format. The preamble provides a descriptive header based on the intent: To make a form,
+        a report, or unadorned markdwon. The elements action specifies the action to be taken on the object type.
+
+        Args:
+            obj_type: The type of object being updated or reported on (e.g., "Product", "Category").
+            search_string: The search string used to filter objects. Defaults to "All Terms" if None.
+            output_format: A format identifier determining the output structure.
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+
+        Returns:
+            tuple: A tuple containing:
+                - A string representing the formatted update or report preamble.
+                - A string or None indicating the action description for the elements,
+                  depending on the output format.
+        """
+        search_string = search_string if search_string else "All Terms"
+        elements_action = "Update " + obj_type
+        if output_format == "FORM":
+            preamble = (f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                        f"\t {obj_type} found from the search string:  `{search_string}`\n\n")
+
+            return preamble, elements_action
+        elif output_format == "REPORT":
+            elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                           f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
             elements_action = None
-        search_string = search_string if search_string else "All Glossaries"
-        elements_md += f"Glossaries found from the search string:  `{search_string}`\n\n"
+            return elements_md, elements_action
+        else:
+            return "\n", elements_action
+
+    def generate_glossaries_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str:
+        elements_md, elements_action = self.make_preamble(obj_type="Glossary", search_string=search_string,
+                                                          output_format=output_format)
+        if isinstance(elements, dict):
+            elements = [elements]
 
         for element in elements:
             guid = element['elementHeader'].get("guid", None)
@@ -72,12 +105,15 @@ class GlossaryBrowser(Client):
             usage = properties.get("usage", None)
             qualified_name = properties.get("qualifiedName", None)
 
-            if form:
+            if output_format == 'FORM':
                 elements_md += f"# {elements_action}\n\n"
-                elements_md += f"## Glossary Name \n{display_name}\n\n"
-            else:
+                elements_md += f"## Glossary Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
+            elif output_format == 'REPORT':
                 elements_md += f"# Glossary Name: {display_name}\n\n"
-
+            else:
+                elements_md += f"## Glossary Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
 
             elements_md += f"## Description\n{description}\n\n"
             elements_md += f"## Language\n{language}\n\n"
@@ -87,15 +123,10 @@ class GlossaryBrowser(Client):
             elements_md += MD_SEPERATOR
         return elements_md
 
-    def generate_terms_md(self, elements: list, search_string: str, form:bool = True)-> str:
-        if form:
-            elements_md = f"# Update terms Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            elements_action = "Update Terms"
-        else:
-            elements_md = f"# Glossary Terms Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            elements_action = None
-        search_string = search_string if search_string else "All Terms"
-        elements_md += f"Terms found from the search string:  `{search_string}`\n\n"
+    def generate_terms_md(self, elements: list | dict, search_string: str, output_format: str = 'MD') -> str:
+        elements_md, elements_action = self.make_preamble(obj_type="Terms", search_string=search_string, output_format=output_format)
+        if isinstance(elements, dict):
+            elements = [elements]
 
         for element in elements:
             guid = element['elementHeader'].get("guid", None)
@@ -107,34 +138,43 @@ class GlossaryBrowser(Client):
             usage = element_properties.get("usage", None)
             pub_version = element_properties.get("publishedVersionIdentifier", None)
             qualified_name = element_properties.get("qualifiedName", None)
-            status = element['elementHeader']['classifications'][0].get('status', None)
+            status = element['elementHeader'].get('status', None)
 
-            if form:
+            category_list_md = "\n"
+            category_list = self.get_categories_for_term(guid)
+            if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
+                category_list_md = ['---']
+            elif isinstance(category_list, list) and len(category_list) > 0:
+                for category in category_list:
+                    category_name = category["glossaryCategoryProperties"].get("displayName", '---')
+                    category_list_md += f" {category_name}\n"
+
+            if output_format == 'FORM':
                 elements_md += f"# {elements_action}\n\n"
-                elements_md += f"## Term Name \n{display_name}\n\n"
-            else:
+                elements_md += f"## Term Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
+            elif output_format == 'REPORT':
                 elements_md += f"# Term Name: {display_name}\n\n"
-
-            elements_md += f"## Status\n{status}\n\n"
-            elements_md += f"## Summary\n{summary}\n\n"
-            elements_md += f"## Description\n{description}\n\n"
-            elements_md += f"## Examples\n{examples}\n\n"
-            elements_md += f"## Usage\n{usage}\n\n"
-            elements_md += f"## Published Version\n{pub_version}\n\n"
-            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
-            elements_md += f"## GUID\n{guid}\n\n"
+            else:
+                elements_md += f"## Term Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
+            elements_md += f"## Categories\n\n{category_list_md}\n\n"
+            elements_md += f"## Status\n\n{status}\n\n"
+            elements_md += f"## Summary\n\n{summary}\n\n"
+            elements_md += f"## Description\n\n{description}\n\n"
+            elements_md += f"## Examples\n\n{examples}\n\n"
+            elements_md += f"## Usage\n\n{usage}\n\n"
+            elements_md += f"## Published Version\n\n{pub_version}\n\n"
+            elements_md += f"## Qualified Name\n\n{qualified_name}\n\n"
+            elements_md += f"## GUID\n\n{guid}\n\n"
             elements_md += MD_SEPERATOR
         return elements_md
 
-    def generate_categories_md(self, elements: list, search_string: str, form:bool = True)-> str:
-        if form:
-            elements_md = f"# Update Categories Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            elements_action = "Update Category"
-        else:
-            elements_md = f"# Categories Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-            elements_action = None
-        search_string = search_string if search_string else "All Categories"
-        elements_md += f"Categories found from the search string:  `{search_string}`\n\n"
+    def generate_categories_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str:
+        elements_md, elements_action = self.make_preamble(obj_type="Categories", search_string=search_string,
+                                                          output_format=output_format)
+        if isinstance(elements, dict):
+            elements = [elements]
 
         for element in elements:
             guid = element['elementHeader'].get("guid", None)
@@ -150,12 +190,15 @@ class GlossaryBrowser(Client):
                 glossary_qualified_name = (
                     self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
 
-            if form:
+            if output_format == 'FORM':
                 elements_md += f"# {elements_action}\n\n"
-                elements_md += f"## Category Name \n{display_name}\n\n"
-            else:
+                elements_md += f"## Category Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
+            elif output_format == 'REPORT':
                 elements_md += f"# Category Name: {display_name}\n\n"
-
+            else:
+                elements_md += f"## Category Name \n\n{display_name}\n\n"
+                elements_md += "## Update Description\n\n\n"
 
             elements_md += f"## Description\n{description}\n\n"
             elements_md += f"## In Glossary (Qualified Name)\n{glossary_qualified_name}\n\n"
@@ -305,8 +348,7 @@ class GlossaryBrowser(Client):
         type_name: str = None,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True
+        output_format: str = 'JSON'
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
@@ -339,11 +381,12 @@ class GlossaryBrowser(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -391,13 +434,14 @@ class GlossaryBrowser(Client):
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
 
-        response = await self._async_make_request("POST", url, body)
-        glossary_elements = response.json().get("elementList", NO_GLOSSARIES_FOUND)
-        if glossary_elements == NO_GLOSSARIES_FOUND:
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elementList", NO_GLOSSARIES_FOUND)
+        if element == NO_GLOSSARIES_FOUND:
             return NO_GLOSSARIES_FOUND
-        if md: # return a simplified markdown representation
-            return self.generate_glossaries_md(glossary_elements, search_string,form)
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_glossaries_md(element, search_string, output_format)
         return response.json().get("elementList", NO_GLOSSARIES_FOUND)
+
 
     def find_glossaries(
         self,
@@ -411,8 +455,7 @@ class GlossaryBrowser(Client):
         type_name: str = None,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True
+        output_format: str = "JSON"
     ) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string.
                 The search string is located in the request body and is interpreted as a plain string.
@@ -446,11 +489,12 @@ class GlossaryBrowser(Client):
          page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
              the class instance.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+         output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
         Returns
         -------
         List | str
@@ -481,15 +525,14 @@ class GlossaryBrowser(Client):
                 type_name,
                 start_from,
                 page_size,
-                md,
-                form
+                output_format
             )
         )
 
         return response
 
     async def _async_get_glossary_by_guid(
-        self, glossary_guid: str, effective_time: str = None
+        self, glossary_guid: str, effective_time: str = None, output_format: str = "JSON"
     ) -> dict:
         """Retrieves information about a glossary
         Parameters
@@ -499,6 +542,13 @@ class GlossaryBrowser(Client):
             effective_time: str, optional
                 Effective time of the query. If not specified will default to any time. Time format is
                 "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+            output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+
         Returns
         -------
         dict
@@ -515,7 +565,7 @@ class GlossaryBrowser(Client):
         Notes
         -----
         """
-
+        output_format = output_format.upper()
         validate_guid(glossary_guid)
 
         body = {
@@ -527,10 +577,16 @@ class GlossaryBrowser(Client):
             f"{glossary_guid}/retrieve"
         )
         response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("element", NO_GLOSSARIES_FOUND)
+        if element == NO_GLOSSARIES_FOUND:
+            return NO_GLOSSARIES_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_glossaries_md(element, "GUID", output_format)
         return response.json().get("element", NO_GLOSSARIES_FOUND)
 
+
     def get_glossary_by_guid(
-        self, glossary_guid: str, effective_time: str = None
+        self, glossary_guid: str, effective_time: str = None, output_format: str = "JSON"
     ) -> dict:
         """Retrieves information about a glossary
         Parameters
@@ -540,6 +596,12 @@ class GlossaryBrowser(Client):
             effective_time: str, optional
                 Effective time of the query. If not specified will default to any time. Time format is
                 "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -559,7 +621,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, effective_time)
+            self._async_get_glossary_by_guid(glossary_guid, effective_time, output_format)
         )
         return response
 
@@ -776,8 +838,7 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True,
+        output_format: str = "JSON"
     ) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -805,11 +866,12 @@ class GlossaryBrowser(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -845,21 +907,21 @@ class GlossaryBrowser(Client):
             "searchString": search_string,
             "effectiveTime": effective_time,
         }
-        body = body_slimmer(body)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
             f"categories/by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
             f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
         )
-
         response = await self._async_make_request("POST", url, body_slimmer(body))
-        category_elements = response.json().get("elementList", NO_GLOSSARIES_FOUND)
-        if category_elements == NO_CATEGORIES_FOUND:
+        element = response.json().get("elementList", NO_CATEGORIES_FOUND)
+        if element == NO_CATEGORIES_FOUND:
             return NO_CATEGORIES_FOUND
-        if md:  # return a simplified markdown representation
-            return self.generate_categories_md(category_elements, search_string, form)
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_categories_md(element, search_string, output_format)
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
+
+
 
 
 
@@ -873,8 +935,7 @@ class GlossaryBrowser(Client):
         ignore_case: bool = False,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True
+        output_format: str = "JSON"
     ) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
          The search string is located in the request body and is interpreted as a plain string.
@@ -897,16 +958,17 @@ class GlossaryBrowser(Client):
             Ends with the supplied string
         ignore_case : bool, [default=False], optional
             Ignore case when searching
-         start_from: int, [default=0], optional
+        start_from: int, [default=0], optional
              When multiple pages of results are available, the page number to start from.
-         page_size: int, [default=None]
+     page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
              the class instance.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -935,8 +997,7 @@ class GlossaryBrowser(Client):
                 ignore_case,
                 start_from,
                 page_size,
-                md,
-                form
+                output_format
             )
         )
 
@@ -1191,7 +1252,7 @@ class GlossaryBrowser(Client):
         }
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No Categories found")
+        return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def get_categories_by_name(
         self,
@@ -1250,6 +1311,7 @@ class GlossaryBrowser(Client):
         self,
         glossary_category_guid: str,
         effective_time: str = None,
+        output_format: str = 'JSON',
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1264,7 +1326,12 @@ class GlossaryBrowser(Client):
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
-            If not provided, the server name associated with the instance is used.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -1283,7 +1350,7 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
+        output_format = output_format.upper()
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/retrieve"
@@ -1294,13 +1361,19 @@ class GlossaryBrowser(Client):
             "effectiveTime": effective_time,
         }
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "No Category found")
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("element", NO_CATEGORIES_FOUND)
+        if element == NO_CATEGORIES_FOUND:
+            return NO_CATEGORIES_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_categories_md(element, "GUID", output_format)
+        return response.json().get("element", NO_CATEGORIES_FOUND)
 
     def get_categories_by_guid(
         self,
         glossary_category_guid: str,
         effective_time: str = None,
+        output_format: str = 'JSON',
     ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
@@ -1313,7 +1386,12 @@ class GlossaryBrowser(Client):
             If specified, the category should only be returned if it was effective at the specified time.
             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
 
-            If not provided, the server name associated with the instance is used.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -1334,7 +1412,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_guid(glossary_category_guid, effective_time)
+            self._async_get_categories_by_guid(glossary_category_guid, effective_time, output_format)
         )
         return response
 
@@ -1454,7 +1532,6 @@ class GlossaryBrowser(Client):
         ----------
             glossary_category_guid : str
                 Unique identifier for the glossary category to retrieve terms from.
-
             effective_time : str, optional
                 If specified, the terms are returned if they are active at the `effective_time
                 Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -1464,7 +1541,7 @@ class GlossaryBrowser(Client):
                 The number of elements to retrieve
         Returns
         -------
-        dict
+        [dict]
             The glossary definition associated with the glossary_guid
 
         Raises
@@ -1475,8 +1552,7 @@ class GlossaryBrowser(Client):
              Raised by the server when an issue arises in processing a valid request.
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
+
         """
 
         validate_guid(glossary_category_guid)
@@ -1485,7 +1561,7 @@ class GlossaryBrowser(Client):
             page_size = self.page_size
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/categories/"
             f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
         )
 
@@ -1979,13 +2055,18 @@ class GlossaryBrowser(Client):
         )
         return response
 
-    async def _async_get_terms_by_guid(self, term_guid: str) -> dict | str:
+    async def _async_get_terms_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -2002,31 +2083,39 @@ class GlossaryBrowser(Client):
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action.
         """
-
+        output_format = output_format.upper()
         validate_guid(term_guid)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
             f"{term_guid}/retrieve"
         )
-
         response = await self._async_make_request("POST", url)
-        return response.json().get("element", "No term found")
+        term_element = response.json().get("element", NO_TERMS_FOUND)
+        if term_element == NO_TERMS_FOUND:
+            return NO_TERMS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_terms_md(term_element, "GUID", output_format)
+        return response.json().get("element", NO_TERMS_FOUND)
 
-    def get_terms_by_guid(self, term_guid: str) -> dict | str:
+
+    def get_terms_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
-
-
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
         Returns
         -------
         dict | str
             A dict detailing the glossary term represented by the GUID. If no term is found, the string
             "No term found" will be returned.
-
         Raises
         ------
         InvalidParameterException
@@ -2038,7 +2127,7 @@ class GlossaryBrowser(Client):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid))
+        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid, output_format))
 
         return response
 
@@ -2321,8 +2410,7 @@ class GlossaryBrowser(Client):
         for_duplicate_processing: bool = False,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True,
+        output_format: str = "JSON",
     ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
@@ -2354,11 +2442,12 @@ class GlossaryBrowser(Client):
             Page of results to start from
         page_size : int, optional
             Number of elements to return per page - if None, then default for class will be used.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+        output_format: str, default = 'JSON'
+          Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -2404,7 +2493,6 @@ class GlossaryBrowser(Client):
             "effectiveTime": effective_time,
             "limitResultsByStatus": status_filter,
         }
-        body = body_slimmer(body)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
@@ -2413,12 +2501,13 @@ class GlossaryBrowser(Client):
             f"forDuplicateProcessing={for_duplicate_processing_s}"
         )
 
-        response = await self._async_make_request("POST", url, body)
+
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         term_elements = response.json().get("elementList", NO_TERMS_FOUND)
         if term_elements == NO_TERMS_FOUND:
             return NO_TERMS_FOUND
-        if md:  # return a simplified markdown representation
-            return self.generate_terms_md(term_elements, search_string, form)
+        if output_format != "JSON":  # return a simplified markdown representation
+            return self.generate_terms_md(term_elements, search_string, output_format)
         return response.json().get("elementList", NO_TERMS_FOUND)
 
 
@@ -2435,8 +2524,7 @@ class GlossaryBrowser(Client):
         for_duplicate_processing: bool = False,
         start_from: int = 0,
         page_size: int = None,
-        md: bool = False,
-        form: bool = True,
+        output_format: str = "JSON",
     ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
@@ -2469,11 +2557,12 @@ class GlossaryBrowser(Client):
             Page of results to start from
         page_size : int, optional
             Number of elements to return per page - if None, then default for class will be used.
-        md: bool, [default=False]
-            If true, a simplified markdown representation of the glossary will be returned
-        form: bool, [default=True]
-            If true and md is true, a form for the glossaries will be returned as a markdown string.
-            If false and md is true, a report for the glossaries will be returned.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
 
         Returns
         -------
@@ -2512,8 +2601,7 @@ class GlossaryBrowser(Client):
                 for_duplicate_processing,
                 start_from,
                 page_size,
-                md,
-                form,
+                output_format
             )
         )
 

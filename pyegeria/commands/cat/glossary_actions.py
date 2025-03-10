@@ -259,6 +259,64 @@ def delete_term(server, url, userid, password, timeout, term_guid):
     finally:
         m_client.close_session()
 
+@click.command("add-term-to-category")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.option("--term-guid", required=True, help="GUID of term to add to a category")
+@click.option("--category-guid", required=True, help="GUID of category to add term to")
+
+def add_term_to_category(server, url, userid, password, timeout, term_guid, category_guid):
+    """Add a glossary term to a category"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        term_guid = term_guid.strip()
+        category_guid = category_guid.strip()
+        m_client.add_term_to_category(term_guid, category_guid)
+
+        click.echo(
+            f"Added term with GUID: {term_guid} to category with GUID: {category_guid}\n"
+        )
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
+@click.command("remove-term-from-category")
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option(
+    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+)
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+@click.option("--term-guid", required=True, help="GUID of term to add to a category")
+@click.option("--category-guid", required=True, help="GUID of category to add term to")
+
+def remove_term_from_category(server, url, userid, password, timeout, term_guid, category_guid):
+    """Add a glossary term to a category"""
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+    try:
+        term_guid = term_guid.strip()
+        category_guid = category_guid.strip()
+        m_client.remove_term_from_category(term_guid, category_guid)
+
+        click.echo(
+            f"Removed term with GUID: {term_guid} from category with GUID: {category_guid}\n"
+        )
+
+    except (InvalidParameterException, PropertyServerException) as e:
+        print_exception_response(e)
+    finally:
+        m_client.close_session()
+
 
 @click.command("import-terms-from-csv")
 @click.option("--glossary_name", help="Name of Glossary", required=True)

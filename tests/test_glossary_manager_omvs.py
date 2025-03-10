@@ -264,7 +264,68 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_add_term_to_category(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
 
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            category_guid = "6d848f56-0332-4c8f-a048-9209d912809b"
+            # term_guid = "16400f1d-657c-4949-91ff-cd018c429b8d" # Directive
+            term_guid = "367300ea-b11e-41bb-ba16-1de1aead75dd" # Command
+            g_client.add_term_to_category(term_guid, category_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nAdded term to category {category_guid}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_remove_term_from_category(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            start_time = time.perf_counter()
+            category_guid = "6d848f56-0332-4c8f-a048-9209d912809b"
+            term_guid = "16400f1d-657c-4949-91ff-cd018c429b8d"
+            g_client.remove_term_from_category(term_guid, category_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nAdded term to category {category_guid}")
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
 
 
 
@@ -513,7 +574,7 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
-    def test_get_terms_by_guid(self, server: str = good_view_server_1):
+    def test_get_terms_by_guid(self, server: str = good_view_server_2):
         server_name = server
 
         try:
@@ -522,8 +583,8 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "50c7668a-9cef-4c1e-bd9d-dde99c03a310"
-            response = g_client.get_terms_by_guid(term_guid)
+            term_guid = "a9c7112f-f199-4f76-a9e6-aa7cee77f008"
+            response = g_client.get_terms_by_guid(term_guid, output_format = 'form')
 
             print(f"type is {type(response)}")
             if type(response) is dict:

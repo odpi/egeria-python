@@ -9,6 +9,7 @@ from pyegeria.md_processing_utils import (extract_command, process_glossary_upse
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+                      process_categories_upsert_command,
                       get_current_datetime_string, process_per_proj_upsert_command, commands,EgeriaTech
                       )
 from datetime import datetime
@@ -72,7 +73,7 @@ def process_markdown_file(
         print(f"Error: File not found at path: {full_file_path}")
         return {}  # Return empty dict if file not found
 
-    final_output = (f"\n# Results from processing file {file_path} on "
+    final_output = (f"\n\n# Results from processing file {file_path} on "
                     f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n---\n")
     h1_blocks = []
     current_block = ""
@@ -108,6 +109,8 @@ def process_markdown_file(
             # Process the block based on the command
             if potential_command in ["Create Glossary", "Update Glossary"]:
                 result = process_glossary_upsert_command(client, element_dictionary, block, directive)
+            elif potential_command in ["Create Category", "Update Category"]:
+                result = process_categories_upsert_command(client, element_dictionary, block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, element_dictionary, block, directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
@@ -131,18 +134,21 @@ def process_markdown_file(
             final_output += f"\n---\n{block}\n---\n\n"
 
     # Write the final_output to a new file if updated
-    if updated:
-        path, filename = os.path.split(file_path)  # Get both parts
-        new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
-        new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
-        os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
+    try:
+        if updated:
+            path, filename = os.path.split(file_path)  # Get both parts
+            new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
+            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
+            os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 
-        with open(new_file_path, 'w') as f2:
-            f2.write(final_output)
-        click.echo(f"\n==> Notebook written to {new_file_path}")
-    else:
-        click.echo("\nNo updates detected. New File not created.")
+            with open(new_file_path, 'w') as f2:
+                f2.write(final_output)
+            click.echo(f"\n==> Notebook written to {new_file_path}")
+        else:
+            click.echo("\nNo updates detected. New File not created.")
 
+    except (Exception):
+        console.print_exception(show_locals=True)
 
 
 if __name__ == "__main__":

@@ -299,111 +299,7 @@ class GlossaryManager(GlossaryBrowser):
     #
 
 
-    async def _async_get_glossaries_by_name(
-        self,
-        glossary_name: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> dict | str:
-        """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
-            There are no wildcards supported on this request.
 
-        Parameters
-        ----------
-        glossary_name: str,
-            Name of the glossary to be retrieved
-        effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-        start_from: int, [default=0], optional
-             When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        ConfigurationErrorException
-          Raised when configuration parameters passed on earlier calls turn out to be
-          invalid or make the new call invalid.
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-        validate_name(glossary_name)
-
-        if effective_time is None:
-            body = {"name": glossary_name}
-        else:
-            body = {"name": glossary_name, "effectiveTime": effective_time}
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
-            f"by-name?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No glossaries found")
-
-    def get_glossaries_by_name(
-        self,
-        glossary_name: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> dict | str:
-        """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
-            There are no wildcards supported on this request.
-
-        Parameters
-        ----------
-        glossary_name: str,
-            Name of the glossary to be retrieved
-        effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time.
-
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            he class instance.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        ConfigurationErrorException
-          Raised when configuration parameters passed on earlier calls turn out to be
-          invalid or make the new call invalid.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossaries_by_name(
-                glossary_name, effective_time, start_from, page_size
-            )
-        )
-        return response
 
     #
     # Glossary Categories
@@ -699,97 +595,6 @@ class GlossaryManager(GlossaryBrowser):
         )
 
 
-
-
-    async def _async_get_glossary_for_category(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> dict | str:
-        """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
-        specify that the glossary element should only be returned if it was effective at a particular time.
-
-        Parameters
-        ----------
-        glossary_category_guid: str,
-            Unique identifier for the glossary category.
-        effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        Returns
-        -------
-        A dict structure with the glossary metadata element for the requested category.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        ConfigurationErrorException
-          Raised when configuration parameters passed on earlier calls turn out to be
-          invalid or make the new call invalid.
-        """
-
-        body = {
-            "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
-        }
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"for-category/{glossary_category_guid}/retrieve"
-        )
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
-
-    def get_glossary_for_category(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-    ) -> dict | str:
-        """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
-        specify that the glossary element should only be returned if it was effective at a particular time.
-
-        Parameters
-        ----------
-        glossary_category_guid: str,
-            Unique identifier for the glossary category.
-        effective_time: datetime, [default=None], optional
-            Effective time of the query. If not specified will default to any effective time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        Returns
-        -------
-        A dict structure with the glossary metadata element for the requested category.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        ConfigurationErrorException
-          Raised when configuration parameters passed on earlier calls turn out to be
-          invalid or make the new call invalid.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_for_category(
-                glossary_category_guid, effective_time
-            )
-        )
-        return response
 
 
     #
@@ -1492,6 +1297,144 @@ class GlossaryManager(GlossaryBrowser):
 
         return
 
+    async def _async_add_term_to_category(
+            self, glossary_term_guid: str, glossary_category_guid: str
+            ) -> None:
+        """Add the term to the specified category. Async Version.
+
+        Parameters
+        ----------
+            glossary_term_guid : str
+                Unique identifier for the glossary term to assign.
+            glossary_category_guid: str
+                Unique identifier for the category the term will be assigned to.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+
+        validate_guid(glossary_term_guid)
+        validate_guid(glossary_category_guid)
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{glossary_category_guid}/terms/{glossary_term_guid}"
+        )
+        body = {
+            "class": "RelationshipRequestBody",
+            "properties": {
+                "class": "GlossaryTermCategorization"
+
+                }
+            }
+
+        await self._async_make_request("POST", url, body)
+
+
+    def add_term_to_category(self, glossary_term_guid: str, glossary_category_guid: str) -> None:
+        """Add the term to the specified category.
+
+        Parameters
+        ----------
+            glossary_term_guid : str
+                Unique identifier for the glossary term to assign.
+            glossary_category_guid: str
+                Unique identifier for the category the term will be assigned to.
+
+        Returns
+        -------
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_term_to_category(glossary_term_guid, glossary_category_guid)
+            )
+
+    async def _async_remove_term_from_category(
+            self, glossary_term_guid: str, glossary_category_guid: str
+            ) -> None:
+        """Remove the term from the specified category. Async Version.
+
+        Parameters
+        ----------
+            glossary_term_guid : str
+                Unique identifier for the glossary term to assign.
+            glossary_category_guid: str
+                Unique identifier for the category the term will be assigned to.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+
+        validate_guid(glossary_term_guid)
+        validate_guid(glossary_category_guid)
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{glossary_category_guid}/terms/{glossary_term_guid}/remove"
+        )
+        await self._async_make_request("POST", url)
+
+
+    def remove_term_from_category(self, glossary_term_guid: str, glossary_category_guid: str) -> None:
+        """Remove the term from the specified category.
+
+        Parameters
+        ----------
+            glossary_term_guid : str
+                Unique identifier for the glossary term to assign.
+            glossary_category_guid: str
+                Unique identifier for the category the term will be assigned to.
+
+        Returns
+        -------
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_term_from_category(glossary_term_guid, glossary_category_guid)
+            )
+
     async def _async_add_confidentiality_to_term(
         self,
         glossary_term_guid: str,
@@ -1961,114 +1904,7 @@ class GlossaryManager(GlossaryBrowser):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_undo_term_update(glossary_term_guid))
 
-    async def _async_get_terms_for_category(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve ALL the glossary terms in a category.
-            The request body also supports the specification of an effective time for the query.
 
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_category_guid : str
-                Unique identifier for the glossary category to retrieve terms from.
-            effective_time : str, optional
-                If specified, the terms are returned if they are active at the `effective_time
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-
-        validate_guid(glossary_category_guid)
-
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
-            f"{glossary_category_guid}/terms/retrieve?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        if effective_time is not None:
-            body = {"effectiveTime": effective_time}
-            response = await self._async_make_request("POST", url, body)
-        else:
-            response = await self._async_make_request("POST", url)
-
-        return response.json().get("elementList", NO_TERMS_FOUND)
-
-    def get_terms_for_category(
-        self,
-        glossary_category_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """Retrieve ALL the glossary terms in a category.
-            The request body also supports the specification of an effective time for the query.
-
-            Async Version.
-
-        Parameters
-        ----------
-            glossary_category_guid : str
-                Unique identifier for the glossary category to retrieve terms from.
-            effective_time : str, optional
-                If specified, the terms are returned if they are active at the `effective_time.
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)`.
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_for_category(
-                glossary_category_guid,
-                effective_time,
-                start_from,
-                page_size,
-            )
-        )
-
-        return response
 
     async def _async_delete_term(
         self,
@@ -2152,652 +1988,6 @@ class GlossaryManager(GlossaryBrowser):
 
         return
 
-    async def _async_get_term_relationships(
-        self,
-        term_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """This call retrieves details of the glossary terms linked to this glossary term.
-        Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
-        Parameters
-        ----------
-            term_guid : str
-                Unique identifier for the glossary term
-            effective_time : str, optional
-                If specified, term relationships are included if they are active at the `effective_time`.
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-
-        validate_guid(term_guid)
-
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
-            f"{term_guid}/related-terms?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        if effective_time is not None:
-            body = {"effectiveTime": effective_time}
-            response = await self._async_make_request("POST", url, body)
-        else:
-            response = await self._async_make_request("POST", url)
-
-        return response.json().get("elementList", NO_TERMS_FOUND)
-
-    def get_term_relationships(
-        self,
-        term_guid: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
-        """This call retrieves details of the glossary terms linked to this glossary term.
-        Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
-        Parameters
-        ----------
-            term_guid : str
-                Unique identifier for the glossary term
-            effective_time : str, optional
-                If specified, term relationships are included if they are active at the `effective_time`.
-                Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-            start_from: int, optional defaults to 0
-                The page number to start retrieving elements from
-            page_size : int, optional defaults to None
-                The number of elements to retrieve
-        Returns
-        -------
-        dict
-            The glossary definition associated with the glossary_guid
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_term_relationships(
-                term_guid, effective_time, start_from, page_size
-            )
-        )
-
-        return response
-
-    async def _async_get_glossary_for_term(
-        self, term_guid: str, effective_time: str = None
-    ) -> dict | str:
-        """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
-            that the glossary element should only be returned if it was effective at a particular time.
-
-            Async Version.
-
-        Parameters
-        ----------
-        term_guid : str
-            The unique identifier for the term.
-
-        effective_time : datetime, optional
-            If specified, the term information will be retrieved if it is active at the `effective_time`.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-        Returns
-        -------
-        dict
-            The glossary information retrieved for the specified term.
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-
-        validate_guid(term_guid)
-
-        body = {
-            "class": "EffectiveTimeQueryRequestBody",
-            "effectiveTime": effective_time,
-        }
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
-            f"for-term/{term_guid}/retrieve"
-        )
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "No glossary found")
-
-    def get_glossary_for_term(
-        self, term_guid: str, effective_time: str = None
-    ) -> dict | str:
-        """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to specify
-            that the glossary element should only be returned if it was effective at a particular time.
-
-            Async Version.
-
-        Parameters
-        ----------
-        term_guid : str
-            The unique identifier for the term.
-
-        effective_time : datetime, optional
-            TIf specified, the term information will be retrieved if it is active at the `effective_time`.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-        Returns
-        -------
-        dict
-            The glossary information retrieved for the specified term.
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_glossary_for_term(term_guid, effective_time)
-        )
-        return response
-
-    async def _async_get_terms_by_name(
-        self,
-        term: str,
-        glossary_guid: str = None,
-        status_filter: list = [],
-        effective_time: str = None,
-        for_lineage: bool = False,
-        for_duplicate_processing: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list:
-        """Retrieve glossary terms by display name or qualified name. Async Version.
-
-        Parameters
-        ----------
-        term : str
-            The term to search for in the glossaries.
-        glossary_guid : str, optional
-            The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
-        status_filter : list, optional
-            A list of status values to filter the search results. Default is an empty list, which means no filtering.
-
-        effective_time : datetime, optional
-            If specified, the term information will be retrieved if it is active at the `effective_time`.
-            Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage : bool, optional
-            Flag to indicate whether the search should include lineage information. Default is False.
-        for_duplicate_processing : bool, optional
-            Flag to indicate whether the search should include duplicate processing information. Default is False.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-
-        Returns
-        -------
-        list
-            A list of terms matching the search criteria. If no terms are found, it returns the string NO_TERMS_FOUND.
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_name(term)
-
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-
-        body = {
-            "class": "GlossaryNameRequestBody",
-            "glossaryGUID": glossary_guid,
-            "name": term,
-            "effectiveTime": effective_time,
-            "limitResultsByStatus": status_filter,
-        }
-        # body = body_slimmer(body)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
-            f"terms/by-name?startFrom={start_from}&pageSize={page_size}&"
-            f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
-        )
-
-        # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", NO_TERMS_FOUND)
-
-    def get_terms_by_name(
-        self,
-        term: str,
-        glossary_guid: str = None,
-        status_filter: list = [],
-        effective_time: str = None,
-        for_lineage: bool = False,
-        for_duplicate_processing: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list:
-        """Retrieve glossary terms by display name or qualified name.
-
-        Parameters
-        ----------
-        term : str
-            The term to search for in the glossaries.
-        glossary_guid : str, optional
-            The GUID of the glossary to search in. If not provided, the search will be performed in all glossaries.
-        status_filter : list, optional
-            A list of status values to filter the search results. Default is an empty list, which means no filtering.
-
-        effective_time : datetime, optional
-            If specified, the term information will be retrieved if it is active at the `effective_time`.
-             Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage : bool, optional
-            Flag to indicate whether the search should include lineage information. Default is False.
-        for_duplicate_processing : bool, optional
-            Flag to indicate whether the search should include duplicate processing information. Default is False.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-
-        Returns
-        -------
-        list
-            A list of terms matching the search criteria. If no terms are found,
-            it returns the string NO_TERMS_FOUND.
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_by_name(
-                term,
-                glossary_guid,
-                status_filter,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-            )
-        )
-        return response
-
-    async def _async_get_terms_by_guid(self, term_guid: str) -> dict | str:
-        """Retrieve a term using its unique id. Async version.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term represented by the GUID. If no term is found, the string
-            "No term found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        validate_guid(term_guid)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
-            f"{term_guid}/retrieve"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("element", "No term found")
-
-    def get_terms_by_guid(self, term_guid: str) -> dict | str:
-        """Retrieve a term using its unique id. Async version.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term represented by the GUID. If no term is found, the string
-            "No term found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_terms_by_guid(term_guid))
-
-        return response
-
-    async def _async_get_terms_versions(
-        self,
-        term_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the versions of a glossary term. Async version.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term represented by the GUID. If no term is found, the string
-            "No term found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_guid(term_guid)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/terms/"
-            f"{term_guid}/history?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("element", "No term found")
-
-    def get_terms_versions(
-        self,
-        term_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the versions of a glossary term.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term represented by the GUID. If no term is found, the string
-            "No term found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_terms_versions(term_guid, start_from, page_size)
-        )
-
-        return response
-
-    async def _async_get_term_revision_logs(
-        self,
-        term_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the revision log history for a term. Async version.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term revision log history. If no term is found, the string
-            "No log found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_guid(term_guid)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/elements/"
-            f"{term_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No log found")
-
-    def get_term_revision_logs(
-        self,
-        term_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the revision log history for a term.
-        Parameters
-        ----------
-        term_guid : str
-            The GUID of the glossary term to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term revision log history. If no term is found, the string
-            "No log found" will be returned.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_term_revision_logs(term_guid, start_from, page_size)
-        )
-
-        return response
-
-    async def _async_get_term_revision_history(
-        self,
-        term_revision_log_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the revision history for a glossary term. Async version.
-
-        Parameters
-        ----------
-        term_revision_log_guid : str
-            The GUID of the glossary term revision log to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term revision history.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-
-
-        Notes
-        -----
-        This revision history is created automatically.  The text is supplied on the update request.
-        If no text is supplied, the value "None" is show.
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_guid(term_revision_log_guid)
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/note-logs/"
-            f"{term_revision_log_guid}/notes/retrieve?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No logs found")
-
-    def get_term_revision_history(
-        self,
-        term_revision_log_guid: str,
-        start_from: int = 0,
-        page_size=None,
-    ) -> dict | str:
-        """Retrieve the revision history for a glossary term.
-
-        Parameters
-        ----------
-        term_revision_log_guid : str
-            The GUID of the glossary term revision log to retrieve.
-        start_from : int, optional
-            The index of the first term to retrieve. Default is 0.
-        page_size : int, optional
-            The number of terms to retrieve per page. If not provided, it will use the default page size.
-        Returns
-        -------
-        dict | str
-            A dict detailing the glossary term revision history.
-
-        Raises
-        ------
-        InvalidParameterException
-            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-        PropertyServerException
-            Raised by the server when an issue arises in processing a valid request.
-        NotAuthorizedException
-            The principle specified by the user_id does not have authorization for the requested action.
-
-
-        Notes
-        -----
-        This revision history is created automatically.  The text is supplied on the update request.
-        If no text is supplied, the value "None" is show.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_term_revision_history(
-                term_revision_log_guid, start_from, page_size
-            )
-        )
-
-        return response
 
 
 
