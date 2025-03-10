@@ -1,4 +1,6 @@
+
 # Introduction to Freddie - an Egeria Markdown Processor
+
 
 A constant challenge in managing information is gathering enough metadata about the information to
 allow us to manage it. A common approach is to build fancy graphical user interfaces hoping that they
@@ -85,6 +87,47 @@ We now have a nice, clean, new...and empty...glossary - guess we better start fi
 
 ---
 
+# Create Category
+
+## Category Name
+
+Writing Markdown
+
+## Owning Glossary
+
+Egeria-Markdown
+
+## Description
+
+These terms describe features of writing markdown files that can use Egeria-Markdown
+
+
+## <Qualified Name>
+
+## <GUID>
+
+---
+
+# Create Category
+
+## Category Name
+
+Processing Markdown
+
+## Owning Glossary
+
+Egeria-Markdown
+
+## Description
+
+These terms describe concepts related to processing Egeria-Markdown
+
+
+## <Qualified Name>
+
+## <GUID>
+---
+
 # Create Term
 
 ## Glossary Name
@@ -120,11 +163,10 @@ Commands are used in the Freddie Egeria markdown language.
 
 ## Version
 
-0.2
+
 
 ## Status
 
-DRAFT
 
 ## Qualified Name
 
@@ -162,7 +204,6 @@ Source of the markdown content - could be jupter or plain markdown file.
 
 DRAFT
 
-## Update Description
 
 ---
 

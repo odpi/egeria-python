@@ -13,6 +13,7 @@ import time
 
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
@@ -21,8 +22,8 @@ from pyegeria import (
     EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
-)
+    UserNotAuthorizedException, NO_CATEGORIES_FOUND,
+    )
 from pyegeria.commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 
 disable_ssl_warnings = True
@@ -57,8 +58,7 @@ def display_glossary_terms(
     user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
-    md: bool = False,
-    form: bool = False,
+    output_format: str = "TABLE",
 ):
     """Display a table of glossary terms filtered by search_string and glossary, if specified. If no
         filters then all terms are displayed. If glossary_guid or name is specified, then only terms from that
@@ -87,40 +87,36 @@ def display_glossary_terms(
         Flag to indicate if the output should be formatted for Jupyter notebook. Defaults to EGERIA_JUPYTER.
     width : int
         The width of the console output. Defaults to EGERIA_WIDTH.
-    md: bool, [default=False]
-        If true, a simplified markdown report of the terms will be created. Filename is Terms-<DATE>-<ACTION>
-        The filepath is derived from the environment variables EGERIA_ROOT_PATH and EGERIA_OUTPUT_PATH, respectively.
-    form: bool, [default=False]
-        If true and md is true, a form for the terms will be created as a markdown file.
-        If false and md is true, a markdown report for the terms will be created.
+        output_format: str, optional, default is 'JSON'
+        One of TABLE, FORM, REPORT
     """
 
     console = Console(
         style="bold bright_white on black", width=width, force_terminal=not jupyter
     )
-    g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
-    token = g_client.create_egeria_bearer_token(user_id, user_pass)
-    if (glossary_name is not None) and (glossary_name != "*"):
-        glossary_guid = g_client.get_guid_for_name(glossary_name)
-        if glossary_guid == "Glossary guid not found":
-            console.print(
-                f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
-            )
-            sys.exit(1)
-    elif (glossary_guid is not None) and (len(glossary_guid) < 10):
-            glossary_guid = None
+    try:
+        g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
+        token = g_client.create_egeria_bearer_token(user_id, user_pass)
+        if (glossary_name is not None) and (glossary_name != "*"):
+            glossary_guid = g_client.get_guid_for_name(glossary_name)
+            if glossary_guid == "Glossary guid not found":
+                console.print(
+                    f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
+                )
+                sys.exit(1)
+        elif (glossary_guid is not None) and (len(glossary_guid) < 10):
+                glossary_guid = None
 
-    if md:
-        if form:
+        if output_format == "FORM":
             action = "Update-Form"
-        else:
+        elif output_format == "REPORT":
             action = "Report"
-        try:
+        if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
             file_name = f"Terms-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = g_client.find_glossaries(search_string, md=md, form=form)
+            output = g_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
             if output == "NO_TERMS_FOUND":
                 print(f"\n==> No terms found for search string '{search_string}'")
                 return
@@ -128,14 +124,14 @@ def display_glossary_terms(
                 f.write(output)
             print(f"\n==> Terms output written to {full_file_path}")
             return
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-            ) as e:
-            console.print_exception()
-        finally:
-            g_client.close_session()
+
+    except (
+        InvalidParameterException,
+        PropertyServerException,
+        UserNotAuthorizedException,
+        ) as e:
+        console.print_exception()
+
 
 
     def generate_table(search_string: str, glossary_guid: str) -> Table:
@@ -161,6 +157,7 @@ def display_glossary_terms(
         table.add_column("Glossary")
         table.add_column("Status")
         table.add_column("Example")
+        table.add_column("Categories")
 
         terms = g_client.find_glossary_terms(
             search_string,
@@ -216,7 +213,16 @@ def display_glossary_terms(
                 glossary_info[glossary_guid] = glossary_name
             else:
                 glossary_name = "---"
+            category_list_md = ""
+            category_list = g_client.get_categories_for_term(term_guid)
+            if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
+                category_list_md = ['---']
+            elif isinstance(category_list, list) and len(category_list) > 0:
+                for category in category_list:
+                    category_name = category["glossaryCategoryProperties"].get("displayName",'---')
+                    category_list_md += f"* {category_name}\n"
 
+            category_list_out = Markdown(category_list_md)
             term_status = term["elementHeader"].get("status","---")
             table.add_row(
                 display_name,
@@ -228,6 +234,7 @@ def display_glossary_terms(
                 glossary_name,
                 term_status,
                 example,
+                category_list_out,
                 style="bold white on black",
             )
 
@@ -271,16 +278,11 @@ def main():
             "Enter the name of the glossary to search or '*' for all glossaries:",
             default="*",
         )
-
-        mdq = Prompt.ask("Do you want to create a markdown report?", choices=["y", "n"], default="n")
-        md = True if mdq.lower() == "y" else False
-
-        formq = Prompt.ask("Do you want to create a form?", choices=["y", "n"], default="n")
-        form = True if formq.lower() == "y" else False
+        output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"], default="TABLE")
 
         display_glossary_terms(
         search_string, guid, glossary_name, server, url,
-            userid, user_pass, md = md, form = form
+            userid, user_pass, output_format= output_format
         )
 
     except KeyboardInterrupt:

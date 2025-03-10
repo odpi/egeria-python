@@ -63,8 +63,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                md = True,
-                form = False
+                output_format = 'REPORT',
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -101,13 +100,13 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # glossary_guid = "5d45b499-d0d5-4fad-bc23-763bc4073296"  # This is the sustainability glossary
-            glossary_guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"
-            response = g_client.get_glossary_by_guid(glossary_guid, None)
+            glossary_guid = "4a4816f4-79c8-4bbb-bc44-f510978fd730"
+            response = g_client.get_glossary_by_guid(glossary_guid, None, output_format = 'REPORT')
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
-                print(f"Found {count} terms")
+                print(f"Found {count} items")
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
@@ -252,6 +251,94 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
+    def test_get_term_by_guid(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = (
+            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
+            # )
+            term_guid = 'a9c7112f-f199-4f76-a9e6-aa7cee77f008'
+            response = g_client.get_term_by_guid(term_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_categories_for_term(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_guid = '16400f1d-657c-4949-91ff-cd018c429b8d'
+            # term_guid = 'c8f7bbcf-87da-4b96-a819-fc3eb1b3a97a'
+            response = g_client.get_categories_for_term(term_guid)
+            print(f"type is {type(response)}")
+            if isinstance(response, list | dict):
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_terms_for_category(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            category_guid = '6d848f56-0332-4c8f-a048-9209d912809b'
+            response = g_client.get_terms_for_category(category_guid)
+            print(f"type is {type(response)}")
+            if isinstance(response, list | dict):
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
     def test_find_glossary_terms(self):
         try:
             g_client = GlossaryBrowser(
@@ -263,10 +350,10 @@ class TestGlossaryBrowser:
             # glossary_guid = (
             #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
             # )
-            glossary_guid = "5d45b499-d0d5-4fad-bc23-763bc4073296"
+            glossary_guid = "95ec8139-c4d4-4611-95a6-835657632070"
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "*",
+                "Command",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
                 starts_with=False,
@@ -277,8 +364,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                md = True,
-                form = True
+                output_format="JSON"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
@@ -310,7 +396,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            search_string = "*"
+            search_string = "Processing Markdown"
             start_time = time.perf_counter()
             response = g_client.find_glossary_categories(
                 search_string,
@@ -319,8 +405,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                md = True,
-                form = True
+                output_format = 'REPORT',
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -376,7 +461,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_categories_by_name(self, server: str = good_view_server_1):
+    def test_get_categories_by_name(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryBrowser(
@@ -384,7 +469,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            category_name = "category1"
+            category_name = "Processing Markdown"
             response = g_client.get_categories_by_name(category_name)
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -413,7 +498,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"
+            glossary_guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"
             response = g_client.get_categories_for_glossary(glossary_guid)
             print(f"type is {type(response)}")
             if type(response) is list:

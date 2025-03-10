@@ -29,7 +29,9 @@ from pyegeria.commands.cat.glossary_actions import (
     create_category,
     update_category,
     delete_category,
-)
+    add_term_to_category,
+    remove_term_from_category)
+
 from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
 from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
 
@@ -357,19 +359,13 @@ def glossary_group(ctx):
     help="Optionally restrict search to a specific named glossary",
 )
 @click.option(
-    "--markdown",
-    flag_value=True,
-    default=False,
-    help="Optionally display glossary list in markdown format",
-    )
-@click.option(
-    "--form",
-    flag_value=True,
-    default=False,
-    help="Optionally display glossary list as an update form",
+    "--output-format",
+    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    default="TABLE",
+    help="Display on screen as table, or as FORM or REPORT file",
     )
 @click.pass_context
-def show_terms(ctx, search_string, glossary_guid, glossary_name, markdown, form):
+def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
     """Find and display glossary terms"""
     c = ctx.obj
     display_glossary_terms(
@@ -382,27 +378,19 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name, markdown, form)
         c.password,
         c.jupyter,
         c.width,
-        markdown,
-        form,
+        output_format,
     )
-
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.option(
-    "--markdown",
-    flag_value=True,
-    default=False,
-    help="Optionally display glossary list in markdown format",
-    )
-@click.option(
-    "--form",
-    flag_value=True,
-    default=False,
-    help="Optionally display glossary list as an update form",
+    "--output-format",
+    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    default="TABLE",
+    help="Display on screen as table, or as FORM or REPORT file",
     )
 @click.pass_context
-def glossaries(ctx, search_string, markdown, form):
+def glossaries(ctx, search_string, output_format):
     """Display a list of glossaries"""
     c = ctx.obj
     display_glossaries(
@@ -413,26 +401,18 @@ def glossaries(ctx, search_string, markdown, form):
         c.password,
         c.jupyter,
         c.width,
-        markdown,
-        form,
+        output_format,
     )
-
 @glossary_group.command("glossary-categories")
 @click.option("--search_string", default="*", help="Name to search for categories")
 @click.option(
-    "--markdown",
-    flag_value=True,
-    default=False,
-    help="Optionally display category list in markdown format",
-    )
-@click.option(
-    "--form",
-    flag_value=True,
-    default=False,
-    help="Optionally display category list as an update form",
+    "--output-format",
+    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    default="TABLEn",
+    help="Display on screen as table, or as FORM or REPORT file",
     )
 @click.pass_context
-def categories(ctx, search_string, markdown, form):
+def categories(ctx, search_string, output_format):
     """Display a list of categories"""
     c = ctx.obj
     display_categories(
@@ -443,8 +423,7 @@ def categories(ctx, search_string, markdown, form):
         c.password,
         c.jupyter,
         c.width,
-        markdown,
-        form,
+        output_format,
     )
 
 
@@ -706,7 +685,8 @@ tell_glossary.add_command(delete_term)
 tell_glossary.add_command(create_category)
 tell_glossary.add_command(delete_category)
 tell_glossary.add_command(update_category)
-
+tell_glossary.add_command(add_term_to_category)
+tell_glossary.add_command(remove_term_from_category)
 
 @tell.group("todo")
 @click.pass_context

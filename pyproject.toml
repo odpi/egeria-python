@@ -85,9 +85,13 @@ isort = "^6.0.0"
     list_glossaries = "pyegeria.commands.cat.list_glossaries:main"
     load_terms_from_csv_file = "pyegeria.commands.cat.glossary_actions:import_terms_csv"
     export_terms_to_csv_file = "pyegeria.commands.cat.glossary_actions:export_terms_csv"
+    list_categories = "pyegeria.commands.cat.list_categoriess:main"
     create_category = "pyegeria.commands.cat.glossary_actions:create_category"
     update_category = "pyegeria.commands.cat.glossary_actions:update_category"
     delete_category = "pyegeria.commands.cat.glossary_actions:delete_category"
+    add_term_to_category = "pyegeria.commands.cat.glossary_actions:add_term_to_category"
+    remove_term_from_category = "pyegeria.commands.cat.glossary_actions:remove_term_from_category"
+
     dr_egeria_md = "pyegeria.commands.cat.dr_egeria_md:main"
     dr_egeria_jupyter = "pyegeria.commands.cat.dr_egeria_jupyter:main"
 
