@@ -1,9 +1,12 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
+import json
 import os
 from rich import print
 from rich.console import Console
+from rich.markdown import Markdown
+
 from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                                           get_current_datetime_string, process_per_proj_upsert_command, commands)
 
@@ -73,8 +76,8 @@ def process_markdown_file(
         print(f"Error: File not found at path: {full_file_path}")
         return {}  # Return empty dict if file not found
 
-    final_output = (f"\n\n# Results from processing file {file_path} on "
-                    f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n---\n")
+    final_output = (f"\n# Results from processing file {file_path} on "
+                    f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
     h1_blocks = []
     current_block = ""
     in_h1_block = False
@@ -122,8 +125,8 @@ def process_markdown_file(
             if result:
                 if directive == "process":
                     updated = True
-                    final_output += f"\n---\n{result}\n---\n\n"
-                    # print(json.dumps(element_dictionary, indent=4))
+                    final_output += f"\n---\n{Markdown(result)}\n---\n\n"
+                    print(json.dumps(element_dictionary, indent=4))
             elif directive == "process":
                 # Handle case with errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"

@@ -28,7 +28,7 @@ In the example below we will create a new Egeria glossary to hold definitions re
 
 ## Glossary Name
 
-Egeria-Markdown
+test
 
 ## Language
 
@@ -44,13 +44,7 @@ commands, validates the Egeria content and allows the requests to be sent to Ege
 
 ## Usage
 
-1. (optional) load an example or template for the type of object from Egeria.
-2. Create a new document (perhaps from the template) and edit it, adding in the content with the Freddie controlled
-   Markdown language.
-3. Process the document to validate and display it before you submit it, Validation may annotate your document with
-   recommendations and potential issues.
-4. Submit the document to Egeria using the Freddie_sings command.
-
+a quick test glossary
 ## <Qualified Name>
 
 ## <GUID>
@@ -91,11 +85,11 @@ We now have a nice, clean, new...and empty...glossary - guess we better start fi
 
 ## Category Name
 
-Writing Markdown
+cat1
 
 ## Owning Glossary
 
-Egeria-Markdown
+test
 
 ## Description
 
@@ -112,11 +106,11 @@ These terms describe features of writing markdown files that can use Egeria-Mark
 
 ## Category Name
 
-Processing Markdown
+cat2
 
 ## Owning Glossary
 
-Egeria-Markdown
+test
 
 ## Description
 
@@ -132,11 +126,15 @@ These terms describe concepts related to processing Egeria-Markdown
 
 ## Glossary Name
 
-Egeria-Markdown
+test
 
 ## Term Name
 
-Command
+t1
+
+## Categories
+
+cat1, cat2
 
 ## Summary
 
@@ -163,7 +161,7 @@ Commands are used in the Freddie Egeria markdown language.
 
 ## Version
 
-
+v1
 
 ## Status
 
@@ -176,11 +174,16 @@ Commands are used in the Freddie Egeria markdown language.
 
 ## Glossary Name
 
-Egeria-Markdown
+test
 
 ## Term Name
 
-Source
+t2
+
+## Categories
+Writing Markdown
+
+Processing Markdown
 
 ## Summary
 
@@ -216,6 +219,10 @@ Egeria-Markdown
 ## Term Name
 
 Directive
+
+## Categories
+
+meow mix
 
 ## Summary
 
