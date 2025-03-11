@@ -82,7 +82,11 @@ def display_glossaries(
     """
     m_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token()
-
+    console = Console(
+        style="bold bright_white on black",
+        width=width,
+        force_terminal=not jupyter,
+        )
 
     try:
         if output_format == "FORM":
@@ -98,10 +102,13 @@ def display_glossaries(
             if output == "NO_GLOSSARIES_FOUND":
                 print(f"\n==> No glossaries found for search string '{search_string}'")
                 return
-            with open(full_file_path, 'w') as f:
-                f.write(output)
-            print(f"\n==> Glossaries output written to {full_file_path}")
-            return
+            try:
+                with open(full_file_path, 'w') as f:
+                    f.write(output)
+                print(f"\n==> Glossaries output written to {full_file_path}")
+                return
+            except Exception:
+                console.print_exception()
 
         table = Table(
             title=f"Glossary List @ {time.asctime()}",
@@ -136,11 +143,7 @@ def display_glossaries(
                 description = glossary["glossaryProperties"].get("description",'---')
                 usage = glossary["glossaryProperties"].get("usage",'---')
                 table.add_row(display_name, q_name, language, description, usage)
-            console = Console(
-                style="bold bright_white on black",
-                width=width,
-                force_terminal=not jupyter,
-            )
+
             console.print(table)
 
     except (InvalidParameterException, PropertyServerException) as e:
