@@ -8,7 +8,7 @@ will be attractive enough and easy enough to use that people will do so.
 
 Unfortunately, however, this ignores the fundamental fact that to use one of these nice GUI
 applications, you have to step away from the tools and processes that you were in the midst of performing.
-You have to leave your world and join someone elses.
+You have to leave your world and enter a new, often less familiar one.
 
 Freddie, is an experiment in turning this around. Its not that fancy graphical user
 interfaces don't have a role - but rather, to look at what we can do to support the
