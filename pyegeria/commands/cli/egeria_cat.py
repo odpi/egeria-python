@@ -408,7 +408,7 @@ def glossaries(ctx, search_string, output_format):
 @click.option(
     "--output-format",
     type=click.Choice(["FORM", "REPORT", "TABLE"]),
-    default="TABLEn",
+    default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
 @click.pass_context
