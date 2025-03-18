@@ -34,7 +34,7 @@ from pyegeria.commands.cat.glossary_actions import (
     remove_term_from_category
 )
 from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
-from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
+from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
 
 from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets

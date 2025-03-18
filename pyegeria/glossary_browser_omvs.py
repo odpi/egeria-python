@@ -75,7 +75,7 @@ class GlossaryBrowser(Client):
                 - A string or None indicating the action description for the elements,
                   depending on the output format.
         """
-        search_string = search_string if search_string else "All Terms"
+        search_string = search_string if search_string else "All Elements"
         elements_action = "Update " + obj_type
         if output_format == "FORM":
             preamble = (f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
@@ -87,8 +87,21 @@ class GlossaryBrowser(Client):
                            f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
             elements_action = None
             return elements_md, elements_action
+
         else:
             return "\n", elements_action
+
+    def make_md_attribute(self, attribute_name: str, attribute_value: str, output_type: str) -> str | None:
+        output = ""
+        attribute_value = attribute_value.strip() if attribute_value else None
+        attribute_title = attribute_name.title() if attribute_name else None
+        if output_type in ["FORM", "MD"]:
+            output = f"## {attribute_title}\n{attribute_value}\n\n"
+        elif output_type == "REPORT":
+            if attribute_value:
+                output = f"## {attribute_title}\n{attribute_value}\n\n"
+        return output
+
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str:
         elements_md, elements_action = self.make_preamble(obj_type="Glossary", search_string=search_string,
@@ -105,26 +118,26 @@ class GlossaryBrowser(Client):
             usage = properties.get("usage", None)
             qualified_name = properties.get("qualifiedName", None)
 
-            if output_format == 'FORM':
+            if output_format in ['FORM','MD']:
                 elements_md += f"# {elements_action}\n\n"
                 elements_md += f"## Glossary Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
+
             elif output_format == 'REPORT':
                 elements_md += f"# Glossary Name: {display_name}\n\n"
             else:
                 elements_md += f"## Glossary Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
 
-            elements_md += f"## Description\n{description}\n\n"
-            elements_md += f"## Language\n{language}\n\n"
-            elements_md += f"## Usage\n{usage}\n\n"
-            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
-            elements_md += f"## GUID\n{guid}\n\n"
-            elements_md += MD_SEPERATOR
+            elements_md += self.make_md_attribute( "description", description, output_format)
+            elements_md += self.make_md_attribute("language", language, output_format)
+            elements_md += self.make_md_attribute("usage", usage, output_format)
+            elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
+            elements_md += self.make_md_attribute("GUID", guid, output_format)
+            # elements_md += MD_SEPERATOR
+
         return elements_md
 
     def generate_terms_md(self, elements: list | dict, search_string: str, output_format: str = 'MD') -> str:
-        elements_md, elements_action = self.make_preamble(obj_type="Terms", search_string=search_string, output_format=output_format)
+        elements_md, elements_action = self.make_preamble(obj_type="Term", search_string=search_string, output_format=output_format)
         if isinstance(elements, dict):
             elements = [elements]
 
@@ -140,34 +153,38 @@ class GlossaryBrowser(Client):
             qualified_name = element_properties.get("qualifiedName", None)
             status = element['elementHeader'].get('status', None)
 
+            glossary_guid = element['elementHeader'].get('classifications', [{}])[0].get('classificationProperties', {}).get('anchorGUID', None)
+            glossary_qualified_name = self.get_glossary_by_guid(glossary_guid)['glossaryProperties']['qualifiedName']
+
             category_list_md = "\n"
             category_list = self.get_categories_for_term(guid)
             if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
                 category_list_md = ['---']
             elif isinstance(category_list, list) and len(category_list) > 0:
                 for category in category_list:
-                    category_name = category["glossaryCategoryProperties"].get("displayName", '---')
+                    category_name = category["glossaryCategoryProperties"].get("qualifiedName", '---')
                     category_list_md += f" {category_name}\n"
 
-            if output_format == 'FORM':
+            if output_format in ['FORM', 'MD']:
                 elements_md += f"# {elements_action}\n\n"
                 elements_md += f"## Term Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
             elif output_format == 'REPORT':
                 elements_md += f"# Term Name: {display_name}\n\n"
             else:
                 elements_md += f"## Term Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
-            elements_md += f"## Categories\n\n{category_list_md}\n\n"
-            elements_md += f"## Status\n\n{status}\n\n"
-            elements_md += f"## Summary\n\n{summary}\n\n"
-            elements_md += f"## Description\n\n{description}\n\n"
-            elements_md += f"## Examples\n\n{examples}\n\n"
-            elements_md += f"## Usage\n\n{usage}\n\n"
-            elements_md += f"## Published Version\n\n{pub_version}\n\n"
-            elements_md += f"## Qualified Name\n\n{qualified_name}\n\n"
-            elements_md += f"## GUID\n\n{guid}\n\n"
-            elements_md += MD_SEPERATOR
+
+            elements_md += self.make_md_attribute("summary", summary, output_format)
+            elements_md += self.make_md_attribute("in glossary", glossary_qualified_name, output_format)
+            elements_md += self.make_md_attribute( "categories", category_list_md, output_format)
+            elements_md += self.make_md_attribute( "status", status, output_format)
+            elements_md += self.make_md_attribute( "description", description, output_format)
+            elements_md += self.make_md_attribute( "examples", examples, output_format)
+            elements_md += self.make_md_attribute("usage", usage, output_format)
+            elements_md += self.make_md_attribute("published version", pub_version, output_format)
+            elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
+            elements_md += self.make_md_attribute("GUID", guid, output_format)
+            # elements_md += MD_SEPERATOR
+
         return elements_md
 
     def generate_categories_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str:
@@ -190,21 +207,22 @@ class GlossaryBrowser(Client):
                 glossary_qualified_name = (
                     self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
 
-            if output_format == 'FORM':
+            if output_format in ['FORM', 'MD']:
                 elements_md += f"# {elements_action}\n\n"
                 elements_md += f"## Category Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
+
             elif output_format == 'REPORT':
                 elements_md += f"# Category Name: {display_name}\n\n"
             else:
                 elements_md += f"## Category Name \n\n{display_name}\n\n"
-                elements_md += "## Update Description\n\n\n"
 
-            elements_md += f"## Description\n{description}\n\n"
-            elements_md += f"## In Glossary (Qualified Name)\n{glossary_qualified_name}\n\n"
-            elements_md += f"## Qualified Name\n{qualified_name}\n\n"
-            elements_md += f"## GUID\n{guid}\n\n"
+
+            elements_md += self.make_md_attribute("description", description, output_format)
+            elements_md += self.make_md_attribute("in glossary", glossary_qualified_name, output_format)
+            elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
+            elements_md += self.make_md_attribute("GUID", guid, output_format)
             elements_md += MD_SEPERATOR
+
         return elements_md
 
     #

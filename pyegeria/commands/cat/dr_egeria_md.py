@@ -8,7 +8,8 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                                          get_current_datetime_string, process_per_proj_upsert_command, commands)
+                                          get_current_datetime_string, process_per_proj_upsert_command, commands,
+                                          process_provenance_command)
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
@@ -76,7 +77,8 @@ def process_markdown_file(
         print(f"Error: File not found at path: {full_file_path}")
         return {}  # Return empty dict if file not found
 
-    final_output = (f"\n# Results from processing file {file_path} on "
+    final_output =""
+    prov_output = (f"\n* Results from processing file {file_path} on "
                     f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
     h1_blocks = []
     current_block = ""
@@ -103,13 +105,16 @@ def process_markdown_file(
 
     if current_block:  # Add the last H1 block
         h1_blocks.append(current_block)
-
+    prov_found = False
     # Process each identified H1 block
     for block in h1_blocks:
         potential_command = extract_command(block)  # Extract potential command
 
         if potential_command in commands:
             # Process the block based on the command
+            if potential_command == "Provenance":
+                prov_found = True
+                result = process_provenance_command(file_path, block)
             if potential_command in ["Create Glossary", "Update Glossary"]:
                 result = process_glossary_upsert_command(client, element_dictionary, block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
@@ -125,7 +130,7 @@ def process_markdown_file(
             if result:
                 if directive == "process":
                     updated = True
-                    final_output += f"\n---\n{Markdown(result)}\n---\n\n"
+                    final_output += f"\n---\n{result}\n---\n\n"
                     print(json.dumps(element_dictionary, indent=4))
             elif directive == "process":
                 # Handle case with errors (skip this block but notify the user)
@@ -135,6 +140,7 @@ def process_markdown_file(
         else:
             # If no command is detected, add the block to the final output as-is
             final_output += f"\n---\n{block}\n---\n\n"
+
 
     # Write the final_output to a new file if updated
     try:
@@ -146,6 +152,9 @@ def process_markdown_file(
 
             with open(new_file_path, 'w') as f2:
                 f2.write(final_output)
+                if not prov_found:
+                    prov_output += f"\n# Provenance:\n{prov_output}\n"
+                f2.write(prov_output)
             click.echo(f"\n==> Notebook written to {new_file_path}")
         else:
             click.echo("\nNo updates detected. New File not created.")

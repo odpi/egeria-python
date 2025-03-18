@@ -11,6 +11,7 @@ import asyncio
 import inspect
 import json
 import os
+import re
 from datetime import datetime
 
 import httpx
@@ -769,6 +770,15 @@ class Client:
         )
         return result
 
+    def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None) -> str:
+        """Helper function to create a qualified name for a given type and display name.
+           If present, the local qualifier will be prepended to the qualified name."""
+        EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
+        display_name = re.sub(r'\s','-',display_name.strip())
+        q_name = f"{type}:{display_name}"
+        if EGERIA_LOCAL_QUALIFIER:
+            q_name = f"{EGERIA_LOCAL_QUALIFIER}:{q_name}"
+        return q_name
 
 if __name__ == "__main__":
     print("Main-__client")

@@ -100,7 +100,7 @@ class GlossaryManager(GlossaryBrowser):
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryProperties",
-                "qualifiedName": f"Glossary:{display_name}",
+                "qualifiedName": self.__create_qualified_name__("Glossary", display_name),
                 "displayName": display_name,
                 "description": description,
                 "language": language,
@@ -351,7 +351,7 @@ class GlossaryManager(GlossaryBrowser):
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryCategoryProperties",
-                "qualifiedName": f"GlossaryCategory-{display_name}-{time.asctime()}",
+                "qualifiedName": self.__create_qualified_name__("Category", display_name),
                 "displayName": display_name,
                 "description": description,
             },
@@ -936,9 +936,8 @@ class GlossaryManager(GlossaryBrowser):
                             continue
 
                 # Add the term
-                term_qualified_name = (
-                    f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}"
-                )
+                term_qualified_name = self.__create_qualified_name("Term", display_name),
+
                 body = {
                     "class": "ReferenceableRequestBody",
                     "elementProperties": {
