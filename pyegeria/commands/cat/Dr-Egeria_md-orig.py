@@ -78,7 +78,6 @@ def process_markdown_file(
         return {}  # Return empty dict if file not found
 
     final_output =""
-    prov_found = False
     prov_output = (f"\n* Results from processing file {file_path} on "
                     f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
     h1_blocks = []
@@ -86,56 +85,62 @@ def process_markdown_file(
     in_h1_block = False
     element_dictionary = {}
 
-    # Read and process lines sequentially, preserving their order
     for line in lines:
         line = line.strip()  # Remove leading/trailing whitespace
 
-        if line.startswith("# "):  # Start of a new H1 block
-            current_block = line  # Initialize the H1 block
+        if line.startswith("# ") and not in_h1_block:  # Start of a new H1 block
+            if current_block:
+                h1_blocks.append(current_block)
+            current_block = line
             in_h1_block = True
         elif line.startswith("---") and in_h1_block:  # End of the current H1 block
-            # Process the completed H1 block
-            current_block += f"\n{line}"  # Add the closing line
-            potential_command = extract_command(current_block)  # Extract command
-
-            if potential_command in commands:
-                # Process the block based on the command
-                if potential_command == "Provenance":
-                    prov_found = True
-                    result = process_provenance_command(file_path, current_block)
-                elif potential_command in ["Create Glossary", "Update Glossary"]:
-                    result = process_glossary_upsert_command(client, element_dictionary, current_block, directive)
-                elif potential_command in ["Create Category", "Update Category"]:
-                    result = process_categories_upsert_command(client, element_dictionary, current_block, directive)
-                elif potential_command in ["Create Term", "Update Term"]:
-                    result = process_term_upsert_command(client, element_dictionary, current_block, directive)
-                elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                    result = process_per_proj_upsert_command(client, element_dictionary, current_block, directive)
-                else:
-                    # If command is not recognized, keep the block as-is
-                    result = None
-
-                if result:
-                    if directive == "process":
-                        updated = True
-                        final_output += f"\n---\n{result}\n"
-                        print(json.dumps(element_dictionary, indent=4))
-                elif directive == "process":
-                    # Handle errors (skip this block but notify the user)
-                    print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
-                          f"\tPlease correct and try again. \n")
-                    final_output += f"\n---\n{current_block}\n"
-            else:
-                # If there is no command, append the block as-is
-                final_output += f"\n---\n{current_block}\n"
-
-            current_block = ""  # Clear the block
+            h1_blocks.append(current_block)
+            current_block = ""
             in_h1_block = False
         elif in_h1_block:  # Add line to the current H1 block
-            current_block += f"\n{line}"
+            current_block += "\n" + line
         else:
-            # For non-H1 lines, add them directly to the output
-            final_output += f"\n{line}"
+            # Add non-H1 blocks directly to the final output
+            final_output += line
+
+    if current_block:  # Add the last H1 block
+        h1_blocks.append(current_block)
+    prov_found = False
+    # Process each identified H1 block
+    for block in h1_blocks:
+        potential_command = extract_command(block)  # Extract potential command
+
+        if potential_command in commands:
+            # Process the block based on the command
+            if potential_command == "Provenance":
+                prov_found = True
+                result = process_provenance_command(file_path, block)
+            elif potential_command in ["Create Glossary", "Update Glossary"]:
+                result = process_glossary_upsert_command(client, element_dictionary, block, directive)
+            elif potential_command in ["Create Category", "Update Category"]:
+                result = process_categories_upsert_command(client, element_dictionary, block, directive)
+            elif potential_command in ["Create Term", "Update Term"]:
+                result = process_term_upsert_command(client, element_dictionary, block, directive)
+            elif potential_command in ["Create Personal Project", "Update Personal Project"]:
+                result = process_per_proj_upsert_command(client, element_dictionary, block, directive)
+            else:
+                # If command is not recognized, copy the block as-is
+                result = None
+
+            if result:
+                if directive == "process":
+                    updated = True
+                    final_output += f"\n---\n{result}\n"
+                    print(json.dumps(element_dictionary, indent=4))
+            elif directive == "process":
+                # Handle case with errors (skip this block but notify the user)
+                print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
+                      f"\tPlease correct and try again. \n")
+                final_output += f"\n---\n{block}\n"
+        else:
+            # If no command is detected, add the block to the final output as-is
+            final_output += f"\n---\n{block}\n"
+
 
     # Write the final_output to a new file if updated
     try:
@@ -147,10 +152,8 @@ def process_markdown_file(
 
             with open(new_file_path, 'w') as f2:
                 f2.write(final_output)
-                prov_output = process_provenance_command(file_path, prov_output)
-                # if not prov_found:
-                #     prov_output += f"\n# Provenance:\n{prov_output}\n"
-
+                if not prov_found:
+                    prov_output += f"\n# Provenance:\n{prov_output}\n"
                 f2.write(prov_output)
             click.echo(f"\n==> Notebook written to {new_file_path}")
         else:

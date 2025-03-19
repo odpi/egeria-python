@@ -183,7 +183,7 @@ class GlossaryBrowser(Client):
             elements_md += self.make_md_attribute("published version", pub_version, output_format)
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
-            # elements_md += MD_SEPERATOR
+            elements_md += MD_SEPERATOR
 
         return elements_md
 

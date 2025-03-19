@@ -20,8 +20,8 @@ from pyegeria import (
     CollectionManager,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException,
-)
+    UserNotAuthorizedException, NO_ELEMENTS_FOUND,
+    )
 from pyegeria._exceptions import print_exception_response
 
 disable_ssl_warnings = True

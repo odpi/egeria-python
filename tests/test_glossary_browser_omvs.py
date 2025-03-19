@@ -350,7 +350,7 @@ class TestGlossaryBrowser:
             # glossary_guid = (
             #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
             # )
-            glossary_guid = "95ec8139-c4d4-4611-95a6-835657632070"
+            glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
                 "Command",
@@ -469,7 +469,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            category_name = "Processing Markdown"
+            category_name = 'Category:Processing-Dr.Egeria-Markdown'
             response = g_client.get_categories_by_name(category_name)
             print(f"type is {type(response)}")
             if type(response) is list:
