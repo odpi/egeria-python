@@ -27,7 +27,8 @@ from pyegeria.solution_architect_omvs import SolutionArchitect
 from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
-
+from pyegeria.egeria_config_client import EgeriaConfig
+from pyegeria.md_processing_utils import render_markdown
 
 
 class Egeria(
@@ -49,6 +50,8 @@ class Egeria(
     ValidMetadataManager,
     MetadataExplorer,
     SolutionArchitect,
+    EgeriaMy,
+    EgeriaConfig,
 ):
     """
     Client to issue Runtime status requests.

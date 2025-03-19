@@ -33,7 +33,7 @@ from pyegeria.commands.cat.glossary_actions import (
     remove_term_from_category)
 
 from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
-from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
+from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
 
 from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets
@@ -667,6 +667,17 @@ def list_databases(ctx):
 def tell(ctx):
     """Perform actions an Egeria Objects"""
     pass
+
+#
+# dr.egeria
+#
+@tell.group("dr_egeria")
+@click.pass_context
+def dr_egeria(ctx):
+    """Execute Dr.Egeria actions"""
+    pass
+
+dr_egeria.add_command(process_markdown_file)
 
 
 @tell.group("glossary")

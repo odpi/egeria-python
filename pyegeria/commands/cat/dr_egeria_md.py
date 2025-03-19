@@ -7,9 +7,9 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                                          get_current_datetime_string, process_per_proj_upsert_command, commands,
-                                          process_provenance_command)
+from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+                     get_current_datetime_string, process_per_proj_upsert_command, commands,
+                     process_provenance_command)
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
@@ -45,7 +45,7 @@ console = Console(width=int(EGERIA_WIDTH))
 
 
 
-@click.command("process-markdown-file", help="Process a markdown file and return the output as a string.")
+@click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--file-path", help="File path to markdown file",
               default="glossary_exp.md")
 @click.option("--directive", default="display-only", help="How to process the file")

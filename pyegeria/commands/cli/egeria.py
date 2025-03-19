@@ -54,6 +54,8 @@ from pyegeria.commands.cat.list_terms import display_glossary_terms
 from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
 from pyegeria.commands.cat.list_user_ids import list_user_ids
 
+from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
+
 from pyegeria.commands.cli.egeria_login_tui import login
 from pyegeria.commands.cli.egeria_ops import show_server
 from pyegeria.commands.cli.ops_config import Config
@@ -372,6 +374,7 @@ my_tell.add_command(delete_todo)
 my_tell.add_command(change_todo_status)
 my_tell.add_command(mark_todo_complete)
 my_tell.add_command(reassign_todo)
+
 
 
 #
@@ -1456,6 +1459,18 @@ def list_databases(ctx):
 def tell_cat(ctx):
     """Perform actions an Egeria Objects"""
     pass
+
+#
+# dr.egeria
+#
+@tell_cat.group("dr_egeria")
+@click.pass_context
+def dr_egeria(ctx):
+    """Execute Dr.Egeria actions"""
+    pass
+
+dr_egeria.add_command(process_markdown_file)
+
 
 
 @tell_cat.group("glossary")
