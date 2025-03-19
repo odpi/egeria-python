@@ -21,9 +21,9 @@ from rich.table import Table
 import click
 from pyegeria import EgeriaTech, body_slimmer, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND
 from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, print_exception_response, )
-import datetime
-
-console = Console(width=120)
+from datetime import datetime
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+console = Console(width=EGERIA_WIDTH)
 
 commands = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "Create Personal Project",
             "Update Personal Project", "Create Category", "Update Category"]
@@ -33,6 +33,10 @@ WARNING = "WARNING-> "
 pre_command = "\n---\n==> Processing command:"
 EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", "PDR")
 element_dictionary = {}
+
+def render_markdown(markdown_text: str) -> None:
+    """Renders the given markdown text in the console."""
+    console.print(Markdown(markdown_text))
 
 
 def is_valid_iso_date(date_text) -> bool:
@@ -46,8 +50,8 @@ def is_valid_iso_date(date_text) -> bool:
 
 def get_current_datetime_string():
     """Returns the current date and time as a human-readable string."""
-    now = datetime.datetime.now()
-    return now.strftime("%Y-%m-%d-%H-%M")
+    now = datetime.now().strftime('%Y-%m-%d %H:%M')
+    return now
 
 
 def add_term_to_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
@@ -85,12 +89,15 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
     # Iterate over the list of labels
     for label in labels:
         # Construct pattern for the current label
-        pattern = rf"## {re.escape(label)}\n(.*?)(?:##|$)"
+        pattern = rf"## {re.escape(label)}\n(.*?)(?:#|---|$)"
         match = re.search(pattern, text, re.DOTALL)
-        if match and not match.group(1).isspace():  # Ensure extracted text is not blank
-            return match.group(1).strip()  # Return the matched text
+        if match:
+            # Extract matched text and replace consecutive \n with a single \n
+            extracted_text = re.sub(r'\n+', '\n', match.group(1).strip())
+            if not extracted_text.isspace() and extracted_text:
+                return extracted_text  # Return the cleaned text
 
-    return None  # Return None if no match is found
+    return None
 
 
 def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
@@ -123,9 +130,10 @@ def process_provenance_command(file_path: str, txt: str) -> str:
     """This commands processes a provenence command by pre-pending the current file name and time to the provenance
     output"""
     output = (f"* Derived from processing file {file_path} on "
-              f"{datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+              f"{get_current_datetime_string()}\n")
     existing_prov = extract_attribute(txt,'Provenance')
-    return f"# Provenance:\n{existing_prov}\n{output}\n"
+    existing_prov = existing_prov if existing_prov else " "
+    return f"\n# Provenance:\n{existing_prov}\n{output}\n"
 
 
 def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
@@ -184,7 +192,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
             valid = False
         if len(glossary_details) == 1:
             known_glossary_guid = glossary_details[0]['elementHeader'].get('guid', None)
-            known_q_name = glossary_details[0]['glossaryProperties'].get('qualifiedName', None)
+            known_q_name = glossary_details[0]['glossaryProperties'].get('qualifiedName', None).strip()
 
         if obj_action == "Update":
 
