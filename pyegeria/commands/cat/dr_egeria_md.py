@@ -93,7 +93,7 @@ def process_markdown_file(
                 h1_blocks.append(current_block)
             current_block = line
             in_h1_block = True
-        elif line == "---" and in_h1_block:  # End of the current H1 block
+        elif line.startswith("---") and in_h1_block:  # End of the current H1 block
             h1_blocks.append(current_block)
             current_block = ""
             in_h1_block = False
@@ -115,7 +115,7 @@ def process_markdown_file(
             if potential_command == "Provenance":
                 prov_found = True
                 result = process_provenance_command(file_path, block)
-            if potential_command in ["Create Glossary", "Update Glossary"]:
+            elif potential_command in ["Create Glossary", "Update Glossary"]:
                 result = process_glossary_upsert_command(client, element_dictionary, block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
                 result = process_categories_upsert_command(client, element_dictionary, block, directive)
@@ -130,16 +130,16 @@ def process_markdown_file(
             if result:
                 if directive == "process":
                     updated = True
-                    final_output += f"\n---\n{result}\n---\n\n"
+                    final_output += f"\n---\n{result}\n"
                     print(json.dumps(element_dictionary, indent=4))
             elif directive == "process":
                 # Handle case with errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
                       f"\tPlease correct and try again. \n")
-                final_output += f"\n---\n{block}\n---\n\n"
+                final_output += f"\n---\n{block}\n"
         else:
             # If no command is detected, add the block to the final output as-is
-            final_output += f"\n---\n{block}\n---\n\n"
+            final_output += f"\n---\n{block}\n"
 
 
     # Write the final_output to a new file if updated
