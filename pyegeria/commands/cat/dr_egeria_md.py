@@ -1,11 +1,13 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
+import argparse
 import json
 import os
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                      get_current_datetime_string, process_per_proj_upsert_command, commands,
@@ -41,20 +43,20 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
 
-console = Console(width=int(EGERIA_WIDTH))
 
 
 
-@click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
-@click.option("--file-path", help="File path to markdown file",
-              default="glossary_exp.md")
-@click.option("--directive", default="display-only", help="How to process the file")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+
+# @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
+# @click.option("--file-path", help="File path to markdown file",
+#               default="glossary_exp.md")
+# @click.option("--directive", default="display-only", help="How to process the file")
+# @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+# @click.option(
+#     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+# )
+# @click.option("--userid", default=EGERIA_USER, help="Egeria user")
+# @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 def process_markdown_file(
         file_path: str,
         directive: str,
@@ -66,7 +68,7 @@ def process_markdown_file(
     """
     Process a markdown file by parsing and executing Dr. Egeria commands. Write output to a new file.
     """
-
+    console = Console(width=int(EGERIA_WIDTH))
     client = EgeriaTech(server, url, user_id=userid)
     token = client.create_egeria_bearer_token(userid, user_pass)
 
@@ -161,3 +163,31 @@ def process_markdown_file(
 
     except (Exception):
         console.print_exception(show_locals=True)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--server", help="Name of the server to display status for")
+    parser.add_argument("--url", help="URL Platform to connect to")
+    parser.add_argument("--userid", help="User Id")
+    parser.add_argument("--password", help="User Password")
+    parser.add_argument("--time_out", help="Time Out")
+
+    args = parser.parse_args()
+
+    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    userid = args.userid if args.userid is not None else EGERIA_USER
+    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    time_out = args.time_out if args.time_out is not None else 60
+    try:
+        file_path = Prompt.ask("Markdown File name to process:", default="")
+        directive = Prompt.ask("Processing Directive:", choices=[ "display", "validate", "process"], default="validate")
+
+        process_markdown_file(file_path, directive, server, url, userid, user_pass)
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == "__main__":
+    main()

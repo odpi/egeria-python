@@ -671,13 +671,22 @@ def tell(ctx):
 #
 # dr.egeria
 #
-# @tell.group("dr_egeria")
-# @click.pass_context
-# def tell_dr_egeria(ctx):
-#     """Execute Dr.Egeria actions"""
-#     pass
+@tell.group("dr_egeria")
+@click.pass_context
+def tell_dr_egeria(ctx):
+    """Execute Dr.Egeria actions"""
+    pass
 
-
+@tell_dr_egeria.command("process_markdown_file")
+@click.option("--file-path", help="File path to markdown file",
+              default="glossary_exp.md")
+@click.option("--directive", type=click.Choice(['Display','Validate','Process'], case_sensitive=False),
+              default="validate", help="How to process the file")
+@click.pass_context
+def process_markdown_file(ctx, file_path, directive):
+    """Process a markdown file"""
+    c = ctx.obj
+    process_markdown_file(file_path, directive, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @tell.group("glossary")
@@ -687,7 +696,7 @@ def tell_glossary(ctx):
     pass
 
 
-tell_glossary.add_command(process_markdown_file)
+
 
 tell_glossary.add_command(create_glossary)
 tell_glossary.add_command(delete_glossary)
