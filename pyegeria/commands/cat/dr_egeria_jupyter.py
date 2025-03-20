@@ -6,12 +6,13 @@ import nbformat
 import os
 from rich import print
 from rich.console import Console
+
+from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                                          get_current_datetime_string, process_per_proj_upsert_command, commands)
+                                          get_current_datetime_string, process_per_proj_upsert_command, command_list,
+                                          )
 import click
-from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                      get_current_datetime_string, process_per_proj_upsert_command, commands,EgeriaTech
-                      )
+
 from pyegeria._exceptions import (
     print_exception_response,
 )
@@ -76,7 +77,7 @@ def process_jupyter_notebook(
                 if cell.cell_type == 'markdown':
                     if cell.source.strip().startswith('#'):
                         potential_command = extract_command(cell.source)
-                        if potential_command in commands:
+                        if potential_command in command_list:
                             if potential_command in ["Create Glossary", "Update Glossary"]:
                                 result = process_glossary_upsert_command(client, element_dictionary,
                                                                          cell.source, directive)

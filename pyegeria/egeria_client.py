@@ -11,7 +11,7 @@ for all use cases..using the more role based clients is often appropriate:
     * EgeriaTech - for technical users such as data scientists and engineers
 
 """
-from pyegeria.x_action_author_omvs import ActionAuthor
+# from pyegeria.x_action_author_omvs import ActionAuthor
 from pyegeria.asset_catalog_omvs import AssetCatalog
 from pyegeria.collection_manager_omvs import CollectionManager
 from pyegeria.glossary_manager_omvs import GlossaryManager
@@ -22,19 +22,21 @@ from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.runtime_manager_omvs import RuntimeManager
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
-from pyegeria.egeria_my_client import EgeriaMy
+from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.feedback_manager_omvs import FeedbackManager
 from pyegeria.solution_architect_omvs import SolutionArchitect
 from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.egeria_config_client import EgeriaConfig
-from pyegeria.md_processing_utils import render_markdown
+# from pyegeria.md_processing_utils import render_markdown
 
 
 class Egeria(
     AssetCatalog,
     CollectionManager,
-    EgeriaMy,
+    MyProfile,
+    FeedbackManager,
     GlossaryManager,
     # GovernanceAuthor,
     # PeopleOrganizer,
@@ -42,15 +44,14 @@ class Egeria(
     RuntimeManager,
     ServerOps,
     FullServerConfig,
-    ActionAuthor,
+    # ActionAuthor,
     AutomatedCuration,
     ClassificationManager,
     RegisteredInfo,
-    # TemplateManager,
+    TemplateManager,
     ValidMetadataManager,
     MetadataExplorer,
     SolutionArchitect,
-    EgeriaMy,
     EgeriaConfig,
 ):
     """
@@ -87,7 +88,10 @@ class Egeria(
             self, view_server, platform_url, user_id, user_pwd, token
         )
 
-        EgeriaMy.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        FeedbackManager.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
 
         GlossaryManager.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
@@ -104,7 +108,7 @@ class Egeria(
 
         EgeriaConfig.__init__(self, view_server, platform_url, user_id, user_pwd)
 
-        ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        # ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         AutomatedCuration.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
@@ -120,3 +124,4 @@ class Egeria(
         SolutionArchitect.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
+print(Egeria.mro())

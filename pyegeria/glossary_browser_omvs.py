@@ -93,8 +93,8 @@ class GlossaryBrowser(Client):
 
     def make_md_attribute(self, attribute_name: str, attribute_value: str, output_type: str) -> str | None:
         output = ""
-        attribute_value = attribute_value.strip() if attribute_value else None
-        attribute_title = attribute_name.title() if attribute_name else None
+        attribute_value = attribute_value.strip() if attribute_value else ""
+        attribute_title = attribute_name.title() if attribute_name else ""
         if output_type in ["FORM", "MD"]:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
         elif output_type == "REPORT":
@@ -149,7 +149,7 @@ class GlossaryBrowser(Client):
             description = element_properties.get("description", None)
             examples = element_properties.get("examples", None)
             usage = element_properties.get("usage", None)
-            pub_version = element_properties.get("publishedVersionIdentifier", None)
+            pub_version = element_properties.get("publishVersionIdentifier", None)
             qualified_name = element_properties.get("qualifiedName", None)
             status = element['elementHeader'].get('status', None)
 
@@ -161,9 +161,14 @@ class GlossaryBrowser(Client):
             if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
                 category_list_md = ['---']
             elif isinstance(category_list, list) and len(category_list) > 0:
+                first_cat = True
                 for category in category_list:
                     category_name = category["glossaryCategoryProperties"].get("qualifiedName", '---')
-                    category_list_md += f" {category_name}\n"
+                    if first_cat:
+                        category_list_md += f" {category_name}\n"
+                        first_cat = False
+                    else:
+                        category_list_md += f", {category_name}\n"
 
             if output_format in ['FORM', 'MD']:
                 elements_md += f"# {elements_action}\n\n"
@@ -180,7 +185,7 @@ class GlossaryBrowser(Client):
             elements_md += self.make_md_attribute( "description", description, output_format)
             elements_md += self.make_md_attribute( "examples", examples, output_format)
             elements_md += self.make_md_attribute("usage", usage, output_format)
-            elements_md += self.make_md_attribute("published version", pub_version, output_format)
+            elements_md += self.make_md_attribute("version", pub_version, output_format)
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
             elements_md += MD_SEPERATOR

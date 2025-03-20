@@ -12,26 +12,28 @@ from typing import List, Optional
 
 import os
 import re
-from pyegeria import EgeriaTech, NO_CATEGORIES_FOUND
+
 from rich import box, print
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.prompt import Prompt
-from rich.table import Table
-import click
-from pyegeria import EgeriaTech, body_slimmer, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND
-from pyegeria._exceptions import (InvalidParameterException, PropertyServerException, print_exception_response, )
+
+from pyegeria import body_slimmer
+from pyegeria._globals import NO_TERMS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND
+
+from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.glossary_manager_omvs import GlossaryManager
+
 from datetime import datetime
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 console = Console(width=EGERIA_WIDTH)
 
-commands = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "Create Personal Project",
+command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "Create Personal Project",
             "Update Personal Project", "Create Category", "Update Category"]
 ERROR = "ERROR-> "
 INFO = "INFO- "
 WARNING = "WARNING-> "
 pre_command = "\n---\n==> Processing command:"
-EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", "PDR")
+
 element_dictionary = {}
 
 def render_markdown(markdown_text: str) -> None:
@@ -42,7 +44,7 @@ def render_markdown(markdown_text: str) -> None:
 def is_valid_iso_date(date_text) -> bool:
     """Checks if the given string is a valid ISO date."""
     try:
-        datetime.datetime.strptime(date_text, '%Y-%m-%d')
+        datetime.strptime(date_text, '%Y-%m-%d')
         return True
     except ValueError:
         return False
@@ -54,7 +56,7 @@ def get_current_datetime_string():
     return now
 
 
-def add_term_to_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
+def add_term_to_categories(egeria_client: GlossaryManager, term_guid: str, categories_exist: bool,
                            categories_list: List[str], element_dictionary: dict) -> None:
     if categories_exist is True and categories_list is not None:
         for category in categories_list:
@@ -97,7 +99,6 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
             if not extracted_text.isspace() and extracted_text:
                 return extracted_text  # Return the cleaned text
 
-    return None
 
 
 def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
@@ -126,17 +127,26 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
         txt = re.sub(pattern, replacement, txt)
     return txt
 
-def process_provenance_command(file_path: str, txt: str) -> str:
+def process_provenance_command(file_path: str, txt: [str]) -> str:
     """This commands processes a provenence command by pre-pending the current file name and time to the provenance
     output"""
     output = (f"* Derived from processing file {file_path} on "
               f"{get_current_datetime_string()}\n")
-    existing_prov = extract_attribute(txt,'Provenance')
+    pattern = rf"# {re.escape('Provenance')}\n(.*?)(?:#|---|$)"
+    match = re.search(pattern, txt, re.DOTALL)
+    if match:
+        # Extract matched text and replace consecutive \n with a single \n
+        extracted_text = re.sub(r'\n+', '\n', match.group(1).strip())
+        if not extracted_text.isspace() and extracted_text:
+            existing_prov =  extracted_text  # Return the cleaned text
+        else:
+            existing_prov = None
+    print(f"txt is: {txt}, existing_prov: {existing_prov}")
     existing_prov = existing_prov if existing_prov else " "
     return f"\n# Provenance:\n{existing_prov}\n{output}\n"
 
 
-def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                     directive: str = "display") -> Optional[str]:
     """
     Processes a glossary create or update command by extracting key attributes such as
@@ -199,12 +209,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
             if not glossary_exists:
                 msg += f"* {ERROR}Glossary {glossary_name} does not exist\n"
                 valid = False
-            # if len(glossary_details) > 1 and glossary_exists:
-            #     msg += f"* {ERROR}More than one glossary with name {glossary_name} found\n"
-            #     valid = False
-            # if len(glossary_details) == 1:
-            #     known_glossary_guid = glossary_details[0]['elementHeader'].get('guid', None)
-            #     known_q_name = glossary_details[0]['glossaryProperties'].get('qualifiedName',None)
+
             if q_name is None:
                 msg += f"* {INFO}Qualified Name is missing => can use known qualified name of {known_q_name}\n"
                 valid = True
@@ -215,6 +220,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
             if valid:
                 msg += glossary_display
                 msg += f"* -->Glossary `{glossary_name}` exists and can be updated\n"
+                element_dictionary[known_q_name] = {'display_name': glossary_name, 'guid': known_glossary_guid}
             else:
                 msg += f"* --> validation failed\n"
 
@@ -228,6 +234,8 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
             elif valid:
                 msg += f"-->It is valid to create Glossary \'{glossary_name}\' with:\n"
                 msg += glossary_display
+                expected_q_name = egeria_client.__create_qualified_name__('Glossary', glossary_name)
+                element_dictionary[expected_q_name] = {'display_name': glossary_name}
 
             print(Markdown(msg))
             return valid, glossary_exists, known_glossary_guid, known_q_name
@@ -284,7 +292,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
                 return egeria_client.get_glossary_by_guid(glossary_guid, output_format = 'MD')
 
 
-def process_categories_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+def process_categories_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                       directive: str = "display") -> Optional[str]:
     """
     Processes a glossary category create or update command by extracting key attributes such as
@@ -383,6 +391,7 @@ def process_categories_upsert_command(egeria_client: EgeriaTech, element_diction
             if valid:
                 msg += category_display
                 msg += f"* -->category `{category_name}` exists and can be updated\n"
+                element_dictionary[known_q_name] = {'display_name': glossary_name, 'guid': known_category_guid}
             else:
                 msg += f"* --> validation failed\n"
 
@@ -396,6 +405,8 @@ def process_categories_upsert_command(egeria_client: EgeriaTech, element_diction
             elif valid:
                 msg += f"-->It is valid to create category `{category_name}` with:\n"
                 msg += category_display
+                expected_q_name = egeria_client.__create_qualified_name__('Category', category_name)
+                element_dictionary[expected_q_name] = {'display_name': category_name}
 
             print(Markdown(msg))
             return valid, category_exists, known_category_guid, known_q_name, glossary_guid
@@ -452,7 +463,7 @@ def process_categories_upsert_command(egeria_client: EgeriaTech, element_diction
                 return egeria_client.get_categories_by_guid(category_guid, output_format='MD')
 
 
-def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+def process_term_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                 directive: str = "display") -> Optional[str]:
     """
     Processes a term create or update command by extracting key attributes such as
@@ -475,7 +486,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
     examples = extract_attribute(txt, ['Examples'])
     usage = extract_attribute(txt, ['Usage'])
     status = extract_attribute(txt, ['Status'])
-    version = extract_attribute(txt, ['Version', "Version Identifier"])
+    version = extract_attribute(txt, ['Version', "Version Identifier", "Published Version"])
     categories = extract_attribute(txt, ['Categories'])
     q_name = extract_attribute(txt, ['Qualified Name'])
     # q_name = q_name if q_name else " "
@@ -598,6 +609,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
             else:
                 msg += f"\n--> * Term {term_name} exists and can be updated\n"
                 msg += term_display
+                element_dictionary[known_q_name] = {'display_name': term_name, 'guid': known_term_guid}
 
             print(Markdown(msg))
             return valid, term_exists, known_term_guid, known_q_name
@@ -609,6 +621,8 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
                 msg += f"\n-->Validation checks failed in creating Term \'{term_name}\' with: {term_display}\n"
             else:
                 msg += f"\n-->It is valid to create Term \'{term_name}\' with: {term_display}\n"
+                expected_q_name = egeria_client.__create_qualified_name__('Term', term_name)
+                element_dictionary[expected_q_name] = {'display_name': term_name}
 
             print(Markdown(msg))
             return valid, term_exists, known_term_guid, known_q_name
@@ -667,7 +681,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
                         },
                     "updateDescription": update_description
                     }
-                egeria_client.update_term(known_guid, body)
+                egeria_client.update_term(known_guid, body_slimmer(body))
                 # if cats_exist is True and categories_list is not None:
                 #     for category in categories_list:
                 #         cat_guid = element_dictionary.get(f"category.{category}", None)
@@ -686,7 +700,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
             elif object_action == "Create":
                 guid = None
 
-                q_name = egeria_client.__create_qualified_name__("Term",term_name, EGERIA_LOCAL_QUALIFIER)
+                q_name = egeria_client.__create_qualified_name__("Term",term_name)
                 if exists:
                     print(f"\n{WARNING}Term {term_name} exists and result document updated")
                     return update_a_command(txt, command, object_type, q_name, known_guid)
@@ -706,9 +720,15 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
                             return None
                     term_body = {
                         "class": "ReferenceableRequestBody", "elementProperties": {
-                            "class": "GlossaryTermProperties", "qualifiedName": q_name, "displayName": term_name,
-                            "summary": summary, "description": description, "abbreviation": abbreviation,
-                            "examples": examples, "usage": usage, "publishVersionIdentifier": version
+                            "class": "GlossaryTermProperties",
+                            "qualifiedName": q_name,
+                            "displayName": term_name,
+                            "summary": summary,
+                            "description": description,
+                            "abbreviation": abbreviation,
+                            "examples": examples,
+                            "usage": usage,
+                            "publishVersionIdentifier": version
                             # "additionalProperties":
                             #     {
                             #         "propertyName1": "xxxx",
@@ -733,7 +753,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
             console.print_exception(show_locals=True)
             return None
 
-def process_per_proj_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+def process_per_proj_upsert_command(egeria_client: ProjectManager, element_dictionary: dict, txt: str,
                                     directive: str = "display") -> str | None:
     """
     Processes a personal project create or update command by extracting key attributes such as
