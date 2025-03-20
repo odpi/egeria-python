@@ -671,13 +671,13 @@ def tell(ctx):
 #
 # dr.egeria
 #
-@tell.group("dr_egeria")
-@click.pass_context
-def dr_egeria(ctx):
-    """Execute Dr.Egeria actions"""
-    pass
+# @tell.group("dr_egeria")
+# @click.pass_context
+# def tell_dr_egeria(ctx):
+#     """Execute Dr.Egeria actions"""
+#     pass
 
-dr_egeria.add_command(process_markdown_file)
+
 
 
 @tell.group("glossary")
@@ -686,6 +686,8 @@ def tell_glossary(ctx):
     """Perform glossary actions"""
     pass
 
+
+tell_glossary.add_command(process_markdown_file)
 
 tell_glossary.add_command(create_glossary)
 tell_glossary.add_command(delete_glossary)

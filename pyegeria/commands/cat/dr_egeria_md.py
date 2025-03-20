@@ -62,7 +62,10 @@ def process_markdown_file(
         url: str,
         userid: str,
         user_pass: str,
-        ):
+        )-> None:
+    """
+    Process a markdown file by parsing and executing Dr. Egeria commands. Write output to a new file.
+    """
 
     client = EgeriaTech(server, url, user_id=userid)
     token = client.create_egeria_bearer_token(userid, user_pass)
@@ -158,7 +161,3 @@ def process_markdown_file(
 
     except (Exception):
         console.print_exception(show_locals=True)
-
-
-if __name__ == "__main__":
-    process_markdown_file()
