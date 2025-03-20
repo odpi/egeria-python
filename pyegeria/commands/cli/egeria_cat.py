@@ -14,6 +14,7 @@ import os
 import click
 from trogon import tui
 
+from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
 from pyegeria.commands.cat.get_asset_graph import asset_viewer
 from pyegeria.commands.cat.get_collection import collection_viewer
 from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
@@ -31,22 +32,18 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_category,
     add_term_to_category,
     remove_term_from_category)
-
-from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
-from pyegeria.commands.cat.dr_egeria_md_file import process_markdown_file
-
-from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_assets import display_assets
+from pyegeria.commands.cat.list_categories import display_categories
 from pyegeria.commands.cat.list_cert_types import display_certifications
 from pyegeria.commands.cat.list_collections import display_collections
 from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
 from pyegeria.commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
-)
+    )
 from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
+from pyegeria.commands.cat.list_deployed_servers import display_servers_by_dep_imp
 from pyegeria.commands.cat.list_glossaries import display_glossaries
 from pyegeria.commands.cat.list_projects import display_project_list
-from pyegeria.commands.cat.list_deployed_servers import display_servers_by_dep_imp
 from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
 from pyegeria.commands.cat.list_tech_types import display_tech_types
 from pyegeria.commands.cat.list_terms import display_glossary_terms
@@ -58,7 +55,7 @@ from pyegeria.commands.my.todo_actions import (
     delete_todo,
     mark_todo_complete,
     reassign_todo,
-)
+    )
 from pyegeria.commands.tech.list_asset_types import display_asset_types
 
 
@@ -668,12 +665,24 @@ def tell(ctx):
     """Perform actions an Egeria Objects"""
     pass
 
+#
+# dr.egeria
+#
+@tell.group("dr_egeria")
+@click.pass_context
+def tell_dr_egeria(ctx):
+    """Execute Dr.Egeria actions"""
+    pass
+
+tell_dr_egeria.add_command(process_markdown_file)
 
 @tell.group("glossary")
 @click.pass_context
 def tell_glossary(ctx):
     """Perform glossary actions"""
     pass
+
+
 
 
 tell_glossary.add_command(create_glossary)

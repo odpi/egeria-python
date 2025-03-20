@@ -61,7 +61,7 @@ from .collection_manager_omvs import CollectionManager
 from .core_omag_server_config import CoreServerConfig
 from .create_tech_guid_lists import build_global_guid_lists
 from .egeria_cat_client import EgeriaCat
-from .egeria_client import Egeria
+# from .egeria_client import Egeria
 from .egeria_config_client import EgeriaConfig
 from .egeria_my_client import EgeriaMy
 from .egeria_tech_client import EgeriaTech
@@ -92,7 +92,7 @@ from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                                   process_categories_upsert_command,
-                                  get_current_datetime_string, process_per_proj_upsert_command, commands,
+                                  get_current_datetime_string, process_per_proj_upsert_command, command_list,
                                   render_markdown, process_provenance_command)
 
 #

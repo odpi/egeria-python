@@ -41,7 +41,7 @@ EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "250"))
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
@@ -148,16 +148,14 @@ def display_glossary_terms(
             caption=f"View Server '{view_server}' @ Platform - {view_url}",
             expand=True,
         )
-        table.add_column("Term Name")
+        table.add_column("Term Name / Abbreviation / Version")
         table.add_column("Qualified Name / GUID", width=38, no_wrap=True)
-        table.add_column("Abbreviation")
         table.add_column("Summary")
         table.add_column("Description")
-        table.add_column("Version Id")
         table.add_column("Glossary")
         table.add_column("Status")
-        table.add_column("Example")
         table.add_column("Categories")
+        table.add_column("Example/Usage", min_width=50)
 
         terms = g_client.find_glossary_terms(
             search_string,
@@ -183,7 +181,7 @@ def display_glossary_terms(
             if props == "None":
                 return table
 
-            display_name = Text(props.get("displayName","---"), style=style, justify="center")
+            display_name = props.get("displayName","---")
             qualified_name = props["qualifiedName"]
             term_guid = term["elementHeader"]["guid"]
             q_name = Text(
@@ -197,7 +195,9 @@ def display_glossary_terms(
                 style=style,
                 justify="center",
             )
-            example = Text(props.get("example", " "), style=style)
+            example = props.get("example", " ")
+            usage = props.get("usage", " ")
+            ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
 
             classifications = term["elementHeader"]["classifications"]
             glossary_guid = None
@@ -221,20 +221,18 @@ def display_glossary_terms(
                 for category in category_list:
                     category_name = category["glossaryCategoryProperties"].get("displayName",'---')
                     category_list_md += f"* {category_name}\n"
-
+            term_abb_ver_out = Markdown(f"{display_name}\n---\n{abbrev}\n---\n{version}")
             category_list_out = Markdown(category_list_md)
             term_status = term["elementHeader"].get("status","---")
             table.add_row(
-                display_name,
+                term_abb_ver_out,
                 q_name,
-                abbrev,
                 summary,
                 description,
-                version,
                 glossary_name,
                 term_status,
-                example,
                 category_list_out,
+                ex_us_out,
                 style="bold white on black",
             )
 
