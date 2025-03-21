@@ -529,6 +529,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             msg += f"* {ERROR}Glossary qualified name is missing\n"
             valid = False
         else:
+            print(f"* {INFO}Glossary qualified name is `{glossary_qn}`")
             if glossary_qn not in element_dictionary:
                 glossary = egeria_client.get_glossaries_by_name(glossary_qn) #assuming q_name?
                 if isinstance(glossary,str):

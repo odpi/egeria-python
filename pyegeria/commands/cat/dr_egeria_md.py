@@ -121,7 +121,7 @@ def process_markdown_file(
                     final_output.append(result)
                     # print(json.dumps(element_dictionary, indent=4))
                 # elif directive == "validate":
-                #     print(json.dumps(element_dictionary, indent=4))
+                    print(json.dumps(element_dictionary, indent=4))
             elif directive == "process":
                 # Handle errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
