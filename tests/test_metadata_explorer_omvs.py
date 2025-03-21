@@ -295,7 +295,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements(self):
-        guid = "929ea364-cead-456d-b9f1-1016202196ed"  # active-metadata-store
+        guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"  # active-metadata-store
         # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
         # guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # sustainability glossary
         # guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # Clinical trials project
@@ -306,6 +306,7 @@ class TestMetadataExplorer:
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
+            "mermaidOnly": True
         }
 
         try:
@@ -325,7 +326,7 @@ class TestMetadataExplorer:
                 print(f"\n\tElement count is: {len(response)}\n")
                 print_json(data=response, indent=4)
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                console.print("\n\n\t Response is:\n " + response)
 
             assert True
         except (
@@ -383,16 +384,16 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_related_metadata_elements(self):
-        guid = "929ea364-cead-456d-b9f1-1016202196ed"
+        guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"
         # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
-        relationship_type = "SourcedFrom"
+        relationship_type = "EngineActionRequestSource"
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
             "limitResultsByStatus": ["ACTIVE"],
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
-            "sequencingProperty": "",
+            "sequencingProperty": ""
         }
 
         try:
@@ -401,7 +402,7 @@ class TestMetadataExplorer:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             response = m_client.get_related_metadata_elements(
-                guid, relationship_type, body
+                guid, relationship_type, body, mermaid_only=False
             )
             duration = time.perf_counter() - start_time
             print(
