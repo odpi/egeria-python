@@ -83,7 +83,7 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
 
         Args:
             text: The input string.
-            label: List of equivalent labels to search for
+            labels: List of equivalent labels to search for
 
         Returns:
             The glossary name, or None if not found.
@@ -120,7 +120,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     #     replacement = r"\1\n\n\2"
     #     txt += re.sub(pattern, replacement, txt)
 
-    status = extract_attribute(txt, "Status")
+    status = extract_attribute(txt, ["Status"])
     if command in ["Create Term", "Update Term"] and status is None:
         pattern = r"(## Status\s*\n)(.*?)(#)"
         replacement = r"\1\n DRAFT\n\n\3"
@@ -499,7 +499,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
     print(Markdown(f"{pre_command} `{command}` for term: `\'{term_name}\'` with directive: `{directive}`"))
 
     def validate_term(obj_action: str) -> tuple[bool, bool, Optional[str], Optional[str]]:
-        nonlocal version, status, categories, categories_list, cats_exist, q_name
+        nonlocal version, status, categories, categories_list, cats_exist, q_name, glossary_qn
         valid = True
         msg = ""
         known_term_guid = None
@@ -534,8 +534,16 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                 if isinstance(glossary,str):
                     msg += f"* {ERROR}Glossary `{glossary_qn}` is unknown\n "
                     valid = False
+                elif len(glossary) != 1:
+                    msg += f"* {ERROR}Glossary `{glossary_qn}` is ambiguous or not found\n "
+                    valid = False
                 else:
-                    element_dictionary[glossary_qn] = {
+                    glossary_qn = glossary[0]['glossaryProperties'].get('qualifiedName', None)
+                    if glossary_qn is None:
+                        msg += f"* {ERROR}Glossary `{glossary_qn}` has no qualifiedName\n "
+                        valid = False
+                    else:
+                        element_dictionary[glossary_qn] = {
                         'guid': glossary[0]['elementHeader'].get('guid', None),
                         'display_name': glossary[0]['glossaryProperties'].get('displayName', None)
                         }
