@@ -178,7 +178,7 @@ def process_markdown_file(
                 f2.write(final_output)
                 if not prov_found:
                     f2.write(prov_output)
-            click.echo(f"\n==> Notebook written to {new_file_path}")
+            click.echo(f"\n==> Output written to {new_file_path}")
         else:
             click.echo("\nNo updates detected. New File not created.")
 
