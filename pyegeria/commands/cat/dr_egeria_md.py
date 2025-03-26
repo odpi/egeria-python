@@ -39,10 +39,6 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
 
-
-
-
-
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--file-path", help="File path to markdown file",
               default="glossary_exp.md", required=True, prompt=False)
@@ -52,6 +48,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat
 @click.option(
     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
 )
+
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 def process_markdown_file(
@@ -120,8 +117,8 @@ def process_markdown_file(
                     updated = True
                     final_output.append(result)
                     # print(json.dumps(element_dictionary, indent=4))
-                # elif directive == "validate":
-                #     print(json.dumps(element_dictionary, indent=4))
+                elif directive == "validate":
+                    print(json.dumps(element_dictionary, indent=4))
             elif directive == "process":
                 # Handle errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
@@ -181,7 +178,7 @@ def process_markdown_file(
                 f2.write(final_output)
                 if not prov_found:
                     f2.write(prov_output)
-            click.echo(f"\n==> Notebook written to {new_file_path}")
+            click.echo(f"\n==> Output written to {new_file_path}")
         else:
             click.echo("\nNo updates detected. New File not created.")
 

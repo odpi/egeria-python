@@ -410,6 +410,7 @@ def test_get_all_related_elements():
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
+    element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
@@ -427,14 +428,15 @@ def test_get_all_related_elements():
 
 def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
-    element_guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+    element_guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"
     # open_metadata_type_name = "Organization"
     # open_metadata_type_name = "CSVFile"
-    open_metadata_type_name = "InformationSupplyChain"
+    # open_metadata_type_name = "InformationSupplyChain"
+    open_metadata_type_name = None
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    # relationship_type = "ReferenceableFacet"
-    relationship_type = "InformationSupplyChainComposition"
+    relationship_type = None
+    # relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)

@@ -141,6 +141,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 @click.command("create-term")
 @click.option("--glossary-name", help="Name of Glossary", required=True)
 @click.option("--term-name", help="Name of Term", required=True)
+@click.option("--qualified-name",  help="Qualified name of Term", default=None)
 @click.option(
     "--summary",
     help="Summary definition",
@@ -170,31 +171,23 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
-def create_term(
-    server,
-    url,
-    userid,
-    password,
-    glossary_name,
-    term_name,
-    summary,
-    description,
-    abbrev,
-    examples,
-    usage,
-    version,
-    status,
-    timeout: int = 120,
-) -> str:
-    """Create a new term"""
+def create_term(server, url, userid, password, glossary_name, term_name, summary, description, abbrev, examples, usage,
+                version, status, timeout: int = 120, qualified_name=None) -> str:
+    """Create a new term
+
+    Args:
+        qualified_name:
+    """
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
+    if qualified_name is None:
+        qualified_name = m_client.__create_qualified_name__('Term', term_name)
     try:
         body = {
             "class": "ReferenceableRequestBody",
             "elementProperties": {
                 "class": "GlossaryTermProperties",
-                "qualifiedName": f"GlossaryTerm: {term_name} - {datetime.now().isoformat()}",
+                "qualifiedName": qualified_name,
                 "displayName": term_name,
                 "summary": summary,
                 "description": description,
