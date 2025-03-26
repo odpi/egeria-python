@@ -149,7 +149,7 @@ class GlossaryBrowser(Client):
             description = element_properties.get("description", None)
             examples = element_properties.get("examples", None)
             usage = element_properties.get("usage", None)
-            pub_version = element_properties.get("publishVersionIdentifier", None)
+            pub_version = element_properties.get("publishfinVersionIdentifier", None)
             qualified_name = element_properties.get("qualifiedName", None)
             status = element['elementHeader'].get('status', None)
 

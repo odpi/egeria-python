@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.7.5"
+version = "5.3.7.6"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -26,10 +26,10 @@ packages = [
 
 [tool.poetry.dependencies]
 #python = "^3.11" # 3.12 seemed to fail
-python = "*"
+python = ">3.12,<4.0.0"
 #python = "^3.13" Need to upgrade jupyter image
 httpx = "*"
-rich = "^13.9.4"
+rich = "*"
 validators = "*"
 urllib3 = "*"
 requests = "*"

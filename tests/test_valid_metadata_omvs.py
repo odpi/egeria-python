@@ -45,7 +45,7 @@ class TestValidMetadataOMVs:
     bad_user_2 = ""
     good_integ_1 = "fluffy_integration"
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "laz_kv"
+    good_server_2 = "qs-view-server"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
     good_server_5 = "fluffy_kv"
@@ -242,18 +242,18 @@ class TestValidMetadataOMVs:
     def test_get_valid_metadata_values(self):
         try:
             m_client = ValidMetadataManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "ToDoStatus"
-            property_name = "toDoStatus"
+            type_name = None
+            property_name = "deployedImplementationType"
             # type_name = None
             # property_name = "stewardTypeName"
 
-            response = m_client.get_valid_metadata_values(property_name, type_name)
+            response = m_client.get_valid_metadata_values(property_name)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -280,15 +280,15 @@ class TestValidMetadataOMVs:
     def test_get_valid_metadata_value(self):
         try:
             m_client = ValidMetadataManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "projectHealth"
-            preferred_value = "At Risk"
+            type_name = None
+            property_name = "deployedImplementationType"
+            preferred_value = None
 
             response = m_client.get_valid_metadata_value(
                 property_name, type_name, preferred_value

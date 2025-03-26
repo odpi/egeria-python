@@ -56,8 +56,8 @@ class TestMetadataExplorer:
     ##
     #
     def test_get_metadata_guid_by_unique_name(self):
-        name = "active-metadata-store"
-        property_name = "name"
+        name = "Command"
+        property_name = "displayName"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
