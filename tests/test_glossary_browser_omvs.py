@@ -220,7 +220,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_terms_by_name(self, server: str = good_view_server_1):
+    def test_get_terms_by_name(self, server: str = good_view_server_2):
         server_name = server
 
         try:
@@ -229,9 +229,9 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Sustainability"
-            glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"
-            response = g_client.get_terms_by_name(term_name, glossary_guid, ["ACTIVE"])
+            term_name = "Command"
+            glossary_guid = None
+            response = g_client.get_terms_by_name(term_name, glossary_guid, [])
 
             print(f"type is {type(response)}")
             if type(response) is list:

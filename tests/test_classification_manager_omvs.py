@@ -70,7 +70,7 @@ def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
     #
     # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "InformationSupplyChain"
+    open_metadata_type_name = "Project"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -89,15 +89,15 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
-    # open_metadata_type_name = None
+    open_metadata_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    open_metadata_type_name = "Asset"
+    # open_metadata_type_name = "Asset"
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
-    property_names = ["name"]
-    property_value = "Set up new clinical trial"
+    property_names = ["name","displayName",'qualifiedName']
+    property_value = "Command"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)

@@ -58,7 +58,7 @@ class TestProjectManager:
     def test_get_linked_projects(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
@@ -67,8 +67,8 @@ class TestProjectManager:
             # parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7" # management
             # parent_guid = "994283c2-deaf-42dc-adf9-ce87cdee0d1f"
             # parent_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
-            # parent_guid = 'cae1c8c4-92e2-4598-b898-f3ee3252dff1' # trial
-            parent_guid = "25452b45-942d-47af-90b6-3fa9df4a5df7"  # proj template
+            parent_guid = '2d86e375-c31b-494d-9e73-a03af1370d81' # trial
+            # parent_guid = "25452b45-942d-47af-90b6-3fa9df4a5df7"  # proj template
             response = p_client.get_linked_projects(parent_guid)
             duration = time.perf_counter() - start_time
 
@@ -137,13 +137,13 @@ class TestProjectManager:
     def test_find_projects(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Sustainability"
+            search_string = "Clinical Trials Management"
 
             response = p_client.find_projects(
                 search_string, None, True, ignore_case=True
@@ -172,14 +172,14 @@ class TestProjectManager:
     def test_get_projects_by_name(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-
+            # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
+            project_name = "Clinical Trials Management"
             response = p_client.get_projects_by_name(project_name)
             duration = time.perf_counter() - start_time
 
@@ -190,7 +190,7 @@ class TestProjectManager:
                 print(f"Type is {type(response)}")
                 print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\nGUID is: " + response)
+                print("\n\nResponse is: " + response)
             assert True
 
         except (
@@ -240,7 +240,7 @@ class TestProjectManager:
         finally:
             p_client.close_session()
 
-    def test_get_project(self):
+    def test_get_project_by_guid(self):
         try:
             p_client = ProjectManager(
                 self.good_view_server_1,
@@ -252,7 +252,7 @@ class TestProjectManager:
             project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
             project_guid = "4fe24e34-490a-43f0-a0d4-fe45ac45c663"  # it setup
 
-            response = p_client.get_project(project_guid)
+            response = p_client.get_project_by_guid(project_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -273,6 +273,45 @@ class TestProjectManager:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            p_client.close_session()
+
+    def test_get_project_graph(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
+            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # clinical trials management
+
+            response = p_client.get_project_graph(project_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Type of response is {type(response)}")
+
+            if type(response) is dict:
+                print("dict:\n\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}\n\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 

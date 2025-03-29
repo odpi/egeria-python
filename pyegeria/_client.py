@@ -770,7 +770,8 @@ class Client:
         )
         return result
 
-    def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None) -> str:
+    def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
+                                  version_identifier: str = None) -> str:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""
         EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
@@ -778,6 +779,8 @@ class Client:
         q_name = f"{type}:{display_name}"
         if EGERIA_LOCAL_QUALIFIER:
             q_name = f"{EGERIA_LOCAL_QUALIFIER}:{q_name}"
+        if version_identifier:
+            q_name = f"{q_name}:{version_identifier}"
         return q_name
 
 if __name__ == "__main__":

@@ -635,7 +635,7 @@ class ProjectManager(Client):
 
         return resp
 
-    async def _async_get_project(
+    async def _async_get_project_by_guid(
         self,
         project_guid: str,
         effective_time: str = None,
@@ -677,7 +677,7 @@ class ProjectManager(Client):
         resp = await self._async_make_request("GET", url, body)
         return resp.json()
 
-    def get_project(self, project_guid: str, effective_time: str = None) -> dict | str:
+    def get_project_by_guid(self, project_guid: str, effective_time: str = None) -> dict | str:
         """Return the properties of a specific project.
 
         Parameters
@@ -707,10 +707,86 @@ class ProjectManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project(project_guid, effective_time)
+            self._async_get_project_by_guid(project_guid, effective_time)
         )
 
         return resp
+
+    async def _async_get_project_graph(
+        self,
+        project_guid: str,
+        effective_time: str = None,
+    ) -> dict | str:
+        """Return the mermaid graph of a specific project. Async version.
+
+        Parameters
+        ----------
+        project_guid: str,
+            unique identifier of the project.
+        effective_time: str, [default=None], optional
+             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+
+
+        Returns
+        -------
+         str
+
+            A mermaid markdown string representing the graph of the project.
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        validate_guid(project_guid)
+        body = {
+            "effective_time": effective_time,
+        }
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/graph"
+
+        resp = await self._async_make_request("GET", url, body)
+        return resp.json().get('element',NO_ELEMENTS_FOUND)
+
+    def get_project_graph(self, project_guid: str, effective_time: str = None) -> dict | str:
+        """Return the mermaid graph of a specific project.
+
+        Parameters
+        ----------
+        project_guid: str,
+            unique identifier of the project.
+        effective_time: str, [default=None], optional
+             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+
+
+        Returns
+        -------
+         str
+
+            A mermaid markdown string representing the graph of the project.
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_project_graph(project_guid, effective_time)
+        )
+
+        return resp
+
 
     #
     #   Create project methods
