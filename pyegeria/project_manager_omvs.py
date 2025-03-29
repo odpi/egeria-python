@@ -675,7 +675,7 @@ class ProjectManager(Client):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}"
 
         resp = await self._async_make_request("GET", url, body)
-        return resp.json()
+        return resp.json().get('element',NO_ELEMENTS_FOUND)
 
     def get_project_by_guid(self, project_guid: str, effective_time: str = None) -> dict | str:
         """Return the properties of a specific project.
