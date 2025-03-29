@@ -20,13 +20,11 @@ from rich.markdown import Markdown
 from pyegeria import body_slimmer
 from pyegeria._globals import NO_TERMS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND
 from pyegeria.egeria_tech_client import EgeriaTech
-# from pyegeria.md_processing_helpers import process_q_name_list
 from pyegeria.project_manager_omvs import ProjectManager
 from pyegeria.glossary_manager_omvs import GlossaryManager
-from pyegeria.shared_state import get_element_dictionary, update_element_dictionary
 
 from datetime import datetime
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 console = Console(width=EGERIA_WIDTH)
 
 command_list = ["Provenance",
@@ -34,15 +32,14 @@ command_list = ["Provenance",
                 "Create Term", "Update Term",
                 "Create Personal Project", "Update Personal Project",
                 "Create Category", "Update Category",
-                "Create Solution Blueprint", "Update Solution Blueprint",
-                "Create Solution Component", "Update Solution Component",]
+                "Create Solution Blueprint", "Update Solution Blueprint"]
 
 ERROR = "ERROR-> "
 INFO = "INFO- "
 WARNING = "WARNING-> "
 pre_command = "\n---\n==> Processing command:"
 
-
+element_dictionary = {}
 
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
@@ -70,9 +67,8 @@ def add_term_to_categories(egeria_client: GlossaryManager, term_guid: str, categ
         for category in categories_list:
             cat_guid = None
             cat_el = category.strip()
-            element_dict = get_element_dictionary()
-            if cat_el in element_dict:
-                cat = element_dict.get(cat_el, None)
+            if cat_el in element_dictionary:
+                cat= element_dictionary.get(cat_el, None)
                 cat_guid = cat.get('guid', None) if cat else None
             if cat_guid is None:
                 cat_guid = egeria_client.__get_guid__(qualified_name=cat_el)
@@ -164,8 +160,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     existing_prov = existing_prov if existing_prov else " "
     return f"\n# Provenance:\n{existing_prov}\n{output}\n"
 
-def process_element_identifiers(egeria_client: EgeriaTech, element_type:str, txt: str, action: str, version: str=None) \
-        -> tuple[str, str, str, bool, bool]:
+def process_element_identifiers(egeria_client: EgeriaTech, txt: str) -> tuple[str, str, str, bool, bool]:
     """
     Processes element identifiers by extracting display name and qualified name from the input text,
     checking if the element exists in Egeria, and validating the information.
@@ -173,14 +168,8 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type:str, txt
     Parameters:
     egeria_client: EgeriaTech
         Client object for interacting with Egeria.
-    element_type: str
-        type of element to process (e.g., 'blueprint', 'category', 'term')
     txt: str
         A string representing the input text to be processed for extracting element identifiers.
-    action: str
-        The action command to be executed (e.g., 'Create', 'Update', 'Display', ...)
-    version: str, optional = None
-        An optional version identifier used if we need to construct the qualified name
 
     Returns: tuple[str, str, str, bool, bool]
         A tuple containing:
@@ -190,169 +179,42 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type:str, txt
         - Valid: Boolean indicating if the element information is valid
         - Exists: Boolean indicating if the element exists in Egeria
     """
-    msg = ""
-    guid = None
-    valid = True
-    exists = False
-    unique: bool | None = None
-    display_name = extract_attribute(txt, ["Display Name"])
 
-    qualified_name = extract_attribute(txt, ["Qualified Name"])
-    if qualified_name:
-        q_name, guid, msg, unique, exists  = get_element_by_name(egeria_client,element_type,qualified_name)
-        # Qualified name could be different if it is being updated
-    else:
-         q_name, guid, msg, unique, exists = get_element_by_name(egeria_client,element_type,display_name)
-    if unique is False:
-        msg += f"{ERROR} Multiple elements named  {display_name} found\n"
-        valid = False
-    if action == "Update" and not exists:
-        msg += f"* {ERROR}Element {display_name} does not exist\n"
-        valid = False
-    elif action == "Update" and exists:
-        msg += f"* {INFO}Element {display_name} exists\n"
-    elif action == "Create" and exists:
-        msg += f"* {ERROR}Element {display_name} already exists\n"
-        valid = False
-    elif action == "Create" and not exists:
-        msg += f"* {INFO}Element {display_name} does not exist and can be created\n"
-        if q_name is None:
-            q_name = egeria_client.__create_qualified_name__(element_type, display_name,
-                                                             version_identifier=version)
-            update_element_dictionary(q_name, {'display_name': display_name})
-
-    return q_name, guid, msg, valid, exists
-
-
-def get_element_by_name(egeria_client, element_type: str, element_name: str)\
-        ->tuple[str | None, str | None, str, bool | None, bool | None]:
-    """
-    Generalized function to retrieve an element by name based on its type.
-
-    Parameters:
-    egeria_client: Client
-        Client object for interacting with Egeria.
-    element_type: str
-        The type of element to retrieve (e.g., 'blueprint', 'category', 'term').
-    element_name: str
-        The name of the element to retrieve.
-
-    Returns:
-        tuple of qualified_name, guid, msg, uniqye, exists
-    """
-    unique = None
-    element_dict = get_element_dictionary()
-    if element_name in element_dict: # use information from element_dictionary
-        guid = element_dict[element_name].get('guid',None)
-        unique = True
-        exists = False
-        if guid is not None: # Found complete entry in element_dictionary
-            return element_name, guid, 'Found qualified name', unique, exists
-        else: # Missing guid from element_dictionary
-            guid = egeria_client.get_element_guid_by_unique_name(element_name)
-            if guid == NO_ELEMENTS_FOUND:
-                exists = False
-                msg = f"{INFO}No {element_type} guid found with name {element_name}\n"
-                return element_name, None, msg, unique, exists
-            else:
-                exists = True
-                update_element_dictionary(element_name, {'guid': guid})
-                return element_name, guid, 'Found qualified name', unique, exists
-
-    # Haven't seen this element before
-    property_names = ['qualifiedName', 'name', 'displayName']
-    open_metadata_type_name = None
-    details =  egeria_client.get_elements_by_property_value(
-        element_name, property_names, open_metadata_type_name
-        )
-    if isinstance(details, str):
-        msg = f"{INFO}{element_type} `{element_name}` not found\n"
-        exists = False
-        return element_name, None, msg, unique, exists
-    if len(details) > 1:
-        msg = (f"{ERROR}More than one element with name {element_name} found, please specify a "
-                f"**Qualified Name**\n")
-        unique= False
-        exists = None
-        return element_name, None, msg, unique, exists
-
-    el_qname = details[0]["properties"].get('qualifiedName', None)
-    el_guid = details[0]['elementHeader']['guid']
-    el_display_name = details[0]["properties"].get('displayName', None)
-    update_element_dictionary(el_qname, {
-        'guid': el_guid,
-        'displayName': el_display_name
-        })
-    msg = f"{INFO}Found {element_type} `{element_name}`\n"
-    exists = True
-    unique = True
-    return el_qname, el_guid, msg, unique, exists
-
-    # Convert element_type to plural form for method name construction
-    # if element_type.endswith('y'):
-    #     plural_type = f"{element_type[:-1]}ies"
-    # elif element_type.endswith('s'):
-    #     plural_type = f"{element_type}es"
-    # else:
-    #     plural_type = f"{element_type}s"
-    #
-    # # Construct method name
-    # method_name = f"get_{plural_type}_by_name"
-    #
-    # # Check if the method exists on the client
-    # if hasattr(egeria_client, method_name):
-    #     # Call the method
-    #     method = getattr(egeria_client, method_name)
-    #     result = method(element_name)
-    #     return result
-    # else:
-    #     # Method doesn't exist
-    #     return f"Method {method_name} not found on client"
-
-
-
-def process_q_name_list(egeria_client: EgeriaTech, element_type: str, txt: str) -> tuple[
-    str | None, list | None, str | None, bool, bool]:
     msg = ""
     known_guid = None
     valid = True
     exists = False
-    elements = ""
-    new_element_list = []
-
-    elements_txt = extract_attribute(txt, [element_type])
-
-    if elements_txt is None:
-        msg += f"* {INFO}No {element_type}s found\n"
-
+    display_name = extract_attribute(txt, ["Display Name"])
+    if display_name is None:
+        msg = f"* {ERROR}Display name is missing\n"
+        valid = False
+        return "","", msg, valid, exists
+    qualified_name = extract_attribute(txt, ["Qualified Name"])
+    if qualified_name:
+        element_details = egeria_client.get_terms_by_name(qualified_name)
     else:
-        element_list = re.split(r'[,\n]+', elements_txt)
+        element_details = egeria_client.get_terms_by_name(display_name)
 
-        for element in element_list:
-            element_el = element.strip()
+    if element_details == NO_TERMS_FOUND:
+        exists = False
+    else:
+        exists = True
 
-            # Get the element using the generalized function
-            known_q_name, known_guid, status_msg, el_valid, el_exists = get_element_by_name(
-                egeria_client, element_type, element_el)
-            msg += status_msg
-            if el_exists and el_valid:
-                elements = f"{element_el}, {elements}"  # list of the input names
-                new_element_list.append(known_q_name)  # list of qualified names
-            elif not el_exists:
-                msg += f"* {INFO}No {element_type} `{element_el}` found\n"
-                valid = False
-            valid = valid if el_valid is None else valid and el_valid
-            exists = exists and el_exists
-
-        if elements:
-            elements += "\n"
-            msg += f"* {INFO}Found {element_type}s: {elements}"
+    if len(element_details) > 1 and exists:
+        msg += (f"* {ERROR}More than one element with name {display_name} found, please specify a "
+                f"**Qualified Name**\n")
+        valid = False
+    elif len(element_details) == 1:
+        known_guid = element_details[0]['elementHeader'].get('guid', None)
+        known_q_name = element_details[0]['glossaryTermProperties'].get('qualifiedName', None)
+        if qualified_name != known_q_name:
+            msg += (f"* {ERROR}Element {display_name} qualifiedName mismatch between {qualified_name} and {known_q_name}\n")
+            valid = False
         else:
-            msg += f"* {INFO}List contains one or more invalid elements.\n"
-        return elements, new_element_list, msg, valid, exists
-
-
-
+            msg += f"\n--> * Element {display_name} exists and can be updated\n"
+            # msg += term_display
+            # element_dictionary[known_q_name] = {'display_name': display_name, 'guid': known_guid}
+    return qualified_name, known_guid, msg, valid, exists
 
 def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
                                 directive: str = "display") -> Optional[str]:
@@ -365,77 +227,73 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
         Client object for interacting with Egeria.
     txt: str
         A string representing the input cell to be processed for
-        extracting element attributes.
+        extracting glossary-related attributes.
     directive: str, optional, default "display"
         An optional string indicating the directive to be used - display, validate or execute
 
     Returns: str
         A string summarizing the outcome of the processing.
     """
+
     object_type, object_action = extract_command_plus(txt)
     element_display = ""
-    valid = True
-    msg =""
-
     display_name = extract_attribute(txt, ['Display Name','Blueprint Name'])
     description = extract_attribute(txt, ['Description'])
     version = extract_attribute(txt, ['Version', "Version Identifier", "Published Version"])
 
-    print(Markdown(f"{pre_command} {object_action} `{object_type}` for Blueprint: `\'{display_name}\'` with directive: `{directive}`\n"))
-    if display_name is None:
-        msg += f"* {ERROR}Display name is missing\n"
-        valid = False
-        q_name, known_guid, exists = None
-    else:
-        q_name, known_guid, status_msg, valid, exists = process_element_identifiers(egeria_client, object_type,txt, object_action)
-        msg+= status_msg
+    print(Markdown(f"{pre_command} `{object_type}{object_action}` for Blueprint: `\'{display_name}\'` with directive: `{directive}`"))
 
-    if description is None:
-        msg += f"* {INFO}Description is missing\n"
+    def validate_blueprint(obj_action: str) -> tuple[bool, bool, Optional[str], Optional[str]]:
+        nonlocal display_name, description, version, element_dictionary, element_display
 
-    if version is None:
-        msg += f"* {INFO}Term version is missing\n"
+        known_q_name, known_guid, msg, valid, exists = process_element_identifiers(egeria_client, txt)
 
-    update_description = extract_attribute(txt, ['Update Description'])
-    if update_description is None:
-        msg += f"* {INFO}Update Description is missing\n"
-        update_description = "---"
+        if description is None:
+            msg += f"* {INFO}Description is missing\n"
 
-    element_display = (f"\n* Command: {object_action} {object_type}\n\t* Blueprint: {display_name}\n\t"
-                       f"* Description: {description}\n\t"
-                       f"* Version: {version}\n\t* Qualified Name:{q_name}\n\t* GUID: {known_guid} "
-                       f"\n\t* Update Description: {update_description}\n")
+        if version is None:
+            msg += f"* {INFO}Term version is missing\n"
 
-    # if object_action == "Update":  # check to see if provided information exists and is consistent with existing info
-    #     if not exists:
-    #         msg += f"* {ERROR}Element {display_name} does not exist\n"
-    #         valid = False
+        update_description = extract_attribute(txt, ['Update Description'])
+        if update_description is None:
+            msg += f"* {INFO}Update Description is missing\n"
+            update_description = "---"
+        element_display = (f"\n* Command: {object_type}{object_action}\n\t* Blueprint: {display_name}\n\t"
+                           f"* Term Name: {display_name}\n\t* Description: {description}\n\t"
+                           f"* Version: {version}\n\t* Qualified Name:{known_q_name}\n\t* GUID: {known_guid} "
+                           f"\n\t* Update Description: {update_description}\n")
 
-    # elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
-    #     if exists:
-    #         msg += f"\n{WARNING}Element \'{display_name}\' already exists.\n"
-    #     elif not valid:
-    #         msg += f"\n-->Validation checks failed in creating element \'{display_name}\' with: {element_display}\n"
-    #     else: # valid to create - update element_dictionary
-    #         msg += f"\n-->It is valid to create element \'{display_name}\' with: {element_display}\n"
-    #         if known_q_name is None:
-    #             known_q_name = egeria_client.__create_qualified_name__(object_type, display_name)
-    #             element_dictionary[known_q_name] = {'display_name': display_name}
-    if valid:
-        msg += f"\n-->It is valid to create element \'{display_name}\' with: {element_display}\n"
+        if obj_action == "Update":  # check to see if provided information exists and is consistent with existing info
+            if not exists:
+                msg += f"* {ERROR}Element {display_name} does not exist\n"
+                valid = False
+                element_dictionary[known_q_name] = {'display_name': display_name, 'guid': known_guid}
+
+        elif obj_action == 'Create':  # if the command is create, check that it doesn't already exist
+            if exists:
+                msg += f"\n{WARNING}Element \'{display_name}\' already exists.\n"
+            elif not valid:
+                msg += f"\n-->Validation checks failed in creating element \'{display_name}\' with: {element_display}\n"
+            else: # valid to create - update element_dictionary
+                msg += f"\n-->It is valid to create element \'{display_name}\' with: {element_display}\n"
+                if known_q_name is None:
+                    known_q_name = egeria_client.__create_qualified_name__(object_type, display_name)
+                element_dictionary[known_q_name] = {'display_name': display_name}
+        print(Markdown(msg))
+        return valid, exists, known_guid, known_q_name
+
 
     if directive == "display":
         print(Markdown(element_display))
         return None
     elif directive == "validate":
-        print(Markdown(msg))
-        print(Markdown(element_display))
+        is_valid, exists, known_guid, known_q_name = validate_blueprint(object_action)
+        valid = is_valid if is_valid else None
         return valid
-
     elif directive == "process":
-        print(Markdown(msg))
         try:
-            if not valid:  # First validate the term before we process it
+            is_valid, exists, known_guid, known_q_name = validate_blueprint(object_action)
+            if not is_valid:  # First validate the term before we process it
                 return None
 
             if object_action == "Update" and directive == "process":
@@ -456,16 +314,16 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
                 if exists:
                     print(f"\n{WARNING}Blueprint {display_name} exists and result document updated")
                     return update_a_command(txt, f"{object_type}{object_action}",
-                    object_type, q_name, known_guid)
+                    object_type, known_q_name, known_guid)
                 else:
                    # create the blueprint
                     #term_guid = egeria_client.create_controlled_glossary_term(glossary_guid, term_body)
                     # if term_guid == NO_ELEMENTS_FOUND:
                     #     print(f"{ERROR}Term {term_name} not created")
                     #     return None
-                    new_guid= f"guid:{get_current_datetime_string()}"
-                    print(f"\n-->Created Blueprint {display_name} with GUID {new_guid}")
-                    update_element_dictionary(q_name, {'guid': new_guid, 'display_name': display_name})
+
+                    print(f"\n-->Created Blueprint {display_name} with GUID {known_guid}")
+                    element_dictionary[known_q_name] = {'guid': known_guid, 'display_name': display_name}
                     return 'Would return get blueprint by guid results as md' #egeria_client.get_terms_by_guid(term_guid, 'MD')
 
         except Exception as e:
@@ -475,149 +333,6 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
 
 
 
-def process_solution_component_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
-                                     directive: str = "display") -> Optional[str]:
-    """
-    Processes a solution componentt create or update command by extracting key attributes such as
-    solution component name, description, version, solution component type etc from the given cell.
-
-    Parameters:
-    egeria_client: SolutionArchitect
-        Client object for interacting with Egeria.
-    txt: str
-        A string representing the input cell to be processed for
-        extracting element attributes.
-    directive: str, optional, default "display"
-        An optional string indicating the directive to be used - display, validate or execute
-
-    Returns: str
-        A string summarizing the outcome of the processing.
-    """
-    object_type, object_action = extract_command_plus(txt)
-    element_display = ""
-    bp_exist = True
-    bp_qname_list = []
-    parent_qname_list = []
-
-    display_name = extract_attribute(txt, ['Display Name', 'Solution Component Name'])
-    description = extract_attribute(txt, ['Description'])
-    version = extract_attribute(txt, ['Version', "Version Identifier", "Published Version"])
-    solution_component_type = extract_attribute(txt, ['Solution Component Type'])
-    planned_deployed_implementation_type = extract_attribute(txt, ['Planned Deployment Implementation Type'])
-    solution_blueprints = extract_attribute(txt, ['Solution Blueprints'])
-    parent_components = extract_attribute(txt, ['Parent Components'])
-
-    print(Markdown(
-        f"{pre_command}  {object_action} `{object_type}` for Solution Component: `\'{display_name}\'` with directive: `{directive}`\n"))
-
-    known_q_name, known_guid, msg, valid, exists = process_element_identifiers(egeria_client, object_type,txt, object_action)
-
-    if description is None:
-        msg += f"* {INFO}Description is missing\n"
-
-    if version is None:
-        msg += f"* {INFO}Term version is missing\n"
-
-    update_description = extract_attribute(txt, ['Update Description'])
-    if update_description is None:
-        msg += f"* {INFO}Update Description is missing\n"
-        update_description = "---"
-
-    if solution_component_type is None:
-        msg += f"* {INFO}Solution Component Type is missing\n"
-
-    if planned_deployed_implementation_type is None:
-        msg += f"* {INFO}Planned Deployed Implementation Type is missing\n"
-
-    if solution_blueprints is None:
-        msg += f"* {INFO}No Solution Blueprints found\n"
-
-    else: # Find information about blueprints that include this component
-        solution_blueprints, bp_qname_list, msg, valid, exists = process_q_name_list(egeria_client,
-                                            'Solution Blueprints', txt)
-
-    if parent_components is None:
-        msg += f"* {INFO}Parent Components are missing\n"
-    else:
-        parent_components, parent_qname_list, msg, valid, exists = process_q_name_list(egeria_client,
-                                            'Solution Component', parent_components)
-
-    element_display = (f"\n* Command: {object_action} {object_type}\n\t* Display Name: {display_name}\n\t"
-                       f"* Description: {description}\n\t"
-                       f"* Version Identifier: {version}\n\t"
-                       f"* Solution Component Type {solution_component_type}\n\t"
-                       f"* Planned Deployment Implementation Type {planned_deployed_implementation_type}\n\t"
-                       f"* Solution_Blueprints: {solution_blueprints}\n\t"
-                       f"* Parent Components: {parent_components}\n\t"
-                       f"* Qualified Name:{known_q_name}\n\t* GUID: {known_guid} "
-                       f"\n\t* Update Description: {update_description}\n")
-
-    if object_action == "Update":  # check to see if provided information exists and is consistent with existing info
-        if not exists:
-            msg += f"* {ERROR}Element {display_name} does not exist\n"
-            valid = False
-            # element_dictionary[known_q_name] = {'display_name': display_name, 'guid': known_guid}
-
-    elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
-        if exists:
-            msg += f"\n{WARNING}Element \'{display_name}\' already exists.\n"
-        elif not valid:
-            msg += f"\n-->Validation checks failed in creating element \'{display_name}\' with: {element_display}\n"
-        else:  # valid to create - update element_dictionary
-            msg += f"\n-->It is valid to create element \'{display_name}\' with: {element_display}\n"
-            if known_q_name is None:
-                known_q_name = egeria_client.__create_qualified_name__(object_type, display_name,
-                                                                       version_identifier=version)
-            update_element_dictionary(known_q_name, {'display_name': display_name})
-
-    if directive == "display":
-        print(Markdown(element_display))
-        return None
-    elif directive == "validate":
-        print(Markdown(msg))
-        print(Markdown(element_display))
-        return valid
-
-    elif directive == "process":
-        print(Markdown(msg))
-        try:
-            if not valid:  # First validate the term before we process it
-                return None
-
-            if object_action == "Update" and directive == "process":
-                if not exists:
-                    print(f"\n-->Solution Component {display_name} does not exist")
-                    return None
-
-                # call update solution component here
-
-                print(f"\n-->Updated Solution Component {display_name} with GUID {known_guid}")
-                # update with get solution component by guid
-                return 'Would return get Solution Component by guid and return md'  # egeria_client.get_terms_by_guid(known_guid, 'md')
-
-            elif object_action == "Update" and directive == "validate":
-                return 'Would call get_blueprint_by_guid and return md'  # egeria_client.get_terms_by_guid(known_guid, 'md')
-
-            elif object_action == "Create":
-                if exists:
-                    print(f"\n{WARNING}Blueprint {display_name} exists and result document updated")
-                    return update_a_command(txt, f"{object_type}{object_action}",
-                                            object_type, known_q_name, known_guid)
-                else:
-                    # create the blueprint
-                    # term_guid = egeria_client.create_controlled_glossary_term(glossary_guid, term_body)
-                    # if term_guid == NO_ELEMENTS_FOUND:
-                    #     print(f"{ERROR}Term {term_name} not created")
-                    #     return None
-
-                    print(f"\n-->Created Solution Component {display_name} with GUID {known_guid}")
-                    update_element_dictionary(known_q_name, {'guid': known_guid, 'display_name': display_name})
-                    return 'Would return get solution component by guid results as md'  # egeria_client.get_terms_by_guid(term_guid, 'MD')
-
-        except Exception as e:
-            print(f"{ERROR}Error creating term {display_name}: {e}")
-            console.print_exception(show_locals=True)
-            return None
 
 
 def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
@@ -635,7 +350,7 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
 
-    glossary_name = extract_attribute(txt, ['Glossary Name','Display Name'])
+    glossary_name = extract_attribute(txt, ['Glossary Name'])
     print(Markdown(f"{pre_command} `{command}` for glossary: `\'{glossary_name}\'` with directive: `{directive}` "))
     language = extract_attribute(txt, ['Language'])
     description = extract_attribute(txt, ['Description'])
@@ -651,11 +366,16 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
         glossary_display += f"* Qualified Name: {q_name}\n\t* GUID: {guid}\n\n"
 
     def validate_glossary(obj_action: str) -> tuple[bool, bool, Optional[str], Optional[str]]:
-
         valid = True
         msg = ""
+        known_glossary_guid = None
+        known_q_name = None
 
-        known_q_name, known_guid, msg, valid, glossary_exists = process_element_identifiers(egeria_client, object_type,txt, object_action)
+        glossary_details = egeria_client.get_glossaries_by_name(glossary_name)
+        if glossary_details == NO_GLOSSARIES_FOUND:
+            glossary_exists = False
+        else:
+            glossary_exists = True
 
         if glossary_name is None:
             msg = f"* {ERROR}Glossary name is missing\n"
@@ -665,6 +385,13 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
             valid = False
         if description is None:
             msg += f"* {INFO}Description is missing\n"
+
+        if len(glossary_details) > 1 and glossary_exists:
+            msg += f"* {ERROR}More than one glossary with name {glossary_name} found\n"
+            valid = False
+        if len(glossary_details) == 1:
+            known_glossary_guid = glossary_details[0]['elementHeader'].get('guid', None)
+            known_q_name = glossary_details[0]['glossaryProperties'].get('qualifiedName', None).strip()
 
         if obj_action == "Update":
 
@@ -682,12 +409,12 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
             if valid:
                 msg += glossary_display
                 msg += f"* -->Glossary `{glossary_name}` exists and can be updated\n"
-                update_element_dictionary(known_q_name, {'display_name': glossary_name, 'guid': known_guid})
+                element_dictionary[known_q_name] = {'display_name': glossary_name, 'guid': known_glossary_guid}
             else:
                 msg += f"* --> validation failed\n"
 
             print(Markdown(msg))
-            return valid, glossary_exists, known_guid, known_q_name
+            return valid, glossary_exists, known_glossary_guid, known_q_name
 
         elif obj_action == "Create":
             if glossary_exists:
@@ -697,10 +424,10 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
                 msg += f"-->It is valid to create Glossary \'{glossary_name}\' with:\n"
                 msg += glossary_display
                 expected_q_name = egeria_client.__create_qualified_name__('Glossary', glossary_name)
-                update_element_dictionary(expected_q_name, {'display_name': glossary_name})
+                element_dictionary[expected_q_name] = {'display_name': glossary_name}
 
             print(Markdown(msg))
-            return valid, glossary_exists, known_guid, known_q_name
+            return valid, glossary_exists, known_glossary_guid, known_q_name
 
     if directive == "display":
         print(Markdown(glossary_display))
@@ -729,9 +456,9 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
                 }
             egeria_client.update_glossary(known_guid, body)
             print(f"\n-->Updated Glossary {glossary_name} with GUID {known_guid}")
-            update_element_dictionary(known_q_name, {
+            element_dictionary[known_q_name] = {
                 'guid': known_guid, 'display_name': glossary_name
-                })
+                }
             # return update_a_command(txt, command, object_type, known_q_name, known_guid)
             return egeria_client.get_glossary_by_guid(known_guid, output_format='MD')
         elif object_action == "Create":
@@ -747,9 +474,9 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
                     print(f"{ERROR}Just created with GUID {glossary_guid} but Glossary not found\n")
                     return None
                 qualified_name = glossary['glossaryProperties']["qualifiedName"]
-                update_element_dictionary(qualified_name, {
+                element_dictionary[qualified_name] = {
                     'guid': glossary_guid, 'display_name': glossary_name
-                    })
+                    }
                 # return update_a_command(txt, command, object_type, qualified_name, glossary_guid)
                 return egeria_client.get_glossary_by_guid(glossary_guid, output_format = 'MD')
 
@@ -802,10 +529,9 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
             msg += f"* {ERROR}Owning Glossary Qualified Name is missing\n"
             valid = False
 
-        elif owning_glossary_qn in get_element_dictionary():  # Check to see if we already know about this glossary
-            element_dict = get_element_dictionary()
-            glossary_name = element_dict[owning_glossary_qn].get('display_name', None)
-            glossary_guid = element_dict[owning_glossary_qn].get('guid', None)
+        elif owning_glossary_qn in element_dictionary:  # Check to see if we already know about this glossary
+            glossary_name = element_dictionary[owning_glossary_qn].get('display_name', None)
+            glossary_guid = element_dictionary[owning_glossary_qn].get('guid', None)
 
         else:
             # need to ask Egeria if it knows the Glossary Name
@@ -822,9 +548,9 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                     msg += f"* {ERROR}Glossary `{owning_glossary_qn}` is known by qualifiedName `{glossary_qn}`\n\n"
                     valid = False
                 else:
-                    update_element_dictionary(owning_glossary_qn, {
+                    element_dictionary[owning_glossary_qn] = {
                         'guid': glossary_guid, 'display_name': glossary_name
-                        })
+                        }
 
         if category_name is None:
             msg = f"* {ERROR}Category name is missing\n"
@@ -854,7 +580,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
             if valid:
                 msg += category_display
                 msg += f"* -->category `{category_name}` exists and can be updated\n"
-                update_element_dictionary(known_q_name, {'display_name': glossary_name, 'guid': known_category_guid})
+                element_dictionary[known_q_name] = {'display_name': glossary_name, 'guid': known_category_guid}
             else:
                 msg += f"* --> validation failed\n"
 
@@ -869,7 +595,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                 msg += f"-->It is valid to create category `{category_name}` with:\n"
                 msg += category_display
                 expected_q_name = egeria_client.__create_qualified_name__('Category', category_name)
-                update_element_dictionary(expected_q_name, {'display_name': category_name})
+                element_dictionary[expected_q_name] = {'display_name': category_name}
 
             print(Markdown(msg))
             return valid, category_exists, known_category_guid, known_q_name, glossary_guid
@@ -899,9 +625,9 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
             egeria_client.update_category(glossary_guid, category_name, description, known_q_name, None,
                                           update_description)
             print(f"\n-->Updated category `{category_name}`with GUID {known_guid}")
-            update_element_dictionary(known_q_name, {
+            element_dictionary[known_q_name] = {
                 'guid': known_guid, 'display_name': category_name
-                })
+                }
             # return update_a_command(txt, command, object_type, known_q_name, known_guid)
             return egeria_client.get_categories_by_guid(known_guid, output_format='FORM')
 
@@ -919,9 +645,9 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                     print(f"{ERROR}Just created with GUID {category_guid} but category not found\n")
                     return None
                 qualified_name = category['glossaryCategoryProperties']["qualifiedName"]
-                update_element_dictionary(qualified_name, {
+                element_dictionary[qualified_name] = {
                     'guid': category_guid, 'display_name': category_name
-                    })
+                    }
                 # return update_a_command(txt, command, object_type, qualified_name, category_guid)
                 return egeria_client.get_categories_by_guid(category_guid, output_format='MD')
 
@@ -942,7 +668,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
 
-    term_name = extract_attribute(txt, ['Term Name','Display Name'])
+    term_name = extract_attribute(txt, ['Term Name'])
     summary = extract_attribute(txt, ['Summary'])
     description = extract_attribute(txt, ['Description'])
     abbreviation = extract_attribute(txt, ['Abbreviation'])
@@ -993,8 +719,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             valid = False
         else:
             print(f"* {INFO}Glossary qualified name is `{glossary_qn}`")
-            element_dict = get_element_dictionary()
-            if glossary_qn not in element_dict:
+            if glossary_qn not in element_dictionary:
                 glossary = egeria_client.get_glossaries_by_name(glossary_qn) #assuming q_name?
                 if isinstance(glossary,str):
                     msg += f"* {ERROR}Glossary `{glossary_qn}` is unknown\n "
@@ -1008,10 +733,10 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                         msg += f"* {ERROR}Glossary `{glossary_qn}` has no qualifiedName\n "
                         valid = False
                     else:
-                        update_element_dictionary(glossary_qn, {
+                        element_dictionary[glossary_qn] = {
                         'guid': glossary[0]['elementHeader'].get('guid', None),
                         'display_name': glossary[0]['glossaryProperties'].get('displayName', None)
-                        })
+                        }
 
 
         if categories is None:
@@ -1022,8 +747,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             new_cat_list = []
             for category in categories_list:
                 category_el = category.strip()
-                element_dict = get_element_dictionary()
-                if category_el not in element_dict:
+                if category_el not in element_dictionary:
                     cat = egeria_client.get_categories_by_name(category_el) # assuming qualified name?
                     if isinstance(cat,str):
                         msg += (f"* {WARNING}Category `{category_el}` not found -> "
@@ -1032,13 +756,13 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                         break
                     cat_qname = cat[0]['glossaryCategoryProperties'].get('qualifiedName', None)
                     category = cat_qname # use the qualified name if found
-                    if cat_qname not in element_dict:
+                    if cat_qname not in element_dictionary:
                         cat_guid = cat[0]['elementHeader']['guid']
                         cat_display_name = cat[0]['glossaryCategoryProperties'].get('displayName', None)
-                        update_element_dictionary(cat_qname, {
+                        element_dictionary[cat_qname] = {
                             'guid' : cat_guid,
                             'displayName': cat_display_name
-                            })
+                            }
                 categories = f"{category}, {categories}"
                 new_cat_list.append(category)
             if cats_exist:
@@ -1083,7 +807,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             else:
                 msg += f"\n--> * Term {term_name} exists and can be updated\n"
                 msg += term_display
-                update_element_dictionary(known_q_name, {'display_name': term_name, 'guid': known_term_guid})
+                element_dictionary[known_q_name] = {'display_name': term_name, 'guid': known_term_guid}
 
             print(Markdown(msg))
             return valid, term_exists, known_term_guid, known_q_name
@@ -1096,11 +820,10 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             else:
                 msg += f"\n-->It is valid to create Term \'{term_name}\' with: {term_display}\n"
                 if q_name is None:
-                    expected_q_name = egeria_client.__create_qualified_name__('Term',
-                                                                              term_name, version_identifier=version)
-                    update_element_dictionary(expected_q_name, {'display_name': term_name})
+                    expected_q_name = egeria_client.__create_qualified_name__('Term', term_name)
+                    element_dictionary[expected_q_name] = {'display_name': term_name}
                 else:
-                    update_element_dictionary(q_name, {'display_name': term_name})
+                    element_dictionary[q_name] = {'display_name': term_name}
             print(Markdown(msg))
             return valid, term_exists, known_term_guid, known_q_name
 
@@ -1177,14 +900,13 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             elif object_action == "Create":
                 guid = None
                 if q_name is None:
-                    q_name = egeria_client.__create_qualified_name__("Term",term_name,
-                                                                     version_identifier=version)
+                    q_name = egeria_client.__create_qualified_name__("Term",term_name)
                 if exists:
                     print(f"\n{WARNING}Term {term_name} exists and result document updated")
                     return update_a_command(txt, command, object_type, q_name, known_guid)
                 else:
                     ## get the guid for the glossary from the name - first look locally
-                    glossary = get_element_dictionary().get(glossary_qn, None)
+                    glossary = element_dictionary.get(glossary_qn, None)
 
                     if glossary is not None:
                         glossary_guid = glossary.get('guid', None)
@@ -1223,7 +945,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                         egeria_client, term_guid, cats_exist, categories_list,
                         element_dictionary)
                     print(f"\n-->Created Term {term_name} with GUID {term_guid}")
-                    update_element_dictionary(q_name, {'guid': term_guid, 'display_name': term_name})
+                    element_dictionary[q_name] = {'guid': term_guid, 'display_name': term_name}
                     return egeria_client.get_terms_by_guid(term_guid, 'MD')
                     # return update_a_command(txt, command, object_type, q_name, term_guid)
         except Exception as e:
@@ -1377,5 +1099,5 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, element_dicti
                     return None
 
                 q_name = project_g['projectProperties']["qualifiedName"]
-                update_element_dictionary(q_name, {'guid': guid, 'display_name': project_name})
+                element_dictionary[q_name] = {'guid': guid, 'display_name': project_name}
                 return update_a_command(txt, command, object_type, q_name, guid)

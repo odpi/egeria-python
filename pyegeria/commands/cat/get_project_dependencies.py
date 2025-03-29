@@ -109,7 +109,7 @@ def project_dependency_viewer(
                 child_md = ""
                 child_guid = proj["elementHeader"]["guid"]
                 child_name = proj["properties"]["name"]
-                relationship = proj["relatedElement"]["relationshipHeader"]["type"][
+                relationship = proj["startingElement"]["relationshipHeader"]["type"][
                     "typeName"
                 ]
                 if relationship != "ProjectDependency":

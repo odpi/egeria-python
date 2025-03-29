@@ -13,6 +13,8 @@ import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                       process_categories_upsert_command, process_provenance_command,
                       get_current_datetime_string, process_per_proj_upsert_command, command_list,EgeriaTech,
+                      process_blueprint_upsert_command, process_solution_component_upsert_command,
+                      shared_state
                       )
 from datetime import datetime
 
@@ -62,7 +64,7 @@ def process_markdown_file(
     """
     Process a markdown file by parsing and executing Dr. Egeria commands. Write output to a new file.
     """
-
+    cmd_list = command_list
     console = Console(width=int(EGERIA_WIDTH))
     client = EgeriaTech(server, url, user_id=userid)
     token = client.create_egeria_bearer_token(userid, user_pass)
@@ -84,41 +86,47 @@ def process_markdown_file(
     h1_blocks = []
     current_block = ""
     in_h1_block = False
-    element_dictionary = {}
+
 
     # Helper function to process the current block
     def process_current_block(current_block):
-        nonlocal updated, final_output, prov_found, prov_output, h1_blocks, in_h1_block, element_dictionary
+        nonlocal updated, final_output, prov_found, prov_output, h1_blocks, in_h1_block
 
         if not current_block:
             return  # No block to process
 
         potential_command = extract_command(current_block)  # Extract command
-        if potential_command in command_list:
+        if potential_command in cmd_list:
             # Process the block based on the command
             if potential_command == "Provenance":
                 result = process_provenance_command(file_path, current_block)
                 prov_found = True
 
             elif potential_command in ["Create Glossary", "Update Glossary"]:
-                result = process_glossary_upsert_command(client, element_dictionary, current_block, directive)
+                result = process_glossary_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
-                result = process_categories_upsert_command(client, element_dictionary, current_block, directive)
+                result = process_categories_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
-                result = process_term_upsert_command(client, element_dictionary, current_block, directive)
+                result = process_term_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                result = process_per_proj_upsert_command(client, element_dictionary, current_block, directive)
+                result = process_per_proj_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+            elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint", "Update Solution Blueprint"]:
+                result = process_blueprint_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+            elif potential_command in ["Create Solution Component", "Update Solution Component"]:
+                result = process_solution_component_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+
+
             else:
                 # If command is not recognized, keep the block as-is
                 result = None
-
+            print(json.dumps(shared_state.get_element_dictionary(), indent=4))
             if result:
                 if directive == "process":
                     updated = True
                     final_output.append(result)
-                    # print(json.dumps(element_dictionary, indent=4))
+                    print(json.dumps(shared_state.get_element_dictionary(), indent=4))
                 elif directive == "validate":
-                    print(json.dumps(element_dictionary, indent=4))
+                    print(json.dumps(shared_state.get_element_dictionary(), indent=4))
             elif directive == "process":
                 # Handle errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
@@ -212,3 +220,5 @@ def process_markdown_file(
 #
 # if __name__ == "__main__":
 #     main()
+if __name__ == "__main__":
+    process_markdown_file()

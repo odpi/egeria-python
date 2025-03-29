@@ -936,7 +936,7 @@ class GlossaryManager(GlossaryBrowser):
                             continue
 
                 # Add the term
-                term_qualified_name = self.__create_qualified_name("Term", display_name),
+                term_qualified_name = self.__create_qualified_name__("Term", term_name)
 
                 body = {
                     "class": "ReferenceableRequestBody",

@@ -716,12 +716,12 @@ class TestGlossaryManager:
     def test_load_terms_from_csv(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1, self.good_platform1_url, self.good_user_3
+                self.good_view_server_2, self.good_platform1_url, self.good_user_3
             )
             token = g_client.create_egeria_bearer_token(self.good_user_3, "secret")
-            glossary = "example"
+            glossary = "Egeria-Markdown"
             file_path = "/Users/dwolfson/localGit/egeria-v5-1/egeria-workspaces/exchange/loading-bay/glossary"
-            file_name = "pets.om-terms"
+            file_name = "Test1.om-terms"
             response = g_client.load_terms_from_csv_file(glossary, file_name, file_path)
             print(f"type is {type(response)}")
             if type(response) is list:
