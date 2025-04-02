@@ -63,7 +63,7 @@ def add_catalog_target(
 @click.argument("relationship-guid")
 @click.pass_context
 def remove_catalog_target(ctx, relationship_guid: str):
-    """Remove the catalog target specified by the relationship guidr"""
+    """Remove the catalog target specified by the relationship guid"""
     try:
         c = ctx.obj
         a_client = AutomatedCuration(
@@ -129,7 +129,7 @@ def refresh_gov_eng_config(ctx, engine_host_guid: str):
 
 @click.command("start")
 @click.pass_context
-@click.option("--server", default="simple-metadata-store", help="OMAG Server to start")
+@click.option("--server", default="qs-metadata-store", help="OMAG Server to start")
 def start_server(ctx, server):
     """Start or restart an engine-host from its known configuration"""
     c = ctx.obj

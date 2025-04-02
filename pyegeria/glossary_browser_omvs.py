@@ -556,7 +556,7 @@ class GlossaryBrowser(Client):
 
     async def _async_get_glossary_by_guid(
         self, glossary_guid: str, effective_time: str = None, output_format: str = "JSON"
-    ) -> dict:
+    ) -> dict|str:
         """Retrieves information about a glossary
         Parameters
         ----------
@@ -574,9 +574,9 @@ class GlossaryBrowser(Client):
 
         Returns
         -------
-        dict
-            The glossary definition associated with the glossary_guid
-
+        dict | str
+            if output format is JSON: The glossary definition associated with the glossary_guid
+            if output format is MD: A markdown string with the same information.
         Raises
         ------
          InvalidParameterException

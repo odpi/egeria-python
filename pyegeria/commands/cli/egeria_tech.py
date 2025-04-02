@@ -60,7 +60,7 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 @click.group()
 @click.option(
     "--server",
-    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
+    default=os.environ.get("EGERIA_METADATA_STORE", "qs-metadata-store"),
     help="Egeria metadata store to work with",
 )
 @click.option(
@@ -70,7 +70,7 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 )
 @click.option(
     "--integration_daemon",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "qs-integration-daemon"),
     help="Egeria integration daemon to work with",
 )
 @click.option(
@@ -80,7 +80,7 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 )
 @click.option(
     "--view_server",
-    default=os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
+    default=os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server"),
     help="Egeria view server to work with",
 )
 @click.option(
@@ -90,7 +90,7 @@ from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_v
 )
 @click.option(
     "--engine_host",
-    default=os.environ.get("EGERIA_ENGINE_HOST", "engine-host"),
+    default=os.environ.get("EGERIA_ENGINE_HOST", "qs-engine-host"),
     help="Egeria engine host to work with",
 )
 @click.option(

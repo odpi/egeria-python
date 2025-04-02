@@ -43,7 +43,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat
 
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--file-path", help="File path to markdown file",
-              default="glossary_exp.md", required=True, prompt=False)
+              default="glossary_test1.md", required=True, prompt=False)
 @click.option("--directive", default="display", help="How to process the file",
               type=click.Choice(["display","validate","process"],case_sensitive=False), prompt=False,)
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
@@ -124,9 +124,10 @@ def process_markdown_file(
                 if directive == "process":
                     updated = True
                     final_output.append(result)
-                    print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+                    # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
                 elif directive == "validate":
-                    print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+                    pass
+                    # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
             elif directive == "process":
                 # Handle errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"

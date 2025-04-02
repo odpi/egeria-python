@@ -775,12 +775,13 @@ class Client:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""
         EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
-        display_name = re.sub(r'\s','-',display_name.strip())
-        q_name = f"{type}:{display_name}"
+        # display_name = re.sub(r'\s','-',display_name.strip()) # This changes spaces between words to -; removing
+
+        q_name = f"{type}::{display_name.strip()}"
         if EGERIA_LOCAL_QUALIFIER:
-            q_name = f"{EGERIA_LOCAL_QUALIFIER}:{q_name}"
+            q_name = f"{EGERIA_LOCAL_QUALIFIER}::{q_name}"
         if version_identifier:
-            q_name = f"{q_name}:{version_identifier}"
+            q_name = f"{q_name}::{version_identifier}"
         return q_name
 
 if __name__ == "__main__":
