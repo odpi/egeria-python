@@ -25,6 +25,9 @@ def update_element_dictionary(key, value):
         value (dict): The value to associate with the key
     """
     global element_dictionary
+    if (key is None or value is None):
+        print(f"===>ERROR Key is {key} and value is {value}")
+        return
     element_dictionary[key] = value
 
 def clear_element_dictionary():

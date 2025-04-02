@@ -119,7 +119,7 @@ def process_markdown_file(
             else:
                 # If command is not recognized, keep the block as-is
                 result = None
-            print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+            # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
             if result:
                 if directive == "process":
                     updated = True
