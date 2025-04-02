@@ -63,7 +63,7 @@ from pyegeria.commands.ops.restart_integration_daemon import restart_connector
 @click.group()
 @click.option(
     "--server",
-    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
+    default=os.environ.get("EGERIA_METADATA_STORE", "qs-metadata-store"),
     help="Egeria metadata store to work with",
 )
 @click.option(
@@ -73,7 +73,7 @@ from pyegeria.commands.ops.restart_integration_daemon import restart_connector
 )
 @click.option(
     "--integration_daemon",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon"),
+    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "qs-integration-daemon"),
     help="Egeria integration daemon to work with",
 )
 @click.option(
@@ -83,7 +83,7 @@ from pyegeria.commands.ops.restart_integration_daemon import restart_connector
 )
 @click.option(
     "--view_server",
-    default=os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
+    default=os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server"),
     help="Egeria view server to work with",
 )
 @click.option(
@@ -93,7 +93,7 @@ from pyegeria.commands.ops.restart_integration_daemon import restart_connector
 )
 @click.option(
     "--engine_host",
-    default=os.environ.get("EGERIA_ENGINE_HOST", "engine-host"),
+    default=os.environ.get("EGERIA_ENGINE_HOST", "qs-engine-host"),
     help="Egeria engine host to work with",
 )
 @click.option(
@@ -449,16 +449,12 @@ def integration_daemon(ctx):
     default="all",
     help="Name of connector to refresh or 'all' to refresh all",
 )
-@click.option(
-    "--server",
-    default="integration-daemon",
-    help="Name of the integration server to refresh",
-)
-def refresh_connectors(ctx, server, connector):
+
+def refresh_connectors(ctx,  connector):
     """Refresh the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     refresh_connector(
-        connector, server, c.view_server_url, c.view_server, c.userid, c.password
+        connector, c.integration_daemon, c.integration_daemon_url, c.view_server, c.userid, c.password
     )
 
 
@@ -469,16 +465,11 @@ def refresh_connectors(ctx, server, connector):
     default="all",
     help="Name of connector to restart or 'all' to restart all",
 )
-@click.option(
-    "--server",
-    default="integration-daemon",
-    help="Name of the integration server to restart",
-)
-def restart_connectors(ctx, server, connector):
+def restart_connectors(ctx,  connector):
     """Restart the specified integration connector or ALL connectors if not specified"""
     c = ctx.obj
     restart_connector(
-        connector, server, c.view_server_url, c.view_server, c.userid, c.password
+        connector, c.integration_daemon, c.integration_daemon_url, c.view_server, c.userid, c.password
     )
 
 

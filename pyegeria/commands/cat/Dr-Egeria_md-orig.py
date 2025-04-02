@@ -47,7 +47,7 @@ console = Console(width=int(EGERIA_WIDTH))
 
 @click.command("process-markdown-file", help="Process a markdown file and return the output as a string.")
 @click.option("--file-path", help="File path to markdown file",
-              default="glossary_exp.md")
+              default="glossary_test1.md")
 @click.option("--directive", default="display-only", help="How to process the file")
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option(
