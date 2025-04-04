@@ -189,7 +189,8 @@ def process_markdown_file(
                     f2.write(prov_output)
             click.echo(f"\n==> Output written to {new_file_path}")
         else:
-            click.echo("\nNo updates detected. New File not created.")
+            if directive != 'display':
+                click.echo("\nNo updates detected. New File not created.")
 
     except (Exception):
         console.print_exception(show_locals=True)

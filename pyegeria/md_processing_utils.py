@@ -33,7 +33,8 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Create Personal Project", "Update Personal Project", "Create Category", "Update Category",
                 "Create Solution Blueprint", "Update Solution Blueprint", "Create Solution Component",
                 "Update Solution Component", ]
-debug_level = "debug"
+# verbosity - verbose, quiet, debug
+debug_level = "verbose"
 message_types = {
     "INFO": "INFO-", "WARNING": "WARNING->", "ERROR": "ERROR->", "DEBUG-INFO": "DEBUG-INFO->",
     "DEBUG-WARNING": "DEBUG-WARNING->", "DEBUG-ERROR": "DEBUG-ERROR->", "ALWAYS": "\n\n==> "
@@ -68,6 +69,12 @@ def is_valid_iso_date(date_text) -> bool:
         return True
     except ValueError:
         return False
+
+def set_debug_level(directive: str) -> None:
+    """Sets the debug level for the script."""
+    global debug_level
+    if directive == "display":
+        debug_level = "display-only"
 
 
 def get_current_datetime_string():
@@ -220,6 +227,8 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
                 print(record)
         case "debug":
             print(record)
+        case "display-only":
+            pass
         case _:
             print("Invalid verbosity level - exiting\n")
             sys.exit(1)
@@ -303,7 +312,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
             existing_prov = extracted_text  # Return the cleaned text
         else:
             existing_prov = None
-    print(f"txt is: {txt}, existing_prov: {existing_prov}")
+    # print(f"txt is: {txt}, existing_prov: {existing_prov}")
     existing_prov = existing_prov if existing_prov else " "
     return f"\n# Provenance:\n{existing_prov}\n{output}\n"
 
@@ -556,7 +565,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
         A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
-
+    set_debug_level(directive)
     display_name = process_simple_attribute(txt, ['Display Name', 'Blueprint Name'],ERROR)
     description = process_simple_attribute(txt, ['Description'])
     version = process_simple_attribute(txt, ['Version', "Version Identifier", "Published Version"])
@@ -660,6 +669,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, element
     Returns: str
         A string summarizing the outcome of the processing.
     """
+    set_debug_level(directive)
     bp_qname_list = []
     command, object_type, object_action = extract_command_plus(txt)
 
@@ -820,6 +830,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, element_dictionar
     # object_type = command.split(' ')[1].strip()
     # object_action = command.split(' ')[0].strip()
     command, object_type, object_action = extract_command_plus(txt)
+    set_debug_level(directive)
 
     glossary_name = process_simple_attribute(txt, ['Glossary Name', 'Display Name'])
     print(Markdown(f"{pre_command} `{object_action}` `{object_type}`  for glossary: `\'{glossary_name}\'` with directive: `{directive}` "))
@@ -937,7 +948,7 @@ def process_categories_upsert_command(egeria_client: EgeriaTech, element_diction
     :return: A string summarizing the outcome of the processing.
     """
     valid = True
-
+    set_debug_level(directive)
     # command = extract_command(txt)
     # object_type = command.split(' ')[1].strip()
     # object_action = command.split(' ')[0].strip()
@@ -1074,7 +1085,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
     valid = True
     categories_list = None
     cats_exist = True
-
+    set_debug_level(directive)
     known_q_name = None
     command = extract_command(txt)
     object_type = command.split(' ')[1].strip()
@@ -1258,6 +1269,7 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, element_dicti
     object = command.split()
     object_type = f"{object[1]} {object[2]}"
     object_action = object[0]
+    set_debug_level(directive)
 
     project_name = process_simple_attribute(txt, ['Project Name'])
     description = process_simple_attribute(txt, ['Description'])
