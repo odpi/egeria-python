@@ -594,8 +594,145 @@ class GlossaryManager(GlossaryBrowser):
             self._async_delete_category(category_guid)
         )
 
+    async def _async_set_parent_category(
+        self,
+        parent_category_guid: str, child_category_guid: str) -> None:
+        """Set parent category Async Version.
 
+        Parameters
+        ----------
+        parent_category_guid: str,
+            Unique identifier for the parent category.
+        child_category_guid: str,
+            Unique identifier for the child category.
 
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{parent_category_guid}/subcategories/{child_category_guid}"
+        )
+
+        await self._async_make_request("POST", url)
+
+    def set_parent_category(self, parent_category_guid: str, child_category_guid: str) -> None:
+        """Set parent category
+
+        Parameters
+        ----------
+        parent_category_guid: str,
+            Unique identifier for the parent category.
+        child_category_guid: str,
+            Unique identifier for the child category.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_parent_category(parent_category_guid,child_category_guid)
+        )
+
+    async def _async_remove_parent_category(
+            self,
+            parent_category_guid: str, child_category_guid: str) -> None:
+        """Remove parent category relationship. Async Version.
+
+        Parameters
+        ----------
+        parent_category_guid: str,
+            Unique identifier for the parent category.
+        child_category_guid: str,
+            Unique identifier for the child category.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"categories/{parent_category_guid}/subcategories/{child_category_guid}/remove"
+        )
+
+        await self._async_make_request("POST", url)
+
+    def remove_parent_category(self, parent_category_guid: str, child_category_guid: str) -> None:
+        """Remove parent category relationship.
+
+        Parameters
+        ----------
+        parent_category_guid: str,
+            Unique identifier for the parent category.
+        child_category_guid: str,
+            Unique identifier for the child category.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_parent_category(parent_category_guid, child_category_guid)
+            )
 
     #
     #  Terms
