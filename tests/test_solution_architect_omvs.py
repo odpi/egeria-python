@@ -15,7 +15,6 @@ import json
 import time
 
 from rich import print, print_json
-from rich.console import Console
 
 from pyegeria import SolutionArchitect
 from pyegeria._exceptions import (
@@ -26,8 +25,6 @@ from pyegeria._exceptions import (
 )
 
 disable_ssl_warnings = True
-
-console = Console()
 
 
 def jprint(info, comment=None):
@@ -53,8 +50,87 @@ class TestSolutionArchitect:
     #
     ##
     #
+
+
+    def test_create_info_supply_chains(self):
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+                )
+            s_client.create_egeria_bearer_token()
+            display_name = "my_first_supply_chain"
+            q_name = s_client.__create_qualified_name__("InformationSupplyChain",display_name)
+            body = {
+                "class": "NewInformationSupplyChainRequestBody",
+                "isOwnAnchor": True,
+                "parentAtEnd1": False,
+                "properties": {
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "description": "my first supply chain",
+                    "scope": "just testing"
+                    }
+                }
+            start_time = time.perf_counter()
+            response = s_client.create_info_supply_chain(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+                )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
+    def test_update_info_supply_chains(self):
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+                )
+            s_client.create_egeria_bearer_token()
+
+            body = {
+              "class" : "UpdateInformationSupplyChainRequestBody",
+              "properties": {
+                "description": "updated description",
+                "scope": "updated scope"
+              }
+            }
+            start_time = time.perf_counter()
+            guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+            s_client.update_info_supply_chain(guid,body, False)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+                )
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_find_information_supply_chains(self):
-        filter = "Clinical"
+        filter_string = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -62,7 +138,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_information_supply_chains(filter)
+            response = s_client.find_information_supply_chains(filter_string, output_format='REPORT', include_mermaid=True)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -71,7 +147,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -84,6 +160,39 @@ class TestSolutionArchitect:
 
         finally:
             s_client.close_session()
+
+    def test_get_information_supply_chain_by_guid(self):
+        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+            start_time = time.perf_counter()
+            response = s_client.get_info_supply_chain_by_guid(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
 
     def test_find_information_supply_chains_body(self):
         filter = "Clinical"
@@ -111,7 +220,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -143,7 +252,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -158,7 +267,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_blueprints(self):
-        filter = "Clinical"
+        search_string = "Clinical"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -166,7 +275,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(filter)
+            response = s_client.find_solution_blueprints(search_string, output_format='FORM', include_mermaid=True)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -175,7 +284,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -206,7 +315,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -221,7 +330,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_roles(self):
-        filter = "0010"
+        search_string = "ClinicalTrialParticipatingHospital"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -229,7 +338,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_roles(filter)
+            response = s_client.find_solution_roles(search_string, output_format='REPORT', include_mermaid=True)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -238,7 +347,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -269,7 +378,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -301,7 +410,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -332,7 +441,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: " + response)
 
             assert True
         except (

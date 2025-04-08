@@ -784,5 +784,55 @@ class Client:
             q_name = f"{q_name}::{version_identifier}"
         return q_name
 
+    def make_preamble(self, obj_type: str, search_string: str, output_format: str = 'MD') -> tuple[str, str | None]:
+        """
+        Creates a preamble string and an elements action based on the given object type, search string,
+        and output format. The preamble provides a descriptive header based on the intent: To make a form,
+        a report, or unadorned markdwon. The elements action specifies the action to be taken on the object type.
+
+        Args:
+            obj_type: The type of object being updated or reported on (e.g., "Product", "Category").
+            search_string: The search string used to filter objects. Defaults to "All Terms" if None.
+            output_format: A format identifier determining the output structure.
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+
+        Returns:
+            tuple: A tuple containing:
+                - A string representing the formatted update or report preamble.
+                - A string or None indicating the action description for the elements,
+                  depending on the output format.
+        """
+        search_string = search_string if search_string else "All Elements"
+        elements_action = "Update " + obj_type
+        if output_format == "FORM":
+            preamble = (f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                        f"\t {obj_type} found from the search string:  `{search_string}`\n\n")
+
+            return preamble, elements_action
+        elif output_format == "REPORT":
+            elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+                           f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
+            elements_action = None
+            return elements_md, elements_action
+
+        else:
+            return "\n", elements_action
+
+    def make_md_attribute(self, attribute_name: str, attribute_value: str, output_type: str) -> str | None:
+        """ Create a markdown attribute line for a given attribute name and value."""
+        output = ""
+        attribute_value = attribute_value.strip() if attribute_value else ""
+        attribute_title = attribute_name.title() if attribute_name else ""
+        if output_type in ["FORM", "MD"]:
+            output = f"## {attribute_title}\n{attribute_value}\n\n"
+        elif output_type == "REPORT":
+            if attribute_value:
+                output = f"## {attribute_title}\n{attribute_value}\n\n"
+        return output
+
+
 if __name__ == "__main__":
     print("Main-__client")
