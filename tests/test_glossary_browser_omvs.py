@@ -437,7 +437,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = "JSON",
+                output_format = "DICT",
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)

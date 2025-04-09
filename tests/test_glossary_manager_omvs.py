@@ -359,7 +359,51 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_find_categories(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
 
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            response = g_client.find_glossary_categories(
+                # "*",
+                "*",
+                starts_with=False,
+                ends_with=False,
+                ignore_case=True,
+                page_size=0,
+                effective_time=None,
+                output_format="DICT"
+            )
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, list | dict):
+                # print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} glossaries")
+                # for i in range(count):
+                #     print(
+                #         f"Found glossary: {response[i]['glossaryCategoryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
+                #     )
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
 
 
 

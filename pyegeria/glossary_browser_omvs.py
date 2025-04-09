@@ -250,6 +250,100 @@ class GlossaryBrowser(Client):
         if isinstance(elements, dict):
             elements = [elements]
 
+        # If output format is LIST, create a markdown table
+        if output_format == 'LIST':
+            # Add table header
+            elements_md += "# Categories Table\n\n"
+            elements_md += f"Categories found from the search string: `{search_string}`\n\n"
+            elements_md += "| Display Name | Description | Qualified Name | Parent Category | Subcategories |\n"
+            elements_md += "|--------------|-------------|----------------|----------------|---------------|\n"
+
+            for element in elements:
+                guid = element['elementHeader'].get("guid", None)
+                properties = element['glossaryCategoryProperties']
+                display_name = properties.get("displayName", "") or ""
+                description = properties.get("description", "") or ""
+                qualified_name = properties.get("qualifiedName", "") or ""
+
+                # Format multiline text for table cells
+                description = description.replace("\n", " ").replace("|", "\\|") if description else ""
+
+                # Get parent category
+                parent_cat = self.get_category_parent(guid)
+                if isinstance(parent_cat, str):
+                    parent_cat_md = '---'
+                else:
+                    parent_cat_md = f"{parent_cat['glossaryCategoryProperties']['qualifiedName']}"
+
+                # Get subcategories
+                subcategories = self.get_glossary_subcategories(guid)
+                subcategory_list = []
+                if isinstance(subcategories, str) and subcategories == NO_CATEGORIES_FOUND:
+                    subcategory_list_md = '---'
+                elif isinstance(subcategories, list) and len(subcategories) > 0:
+                    for subcat in subcategories:
+                        subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '')
+                        if subcat_name:
+                            subcategory_list.append(subcat_name)
+                    subcategory_list_md = ", ".join(subcategory_list)
+                else:
+                    subcategory_list_md = '---'
+
+                subcategory_list_md = subcategory_list_md.replace("|", "\\|")
+
+                # Add row to table
+                elements_md += f"| {display_name} | {description} | {qualified_name} | {parent_cat_md} | {subcategory_list_md} |\n"
+
+            return elements_md
+
+        # If output format is DICT, return a dictionary structure
+        elif output_format == 'DICT':
+            result = []
+            for element in elements:
+                guid = element['elementHeader'].get("guid", None)
+                properties = element['glossaryCategoryProperties']
+                display_name = properties.get("displayName", None)
+                description = properties.get("description", None)
+                qualified_name = properties.get("qualifiedName", None)
+
+                # Get parent category
+                parent_cat = self.get_category_parent(guid)
+                if isinstance(parent_cat, str):
+                    parent_cat_md = '---'
+                else:
+                    parent_cat_md = f"{parent_cat['glossaryCategoryProperties']['qualifiedName']}"
+
+                # Get subcategories
+                subcategories = self.get_glossary_subcategories(guid)
+                subcategory_list = []
+                if isinstance(subcategories, list) and len(subcategories) > 0:
+                    for subcat in subcategories:
+                        subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '')
+                        if subcat_name:
+                            subcategory_list.append(subcat_name)
+
+                # Get glossary information
+                classification_props = element["elementHeader"]['classifications'][0].get('classificationProperties', None)
+                glossary_qualified_name = '---'
+                if classification_props is not None:
+                    glossary_guid = classification_props.get('anchorGUID', '---')
+                    glossary_qualified_name = (self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
+
+                # Create category dictionary
+                category_dict = {
+                    'display_name': display_name,
+                    'description': description,
+                    'qualified name': qualified_name,
+                    'guid': guid,
+                    'parent category': parent_cat_md,
+                    'subcategories': subcategory_list,
+                    'in glossary': glossary_qualified_name
+                }
+                result.append(category_dict)
+
+            return result
+
+        # Original implementation for other formats
         for element in elements:
             guid = element['elementHeader'].get("guid", None)
             properties = element['glossaryCategoryProperties']
@@ -257,25 +351,26 @@ class GlossaryBrowser(Client):
             description = properties.get("description", None)
             qualified_name = properties.get("qualifiedName", None)
 
-            parent_cat_qname = self.get_category_parent(guid)['glossaryCategoryProperties']['qualifiedName']
+            parent_cat= self.get_category_parent(guid)
+            if isinstance(parent_cat, str):
+                parent_cat_md = '---'
+            else:
+                parent_cat_md = f"{parent_cat['glossaryCategoryProperties']['qualifiedName']}"
 
             subcategories = self.get_glossary_subcategories(guid)
             subcategory_list_md = "\n"
             if isinstance(subcategories, str) and subcategories == NO_CATEGORIES_FOUND:
-                subcategory_list_md = ['---']
+                subcategory_list_md = '---'
             elif isinstance(subcategories, list) and len(subcategories) > 0:
                 for subcat in subcategories:
                     subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '---')
                     subcategory_list_md += f"{subcat_name},\n"
-#
-# Todo - finish this to put in the parent for all  modes, and subcategories only for the mode were this is a list
-#
+
             classification_props = element["elementHeader"]['classifications'][0].get('classificationProperties', None)
             glossary_qualified_name = '---'
             if classification_props is not None:
                 glossary_guid = classification_props.get('anchorGUID', '---')
-                glossary_qualified_name = (
-                    self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
+                glossary_qualified_name = (self.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
 
             if output_format in ['FORM', 'MD']:
                 elements_md += f"# {elements_action}\n\n"
@@ -289,6 +384,8 @@ class GlossaryBrowser(Client):
 
             elements_md += self.make_md_attribute("description", description, output_format)
             elements_md += self.make_md_attribute("in glossary", glossary_qualified_name, output_format)
+            elements_md += self.make_md_attribute("parent category", parent_cat_md, output_format)
+            elements_md += self.make_md_attribute("subcategories", subcategory_list_md, output_format)
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
             elements_md += MD_SEPERATOR
