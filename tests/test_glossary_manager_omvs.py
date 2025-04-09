@@ -264,6 +264,38 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
+    def test_set_parent_category(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+                )
+
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+                )
+            parent_guid = "e14b80c6-346c-4e7c-89c6-b5ed92ddbd33"
+            child_guid = "e164ba97-f5eb-42f2-b52e-cd72f484d18d"
+            start_time = time.perf_counter()
+
+            g_client.set_parent_category(parent_guid, child_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nLinked category {child_guid} to parent {parent_guid}")
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
     def test_add_term_to_category(self):
         try:
             g_client = GlossaryManager(

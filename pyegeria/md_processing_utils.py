@@ -9,9 +9,10 @@ import os
 import re
 import sys
 from datetime import datetime
+from operator import truediv
 from typing import List, Optional
 
-from prompt_toolkit.filters import Always
+
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -24,7 +25,7 @@ from pyegeria.egeria_tech_client import EgeriaTech
 
 # from pyegeria.md_processing_helpers import process_q_name_list
 from pyegeria.project_manager_omvs import ProjectManager
-from pyegeria.shared_state import get_element_dictionary, update_element_dictionary, find_key_with_value
+from pyegeria.dr_egeria_state import get_element_dictionary, update_element_dictionary, find_key_with_value
 
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
@@ -32,7 +33,7 @@ console = Console(width=EGERIA_WIDTH)
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term",
                 "Create Personal Project", "Update Personal Project", "Create Category", "Update Category",
                 "Create Solution Blueprint", "Update Solution Blueprint", "Create Solution Component",
-                "Update Solution Component", ]
+                "Update Solution Component", "Set Parent Category", "UnSet Parent Category", "Unset Parent Category"]
 # verbosity - verbose, quiet, debug
 debug_level = "verbose"
 message_types = {
@@ -48,6 +49,8 @@ command_seperator = Markdown("\n---\n")
 
 GLOSSARY_NAME_LABELS = ["Glossary Name", "Glossary", "Glossaries", "Owning Glossary", "In Glossary"]
 CATEGORY_NAME_LABELS = [ "Glossary Category Name", "Glossary Category", "Glossary Categories", "Category Name", "Category", "Categories"]
+PARENT_CATEGORY_LABELS = ["Parent Category Name", "Parent Category", "parent category name", "parent category"]
+CHILD_CATEGORY_LABELS = ["Child Category Name", "Child Category", "child category name", "child category"]
 TERM_NAME_LABELS= ["Glossary Term Name", "Glossary Term", "Glossary Terms", "Term Name", "Term", "Terms", "Term Names"]
 PROJECT_NAME_LABELS = ["Project Name", "Project", "Project Names", "Projects"]
 BLUEPRINT_NAME_LABELS = ["Solution Blueprint Name", "Solution Blueprint", "Solution Blueprints", "Blueprint Name", "Blueprint", "Blueprints"]
@@ -1068,7 +1071,121 @@ def process_categories_upsert_command(egeria_client: EgeriaTech, element_diction
                     'guid': category_guid, 'display_name': category_name
                     })
                 print_msg(ALWAYS, f"Created Category `{category_name}` with GUID {category_guid}", debug_level)
-                return egeria_client.get_categories_by_guid(category_guid, output_format='MD')
+                return egeria_client.get_categories_by_guid(category_guid, output_format='DR')
+
+def process_set_categories_parent_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+                                      directive: str = "display") -> Optional[str]:
+    """
+    Processes a set_parent_category command by extracting key attributes such as
+    parent and child category names from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting category-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    valid = True
+    set_debug_level(directive)
+
+    command, object_type, object_action = extract_command_plus(txt)
+
+    parent_category_name = process_simple_attribute(txt, PARENT_CATEGORY_LABELS, "ERROR")
+    child_category_name = process_simple_attribute(txt, CHILD_CATEGORY_LABELS, "ERROR")
+    print(Markdown(f"{pre_command} `{command}` for parent category: `\'{parent_category_name}\'` \n\t"
+                   f"and child category: `\'{child_category_name}\'` \nwith directive: `{directive}` "))
+
+    if parent_category_name is None or child_category_name is None:
+        valid = False
+    else:
+        parent_cat_q_name, parent_cat_guid, parent_cat_valid, parent_cat_exists = (
+            get_element_by_name(egeria_client, 'Glossary Categories', parent_category_name))
+        child_cat_q_name, child_cat_guid, child_cat_valid, child_cat_exists = (
+            get_element_by_name(egeria_client, 'Glossary Categories', child_category_name))
+
+
+    # Check if category exists (and get qname and guid)
+
+    if parent_cat_exists and child_cat_exists:
+        valid = True
+        msg = f" Both categories {parent_category_name} and {child_category_name} exist\n"
+        print_msg(INFO, msg, debug_level)
+        if parent_cat_guid and child_cat_guid:
+            msg = f" Both categories {parent_category_name} and {child_category_name} have GUIDs\n"
+            print_msg(INFO, msg, debug_level)
+        else:
+            msg = f" Both categories {parent_category_name} and {child_category_name} do not have GUIDs\n"
+            print_msg(ERROR, msg, debug_level)
+            valid = False
+
+
+    else:
+        valid = False
+        msg = f"Both categories {parent_category_name} and {child_category_name} do NOT exist\n"
+        print_msg(ERROR, msg, debug_level)
+
+    category_display = (
+        f"\n* Command: {command}\n\t* Parent Category: {parent_category_name}\n\t\t"
+        f"* Qualified Name: {parent_cat_q_name}\n\t\t* GUID: {parent_cat_guid}\n\t"
+        f"* Child Category:\n{child_category_name}\n\t\t* Qualified Name: {child_cat_q_name}\n\t\t"
+        f"* GUID: {child_cat_guid}\n")
+
+
+    # if object_action == 'Remove Parent Category':
+    #     parent_guid = process_simple_attribute(txt, ['GUID', 'guid', 'Guid'])
+    #
+    #     category_display += (f"* GUID: {guid}\n\n")
+    #     if not category_exists:
+    #         msg = f"Category {category_name} can't be updated; {category_name} not found."
+    #         print_msg(ERROR, msg, debug_level)
+    #         valid = False
+    #     else:
+    #         msg = f"Glossary can be updated; {category_name} found"
+    #         print_msg(ALWAYS, msg, debug_level)
+    #
+    # elif object_action == "Create":
+    #     if category_exists:
+    #         msg = f"Category {category_name} can't be created because it already exists.\n"
+    #         print_msg("ERROR", msg, debug_level)
+    #         valid = False
+    #     elif valid:
+    #         msg = f"It is valid to create Category `{category_name}` with:\n"
+    #         print_msg("ALWAYS", msg, debug_level)
+
+    if directive == "display":
+        print(Markdown(category_display))
+        return None
+
+    elif directive == "validate":
+        if valid:
+            print(Markdown(category_display))
+        else:
+            msg = f"Validation failed for {object_type} `{parent_category_name}`\n"
+            print_msg(ERROR, msg, debug_level)
+            print(Markdown(category_display))
+        return valid
+
+    elif directive == "process":
+        if valid:
+            print(Markdown(category_display))
+        else:
+            msg = f"* --> Validation failed for {object_type} `{parent_category_name}`\n"
+            print_msg(ERROR, msg, debug_level)
+            print(Markdown(category_display))
+            return None
+
+        if object_action in ["Set", "Set Parent"]:
+            egeria_client.set_parent_category(parent_cat_guid, child_cat_guid)
+            print_msg(ALWAYS, f"Set parent category of `{child_category_name}` to `{parent_category_name}`", debug_level)
+            output_txt = txt.replace("Set Parent","UnSet Parent")
+            return output_txt
+
+        elif object_action in ["UnSet", "UnSet Parent", "Unset Parent", "Unset", "Remove Parent"]:
+            egeria_client.remove_parent_category(parent_cat_guid, child_cat_guid)
+            print_msg(ALWAYS, f"UnSet parent category `{child_category_name}` from {parent_category_name}", debug_level)
+            output_txt = txt.replace("UnSet Parent", "Set Parent")
+            return output_txt
+
+
 
 
 def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,

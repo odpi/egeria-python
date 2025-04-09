@@ -120,6 +120,7 @@ def display_categories(
         )
         table.add_column("Description")
         table.add_column("In Glossary (Qualified Name)")
+        table.add_column("Parent Category")
 
         categories = m_client.find_glossary_categories(search_string)
         if type(categories) is list:
@@ -138,8 +139,14 @@ def display_categories(
                     glossary_guid = classification_props.get('anchorGUID','---')
                     glossary_qualified_name = (
                         m_client.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
+                cat_info = m_client.get_category_parent(category_guid)
+                if type(cat_info) is dict:
+                    parent_qn = cat_info['glossaryCategoryProperties']['qualifiedName']
+                else:
+                    parent_qn = '---'
 
-                table.add_row(display_name, q_name, description, glossary_qualified_name)
+
+                table.add_row(display_name, q_name, description, glossary_qualified_name, parent_qn)
             console = Console(
                 style="bold bright_white on black",
                 width=width,

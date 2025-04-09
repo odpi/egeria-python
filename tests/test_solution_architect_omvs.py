@@ -62,13 +62,10 @@ class TestSolutionArchitect:
             q_name = s_client.__create_qualified_name__("InformationSupplyChain",display_name)
             body = {
                 "class": "NewInformationSupplyChainRequestBody",
-                "isOwnAnchor": True,
-                "parentAtEnd1": False,
                 "properties": {
-                    "qualifiedName": q_name,
+                    "class": "InformationSupplyChainProperties",
                     "displayName": display_name,
-                    "description": "my first supply chain",
-                    "scope": "just testing"
+                    "qualifiedName": q_name
                     }
                 }
             start_time = time.perf_counter()
@@ -129,6 +126,44 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
+    def test_delete_info_supply_chains(self):
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+                )
+            s_client.create_egeria_bearer_token()
+            guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+            # body = {
+            #     "class": "NewInformationSupplyChainRequestBody",
+            #     "properties": {
+            #         "displayName": display_name,
+            #         "qualifiedName": q_name
+            #         }
+            #     }
+            start_time = time.perf_counter()
+            response = s_client.delete_info_supply_chain(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+                )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_find_information_supply_chains(self):
         filter_string = "*"
         try:
@@ -161,8 +196,9 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
-    def test_get_information_supply_chain_by_guid(self):
-        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+
+    def test_get_information_supply_chain_by_name(self):
+        name = "InformationSupplyChain:New Employee Onboarding"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -170,7 +206,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_info_supply_chain_by_guid(guid)
+            response = s_client.get_info_supply_chain_by_name(name)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -203,12 +239,12 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             body = {
-                "effective_time": None,
-                "limitResultsByStatus": ["ACTIVE"],
-                "asOfTime": "2021-12-19T07:20:40.038+00:00",
+                # "effective_time": None,
+                # "limitResultsByStatus": ["ACTIVE"],
+                "asOfTime": "2025-04-07T07:20:40.038+00:00",
                 "sequencingOrder": None,
                 "sequencingProperty": None,
-                "filter": filter,
+                "filter": filter
                 }
             start_time = time.perf_counter()
             response = s_client.find_information_supply_chains(filter, body=body)
@@ -265,6 +301,97 @@ class TestSolutionArchitect:
 
         finally:
             s_client.close_session()
+
+    def test_create_information_supply_chain_segment(self):
+        name = "sell to the highest bidder2"
+        guid = "3433ac3e-7233-48d6-bc20-b88e1846ac33"
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+            q_name = s_client.__create_qualified_name__("InformationSupplyChainSegment",name)
+            body = {
+                "class": "InformationSupplyChainSegmentRequestBody",
+                "properties": {
+                    "class": "InformationSupplyChainSegmentProperties",
+                    "qualifiedName": q_name,
+                    "displayName": name,
+                    "description": "trumpian description",
+                    "scope": "worldwide",
+                    "integrationStyle": "style"
+                    }
+                }
+
+
+            start_time = time.perf_counter()
+            response = s_client.create_info_supply_chain_segment(guid,body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
+    def test_link_info_supply_chain_segments(self):
+        guid1 = "3433ac3e-7233-48d6-bc20-b88e1846ac33"
+        guid2 = "2d2bed59-afdf-4eef-bcb1-f1ac8f21f6ce"
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+        #     body = {
+        #   "class" : "InformationSupplyChainLinkRequestBody",
+        #   "properties": {
+        #       "class": "InformationSupplyChainLinkProperties",
+        #     "label": "expermimental",
+        #     "description": "checking to see it works",
+        #   }
+        # }
+            body = {}
+
+            start_time = time.perf_counter()
+            response = s_client.link_info_supply_chain_segments(guid1,guid2,body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
 
     def test_find_solution_blueprints(self):
         search_string = "Clinical"
@@ -347,7 +474,7 @@ class TestSolutionArchitect:
                 print_json(data=response)
 
             elif type(response) is str:
-                print("\n\n\t Response is: " + response)
+                print("\n\n\t Response is: \n" + response)
 
             assert True
         except (

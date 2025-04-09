@@ -10,7 +10,7 @@ added in subsequent versions of the glossary_omvs module.
 import asyncio
 from datetime import datetime
 
-from pyegeria import NO_GLOSSARIES_FOUND, NO_CATEGORIES_FOUND, NO_TERMS_FOUND
+from pyegeria import NO_GLOSSARIES_FOUND, NO_CATEGORIES_FOUND, NO_TERMS_FOUND, max_paging_size
 import json
 from pyegeria._client import Client
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
@@ -141,6 +141,58 @@ class GlossaryBrowser(Client):
         if isinstance(elements, dict):
             elements = [elements]
 
+        # If output format is TABLE, create a markdown table
+        if output_format == 'MD-TABLE':
+            # Add table header
+            elements_md += "# Terms Table\n\n"
+            elements_md += f"Terms found from the search string: `{search_string}`\n\n"
+            elements_md += "| Term Name | Summary | Glossary | Categories | Status | Description | Examples | Usage | Version | Qualified Name | GUID |\n"
+            elements_md += "|-----------|---------|----------|------------|--------|-------------|----------|-------|---------|----------------|------|\n"
+
+            for element in elements:
+                guid = element['elementHeader'].get("guid", None)
+                element_properties = element['glossaryTermProperties']
+                display_name = element_properties.get("displayName", "") or ""
+                summary = element_properties.get("summary", "") or ""
+                description = element_properties.get("description", "") or ""
+                examples = element_properties.get("examples", "") or ""
+                usage = element_properties.get("usage", "") or ""
+                pub_version = element_properties.get("publishfinVersionIdentifier", "") or ""
+                qualified_name = element_properties.get("qualifiedName", "") or ""
+                status = element['elementHeader'].get('status', "") or ""
+
+                # Format multiline text for table cells
+                summary = summary.replace("\n", " ").replace("|", "\\|") if summary else ""
+                description = description.replace("\n", " ").replace("|", "\\|") if description else ""
+                examples = examples.replace("\n", " ").replace("|", "\\|") if examples else ""
+                usage = usage.replace("\n", " ").replace("|", "\\|") if usage else ""
+
+                # Get glossary information
+                glossary_guid = element['elementHeader'].get('classifications', [{}])[0].get('classificationProperties', {}).get('anchorGUID', None)
+                glossary_qualified_name = ""
+                if glossary_guid:
+                    glossary = self.get_glossary_by_guid(glossary_guid)
+                    if glossary and 'glossaryProperties' in glossary:
+                        glossary_qualified_name = glossary['glossaryProperties'].get('qualifiedName', "")
+
+                # Get categories
+                category_names = []
+                category_list = self.get_categories_for_term(guid)
+                if isinstance(category_list, list) and len(category_list) > 0:
+                    for category in category_list:
+                        category_name = category["glossaryCategoryProperties"].get("qualifiedName", '')
+                        if category_name:
+                            category_names.append(category_name)
+
+                categories_str = ", ".join(category_names) if category_names else "---"
+                categories_str = categories_str.replace("|", "\\|")
+
+                # Add row to table
+                elements_md += f"| {display_name} | {summary} | {glossary_qualified_name} | {categories_str} | {status} | {description} | {examples} | {usage} | {pub_version} | {qualified_name} | {guid} |\n"
+
+            return elements_md
+
+        # Original implementation for other formats
         for element in elements:
             guid = element['elementHeader'].get("guid", None)
             element_properties = element['glossaryTermProperties']
@@ -205,6 +257,19 @@ class GlossaryBrowser(Client):
             description = properties.get("description", None)
             qualified_name = properties.get("qualifiedName", None)
 
+            parent_cat_qname = self.get_category_parent(guid)['glossaryCategoryProperties']['qualifiedName']
+
+            subcategories = self.get_glossary_subcategories(guid)
+            subcategory_list_md = "\n"
+            if isinstance(subcategories, str) and subcategories == NO_CATEGORIES_FOUND:
+                subcategory_list_md = ['---']
+            elif isinstance(subcategories, list) and len(subcategories) > 0:
+                for subcat in subcategories:
+                    subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '---')
+                    subcategory_list_md += f"{subcat_name},\n"
+#
+# Todo - finish this to put in the parent for all  modes, and subcategories only for the mode were this is a list
+#
             classification_props = element["elementHeader"]['classifications'][0].get('classificationProperties', None)
             glossary_qualified_name = '---'
             if classification_props is not None:
@@ -848,6 +913,127 @@ class GlossaryBrowser(Client):
         response = loop.run_until_complete(
             self._async_get_glossary_for_category(
                 glossary_category_guid, effective_time
+            )
+        )
+        return response
+
+    async def _async_get_glossary_subcategories(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+    ) -> dict | str:
+        """Glossary categories can be organized in a hierarchy. Retrieve the subcategories for the glossary category
+        metadata element with the supplied unique identifier. If the requested category does not have any subcategories,
+         null is returned. The optional request body contain an effective time for the query.
+
+        Parameters
+        ----------
+        glossary_category_guid: str,
+            Unique identifier for the glossary category.
+        effective_time: datetime, [default=None], optional
+            Effective time of the query. If not specified will default to any effective time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        start_from: int, [default=0], optional
+            The page to start from.
+        page_size: int, [default=max_paging_size], optional
+            The number of results per page to return.
+        for_lineage: bool, [default=False], optional
+            Indicates the search is for lineage.
+        for_duplicate_processing: bool, [default=False], optional
+            If set to True the user will handle duplicate processing.
+
+        Returns
+        -------
+        A dict list with the glossary metadata element for the requested category.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+        for_lineage_s = str(for_lineage).lower()
+        for_duplicate_processing_s = str(for_duplicate_processing).lower()
+
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time,
+        }
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
+            f"categories/{glossary_category_guid}/subcategories/retrieve?startFrom={start_from}&pageSize={page_size}&"
+            f"forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}"
+        )
+        if effective_time:
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            response = await self._async_make_request("POST", url)
+
+        return response.json().get("elementList", "No categories found")
+
+    def get_glossary_subcategories(
+        self,
+        glossary_category_guid: str,
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+    ) -> dict | str:
+        """Glossary categories can be organized in a hierarchy. Retrieve the subcategories for the glossary category
+        metadata element with the supplied unique identifier. If the requested category does not have any subcategories,
+         null is returned. The optional request body contain an effective time for the query.
+
+        Parameters
+        ----------
+        glossary_category_guid: str,
+            Unique identifier for the glossary category.
+        effective_time: datetime, [default=None], optional
+            Effective time of the query. If not specified will default to any effective time. Time format is
+            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        start_from: int, [default=0], optional
+            The page to start from.
+        page_size: int, [default=max_paging_size], optional
+            The number of results per page to return.
+        for_lineage: bool, [default=False], optional
+            Indicates the search is for lineage.
+        for_duplicate_processing: bool, [default=False], optional
+            If set to True the user will handle duplicate processing.
+
+        Returns
+        -------
+        A dict list with the glossary metadata element for the requested category.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        ConfigurationErrorException
+          Raised when configuration parameters passed on earlier calls turn out to be
+          invalid or make the new call invalid.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_glossary_subcategories(
+                glossary_category_guid, effective_time, start_from,
+                page_size, for_lineage, for_duplicate_processing
             )
         )
         return response

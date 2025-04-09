@@ -1,34 +1,26 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
-import argparse
-import json
 import os
-from rich import print
-from rich.console import Console
-from rich.prompt import Prompt
-
+from datetime import datetime
 
 import click
+from rich import print
+from rich.console import Console
+
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                       process_categories_upsert_command, process_provenance_command,
-                      get_current_datetime_string, process_per_proj_upsert_command, command_list,EgeriaTech,
-                      process_blueprint_upsert_command, process_solution_component_upsert_command,
-                      shared_state
-                      )
-from datetime import datetime
+                      process_set_categories_parent_command, get_current_datetime_string,
+                      process_per_proj_upsert_command, command_list, EgeriaTech, process_blueprint_upsert_command,
+                      process_solution_component_upsert_command, dr_egeria_state)
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
 EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
 EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
+EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443")
 EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
-)
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -41,26 +33,17 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
 
-@click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
-@click.option("--file-path", help="File path to markdown file",
-              default="glossary_test1.md", required=True, prompt=False)
-@click.option("--directive", default="display", help="How to process the file",
-              type=click.Choice(["display","validate","process"],case_sensitive=False), prompt=False,)
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
-@click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
-)
 
+@click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
+@click.option("--file-path", help="File path to markdown file", default="glossary_test1.md", required=True,
+              prompt=False)
+@click.option("--directive", default="display", help="How to process the file",
+              type=click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
+@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-def process_markdown_file(
-        file_path: str,
-        directive: str,
-        server: str,
-        url: str,
-        userid: str,
-        user_pass: str,
-        )-> None:
+def process_markdown_file(file_path: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria commands. Write output to a new file.
     """
@@ -82,11 +65,10 @@ def process_markdown_file(
     final_output = []
     prov_found = False
     prov_output = (f"\n# Provenance\n\n* Results from processing file {file_path} on "
-                    f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
+                   f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
     h1_blocks = []
     current_block = ""
     in_h1_block = False
-
 
     # Helper function to process the current block
     def process_current_block(current_block):
@@ -103,31 +85,39 @@ def process_markdown_file(
                 prov_found = True
 
             elif potential_command in ["Create Glossary", "Update Glossary"]:
-                result = process_glossary_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+                result = process_glossary_upsert_command(client, dr_egeria_state.get_element_dictionary(),
+                                                         current_block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
-                result = process_categories_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+                result = process_categories_upsert_command(client, dr_egeria_state.get_element_dictionary(),
+                                                           current_block, directive)
+            elif potential_command in ["Set Parent Category", "UnSet Parent Category"]:
+                result = process_set_categories_parent_command(client, dr_egeria_state.get_element_dictionary(),
+                                                               current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
-                result = process_term_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+                result = process_term_upsert_command(client, dr_egeria_state.get_element_dictionary(), current_block,
+                                                     directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                result = process_per_proj_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
-            elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint", "Update Solution Blueprint"]:
-                result = process_blueprint_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+                result = process_per_proj_upsert_command(client, dr_egeria_state.get_element_dictionary(),
+                                                         current_block, directive)
+            elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint",
+                                       "Update Solution Blueprint"]:
+                result = process_blueprint_upsert_command(client, dr_egeria_state.get_element_dictionary(),
+                                                          current_block, directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
-                result = process_solution_component_upsert_command(client, shared_state.get_element_dictionary(), current_block, directive)
+                result = process_solution_component_upsert_command(client, dr_egeria_state.get_element_dictionary(),
+                                                                   current_block, directive)
 
 
             else:
                 # If command is not recognized, keep the block as-is
                 result = None
-            # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+            # print(json.dumps(dr_egeria_state.get_element_dictionary(), indent=4))
             if result:
                 if directive == "process":
                     updated = True
-                    final_output.append(result)
-                    # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+                    final_output.append(result)  # print(json.dumps(dr_egeria_state.get_element_dictionary(), indent=4))
                 elif directive == "validate":
-                    pass
-                    # print(json.dumps(shared_state.get_element_dictionary(), indent=4))
+                    pass  # print(json.dumps(dr_egeria_state.get_element_dictionary(), indent=4))
             elif directive == "process":
                 # Handle errors (skip this block but notify the user)
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
@@ -175,7 +165,6 @@ def process_markdown_file(
     # Join the final output list into a single string
     final_output = "\n".join(final_output)
 
-
     try:
         if updated:
             path, filename = os.path.split(file_path)  # Get both parts
@@ -213,7 +202,8 @@ def process_markdown_file(
 #     time_out = args.time_out if args.time_out is not None else 60
 #     try:
 #         file_path = Prompt.ask("Markdown File name to process:", default="")
-#         directive = Prompt.ask("Processing Directive:", choices=[ "display", "validate", "process"], default="validate")
+#         directive = Prompt.ask("Processing Directive:", choices=[ "display", "validate", "process"],
+#         default="validate")
 #
 #         process_markdown_file(file_path, directive, server, url, userid, user_pass)
 #     except KeyboardInterrupt:
