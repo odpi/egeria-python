@@ -128,7 +128,7 @@ class SolutionArchitect(Client):
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
             if include_mermaid and output_format == 'REPORT':
-                elements_md += f"```mermaid\n{mermaid}\n```\n"
+                elements_md += f"\n```mermaid\n{mermaid}\n```\n"
             elements_md += MD_SEPERATOR
         return elements_md
 
@@ -172,7 +172,7 @@ class SolutionArchitect(Client):
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
             if include_mermaid and output_format == 'REPORT':
-                elements_md += f"```mermaid\n{bp_graph}\n```\n"
+                elements_md += f"\n```mermaid\n{bp_graph}\n```\n"
             elements_md += MD_SEPERATOR
 
         return elements_md
@@ -221,7 +221,7 @@ class SolutionArchitect(Client):
             elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
             elements_md += self.make_md_attribute("GUID", guid, output_format)
             if include_mermaid and output_format == 'REPORT':
-                elements_md += f"```mermaid\n{solution_roles_graph}\n```\n"
+                elements_md += f"\n```mermaid\n{solution_roles_graph}\n```\n"
             elements_md += MD_SEPERATOR
 
         return elements_md
@@ -298,20 +298,19 @@ class SolutionArchitect(Client):
             elements_md += self.make_md_attribute("description", description, output_format)
             elements_md += self.make_md_attribute("component type", component_type, output_format)
             elements_md += self.make_md_attribute("version", version, output_format)
-            elements_md += self.make_md_attribute("qualified name", qualified_name, output_format)
+            elements_md += self.make_md_attribute("qualified name/GUID", f"{qualified_name}\n---\n{guid}", output_format)
             elements_md += self.make_md_attribute("blueprints", blueprints_md, output_format)
             elements_md += self.make_md_attribute("parent components", parent_comp_md, output_format)
             elements_md += self.make_md_attribute("extended properties", extended_props_md, output_format)
-            elements_md += self.make_md_attribute("GUID", guid, output_format)
             if include_mermaid and output_format == 'REPORT':
-                elements_md += f"```mermaid\n{comp_graph}\n```\n"
+                elements_md += f"\n```mermaid\n{comp_graph}\n```\n"
             elements_md += MD_SEPERATOR
 
         return elements_md
 
     async def _async_create_info_supply_chain(self, body: dict) -> str:
         """Create an information supply. Async version.
-        
+
         Parameters
         ----------
         body: dict
@@ -848,14 +847,15 @@ class SolutionArchitect(Client):
 
         """
         validate_guid(guid)
+        add_impl = str(add_implementation).lower()
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/retrieve?addImplementation={add_implementation}")
+               f"information-supply-chains/{guid}/retrieve?addImplementation={add_impl}")
 
         if body is None:
-            response = await self._async_make_request("GET", url)
+            response = await self._async_make_request("POST", url)
         else:
             response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_info_supply_chain_by_guid(self, guid: str, body: dict = None,
                                       add_implementation: bool = True) -> dict | str:
@@ -943,8 +943,9 @@ class SolutionArchitect(Client):
             }
 
         """
+        add_impl = str(add_implementation).lower()
         possible_query_params = query_string(
-            [("addImplementation", add_implementation), ("startFrom", start_from), ("pageSize", page_size)])
+            [("addImplementation", add_impl), ("startFrom", start_from), ("pageSize", page_size)])
 
         if body is None:
             body = {
