@@ -385,10 +385,10 @@ class TestGlossaryBrowser:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "Command",
+                "Display",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
-                starts_with=False,
+                starts_with=True,
                 ends_with=False,
                 ignore_case=True,
                 for_lineage=False,
@@ -396,7 +396,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="MD-TABLE"
+                output_format="LIST"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
@@ -437,7 +437,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = "DICT",
+                output_format = "LIST",
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)

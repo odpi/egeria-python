@@ -12,7 +12,7 @@ from pyegeria import (extract_command, process_glossary_upsert_command, process_
                       process_categories_upsert_command, process_provenance_command,
                       process_set_categories_parent_command, get_current_datetime_string,
                       process_per_proj_upsert_command, command_list, EgeriaTech, process_blueprint_upsert_command,
-                      process_solution_component_upsert_command, dr_egeria_state)
+                      process_solution_component_upsert_command, dr_egeria_state, process_term_list_command)
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -95,6 +95,9 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                                                                current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, dr_egeria_state.get_element_dictionary(), current_block,
+                                                     directive)
+            elif potential_command in ["List Terms", "List Glossary Terms"]:
+                result = process_term_list_command(client, dr_egeria_state.get_element_dictionary(), current_block,
                                                      directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
                 result = process_per_proj_upsert_command(client, dr_egeria_state.get_element_dictionary(),

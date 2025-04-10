@@ -371,13 +371,13 @@ class TestGlossaryManager:
             start_time = time.perf_counter()
             response = g_client.find_glossary_categories(
                 # "*",
-                "*",
+                "Dr.Egeria",
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format="DICT"
+                output_format="LIST"
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -413,7 +413,7 @@ class TestGlossaryManager:
     def test_find_glossaries(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
@@ -422,12 +422,13 @@ class TestGlossaryManager:
             start_time = time.perf_counter()
             response = g_client.find_glossaries(
                 # "*",
-                "Sustainability Glossary",
+                "*",
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
+                output_format="LIST"
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -436,10 +437,7 @@ class TestGlossaryManager:
                 # print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} glossaries")
-                for i in range(count):
-                    print(
-                        f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
-                    )
+
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
