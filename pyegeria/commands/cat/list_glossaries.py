@@ -15,6 +15,7 @@ import time
 
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
@@ -128,6 +129,7 @@ def display_glossaries(
         table.add_column("Language")
         table.add_column("Description")
         table.add_column("Usage")
+        table.add_column("Categories")
 
         glossaries = m_client.find_glossaries(search_string)
         if type(glossaries) is list:
@@ -142,7 +144,15 @@ def display_glossaries(
                 language = glossary["glossaryProperties"].get("language",'---')
                 description = glossary["glossaryProperties"].get("description",'---')
                 usage = glossary["glossaryProperties"].get("usage",'---')
-                table.add_row(display_name, q_name, language, description, usage)
+
+                categories = m_client.get_categories_for_glossary(guid)
+                cat_md = ''
+                if type(categories) is list:
+                    for category in categories:
+                        cat_md += f"* {category['glossaryCategoryProperties'][('displayName')]}\n"
+                    cat_md = cat_md.strip()
+
+                table.add_row(display_name, q_name, language, description, usage, Markdown(cat_md))
 
             console.print(table)
 

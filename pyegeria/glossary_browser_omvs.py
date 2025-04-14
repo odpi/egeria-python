@@ -136,6 +136,16 @@ class GlossaryBrowser(Client):
         usage = properties.get("usage", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
 
+        categories = self.get_categories_for_glossary(guid)
+        cat_md_display = ''
+        cat_md_qn = ''
+        if type(categories) is list:
+            for category in categories:
+                cat_md_display += f"* {category['glossaryCategoryProperties'][('displayName')]}\n"
+                cat_md_qn += f"* {category['glossaryCategoryProperties'][('qualifiedName')]}\n"
+            cat_md = cat_md_display.strip()
+            cat_md_qn = cat_md_qn.strip()
+
         return {
             'guid': guid,
             'properties': properties,
@@ -143,7 +153,9 @@ class GlossaryBrowser(Client):
             'description': description,
             'language': language,
             'usage': usage,
-            'qualified_name': qualified_name
+            'qualified_name': qualified_name,
+            'categories_dn_md': cat_md_display,
+            'categories_qn_md': cat_md_qn
         }
 
     def _generate_entity_md(self, elements: list, elements_action: str, output_format: str, 
@@ -199,7 +211,7 @@ class GlossaryBrowser(Client):
                 elements_md += MD_SEPERATOR
 
         return elements_md
-
+# TODO - differentiate between what is generated for report vs form - for example, category qn for form but category dn for report
     def _generate_glossary_md(self, elements: list, elements_action: str, output_format: str) -> str:
         """
         Generate markdown for glossaries.
@@ -297,7 +309,8 @@ class GlossaryBrowser(Client):
             {'name': 'Qualified Name', 'key': 'qualified_name'},
             {'name': 'Language', 'key': 'language', 'format': True},
             {'name': 'Description', 'key': 'description', 'format': True},
-            {'name': 'Usage', 'key': 'usage', 'format': True}
+            {'name': 'Usage', 'key': 'usage', 'format': True},
+            {'name': 'Categories', 'key': 'categories_dn_md', 'format': True},
         ]
 
         return self._generate_entity_md_table(
@@ -364,7 +377,7 @@ class GlossaryBrowser(Client):
         return self._generate_entity_dict(
             elements=elements,
             extract_properties_func=self._extract_glossary_properties,
-            exclude_keys=['properties']
+            exclude_keys=['properties',  'categories_qn_md']
         )
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str | list:
@@ -413,7 +426,7 @@ class GlossaryBrowser(Client):
         description = properties.get("description", "") or ""
         examples = properties.get("examples", "") or ""
         usage = properties.get("usage", "") or ""
-        pub_version = properties.get("publishfinVersionIdentifier", "") or ""
+        pub_version = properties.get("publishVersionIdentifier", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
         status = element['elementHeader'].get('status', "") or ""
 
