@@ -72,10 +72,7 @@ class TestGlossaryBrowser:
                 # print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} glossaries")
-                for i in range(count):
-                    print(
-                        f"Found glossary: {response[i]['glossaryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
-                    )
+
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\n" + response)
@@ -396,7 +393,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="LIST"
+                output_format="FORM"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
@@ -437,7 +434,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = "LIST",
+                output_format = "REPORT",
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)

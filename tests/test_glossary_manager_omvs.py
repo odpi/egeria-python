@@ -695,7 +695,7 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "*",
+                "Display",
                 glossary_guid=glossary_guid,
                 starts_with=True,
                 ends_with=False,
@@ -705,6 +705,7 @@ class TestGlossaryManager:
                 status_filter=[],
                 page_size=10,
                 effective_time=None,
+                output_format="LIST"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             print(f"Number of terms is: {len(response)}")

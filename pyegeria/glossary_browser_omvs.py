@@ -182,7 +182,7 @@ class GlossaryBrowser(Client):
             # Get additional properties if function is provided
             additional_props = {}
             if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'])
+                additional_props = get_additional_props_func(element, props['guid'], output_format)
 
             # Format header based on output format
             if output_format in ['FORM', 'MD']:
@@ -195,15 +195,26 @@ class GlossaryBrowser(Client):
 
             # Add common attributes
             for key, value in props.items():
+                # Skip categories_dn_md for FORM output and categories_qn_md for REPORT output
+                if key == 'categories_dn_md' and output_format == 'FORM':
+                    continue
+                if key == 'categories_qn_md' and output_format == 'REPORT':
+                    continue
                 if key not in ['guid', 'properties', 'display_name']:
-                    elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
+                    # Use "Categories" as the label for both categories_qn_md and categories_dn_md
+                    if key == 'categories_qn_md' and output_format == 'FORM':
+                        elements_md += self.make_md_attribute("Categories", value, output_format)
+                    elif key == 'categories_dn_md' and output_format == 'REPORT':
+                        elements_md += self.make_md_attribute("Categories", value, output_format)
+                    else:
+                        elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
 
             # Add additional properties
             for key, value in additional_props.items():
                 elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
 
             # Add GUID
-            elements_md += self.make_md_attribute("qualified name", props['qualified_name'], output_format)
+            # elements_md += self.make_md_attribute("qualified name", props['qualified_name'], output_format)
             elements_md += self.make_md_attribute("GUID", props['guid'], output_format)
 
             # Add separator if not the last element
@@ -211,7 +222,6 @@ class GlossaryBrowser(Client):
                 elements_md += MD_SEPERATOR
 
         return elements_md
-# TODO - differentiate between what is generated for report vs form - for example, category qn for form but category dn for report
     def _generate_glossary_md(self, elements: list, elements_action: str, output_format: str) -> str:
         """
         Generate markdown for glossaries.
@@ -233,7 +243,7 @@ class GlossaryBrowser(Client):
         )
 
     def _generate_entity_md_table(self, elements: list, search_string: str, entity_type: str, 
-                           extract_properties_func, columns: list, get_additional_props_func=None) -> str:
+                           extract_properties_func, columns: list, get_additional_props_func=None, output_format: str = 'LIST') -> str:
         """
         Generic method to generate a markdown table for entities (glossaries, terms, categories).
 
@@ -244,13 +254,18 @@ class GlossaryBrowser(Client):
             extract_properties_func: Function to extract properties from an element
             columns: List of column definitions, each containing 'name', 'key', and 'format' (optional)
             get_additional_props_func: Optional function to get additional properties
+            output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
             str: Markdown table
         """
         # Create table header
-        elements_md = f"# {entity_type}s Table\n\n"
-        elements_md += f"{entity_type}s found from the search string: `{search_string}`\n\n"
+
+        # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
+        entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
+
+        elements_md = f"# {entity_type_plural} Table\n\n"
+        elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
 
         # Add column headers
         header_row = "| "
@@ -269,7 +284,7 @@ class GlossaryBrowser(Client):
             # Get additional properties if function is provided
             additional_props = {}
             if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'])
+                additional_props = get_additional_props_func(element, props['guid'], output_format)
 
             # Build row
             row = "| "
@@ -322,7 +337,7 @@ class GlossaryBrowser(Client):
         )
 
     def _generate_entity_dict(self, elements: list, extract_properties_func, get_additional_props_func=None, 
-                        include_keys=None, exclude_keys=None) -> list:
+                        include_keys=None, exclude_keys=None, output_format: str = 'DICT') -> list:
         """
         Generic method to generate a dictionary representation of entities (glossaries, terms, categories).
 
@@ -332,6 +347,7 @@ class GlossaryBrowser(Client):
             get_additional_props_func: Optional function to get additional properties
             include_keys: Optional list of keys to include in the result (if None, include all)
             exclude_keys: Optional list of keys to exclude from the result (if None, exclude none)
+            output_format (str): Output format (FORM, REPORT, DICT, etc.)
 
         Returns:
             list: List of entity dictionaries
@@ -344,7 +360,7 @@ class GlossaryBrowser(Client):
             # Get additional properties if function is provided
             additional_props = {}
             if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'])
+                additional_props = get_additional_props_func(element, props['guid'], output_format)
 
             # Create entity dictionary
             entity_dict = {}
@@ -364,12 +380,13 @@ class GlossaryBrowser(Client):
 
         return result
 
-    def _generate_glossary_dict(self, elements: list) -> list:
+    def _generate_glossary_dict(self, elements: list, output_format: str = 'DICT') -> list:
         """
         Generate a dictionary representation of glossaries.
 
         Args:
             elements (list): List of glossary elements
+            output_format (str): Output format (FORM, REPORT, DICT, etc.)
 
         Returns:
             list: List of glossary dictionaries
@@ -377,7 +394,8 @@ class GlossaryBrowser(Client):
         return self._generate_entity_dict(
             elements=elements,
             extract_properties_func=self._extract_glossary_properties,
-            exclude_keys=['properties',  'categories_qn_md']
+            exclude_keys=['properties',  'categories_qn_md'],
+            output_format=output_format
         )
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str | list:
@@ -397,13 +415,16 @@ class GlossaryBrowser(Client):
         if isinstance(elements, dict):
             elements = [elements]
 
+        if search_string is None or search_string == '':
+            search_string = "All"
+
         # If output format is LIST, create a markdown table
         if output_format == 'LIST':
             return self._generate_glossary_md_table(elements, search_string)
 
         # If output format is DICT, return a dictionary structure
         elif output_format == 'DICT':
-            return self._generate_glossary_dict(elements)
+            return self._generate_glossary_dict(elements, output_format)
 
         # Original implementation for other formats (MD, FORM, REPORT)
         elements_md += self._generate_glossary_md(elements, elements_action, output_format)
@@ -438,17 +459,18 @@ class GlossaryBrowser(Client):
             'description': description,
             'examples': examples,
             'usage': usage,
-            'pub_version': pub_version,
+            'version identifier': pub_version,
             'qualified_name': qualified_name,
             'status': status
         }
 
-    def _get_categories_for_term(self, term_guid: str) -> tuple[list, str]:
+    def _get_categories_for_term(self, term_guid: str, output_format: str = None) -> tuple[list, str]:
         """
         Get a list of categories for a given term.
 
         Args:
             term_guid (str): The GUID of the term
+            output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
             tuple: A tuple containing:
@@ -464,7 +486,12 @@ class GlossaryBrowser(Client):
         elif isinstance(category_list, list) and len(category_list) > 0:
             first_cat = True
             for category in category_list:
-                category_name = category["glossaryCategoryProperties"].get("qualifiedName", '---')
+                # Use qualified name for FORM output, display name for REPORT and LIST output
+                if output_format in ['REPORT', 'LIST']:
+                    category_name = category["glossaryCategoryProperties"].get("displayName", '---')
+                else:
+                    category_name = category["glossaryCategoryProperties"].get("qualifiedName", '---')
+
                 if category_name:
                     category_names.append(category_name)
                 if first_cat:
@@ -477,22 +504,23 @@ class GlossaryBrowser(Client):
 
         return category_names, category_list_md
 
-    def _get_term_table_properties(self, element: dict, term_guid: str) -> dict:
+    def _get_term_table_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         """
         Get properties for a term table row.
 
         Args:
             element (dict): The term element
             term_guid (str): The GUID of the term
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of properties for the table row
         """
         # Get glossary information
-        glossary_qualified_name = self._get_glossary_name_for_element(element)
+        glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
         # Get categories
-        category_names, _ = self._get_categories_for_term(term_guid)
+        category_names, _ = self._get_categories_for_term(term_guid, output_format)
         categories_str = ", ".join(category_names) if category_names else "---"
 
         return {
@@ -500,13 +528,14 @@ class GlossaryBrowser(Client):
             'categories_str': categories_str
         }
 
-    def _generate_term_md_table(self, elements: list, search_string: str) -> str:
+    def _generate_term_md_table(self, elements: list, search_string: str, output_format: str = 'LIST') -> str:
         """
         Generate a markdown table for terms.
 
         Args:
             elements (list): List of term elements
             search_string (str): The search string used
+            output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
             str: Markdown table
@@ -519,31 +548,36 @@ class GlossaryBrowser(Client):
             {'name': 'Categories', 'key': 'categories_str', 'format': True}
         ]
 
+        # Create a wrapper function to pass output_format to _get_term_table_properties
+        def get_table_props_with_format(element, term_guid, output_format_param=None):
+            return self._get_term_table_properties(element, term_guid, output_format)
+
         return self._generate_entity_md_table(
             elements=elements,
             search_string=search_string,
             entity_type="Term",
             extract_properties_func=self._extract_term_properties,
             columns=columns,
-            get_additional_props_func=self._get_term_table_properties
+            get_additional_props_func=get_table_props_with_format
         )
 
-    def _get_term_dict_properties(self, element: dict, term_guid: str) -> dict:
+    def _get_term_dict_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         """
         Get additional properties for a term dictionary.
 
         Args:
             element (dict): The term element
             term_guid (str): The GUID of the term
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of additional properties
         """
         # Get glossary information
-        glossary_qualified_name = self._get_glossary_name_for_element(element)
+        glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
         # Get categories
-        category_names, _ = self._get_categories_for_term(term_guid)
+        category_names, _ = self._get_categories_for_term(term_guid, output_format)
 
         return {
             'in_glossary': glossary_qualified_name,
@@ -551,39 +585,45 @@ class GlossaryBrowser(Client):
             'version': element['glossaryTermProperties'].get('publishfinVersionIdentifier', '')
         }
 
-    def _generate_term_dict(self, elements: list) -> list:
+    def _generate_term_dict(self, elements: list, output_format: str = 'DICT') -> list:
         """
         Generate a dictionary representation of terms.
 
         Args:
             elements (list): List of term elements
+            output_format (str): Output format (FORM, REPORT, DICT, etc.)
 
         Returns:
             list: List of term dictionaries
         """
+        # Create a wrapper function to pass output_format to _get_term_dict_properties
+        def get_dict_props_with_format(element, term_guid, output_format_param=None):
+            return self._get_term_dict_properties(element, term_guid, output_format)
+
         return self._generate_entity_dict(
             elements=elements,
             extract_properties_func=self._extract_term_properties,
-            get_additional_props_func=self._get_term_dict_properties,
+            get_additional_props_func=get_dict_props_with_format,
             exclude_keys=['properties', 'pub_version']  # Exclude raw properties and pub_version (renamed to version)
         )
 
-    def _get_term_additional_properties(self, element: dict, term_guid: str) -> dict:
+    def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         """
         Get additional properties for a term.
 
         Args:
             element (dict): The term element
             term_guid (str): The GUID of the term
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of additional properties
         """
         # Get glossary information
-        glossary_qualified_name = self._get_glossary_name_for_element(element)
+        glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
         # Get categories
-        _, category_list_md = self._get_categories_for_term(term_guid)
+        _, category_list_md = self._get_categories_for_term(term_guid, output_format)
 
         return {
             'in_glossary': glossary_qualified_name,
@@ -627,24 +667,28 @@ class GlossaryBrowser(Client):
         if isinstance(elements, dict):
             elements = [elements]
 
-        # If output format is MD-TABLE, create a markdown table
+        if search_string is None or search_string == '':
+            search_string = "All"
+
+        # If output format is LIST, create a markdown table
         if output_format == 'LIST':
-            return self._generate_term_md_table(elements, search_string)
+            return self._generate_term_md_table(elements, search_string, output_format)
 
         # If output format is DICT, return a dictionary structure
         elif output_format == 'DICT':
-            return self._generate_term_dict(elements)
+            return self._generate_term_dict(elements, output_format)
 
         # Original implementation for other formats (MD, FORM, REPORT)
         elements_md += self._generate_term_md(elements, elements_action, output_format)
         return elements_md
 
-    def _get_parent_category_name(self, category_guid: str) -> str:
+    def _get_parent_category_name(self, category_guid: str, output_format: str = None) -> str:
         """
         Get the parent category name for a given category.
 
         Args:
             category_guid (str): The GUID of the category
+            output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
             str: The parent category name or '---' if no parent
@@ -652,14 +696,23 @@ class GlossaryBrowser(Client):
         parent_cat = self.get_category_parent(category_guid)
         if isinstance(parent_cat, str):
             return '---'
-        return parent_cat['glossaryCategoryProperties']['qualifiedName']
 
-    def _get_subcategories_list(self, category_guid: str) -> tuple[list, str]:
+        # Return qualified name for FORM output, display name for REPORT and LIST output
+        if output_format == 'FORM':
+            return parent_cat['glossaryCategoryProperties']['qualifiedName']
+        elif output_format in ['REPORT', 'LIST']:
+            return parent_cat['glossaryCategoryProperties']['displayName']
+        else:
+            # Default to qualified name for backward compatibility
+            return parent_cat['glossaryCategoryProperties']['qualifiedName']
+
+    def _get_subcategories_list(self, category_guid: str, output_format: str = None) -> tuple[list, str]:
         """
         Get a list of subcategories for a given category.
 
         Args:
             category_guid (str): The GUID of the category
+            output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
             tuple: A tuple containing:
@@ -673,7 +726,15 @@ class GlossaryBrowser(Client):
             subcategory_list_md = '---'
         elif isinstance(subcategories, list) and len(subcategories) > 0:
             for subcat in subcategories:
-                subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '')
+                # Use qualified name for FORM output, display name for REPORT and LIST output
+                if output_format == 'FORM':
+                    subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '')
+                elif output_format in ['REPORT', 'LIST']:
+                    subcat_name = subcat["glossaryCategoryProperties"].get("displayName", '')
+                else:
+                    # Default to qualified name for backward compatibility
+                    subcat_name = subcat["glossaryCategoryProperties"].get("qualifiedName", '')
+
                 if subcat_name:
                     subcategory_list.append(subcat_name)
             subcategory_list_md = ", ".join(subcategory_list)
@@ -682,12 +743,13 @@ class GlossaryBrowser(Client):
 
         return subcategory_list, subcategory_list_md
 
-    def _get_glossary_name_for_element(self, element: dict) -> str:
+    def _get_glossary_name_for_element(self, element: dict, output_format: str = None) -> str:
         """
         Get the glossary name for a given element.
 
         Args:
             element (dict): The element dictionary
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             str: The glossary name or '---' if not found
@@ -701,7 +763,12 @@ class GlossaryBrowser(Client):
             return '---'
 
         glossary = self.get_glossary_by_guid(glossary_guid)
-        return glossary['glossaryProperties']['qualifiedName']
+
+        # Return display name for REPORT output, qualified name otherwise
+        if output_format == 'REPORT':
+            return glossary['glossaryProperties']['displayName']
+        else:
+            return glossary['glossaryProperties']['qualifiedName']
 
     def _extract_category_properties(self, element: dict) -> dict:
         """
@@ -727,35 +794,37 @@ class GlossaryBrowser(Client):
             'qualified_name': qualified_name
         }
 
-    def _get_category_table_properties(self, element: dict, category_guid: str) -> dict:
+    def _get_category_table_properties(self, element: dict, category_guid: str, output_format: str = None) -> dict:
         """
         Get properties for a category table row.
 
         Args:
             element (dict): The category element
             category_guid (str): The GUID of the category
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of properties for the table row
         """
         # Get parent category
-        parent_cat_md = self._get_parent_category_name(category_guid)
+        parent_cat_md = self._get_parent_category_name(category_guid, output_format)
 
         # Get subcategories
-        _, subcategory_list_md = self._get_subcategories_list(category_guid)
+        _, subcategory_list_md = self._get_subcategories_list(category_guid, output_format)
 
         return {
             'parent_category': parent_cat_md,
             'subcategories': subcategory_list_md
         }
 
-    def _generate_category_md_table(self, elements: list, search_string: str) -> str:
+    def _generate_category_md_table(self, elements: list, search_string: str, output_format: str = 'LIST') -> str:
         """
         Generate a markdown table for categories.
 
         Args:
             elements (list): List of category elements
             search_string (str): The search string used
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             str: Markdown table
@@ -768,34 +837,39 @@ class GlossaryBrowser(Client):
             {'name': 'Subcategories', 'key': 'subcategories', 'format': True}
         ]
 
+        # Create a wrapper function to pass output_format to _get_category_table_properties
+        def get_table_props_with_format(element, category_guid, output_format_param=None):
+            return self._get_category_table_properties(element, category_guid, output_format)
+
         return self._generate_entity_md_table(
             elements=elements,
             search_string=search_string,
             entity_type="Category",
             extract_properties_func=self._extract_category_properties,
             columns=columns,
-            get_additional_props_func=self._get_category_table_properties
+            get_additional_props_func=get_table_props_with_format
         )
 
-    def _get_category_dict_properties(self, element: dict, category_guid: str) -> dict:
+    def _get_category_dict_properties(self, element: dict, category_guid: str, output_format: str = None) -> dict:
         """
         Get additional properties for a category dictionary.
 
         Args:
             element (dict): The category element
             category_guid (str): The GUID of the category
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of additional properties
         """
         # Get parent category
-        parent_cat_md = self._get_parent_category_name(category_guid)
+        parent_cat_md = self._get_parent_category_name(category_guid, output_format)
 
         # Get subcategories
-        subcategory_list, _ = self._get_subcategories_list(category_guid)
+        subcategory_list, _ = self._get_subcategories_list(category_guid, output_format)
 
         # Get glossary information
-        glossary_qualified_name = self._get_glossary_name_for_element(element)
+        glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
         return {
             'parent_category': parent_cat_md,
@@ -803,42 +877,49 @@ class GlossaryBrowser(Client):
             'in_glossary': glossary_qualified_name
         }
 
-    def _generate_category_dict(self, elements: list) -> list:
+    def _generate_category_dict(self, elements: list, output_format: str = 'DICT') -> list:
         """
         Generate a dictionary representation of categories.
 
         Args:
             elements (list): List of category elements
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             list: List of category dictionaries
         """
+        # Create a wrapper function to pass output_format to _get_category_dict_properties
+        def get_dict_props_with_format(element, category_guid, output_format_param=None):
+            return self._get_category_dict_properties(element, category_guid, output_format)
+
         return self._generate_entity_dict(
             elements=elements,
             extract_properties_func=self._extract_category_properties,
-            get_additional_props_func=self._get_category_dict_properties,
-            exclude_keys=['properties']  # Exclude raw properties
+            get_additional_props_func=get_dict_props_with_format,
+            exclude_keys=['properties'],  # Exclude raw properties
+            output_format=output_format
         )
 
-    def _get_category_additional_properties(self, element: dict, category_guid: str) -> dict:
+    def _get_category_additional_properties(self, element: dict, category_guid: str, output_format: str = None) -> dict:
         """
         Get additional properties for a category.
 
         Args:
             element (dict): The category element
             category_guid (str): The GUID of the category
+            output_format (str): Output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of additional properties
         """
         # Get parent category
-        parent_cat_md = self._get_parent_category_name(category_guid)
+        parent_cat_md = self._get_parent_category_name(category_guid, output_format)
 
         # Get subcategories
-        _, subcategory_list_md = self._get_subcategories_list(category_guid)
+        _, subcategory_list_md = self._get_subcategories_list(category_guid, output_format)
 
         # Get glossary information
-        glossary_qualified_name = self._get_glossary_name_for_element(element)
+        glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
         return {
             'in_glossary': glossary_qualified_name,
@@ -858,13 +939,17 @@ class GlossaryBrowser(Client):
         Returns:
             str: Markdown representation
         """
+        # Create a wrapper function to pass output_format to _get_category_additional_properties
+        def get_additional_props_with_format(element, category_guid, output_format_param=None):
+            return self._get_category_additional_properties(element, category_guid, output_format)
+
         return self._generate_entity_md(
             elements=elements,
             elements_action=elements_action,
             output_format=output_format,
             entity_type="Category",
             extract_properties_func=self._extract_category_properties,
-            get_additional_props_func=self._get_category_additional_properties
+            get_additional_props_func=get_additional_props_with_format
         )
 
     def generate_categories_md(self, elements: list | dict, search_string: str, output_format: str = 'MD')-> str | list:
@@ -884,13 +969,16 @@ class GlossaryBrowser(Client):
         if isinstance(elements, dict):
             elements = [elements]
 
+        if search_string is None or search_string == '':
+            search_string = "All"
+
         # If output format is LIST, create a markdown table
         if output_format == 'LIST':
-            return self._generate_category_md_table(elements, search_string)
+            return self._generate_category_md_table(elements, search_string, output_format)
 
         # If output format is DICT, return a dictionary structure
         elif output_format == 'DICT':
-            return self._generate_category_dict(elements)
+            return self._generate_category_dict(elements, output_format)
 
         # Original implementation for other formats (MD, FORM, REPORT)
         elements_md += self._generate_category_md(elements, elements_action, output_format)
@@ -1126,7 +1214,13 @@ class GlossaryBrowser(Client):
         response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("elementList", NO_GLOSSARIES_FOUND)
         if element == NO_GLOSSARIES_FOUND:
-            return NO_GLOSSARIES_FOUND
+                if output_format == 'JSON':
+                    return NO_GLOSSARIES_FOUND
+                elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
+                    return "\n# No glossaries found.\n"
+                elif output_format == 'DICT':
+                    return None
+
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_glossaries_md(element, search_string, output_format)
         return response.json().get("elementList", NO_GLOSSARIES_FOUND)
@@ -1732,7 +1826,12 @@ class GlossaryBrowser(Client):
         response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("elementList", NO_CATEGORIES_FOUND)
         if element == NO_CATEGORIES_FOUND:
-            return NO_CATEGORIES_FOUND
+                if output_format == 'JSON':
+                    return NO_CATEGORIES_FOUND
+                elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
+                    return "\n# No categories found.\n"
+                elif output_format == 'DICT':
+                    return None
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_categories_md(element, search_string, output_format)
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
@@ -3319,7 +3418,12 @@ class GlossaryBrowser(Client):
         response = await self._async_make_request("POST", url, body_slimmer(body))
         term_elements = response.json().get("elementList", NO_TERMS_FOUND)
         if term_elements == NO_TERMS_FOUND:
-            return NO_TERMS_FOUND
+                if output_format == 'JSON':
+                    return NO_TERMS_FOUND
+                elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
+                    return "\n# No Terms found.\n"
+                elif output_format == 'DICT':
+                    return None
         if output_format != "JSON":  # return a simplified markdown representation
             return self.generate_terms_md(term_elements, search_string, output_format)
         return response.json().get("elementList", NO_TERMS_FOUND)

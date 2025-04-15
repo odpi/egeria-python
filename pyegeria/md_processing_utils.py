@@ -27,7 +27,8 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
 
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
-                "List Glossary Terms", "Create Personal Project", "Update Personal Project", "Create Category",
+                "List Glossary Terms", "List Glossaries", "List Categories", "List Glossary Categories",
+                "Create Personal Project", "Update Personal Project", "Create Category",
                 "Update Category", "Create Solution Blueprint", "Update Solution Blueprint",
                 "Create Solution Component", "Update Solution Component", "Set Parent Category",
                 "UnSet Parent Category", "Unset Parent Category"]
@@ -138,6 +139,8 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
     be the first part, while the rest is treated as the object type. If
     no match is found, the function returns None.
 
+    Lines beginning with '>' are ignored.
+
     Args:
         block: A string containing the block of text to search for the
             command and action.
@@ -146,7 +149,11 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
         A tuple containing the command, the object type and the object action if a
         match is found. Otherwise, returns None.
     """
-    match = re.search(r"#(.*?)(?:##|\n|$)", block)  # Using a non capturing group
+    # Filter out lines beginning with '>'
+    filtered_lines = [line for line in block.split('\n') if not line.strip().startswith('>')]
+    filtered_block = '\n'.join(filtered_lines)
+
+    match = re.search(r"#(.*?)(?:##|\n|$)", filtered_block)  # Using a non capturing group
     if match:
         clean_match = match.group(1).strip()
         if ' ' in clean_match:
@@ -186,7 +193,7 @@ def extract_command(block: str) -> str | None:
 
 def extract_attribute(text: str, labels: [str]) -> str | None:
     """
-        Extracts the glossary name from a string.
+        Extracts the attribute value from a string.
 
         Args:
             text: The input string.
@@ -194,6 +201,9 @@ def extract_attribute(text: str, labels: [str]) -> str | None:
 
         Returns:
             The glossary name, or None if not found.
+
+        Note:
+            Lines beginning with '>' are ignored.
         """
     # Iterate over the list of labels
     for label in labels:
@@ -201,10 +211,17 @@ def extract_attribute(text: str, labels: [str]) -> str | None:
         pattern = rf"## {re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:
-            # Extract matched text and replace consecutive \n with a single \n
-            extracted_text = re.sub(r'\n+', '\n', match.group(1).strip())
+            # Extract matched text
+            matched_text = match.group(1).strip()
+
+            # Filter out lines beginning with '>'
+            filtered_lines = [line for line in matched_text.split('\n') if not line.strip().startswith('>')]
+            filtered_text = '\n'.join(filtered_lines)
+
+            # Replace consecutive \n with a single \n
+            extracted_text = re.sub(r'\n+', '\n', filtered_text)
             if not extracted_text.isspace() and extracted_text:
-                return extracted_text.title()  # Return the cleaned text
+                return extracted_text  # Return the cleaned text - I removed the title casing
 
 
 def print_msg(msg_level: str, msg: str, verbosity: str):
@@ -1212,7 +1229,7 @@ def process_term_list_command(egeria_client: EgeriaTech, element_dictionary: dic
 
     search_string = process_simple_attribute(txt, ['Search String', 'Filter'])
     if search_string is None:
-        search_string = ''
+        search_string = '*'
     print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
 
     glossary = process_simple_attribute(txt, ['Glossary', 'In Glossary'])
@@ -1247,6 +1264,104 @@ def process_term_list_command(egeria_client: EgeriaTech, element_dictionary: dic
 
         except Exception as e:
             print(f"{ERROR}Error creating Glossary Term list: {e}")
+            console.print_exception(show_locals=True)
+            return None
+
+def process_category_list_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+                                directive: str = "display") -> Optional[str]:
+    """ List terms as a markdown table. Filter based on optional search string. """
+    set_debug_level(directive)
+    valid = True
+    command = extract_command(txt)
+    object_type = command.split(' ')[1].strip()
+    object_action = command.split(' ')[0].strip()
+    known_glossary_q = ""
+    known_glossary_guid = ""
+    glossary_exists = False
+    glossary_valid = False
+
+
+    search_string = process_simple_attribute(txt, ['Search String', 'Filter'])
+    if search_string is None:
+        search_string = '*'
+    print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
+
+    glossary = process_simple_attribute(txt, ['Glossary', 'In Glossary'])
+    if glossary is not None:
+        _, glossary_guid, _, glossary_exists = get_element_by_name(
+        egeria_client, "Glossary", glossary)
+        msg = f"Found glossary `{glossary}` with GUID {glossary_guid}"
+        print_msg(INFO, msg, debug_level)
+    else:
+        glossary_guid= None
+        msg = f"No glossary found"
+        print_msg(INFO, msg, debug_level)
+
+
+    request_display = f"\n* Search String: {search_string}\n* Glossary: {glossary}\n"
+
+    if directive == "display":
+        print(Markdown(request_display))
+        return None
+    elif directive == "validate":
+        print(Markdown(request_display))
+        return valid
+    elif directive == "process":
+        try:
+            print(Markdown(request_display))
+            if not valid:  # First validate the term before we process it
+                return None
+
+            md_table = egeria_client.find_glossary_categories(search_string,glossary_guid,
+                                                              output_format = "LIST")
+
+            return md_table
+
+        except Exception as e:
+            print(f"{ERROR}Error creating Glossary Category list: {e}")
+            console.print_exception(show_locals=True)
+            return None
+
+def process_glossary_list_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
+                                directive: str = "display") -> Optional[str]:
+    """ List terms as a markdown table. Filter based on optional search string. """
+    set_debug_level(directive)
+    valid = True
+    command = extract_command(txt)
+    object_type = command.split(' ')[1].strip()
+    object_action = command.split(' ')[0].strip()
+    known_glossary_q = ""
+    known_glossary_guid = ""
+    glossary_exists = False
+    glossary_valid = False
+
+
+    search_string = process_simple_attribute(txt, ['Search String', 'Filter'])
+    if search_string is None:
+        search_string = '*'
+    print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
+
+
+    request_display = f"\n* Search String: {search_string}\n"
+
+    if directive == "display":
+        print(request_display)
+        return None
+    elif directive == "validate":
+        print(request_display)
+        return valid
+    elif directive == "process":
+        try:
+            print(request_display)
+            if not valid:  # First validate the term before we process it
+                return None
+
+            md_table = egeria_client.find_glossaries(search_string, output_format = "LIST")
+
+            return md_table
+
+        except Exception as e:
+            print(f"{ERROR}Error creating Glossary list: {e}")
             console.print_exception(show_locals=True)
             return None
 

@@ -164,3 +164,4 @@ dmypy.json
 
 /pyegeria/commands/cat/dr_egeria_inbox/
 /pyegeria/commands/cat/dr_egeria_outbox/
+/.junie/

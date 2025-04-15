@@ -189,7 +189,7 @@ def display_glossary_terms(
             )
             abbrev = Text(props.get("abbreviation", " "), style=style, justify="center")
             summary = Text(props.get("summary", " "), style=style)
-            description = Text(props.get("description", " "), style=style)
+            description = Markdown(props.get("description"))
             version = Text(
                 props.get("publishVersionIdentifier", " "),
                 style=style,
@@ -223,6 +223,7 @@ def display_glossary_terms(
                     category_list_md += f"* {category_name}\n"
             term_abb_ver_out = Markdown(f"{display_name}\n---\n{abbrev}\n---\n{version}")
             category_list_out = Markdown(category_list_md)
+
             term_status = term["elementHeader"].get("status","---")
             table.add_row(
                 term_abb_ver_out,
