@@ -144,7 +144,7 @@ class TestGlossaryManager:
             )
             start_time = time.perf_counter()
             glossary_guid = "2a7b7423-335b-4b0f-9dfe-af73621b465d"
-            g_client.delete_glossary(glossary_guid)
+            g_client.delete_glossary(glossary_guid, cascade = False)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -386,6 +386,48 @@ class TestGlossaryManager:
                 # print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} glossaries")
+                # for i in range(count):
+                #     print(
+                #         f"Found glossary: {response[i]['glossaryCategoryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
+                #     )
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_get_glossary_category_structure(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            guid = "79f9784d-26d6-47f0-bb50-c193ede03441"
+            response = g_client.get_glossary_category_structure(
+                # "*",
+                guid,
+                output_format="LIST"
+            )
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, list | dict):
+                # print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} categories")
                 # for i in range(count):
                 #     print(
                 #         f"Found glossary: {response[i]['glossaryCategoryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"

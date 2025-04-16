@@ -203,7 +203,7 @@ def display_glossary_terms(
             glossary_guid = None
             for c in classifications:
                 if c["classificationName"] == "Anchors":
-                    glossary_guid = c["classificationProperties"]["anchorGUID"]
+                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
 
             if glossary_guid and glossary_guid in glossary_info:
                 glossary_name = glossary_info[glossary_guid]

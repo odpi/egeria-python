@@ -1521,7 +1521,7 @@ class ProjectManager(Client):
 
     async def _async_delete_project(
         self,
-        project_guid: str,
+        project_guid: str, cascade: bool = False
     ) -> None:
         """Delete a project.  It is detected from all parent elements. Async version
 
@@ -1529,7 +1529,8 @@ class ProjectManager(Client):
         ----------
         project_guid: str
             The guid of the project to update.
-
+        cascade: bool, optional, defaults to False
+            If true, then all anchored elements will be deleted.
 
         Returns
         -------
@@ -1545,10 +1546,10 @@ class ProjectManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
+        cascade_s = str(cascade).lower()
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
-            f"{project_guid}/delete"
+            f"{project_guid}/delete?cascadedDelete={cascade_s}"
         )
 
         body = {"class": "NullRequestBody"}
@@ -1558,7 +1559,7 @@ class ProjectManager(Client):
 
     def delete_project(
         self,
-        project_guid: str,
+        project_guid: str, cascade: bool = False
     ) -> None:
         """Delete a project.  It is detected from all parent elements.
 
@@ -1566,8 +1567,12 @@ class ProjectManager(Client):
         ----------
         project_guid: str
             The guid of the collection to update.
+        cascade: bool, optional, defaults to False
+            If true, then all anchored elements will be deleted.
 
 
+        cascade: bool, optional, defaults to False
+            If true, then all anchored elements will be deleted.
         Returns
         -------
         Nothing
@@ -1584,7 +1589,7 @@ class ProjectManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_project(project_guid))
+        loop.run_until_complete(self._async_delete_project(project_guid, cascade))
         return
 
     async def _async_add_to_project_team(

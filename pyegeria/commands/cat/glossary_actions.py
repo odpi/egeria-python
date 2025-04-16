@@ -128,7 +128,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        m_client.delete_glossary(glossary_guid)
+        m_client.delete_glossary(glossary_guid, cascade = True)
 
         click.echo(f"Deleted glossary: {glossary_guid}")
 

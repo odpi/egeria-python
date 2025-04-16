@@ -676,11 +676,11 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
                 print_msg("ALWAYS", msg, debug_level)
 
                 # update with get blueprint by guid
-                return 'Would return get blueprint by guid and return md'  # egeria_client.get_terms_by_guid(  #
+                return 'Would return get blueprint by guid and return md'  # egeria_client.get_term_by_guid(  #
                 # known_guid, 'md')
 
             elif object_action == "Update" and directive == "validate":
-                return 'Would call get_blueprint_by_guid and return md'  # egeria_client.get_terms_by_guid(  #
+                return 'Would call get_blueprint_by_guid and return md'  # egeria_client.get_term_by_guid(  #
                 # known_guid, 'md')
 
             elif object_action == "Create":
@@ -699,7 +699,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
                     print_msg("ALWAYS", msg, debug_level)
 
                     update_element_dictionary(q_name, {'guid': new_guid, 'display_name': display_name})
-                    return 'Would return get blueprint by guid results as md'  # egeria_client.get_terms_by_guid(  #
+                    return 'Would return get blueprint by guid results as md'  # egeria_client.get_term_by_guid(  #
                     # term_guid, 'MD')
 
         except Exception as e:
@@ -844,10 +844,10 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, element
                 print_msg("ALWAYS", msg, debug_level)
                 # update with get solution component by guid
                 return 'Would return get Solution Component by guid and return md'  #  #
-                # egeria_client.get_terms_by_guid(known_guid, 'md')
+                # egeria_client.get_term_by_guid(known_guid, 'md')
 
             elif object_action == "Update" and directive == "validate":
-                return 'Would call get_blueprint_by_guid and return md'  # egeria_client.get_terms_by_guid(  #
+                return 'Would call get_blueprint_by_guid and return md'  # egeria_client.get_term_by_guid(  #
                 # known_guid, 'md')
 
             elif object_action == "Create":
@@ -866,7 +866,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, element
                     print_msg("ALWAYS", msg, debug_level)
                     update_element_dictionary(known_q_name, {'guid': known_guid, 'display_name': display_name})
                     return 'Would return get solution component by guid results as md'  #  #
-                    # egeria_client.get_terms_by_guid(term_guid, 'MD')
+                    # egeria_client.get_term_by_guid(term_guid, 'MD')
 
         except Exception as e:
             msg = f"Error creating term {display_name}: {e}"
@@ -1566,11 +1566,11 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
                 print_msg(ALWAYS,
                           f"\tUpdated Term `{term_name}` with GUID {known_guid}\n\tand categories `{categories}`",
                           debug_level)
-                return egeria_client.get_terms_by_guid(known_guid,
+                return egeria_client.get_term_by_guid(known_guid,
                                                        'md')  # return update_a_command(txt, command, object_type,
                 # known_q_name, known_guid)
             elif object_action == "Update" and directive == "validate":  # is sthis reachable?
-                return egeria_client.get_terms_by_guid(known_guid, 'md')
+                return egeria_client.get_term_by_guid(known_guid, 'md')
 
             elif object_action == "Create":
                 if term_exists:
@@ -1613,7 +1613,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, element_dictionary: d
                         update_term_categories(egeria_client, term_guid, cats_exist, cat_q_name_list)
                     update_element_dictionary(known_q_name, {'guid': term_guid, 'display_name': term_name})
                     print_msg(ALWAYS, f"Created term `{term_name}` with GUID {term_guid}", debug_level)
-                    return egeria_client.get_terms_by_guid(term_guid,
+                    return egeria_client.get_term_by_guid(term_guid,
                                                            'MD')  # return update_a_command(txt, command,
                     # object_type, q_name, term_guid)
         except Exception as e:

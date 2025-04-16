@@ -693,3 +693,49 @@ class TestGlossaryBrowser:
 
         finally:
             g_client.close_session()
+
+    def test_get_glossary_category_structure(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            glossary_guid = "85a46c28-e7be-4241-ba94-ef7ea5f8edec"
+
+            # Test DICT output format
+            response_dict = g_client.get_glossary_category_structure(glossary_guid, output_format="DICT")
+            print(f"DICT response type is {type(response_dict)}")
+            if isinstance(response_dict, dict):
+                print("\n\nDICT output:")
+                print(json.dumps(response_dict, indent=4))
+            elif isinstance(response_dict, str):
+                print("\n\n" + response_dict)
+
+            # Test LIST output format
+            response_list = g_client.get_glossary_category_structure(glossary_guid, output_format="LIST")
+            print(f"LIST response type is {type(response_list)}")
+            if isinstance(response_list, str):
+                print("\n\nLIST output:")
+                print(response_list)
+
+            # Test MD output format
+            response_md = g_client.get_glossary_category_structure(glossary_guid, output_format="MD")
+            print(f"MD response type is {type(response_md)}")
+            if isinstance(response_md, str):
+                print("\n\nMD output:")
+                print(response_md)
+
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()

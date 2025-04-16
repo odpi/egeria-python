@@ -538,7 +538,7 @@ class TestProjectManager:
             start_time = time.perf_counter()
             project_guid = "71e55eca-42da-4d34-ace7-5247cf19ea57"
 
-            response = p_client.delete_project(project_guid)
+            response = p_client.delete_project(project_guid, cascade = False)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
