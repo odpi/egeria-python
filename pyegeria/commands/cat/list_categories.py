@@ -119,7 +119,7 @@ def display_categories(
             "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
         )
         table.add_column("Description")
-        table.add_column("In Glossary (Qualified Name)")
+        table.add_column("In Glossary")
         table.add_column("Parent Category")
 
         categories = m_client.find_glossary_categories(search_string)
