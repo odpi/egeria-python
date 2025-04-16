@@ -311,6 +311,120 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
+    def test_get_term_versions(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_guid = '5401a977-4d77-4360-b747-42d11f87ddd1'
+            response = g_client.get_term_versions(term_guid)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_revision_logs(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_guid = '5401a977-4d77-4360-b747-42d11f87ddd1'
+            response = g_client.get_term_revision_logs(term_guid)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_revision_history(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            note_log_guid = '802744f8-0a59-4c5e-a631-f8969b673d7c'
+            # note_log_guid = '54cbe8e6-ab3a-4d9c-af4f-7ac346d51468'
+            response = g_client.get_term_revision_history(note_log_guid)
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_list_full_term_history(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_guid = '5401a977-4d77-4360-b747-42d11f87ddd1'
+            response = g_client.list_full_term_history(term_guid, "LIST")
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+
     def test_get_categories_for_term(self, server: str = good_view_server_2):
         try:
             server_name = server
@@ -320,7 +434,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '16400f1d-657c-4949-91ff-cd018c429b8d'
+            term_guid = 'a8bfb781-62f6-4c11-96a8-28e9b6d57261'
             # term_guid = 'c8f7bbcf-87da-4b96-a819-fc3eb1b3a97a'
             response = g_client.get_categories_for_term(term_guid)
             print(f"type is {type(response)}")
@@ -502,8 +616,8 @@ class TestGlossaryBrowser:
             # glossary_guid = (
             #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
             # )
-            glossary_guid = '6de10544-ec5a-4c92-b19d-03a79fa353f2'
-            response = g_client.get_category_parent(glossary_guid)
+            category_guid = '6de10544-ec5a-4c92-b19d-03a79fa353f2'
+            response = g_client.get_category_parent(category_guid)
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
