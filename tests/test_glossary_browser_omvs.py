@@ -539,7 +539,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            search_string = "Dr."
+            search_string = "*"
             start_time = time.perf_counter()
             response = g_client.find_glossary_categories(
                 search_string,
@@ -548,7 +548,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = "REPORT",
+                output_format = "MD",
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -585,8 +585,8 @@ class TestGlossaryBrowser:
             # glossary_guid = (
             #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
             # )
-            glossary_guid = 'e164ba97-f5eb-42f2-b52e-cd72f484d18d'
-            response = g_client.get_categories_by_guid(glossary_guid)
+            glossary_guid = 'be767c03-b54d-4cc6-94aa-73fde1bf61e1'
+            response = g_client.get_category_by_guid(glossary_guid, output_format = 'FORM')
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -681,6 +681,52 @@ class TestGlossaryBrowser:
 
             elif type(response) is str:
                 print("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_glossary_category_structure(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            glossary_guid = "85a46c28-e7be-4241-ba94-ef7ea5f8edec"
+
+            # Test DICT output format
+            response_dict = g_client.get_glossary_category_structure(glossary_guid, output_format="DICT")
+            print(f"DICT response type is {type(response_dict)}")
+            if isinstance(response_dict, dict):
+                print("\n\nDICT output:")
+                print(json.dumps(response_dict, indent=4))
+            elif isinstance(response_dict, str):
+                print("\n\n" + response_dict)
+
+            # Test LIST output format
+            response_list = g_client.get_glossary_category_structure(glossary_guid, output_format="LIST")
+            print(f"LIST response type is {type(response_list)}")
+            if isinstance(response_list, str):
+                print("\n\nLIST output:")
+                print(response_list)
+
+            # Test MD output format
+            response_md = g_client.get_glossary_category_structure(glossary_guid, output_format="MD")
+            print(f"MD response type is {type(response_md)}")
+            if isinstance(response_md, str):
+                print("\n\nMD output:")
+                print(response_md)
+
             assert True
 
         except (

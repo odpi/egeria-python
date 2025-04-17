@@ -136,7 +136,7 @@ def display_categories(
                 classification_props = category["elementHeader"]['classifications'][0].get('classificationProperties',None)
                 glossary_qualified_name = '---'
                 if classification_props is not None:
-                    glossary_guid = classification_props.get('anchorGUID','---')
+                    glossary_guid = classification_props.get('anchorScopeGUID','---')
                     glossary_qualified_name = (
                         m_client.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
                 cat_info = m_client.get_category_parent(category_guid)

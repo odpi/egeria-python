@@ -79,14 +79,12 @@ def process_jupyter_notebook(
                         potential_command = extract_command(cell.source)
                         if potential_command in command_list:
                             if potential_command in ["Create Glossary", "Update Glossary"]:
-                                result = process_glossary_upsert_command(client, element_dictionary,
-                                                                         cell.source, directive)
+                                result = process_glossary_upsert_command(client, cell.source, directive)
 
                             elif potential_command in ["Create Term", "Update Term"]:
-                                result = process_term_upsert_command(client, element_dictionary,
-                                                                     cell.source, directive)
+                                result = process_term_upsert_command(client, cell.source, directive)
                             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                                result = process_per_proj_upsert_command(client, element_dictionary, cell.source, directive)
+                                result = process_per_proj_upsert_command(client, cell.source, directive)
                             else:
                                 # If command is not recognized, copy the block as-is
                                 result = None

@@ -13,8 +13,8 @@ from pyegeria.md_processing_utils import (extract_command, process_glossary_upse
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                      process_categories_upsert_command,
-                      get_current_datetime_string, process_per_proj_upsert_command, commands,EgeriaTech
+                      process_category_upsert_command,
+                      get_current_datetime_string, process_per_proj_upsert_command, commands, EgeriaTech
                       )
 from datetime import datetime
 
@@ -116,13 +116,13 @@ def process_markdown_file(
                 prov_found = True
                 result = process_provenance_command(file_path, block)
             elif potential_command in ["Create Glossary", "Update Glossary"]:
-                result = process_glossary_upsert_command(client, element_dictionary, block, directive)
+                result = process_glossary_upsert_command(client, block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
-                result = process_categories_upsert_command(client, element_dictionary, block, directive)
+                result = process_category_upsert_command(client, block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
-                result = process_term_upsert_command(client, element_dictionary, block, directive)
+                result = process_term_upsert_command(client, block, directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                result = process_per_proj_upsert_command(client, element_dictionary, block, directive)
+                result = process_per_proj_upsert_command(client, block, directive)
             else:
                 # If command is not recognized, copy the block as-is
                 result = None

@@ -531,7 +531,7 @@ class TemplateManager(Client):
         return
 
     async def _async_delete_metadata_element_in_store(
-        self, element_guid: str, body: dict
+        self, element_guid: str, body: dict, cascade:bool = False
     ) -> None:
         """Delete a metadata element.
             Async version.
@@ -542,6 +542,8 @@ class TemplateManager(Client):
             The identity of the metadata element to update.
         body : dict
             The definition of the element to create. A sample is the notes below.
+        cascade : bool, optional, defaults to False
+            If true, delete all anchored elements as well.
 
         Returns
         -------
@@ -567,11 +569,12 @@ class TemplateManager(Client):
         }
 
         """
-        url = f"{self.command_root}/metadata-elements/{element_guid}/delete"
+        cascade_str = str(cascade).lower()
+        url = f"{self.command_root}/metadata-elements/{element_guid}/delete?cascadedDelete={cascade_str}"
         await self._async_make_request("POST", url, body_slimmer(body))
         return
 
-    def delete_metadata_element_in_store(self, element_guid: str, body: dict) -> None:
+    def delete_metadata_element_in_store(self, element_guid: str, body: dict, cascade:bool = False) -> None:
         """Delete a metadata element.
 
         Parameters
@@ -580,6 +583,8 @@ class TemplateManager(Client):
             The identity of the metadata element to update.
         body : dict
             The definition of the element to create. A sample is the notes below.
+        cascade : bool, optional, defaults to False
+            If true, delete all anchored elements as well.
 
         Returns
         -------
@@ -607,7 +612,7 @@ class TemplateManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_delete_metadata_element_in_store(element_guid, body)
+            self._async_delete_metadata_element_in_store(element_guid, body, cascade)
         )
         return
 

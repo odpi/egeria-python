@@ -187,23 +187,23 @@ def display_glossary_terms(
             q_name = Text(
                 f"{qualified_name}\n&\n{term_guid}", style=style, justify="center"
             )
-            abbrev = Text(props.get("abbreviation", " "), style=style, justify="center")
-            summary = Text(props.get("summary", " "), style=style)
-            description = Markdown(props.get("description"))
+            abbrev = Text(props.get("abbreviation", "---"), style=style, justify="center")
+            summary = Text(props.get("summary", "---"), style=style)
+            description = Markdown(props.get("description",'---'))
             version = Text(
-                props.get("publishVersionIdentifier", " "),
+                props.get("publishVersionIdentifier", "---"),
                 style=style,
                 justify="center",
             )
-            example = props.get("example", " ")
-            usage = props.get("usage", " ")
+            example = props.get("example", "---")
+            usage = props.get("usage", "---")
             ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
 
             classifications = term["elementHeader"]["classifications"]
             glossary_guid = None
             for c in classifications:
                 if c["classificationName"] == "Anchors":
-                    glossary_guid = c["classificationProperties"]["anchorGUID"]
+                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
 
             if glossary_guid and glossary_guid in glossary_info:
                 glossary_name = glossary_info[glossary_guid]

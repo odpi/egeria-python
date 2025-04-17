@@ -143,35 +143,38 @@ class GlossaryManager(GlossaryBrowser):
         )
         return response
 
-    async def _async_delete_glossary(self, glossary_guid: str) -> None:
+    async def _async_delete_glossary(self, glossary_guid: str, cascade:bool = False) -> None:
         """Delete glossary. Async version.
 
         Parameters
         ----------
         glossary_guid: str
             The ID of the glossary to delete.
-
+        cascade: bool, optional, default = False
+            If true, then delete all terms and categories in the glossary as well.
 
         Returns
         -------
         None
 
         """
-
+        cascade_str = str(cascade).lower()
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"{glossary_guid}/remove"
+            f"{glossary_guid}/remove?cascadedDelete={cascade_str}"
         )
 
         await self._async_make_request("POST", url)
 
-    def delete_glossary(self, glossary_guid: str) -> None:
-        """Create a new glossary.
+    def delete_glossary(self, glossary_guid: str, cascade: bool = False) -> None:
+        """Delete a new glossary.
 
         Parameters
         ----------
         glossary_guid: str
             The ID of the glossary to delete.
+        cascade: bool, optional, default = False
+            If true, then delete all terms and categories in the glossary as well.
 
 
         Returns
@@ -180,7 +183,7 @@ class GlossaryManager(GlossaryBrowser):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_glossary(glossary_guid))
+        loop.run_until_complete(self._async_delete_glossary(glossary_guid, cascade))
 
     async def _async_update_glossary(
         self,

@@ -629,7 +629,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                 'guid': known_guid, 'display_name': category_name
                 }
             # return update_a_command(txt, command, object_type, known_q_name, known_guid)
-            return egeria_client.get_categories_by_guid(known_guid, output_format='FORM')
+            return egeria_client.get_category_by_guid(known_guid, output_format='FORM')
 
         elif object_action == "Create":
             is_root = False
@@ -639,7 +639,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                 return update_a_command(txt, command, object_type, known_q_name, known_guid)
             else:
                 category_guid = egeria_client.create_category(glossary_guid, category_name, description, is_root)
-                category = egeria_client.get_categories_by_guid(category_guid)
+                category = egeria_client.get_category_by_guid(category_guid)
 
                 if category == NO_CATEGORIES_FOUND:
                     print(f"{ERROR}Just created with GUID {category_guid} but category not found\n")
@@ -649,7 +649,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                     'guid': category_guid, 'display_name': category_name
                     }
                 # return update_a_command(txt, command, object_type, qualified_name, category_guid)
-                return egeria_client.get_categories_by_guid(category_guid, output_format='MD')
+                return egeria_client.get_category_by_guid(category_guid, output_format='MD')
 
 
 def process_term_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
