@@ -133,7 +133,7 @@ class TestGlossaryManager:
     def test_delete_glossary(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
@@ -143,7 +143,7 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            glossary_guid = "2a7b7423-335b-4b0f-9dfe-af73621b465d"
+            glossary_guid = "85a46c28-e7be-4241-ba94-ef7ea5f8edec"
             g_client.delete_glossary(glossary_guid, cascade = False)
             duration = time.perf_counter() - start_time
 

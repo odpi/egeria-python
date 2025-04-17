@@ -539,7 +539,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            search_string = "Dr."
+            search_string = "*"
             start_time = time.perf_counter()
             response = g_client.find_glossary_categories(
                 search_string,
@@ -548,7 +548,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = "REPORT",
+                output_format = "MD",
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -585,8 +585,8 @@ class TestGlossaryBrowser:
             # glossary_guid = (
             #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
             # )
-            glossary_guid = 'e164ba97-f5eb-42f2-b52e-cd72f484d18d'
-            response = g_client.get_categories_by_guid(glossary_guid)
+            glossary_guid = 'be767c03-b54d-4cc6-94aa-73fde1bf61e1'
+            response = g_client.get_category_by_guid(glossary_guid, output_format = 'FORM')
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))

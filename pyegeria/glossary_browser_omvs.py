@@ -847,16 +847,21 @@ class GlossaryBrowser(Client):
         # Get parent category
         parent_cat_md = self._get_parent_category_name(category_guid, output_format)
 
-        # Get subcategories
-        _, subcategory_list_md = self._get_subcategories_list(category_guid, output_format)
-
         # Get glossary information
         glossary_qualified_name = self._get_glossary_name_for_element(element, output_format)
 
-        return {
-            'in_glossary': glossary_qualified_name, 'parent_category': parent_cat_md,
-            'subcategories': subcategory_list_md
-            }
+        # Only include subcategories if output_format is not FORM, REPORT, or MD
+        if output_format not in ['FORM', 'REPORT', 'MD']:
+            # Get subcategories
+            _, subcategory_list_md = self._get_subcategories_list(category_guid, output_format)
+            return {
+                'in_glossary': glossary_qualified_name, 'parent_category': parent_cat_md,
+                'subcategories': subcategory_list_md
+                }
+        else:
+            return {
+                'in_glossary': glossary_qualified_name, 'parent_category': parent_cat_md
+                }
 
     def _generate_category_md(self, elements: list, elements_action: str, output_format: str) -> str:
         """
@@ -1528,6 +1533,7 @@ class GlossaryBrowser(Client):
 
         return response.json().get("elementList", "No categories found")
 
+
     def get_glossary_subcategories(self, glossary_category_guid: str, effective_time: str = None, start_from: int = 0,
             page_size: int = max_paging_size, for_lineage: bool = False,
             for_duplicate_processing: bool = False, ) -> dict | str:
@@ -1979,8 +1985,8 @@ class GlossaryBrowser(Client):
             self._async_get_categories_by_name(name, glossary_guid, status, start_from, page_size))
         return response
 
-    async def _async_get_categories_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-            output_format: str = 'JSON', ) -> list | str:
+    async def _async_get_category_by_guid(self, glossary_category_guid: str, effective_time: str = None,
+                                          output_format: str = 'JSON', ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
@@ -2035,8 +2041,8 @@ class GlossaryBrowser(Client):
             return self.generate_categories_md(element, "GUID", output_format)
         return response.json().get("element", NO_CATEGORIES_FOUND)
 
-    def get_categories_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-            output_format: str = 'JSON', ) -> list | str:
+    def get_category_by_guid(self, glossary_category_guid: str, effective_time: str = None,
+                             output_format: str = 'JSON', ) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
@@ -2074,7 +2080,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_categories_by_guid(glossary_category_guid, effective_time, output_format))
+            self._async_get_category_by_guid(glossary_category_guid, effective_time, output_format))
         return response
 
     async def _async_get_category_parent(self, glossary_category_guid: str, effective_time: str = None, ) -> list | str:
