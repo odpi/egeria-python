@@ -13,7 +13,8 @@ from pyegeria import (extract_command, process_glossary_upsert_command, process_
                       get_current_datetime_string,
                       process_per_proj_upsert_command, command_list, EgeriaTech, process_blueprint_upsert_command,
                       process_solution_component_upsert_command, dr_egeria_state, process_term_list_command,
-                      process_category_list_command, process_glossary_list_command, process_term_history_command)
+                      process_category_list_command, process_glossary_list_command, process_term_history_command,
+                      process_glossary_structure_command, process_term_revision_history_command,)
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -89,21 +90,20 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_glossary_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Category", "Update Category"]:
                 result = process_category_upsert_command(client, current_block, directive)
-            # elif potential_command in ["Set Parent Category", "UnSet Parent Category"]:
-            #     result = process_set_categories_parent_command(client, dr_egeria_state.get_element_dictionary(),
-            #                                                    current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, current_block, directive)
             elif potential_command in ["List Term History", "Term History"]:
                 result = process_term_history_command(client, current_block, directive)
+            elif potential_command in ["List Term Update History", "List Term Revision History"]:
+                result = process_term_revision_history_command(client, current_block, directive)
             elif potential_command in ["List Terms", "List Glossary Terms"]:
                 result = process_term_list_command(client, current_block, directive)
             elif potential_command in ["List Categories", "List Glossary Categories"]:
-                result = process_category_list_command(client, dr_egeria_state.get_element_dictionary(), current_block,
-                                                       directive)
+                result = process_category_list_command(client, current_block, directive)
+            elif potential_command in ["List Glossary Structure"]:
+                result = process_glossary_structure_command(client, current_block, directive)
             elif potential_command in ["List Glossaries"]:
-                result = process_glossary_list_command(client, dr_egeria_state.get_element_dictionary(), current_block,
-                                                       directive)
+                result = process_glossary_list_command(client, current_block, directive)
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
                 result = process_per_proj_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint",

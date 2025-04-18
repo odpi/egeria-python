@@ -97,7 +97,7 @@ def test_get_elements_by_property_value():
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name","displayName",'qualifiedName']
-    property_value = "Command"
+    property_value = "Egeria-Markdown"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)

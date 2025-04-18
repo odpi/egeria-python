@@ -640,11 +640,11 @@ class GlossaryBrowser(Client):
             output_format (str): Output format (FORM, REPORT, LIST, etc.)
 
         Returns:
-            str: The parent category name or '---' if no parent
+            str: The parent category name or ' ' if no parent
         """
         parent_cat = self.get_category_parent(category_guid)
         if isinstance(parent_cat, str):
-            return '---'
+            return ' '
 
         # Return qualified name for FORM output, display name for REPORT and LIST output
         if output_format == 'FORM':
@@ -3107,6 +3107,109 @@ class GlossaryBrowser(Client):
 
         return response
 
+    def list_term_revision_history(self, term_guid: str, output_format: str = "DICT") -> list | str:
+        """
+        Retrieve the revision history for a term.
+
+        This method retrieves the revision logs associated with a term, and for each revision log,
+        retrieves the revision history. The results are formatted according to the specified output format.
+
+        Parameters
+        ----------
+        term_guid : str
+            The GUID of the glossary term to retrieve the revision history for.
+        output_format : str, optional
+            The format in which to return the results. Can be "DICT", "MD", or "LIST".
+            Defaults to "DICT".
+
+        Returns
+        -------
+        list | str
+            If output_format is "DICT", returns a list of dictionaries containing the revision history.
+            If output_format is "MD", returns a markdown representation of the revision history.
+            If output_format is "LIST", returns a markdown table of the revision history.
+            If no revision logs are found, returns a string message "No revision logs found".
+        """
+        import re
+        validate_guid(term_guid)
+
+        # Get revision logs for the term
+        revision_logs = self.get_term_revision_logs(term_guid)
+        if isinstance(revision_logs, str):
+            return "No revision logs found"
+
+        # Process each revision log
+        all_entries = []
+        for log in revision_logs:
+            log_guid = log['elementHeader']['guid']
+            qualified_name = log.get('properties', {}).get('qualifiedName', '---')
+
+            # Get revision history for this log
+            history = self.get_term_revision_history(log_guid)
+            if isinstance(history, str):
+                continue
+
+            # Process each entry in the history
+            for entry in history:
+                # Extract update time from the title
+                title = entry.get('properties', {}).get('title', '---')
+
+                keyword_index = title.index('on')
+                update_time = title[keyword_index + 2:].strip()
+
+                entry_data = {
+                    'qualifiedName': qualified_name,
+                    'title': title,
+                    'text': entry.get('properties', {}).get('text', '---'),
+                    'updateTime': update_time  # Use extracted date/time or fall back to title
+                }
+                all_entries.append(entry_data)
+
+        # Sort entries by update time
+        sorted_entries = sorted(all_entries, key=lambda x: x['updateTime'] if x['updateTime'] != '---' else '', reverse=True)
+
+        # Return in the specified format
+        if output_format == "DICT":
+            return sorted_entries
+        elif output_format == "LIST":
+            # Create markdown table
+            if not sorted_entries:
+                return "No revision entries found"
+
+            # Get headers
+            headers = sorted_entries[0].keys()
+
+            # Create header row
+            header_row = " | ".join(headers)
+            separator_row = " | ".join(["---"] * len(headers))
+
+            # Create rows
+            rows = []
+            for entry in sorted_entries:
+                row = " | ".join(str(entry.get(header, "---")) for header in headers)
+                rows.append(row)
+
+            # Combine into table
+            markdown_table = f"{header_row}\n{separator_row}\n" + "\n".join(rows)
+            return markdown_table
+        elif output_format == "MD":
+            # Create markdown representation
+            if not sorted_entries:
+                return "No revision entries found"
+
+            md_output = "\n"
+
+            for entry in sorted_entries:
+                md_output += f"* Note Log Name: \n{entry['qualifiedName']}\n\n"
+                md_output += f"* Note Log Entry Title: \n{entry['title']}\n\n"
+                md_output += f"* Note Log Entry: \n\t{entry['text']}\n\n"
+                md_output += "---\n\n"
+
+            return md_output
+        else:
+            # Default to DICT format
+            return sorted_entries
+
 
     def list_full_term_history(self, term_guid: str, output_type: str = "DICT") -> list | str:
         """
@@ -3138,19 +3241,19 @@ class GlossaryBrowser(Client):
             return "No History Found"
         version_history = []
         for ver in history:
-            create_time = ver["elementHeader"]["versions"].get("createTime", "---")
-            update_time = ver["elementHeader"]["versions"].get("createTime", "---")
-            created_by = ver["elementHeader"]["versions"].get("createdBy", "---")
+            create_time = ver["elementHeader"]["versions"].get("createTime", " ")
+            update_time = ver["elementHeader"]["versions"].get("createTime", " ")
+            created_by = ver["elementHeader"]["versions"].get("createdBy", " ")
             updated_by = ver["elementHeader"]["versions"].get("updatedBy", "---")
             version = ver["elementHeader"]["versions"].get("version")
 
-            qualified_name = ver["glossaryTermProperties"].get("qualifiedName", '---')
-            display_name = ver["glossaryTermProperties"].get("displayName", '---')
-            summary = ver["glossaryTermProperties"].get("summary", '---')
-            description = ver["glossaryTermProperties"].get("description", '---')
-            examples = ver["glossaryTermProperties"].get("examples", '---')
-            usage = ver["glossaryTermProperties"].get("usage", '---')
-            version_identifier = ver["glossaryTermProperties"].get("versionIdentifier", '---')
+            qualified_name = ver["glossaryTermProperties"].get("qualifiedName", ' ')
+            display_name = ver["glossaryTermProperties"].get("displayName", ' ')
+            summary = ver["glossaryTermProperties"].get("summary", ' ')
+            description = ver["glossaryTermProperties"].get("description", ' ')
+            examples = ver["glossaryTermProperties"].get("examples", ' ')
+            usage = ver["glossaryTermProperties"].get("usage", ' ')
+            version_identifier = ver["glossaryTermProperties"].get("versionIdentifier", ' ')
 
             version_history.append({
                 "version": version, "displayName": display_name, "summary": summary, "created": create_time,
@@ -3178,6 +3281,8 @@ class GlossaryBrowser(Client):
             # Combine everything into a Markdown table string
             markdown_table = f"{header_row}\n{separator_row}\n" + "\n".join(rows)
             return markdown_table
+        else:
+            return None
 
     async def _async_find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
             effective_time: str = None, starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
