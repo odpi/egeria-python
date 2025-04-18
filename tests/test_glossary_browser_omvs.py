@@ -118,7 +118,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_glossaries_by_name(self, server: str = good_view_server_1):
+    def test_get_glossaries_by_name(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryBrowser(
@@ -126,7 +126,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_name = "Sustainability Glossary"
+            glossary_name = "Egeria-Markdown"
 
             response = g_client.get_glossaries_by_name(glossary_name)
             print(f"type is {type(response)}")
@@ -348,7 +348,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '5401a977-4d77-4360-b747-42d11f87ddd1'
+            term_guid = '4961c79b-b040-4597-b0d3-5d32dd5f8935'
             response = g_client.get_term_revision_logs(term_guid)
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -376,7 +376,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            note_log_guid = '802744f8-0a59-4c5e-a631-f8969b673d7c'
+            note_log_guid = '1e5a83f2-91d6-4953-b7ab-22615763045e'
             # note_log_guid = '54cbe8e6-ab3a-4d9c-af4f-7ac346d51468'
             response = g_client.get_term_revision_history(note_log_guid)
             print(f"type is {type(response)}")
@@ -395,6 +395,36 @@ class TestGlossaryBrowser:
 
         finally:
             g_client.close_session()
+
+    def test_list_term_revision_history(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_guid = '4961c79b-b040-4597-b0d3-5d32dd5f8935'
+            # note_log_guid = '54cbe8e6-ab3a-4d9c-af4f-7ac346d51468'
+            response = g_client.list_term_revision_history(term_guid, output_format='LIST')
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
 
     def test_list_full_term_history(self, server: str = good_view_server_2):
         try:
@@ -702,7 +732,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "85a46c28-e7be-4241-ba94-ef7ea5f8edec"
+            glossary_guid = "81b618ae-cadc-4c23-ad6e-4b1113643ddb"
 
             # Test DICT output format
             response_dict = g_client.get_glossary_category_structure(glossary_guid, output_format="DICT")
