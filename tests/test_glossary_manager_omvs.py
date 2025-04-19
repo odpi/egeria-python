@@ -26,6 +26,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
+from tests.test_classification_manager_omvs import relationship_type
 from tests.test_feedback_manager_omvs import password
 
 # from pyegeria.admin_services import FullServerConfig
@@ -888,5 +889,85 @@ class TestGlossaryManager:
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+
+    def test_add_relationship_between_terms(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
+            guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
+            relationship_type = "Synonym"
+            g_client.add_relationship_between_terms(guid1, guid2, relationship_type)
+
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_update_relationship_between_terms(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
+            guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
+            relationship_type = "Synonym"
+
+            # body = {
+            #         "properties": {
+            #             "class": "GlossaryTermRelationship",
+            #             "expression": None,
+            #             "confidence": "50",
+            #             "description": "A test description",
+            #             "source": None,
+            #             "steward": "Martha",
+            #             "status": "DRAFT",
+            #             "effectiveFrom": None,
+            #             "effectiveTo": None
+            #         }
+            #
+            #     }
+            body = {
+                "class": "GlossaryTermRelationship",
+                "elementProperties": {
+                    "expression": None,
+                    "confidence": "50",
+                    "description": "A test description",
+                    "source": None,
+                    "steward": "Martha",
+                    "status": "DRAFT",
+                    "effectiveFrom": None,
+                    "effectiveTo": None
+                    }
+
+                }
+            g_client.update_relationship_between_terms(guid1, guid2, relationship_type)
+
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
         finally:
             g_client.close_session()

@@ -133,8 +133,8 @@ class GlossaryBrowser(Client):
         cat_md_qn = ''
         if type(categories) is list:
             for category in categories:
-                cat_md_display += f"* {category['glossaryCategoryProperties'][('displayName')]}\n"
-                cat_md_qn += f"* {category['glossaryCategoryProperties'][('qualifiedName')]}\n"
+                cat_md_display += f" {category['glossaryCategoryProperties'][('displayName')]},\n"
+                cat_md_qn += f" {category['glossaryCategoryProperties'][('qualifiedName')]},\n"
             cat_md = cat_md_display.strip()
             cat_md_qn = cat_md_qn.strip()
 
@@ -1034,6 +1034,43 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_glossary_term_statuses())
+        return response
+
+    async def _async_get_term_relationship_types(self) -> [str]:
+        """Return the list of term relationship types enum values. Async version.
+
+        Parameters
+        ----------
+
+
+        Returns
+        -------
+        List[str]
+            A list of glossary term relationships retrieved from the server.
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}"
+               f"/api/open-metadata/glossary-manager/glossaries/terms/relationships/type-names")
+
+        response = await self._async_make_request("GET", url)
+        return response.json().get("names", [])
+
+    def get_term_relationship_types(self) -> [str]:
+        """Return the list of term relationship type enum values.
+
+        Parameters
+        ----------
+
+
+        Returns
+        -------
+        list of str
+            A list of term relationship types. Each status is represented as a string.
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_term_relationship_types())
         return response
 
     #

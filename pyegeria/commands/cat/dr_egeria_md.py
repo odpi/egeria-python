@@ -14,7 +14,8 @@ from pyegeria import (extract_command, process_glossary_upsert_command, process_
                       process_per_proj_upsert_command, command_list, EgeriaTech, process_blueprint_upsert_command,
                       process_solution_component_upsert_command, dr_egeria_state, process_term_list_command,
                       process_category_list_command, process_glossary_list_command, process_term_history_command,
-                      process_glossary_structure_command, process_term_revision_history_command,)
+                      process_glossary_structure_command, process_term_revision_history_command,
+                      process_create_term_term_relationship_command)
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -92,6 +93,8 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_category_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Term-Term Relationship", "Update Term-Term Relationship"]:
+                result = process_create_term_term_relationship_command(client, current_block, directive)
             elif potential_command in ["List Term History", "Term History"]:
                 result = process_term_history_command(client, current_block, directive)
             elif potential_command in ["List Term Update History", "List Term Revision History"]:

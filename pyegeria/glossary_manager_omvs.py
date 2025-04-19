@@ -1473,6 +1473,317 @@ class GlossaryManager(GlossaryBrowser):
             self._async_remove_term_from_category(glossary_term_guid, glossary_category_guid)
             )
 
+    async def _async_add_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None
+            ) -> None:
+        """Add a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add.
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+        { "properties" :
+            { "class" : "GlossaryTermRelationship",
+                "expression" :
+                "confidence" " :
+                "description" :
+                "source" :
+                "steward" :
+                "status" :
+                "effectiveFrom" :
+                "effectiveTo" :
+            }
+        }
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        if body is None:
+            body = {"properties": {"class": "GlossaryTermRelationship"}}
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def add_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None
+            ) -> None:
+        """Add a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+        { "properties" :
+            { "class" : "GlossaryTermRelationship",
+                "expression" :
+                "confidence" " :
+                "description" :
+                "source" :
+                "steward" :
+                "status" :
+                "effectiveFrom" :
+                "effectiveTo" :
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_relationship_between_terms(term1_guid, term2_guid, relationship_type, body)
+            )
+
+
+    async def _async_update_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None
+            ) -> None:
+        """Update a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to update.
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+        { "properties" :
+            { "class" : "GlossaryTermRelationship",
+                "expression" :
+                "confidence" " :
+                "description" :
+                "source" :
+                "steward" :
+                "status" :
+                "effectiveFrom" :
+                "effectiveTo" :
+            }
+        }
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        if body is None:
+            body = {"properties": {"class": "GlossaryTermRelationship"}}
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}/update"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def update_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None
+            ) -> None:
+        """Update a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to update. A list of relationship types can be found using get_term_relationship_types().
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+        { "properties" :
+            { "class" : "GlossaryTermRelationship",
+                "expression" :
+                "confidence" " :
+                "description" :
+                "source" :
+                "steward" :
+                "status" :
+                "effectiveFrom" :
+                "effectiveTo" :
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_relationship_between_terms(term1_guid, term2_guid, relationship_type, body)
+            )
+
+    async def _async_remove_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, effective_time: str = None
+            ) -> None:
+        """Remove a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add.
+        effective_time: str, optional, default = None
+            Effective time to remove the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        body = {"properties": {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time
+            }
+        }
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}/remove"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def remove_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str,  effective_time: str = None
+            ) -> None:
+        """Remove a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to remove. A list of relationship types can be found using get_term_relationship_types().
+        effective_time: str, optional, default = None
+            Effective time to remove the relationship.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship_type, effective_time)
+            )
+
+
+
     async def _async_add_confidentiality_to_term(
         self,
         glossary_term_guid: str,
@@ -2026,7 +2337,8 @@ class GlossaryManager(GlossaryBrowser):
 
         return
 
-
+    async def _async_relate_terms(self, term1_guid: str, term2_guid: str, relationship: str) -> None:
+        pass
 
 
 if __name__ == "__main__":
