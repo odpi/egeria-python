@@ -900,10 +900,24 @@ class TestGlossaryManager:
                 )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
-            guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
-            relationship_type = "Synonym"
-            g_client.add_relationship_between_terms(guid1, guid2, relationship_type)
+
+            # guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
+            # guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
+            guid1 = "54956df0-77c8-49cc-a3dc-4e10f3298e68"
+            guid2 = "42a1fd63-5b3c-44a2-a7b2-6c62fca4c54b"
+            relationship_type = "PreferredTerm"
+            body = {
+                "class": "RelationshipRequestBody",
+                "properties": {
+                    "class": "GlossaryTermRelationship",
+                    "confidence": 10,
+                    "description": "Why not",
+                    "status": "DRAFT",
+                    "steward": "Martha"
+                }
+            }
+
+            g_client.add_relationship_between_terms(guid1, guid2, relationship_type, body)
 
             assert True
 
@@ -928,36 +942,49 @@ class TestGlossaryManager:
             guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
             guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
             relationship_type = "Synonym"
-
-            # body = {
-            #         "properties": {
-            #             "class": "GlossaryTermRelationship",
-            #             "expression": None,
-            #             "confidence": "50",
-            #             "description": "A test description",
-            #             "source": None,
-            #             "steward": "Martha",
-            #             "status": "DRAFT",
-            #             "effectiveFrom": None,
-            #             "effectiveTo": None
-            #         }
-            #
-            #     }
             body = {
-                "class": "GlossaryTermRelationship",
-                "elementProperties": {
-                    "expression": None,
-                    "confidence": "50",
-                    "description": "A test description",
-                    "source": None,
-                    "steward": "Martha",
+                "class": "RelationshipRequestBody",
+                "properties": {
+                    "class": "GlossaryTermRelationship",
+                    "confidence": 15,
+                    "description": "Why not",
                     "status": "DRAFT",
-                    "effectiveFrom": None,
-                    "effectiveTo": None
-                    }
-
+                    "steward": "Martha"
                 }
-            g_client.update_relationship_between_terms(guid1, guid2, relationship_type)
+            }
+
+
+            g_client.update_relationship_between_terms(guid1, guid2, relationship_type, body)
+
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_remove_relationship_between_terms(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
+            # guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
+            guid1 = "54956df0-77c8-49cc-a3dc-4e10f3298e68"
+            guid2 = "42a1fd63-5b3c-44a2-a7b2-6c62fca4c54b"
+            relationship_type = "Synonym"
+
+
+
+            g_client.remove_relationship_between_terms(guid1, guid2, relationship_type)
 
             assert True
 

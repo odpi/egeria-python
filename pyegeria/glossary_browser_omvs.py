@@ -2549,10 +2549,10 @@ class GlossaryBrowser(Client):
 
         return response
 
-    async def _async_get_term_relationships(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+    async def _async_get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
+                                       page_size: int = None, ) -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
-        Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
+        Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship.
         Parameters
         ----------
             term_guid : str
@@ -2598,8 +2598,8 @@ class GlossaryBrowser(Client):
 
         return response.json().get("elementList", "No terms found")
 
-    def get_term_relationships(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+    def get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
+                          page_size: int = None, ) -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
         Parameters
@@ -2632,7 +2632,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_term_relationships(term_guid, effective_time, start_from, page_size))
+            self._async_get_related_terms(term_guid, effective_time, start_from, page_size))
 
         return response
 

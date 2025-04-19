@@ -512,7 +512,7 @@ class TestGlossaryBrowser:
         finally:
             g_client.close_session()
 
-    def test_get_term_relationships(self, server: str = good_view_server_2):
+    def test_get_related_terms(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryBrowser(
@@ -521,8 +521,9 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = 'ed9b6fca-3178-4e48-9f11-397592b03c71'
-            response = g_client.get_term_relationships(term_guid)
+            term_guid = '54956df0-77c8-49cc-a3dc-4e10f3298e68'
+            # term_guid = '2852b4e1-4445-44ee-b3aa-dbd1e577cdcb'
+            response = g_client.get_related_terms(term_guid)
             print(f"type is {type(response)}")
             if isinstance(response, list | dict):
                 print("\n\n" + json.dumps(response, indent=4))
