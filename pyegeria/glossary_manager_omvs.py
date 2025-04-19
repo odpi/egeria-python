@@ -21,6 +21,27 @@ from pyegeria._validators import validate_guid, validate_name
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 from pyegeria.utils import body_slimmer
 
+def query_seperator(current_string):
+    if current_string == "":
+        return "?"
+    else:
+        return "&"
+
+
+"params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to the query string"
+
+
+def query_string(params):
+    result = ""
+    for i in range(len(params)):
+        if params[i][1] is not None:
+            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
+    return result
+
+
+def base_path(client, view_server: str):
+    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
+
 
 class GlossaryManager(GlossaryBrowser):
     """
@@ -1473,6 +1494,386 @@ class GlossaryManager(GlossaryBrowser):
             self._async_remove_term_from_category(glossary_term_guid, glossary_category_guid)
             )
 
+    async def _async_add_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None,
+            for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+        """Add a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add.
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+            {
+             "class" : "RelationshipRequestBody",
+             "effectiveTime" : {{@isoTimestamp}},
+             "properties" : {
+                "class" : "GlossaryTermRelationship",
+                "expression" : "",
+                "confidence"  : 0,
+                "description" : "",
+                "status"   : "",
+                "steward"  : "",
+                "source" : "",
+                "effectiveFrom" : "{{@isoTimestamp}}",
+                "effectiveTo" : "{{@isoTimestamp}}",
+                "extendedProperties" : {
+                }
+             }
+        }
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        if body is None:
+            body = {"properties": {"class": "RelationshipRequestBody"}}
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+                ]
+            )
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}{possible_query_params}"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def add_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None,
+            for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+        """Add a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add. A list of relationship types can be found using get_term_relationship_types().
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+        {
+         "class" : "RelationshipRequestBody",
+         "effectiveTime" : {{@isoTimestamp}},
+         "properties" : {
+            "class" : "GlossaryTermRelationship",
+            "expression" : "",
+            "confidence"  : 0,
+            "description" : "",
+            "status"   : "",
+            "steward"  : "",
+            "source" : "",
+            "effectiveFrom" : "{{@isoTimestamp}}",
+            "effectiveTo" : "{{@isoTimestamp}}",
+            "extendedProperties" : {
+            }
+         }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_relationship_between_terms(term1_guid, term2_guid, relationship_type,
+                                                       body, for_lineage, for_duplicate_processing)
+            )
+
+
+    async def _async_update_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None,
+        for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+
+        """Update a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to update.
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+            {
+         "class" : "RelationshipRequestBody",
+         "effectiveTime" : {{@isoTimestamp}},
+         "properties" : {
+            "class" : "GlossaryTermRelationship",
+            "expression" : "",
+            "confidence"  : 0,
+            "description" : "",
+            "status"   : "",
+            "steward"  : "",
+            "source" : "",
+            "effectiveFrom" : "{{@isoTimestamp}}",
+            "effectiveTo" : "{{@isoTimestamp}}",
+            "extendedProperties" : {
+            }
+         }
+        }
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+                ]
+            )
+
+        if body is None:
+            body = {"properties": {"class": "RelationshipRequestBody"}}
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}/update{possible_query_params}"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def update_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None,
+            for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+        """Update a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to update. A list of relationship types can be found using get_term_relationship_types().
+        body: dict, optional, default = None
+            Further optional details for the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        Notes
+        ----
+        Body is currently required but can be empty except for class. Basic structure is:
+
+            {
+         "class" : "RelationshipRequestBody",
+         "effectiveTime" : {{@isoTimestamp}},
+         "properties" : {
+            "class" : "GlossaryTermRelationship",
+            "expression" : "",
+            "confidence"  : 0,
+            "description" : "",
+            "status"   : "",
+            "steward"  : "",
+            "source" : "",
+            "effectiveFrom" : "{{@isoTimestamp}}",
+            "effectiveTo" : "{{@isoTimestamp}}",
+            "extendedProperties" : {
+            }
+         }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_relationship_between_terms(term1_guid, term2_guid, relationship_type,
+                                                          body,for_lineage,for_duplicate_processing)
+            )
+
+    async def _async_remove_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str, effective_time: str = None,
+            for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+        """Remove a relationship between terms. Async Version.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to add.
+        effective_time: str, optional, default = None
+            Effective time to remove the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+
+        """
+
+        validate_guid(term1_guid)
+        validate_guid(term2_guid)
+
+        possible_query_params = query_string(
+            [
+                ("forLineage", for_lineage),
+                ("forDuplicateProcessing", for_duplicate_processing),
+                ]
+            )
+
+        body = {"properties": {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": effective_time
+            }
+        }
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+            f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}/remove{possible_query_params}"
+        )
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+
+    def remove_relationship_between_terms(
+            self, term1_guid: str, term2_guid: str, relationship_type: str,  effective_time: str = None,
+            for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
+        """Remove a relationship between terms.
+
+        Parameters
+        ----------
+        term1_guid : str
+            Unique identifier of the first glossary term in relationship.
+        term2_guid : str
+            Unique identifier of the second glossary term in relationship.
+        relationship_type: str
+            Type of relationship to remove. A list of relationship types can be found using get_term_relationship_types().
+        effective_time: str, optional, default = None
+            Effective time to remove the relationship.
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship_type,
+                                                          effective_time, for_lineage, for_duplicate_processing)
+            )
+
+
+
     async def _async_add_confidentiality_to_term(
         self,
         glossary_term_guid: str,
@@ -2026,7 +2427,8 @@ class GlossaryManager(GlossaryBrowser):
 
         return
 
-
+    async def _async_relate_terms(self, term1_guid: str, term2_guid: str, relationship: str) -> None:
+        pass
 
 
 if __name__ == "__main__":
