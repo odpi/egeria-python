@@ -914,14 +914,15 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
     command, object_type, object_action = extract_command_plus(txt)
     set_debug_level(directive)
 
-    glossary_name = process_simple_attribute(txt, GLOSSARY_NAME_LABELS)
+    glossary_name = process_simple_attribute(txt, GLOSSARY_NAME_LABELS, ERROR)
     print(Markdown(
         f"{pre_command} `{object_action}` `{object_type}`  for glossary: `\'{glossary_name}\'` with directive: `"
         f"{directive}` "))
-    language = process_simple_attribute(txt, ['Language'])
-    description = process_simple_attribute(txt, ['Description'])
-    usage = process_simple_attribute(txt, ['Usage'])
-    q_name = process_simple_attribute(txt, ['Qualified Name'])
+    language = process_simple_attribute(txt, ['Language'], INFO)
+    description = process_simple_attribute(txt, ['Description'], INFO)
+    usage = process_simple_attribute(txt, ['Usage'], INFO)
+    q_name = process_simple_attribute(txt, ['Qualified Name'], INFO)
+    valid = True
 
     if glossary_name is None:
         valid = False
@@ -1277,7 +1278,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     """
     valid = True
     categories_list = None
-    cats_exist = True
+    cats_exist = False
     set_debug_level(directive)
     known_q_name = None
     command = extract_command(txt)
@@ -1286,15 +1287,23 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
 
     term_name = process_simple_attribute(txt, ['Term Name', 'Display Name'], ERROR)
     print(Markdown(f"{pre_command} `{command}` for term:`{term_name}` with directive: `{directive}`"))
-    summary = process_simple_attribute(txt, ['Summary'])
-    description = process_simple_attribute(txt, ['Description'])
-    abbreviation = process_simple_attribute(txt, ['Abbreviation'])
-    examples = process_simple_attribute(txt, ['Examples'])
-    usage = process_simple_attribute(txt, ['Usage'])
+    summary = process_simple_attribute(txt, ['Summary'],INFO)
+    description = process_simple_attribute(txt, ['Description'], INFO)
+    abbreviation = process_simple_attribute(txt, ['Abbreviation'], INFO)
+    examples = process_simple_attribute(txt, ['Examples'], INFO)
+    usage = process_simple_attribute(txt, ['Usage'], INFO)
     status = process_simple_attribute(txt, ['Status'])
     status = status.upper() if status else 'DRAFT'
-    version = process_simple_attribute(txt, ['Version', "Version Identifier", "Published Version"])
-    q_name = process_simple_attribute(txt, ['Qualified Name'])
+    version = process_simple_attribute(txt, ['Version', "Version Identifier", "Published Version"], INFO)
+    q_name = process_simple_attribute(txt, ['Qualified Name'], INFO)
+
+    aliases = process_simple_attribute(txt, ['Aliases'], INFO)
+    if aliases:
+        alias_list = list(filter(None, re.split(r'[,\s]+', aliases.strip())))
+    else:
+        alias_list = None
+
+
 
     # validate term name and get existing qualified_name and guid if they exist
     if term_name is None:
@@ -1324,23 +1333,24 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     if categories:  # Find information about categoriess that classify this term
         msg = "Checking for categories that classify this term"
         print_msg("DEBUG-INFO", msg, debug_level)
-        categories_list, cat_q_name_list, cat_valid, cat_exist = process_name_list(egeria_client, 'Glossary Categories',
+        categories_list, cat_q_name_list, cats_valid, cats_exist = process_name_list(egeria_client, 'Glossary Categories',
                                                                                    txt, CATEGORY_NAME_LABELS)
-        if cat_exist and cat_valid:
+        if cats_exist and cats_valid:
             msg = f"Found valid glossary categories to classify the term:\n\t{term_name}"
             print_msg("INFO", msg, debug_level)
         else:
             msg = "No valid glossary categories found."
             print_msg("INFO", msg, debug_level)
     else:
-        cat_exist = cat_valid = False
+        cats_exist = cats_valid = False
         cat_q_name_list = None
 
     if object_action == "Update":  # check to see if provided information exists and is consistent with existing info
         term_guid = process_simple_attribute(txt, GUID_LABELS)
         update_description = process_simple_attribute(txt, ['Update Description'])
         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
-                        f"* Term Name: {term_name}\n\t* Qualified Name: {q_name}\n\t* Categories: {categories}\n\t"
+                        f"* Term Name: {term_name}\n\t* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t"
+                        f"* Categories: {categories}\n\t"
                         f"* Summary: {summary}\n\t* Description: {description}\n\t"
                         f"* Abbreviation: {abbreviation}\n\t* Examples: {examples}\n\t* Usage: {usage}\n\t"
                         f"* Version: {version}\n\t* Status: {status}\n\t* GUID: {term_guid}"
@@ -1353,7 +1363,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
                         f"* Term Name: {term_name}\n\t* Categories: {categories}\n\t* Summary: {summary}\n\t"
-                        f"* Qualified Name: {q_name}\n\t* Description: {description}\n\t"
+                        f"* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t* Description: {description}\n\t"
                         f"* Abbreviation: {abbreviation}\n\t* Examples: {examples}\n\t* Usage: {usage}\n\t"
                         f"* Version: {version}\n\t* Status: {status}\n")
         if term_exists:
@@ -1378,13 +1388,13 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                 if not term_exists:
                     return None
                 body = {
-                    "class": "ReferenceableRequestBody", "elementProperties": {
-                        "class": "GlossaryTermProperties", "qualifiedName": known_q_name, "summary": summary,
+                    "class": "ReferenceableRequestBody", "elementProperties": { "displayName": term_name,
+                        "class": "GlossaryTermProperties", "qualifiedName": known_q_name, "aliases": alias_list, "summary": summary,
                         "description": description, "abbreviation": abbreviation, "examples": examples, "usage": usage,
                         "publishVersionIdentifier": version, "status": status
                         }, "updateDescription": update_description
                     }
-                egeria_client.update_term(known_guid, body_slimmer(body))
+                egeria_client.update_term(known_guid, body_slimmer(body), is_merge_update=False)
                 # if cat_exist and cat_valid:
                 update_term_categories(egeria_client, known_guid, cats_exist, cat_q_name_list)
                 print_msg(ALWAYS,
@@ -1420,7 +1430,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     term_body = {
                         "class": "ReferenceableRequestBody", "elementProperties": {
                             "class": "GlossaryTermProperties", "qualifiedName": known_q_name, "displayName": term_name,
-                            "summary": summary, "description": description, "abbreviation": abbreviation,
+                            "aliases": alias_list, "summary": summary, "description": description, "abbreviation": abbreviation,
                             "examples": examples, "usage": usage, "publishVersionIdentifier": version
                             # "additionalProperties":
                             #     {

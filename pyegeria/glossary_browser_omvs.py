@@ -423,9 +423,10 @@ class GlossaryBrowser(Client):
         pub_version = properties.get("publishVersionIdentifier", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
         status = element['elementHeader'].get('status', "") or ""
+        aliases = ", ".join(properties.get("aliases", "")) or ""
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'summary': summary,
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'aliases': aliases, 'summary': summary,
             'description': description, 'examples': examples, 'usage': usage, 'version identifier': pub_version,
             'qualified_name': qualified_name, 'status': status
             }
@@ -506,8 +507,8 @@ class GlossaryBrowser(Client):
             str: Markdown table
         """
         columns = [{'name': 'Term Name', 'key': 'display_name'}, {'name': 'Qualified Name', 'key': 'qualified_name'},
-            {'name': 'Summary', 'key': 'summary', 'format': True}, {'name': 'Glossary', 'key': 'glossary'},
-            {'name': 'Categories', 'key': 'categories_str', 'format': True}]
+            {'name': 'Aliases', 'key': 'aliases', 'format': True}, {'name': 'Summary', 'key': 'summary', 'format': True}, 
+            {'name': 'Glossary', 'key': 'glossary'}, {'name': 'Categories', 'key': 'categories_str', 'format': True}]
 
         # Create a wrapper function to pass output_format to _get_term_table_properties
         def get_table_props_with_format(element, term_guid, output_format_param=None):
@@ -2550,7 +2551,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-                                       page_size: int = None, ) -> list | str:
+                                       page_size: int = None, output_format:str = "JSON") -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship.
         Parameters
@@ -2596,10 +2597,21 @@ class GlossaryBrowser(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        return response.json().get("elementList", "No terms found")
+        term_elements = response.json().get("elementList", NO_TERMS_FOUND)
+        if term_elements == NO_TERMS_FOUND:
+            if output_format == 'JSON':
+                return NO_TERMS_FOUND
+            elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
+                return "\n# No Terms found.\n"
+            elif output_format == 'DICT':
+                return None
+        if output_format != "JSON":  # return a simplified markdown representation
+            return self.generate_terms_md(term_elements, term_guid, output_format)
+        return response.json().get("elementList", NO_TERMS_FOUND)
+
 
     def get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-                          page_size: int = None, ) -> list | str:
+                          page_size: int = None, output_format = "JSON") -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
         Parameters
@@ -2632,9 +2644,36 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_terms(term_guid, effective_time, start_from, page_size))
+            self._async_get_related_terms(term_guid, effective_time, start_from,
+                                          page_size, output_format))
 
         return response
+
+    def get_term_details(self, term_name:str, effective_time: str = None) -> dict | str:
+        """Retrieve the details of a glossary term. Including relationships and feedback
+
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            DICT = output a simplified DICT structure
+        """
+
+
+        # Now lets get the term details as a dict
+        core = self.get_terms_by_name(term_name, effective_time, output_format="DICT")
+        if not core:
+            return NO_TERMS_FOUND
+
+        related = self.get_related_terms(core[0]['guid'], effective_time)
+        if not related:
+            return "NO RELATED TERMS FOUND"
+
+        related_term_guid = related[0]["relatedElement"]["relatedElement"]["guid"]
+        related_term_qn = related[0]["relatedElement"]["relatedElement"]["uniquedName"]
+
+
+
 
     async def _async_get_glossary_for_term(self, term_guid: str, effective_time: str = None) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to
@@ -2675,8 +2714,8 @@ class GlossaryBrowser(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
                f"for-term/{term_guid}/retrieve")
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "No glossary found")
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return response.json().get("element", NO_GLOSSARIES_FOUND)
 
     def get_glossary_for_term(self, term_guid: str, effective_time: str = None) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to
@@ -2714,7 +2753,7 @@ class GlossaryBrowser(Client):
 
     async def _async_get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
             effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-            start_from: int = 0, page_size: int = None, ) -> list:
+            start_from: int = 0, page_size: int = None, output_format = "JSON") -> list:
         """Retrieve glossary terms by display name or qualified name. Async Version.
 
         Parameters
@@ -2737,6 +2776,13 @@ class GlossaryBrowser(Client):
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
             The number of terms to retrieve per page. If not provided, it will use the default page size.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
+            DICT - output a simplified DICT structure
 
         Returns
         -------
@@ -2772,13 +2818,23 @@ class GlossaryBrowser(Client):
                f"&forLineage={for_lineage_s}&forDuplicateProcessing={for_duplicate_processing_s}")
 
         # print(f"\n\nURL is: \n {url}\n\nBody is: \n{body}")
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        term_elements = response.json().get("elementList", NO_TERMS_FOUND)
+        if term_elements == NO_TERMS_FOUND:
+            if output_format == 'JSON':
+                return NO_TERMS_FOUND
+            elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
+                return "\n# No Terms found.\n"
+            elif output_format == 'DICT':
+                return None
+        if output_format != "JSON":  # return a simplified markdown representation
+            return self.generate_terms_md(term_elements, term, output_format)
+        return response.json().get("elementList", NO_TERMS_FOUND)
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elementList", "No terms found")
 
     def get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
             effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-            start_from: int = 0, page_size: int = None, ) -> list:
+            start_from: int = 0, page_size: int = None, output_format = "JSON") -> list:
         """Retrieve glossary terms by display name or qualified name.
 
         Parameters
@@ -2801,6 +2857,13 @@ class GlossaryBrowser(Client):
             The index of the first term to retrieve. Default is 0.
         page_size : int, optional
             The number of terms to retrieve per page. If not provided, it will use the default page size.
+         output_format: str, default = 'JSON'
+            Type of output to produce:
+            JSON - output standard json
+            MD - output standard markdown with no preamble
+            FORM - output markdown with a preamble for a form
+            REPORT - output markdown with a preamble for a report
+            DICT - output a simplified DICT structure
 
         Returns
         -------
@@ -2820,7 +2883,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_by_name(term, glossary_guid, status_filter, effective_time, for_lineage,
-                for_duplicate_processing, start_from, page_size, ))
+                for_duplicate_processing, start_from, page_size, output_format))
         return response
 
     async def _async_get_term_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:

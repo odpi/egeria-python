@@ -258,9 +258,9 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Update Term"
+            term_name = "zt2"
             glossary_guid = None
-            response = g_client.get_terms_by_name(term_name, glossary_guid, [])
+            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="DICT")
 
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -521,7 +521,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '54956df0-77c8-49cc-a3dc-4e10f3298e68'
+            term_guid = 'ecb57c19-fb1c-42f4-ab1a-c85b6fe753ea'
             # term_guid = '2852b4e1-4445-44ee-b3aa-dbd1e577cdcb'
             response = g_client.get_related_terms(term_guid)
             print(f"type is {type(response)}")
@@ -555,7 +555,7 @@ class TestGlossaryBrowser:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "Teddy Bear Drop Foot Data Fields",
+                "zt2",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
                 starts_with=True,
@@ -566,7 +566,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="FORM"
+                output_format="REPORT"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
