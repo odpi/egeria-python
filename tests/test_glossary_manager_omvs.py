@@ -738,7 +738,7 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "Display",
+                "xt1",
                 glossary_guid=glossary_guid,
                 starts_with=True,
                 ends_with=False,
@@ -748,7 +748,7 @@ class TestGlossaryManager:
                 status_filter=[],
                 page_size=10,
                 effective_time=None,
-                output_format="LIST"
+                output_format="DICT"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             print(f"Number of terms is: {len(response)}")
@@ -775,16 +775,17 @@ class TestGlossaryManager:
     def test_update_term(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1, self.good_platform1_url, self.good_user_2
+                self.good_view_server_2, self.good_platform1_url, self.good_user_2
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "a27b20a9-3c1a-4d80-b92f-9c877c193385"  # meow
+            term_guid = "ecb57c19-fb1c-42f4-ab1a-c85b6fe753ea"  # meow
             body = {
                 "class": "ReferenceableUpdateRequestBody",
                 "elementProperties": {
                     "class": "GlossaryTermProperties",
-                    "description": "Woof Woof",
+                    "description": "With alieas",
+                    "aliases" : ["t1","xt1"]
                 },
             }
 
@@ -901,19 +902,18 @@ class TestGlossaryManager:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            # guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
-            # guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
-            guid1 = "54956df0-77c8-49cc-a3dc-4e10f3298e68"
-            guid2 = "42a1fd63-5b3c-44a2-a7b2-6c62fca4c54b"
-            relationship_type = "PreferredTerm"
+
+            guid1 = "ecb57c19-fb1c-42f4-ab1a-c85b6fe753ea"
+            guid2 = "76786599-05d8-4bd6-84ee-0f32833c417f"
+            relationship_type = "Antonym"
             body = {
                 "class": "RelationshipRequestBody",
                 "properties": {
                     "class": "GlossaryTermRelationship",
-                    "confidence": 10,
-                    "description": "Why not",
-                    "status": "DRAFT",
-                    "steward": "Martha"
+                    # "confidence": 10,
+                    # "description": "Why not",
+                    # "status": "DRAFT",
+                    # "steward": "Martha"
                 }
             }
 
@@ -978,8 +978,8 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             # guid1 = "2852b4e1-4445-44ee-b3aa-dbd1e577cdcb"
             # guid2 = "4961c79b-b040-4597-b0d3-5d32dd5f8935"
-            guid1 = "54956df0-77c8-49cc-a3dc-4e10f3298e68"
-            guid2 = "42a1fd63-5b3c-44a2-a7b2-6c62fca4c54b"
+            guid1 = "46d4ad19-7627-4a8a-91b2-5b0a65ae328c"
+            guid2 = "49e07289-d56f-4c45-9b87-e3d86c11d056"
             relationship_type = "Synonym"
 
 

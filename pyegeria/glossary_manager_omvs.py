@@ -802,6 +802,7 @@ class GlossaryManager(GlossaryBrowser):
                     "class" : "GlossaryTermProperties",
                     "qualifiedName" : "GlossaryTerm: term name : {$isoTimestamp}",
                     "displayName" : "term name",
+                    "aliases": []
                     "summary" : "This is the short description.",
                     "description" : "This is the long description of the term.",
                     "abbreviation" : "GT",
@@ -869,6 +870,7 @@ class GlossaryManager(GlossaryBrowser):
                     "class" : "GlossaryTermProperties",
                     "qualifiedName" : "GlossaryTerm: term name : {$isoTimestamp}",
                     "displayName" : "term name",
+                    "aliases": []
                     "summary" : "This is the short description.",
                     "description" : "This is the long description of the term.",
                     "abbreviation" : "GT",
@@ -1554,7 +1556,10 @@ class GlossaryManager(GlossaryBrowser):
         validate_guid(term2_guid)
 
         if body is None:
-            body = {"properties": {"class": "RelationshipRequestBody"}}
+            body = {"class": "RelationshipRequestBody",
+                    "properties":
+                        {"class": "GlossaryTermRelationship",}
+                }
 
         possible_query_params = query_string(
             [
@@ -1712,7 +1717,7 @@ class GlossaryManager(GlossaryBrowser):
 
 
     def update_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict = None,
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict,
             for_lineage: bool = False, for_duplicate_processing: bool = False) -> None:
         """Update a relationship between terms.
 
@@ -1724,8 +1729,8 @@ class GlossaryManager(GlossaryBrowser):
             Unique identifier of the second glossary term in relationship.
         relationship_type: str
             Type of relationship to update. A list of relationship types can be found using get_term_relationship_types().
-        body: dict, optional, default = None
-            Further optional details for the relationship.
+        body: dict
+            Details of the relationship to update.
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -2064,7 +2069,7 @@ class GlossaryManager(GlossaryBrowser):
         self,
         glossary_term_guid: str,
         body: dict,
-        is_merge_update: bool = True,
+        is_merge_update: bool = False,
         for_lineage: bool = False,
         for_duplicate_processig: bool = False,
     ) -> None:
