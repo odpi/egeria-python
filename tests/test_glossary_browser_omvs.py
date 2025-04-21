@@ -258,9 +258,9 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "zt2"
+            term_name = "T1"
             glossary_guid = None
-            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="DICT")
+            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="JSON")
 
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -521,14 +521,78 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = 'ecb57c19-fb1c-42f4-ab1a-c85b6fe753ea'
+            term_guid = '29bd7985-ddb9-4b8c-95a3-76b9d535cc5c'
             # term_guid = '2852b4e1-4445-44ee-b3aa-dbd1e577cdcb'
-            response = g_client.get_related_terms(term_guid)
-            print(f"type is {type(response)}")
-            if isinstance(response, list | dict):
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\n" + response)
+
+            # Test different output formats
+            for output_format in ["JSON", "LIST", "MD", "DICT"]:
+                print(f"\n\nTesting output_format: {output_format}")
+                response = g_client.get_related_terms(term_guid, output_format=output_format)
+                print(f"Response type is {type(response)}")
+                if isinstance(response, list | dict):
+                    print(json.dumps(response, indent=4))
+                elif type(response) is str:
+                    print(response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_details(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            term_id = "Term::T1"
+            # Test with invalid input to verify error handling
+            print("\n\nTesting get_term_details:")
+            response = g_client.get_term_details(term_id, output_format="REPORT")
+            print(f"Response type is {type(response)}")
+            print(response)
+
+
+            print("\n\nTesting get_term_details with invalid input:")
+            response_invalid = g_client.get_term_details("invalid-term-identifier", output_format="DICT")
+            print(f"Response type is {type(response_invalid)}")
+            print(response_invalid)
+
+            # Verify that the response is a string containing an error message
+            assert isinstance(response_invalid, str)
+            assert "No term found" in response_invalid
+
+            # Test with invalid input and REPORT format
+            print("\n\nTesting get_term_details with invalid input and REPORT format:")
+            response_invalid_report = g_client.get_term_details("invalid-term-identifier", output_format="REPORT")
+            print(f"Response type is {type(response_invalid_report)}")
+            print(response_invalid_report)
+
+            # Verify that the response is a string containing an error message
+            assert isinstance(response_invalid_report, str)
+            assert "No term found" in response_invalid_report
+
+            # Test with unsupported output format
+            print("\n\nTesting get_term_details with unsupported output format:")
+            response_invalid_format = g_client.get_term_details("invalid-term-identifier", output_format="INVALID")
+            print(f"Response type is {type(response_invalid_format)}")
+            print(response_invalid_format)
+
+            # Verify that the response is a string containing an error message
+            assert isinstance(response_invalid_format, str)
+            assert "Unsupported output format" in response_invalid_format
+
+            print("\n\nAll tests passed!")
             assert True
         except (
                 InvalidParameterException,
@@ -555,12 +619,12 @@ class TestGlossaryBrowser:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "zt2",
+                "t1",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
                 starts_with=True,
                 ends_with=False,
-                ignore_case=True,
+                ignore_case=False,
                 for_lineage=False,
                 for_duplicate_processing=True,
                 status_filter=[],
@@ -907,4 +971,3 @@ class TestGlossaryBrowser:
 
         finally:
             g_client.close_session()
-

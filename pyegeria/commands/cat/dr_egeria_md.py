@@ -15,7 +15,7 @@ from pyegeria import (extract_command, process_glossary_upsert_command, process_
                       process_solution_component_upsert_command, dr_egeria_state, process_term_list_command,
                       process_category_list_command, process_glossary_list_command, process_term_history_command,
                       process_glossary_structure_command, process_term_revision_history_command,
-                      process_create_term_term_relationship_command)
+                      process_create_term_term_relationship_command, process_term_details_command)
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -97,6 +97,8 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_create_term_term_relationship_command(client, current_block, directive)
             elif potential_command in ["List Term History", "Term History"]:
                 result = process_term_history_command(client, current_block, directive)
+            elif potential_command in ["List Term Details"]:
+                result = process_term_details_command(client, current_block, directive)
             elif potential_command in ["List Term Update History", "List Term Revision History"]:
                 result = process_term_revision_history_command(client, current_block, directive)
             elif potential_command in ["List Terms", "List Glossary Terms"]:
@@ -150,7 +152,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
             in_h1_block = True
 
         # Handle the end of a block (line starts with `---`)
-        elif line.startswith("---"):
+        elif line.startswith("___"):
             if in_h1_block:
                 # Process the current block when it ends with `---`
                 current_block += f"\n{line}"
