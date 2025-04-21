@@ -12,6 +12,7 @@ from datetime import datetime
 
 from pyegeria import NO_GLOSSARIES_FOUND, max_paging_size
 from pyegeria._client import Client
+from pyegeria._exceptions import InvalidParameterException, PropertyServerException, UserNotAuthorizedException
 from pyegeria._globals import NO_CATEGORIES_FOUND, NO_TERMS_FOUND
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
@@ -222,7 +223,8 @@ class GlossaryBrowser(Client):
             str: Markdown representation
         """
         return self._generate_entity_md(elements=elements, elements_action=elements_action, output_format=output_format,
-            entity_type="Glossary", extract_properties_func=self._extract_glossary_properties)
+                                        entity_type="Glossary",
+                                        extract_properties_func=self._extract_glossary_properties)
 
     def _generate_entity_md_table(self, elements: list, search_string: str, entity_type: str, extract_properties_func,
                                   columns: list, get_additional_props_func=None, output_format: str = 'LIST') -> str:
@@ -302,14 +304,15 @@ class GlossaryBrowser(Client):
             str: Markdown table
         """
         columns = [{'name': 'Glossary Name', 'key': 'display_name'},
-            {'name': 'Qualified Name', 'key': 'qualified_name'},
-            {'name': 'Language', 'key': 'language', 'format': True},
-            {'name': 'Description', 'key': 'description', 'format': True},
-            {'name': 'Usage', 'key': 'usage', 'format': True},
-            {'name': 'Categories', 'key': 'categories_dn_md', 'format': True}, ]
+                   {'name': 'Qualified Name', 'key': 'qualified_name'},
+                   {'name': 'Language', 'key': 'language', 'format': True},
+                   {'name': 'Description', 'key': 'description', 'format': True},
+                   {'name': 'Usage', 'key': 'usage', 'format': True},
+                   {'name': 'Categories', 'key': 'categories_dn_md', 'format': True}, ]
 
         return self._generate_entity_md_table(elements=elements, search_string=search_string, entity_type="Glossary",
-            extract_properties_func=self._extract_glossary_properties, columns=columns)
+                                              extract_properties_func=self._extract_glossary_properties,
+                                              columns=columns)
 
     def _generate_entity_dict(self, elements: list, extract_properties_func, get_additional_props_func=None,
                               include_keys=None, exclude_keys=None, output_format: str = 'DICT') -> list:
@@ -368,7 +371,7 @@ class GlossaryBrowser(Client):
             list: List of glossary dictionaries
         """
         return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_glossary_properties,
-            exclude_keys=['properties', 'categories_qn_md'], output_format=output_format)
+                                          exclude_keys=['properties', 'categories_qn_md'], output_format=output_format)
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str,
                                output_format: str = 'MD') -> str | list:
@@ -426,9 +429,9 @@ class GlossaryBrowser(Client):
         aliases = ", ".join(properties.get("aliases", "")) or ""
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'aliases': aliases, 'summary': summary,
-            'description': description, 'examples': examples, 'usage': usage, 'version identifier': pub_version,
-            'qualified_name': qualified_name, 'status': status
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'aliases': aliases,
+            'summary': summary, 'description': description, 'examples': examples, 'usage': usage,
+            'version identifier': pub_version, 'qualified_name': qualified_name, 'status': status
             }
 
     def _get_categories_for_term(self, term_guid: str, output_format: str = None) -> tuple[list, str]:
@@ -449,7 +452,7 @@ class GlossaryBrowser(Client):
 
         category_list = self.get_categories_for_term(term_guid)
         if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
-            category_list_md = '---'
+            category_list_md = ''
         elif isinstance(category_list, list) and len(category_list) > 0:
             first_cat = True
             for category in category_list:
@@ -507,16 +510,17 @@ class GlossaryBrowser(Client):
             str: Markdown table
         """
         columns = [{'name': 'Term Name', 'key': 'display_name'}, {'name': 'Qualified Name', 'key': 'qualified_name'},
-            {'name': 'Aliases', 'key': 'aliases', 'format': True}, {'name': 'Summary', 'key': 'summary', 'format': True}, 
-            {'name': 'Glossary', 'key': 'glossary'}, {'name': 'Categories', 'key': 'categories_str', 'format': True}]
+                   {'name': 'Aliases', 'key': 'aliases', 'format': True},
+                   {'name': 'Summary', 'key': 'summary', 'format': True}, {'name': 'Glossary', 'key': 'glossary'},
+                   {'name': 'Categories', 'key': 'categories_str', 'format': True}]
 
         # Create a wrapper function to pass output_format to _get_term_table_properties
         def get_table_props_with_format(element, term_guid, output_format_param=None):
             return self._get_term_table_properties(element, term_guid, output_format)
 
         return self._generate_entity_md_table(elements=elements, search_string=search_string, entity_type="Term",
-            extract_properties_func=self._extract_term_properties, columns=columns,
-            get_additional_props_func=get_table_props_with_format)
+                                              extract_properties_func=self._extract_term_properties, columns=columns,
+                                              get_additional_props_func=get_table_props_with_format)
 
     def _get_term_dict_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         """
@@ -558,9 +562,10 @@ class GlossaryBrowser(Client):
             return self._get_term_dict_properties(element, term_guid, output_format)
 
         return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_term_properties,
-            get_additional_props_func=get_dict_props_with_format, exclude_keys=['properties', 'pub_version']
-            # Exclude raw properties and pub_version (renamed to version)
-            )
+                                          get_additional_props_func=get_dict_props_with_format,
+                                          exclude_keys=['properties', 'pub_version']
+                                          # Exclude raw properties and pub_version (renamed to version)
+                                          )
 
     def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         """
@@ -597,8 +602,8 @@ class GlossaryBrowser(Client):
             str: Markdown representation
         """
         return self._generate_entity_md(elements=elements, elements_action=elements_action, output_format=output_format,
-            entity_type="Term", extract_properties_func=self._extract_term_properties,
-            get_additional_props_func=self._get_term_additional_properties)
+                                        entity_type="Term", extract_properties_func=self._extract_term_properties,
+                                        get_additional_props_func=self._get_term_additional_properties)
 
     def generate_terms_md(self, elements: list | dict, search_string: str, output_format: str = 'MD') -> str | list:
         """
@@ -776,17 +781,18 @@ class GlossaryBrowser(Client):
             str: Markdown table
         """
         columns = [{'name': 'Display Name', 'key': 'display_name'},
-            {'name': 'Description', 'key': 'description', 'format': True},
-            {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Parent Category', 'key': 'parent_category'},
-            {'name': 'Subcategories', 'key': 'subcategories', 'format': True}]
+                   {'name': 'Description', 'key': 'description', 'format': True},
+                   {'name': 'Qualified Name', 'key': 'qualified_name'},
+                   {'name': 'Parent Category', 'key': 'parent_category'},
+                   {'name': 'Subcategories', 'key': 'subcategories', 'format': True}]
 
         # Create a wrapper function to pass output_format to _get_category_table_properties
         def get_table_props_with_format(element, category_guid, output_format_param=None):
             return self._get_category_table_properties(element, category_guid, output_format)
 
         return self._generate_entity_md_table(elements=elements, search_string=search_string, entity_type="Category",
-            extract_properties_func=self._extract_category_properties, columns=columns,
-            get_additional_props_func=get_table_props_with_format)
+                                              extract_properties_func=self._extract_category_properties,
+                                              columns=columns, get_additional_props_func=get_table_props_with_format)
 
     def _get_category_dict_properties(self, element: dict, category_guid: str, output_format: str = None) -> dict:
         """
@@ -830,8 +836,9 @@ class GlossaryBrowser(Client):
             return self._get_category_dict_properties(element, category_guid, output_format)
 
         return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_category_properties,
-            get_additional_props_func=get_dict_props_with_format, exclude_keys=['properties'],  # Exclude raw properties
-            output_format=output_format)
+                                          get_additional_props_func=get_dict_props_with_format,
+                                          exclude_keys=['properties'],  # Exclude raw properties
+                                          output_format=output_format)
 
     def _get_category_additional_properties(self, element: dict, category_guid: str, output_format: str = None) -> dict:
         """
@@ -882,8 +889,9 @@ class GlossaryBrowser(Client):
             return self._get_category_additional_properties(element, category_guid, output_format)
 
         return self._generate_entity_md(elements=elements, elements_action=elements_action, output_format=output_format,
-            entity_type="Category", extract_properties_func=self._extract_category_properties,
-            get_additional_props_func=get_additional_props_with_format)
+                                        entity_type="Category",
+                                        extract_properties_func=self._extract_category_properties,
+                                        get_additional_props_func=get_additional_props_with_format)
 
     def generate_categories_md(self, elements: list | dict, search_string: str,
                                output_format: str = 'MD') -> str | list:
@@ -1079,9 +1087,9 @@ class GlossaryBrowser(Client):
     #
 
     async def _async_find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-            ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON') -> list | str:
+                                     ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
+                                     for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
+                                     page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -1177,9 +1185,9 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", NO_GLOSSARIES_FOUND)
 
     def find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-            ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0, page_size: int = None,
-            output_format: str = "JSON") -> list | str:
+                        ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
+                        for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
+                        page_size: int = None, output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string.
                 The search string is located in the request body and is interpreted as a plain string.
                 The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -1241,12 +1249,12 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossaries(search_string, effective_time, starts_with, ends_with, ignore_case, for_lineage,
-                for_duplicate_processing, type_name, start_from, page_size, output_format))
+                                        for_duplicate_processing, type_name, start_from, page_size, output_format))
 
         return response
 
     async def _async_get_glossary_by_guid(self, glossary_guid: str, effective_time: str = None,
-            output_format: str = "JSON") -> dict | str:
+                                          output_format: str = "JSON") -> dict | str:
         """Retrieves information about a glossary
         Parameters
         ----------
@@ -1338,7 +1346,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_glossaries_by_name(self, glossary_name: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> dict | str:
+                                            page_size: int = None, ) -> dict | str:
         """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
             There are no wildcards supported on this request.
 
@@ -1391,7 +1399,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No glossaries found")
 
     def get_glossaries_by_name(self, glossary_name: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> dict | str:
+                               page_size: int = None, ) -> dict | str:
         """Retrieve the list of glossary metadata elements with an exactly matching qualified or display name.
             There are no wildcards supported on this request.
 
@@ -1435,7 +1443,7 @@ class GlossaryBrowser(Client):
     #
 
     async def _async_get_glossary_for_category(self, glossary_category_guid: str,
-            effective_time: str = None, ) -> dict | str:
+                                               effective_time: str = None, ) -> dict | str:
         """Retrieve the glossary metadata element for the requested category.  The optional request body allows you to
         specify that the glossary element should only be returned if it was effective at a particular time.
 
@@ -1514,8 +1522,9 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_glossary_subcategories(self, glossary_category_guid: str, effective_time: str = None,
-            start_from: int = 0, page_size: int = max_paging_size, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, ) -> dict | str:
+                                                start_from: int = 0, page_size: int = max_paging_size,
+                                                for_lineage: bool = False,
+                                                for_duplicate_processing: bool = False, ) -> dict | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the subcategories for the glossary category
         metadata element with the supplied unique identifier. If the requested category does not have any subcategories,
          null is returned. The optional request body contain an effective time for the query.
@@ -1571,10 +1580,9 @@ class GlossaryBrowser(Client):
 
         return response.json().get("elementList", "No categories found")
 
-
     def get_glossary_subcategories(self, glossary_category_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = max_paging_size, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, ) -> dict | str:
+                                   page_size: int = max_paging_size, for_lineage: bool = False,
+                                   for_duplicate_processing: bool = False, ) -> dict | str:
         """Glossary categories can be organized in a hierarchy. Retrieve the subcategories for the glossary category
         metadata element with the supplied unique identifier. If the requested category does not have any subcategories,
          null is returned. The optional request body contain an effective time for the query.
@@ -1615,12 +1623,13 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_glossary_subcategories(glossary_category_guid, effective_time, start_from, page_size,
-                for_lineage, for_duplicate_processing))
+                                                   for_lineage, for_duplicate_processing))
         return response
 
     async def _async_find_glossary_categories(self, search_string: str, effective_time: str = None,
-            starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-            page_size: int = None, output_format: str = "JSON") -> list | str:
+                                              starts_with: bool = False, ends_with: bool = False,
+                                              ignore_case: bool = False, start_from: int = 0, page_size: int = None,
+                                              output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -1704,8 +1713,8 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def find_glossary_categories(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-            output_format: str = "JSON") -> list | str:
+                                 ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                 page_size: int = None, output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
          The search string is located in the request body and is interpreted as a plain string.
          The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -1759,12 +1768,12 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossary_categories(search_string, effective_time, starts_with, ends_with, ignore_case,
-                start_from, page_size, output_format))
+                                                 start_from, page_size, output_format))
 
         return response
 
     async def _async_get_categories_for_glossary(self, glossary_guid: str, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                                                 page_size: int = None, ) -> list | str:
         """Return the list of categories associated with a glossary.
             Async version.
 
@@ -1807,7 +1816,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No Categories found")
 
     def get_categories_for_glossary(self, glossary_guid: str, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                                    page_size: int = None, ) -> list | str:
         """Return the list of categories associated with a glossary.
 
         Parameters
@@ -1844,7 +1853,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_categories_for_term(self, glossary_term_guid: str, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                                             page_size: int = None, ) -> list | str:
         """Return the list of categories associated with a glossary term.
             Async version.
 
@@ -1883,10 +1892,10 @@ class GlossaryBrowser(Client):
                f"{glossary_term_guid}/categories/retrieve?startFrom={start_from}&pageSize={page_size}")
 
         response = await self._async_make_request("POST", url)
-        return response.json().get("elementList", "No Categories found")
+        return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def get_categories_for_term(self, glossary_term_guid: str, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                                page_size: int = None, ) -> list | str:
         """Return the list of categories associated with a glossary term.
 
         Parameters
@@ -1922,7 +1931,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_categories_by_name(self, name: str, glossary_guid: str = None, status: [str] = ["ACTIVE"],
-            start_from: int = 0, page_size: int = None, ) -> list | str:
+                                            start_from: int = 0, page_size: int = None, ) -> list | str:
         """Retrieve the list of glossary category metadata elements that either have the requested qualified name or
             display name. The name to search for is located in the request body and is interpreted as a plain string.
             The request body also supports the specification of a glossaryGUID to restrict the search to within a single
@@ -1936,12 +1945,8 @@ class GlossaryBrowser(Client):
             category name to search for.
         glossary_guid: str, optional
             The identity of the glossary to search. If not specified, all glossaries will be searched.
-        status: [str], optional
-            A list of statuses to optionally restrict results. Default is Active
-
-            If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
+             When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
@@ -1980,7 +1985,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def get_categories_by_name(self, name: str, glossary_guid: str = None, status: [str] = ["ACTIVE"],
-            start_from: int = 0, page_size: int = None, ) -> list | str:
+                               start_from: int = 0, page_size: int = None) -> list | str:
         """Retrieve the list of glossary category metadata elements that either have the requested qualified name or
             display name. The name to search for is located in the request body and is interpreted as a plain string.
             The request body also supports the specification of a glossaryGUID to restrict the search to within a
@@ -1992,10 +1997,6 @@ class GlossaryBrowser(Client):
             category name to search for.
         glossary_guid: str, optional
             The identity of the glossary to search. If not specified, all glossaries will be searched.
-        status: [str], optional
-            A list of statuses to optionally restrict results. Default is Active
-
-            If not provided, the server name associated with the instance is used.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -2287,18 +2288,13 @@ class GlossaryBrowser(Client):
                 parent_guid = parent['elementHeader']['guid']
                 parent_name = parent['glossaryCategoryProperties'].get('displayName', '---')
                 parent_info = {
-                    'guid': parent_guid,
-                    'name': parent_name
-                }
+                    'guid': parent_guid, 'name': parent_name
+                    }
 
             return {
-                'guid': category_guid,
-                'name': display_name,
-                'qualifiedName': qualified_name,
-                'description': description,
-                'parent': parent_info,
-                'children': children
-            }
+                'guid': category_guid, 'name': display_name, 'qualifiedName': qualified_name,
+                'description': description, 'parent': parent_info, 'children': children
+                }
 
         # Build tree for each root category
         for root_guid in root_guids:
@@ -2309,9 +2305,8 @@ class GlossaryBrowser(Client):
         # Format the output according to the specified output_format
         if output_format == "DICT":
             return {
-                'glossary_guid': glossary_guid,
-                'categories': category_tree
-            }
+                'glossary_guid': glossary_guid, 'categories': category_tree
+                }
         elif output_format == "LIST":
             # Generate markdown table
             md_table = "| Category | Path | Description | Parent Category | Child Categories |\n"
@@ -2333,7 +2328,9 @@ class GlossaryBrowser(Client):
                         child_names.append(child['name'])
                     child_categories = ", ".join(child_names) if child_names else "None"
 
-                    md_table += f"| {category['name']} | {category_path} | {self._format_for_markdown_table(category['description'])} | {parent_name} | {child_categories} |\n"
+                    md_table += (f"| {category['name']} | {category_path} | "
+                                 f"{self._format_for_markdown_table(category['description'])} | "
+                                 f"{parent_name} | {child_categories} |\n")
                     if category['children']:
                         add_categories_to_table(category['children'], category_path)
 
@@ -2365,14 +2362,12 @@ class GlossaryBrowser(Client):
         else:
             return f"Unsupported output format: {output_format}. Use 'DICT', 'LIST', or 'MD'."
 
-
-
     #
     #  Terms
     #
 
     async def _async_get_terms_for_category(self, glossary_category_guid: str, effective_time: str = None,
-            start_from: int = 0, page_size: int = None, ) -> list | str:
+                                            start_from: int = 0, page_size: int = None, ) -> list | str:
         """Retrieve ALL the glossary terms in a category.
             The request body also supports the specification of an effective time for the query.
 
@@ -2423,7 +2418,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No terms found")
 
     def get_terms_for_category(self, glossary_category_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                               page_size: int = None, ) -> list | str:
         """Retrieve ALL the glossary terms in a category.
             The request body also supports the specification of an effective time for the query.
 
@@ -2464,7 +2459,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_terms_for_glossary(self, glossary_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                                            page_size: int = None, ) -> list | str:
         """Retrieve the list of glossary terms associated with a glossary.
             The request body also supports the specification of an effective time for the query.
         Parameters
@@ -2513,7 +2508,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No terms found")
 
     def get_terms_for_glossary(self, glossary_guid: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, ) -> list | str:
+                               page_size: int = None, ) -> list | str:
         """Retrieve the list of glossary terms associated with a glossary.
             The request body also supports the specification of an effective time for the query.
         Parameters
@@ -2551,7 +2546,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-                                       page_size: int = None, output_format:str = "JSON") -> list | str:
+                                       page_size: int = None, output_format: str = "JSON") -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship.
         Parameters
@@ -2606,12 +2601,11 @@ class GlossaryBrowser(Client):
             elif output_format == 'DICT':
                 return None
         if output_format != "JSON":  # return a simplified markdown representation
-            return self.generate_terms_md(term_elements, term_guid, output_format)
+            return self.generate_related_terms_md(term_elements, term_guid, output_format)
         return response.json().get("elementList", NO_TERMS_FOUND)
 
-
-    def get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0,
-                          page_size: int = None, output_format = "JSON") -> list | str:
+    def get_related_terms(self, term_guid: str, effective_time: str = None, start_from: int = 0, page_size: int = None,
+                          output_format="JSON") -> list | str:
         """This call retrieves details of the glossary terms linked to this glossary term.
         Notice the original org 1 glossary term is linked via the "SourcedFrom" relationship..
         Parameters
@@ -2644,36 +2638,205 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_terms(term_guid, effective_time, start_from,
-                                          page_size, output_format))
+            self._async_get_related_terms(term_guid, effective_time, start_from, page_size, output_format))
 
         return response
 
-    def get_term_details(self, term_name:str, effective_time: str = None) -> dict | str:
-        """Retrieve the details of a glossary term. Including relationships and feedback
-
-        output_format: str, default = 'JSON'
-            Type of output to produce:
-            JSON - output standard json
-            MD - output standard markdown with no preamble
-            DICT = output a simplified DICT structure
+    def generate_related_terms_md(self, term_elements: list, term_guid: str, output_format: str = 'MD') -> str | list:
         """
+        Generate a simplified representation of related terms.
 
+        Args:
+            term_elements (list): List of term elements with relationship information
+            term_guid (str): GUID of the term for which to generate related terms
+            output_format (str): Output format (MD, LIST, DICT, etc.)
 
-        # Now lets get the term details as a dict
-        core = self.get_terms_by_name(term_name, effective_time, output_format="DICT")
-        if not core:
-            return NO_TERMS_FOUND
+        Returns:
+            str | list: Markdown string or list of dictionaries depending on output_format
+        """
+        # Get the first term's display name and qualified name
+        term_name = "Term"
+        try:
+            term_info = self.get_term_by_guid(term_guid, output_format="DICT")
+            # Handle case where term_info is a list of dictionaries
+            if isinstance(term_info, list) and len(term_info) > 0:
+                term_info = term_info[0]  # Get the first term
+            if isinstance(term_info, dict) and 'display_name' in term_info:
+                term_name = term_info['display_name']
+        except:
+            # If we can't get the term info, just use the default name
+            pass
 
-        related = self.get_related_terms(core[0]['guid'], effective_time)
-        if not related:
-            return "NO RELATED TERMS FOUND"
+        # Create a list to store the simplified related terms
+        related_terms = []
 
-        related_term_guid = related[0]["relatedElement"]["relatedElement"]["guid"]
-        related_term_qn = related[0]["relatedElement"]["relatedElement"]["uniquedName"]
+        # Process each term element
+        for element in term_elements:
+            # Extract relationship type from the relationship header
+            relationship_type = element['relatedElement']['relationshipHeader']['type']['typeName']
 
+            # Extract related term information
+            related_term = {
+                'first_term_display_name': term_name, 'first_term_qualified_name': term_info.get('qualified_name', ''),
+                'related_term_display_name': element['glossaryTermProperties'].get('displayName', ''),
+                'related_term_qualified_name': element['glossaryTermProperties'].get('qualifiedName', ''),
+                'relationship_type': relationship_type
+                }
 
+            related_terms.append(related_term)
 
+        # Return based on output format
+        if output_format == 'DICT':
+            return related_terms
+
+        # For MD, LIST, FORM, REPORT formats, create a markdown representation
+        md_output = f"# Related Terms for {term_name}\n\n"
+
+        if output_format == 'LIST':
+            # Create a table
+            md_output += ("| First Term | First Term Qualified Name | Related Term | Related Term Qualified Name | "
+                          "Relationship Type |\n")
+            md_output += \
+                "|------------|---------------------------|--------------|------------------------------|-------------------|\n"
+
+            for term in related_terms:
+                md_output += f"| {term['first_term_display_name']} | {term['first_term_qualified_name']} | "
+                md_output += f"{term['related_term_display_name']} | {term['related_term_qualified_name']} | "
+                md_output += f"{term['relationship_type']} |\n"
+        else:
+            # For other formats, create a more detailed representation
+            for term in related_terms:
+                md_output += f"## {term['relationship_type']} Relationship\n\n"
+                md_output += (f"**First Term:** {term['first_term_display_name']} ("
+                              f"{term['first_term_qualified_name']})\n\n")
+                md_output += f"**Related Term:** {term[('related_term_dis'
+                                                        'play_name')]} ({term['related_term_qualified_name']})\n\n"
+                md_output += "---\n\n"
+
+        return md_output
+
+    def get_term_details(self, term_name: str, effective_time: str = None, output_format: str = 'DICT') -> dict | str:
+        """Retrieve detailed information about a term, combining basic term details and related terms.
+
+        This method combines the term details retrieved from get_term_by_guid and the related terms
+        information from generate_related_terms_md.
+
+        Parameters
+        ----------
+        term_name : str
+            Either the display name or the qualified name of the term to retrieve.
+        effective_time : str, optional
+            Time at which the term is active. If not specified, the current time is used.
+        output_format : str, default = 'DICT'
+            Type of output to produce:
+                DICT - output a dictionary with combined term details and related terms
+                REPORT - output a markdown report with combined term details and related terms
+
+        Returns
+        -------
+        dict | str
+            A dictionary or markdown string containing the combined term details and related terms.
+
+        Raises
+        ------
+        InvalidParameterException
+            If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+        PropertyServerException
+            Raised by the server when an issue arises in processing a valid request.
+        NotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action.
+        """
+        # Check if the output format is supported
+        if output_format not in ["DICT", "REPORT"]:
+            return f"Unsupported output format: {output_format}. Supported formats are DICT and REPORT."
+
+        # Search for the term using the qualified name
+        terms = self.get_terms_by_name(term_name, effective_time=effective_time, output_format="DICT")
+
+        # Check if we found any terms
+        if not terms or (isinstance(terms, str) and terms == NO_TERMS_FOUND):
+            return f"No term found with name: {term_name}"
+
+        # Make sure we only have one term
+        if isinstance(terms, list) and len(terms) > 1:
+            return f"Multiple terms found with name: {term_name} - please specify the qualified name."
+
+        term_details = terms[0]
+
+        # Get related terms
+        try:
+            related_terms_response = self.get_related_terms(term_details.get('guid', ''), output_format="DICT")
+        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException):
+            # If we can't get related terms, set to empty list
+            related_terms_response = []
+
+        # If no related terms were found, set to empty list
+        if isinstance(related_terms_response, str) and related_terms_response == NO_TERMS_FOUND:
+            related_terms = []
+        elif related_terms_response is None:
+            related_terms = []
+        else:
+            related_terms = related_terms_response
+
+        # Combine the data
+        if output_format == "DICT":
+            # Create a combined dictionary
+            combined_data = {
+                "term_details": term_details, "related_terms": related_terms
+                }
+            return combined_data
+        elif output_format == "REPORT":
+            # Create a markdown report
+            md_output = f"# Term Details Report for `{term_name}` \n\n"
+
+            # Add term details
+            md_output += "## Basic Term Information\n\n"
+            md_output += f"**Display Name:** {term_details.get('display_name', '')}\n\n"
+            md_output += f"**Qualified Name:** {term_details.get('qualified_name', '')}\n\n"
+            md_output += f"**GUID:** {term_details.get('guid', '')}\n\n"
+
+            if 'summary' in term_details and term_details['summary']:
+                md_output += f"**Summary:** {term_details.get('summary', '')}\n\n"
+
+            if 'description' in term_details and term_details['description']:
+                md_output += f"**Description:** {term_details.get('description', '')}\n\n"
+
+            if 'examples' in term_details and term_details['examples']:
+                md_output += f"**Examples:** {term_details.get('examples', '')}\n\n"
+
+            if 'usage' in term_details and term_details['usage']:
+                md_output += f"**Usage:** {term_details.get('usage', '')}\n\n"
+
+            if 'aliases' in term_details and term_details['aliases']:
+                md_output += f"**Aliases:** {term_details.get('aliases', '')}\n\n"
+
+            if 'status' in term_details and term_details['status']:
+                md_output += f"**Status:** {term_details.get('status', '')}\n\n"
+
+            if 'in_glossary' in term_details and term_details['in_glossary']:
+                md_output += f"**Glossary:** {term_details.get('in_glossary', '')}\n\n"
+
+            if 'categories' in term_details and term_details['categories']:
+                md_output += f"**Categories:** {', '.join(term_details.get('categories', []))}\n\n"
+
+            # Add related terms
+            md_output += "## Related Terms\n\n"
+
+            if not related_terms:
+                md_output += "No related terms found.\n\n"
+            else:
+                # Create a table for related terms
+                md_output += "| Related Term | Qualified Name | Relationship Type |\n"
+                md_output += "|--------------|---------------|-------------------|\n"
+
+                for term in related_terms:
+                    md_output += f"| {term.get('related_term_display_name', '')} | "
+                    md_output += f"{term.get('related_term_qualified_name', '')} | "
+                    md_output += f"{term.get('relationship_type', '')} |\n"
+
+            return md_output
+        else:
+            return f"Unsupported output format: {output_format}. Supported formats are DICT and REPORT."
 
     async def _async_get_glossary_for_term(self, term_guid: str, effective_time: str = None) -> dict | str:
         """Retrieve the glossary metadata element for the requested term.  The optional request body allows you to
@@ -2752,8 +2915,9 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
-            effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-            start_from: int = 0, page_size: int = None, output_format = "JSON") -> list:
+                                       effective_time: str = None, for_lineage: bool = False,
+                                       for_duplicate_processing: bool = False, start_from: int = 0,
+                                       page_size: int = None, output_format="JSON") -> list:
         """Retrieve glossary terms by display name or qualified name. Async Version.
 
         Parameters
@@ -2831,10 +2995,9 @@ class GlossaryBrowser(Client):
             return self.generate_terms_md(term_elements, term, output_format)
         return response.json().get("elementList", NO_TERMS_FOUND)
 
-
     def get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
-            effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-            start_from: int = 0, page_size: int = None, output_format = "JSON") -> list:
+                          effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
+                          start_from: int = 0, page_size: int = None, output_format="JSON") -> list:
         """Retrieve glossary terms by display name or qualified name.
 
         Parameters
@@ -2883,7 +3046,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_by_name(term, glossary_guid, status_filter, effective_time, for_lineage,
-                for_duplicate_processing, start_from, page_size, output_format))
+                                          for_duplicate_processing, start_from, page_size, output_format))
         return response
 
     async def _async_get_term_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:
@@ -2960,10 +3123,11 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_term_versions(self, term_guid: str, effective_time: str = None, from_time: str = None,
-            to_time: str = None, oldest_first: bool = False, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, start_from: int = 0, page_size=max_paging_size,
+                                       to_time: str = None, oldest_first: bool = False, for_lineage: bool = False,
+                                       for_duplicate_processing: bool = False, start_from: int = 0,
+                                       page_size=max_paging_size,
 
-            ) -> list | str:
+                                       ) -> list | str:
         """Retrieve the versions of a glossary term. Async version.
         Parameters
         ----------
@@ -3017,8 +3181,8 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No term found")
 
     def get_term_versions(self, term_guid: str, effective_time: str = None, from_time: str = None, to_time: str = None,
-            oldest_first: bool = False, for_lineage: bool = False, for_duplicate_processing: bool = False,
-            start_from: int = 0, page_size=max_paging_size, ) -> dict | str:
+                          oldest_first: bool = False, for_lineage: bool = False, for_duplicate_processing: bool = False,
+                          start_from: int = 0, page_size=max_paging_size, ) -> dict | str:
         """Retrieve the versions of a glossary term.
         Parameters
         ----------
@@ -3123,7 +3287,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_term_revision_history(self, term_revision_log_guid: str, start_from: int = 0,
-            page_size=None, ) -> dict | str:
+                                               page_size=None, ) -> dict | str:
         """Retrieve the revision history for a glossary term. Async version.
 
         Parameters
@@ -3168,7 +3332,7 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", "No logs found")
 
     def get_term_revision_history(self, term_revision_log_guid: str, start_from: int = 0,
-            page_size=None, ) -> dict | str:
+                                  page_size=None, ) -> dict | str:
         """Retrieve the revision history for a glossary term.
 
         Parameters
@@ -3230,7 +3394,6 @@ class GlossaryBrowser(Client):
             If output_format is "LIST", returns a markdown table of the revision history.
             If no revision logs are found, returns a string message "No revision logs found".
         """
-        import re
         validate_guid(term_guid)
 
         # Get revision logs for the term
@@ -3258,15 +3421,15 @@ class GlossaryBrowser(Client):
                 update_time = title[keyword_index + 2:].strip()
 
                 entry_data = {
-                    'qualifiedName': qualified_name,
-                    'title': title,
-                    'text': entry.get('properties', {}).get('text', '---'),
-                    'updateTime': update_time  # Use extracted date/time or fall back to title
-                }
+                    'qualifiedName': qualified_name, 'title': title,
+                    'text': entry.get('properties', {}).get('text', '---'), 'updateTime': update_time
+                    # Use extracted date/time or fall back to title
+                    }
                 all_entries.append(entry_data)
 
         # Sort entries by update time
-        sorted_entries = sorted(all_entries, key=lambda x: x['updateTime'] if x['updateTime'] != '---' else '', reverse=True)
+        sorted_entries = sorted(all_entries, key=lambda x: x['updateTime'] if x['updateTime'] != '---' else '',
+                                reverse=True)
 
         # Return in the specified format
         if output_format == "DICT":
@@ -3309,7 +3472,6 @@ class GlossaryBrowser(Client):
         else:
             # Default to DICT format
             return sorted_entries
-
 
     def list_full_term_history(self, term_guid: str, output_type: str = "DICT") -> list | str:
         """
@@ -3385,9 +3547,10 @@ class GlossaryBrowser(Client):
             return None
 
     async def _async_find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-            effective_time: str = None, starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
-            for_lineage: bool = False, for_duplicate_processing: bool = False, start_from: int = 0,
-            page_size: int = None, output_format: str = "JSON", ) -> list | str:
+                                         effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
+                                         ignore_case: bool = False, for_lineage: bool = False,
+                                         for_duplicate_processing: bool = False, start_from: int = 0,
+                                         page_size: int = None, output_format: str = "JSON", ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters
@@ -3486,9 +3649,10 @@ class GlossaryBrowser(Client):
         return response.json().get("elementList", NO_TERMS_FOUND)
 
     def find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-            effective_time: str = None, starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
-            for_lineage: bool = False, for_duplicate_processing: bool = False, start_from: int = 0,
-            page_size: int = None, output_format: str = "JSON", ) -> list | str:
+                            effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
+                            ignore_case: bool = False, for_lineage: bool = False,
+                            for_duplicate_processing: bool = False, start_from: int = 0, page_size: int = None,
+                            output_format: str = "JSON", ) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters
@@ -3553,7 +3717,8 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossary_terms(search_string, glossary_guid, status_filter, effective_time, starts_with,
-                ends_with, ignore_case, for_lineage, for_duplicate_processing, start_from, page_size, output_format))
+                                            ends_with, ignore_case, for_lineage, for_duplicate_processing, start_from,
+                                            page_size, output_format))
 
         return response
 
@@ -3561,7 +3726,7 @@ class GlossaryBrowser(Client):
     #   Feedback
     #
     async def _async_get_comment(self, commemt_guid: str, effective_time: str, for_lineage: bool = False,
-            for_duplicate_processing: bool = False, ) -> dict | list:
+                                 for_duplicate_processing: bool = False, ) -> dict | list:
         """Retrieve the comment specified by the comment GUID"""
 
         validate_guid(commemt_guid)
@@ -3584,7 +3749,7 @@ class GlossaryBrowser(Client):
         return response.json()
 
     async def _async_add_comment_reply(self, comment_guid: str, is_public: bool, comment_type: str, comment_text: str,
-            for_lineage: bool = False, for_duplicate_processing: bool = False, ) -> str:
+                                       for_lineage: bool = False, for_duplicate_processing: bool = False, ) -> str:
         """Reply to a comment"""
 
         validate_guid(comment_guid)
@@ -3609,7 +3774,8 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_update_comment(self, comment_guid: str, is_public: bool, comment_type: str, comment_text: str,
-            is_merge_update: bool = False, for_lineage: bool = False, for_duplicate_processing: bool = False, ) -> str:
+                                    is_merge_update: bool = False, for_lineage: bool = False,
+                                    for_duplicate_processing: bool = False, ) -> str:
         """Update the specified comment"""
 
         validate_guid(comment_guid)
@@ -3634,9 +3800,9 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_find_comment(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
-            effective_time: str = None, starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
-            for_lineage: bool = False, for_duplicate_processing: bool = False, start_from: int = 0,
-            page_size: int = None, ):
+                                  effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
+                                  ignore_case: bool = False, for_lineage: bool = False,
+                                  for_duplicate_processing: bool = False, start_from: int = 0, page_size: int = None, ):
         """Find comments by search string"""
 
         if page_size is None:

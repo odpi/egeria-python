@@ -149,7 +149,7 @@ def display_glossary_terms(
             expand=True,
         )
         table.add_column("Term Name / Abbreviation / Version")
-        table.add_column("Qualified Name / GUID", width=38, no_wrap=True)
+        table.add_column("Qualified Name / GUID / Aliases", width=38, no_wrap=True)
         table.add_column("Summary")
         table.add_column("Description")
         table.add_column("Glossary")
@@ -184,8 +184,9 @@ def display_glossary_terms(
             display_name = props.get("displayName","---")
             qualified_name = props["qualifiedName"]
             term_guid = term["elementHeader"]["guid"]
+            aliases = props.get("aliases", "---")
             q_name = Text(
-                f"{qualified_name}\n&\n{term_guid}", style=style, justify="center"
+                f"{qualified_name}\n&\n{term_guid}\n&\n{aliases}", style=style, justify="center"
             )
             abbrev = Text(props.get("abbreviation", "---"), style=style, justify="center")
             summary = Text(props.get("summary", "---"), style=style)
