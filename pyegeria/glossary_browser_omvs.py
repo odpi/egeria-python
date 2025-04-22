@@ -185,17 +185,18 @@ class GlossaryBrowser(Client):
 
             # Add common attributes
             for key, value in props.items():
-                # Skip categories_names for FORM output and categories_qualified_names for REPORT output
-                if key == 'categories_names' and output_format == 'FORM':
-                    continue
-                if key == 'categories_qualified_names' and output_format == 'REPORT':
-                    continue
                 if key not in ['guid', 'properties', 'display_name']:
-                    # Use "Categories" as the label for both categories_qualified_names and categories_names
-                    if key == 'categories_qualified_names' and output_format == 'FORM':
-                        elements_md += self.make_md_attribute("Categories", value, output_format)
-                    elif key == 'categories_names' and output_format == 'REPORT':
-                        elements_md += self.make_md_attribute("Categories", value, output_format)
+                    # Handle categories based on output format
+                    if key == 'categories_qualified_names':
+                        if output_format == 'FORM':
+                            elements_md += self.make_md_attribute("Category Names", value, output_format)
+                        elif output_format != 'REPORT':  # Include for all formats except REPORT
+                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
+                    elif key == 'categories_names':
+                        if output_format == 'REPORT':
+                            elements_md += self.make_md_attribute("Category Names", value, output_format)
+                        elif output_format != 'FORM':  # Include for all formats except FORM
+                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
                     else:
                         elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
 

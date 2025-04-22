@@ -1021,7 +1021,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                     })
                 # return update_a_command(txt, command, object_type, qualified_name, glossary_guid)
                 print_msg(ALWAYS, f"Created Glossary `{glossary_name}` with GUID {glossary_guid}", debug_level)
-                return egeria_client.get_glossary_by_guid(glossary_guid, output_format='MD')
+                return egeria_client.get_glossary_by_guid(glossary_guid, output_format='FORM')
         else:
             return None
     else:
