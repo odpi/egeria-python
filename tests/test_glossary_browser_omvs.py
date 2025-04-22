@@ -521,7 +521,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '29bd7985-ddb9-4b8c-95a3-76b9d535cc5c'
+            term_guid = 'f0511dda-1aa4-4e13-81ac-29c2fd860b18'
             # term_guid = '2852b4e1-4445-44ee-b3aa-dbd1e577cdcb'
 
             # Test different output formats
@@ -825,7 +825,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "81b618ae-cadc-4c23-ad6e-4b1113643ddb"
+            glossary_guid = "1411b3a0-b387-42f3-b6f0-4512a12d272d"
 
             # Test DICT output format
             response_dict = g_client.get_glossary_category_structure(glossary_guid, output_format="DICT")

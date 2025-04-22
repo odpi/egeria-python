@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from pyegeria import body_slimmer
-from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND)
+from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND, DEBUG_LEVEL)
 from pyegeria.dr_egeria_state import get_element_dictionary, update_element_dictionary, find_key_with_value
 from pyegeria.egeria_tech_client import EgeriaTech
 # from pyegeria.md_processing_helpers import process_q_name_list
@@ -32,7 +32,7 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Create Solution Blueprint", "Update Solution Blueprint", "Create Solution Component",
                 "Update Solution Component", "Create Term-Term Relationship", "Update Term-Term Relationship",]
 # verbosity - verbose, quiet, debug
-debug_level = "debug"
+
 message_types = {
     "INFO": "INFO-", "WARNING": "WARNING->", "ERROR": "ERROR->", "DEBUG-INFO": "DEBUG-INFO->",
     "DEBUG-WARNING": "DEBUG-WARNING->", "DEBUG-ERROR": "DEBUG-ERROR->", "ALWAYS": "\n\n==> "
@@ -96,6 +96,7 @@ def is_valid_iso_date(date_text) -> bool:
     except ValueError:
         return False
 
+debug_level = DEBUG_LEVEL
 
 def set_debug_level(directive: str) -> None:
     """Sets the debug level for the script."""
@@ -388,7 +389,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
             existing_prov = extracted_text  # Return the cleaned text
         else:
             existing_prov = None
-    # print(f"txt is: {txt}, existing_prov: {existing_prov}")
+
     existing_prov = existing_prov if existing_prov else " "
     return f"\n# Provenance:\n{existing_prov}\n{output}\n"
 
@@ -1148,7 +1149,6 @@ def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directi
             update_element_dictionary(known_q_name, {
                 'guid': known_guid, 'display_name': category_name
                 })
-            print_msg(ALWAYS, f"Updated Category `{category_name}` with GUID {known_guid}", debug_level)
 
             category_sync = update_category_parent(egeria_client, known_guid, parent_category_name)
             print_msg(ALWAYS, f"Updated Category hierarchy for  `{category_name}` with outcome {category_sync}",
@@ -1303,7 +1303,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
 
     aliases = process_simple_attribute(txt, ['Aliases','Alias'], INFO)
     if aliases:
-        alias_list = list(filter(None, re.split(r'[,\s]+', aliases.strip())))
+        alias_list = list(filter(None, re.split(r'[,\n]+', aliases.strip())))
     else:
         alias_list = None
 

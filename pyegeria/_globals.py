@@ -14,7 +14,7 @@ disable_ssl_warnings = True
 enable_ssl_check = False
 max_paging_size = 500
 default_time_out = 30
-
+DEBUG_LEVEL = "quiet"
 comment_types = (
     "ANSWER",
     "OTHER",
