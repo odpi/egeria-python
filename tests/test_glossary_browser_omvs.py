@@ -611,6 +611,11 @@ class TestGlossaryBrowser:
             # Test with invalid input to verify error handling
             print("\n\nTesting get_term_details:")
             response = g_client.get_term_details(term_id, output_format="REPORT")
+            response = g_client.get_term_details(term_id, output_format="DICT")
+            print(json.dumps(response, indent=4))
+
+
+
             print(f"Response type is {type(response)}")
             print(response)
 
