@@ -52,7 +52,7 @@ class GlossaryBrowser(Client):
         """
         Creates a preamble string and an elements action based on the given object type, search string,
         and output format. The preamble provides a descriptive header based on the intent: To make a form,
-        a report, or unadorned markdwon. The elements action specifies the action to be taken on the object type.
+        a report, or unadorned Markdown. The element action specifies the action to be taken on the object type.
 
         Args:
             obj_type: The type of object being updated or reported on (e.g., "Product", "Category").
@@ -2677,7 +2677,7 @@ class GlossaryBrowser(Client):
         # Process each term element
         for element in term_elements:
             # Extract relationship type from the relationship header
-            relationship_type = element['relatedElement']['relationshipHeader']['type']['typeName']
+            relationship_type = element['relatedBy']['relationshipHeader']['type']['typeName']
 
             # Extract related term information
             related_term = {

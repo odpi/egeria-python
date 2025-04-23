@@ -58,13 +58,14 @@ class CollectionManager(Client):
     #
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
     #
-    async def _async_get_linked_collections(
+    async def _async_get_attached_collections(
         self,
         parent_guid: str,
         start_from: int = 0,
         page_size: int = None,
     ) -> list:
-        """Returns the list of collections that are linked off of the supplied element. Async version.
+        """Returns the list of collections that are linked off of the supplied element using the ResourceList
+           relationship. Async version.
 
         Parameters
         ----------
@@ -109,7 +110,7 @@ class CollectionManager(Client):
         resp = await self._async_make_request("POST", url, body)
         return resp.json()
 
-    def get_linked_collections(
+    def get_attached_collections(
         self,
         parent_guid: str,
         start_from: int = 0,
@@ -148,7 +149,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_linked_collections(parent_guid, start_from, page_size)
+            self._async_get_attached_collections(parent_guid, start_from, page_size)
         )
         return resp
 
@@ -702,6 +703,26 @@ class CollectionManager(Client):
     #
     #   Create collection methods
     #
+
+    ###
+    # =====================================================================================================================
+    # Create Collections: https://egeria-project.org/concepts/collection
+    # These requests use the following parameters:
+    #
+    # anchorGUID - the unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
+    # or if this collection is to be its own anchor.
+    #
+    # isOwnAnchor -this element should be classified as its own anchor or not.  The default is false.
+    #
+    # parentGUID - the optional unique identifier for an element that should be connected to the newly created element.
+    # If this property is specified, parentRelationshipTypeName must also be specified
+    #
+    # parentRelationshipTypeName - the name of the relationship, if any, that should be established between the new element and the parent element.
+    # Examples could be "ResourceList" or "DigitalServiceProduct".
+    #
+    # parentAtEnd1 -identifies which end any parent entity sits on the relationship.
+    #
+
     async def _async_create_collection_w_body(
         self, classification_name: str, body: dict
     ) -> str:
@@ -730,6 +751,36 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes:
+        -----
+
+        Sample body:
+        {
+          "isOwnAnchor" : true,
+          "collectionProperties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type"
+          }
+        }
+        or
+        {
+          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor" : false,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName" : "open metadata type name",
+          "parentAtEnd1": true,
+          "collectionProperties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type"
+          }
+        }
         """
 
         url = (
@@ -739,6 +790,7 @@ class CollectionManager(Client):
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID returned")
+
 
     def create_collection_w_body(self, classification_name: str, body: dict) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
@@ -768,6 +820,37 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+
+        Notes:
+        -----
+
+        Sample body:
+        {
+          "isOwnAnchor" : true,
+          "collectionProperties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type"
+          }
+        }
+        or
+        {
+          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor" : false,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName" : "open metadata type name",
+          "parentAtEnd1": true,
+          "collectionProperties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type"
+          }
+        }
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
@@ -785,6 +868,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = False,
         collection_ordering: str = None,
         order_property_name: str = None,
@@ -812,9 +896,11 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
              "OTHER"
@@ -842,6 +928,7 @@ class CollectionManager(Client):
         if parent_guid is None:
             is_own_anchor = False
         is_own_anchor_s = str(is_own_anchor).lower()
+        parent_at_end1_s = str(parent_at_end1).lower()
 
         url = (
             f"{self.collection_command_root}?"
@@ -850,13 +937,14 @@ class CollectionManager(Client):
 
         body = {
             "anchorGUID": anchor_guid,
+            "anchorScopeGUID": anchor_scope_guid,
             "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
+            "parentAtEnd1": parent_at_end1_s,
             "collectionProperties": {
                 "class": "CollectionProperties",
-                "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                "qualifiedName": f"{classification_name}::{display_name}",
                 "name": display_name,
                 "description": description,
                 "collectionType": collection_type,
@@ -865,7 +953,7 @@ class CollectionManager(Client):
             },
         }
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
     def create_collection(
@@ -878,6 +966,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = False,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
@@ -906,9 +995,11 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
             "DATE_CREATED", "OTHER"
@@ -919,8 +1010,6 @@ class CollectionManager(Client):
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -943,9 +1032,10 @@ class CollectionManager(Client):
                 display_name,
                 description,
                 collection_type,
+                anchor_scope_guid,
                 is_own_anchor,
                 collection_ordering,
-                order_property_name,
+                order_property_name
             )
         )
         return resp
@@ -959,6 +1049,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = False,
     ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
@@ -982,15 +1073,15 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
 
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1004,24 +1095,26 @@ class CollectionManager(Client):
         """
 
         is_own_anchor_s = str(is_own_anchor).lower()
+        parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/root-collection"
 
         body = {
             "anchorGUID": anchor_guid,
             "isOwnAnchor": is_own_anchor_s,
+            "anchorScopeGUID": anchor_scope_guid,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
+            "parentAtEnd1": parent_at_end1_s,
             "collectionProperties": {
                 "class": "CollectionProperties",
-                "qualifiedName": f"root-collection-{display_name}-{time.asctime()}",
+                "qualifiedName": f"root-collection::{display_name}",
                 "name": display_name,
                 "description": description,
                 "collectionType": collection_type,
             },
         }
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID Returned")
 
     def create_root_collection(
@@ -1033,6 +1126,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = False,
     ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
@@ -1057,15 +1151,15 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
 
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1087,6 +1181,7 @@ class CollectionManager(Client):
                 display_name,
                 description,
                 collection_type,
+                anchor_scope_guid,
                 is_own_anchor,
             )
         )
@@ -1101,6 +1196,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = True,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
@@ -1126,9 +1222,11 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
             "DATE_CREATED", "OTHER"
@@ -1139,7 +1237,6 @@ class CollectionManager(Client):
         -------
         str - the guid of the created collection
 
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1152,17 +1249,19 @@ class CollectionManager(Client):
         """
 
         is_own_anchor_s = str(is_own_anchor).lower()
+        parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/data-spec-collection"
 
         body = {
             "anchorGUID": anchor_guid,
+            "anchorScopeGUID": anchor_scope_guid,
             "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
+            "parentAtEnd1": parent_at_end1_s,
             "collectionProperties": {
                 "class": "CollectionProperties",
-                "qualifiedName": f"data-spec-collection-{display_name}-{time.asctime()}",
+                "qualifiedName": f"data-spec-collection::{display_name}",
                 "name": display_name,
                 "description": description,
                 "collectionType": collection_type,
@@ -1171,7 +1270,7 @@ class CollectionManager(Client):
             },
         }
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID Returned")
 
     def create_data_spec_collection(
@@ -1183,7 +1282,8 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
-        is_own_anchor: bool,
+        anchor_scope_guid: str = None,
+        is_own_anchor: bool = False,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
     ) -> str:
@@ -1208,21 +1308,19 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
 
-
-
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1244,12 +1342,180 @@ class CollectionManager(Client):
                 display_name,
                 description,
                 collection_type,
+                anchor_scope_guid,
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
             )
         )
         return resp
+
+    async def _async_create_data_dictionary_collection(
+        self,
+        anchor_guid: str,
+        parent_guid: str,
+        parent_relationship_type_name: str,
+        parent_at_end1: bool,
+        display_name: str,
+        description: str,
+        collection_type: str,
+        anchor_scope_guid: str = None,
+        is_own_anchor: bool = True,
+        collection_ordering: str = "OTHER",
+        order_property_name: str = "Something",
+    ) -> str:
+        """ Create a new collection with the Data Dictionary classification.  Used to identify a collection of
+            data fields that represent a data store collection of common data types. Async version.
+
+        Parameters
+        ----------
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element.
+            Set to null if no anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool
+            Identifies which end any parent entity sits on the relationship.
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        collection_type: str
+            Add an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            GUID for search scope
+        is_own_anchor: bool, optional, defaults to False
+            Indicates if the collection should be classified as its own anchor or not.
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
+            "DATE_CREATED", "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        is_own_anchor_s = str(is_own_anchor).lower()
+        parent_at_end1_s = str(parent_at_end1).lower()
+        url = f"{self.collection_command_root}/data-spec-collection"
+
+        body = {
+            "anchorGUID": anchor_guid,
+            "isOwnAnchor": is_own_anchor_s,
+            "anchorScopeGUID": anchor_scope_guid,
+            "parentGUID": parent_guid,
+            "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s,
+            "collectionProperties": {
+                "class": "CollectionProperties",
+                "qualifiedName": f"data-dict-collection::{display_name}",
+                "name": display_name,
+                "description": description,
+                "collectionType": collection_type,
+                "collectionOrdering": collection_ordering,
+                "orderPropertyName": order_property_name,
+            },
+        }
+
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        return resp.json().get("guid", "No GUID Returned")
+
+    def create_data_dictionary_collection(
+        self,
+        anchor_guid: str,
+        parent_guid: str,
+        parent_relationship_type_name: str,
+        parent_at_end1: bool,
+        display_name: str,
+        description: str,
+        collection_type: str,
+        anchor_scope_guid: str = None,
+        is_own_anchor: bool = False,
+        collection_ordering: str = "OTHER",
+        order_property_name: str = "Something",
+    ) -> str:
+        """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
+         and schema types.
+
+        Parameters
+        ----------
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element.
+            Set to null if no anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool
+            Identifies which end any parent entity sits on the relationship.
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        collection_type: str
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        is_own_anchor: bool, optional, defaults to False
+            Indicates if the collection should be classified as its own anchor or not.
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_data_dictionary_collection(
+                anchor_guid,
+                parent_guid,
+                parent_relationship_type_name,
+                parent_at_end1,
+                display_name,
+                description,
+                collection_type,
+                anchor_scope_guid,
+                is_own_anchor,
+                collection_ordering,
+                order_property_name,
+            )
+        )
+        return resp
+
+
 
     async def _async_create_folder_collection(
         self,
@@ -1260,6 +1526,7 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
+        anchor_scope_guid: str = None,
         is_own_anchor: bool = True,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
@@ -1285,9 +1552,11 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
             "DATE_CREATED", "OTHER"
@@ -1297,8 +1566,6 @@ class CollectionManager(Client):
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1312,18 +1579,19 @@ class CollectionManager(Client):
         """
 
         is_own_anchor_s = str(is_own_anchor).lower()
-
+        parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/folder"
 
         body = {
             "anchorGUID": anchor_guid,
+            "anchorScopeGUID": anchor_scope_guid,
             "isOwnAnchor": is_own_anchor_s,
             "parentGUID": parent_guid,
             "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1,
+            "parentAtEnd1": parent_at_end1_s,
             "collectionProperties": {
                 "class": "CollectionProperties",
-                "qualifiedName": f"folder-collection-{display_name}-{time.asctime()}",
+                "qualifiedName": f"folder-collection::{display_name}",
                 "name": display_name,
                 "description": description,
                 "collectionType": collection_type,
@@ -1332,7 +1600,7 @@ class CollectionManager(Client):
             },
         }
 
-        resp = await self._async_make_request("POST", url, body)
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
     def create_folder_collection(
@@ -1344,7 +1612,8 @@ class CollectionManager(Client):
         display_name: str,
         description: str,
         collection_type: str,
-        is_own_anchor: bool,
+        anchor_scope_guid: str = None,
+        is_own_anchor: bool = True,
         collection_ordering: str = "OTHER",
         order_property_name: str = "Something",
     ) -> str:
@@ -1369,9 +1638,11 @@ class CollectionManager(Client):
         description: str
             A description of the collection.
         collection_type: str
-            Add appropriate valid value for the collection type.
+            Adds an appropriate valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should classified as its own anchor or not.
+            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
             "OTHER"
@@ -1382,7 +1653,6 @@ class CollectionManager(Client):
         -------
         str - the guid of the created collection
 
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -1404,6 +1674,7 @@ class CollectionManager(Client):
                 display_name,
                 description,
                 collection_type,
+                anchor_scope_guid,
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
@@ -1928,7 +2199,7 @@ class CollectionManager(Client):
         watch_resources: bool = False,
         make_anchor: bool = False,
     ) -> None:
-        """Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
+        """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
         Parameters
         ----------
         collection_guid: str
@@ -1938,13 +2209,13 @@ class CollectionManager(Client):
         resource_use: str,
             How the resource is being used.
         resource_use_description: str
-            Describe how the resource is being used.
+            Describes how the resource is being used.
         resource_use_props: dict, optional, defaults to None
             The properties of the resource to be used.
         watch_resources, bool, optional, defaults to False
             Whether to watch for the resources to be updated.
         make_anchor, bool, optional, defaults to False
-            Whether to make the this an anchor.
+            Whether to make this an anchor.
 
 
         Returns
@@ -1978,7 +2249,6 @@ class CollectionManager(Client):
             "resourceUseProperties": resource_use_props,
         }
         await self._async_make_request("POST", url, body)
-        return
 
     def attach_collection(
         self,
@@ -2182,7 +2452,6 @@ class CollectionManager(Client):
         collection_guid: str = None,
         collection_name: str = None,
         collection_qname: str = None,
-        effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2194,13 +2463,11 @@ class CollectionManager(Client):
             identity of the collection to return members for. If none, collection_name or
             collection_qname are used.
         collection_name: str,
-            display name of the collection to return members for. If none, collection_guid
+            display the name of the collection to return members for. If none, collection_guid
             or collection_qname are used.
         collection_qname: str,
             qualified name of the collection to return members for. If none, collection_guid
             or collection_name are used.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -2246,7 +2513,6 @@ class CollectionManager(Client):
         collection_guid: str = None,
         collection_name: str = None,
         collection_qname: str = None,
-        effective_time: str = None,
         start_from: int = 0,
         page_size: int = None,
     ) -> list | str:
@@ -2258,13 +2524,11 @@ class CollectionManager(Client):
                    identity of the collection to return members for. If none, collection_name or
                    collection_qname are used.
                collection_name: str,
-                   display name of the collection to return members for. If none, collection_guid
+                   display the name of the collection to return members for. If none, collection_guid
                    or collection_qname are used.
                collection_qname: str,
                    qualified name of the collection to return members for. If none, collection_guid
                    or collection_name are used.
-               effective_time: str, [default=None], optional
-                   Effective time of the query. If not specified will default to any time.
                start_from: int, [default=0], optional
                            When multiple pages of results are available, the page number to start from.
                page_size: int, [default=None]
@@ -2293,7 +2557,6 @@ class CollectionManager(Client):
                 collection_guid,
                 collection_name,
                 collection_qname,
-                effective_time,
                 start_from,
                 page_size,
             )
