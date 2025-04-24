@@ -95,7 +95,7 @@ As always, we welcome your feedback and contributions to this work.
 ## 1. Top level
 This image is a composite of screenshots showing the full list and organization of **hey_egeria** commands.
 
-![hey_egeria tui 2024-12-16 at 16.58.22@2x.png](hey_egeria%20tui%202024-12-16%20at%2016.58.22%402x.png)
+![hey_egeria tui 2024-12-16 at 16.58.22@2x.png](hey_egeria tui 2024-12-16 at 16.58.22@2x.png)
 
 
 ## 2. cat: Commands for the catalog user
@@ -119,13 +119,13 @@ Input:
 Note: Technology type artifacts are generally loaded from open-metadata archives. You may need to load the right
 archive file, if it hasn't already been loaded,  before finding a specific technology type.
 
-![elements-of-type 2024-11-20 at 16.01.35.png](cat/show/assets/elements-of-type%202024-11-20%20at%2016.01.35.png)
+![elements-of-type 2024-11-20 at 16.01.35.png](cat/show/assets/elements-of-type 2024-11-20 at 16.01.35.png)
 
 #### 2.1.4 tech-type-elements - list the elements of the specified technology type
 Input: 
 * tech_type (required) - technology type to search elements for; default is 'PostgreSQL Server'
 
-![tech-type-elements 2024-11-20 at 16.05.05.png](cat/show/assets/tech-type-elements%202024-11-20%20at%2016.05.05.png)
+![tech-type-elements 2024-11-20 at 16.05.05.png](cat/show/assets/tech-type-elements 2024-11-20 at 16.05.05.png)
 
 ### 2.2 deployed-data: display information about deployed data resources Egeria has been told about
 
@@ -134,26 +134,26 @@ Input:
 * search_server - optionally filter results by this server name, default is '*' (all)
 Notes: This shows the properties for each server found as well as the catalog schemas it contains.
 
-![deployed-data-catalogs 2024-12-17 at 15.43.27@2x.png](cat/show/deployed-data/deployed-data-catalogs%202024-12-17%20at%2015.43.27%402x.png)
+![deployed-data-catalogs 2024-12-17 at 15.43.27@2x.png](cat/show/deployed-data/deployed-data-catalogs 2024-12-17 at 15.43.27@2x.png)
 
 #### 2.2.2 deployed-schemas: lists information about schemas, optionally filtered by catalog name
 Input:
 * search_catalog - optionally filter results by this catalog name, default is '*' (all)
 Notes: This shows the schemas for catalogs as well as data resources within the schema.
 
-![deployed-schemas 2024-12-17 at 15.48.38@2x.png](cat/show/deployed-data/deployed-schemas%202024-12-17%20at%2015.48.38%402x.png) 
+![deployed-schemas 2024-12-17 at 15.48.38@2x.png](cat/show/deployed-data/deployed-schemas 2024-12-17 at 15.48.38@2x.png) 
 
 #### 2.2.3 deployed-servers: lists the deployed software servers
 Input: 
 * search_string - optionally filters by the search string, default is '*' (all).
 
-![deployed-servers 2024-12-17 at 15.52.16@2x.png](cat/show/deployed-data/deployed-servers%202024-12-17%20at%2015.52.16%402x.png)
+![deployed-servers 2024-12-17 at 15.52.16@2x.png](cat/show/deployed-data/deployed-servers 2024-12-17 at 15.52.16@2x.png)
 
 #### 2.2.4 deployed-databases: lists the known, deployed databases
 Input:
 * server - optionally filter the databases by the name of the database servers.  
 
-![deployed_databases 2024-12-16 at 16.40.31@2x.png](cat/show/deployed-data/deployed_databases%202024-12-16%20at%2016.40.31%402x.png)
+![deployed_databases 2024-12-16 at 16.40.31@2x.png](cat/show/deployed-data/deployed_databases 2024-12-16 at 16.40.31@2x.png)
 
 
 ### 2.3 glossary: display information about glossaries and glossary terms
@@ -162,7 +162,7 @@ Input:
 Input:
 * search_string - optionally filters by the search string, default is '*' (all).
 
-* ![list-glossaries 2024-11-25 at 20.30.02.png](cat/show/glossary/list-glossaries%202024-11-25%20at%2020.30.02.png)
+* ![list-glossaries 2024-11-25 at 20.30.02.png](cat/show/glossary/list-glossaries 2024-11-25 at 20.30.02.png)
 
 #### 2.3.2 list-glossary-terms: lists glossary terms, optionally filtered by glossary
 Input:
@@ -173,7 +173,7 @@ Input:
 Note:
 If both glossary-guid and glossary-name have values, glossary-guid will take precedence.
 
-![list-terms 2024-11-25 at 20.32.11.png](cat/show/glossary/list-terms%202024-11-25%20at%2020.32.11.png)
+![list-terms 2024-11-25 at 20.32.11.png](cat/show/glossary/list-terms 2024-11-25 at 20.32.11.png)
 
 ### 2,4 info: a mix of other information and Egeria structures
 
@@ -181,39 +181,39 @@ As we get more commands in particular topic areas, we will sub-divide this furth
 
 #### 2.4.1 asset-types: list the types of assets Egeria knows about
 
-![asset-types 2024-11-25 at 20.34.19@2x.png](cat/show/info/asset-types%202024-11-25%20at%2020.34.19%402x.png)
+![asset-types 2024-11-25 at 20.34.19@2x.png](cat/show/info/asset-types 2024-11-25 at 20.34.19@2x.png)
 
 #### 2.4.2 certification-types: list the types of certifications that have been defined
 Input:
 * search-string - optionally filters certifications by the search string, default is '*' (all).
 
-![certification-types 2024-11-25 at 20.37.07.png](cat/show/info/certification-types%202024-11-25%20at%2020.37.07.png)
+![certification-types 2024-11-25 at 20.37.07.png](cat/show/info/certification-types 2024-11-25 at 20.37.07.png)
 
 #### 2.4.3 collection-graph: display a graph of collection from a specified root collection
 Input:
 * root_collection (required) - collection to use as the root of the graph; nested collections will be displayed, default root collection is 'Coco Pharmaceuticals Governance Domains'.
-![collection-graph 2024-12-12 at 11.33.18@2x.png](cat/show/info/collection-graph%202024-12-12%20at%2011.33.18%402x.png)
+![collection-graph 2024-12-12 at 11.33.18@2x.png](cat/show/info/collection-graph 2024-12-12 at 11.33.18@2x.png)
 
 #### 2.4.4 collections: lists collections filtered by the optional search string
 Input:
 * collection - optionally filter collections by the string specified, default is "*" (all).
 
-![list-collections 2024-12-10 at 14.25.51@2x.png](cat/show/info/list-collections%202024-12-10%20at%2014.25.51%402x.png)
+![list-collections 2024-12-10 at 14.25.51@2x.png](cat/show/info/list-collections 2024-12-10 at 14.25.51@2x.png)
 
 #### 2.4.5 to-dos: list to-do items optionally filtered by a search string
 Input:
 * search-string - optionally filters todo items by the search string, default is '*' (all).
 
-![list-todos 2024-12-12 at 11.46.30@2x.png](cat/show/info/list-todos%202024-12-12%20at%2011.46.30%402x.png)
+![list-todos 2024-12-12 at 11.46.30@2x.png](cat/show/info/list-todos 2024-12-12 at 11.46.30@2x.png)
 
 #### 2.4.6 user-ids: list all known user ids
 
-![list-user-ids 2024-12-12 at 11.51.09@2x.png](cat/show/info/list-user-ids%202024-12-12%20at%2011.51.09%402x.png)
+![list-user-ids 2024-12-12 at 11.51.09@2x.png](cat/show/info/list-user-ids 2024-12-12 at 11.51.09@2x.png)
 
 #### 2.4.7 tech-types: list technology types optionally filtered by a search-string
 Input:
 * tech_type: optionally filters list by the search string, default is '*' (all).
-![tech-types 2024-12-12 at 11.37.20@2x.png](cat/show/info/tech-types%202024-12-12%20at%2011.37.20%402x.png)
+![tech-types 2024-12-12 at 11.37.20@2x.png](cat/show/info/tech-types 2024-12-12 at 11.37.20@2x.png)
 
 
 ### 2.5 projects: information about projects that Egeria represents
@@ -222,19 +222,19 @@ Input:
 Input:
 * project (required) - base project to show dependencies from, default is "Clinical Trials Management"
 
-![project_dependencies 2024-12-14 at 16.24.39@2x.png](cat/show/projects/project_dependencies%202024-12-14%20at%2016.24.39%402x.png)
+![project_dependencies 2024-12-14 at 16.24.39@2x.png](cat/show/projects/project_dependencies 2024-12-14 at 16.24.39@2x.png)
 
 #### 2.5.2 project-structure: display the structure of the project specified, including sub-projects and relationships
 Input:
 * project (required) - base project to show dependencies from, default is "Clinical Trials Management"
 
-![project_structure 2024-12-14 at 16.21.35@2x.png](cat/show/projects/project_structure%202024-12-14%20at%2016.21.35%402x.png)
+![project_structure 2024-12-14 at 16.21.35@2x.png](cat/show/projects/project_structure 2024-12-14 at 16.21.35@2x.png)
 
 #### 2.5.3 projects: display a list of projects optionally filtered by a search string
 Input:
 * search-string - optionally filters projects by the search string, default is '*' (all).
 
-![projects 2024-12-14 at 16.18.10@2x.png](cat/show/projects/projects%202024-12-14%20at%2016.18.10%402x.png)
+![projects 2024-12-14 at 16.18.10@2x.png](cat/show/projects/projects 2024-12-14 at 16.18.10@2x.png)
 
 
 
@@ -246,7 +246,7 @@ Input:
 Note:
 Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
 
-![my_profile  2024-12-14 at 16.29.27@2x.png](my/show/my_profile%20%202024-12-14%20at%2016.29.27%402x.png)
+![my_profile  2024-12-14 at 16.29.27@2x.png](my/show/my_profile  2024-12-14 at 16.29.27@2x.png)
 
 #### 3.0.2 my-roles: displays the roles of the user identity the command runs under
 Input:
@@ -255,7 +255,7 @@ Input:
 Note:
 Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
 
-![my_roles 2024-12-14 at 16.32.10@2x.png](my/show/my_roles%202024-12-14%20at%2016.32.10%402x.png)
+![my_roles 2024-12-14 at 16.32.10@2x.png](my/show/my_roles 2024-12-14 at 16.32.10@2x.png)
 
 #### 3.03 my-to-dos: displays to-do items that have been assigned to the current user identity
 
@@ -265,11 +265,11 @@ Input:
 Note:
 Set the EGERIA_USER and EGERIA_USER_PASSWORD environment variables for your desired default user.
 
-![my_todos  2024-12-15 at 16.24.13@2x.png](my/show/my_todos%20%202024-12-15%20at%2016.24.13%402x.png)
+![my_todos  2024-12-15 at 16.24.13@2x.png](my/show/my_todos  2024-12-15 at 16.24.13@2x.png)
 
 #### 3.04 open-to-dos: displays a list of all open to-do items
 
-![open_todos 2024-12-14 at 16.36.12@2x.png](my/show/open_todos%202024-12-14%20at%2016.36.12%402x.png)
+![open_todos 2024-12-14 at 16.36.12@2x.png](my/show/open_todos 2024-12-14 at 16.36.12@2x.png)
 
 
 
@@ -287,7 +287,7 @@ Input:
 Note:
 To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
 
-![list_engine_activity compressed 2024-12-15 at 16.48.48@2x.png](ops/show/engines/list_engine_activity%20compressed%202024-12-15%20at%2016.48.48%402x.png)
+![list_engine_activity compressed 2024-12-15 at 16.48.48@2x.png](ops/show/engines/list_engine_activity compressed 2024-12-15 at 16.48.48@2x.png)
 
 #### 4.1.2 activity: display the current engine activity as a live monitor in a compressed view
 Input:
@@ -300,7 +300,7 @@ To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
 
 
 
-![monitor_engine_activity compressed  2024-12-15 at 16.38.29@2x.png](ops/show/engines/monitor_engine_activity%20compressed%20%202024-12-15%20at%2016.38.29%402x.png)
+![monitor_engine_activity compressed  2024-12-15 at 16.38.29@2x.png](ops/show/engines/monitor_engine_activity compressed  2024-12-15 at 16.38.29@2x.png)
 #### 4.1.3 activity: display the current engine activity as a live monitor 
 Input:
 * rowlimit - limits the number of rows to display, default is 0, which means return all rows.
@@ -309,7 +309,7 @@ Input:
 
 Note:
 To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
-![monitor_engine_activity  2024-12-15 at 16.32.55@2x.png](ops/show/engines/monitor_engine_activity%20%202024-12-15%20at%2016.32.55%402x.png)
+![monitor_engine_activity  2024-12-15 at 16.32.55@2x.png](ops/show/engines/monitor_engine_activity  2024-12-15 at 16.32.55@2x.png)
 
 #### 4.1.4 status: display the current status of governance engines either as a live monitor or as a static, paged list
 Input:
@@ -319,7 +319,7 @@ Input:
 
 Note:
 To exit a live monitor you type "ctrl-c"; to exit a paged list you type "q"
-![monitor_engine_status 2024-12-15 at 16.51.26.jpeg](ops/show/engines/monitor_engine_status%202024-12-15%20at%2016.51.26.jpeg)
+![monitor_engine_status 2024-12-15 at 16.51.26.jpeg](ops/show/engines/monitor_engine_status 2024-12-15 at 16.51.26.jpeg)
 
 
 
@@ -331,7 +331,7 @@ Input:
 * list (checkbox) - if checked, a paging version of the display is provided, if unchecked this will be a live, continuously updated version; default is not checked.
 * sorted (checkbox) - if checked, the list of connectors will be sorted; default is checked.
 
-![monitor_integration_daemon_status  2024-12-15 at 16.57.12@2x.png](ops/show/integrations/monitor_integration_daemon_status%20%202024-12-15%20at%2016.57.12%402x.png)
+![monitor_integration_daemon_status  2024-12-15 at 16.57.12@2x.png](ops/show/integrations/monitor_integration_daemon_status  2024-12-15 at 16.57.12@2x.png)
 
 
 #### 4.2.2 targets: display a list of catalog targets and their details
@@ -339,12 +339,12 @@ Input:
 * connector (required) - a valid connector name must be provided - typically selected using the previous 'integration daemon status' command.
 
 
-![monitor_integration_targets  2024-12-15 at 17.02.19@2x.png](ops/show/integrations/monitor_integration_targets%20%202024-12-15%20at%2017.02.19%402x.png)
+![monitor_integration_targets  2024-12-15 at 17.02.19@2x.png](ops/show/integrations/monitor_integration_targets  2024-12-15 at 17.02.19@2x.png)
 
 ### 4.3 platforms
 #### 4.3.1 status: display the platform status as a live monitor
 
-![monitor_platform_status  2024-12-15 at 19.53.18@2x.png](ops/show/platforms/monitor_platform_status%20%202024-12-15%20at%2019.53.18%402x.png)
+![monitor_platform_status  2024-12-15 at 19.53.18@2x.png](ops/show/platforms/monitor_platform_status  2024-12-15 at 19.53.18@2x.png)
 
 
 
@@ -355,21 +355,21 @@ Input:
 * full (checkbox) - if check shows a full description of the servers, otherwise just the status is displayed; default is unchecked.
 * url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
 
-![monitor_server_status full 2024-12-15 at 20.01.57@2x.png](ops/show/servers/monitor_server_status%20full%202024-12-15%20at%2020.01.57%402x.png)
+![monitor_server_status full 2024-12-15 at 20.01.57@2x.png](ops/show/servers/monitor_server_status full 2024-12-15 at 20.01.57@2x.png)
 
 #### 4.4.2 status: show the status of servers running on the default platform with only status
 Input:
 * full (checkbox) - if check shows a full description of the servers, otherwise just the status is displayed; default is unchecked.
 * url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
 
-![monitor_server_status  2024-12-15 at 19.59.39@2x.png](ops/show/servers/monitor_server_status%20%202024-12-15%20at%2019.59.39%402x.png)
+![monitor_server_status  2024-12-15 at 19.59.39@2x.png](ops/show/servers/monitor_server_status  2024-12-15 at 19.59.39@2x.png)
 
 #### 4.4.3 startup: display a summary server status view using direct platform information.
 Input:
 * url - the url of the Egeria OMAG Server Platform to get the server status for; default is derived from the EGERIA_PLATFORM_URL environment variable.
 
 
-![monitor_startup_servers 2024-12-15 at 19.56.07@2x.png](ops/show/servers/monitor_startup_servers%202024-12-15%20at%2019.56.07%402x.png)
+![monitor_startup_servers 2024-12-15 at 19.56.07@2x.png](ops/show/servers/monitor_startup_servers 2024-12-15 at 19.56.07@2x.png)
 
 
 
@@ -383,7 +383,7 @@ Input:
 * search-string (required) - value to search for, default is "DeployedDatabaseSchema"
 * prop-list (required) - properties to search for the the above search-string. This is a list of strings separated by comma. Default is "anchorTypeName".
 
-![get_anchored_elements 2024-12-15 at 21.25.41@2x.png](tech/show/elements/get_anchored_elements%202024-12-15%20at%2021.25.41%402x.png)
+![get_anchored_elements 2024-12-15 at 21.25.41@2x.png](tech/show/elements/get_anchored_elements 2024-12-15 at 21.25.41@2x.png)
 
 
 #### 5.1.2 elements: List of elements of the specified Egeria Open Metadata type
@@ -391,73 +391,73 @@ Input:
 * extended (checkbox) - if checked additional feedback columns are displayed; default is unchecked.
 * om_type (required) - the Egeria Open Metadata type to return elements for; default is "Organization"
 
-![list_elements_by_om-type  2024-12-16 at 14.24.18@2x.png](tech/show/elements/list_elements_by_om-type%20%202024-12-16%20at%2014.24.18%402x.png)
+![list_elements_by_om-type  2024-12-16 at 14.24.18@2x.png](tech/show/elements/list_elements_by_om-type  2024-12-16 at 14.24.18@2x.png)
 
 #### 5.1.3 elements - extended: List of elements of the specified Egeria Open Metadata type with the extended columns
 Input:
 * extended (checkbox) - if checked additional feedback columns are displayed; default is unchecked.
 * om_type (required) - the Egeria Open Metadata type to return elements for; default is "Organization"
 
-![list_elements_by_om-type extended  2024-12-16 at 14.28.46@2x.png](tech/show/elements/list_elements_by_om-type%20extended%20%202024-12-16%20at%2014.28.46%402x.png)
+![list_elements_by_om-type extended  2024-12-16 at 14.28.46@2x.png](tech/show/elements/list_elements_by_om-type extended  2024-12-16 at 14.28.46@2x.png)
 
 #### 5.1.4 elements of om_type by classification
 Input:
 * om_type (required) - Egeria Open Metadata type to search for; default is "Project".
 * classification - Egeria classification to search within; default is "GovernanceProject".
 
-![list_elements_of_om_type_by_classification  2024-12-16 at 14.35.26@2x.png](tech/show/elements/list_elements_of_om_type_by_classification%20%202024-12-16%20at%2014.35.26%402x.png)
+![list_elements_of_om_type_by_classification  2024-12-16 at 14.35.26@2x.png](tech/show/elements/list_elements_of_om_type_by_classification  2024-12-16 at 14.35.26@2x.png)
 
 #### 5.1.5 get_elements: a list of elements of the specified om_type
 Input: 
 * om_type (required) - Egeria Open Metadata type to search for; default is "Project".
-![get_elements_of_om_type  2024-12-16 at 14.39.59@2x.png](tech/show/elements/get_elements_of_om_type%20%202024-12-16%20at%2014.39.59%402x.png)
+![get_elements_of_om_type  2024-12-16 at 14.39.59@2x.png](tech/show/elements/get_elements_of_om_type  2024-12-16 at 14.39.59@2x.png)
 
 
 #### 5.1.6 guid-info: information about the element identified by the supplied GUID
 Input:
 * guid (required) - the unique identifier of the element to return information about.
 
-![info_for_guid  2024-12-16 at 11.35.29@2x.png](tech/show/elements/info_for_guid%20%202024-12-16%20at%2011.35.29%402x.png)
+![info_for_guid  2024-12-16 at 11.35.29@2x.png](tech/show/elements/info_for_guid  2024-12-16 at 11.35.29@2x.png)
 
 #### 5.1.7 related-elements: lists elements related to specified element
 Input:
 * guid (required) - the unique identifier of the element to return information about.
 * om_type (required) - Egeria Open Metadata type to search for; default is "Project".
 * rel_type (requited) - Egeria relationship type to filter by; default is "Certification".
-![related_elements 2024-12-16 at 14.55.01@2x.png](tech/show/elements/related_elements%202024-12-16%20at%2014.55.01%402x.png)
+![related_elements 2024-12-16 at 14.55.01@2x.png](tech/show/elements/related_elements 2024-12-16 at 14.55.01@2x.png)
 
 
 #### 5.1.8 related-specifications: display template specification parameters
 Input:
 * guid (required) - the unique identifier of the element to return information about.
 
-![show_related_specifications 2024-12-16 at 15.04.55@2x.png](tech/show/elements/show_related_specifications%202024-12-16%20at%2015.04.55%402x.png)
+![show_related_specifications 2024-12-16 at 15.04.55@2x.png](tech/show/elements/show_related_specifications 2024-12-16 at 15.04.55@2x.png)
 
 ### 5.2 tech-info
 #### 5.2.1 asset-types: List defined asset types
 
-![asset_types 2024-12-16 at 15.10.16@2x.png](tech/show/tech-info/asset_types%202024-12-16%20at%2015.10.16%402x.png)
+![asset_types 2024-12-16 at 15.10.16@2x.png](tech/show/tech-info/asset_types 2024-12-16 at 15.10.16@2x.png)
 
 #### 5.2.2 gov-action-processes: displays details about identified governance action processes
 Input:
 * search-string (required) - value to search for, default is "*" (all)
 
-![detailed_governance_action_processes  2024-12-16 at 15.16.26@2x.png](tech/show/tech-info/detailed_governance_action_processes%20%202024-12-16%20at%2015.16.26%402x.png)
+![detailed_governance_action_processes  2024-12-16 at 15.16.26@2x.png](tech/show/tech-info/detailed_governance_action_processes  2024-12-16 at 15.16.26@2x.png)
 
 #### 5.2.3 processes: lists all governance action processes
-![governance_action_processes 2024-12-16 at 15.13.01@2x.png](tech/show/tech-info/governance_action_processes%202024-12-16%20at%2015.13.01%402x.png)
+![governance_action_processes 2024-12-16 at 15.13.01@2x.png](tech/show/tech-info/governance_action_processes 2024-12-16 at 15.13.01@2x.png)
 
 #### 5.2.4 registered-services: lists the services registered with the Egeria OMAG Platform
 Input:
 * services: one of all, access-services, common-services, engine-services, governance-services, integration-services, view-services; default is "all".
-![registered_services 2024-12-16 at 16.44.54@2x.png](tech/show/tech-info/registered_services%202024-12-16%20at%2016.44.54%402x.png)
+![registered_services 2024-12-16 at 16.44.54@2x.png](tech/show/tech-info/registered_services 2024-12-16 at 16.44.54@2x.png)
 
 #### 5.2.5 relationship-types: lists the relationship types from the specified Egeria Open Metadata type
 Input:
 
 * om_type (required) - Egeria Open Metadata type to search for; default is "AssetOwner".
 
-![relationship_types 2024-12-19 at 10.51.54@2x.png](tech/show/tech-info/relationship_types%202024-12-19%20at%2010.51.54%402x.png)
+![relationship_types 2024-12-19 at 10.51.54@2x.png](tech/show/tech-info/relationship_types 2024-12-19 at 10.51.54@2x.png)
 
 #### 5.2.6 relationships <placeholder>
 Input:
@@ -471,7 +471,7 @@ Input:
 * property (required) - valid value property to return the value for; default is "projectHealth".
 * type-name (required) - metadata type to search the valid values for; default is "Project"
 
-![valid_metadata_values 2024-12-16 at 15.31.56@2x.png](tech/show/tech-info/valid_metadata_values%202024-12-16%20at%2015.31.56%402x.png)
+![valid_metadata_values 2024-12-16 at 15.31.56@2x.png](tech/show/tech-info/valid_metadata_values 2024-12-16 at 15.31.56@2x.png)
 
 
 
@@ -482,27 +482,27 @@ Input:
 
 * tech_name (required) - technology name to get details for.
 
-![tech_type_details 2024-12-16 at 15.37.21@2x.png](tech/show/tech-types/tech_type_details%202024-12-16%20at%2015.37.21%402x.png)
+![tech_type_details 2024-12-16 at 15.37.21@2x.png](tech/show/tech-types/tech_type_details 2024-12-16 at 15.37.21@2x.png)
 
 
 #### 5.3.2 list - list the deployed technology types specified by the search string
 Input:
 * search-string - search for technology types containing the search-string; default is "*" (all).
 
-[list_technology_types 2024-12-16 at 15.39.20@2x.png](tech/show/tech-types/list_technology_types%202024-12-16%20at%2015.39.20%402x.png)
+[list_technology_types 2024-12-16 at 15.39.20@2x.png](tech/show/tech-types/list_technology_types 2024-12-16 at 15.39.20@2x.png)
 
 #### 5.3.3 template-spec - list the template specification details for the specified technology type
 
 Input:
 * search-string - search for templates associated with technology types containing the search-string; default is "*" (all).
 
-![list_tech_type_template_specs  2024-12-16 at 16.03.22@2x.png](tech/show/tech-types/list_tech_type_template_specs%20%202024-12-16%20at%2016.03.22%402x.png)
+![list_tech_type_template_specs  2024-12-16 at 16.03.22@2x.png](tech/show/tech-types/list_tech_type_template_specs  2024-12-16 at 16.03.22@2x.png)
 
 #### 5.3.4 templates - display details of technology type templates for the specified technology type
 Input:
 * tech-type - name of the technology type to display templates for; default is "PostgreSQL Server"
 
-![tech_type_templates 2024-12-16 at 16.11.48@2x.png](tech/show/tech-types/tech_type_templates%202024-12-16%20at%2016.11.48%402x.png)
+![tech_type_templates 2024-12-16 at 16.11.48@2x.png](tech/show/tech-types/tech_type_templates 2024-12-16 at 16.11.48@2x.png)
 
 
 

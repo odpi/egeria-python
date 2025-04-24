@@ -24,7 +24,7 @@ from pyegeria import (
     PropertyServerException,
     UserNotAuthorizedException, NO_CATEGORIES_FOUND,
     )
-from pyegeria.commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
+from commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 from pyegeria._globals import NO_GLOSSARIES_FOUND
 
 disable_ssl_warnings = True
@@ -44,9 +44,9 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "250"))
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
 
 def display_glossary_terms(

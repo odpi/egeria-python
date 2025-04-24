@@ -126,7 +126,43 @@ class TestMetadataExplorer:
         finally:
             m_client.close_session()
 
+    def test_link_member_data_fieldy(self):
+        struct_guid = "b4361286-31ad-42d2-8315-cb013b24fe1a"
+        member_guid = "d58698e3-0e9c-4237-9855-3c5949e5e64a"
 
+        body = {
+          "class" : "MemberDataFieldRequestBody",
+          "properties": {
+            "class": "MemberDataFieldProperties",
+            "dataFieldPosition": 0,
+            "minCardinality": 0,
+            "maxCardinality": -1,
+
+          }
+        }
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.link_member_data_field(struct_guid,member_guid, body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+            )
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
 
     def test_find_all_data_structures(self):
 
@@ -194,7 +230,306 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structures_by_guid(guid, output_format="MERMAID")
+            response = m_client.get_data_structures_by_guid(guid, output_format="JSON")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if isinstance(response, list | dict):
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\tResponse is: \n" + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+
+    def test_create_data_field(self):
+        name = "Test Data Structure"
+        description = "Test Data Structure Description"
+
+        body =  {
+          "properties": {
+            "class": "DataFieldProperties",
+            "qualifiedName": "dataField::radio_name",
+            "displayName": "radio_name",
+            "namespace": "",
+            "description": "What is the name of the radio",
+            "versionIdentifier": ".1",
+            "aliases": [
+              "transmitter"
+            ],
+            "namePatterns": [],
+            "isDeprecated": False,
+            "isNullable": False,
+            "dataType": "String",
+            "minimumLength": 3,
+            "length": 20,
+            "precision": 0,
+            "orderedValues": False,
+            "sortOrder": "UNSORTED",
+
+            }
+          }
+
+
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.create_data_field(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+            )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_find_all_data_field(self):
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.find_all_data_fields(output_format="MERMAID")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_field_by_name(self):
+        name = "radio_name"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_fields_by_name(name)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_field_by_guid(self):
+        guid = "d58698e3-0e9c-4237-9855-3c5949e5e64a"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_field_by_guid(guid, output_format="DICT")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if isinstance(response, list | dict):
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_create_data_class(self):
+        name = "Purchase Date"
+        description = "Date of purchase in YYYY-MM-DD format"
+
+        body =  {
+          "properties": {
+            "class": "DataClassProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespace": "add scope of this data class's applicability.",
+            "matchPropertyNames": [
+              "name1",
+              "name2"
+            ],
+            "matchThreshold": 0,
+            "specification": "",
+            "specificationDetails": {
+              "property1": "propertyValue1",
+              "property2": "propertyValue2"
+            },
+            "dataType": "",
+            "allowsDuplicateValues": true,
+            "isNullable": false,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns": [],
+            "additionalProperties": {
+              "property1": "propertyValue1",
+              "property2": "propertyValue2"
+            }
+          }
+        }
+
+
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.create_data_class(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+            )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_find_all_data_field(self):
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.find_all_data_fields(output_format="DICT")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_field_by_name(self):
+        name = "radio_name"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_fields_by_name(name)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_field_by_guid(self):
+        guid = "d58698e3-0e9c-4237-9855-3c5949e5e64a"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_field_by_guid(guid, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

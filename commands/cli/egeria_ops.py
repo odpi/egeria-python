@@ -15,8 +15,8 @@ import click
 from trogon import tui
 
 # from pyegeria import ServerOps
-from pyegeria.commands.cli.ops_config import Config
-from pyegeria.commands.ops.gov_server_actions import (
+from commands.cli.ops_config import Config
+from commands.ops.gov_server_actions import (
     add_catalog_target,
     refresh_gov_eng_config,
     remove_catalog_target,
@@ -24,24 +24,24 @@ from pyegeria.commands.ops.gov_server_actions import (
     stop_server,
     update_catalog_target,
 )
-from pyegeria.commands.ops.list_archives import display_archive_list
-from pyegeria.commands.ops.list_catalog_targets import display_catalog_targets
-from pyegeria.commands.ops.load_archive import load_archive
-from pyegeria.commands.ops.monitor_engine_activity import display_engine_activity
-from pyegeria.commands.ops.monitor_engine_activity_c import display_engine_activity_c
-from pyegeria.commands.ops.monitor_gov_eng_status import display_gov_eng_status
-from pyegeria.commands.ops.monitor_integ_daemon_status import (
+from commands.ops.list_archives import display_archive_list
+from commands.ops.list_catalog_targets import display_catalog_targets
+from commands.ops.load_archive import load_archive
+from commands.ops.monitor_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity_c import display_engine_activity_c
+from commands.ops.monitor_gov_eng_status import display_gov_eng_status
+from commands.ops.monitor_integ_daemon_status import (
     display_integration_daemon_status,
 )
-from pyegeria.commands.ops.monitor_platform_status import (
+from commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
-from pyegeria.commands.ops.monitor_server_startup import display_startup_status
-from pyegeria.commands.ops.monitor_server_status import (
+from commands.ops.monitor_server_startup import display_startup_status
+from commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
-from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
-from pyegeria.commands.ops.restart_integration_daemon import restart_connector
+from commands.ops.refresh_integration_daemon import refresh_connector
+from commands.ops.restart_integration_daemon import restart_connector
 
 # class Config(object):
 #     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,

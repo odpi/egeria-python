@@ -81,11 +81,13 @@ def supply_chain_viewer(
         table.add_column("Description", justify = 'center')
         table.add_column("Segments", justify = 'center')
 
-        supply_chains = client.find_information_supply_chains(search_string)
+        supply_chains = client.find_information_supply_chains(search_string )
         if isinstance(supply_chains, list) is False:
             return "No Supply Chains found"
 
         for sc in supply_chains:
+            if sc is None:
+                continue
             sc_name = sc["properties"].get("displayName", "---")
             sc_qname = sc["properties"].get("qualifiedName", "---")
             sc_guid = sc["elementHeader"]["guid"]

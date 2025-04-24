@@ -14,13 +14,13 @@ import os
 import click
 from trogon import tui
 
-from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
-from pyegeria.commands.cat.get_asset_graph import asset_viewer
-from pyegeria.commands.cat.get_collection import collection_viewer
-from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
-from pyegeria.commands.cat.get_project_structure import project_structure_viewer
-from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
-from pyegeria.commands.cat.glossary_actions import (
+from commands.cat.dr_egeria_md import process_markdown_file
+from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.get_collection import collection_viewer
+from commands.cat.get_project_dependencies import project_dependency_viewer
+from commands.cat.get_project_structure import project_structure_viewer
+from commands.cat.get_tech_type_elements import tech_viewer
+from commands.cat.glossary_actions import (
     create_glossary,
     create_term,
     delete_glossary,
@@ -32,31 +32,31 @@ from pyegeria.commands.cat.glossary_actions import (
     delete_category,
     add_term_to_category,
     remove_term_from_category)
-from pyegeria.commands.cat.list_assets import display_assets
-from pyegeria.commands.cat.list_categories import display_categories
-from pyegeria.commands.cat.list_cert_types import display_certifications
-from pyegeria.commands.cat.list_collections import display_collections
-from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
-from pyegeria.commands.cat.list_deployed_database_schemas import (
+from commands.cat.list_assets import display_assets
+from commands.cat.list_categories import display_categories
+from commands.cat.list_cert_types import display_certifications
+from commands.cat.list_collections import display_collections
+from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
     )
-from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
-from pyegeria.commands.cat.list_deployed_servers import display_servers_by_dep_imp
-from pyegeria.commands.cat.list_glossaries import display_glossaries
-from pyegeria.commands.cat.list_projects import display_project_list
-from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
-from pyegeria.commands.cat.list_tech_types import display_tech_types
-from pyegeria.commands.cat.list_terms import display_glossary_terms
-from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
-from pyegeria.commands.cat.list_user_ids import list_user_ids
-from pyegeria.commands.cli.ops_config import Config
-from pyegeria.commands.my.todo_actions import (
+from commands.cat.list_deployed_databases import list_deployed_databases
+from commands.cat.list_deployed_servers import display_servers_by_dep_imp
+from commands.cat.list_glossaries import display_glossaries
+from commands.cat.list_projects import display_project_list
+from commands.cat.list_tech_type_elements import list_tech_elements
+from commands.cat.list_tech_types import display_tech_types
+from commands.cat.list_terms import display_glossary_terms
+from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.list_user_ids import list_user_ids
+from commands.cli.ops_config import Config
+from commands.my.todo_actions import (
     create_todo,
     delete_todo,
     mark_todo_complete,
     reassign_todo,
     )
-from pyegeria.commands.tech.list_asset_types import display_asset_types
+from commands.tech.list_asset_types import display_asset_types
 
 
 # @tui

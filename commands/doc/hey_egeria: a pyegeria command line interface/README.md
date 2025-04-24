@@ -131,7 +131,7 @@ A good first use is to validate that we are able to communicate with an Egeria p
 `hey_egeria ops show servers status`
 
 Which should produce an output similar to:
-![out-server-status  2024-11-10 at 18.15.42@2x.png](images/out-server-status%20%202024-11-10%20at%2018.15.42%402x.png)
+![out-server-status  2024-11-10 at 18.15.42@2x.png](images/out-server-status  2024-11-10 at 18.15.42@2x.png)
 **N.B. if you are trying this out in your terminal, you may need to type either `ctrl-c` or `q` to quit the display.
 
 We can also execute a variation of this command to display an extended version of this status.
@@ -139,7 +139,7 @@ We can also execute a variation of this command to display an extended version o
 `hey_egeria ops show servers status --full` 
 which will return much more descriptive information about the servers and their status:
 
-![out-server-status-full 2024-11-10 at 18.25.14@2x.png](images/out-server-status-full%202024-11-10%20at%2018.25.14%402x.png)
+![out-server-status-full 2024-11-10 at 18.25.14@2x.png](images/out-server-status-full 2024-11-10 at 18.25.14@2x.png)
 
 The general structure of the command is:
 
@@ -160,9 +160,9 @@ A more visual representation of **hey_egeria** is shown in the following two dia
 and the second shows the structure and all the commands. **PLEASE NOTE** - **hey_egeria** continues to evolve; view all 
 images as representing a point-in-time representation. The principles will hold true but details may vary.
 
-![Xmind 1731421782704.png](images/Xmind%201731421782704.png)
+![Xmind 1731421782704.png](images/Xmind 1731421782704.png)
 
-![Xmind 1731422134920.png](images/Xmind%201731422134920.png)
+![Xmind 1731422134920.png](images/Xmind 1731422134920.png)
 
 There is a lot of detail here that can seem a bit daunting to learn - so to make things easier, we have a TUI 
 (Textual User Interface) that allows us to browse through the commands with documentation and guidance about how to fill out each command - and then to execute the command. Here is what it looks like:
@@ -187,10 +187,10 @@ to view the results.
 We can return to the example above, this time using the TUI to help us fill out the parameters. Here is what the TUI 
 looks like to execute the same command:
 
-![tui-show-server-status 2024-11-10 at 18.52.01@2x.png](images/tui-show-server-status%202024-11-10%20at%2018.52.01%402x.png)
+![tui-show-server-status 2024-11-10 at 18.52.01@2x.png](images/tui-show-server-status 2024-11-10 at 18.52.01@2x.png)
 To show the full version of the server status we would select the check-box for --full as shown here:
 
-![tui-show-server-status-full 2024-11-10.png](images/tui-show-server-status-full%202024-11-10.png)
+![tui-show-server-status-full 2024-11-10.png](images/tui-show-server-status-full 2024-11-10.png)
 As you can see, the TUI provides visibility into the available command options as well as descriptive text explaining
 what they are.
 
@@ -199,7 +199,7 @@ want to see more details about a specific kind of server. For instance,  to view
 we would use `hey_egeria ops show integrations status` which we could either type at the terminal or enter via the TUI.
 The output of this command looks like:
 
-![out-integ-status-live 2024-11-12 at 16.44.12@2x.png](images/out-integ-status-live%202024-11-12%20at%2016.44.12%402x.png)
+![out-integ-status-live 2024-11-12 at 16.44.12@2x.png](images/out-integ-status-live 2024-11-12 at 16.44.12@2x.png)
 
 There are a few different styles of output. Some of the tables are **live monitors**. That is, the commands run until interrupted by either a failure or the user typing `ctrl-c`. They reflect the status of 
 the object they are monitoring. Quite useful for operational monitoring - but the number of rows displayed is limited by
@@ -212,7 +212,7 @@ the `list` flag in the parameter list of the TUI like this:
 
 The list view looks a bit different, but contains the same information. 
 
-![out-integ-status-list 2024-11-12 at 16.45.26.png](images/out-integ-status-list%202024-11-12%20at%2016.45.26.png)
+![out-integ-status-list 2024-11-12 at 16.45.26.png](images/out-integ-status-list 2024-11-12 at 16.45.26.png)
 
 Pressing the `space-bar` will advance the page. You can exit the display by pressing `q`. There are other options
 that generally follow the syntax of the `more` command.
@@ -225,7 +225,7 @@ create a glossary term. If the user specified in the command has permissions the
 
 As an example, lets look at the command to load a content pack (or archive) into a repository. The 
 TUI page looks like this:
-![tui-load-archive 2024-11-10 at 19.19.09@2x.png](images/tui-load-archive%202024-11-10%20at%2019.19.09%402x.png)
+![tui-load-archive 2024-11-10 at 19.19.09@2x.png](images/tui-load-archive 2024-11-10 at 19.19.09@2x.png)
 
 Creating a glossary term looks like:
 ![tui-create-term 2024-11-06 at 20.46.35.png](../glossary/images/tui-create-term%202024-11-06%20at%2020.46.35.png)
@@ -292,11 +292,11 @@ For frequently used commands this can be a bit quicker.
 
 We start with a terminal window and type `hey_egeria` and we see that we get a lot of help information, the commands that
 are available at this point and optional parameters that we can pass: 
-![hey_egeria  2024-11-12 at 20.38.43.png](images/hey_egeria%20%202024-11-12%20at%2020.38.43.png)
+![hey_egeria  2024-11-12 at 20.38.43.png](images/hey_egeria  2024-11-12 at 20.38.43.png)
 We can add one of the commands to the end of the clause and see that the next set of commands to choose from. In the 
 following screenshot below we show incrementally building up the final command clause by clause. Till we finally have the
 `hey_egeria cat show glossary glossaries`. 
-![hey_egeria cat 2024-11-12 at 21.41.43.png](images/hey_egeria%20cat%202024-11-12%20at%2021.41.43.png)
+![hey_egeria cat 2024-11-12 at 21.41.43.png](images/hey_egeria cat 2024-11-12 at 21.41.43.png)
 
 Of course, if we remember the command we can just type it in and execute it.
 
@@ -313,7 +313,7 @@ is
 
 Each of these commands has a help option that lists the available parameters. For example:
 
-![short-cut commands 2024-11-12 at 22.22.13.png](images/short-cut%20commands%202024-11-12%20at%2022.22.13.png)
+![short-cut commands 2024-11-12 at 22.22.13.png](images/short-cut commands 2024-11-12 at 22.22.13.png)
 
 The full list of available short-cut commands can be found by typing `pipx list`. It is also shown above in the 
 installation section.

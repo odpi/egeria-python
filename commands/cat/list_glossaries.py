@@ -3,10 +3,10 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-List categories for a category.
+Unit tests for the Utils helper functions using the Pytest framework.
 
 
-A simple display for category terms
+A simple display for glossary terms
 """
 import argparse
 import os
@@ -15,6 +15,7 @@ import time
 
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
@@ -42,15 +43,15 @@ EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "150"))
-EGERIA_category_PATH = os.environ.get("EGERIA_category_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
 
 
-def display_categories(
+def display_glossaries(
     search_string: str = "*",
     view_server: str = EGERIA_VIEW_SERVER,
     view_url: str = EGERIA_VIEW_SERVER_URL,
@@ -58,13 +59,13 @@ def display_categories(
     user_pass: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
-    output_format: str = "TABLE",
+    output_format: str = "JSON"
 ):
-    """Display either a specified category or all categories if the search_string is '*'.
+    """Display either a specified glossary or all glossaries if the search_string is '*'.
     Parameters
     ----------
     search_string : str, default is '*'
-        The string used to search for categories.
+        The string used to search for glossaries.
     view_server : str
         The view server name or address where the Egeria services are hosted.
     view_url : str
@@ -78,11 +79,15 @@ def display_categories(
     width : int, optional
         The width of the console output (default is EGERIA_WIDTH).
     output_format: str, optional, default is 'JSON'
-        One of  FORM, REPORT, TABLE
+        One of TABLE, FORM, REPORT
     """
     m_client = EgeriaTech(view_server, view_url, user_id=user, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token()
-
+    console = Console(
+        style="bold bright_white on black",
+        width=width,
+        force_terminal=not jupyter,
+        )
 
     try:
         if output_format == "FORM":
@@ -91,20 +96,23 @@ def display_categories(
             action = "Report"
         if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
-            file_name = f"Categories-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
+            file_name = f"Glossaries-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = m_client.find_glossary_categories(search_string, output_format=output_format)
-            if output == "NO_CATEGORIES_FOUND":
-                print(f"\n==> No categories found for search string '{search_string}'")
+            output = m_client.find_glossaries(search_string,  None, output_format=output_format)
+            if output == "NO_GLOSSARIES_FOUND":
+                print(f"\n==> No glossaries found for search string '{search_string}'")
                 return
-            with open(full_file_path, 'w') as f:
-                f.write(output)
-            print(f"\n==> Categories output written to {full_file_path}")
-            return
+            try:
+                with open(full_file_path, 'w') as f:
+                    f.write(output)
+                print(f"\n==> Glossaries output written to {full_file_path}")
+                return
+            except Exception:
+                console.print_exception()
 
         table = Table(
-            title=f"Category List @ {time.asctime()}",
+            title=f"Glossary List @ {time.asctime()}",
             style="bright_white on black",
             header_style="bright_white on dark_blue",
             title_style="bold white on black",
@@ -114,44 +122,38 @@ def display_categories(
             caption=f"View Server '{view_server}' @ Platform - {view_url}",
             expand=True,
         )
-        table.add_column("Category Name")
+        table.add_column("Glossary Name")
         table.add_column(
             "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
         )
+        table.add_column("Language")
         table.add_column("Description")
-        table.add_column("In Glossary")
-        table.add_column("Parent Category")
+        table.add_column("Usage")
+        table.add_column("Categories")
 
-        categories = m_client.find_glossary_categories(search_string)
-        if type(categories) is list:
-            sorted_category_list = sorted(
-                categories, key=lambda k: k["glossaryCategoryProperties"]["displayName"]
+        glossaries = m_client.find_glossaries(search_string)
+        if type(glossaries) is list:
+            sorted_glossary_list = sorted(
+                glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
             )
-            for category in sorted_category_list:
-                display_name = category["glossaryCategoryProperties"].get("displayName",'---')
-                qualified_name = category["glossaryCategoryProperties"]["qualifiedName"]
-                category_guid = category["elementHeader"]["guid"]
-                q_name = Text(f"{qualified_name}\n&\n{category_guid}", justify="center")
-                description = category["glossaryCategoryProperties"].get("description",'---')
-                classification_props = category["elementHeader"]['classifications'][0].get('classificationProperties',None)
-                glossary_qualified_name = '---'
-                if classification_props is not None:
-                    glossary_guid = classification_props.get('anchorScopeGUID','---')
-                    glossary_qualified_name = (
-                        m_client.get_glossary_by_guid(glossary_guid))['glossaryProperties']['qualifiedName']
-                cat_info = m_client.get_category_parent(category_guid)
-                if type(cat_info) is dict:
-                    parent_qn = cat_info['glossaryCategoryProperties']['qualifiedName']
-                else:
-                    parent_qn = '---'
+            for glossary in sorted_glossary_list:
+                display_name = glossary["glossaryProperties"].get("displayName",'---')
+                qualified_name = glossary["glossaryProperties"]["qualifiedName"]
+                guid = glossary["elementHeader"]["guid"]
+                q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
+                language = glossary["glossaryProperties"].get("language",'---')
+                description = glossary["glossaryProperties"].get("description",'---')
+                usage = glossary["glossaryProperties"].get("usage",'---')
 
+                categories = m_client.get_categories_for_glossary(guid)
+                cat_md = ''
+                if type(categories) is list:
+                    for category in categories:
+                        cat_md += f"* {category['glossaryCategoryProperties'][('displayName')]}\n"
+                    cat_md = cat_md.strip()
 
-                table.add_row(display_name, q_name, description, glossary_qualified_name, parent_qn)
-            console = Console(
-                style="bold bright_white on black",
-                width=width,
-                force_terminal=not jupyter,
-            )
+                table.add_row(display_name, q_name, language, description, usage, Markdown(cat_md))
+
             console.print(table)
 
     except (InvalidParameterException, PropertyServerException) as e:
@@ -176,13 +178,11 @@ def main():
 
     try:
         search_string = Prompt.ask(
-            "Enter the category you are searching for or '*' for all:", default="*"
+            "Enter the glossary you are searching for or '*' for all:", default="*"
         )
-        output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"],
-                                   default="TABLE")
-
-        display_categories(search_string, server, url, userid,
-                           user_pass, output_format = output_format)
+        output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"], default="TABLE")
+        display_glossaries(search_string, server, url, userid,
+                           user_pass, output_format=output_format)
 
     except KeyboardInterrupt:
         pass

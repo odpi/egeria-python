@@ -50,11 +50,11 @@ def load_mermaid():
     """Inject Mermaid.js library"""
     # Alternative CDN URL via unpkg
     mermaid_js = """
-    <script src="https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/mermaid@11.6.0/dist/mermaid.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             mermaid.initialize({startOnLoad: true},
-            {maxTextSize: 190000});
+            {maxTextSize: 300000});
         });
     </script>
 
@@ -125,7 +125,7 @@ def construct_mermaid_web(mermaid_str: str) -> str:
           <style type="text/css">
             #mySvgId {
             width: 100%;
-            height: 600px;
+            height: 1200px;
             overflow: scroll;
             border: 2px solid #ccc;
             position: relative;

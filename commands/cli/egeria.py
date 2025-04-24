@@ -15,12 +15,12 @@ import sys
 import click
 from trogon import tui
 
-from pyegeria.commands.cat.get_asset_graph import asset_viewer
-from pyegeria.commands.cat.get_collection import collection_viewer
-from pyegeria.commands.cat.get_project_dependencies import project_dependency_viewer
-from pyegeria.commands.cat.get_project_structure import project_structure_viewer
-from pyegeria.commands.cat.get_tech_type_elements import tech_viewer
-from pyegeria.commands.cat.glossary_actions import (
+from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.get_collection import collection_viewer
+from commands.cat.get_project_dependencies import project_dependency_viewer
+from commands.cat.get_project_structure import project_structure_viewer
+from commands.cat.get_tech_type_elements import tech_viewer
+from commands.cat.glossary_actions import (
     create_glossary,
     create_term,
     delete_glossary,
@@ -33,44 +33,40 @@ from pyegeria.commands.cat.glossary_actions import (
     add_term_to_category,
     remove_term_from_category
 )
-from pyegeria.commands.cat.dr_egeria_jupyter import process_jupyter_notebook
-from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
 
-from pyegeria.commands.cat.list_categories import display_categories
-from pyegeria.commands.cat.list_assets import display_assets
-from pyegeria.commands.cat.list_cert_types import display_certifications
-from pyegeria.commands.cat.list_collections import display_collections
-from pyegeria.commands.cat.list_deployed_catalogs import list_deployed_catalogs
-from pyegeria.commands.cat.list_deployed_database_schemas import (
+from commands.cat.list_categories import display_categories
+from commands.cat.list_assets import display_assets
+from commands.cat.list_cert_types import display_certifications
+from commands.cat.list_collections import display_collections
+from commands.cat.list_deployed_catalogs import list_deployed_catalogs
+from commands.cat.list_deployed_database_schemas import (
     list_deployed_database_schemas,
 )
-from pyegeria.commands.cat.list_deployed_databases import list_deployed_databases
-from pyegeria.commands.cat.list_glossaries import display_glossaries
-from pyegeria.commands.cat.list_projects import display_project_list
-from pyegeria.commands.cat.list_deployed_servers import display_servers_by_dep_imp
-from pyegeria.commands.cat.list_tech_type_elements import list_tech_elements
-from pyegeria.commands.cat.list_tech_types import display_tech_types
-from pyegeria.commands.cat.list_terms import display_glossary_terms
-from pyegeria.commands.cat.list_todos import display_to_dos as list_todos
-from pyegeria.commands.cat.list_user_ids import list_user_ids
+from commands.cat.list_deployed_databases import list_deployed_databases
+from commands.cat.list_glossaries import display_glossaries
+from commands.cat.list_projects import display_project_list
+from commands.cat.list_deployed_servers import display_servers_by_dep_imp
+from commands.cat.list_tech_type_elements import list_tech_elements
+from commands.cat.list_tech_types import display_tech_types
+from commands.cat.list_terms import display_glossary_terms
+from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.list_user_ids import list_user_ids
 
-from pyegeria.commands.cat.dr_egeria_md import process_markdown_file
+from commands.cat.dr_egeria_md import process_markdown_file
 
-from pyegeria.commands.cli.egeria_login_tui import login
-from pyegeria.commands.cli.egeria_ops import show_server
-from pyegeria.commands.cli.ops_config import Config
-from pyegeria.commands.my.list_my_profile import display_my_profile
-from pyegeria.commands.my.list_my_roles import display_my_roles
-from pyegeria.commands.my.monitor_my_todos import display_my_todos
-from pyegeria.commands.my.monitor_open_todos import display_todos
-from pyegeria.commands.my.todo_actions import (
+from commands.cli.ops_config import Config
+from commands.my.list_my_profile import display_my_profile
+from commands.my.list_my_roles import display_my_roles
+from commands.my.monitor_my_todos import display_my_todos
+from commands.my.monitor_open_todos import display_todos
+from commands.my.todo_actions import (
     change_todo_status,
     create_todo,
     delete_todo,
     mark_todo_complete,
     reassign_todo,
 )
-from pyegeria.commands.ops.gov_server_actions import (
+from commands.ops.gov_server_actions import (
     add_catalog_target,
     refresh_gov_eng_config,
     remove_catalog_target,
@@ -78,61 +74,61 @@ from pyegeria.commands.ops.gov_server_actions import (
     stop_server,
     update_catalog_target,
 )
-from pyegeria.commands.ops.list_archives import display_archive_list
-from pyegeria.commands.ops.list_catalog_targets import display_catalog_targets
-from pyegeria.commands.ops.load_archive import load_archive
-from pyegeria.commands.ops.monitor_engine_activity import display_engine_activity
-from pyegeria.commands.ops.monitor_engine_activity_c import display_engine_activity_c
-from pyegeria.commands.ops.monitor_gov_eng_status import display_gov_eng_status
-from pyegeria.commands.ops.monitor_integ_daemon_status import (
+from commands.ops.list_archives import display_archive_list
+from commands.ops.list_catalog_targets import display_catalog_targets
+from commands.ops.load_archive import load_archive
+from commands.ops.monitor_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity_c import display_engine_activity_c
+from commands.ops.monitor_gov_eng_status import display_gov_eng_status
+from commands.ops.monitor_integ_daemon_status import (
     display_integration_daemon_status,
 )
-from pyegeria.commands.ops.monitor_platform_status import (
+from commands.ops.monitor_platform_status import (
     display_status as p_display_status,
 )
-from pyegeria.commands.ops.monitor_server_startup import display_startup_status
-from pyegeria.commands.ops.monitor_server_status import (
+from commands.ops.monitor_server_startup import display_startup_status
+from commands.ops.monitor_server_status import (
     display_status as s_display_status,
 )
-from pyegeria.commands.ops.refresh_integration_daemon import refresh_connector
-from pyegeria.commands.ops.restart_integration_daemon import restart_connector
-from pyegeria.commands.tech.get_element_info import display_elements
-from pyegeria.commands.tech.get_guid_info import display_guid
-from pyegeria.commands.tech.get_tech_details import tech_details_viewer
-from pyegeria.commands.tech.get_tech_type_template import template_viewer
-from pyegeria.commands.tech.list_all_om_type_elements import list_elements
-from pyegeria.commands.tech.list_all_om_type_elements_x import list_elements_x
-from pyegeria.commands.tech.list_all_related_elements import list_related_elements
-from pyegeria.commands.tech.list_anchored_elements import display_anchored_elements
-from pyegeria.commands.tech.list_asset_types import display_asset_types
-from pyegeria.commands.tech.list_elements_by_classification_by_property_value import (
+from commands.ops.refresh_integration_daemon import refresh_connector
+from commands.ops.restart_integration_daemon import restart_connector
+from commands.tech.get_element_info import display_elements
+from commands.tech.get_guid_info import display_guid
+from commands.tech.get_tech_details import tech_details_viewer
+from commands.tech.get_tech_type_template import template_viewer
+from commands.tech.list_all_om_type_elements import list_elements
+from commands.tech.list_all_om_type_elements_x import list_elements_x
+from commands.tech.list_all_related_elements import list_related_elements
+from commands.tech.list_anchored_elements import display_anchored_elements
+from commands.tech.list_asset_types import display_asset_types
+from commands.tech.list_elements_by_classification_by_property_value import (
     find_elements_by_classification_by_prop_value,
 )
-from pyegeria.commands.tech.list_elements_by_property_value import (
+from commands.tech.list_elements_by_property_value import (
     find_elements_by_prop_value,
 )
-from pyegeria.commands.tech.list_elements_by_property_value_x import (
+from commands.tech.list_elements_by_property_value_x import (
     find_elements_by_prop_value_x,
 )
-from pyegeria.commands.tech.list_elements_for_classification import (
+from commands.tech.list_elements_for_classification import (
     list_classified_elements,
 )
-from pyegeria.commands.tech.list_gov_action_processes import display_gov_processes
-from pyegeria.commands.tech.list_information_supply_chains import supply_chain_viewer
-from pyegeria.commands.tech.list_registered_services import display_registered_svcs
-from pyegeria.commands.tech.list_related_elements_with_prop_value import (
+from commands.tech.list_gov_action_processes import display_gov_processes
+from commands.tech.list_information_supply_chains import supply_chain_viewer
+from commands.tech.list_registered_services import display_registered_svcs
+from commands.tech.list_related_elements_with_prop_value import (
     list_related_elements_with_prop_value,
 )
-from pyegeria.commands.tech.list_related_specification import (
+from commands.tech.list_related_specification import (
     display_related_specification,
 )
-from pyegeria.commands.tech.list_relationship_types import display_relationship_types
-from pyegeria.commands.tech.list_relationships import list_relationships
-from pyegeria.commands.tech.list_solution_blueprints import blueprint_list
-from pyegeria.commands.tech.list_solution_components import solution_component_list
-from pyegeria.commands.tech.list_solution_roles import solution_role_list
-from pyegeria.commands.tech.list_tech_templates import display_templates_spec
-from pyegeria.commands.tech.list_valid_metadata_values import display_metadata_values
+from commands.tech.list_relationship_types import display_relationship_types
+from commands.tech.list_relationships import list_relationships
+from commands.tech.list_solution_blueprints import blueprint_list
+from commands.tech.list_solution_components import solution_component_list
+from commands.tech.list_solution_roles import solution_role_list
+from commands.tech.list_tech_templates import display_templates_spec
+from commands.tech.list_valid_metadata_values import display_metadata_values
 
 
 @tui()

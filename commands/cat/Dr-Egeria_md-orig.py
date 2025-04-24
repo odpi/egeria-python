@@ -5,17 +5,16 @@ import json
 import os
 from rich import print
 from rich.console import Console
-from rich.markdown import Markdown
 
-from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                                          get_current_datetime_string, process_per_proj_upsert_command, commands,
+from pyegeria.md_processing_utils import (commands,
                                           process_provenance_command)
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                       process_category_upsert_command,
-                      get_current_datetime_string, process_per_proj_upsert_command, commands, EgeriaTech
+                      get_current_datetime_string, process_per_proj_upsert_command, EgeriaTech
                       )
+import commands
 from datetime import datetime
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -37,9 +36,9 @@ EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 220)
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "pyegeria/commands/cat/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "pyegeria/commands/cat/dr_egeria_outbox")
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
 console = Console(width=int(EGERIA_WIDTH))
 

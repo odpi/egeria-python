@@ -14,12 +14,12 @@ import os
 import click
 from trogon import tui
 
-from pyegeria.commands.cli.ops_config import Config
-from pyegeria.commands.my.list_my_profile import display_my_profile
-from pyegeria.commands.my.list_my_roles import display_my_roles
-from pyegeria.commands.my.monitor_my_todos import display_my_todos
-from pyegeria.commands.my.monitor_open_todos import display_todos
-from pyegeria.commands.my.todo_actions import (
+from commands.cli.ops_config import Config
+from commands.my.list_my_profile import display_my_profile
+from commands.my.list_my_roles import display_my_roles
+from commands.my.monitor_my_todos import display_my_todos
+from commands.my.monitor_open_todos import display_todos
+from commands.my.todo_actions import (
     change_todo_status,
     create_todo,
     delete_todo,
