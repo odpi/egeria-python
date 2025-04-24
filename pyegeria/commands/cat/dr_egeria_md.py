@@ -133,6 +133,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
                       f"\tPlease correct and try again. \n")
                 final_output.append(current_block)
+                final_output.append('\n___\n')
         else:
             # If there is no command, append the block as-is
             final_output.append(current_block)

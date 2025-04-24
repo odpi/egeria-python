@@ -144,8 +144,8 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            glossary_guid = "85a46c28-e7be-4241-ba94-ef7ea5f8edec"
-            g_client.delete_glossary(glossary_guid, cascade = False)
+            glossary_guid = "81b618ae-cadc-4c23-ad6e-4b1113643ddb"
+            g_client.delete_glossary(glossary_guid, cascade = True)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

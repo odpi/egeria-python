@@ -35,7 +35,7 @@ TESTING_EGERIA_PLATFORM_URL = os.environ.get(
     "TESTING_EGERIA_PLATFORM_URL", "https://localhost:9443"
 )
 
-view_server = "view-server"
+view_server = "qs-view-server"
 user = "erinoverview"
 password = "secret"
 

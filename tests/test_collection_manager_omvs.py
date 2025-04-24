@@ -51,7 +51,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             parent_guid = "eefedc09-98d6-4f65-9a3e-b2c546571f44"
 
-            response = c_client.get_linked_collections(parent_guid)
+            response = c_client.get_attached_collections(parent_guid)
             duration = time.perf_counter() - start_time
             print(f"response type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")

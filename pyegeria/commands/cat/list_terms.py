@@ -25,6 +25,7 @@ from pyegeria import (
     UserNotAuthorizedException, NO_CATEGORIES_FOUND,
     )
 from pyegeria.commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
+from pyegeria._globals import NO_GLOSSARIES_FOUND
 
 disable_ssl_warnings = True
 
@@ -99,7 +100,7 @@ def display_glossary_terms(
         token = g_client.create_egeria_bearer_token(user_id, user_pass)
         if (glossary_name is not None) and (glossary_name != "*"):
             glossary_guid = g_client.get_guid_for_name(glossary_name)
-            if glossary_guid == "Glossary guid not found":
+            if glossary_guid == NO_GLOSSARIES_FOUND:
                 console.print(
                     f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
                 )
@@ -188,14 +189,10 @@ def display_glossary_terms(
             q_name = Text(
                 f"{qualified_name}\n&\n{term_guid}\n&\n{aliases}", style=style, justify="center"
             )
-            abbrev = Text(props.get("abbreviation", "---"), style=style, justify="center")
-            summary = Text(props.get("summary", "---"), style=style)
+            abbrev = props.get("abbreviation", "---")
+            summary = props.get("summary", "---")
             description = Markdown(props.get("description",'---'))
-            version = Text(
-                props.get("publishVersionIdentifier", "---"),
-                style=style,
-                justify="center",
-            )
+            version = props.get("publishVersionIdentifier", "---")
             example = props.get("example", "---")
             usage = props.get("usage", "---")
             ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
@@ -217,7 +214,7 @@ def display_glossary_terms(
             category_list_md = ""
             category_list = g_client.get_categories_for_term(term_guid)
             if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
-                category_list_md = ['---']
+                category_list_md = '---'
             elif isinstance(category_list, list) and len(category_list) > 0:
                 for category in category_list:
                     category_name = category["glossaryCategoryProperties"].get("displayName",'---')

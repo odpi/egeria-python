@@ -14,7 +14,7 @@ disable_ssl_warnings = True
 enable_ssl_check = False
 max_paging_size = 500
 default_time_out = 30
-
+DEBUG_LEVEL = "quiet"
 comment_types = (
     "ANSWER",
     "OTHER",
@@ -44,3 +44,4 @@ NO_TERMS_FOUND = "No terms found"
 NO_CATEGORIES_FOUND = "No categories found"
 NO_ELEMENT_FOUND = "No element found"
 NO_PROJECTS_FOUND = "No projects found"
+NO_COLLECTION_FOUND = "No collection found"

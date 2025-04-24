@@ -53,7 +53,8 @@ def load_mermaid():
     <script src="https://unpkg.com/mermaid@11.4.1/dist/mermaid.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            mermaid.initialize({startOnLoad: true});
+            mermaid.initialize({startOnLoad: true},
+            {maxTextSize: 190000});
         });
     </script>
 

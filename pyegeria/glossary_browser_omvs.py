@@ -52,7 +52,7 @@ class GlossaryBrowser(Client):
         """
         Creates a preamble string and an elements action based on the given object type, search string,
         and output format. The preamble provides a descriptive header based on the intent: To make a form,
-        a report, or unadorned markdwon. The elements action specifies the action to be taken on the object type.
+        a report, or unadorned Markdown. The element action specifies the action to be taken on the object type.
 
         Args:
             obj_type: The type of object being updated or reported on (e.g., "Product", "Category").
@@ -132,17 +132,20 @@ class GlossaryBrowser(Client):
         categories = self.get_categories_for_glossary(guid)
         cat_md_display = ''
         cat_md_qn = ''
+        category_names = ''
+        category_qualified_names = ''
+
         if type(categories) is list:
             for category in categories:
                 cat_md_display += f" {category['glossaryCategoryProperties'][('displayName')]},\n"
                 cat_md_qn += f" {category['glossaryCategoryProperties'][('qualifiedName')]},\n"
-            cat_md = cat_md_display.strip()
-            cat_md_qn = cat_md_qn.strip()
+            category_names = cat_md_display.rstrip(',')
+            category_qualified_names = cat_md_qn.rstrip(',')
 
         return {
             'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'language': language, 'usage': usage, 'qualified_name': qualified_name, 'categories_dn_md': cat_md_display,
-            'categories_qn_md': cat_md_qn
+            'language': language, 'usage': usage, 'qualified_name': qualified_name, 'categories_names': category_names,
+            'categories_qualified_names': category_qualified_names
             }
 
     def _generate_entity_md(self, elements: list, elements_action: str, output_format: str, entity_type: str,
@@ -182,17 +185,18 @@ class GlossaryBrowser(Client):
 
             # Add common attributes
             for key, value in props.items():
-                # Skip categories_dn_md for FORM output and categories_qn_md for REPORT output
-                if key == 'categories_dn_md' and output_format == 'FORM':
-                    continue
-                if key == 'categories_qn_md' and output_format == 'REPORT':
-                    continue
                 if key not in ['guid', 'properties', 'display_name']:
-                    # Use "Categories" as the label for both categories_qn_md and categories_dn_md
-                    if key == 'categories_qn_md' and output_format == 'FORM':
-                        elements_md += self.make_md_attribute("Categories", value, output_format)
-                    elif key == 'categories_dn_md' and output_format == 'REPORT':
-                        elements_md += self.make_md_attribute("Categories", value, output_format)
+                    # Handle categories based on output format
+                    if key == 'categories_qualified_names':
+                        if output_format == 'FORM':
+                            elements_md += self.make_md_attribute("Category Names", value, output_format)
+                        elif output_format != 'REPORT':  # Include for all formats except REPORT
+                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
+                    elif key == 'categories_names':
+                        if output_format == 'REPORT':
+                            elements_md += self.make_md_attribute("Category Names", value, output_format)
+                        elif output_format != 'FORM':  # Include for all formats except FORM
+                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
                     else:
                         elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
 
@@ -308,7 +312,7 @@ class GlossaryBrowser(Client):
                    {'name': 'Language', 'key': 'language', 'format': True},
                    {'name': 'Description', 'key': 'description', 'format': True},
                    {'name': 'Usage', 'key': 'usage', 'format': True},
-                   {'name': 'Categories', 'key': 'categories_dn_md', 'format': True}, ]
+                   {'name': 'Categories', 'key': 'categories_names', 'format': True}, ]
 
         return self._generate_entity_md_table(elements=elements, search_string=search_string, entity_type="Glossary",
                                               extract_properties_func=self._extract_glossary_properties,
@@ -371,7 +375,7 @@ class GlossaryBrowser(Client):
             list: List of glossary dictionaries
         """
         return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_glossary_properties,
-                                          exclude_keys=['properties', 'categories_qn_md'], output_format=output_format)
+                                          exclude_keys=['properties', 'categories_qualified_names'], output_format=output_format)
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str,
                                output_format: str = 'MD') -> str | list:
@@ -2673,7 +2677,7 @@ class GlossaryBrowser(Client):
         # Process each term element
         for element in term_elements:
             # Extract relationship type from the relationship header
-            relationship_type = element['relatedElement']['relationshipHeader']['type']['typeName']
+            relationship_type = element['relatedBy']['relationshipHeader']['type']['typeName']
 
             # Extract related term information
             related_term = {

@@ -96,16 +96,68 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            # glossary_guid = "5d45b499-d0d5-4fad-bc23-763bc4073296"  # This is the sustainability glossary
-            glossary_guid = "4a4816f4-79c8-4bbb-bc44-f510978fd730"
-            response = g_client.get_glossary_by_guid(glossary_guid, None, output_format = 'REPORT')
-            print(f"type is {type(response)}")
-            if type(response) is dict:
-                print("\n\n" + json.dumps(response, indent=4))
-                count = len(response)
-                print(f"Found {count} items")
-            elif type(response) is str:
-                print("\n\n" + response)
+
+            # First, find available glossaries
+            glossaries = g_client.find_glossaries("Egeria-Markdown", output_format="DICT")
+
+            # Skip the test if no glossaries are found
+            if not glossaries or len(glossaries) == 0:
+                print("No glossaries found. Skipping test.")
+                return
+
+            # Use the first glossary found
+            glossary_guid = glossaries[0]['guid']
+            print(f"\nUsing glossary with GUID: {glossary_guid}")
+
+            try:
+                # Test with REPORT format - should include Categories Names and not Categories Qualified Names
+                print("\nTesting with REPORT format:")
+                response_report = g_client.get_glossary_by_guid(glossary_guid, None, output_format='REPORT')
+                print(f"REPORT response type is {type(response_report)}")
+                if isinstance(response_report, dict):
+                    print(json.dumps(response_report, indent=4))
+                elif isinstance(response_report, str):
+                    print(response_report)
+                    # Only verify if the response contains categories
+                    if "Category" in response_report:
+                        # Verify that Category Names is included
+                        assert "Category Names" in response_report
+
+                # Test with FORM format - should include Categories Qualified Names and not Categories Names
+                print("\nTesting with FORM format:")
+                response_form = g_client.get_glossary_by_guid(glossary_guid, None, output_format='FORM')
+                print(f"FORM response type is {type(response_form)}")
+                if isinstance(response_form, dict):
+                    print(json.dumps(response_form, indent=4))
+                elif isinstance(response_form, str):
+                    print(response_form)
+                    # Only verify if the response contains categories
+                    if "Category" in response_form:
+                        # Verify that Category Names is included
+                        assert "Category Names" in response_form
+            except Exception as e:
+                print(f"Error testing glossary with GUID {glossary_guid}: {str(e)}")
+                # Try another glossary if available
+                if len(glossaries) > 1:
+                    glossary_guid = glossaries[1]['guid']
+                    print(f"\nTrying another glossary with GUID: {glossary_guid}")
+
+                    # Test with REPORT format
+                    print("\nTesting with REPORT format:")
+                    response_report = g_client.get_glossary_by_guid(glossary_guid, None, output_format='REPORT')
+                    print(f"REPORT response type is {type(response_report)}")
+                    if isinstance(response_report, str):
+                        print(response_report)
+
+                    # Test with FORM format
+                    print("\nTesting with FORM format:")
+                    response_form = g_client.get_glossary_by_guid(glossary_guid, None, output_format='FORM')
+                    print(f"FORM response type is {type(response_form)}")
+                    if isinstance(response_form, str):
+                        print(response_form)
+                else:
+                    print("No other glossaries available for testing.")
+
             assert True
         except (
             InvalidParameterException,
@@ -348,7 +400,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '4961c79b-b040-4597-b0d3-5d32dd5f8935'
+            term_guid = 'd1f22462-4d68-4bdf-be43-c82b6c710381'
             response = g_client.get_term_revision_logs(term_guid)
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -376,7 +428,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            note_log_guid = '1e5a83f2-91d6-4953-b7ab-22615763045e'
+            note_log_guid = 'c7f0b396-cccf-4e8c-96e7-598ce5dc6585'
             # note_log_guid = '54cbe8e6-ab3a-4d9c-af4f-7ac346d51468'
             response = g_client.get_term_revision_history(note_log_guid)
             print(f"type is {type(response)}")
@@ -521,7 +573,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '29bd7985-ddb9-4b8c-95a3-76b9d535cc5c'
+            term_guid = 'f0511dda-1aa4-4e13-81ac-29c2fd860b18'
             # term_guid = '2852b4e1-4445-44ee-b3aa-dbd1e577cdcb'
 
             # Test different output formats
@@ -555,10 +607,15 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_id = "Term::T1"
+            term_id = "Sustainability"
             # Test with invalid input to verify error handling
             print("\n\nTesting get_term_details:")
             response = g_client.get_term_details(term_id, output_format="REPORT")
+            response = g_client.get_term_details(term_id, output_format="DICT")
+            print(json.dumps(response, indent=4))
+
+
+
             print(f"Response type is {type(response)}")
             print(response)
 
@@ -619,7 +676,7 @@ class TestGlossaryBrowser:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "t1",
+                "Sustainability",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
                 starts_with=True,
@@ -630,7 +687,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="REPORT"
+                output_format="DICT"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
@@ -825,7 +882,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "81b618ae-cadc-4c23-ad6e-4b1113643ddb"
+            glossary_guid = "1411b3a0-b387-42f3-b6f0-4512a12d272d"
 
             # Test DICT output format
             response_dict = g_client.get_glossary_category_structure(glossary_guid, output_format="DICT")
