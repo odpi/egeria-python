@@ -607,7 +607,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_id = "Term::T1"
+            term_id = "Sustainability"
             # Test with invalid input to verify error handling
             print("\n\nTesting get_term_details:")
             response = g_client.get_term_details(term_id, output_format="REPORT")
@@ -676,7 +676,7 @@ class TestGlossaryBrowser:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "t1",
+                "Sustainability",
                 # glossary_guid=glossary_guid,
                 glossary_guid=glossary_guid,
                 starts_with=True,
@@ -687,7 +687,7 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="REPORT"
+                output_format="DICT"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:
