@@ -23,8 +23,8 @@ def query_seperator(current_string):
         return "&"
 
 
-("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
- "the query string")
+# ("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
+# "the query string")
 
 
 def query_string(params):
@@ -39,71 +39,47 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/data-designer"
 
 
-def process_related_element_list(response: Response, mermaid_only: bool, relationship_list: bool = False) -> str | dict:
-    """Process the result payload
+def extract_mermaid_only(elements) -> list:
+    result = []
+    if type(elements) is dict:
+        return(elements.get('mermaidGraph', '___'))
+    for element in elements:
+        result.append(element.get('mermaidGraph', '___'))
+    return result
 
-    Parameters
-    ----------
-    response: Response
-        - the response payload from the API call
-    mermaid_only: bool
-        - if true, only return the Mermaid graph
-    relationship_list: bool
-        - if True, look for "relationshipList" otherwise look for "relatedElementList"
 
-    Returns
-    -------
+def extract_basic_dict(elements: dict) -> list:
+    list = []
+    body = {}
+    if type(elements) is dict:
+        body['guid'] = elements['elementHeader']['guid']
+        for key in elements['properties']:
+            body[key] = elements['properties'][key]
+        return body
 
-    """
-    if relationship_list:
-        elements = response.json().get("relationshipList", "No relationship list found")
-    else:
-        elements = response.json().get("relatedElementList", NO_ELEMENTS_FOUND)
-
-    if isinstance(elements, str):
-        return NO_ELEMENTS_FOUND
-    if mermaid_only:
-        return elements.get("mermaidGraph", "No mermaid graph found")
-
-    el_list = elements.get("elementList", NO_ELEMENTS_FOUND)
-    if isinstance(el_list, str):
-        return el_list
-
-    if len(el_list) == 0:
-        return "No elements returned"
-    return elements
+    for element in elements:
+        body['guid'] = element['elementHeader']['guid']
+        for key in element['properties']:
+            body[key] = element['properties'][key]
+        list.append(body)
+    return list
 
 
 class DataDesigner(Client):
     """DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
       building specifications for data. This includes common data fields in a data dictionary, data specifications
       for a project and data classes for data quality validation.
-
-    Attributes:
-
-        view_server_name: str
-            The name of the View Server to connect to.
-        platform_url : str
-            URL of the server platform to connect to
-        user_id : str
-            The identity of the user calling the method - this sets a
-            default optionally used by the methods when the user
-            doesn't pass the user_id on a method call.
-        user_pwd: str
-            The password associated with the user_id. Defaults to None
-
-
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str = None, user_pwd: str = None,
+    def __init__(self, view_server_name: str, platform_url: str, user_id: str = None, user_pwd: str = None,
                  token: str = None, ):
-        self.view_server = view_server
+        self.view_server = view_server_name
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
         self.metadata_explorer_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-designer")
-        Client.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        Client.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
 
     #
     #    Data Structures
@@ -878,8 +854,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_data_structure(self, data_struct_guid: str,
-                              body: dict = None) -> None:
+    def delete_data_structure(self, data_struct_guid: str, body: dict = None) -> None:
         """
         Delete a data structure. Request body is optional.
 
@@ -920,11 +895,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_delete_data_field(data_struct_guid,  body))
+        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body))
 
-    async def _async_find_all_data_structures(self, start_from: int = 0,
-                                              page_size: int = max_paging_size, ) -> list | str:
+    async def _async_find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
+                                              output_format: str = "DICT") -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
@@ -933,6 +907,8 @@ r       replace_all_properties: bool, default = False
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format: str, default = "DICT"
+            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
 
         Returns
         -------
@@ -960,12 +936,14 @@ r       replace_all_properties: bool, default = False
         response: Response = await self._async_make_request("POST", url)
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list:
-            if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return other representations
+            return self.generate_data_structure_output(elements, filter, output_format)
         return elements
 
-    def find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size, ) -> list | str:
+    def find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
+                                 output_format: str = "DICT") -> list | str:
         """ Returns a list of all known data structures.
 
         Parameters
@@ -974,11 +952,14 @@ r       replace_all_properties: bool, default = False
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format: str, default = "DICT"
+            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
+
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements are found and a list of dict of elements with the results.
+            Returns a string if no elements are found and a list of dict  elements with the results.
 
         Raises
         ------
@@ -992,12 +973,13 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_structures(start_from, page_size))
+        response = loop.run_until_complete(self._async_find_all_data_structures(start_from, page_size, output_format))
         return response
 
     async def _async_find_data_structures_w_body(self, body: dict, start_from: int = 0,
                                                  page_size: int = max_paging_size, starts_with: bool = True,
-                                                 ends_with: bool = False, ignore_case: bool = True) -> list | str:
+                                                 ends_with: bool = False, ignore_case: bool = True,
+                                                 output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -1015,6 +997,8 @@ r       replace_all_properties: bool, default = False
             - if True, the search string filters from the end of the string.
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
+        output_format: str, default = "DICT"
+            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
 
         Returns
         -------
@@ -1058,14 +1042,15 @@ r       replace_all_properties: bool, default = False
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list:
-            if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
+        if type(elements) is list and len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return other representations
+            return self.generate_data_structure_output(elements, filter, output_format)
         return elements
 
     def find_data_structures_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                    starts_with: bool = True, ends_with: bool = False,
-                                    ignore_case: bool = True) -> list | str:
+                                    starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                                    output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string.
 
         Parameters
@@ -1082,6 +1067,8 @@ r       replace_all_properties: bool, default = False
             - if True, the search string filters from the end of the string.
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
+        output_format: str, default = "DICT"
+            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
 
         Returns
         -------
@@ -1115,12 +1102,13 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_structures_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case))
+            self._async_find_data_structures_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
+                                                    output_format))
         return response
 
     async def _async_find_data_structures(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                                          starts_with: bool = True, ends_with: bool = False,
-                                          ignore_case: bool = True) -> list | str:
+                                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                                          output_format: str = "DICT") -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -1138,6 +1126,8 @@ r       replace_all_properties: bool, default = False
             - if True, the search string filters from the end of the string.
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
+        output_format: str, default = "DICT"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -1167,13 +1157,16 @@ r       replace_all_properties: bool, default = False
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list:
-            if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
+        if type(elements) is list and len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_data_structure_output(elements, filter, output_format)
         return elements
 
     def find_data_structures(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                             starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True) -> list | str:
+                             starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                             output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string filter.
 
         Parameters
@@ -1190,7 +1183,9 @@ r       replace_all_properties: bool, default = False
             - if True, the search string filters from the end of the string.
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
-
+        output_format: str, default = "DICT"
+            output_format: str, default = "DICT"
+            -  one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         [dict] | str
@@ -1210,11 +1205,13 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_structures(filter, start_from, page_size, starts_with, ends_with, ignore_case))
+            self._async_find_data_structures(filter, start_from, page_size, starts_with, ends_with, ignore_case,
+                                             output_format))
         return response
 
     async def _async_get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                                 page_size: int = max_paging_size) -> list | str:
+                                                 page_size: int = max_paging_size,
+                                                 output_format: str = "DICT") -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -1228,7 +1225,8 @@ r       replace_all_properties: bool, default = False
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
+        output_format: str, default = "DICT"
+            - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         [dict] | str
@@ -1268,13 +1266,14 @@ r       replace_all_properties: bool, default = False
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
 
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list:
-            if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return other representations
+            return self.generate_data_structure_output(elements, filter, output_format)
         return elements
 
     def get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                    page_size: int = max_paging_size) -> list | str:
+                                    page_size: int = max_paging_size, output_format: str = "DICT") -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1287,6 +1286,8 @@ r       replace_all_properties: bool, default = False
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
+        output_format: str, default = "DICT"
+         - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -1306,10 +1307,11 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_structures_by_name(filter, body, start_from, page_size))
+        response = loop.run_until_complete(
+            self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_get_data_structures_by_guid(self, guid: str, body: dict = None) -> list | str:
+    async def _async_get_data_structures_by_guid(self, guid: str, body: dict = None, output_format: str = "DICT") -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1319,6 +1321,8 @@ r       replace_all_properties: bool, default = False
             - unique identifier of the data structure metadata element.
         body: dict, optional
             - optional request body.
+        output_format: str, default = "DICT"
+         - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         [dict] | str
@@ -1353,14 +1357,15 @@ r       replace_all_properties: bool, default = False
         else:
             response: Response = await self._async_make_request("POST", url)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list:
-            if len(elements) == 0:
-                return NO_ELEMENTS_FOUND
-        return elements
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(element) is str:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return other representations
+            return self.generate_data_structure_output(element, filter, output_format)
+        return element
 
-    def get_data_structures_by_guid(self, guid: str, body: str = None) -> list | str:
-        """ Get the  data structure metadata element with the specified unique identifier..
+    def get_data_structures_by_guid(self, guid: str, body: str = None, output_format: str = "DICT") -> list | str:
+        """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
         ----------
@@ -1368,6 +1373,8 @@ r       replace_all_properties: bool, default = False
             - unique identifier of the data structure metadata element.
         body: dict, optional
             - optional request body.
+        output_format: str, default = "DICT"
+         - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         [dict] | str
@@ -1397,7 +1404,7 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_structures_by_guid(guid, body))
+        response = loop.run_until_complete(self._async_get_data_structures_by_guid(guid, body, output_format))
         return response
 
     #
@@ -1916,7 +1923,6 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_data_field(data_field_guid, body, replace_all_properties))
 
-
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                             body: dict = None) -> None:
         """
@@ -1976,8 +1982,8 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str, body: dict = None) -> None:
+    def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                               body: dict = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -2028,9 +2034,8 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_field(parent_data_field_guid,
-                                                                   nested_data_field_guid, body))
-
+        loop.run_until_complete(
+            self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                               body: dict = None) -> None:
@@ -2084,7 +2089,6 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                  body: dict = None) -> None:
         """
@@ -2129,10 +2133,8 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_data_field(parent_data_field_guid,
-                                                                     nested_data_field_guid,
-                                                                            body))
-
+        loop.run_until_complete(
+            self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     async def _async_delete_data_field(self, data_field_guid: str, body: dict = None) -> None:
         """
@@ -2182,8 +2184,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def delete_data_field(self, data_field_guid: str,  body: dict = None) -> None:
+    def delete_data_field(self, data_field_guid: str, body: dict = None) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -2224,9 +2225,7 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_field_guid,
-                                                                      body))
-
+        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body))
 
     async def _async_find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size, ) -> list | str:
         """Returns a list of all known data fields. Async version.
@@ -2269,7 +2268,6 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size, ) -> list | str:
         """ Returns a list of all known data fields.
 
@@ -2299,7 +2297,6 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_find_all_data_fields(start_from, page_size))
         return response
-
 
     async def _async_find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                              starts_with: bool = True, ends_with: bool = False,
@@ -2355,8 +2352,8 @@ r       replace_all_properties: bool, default = False
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s), ("endsWith", ends_with_s),
-             ("ignoreCase", ignore_case_s), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s),
+             ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         url = (f"{base_path(self, self.view_server)}/data-fields/by-search-string"
                f"{possible_query_params}")
@@ -2369,9 +2366,9 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True) -> list | str:
+                                starts_with: bool = True, ends_with: bool = False,
+                                ignore_case: bool = True) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -2423,7 +2420,6 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(
             self._async_find_data_fields_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case))
         return response
-
 
     async def _async_find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
                                       starts_with: bool = True, ends_with: bool = False,
@@ -2479,9 +2475,8 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
-    def find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size, starts_with: bool = True,
-                         ends_with: bool = False, ignore_case: bool = True) -> list | str:
+    def find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+                         starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2520,7 +2515,6 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(
             self._async_find_data_fields(filter, start_from, page_size, starts_with, ends_with, ignore_case))
         return response
-
 
     async def _async_get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
                                              page_size: int = max_paging_size) -> list | str:
@@ -2582,9 +2576,8 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
-    def get_data_fields_by_name(self, filter: str, body: dict = None,
-                                start_from: int = 0, page_size: int = max_paging_size) -> list | str:
+    def get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
+                                page_size: int = max_paging_size) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -2632,7 +2625,6 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_data_fields_by_name(filter, body, start_from, page_size))
         return response
-
 
     async def _async_get_data_field_by_guid(self, guid: str, body: dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
@@ -2684,7 +2676,6 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def get_data_field_by_guid(self, guid: str, body: str = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
@@ -2726,12 +2717,12 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, body))
         return response
 
-###
-# =====================================================================================================================
-# Work with Data Classes
-# https://egeria-project.org/concepts/data-class
-#
-#
+    ###
+    # =====================================================================================================================
+    # Work with Data Classes
+    # https://egeria-project.org/concepts/data-class
+    #
+    #
     async def _async_create_data_class(self, body: dict) -> str:
         """
         Create a new data class with parameters defined in the body. Async version.
@@ -3263,7 +3254,6 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_data_class(data_class_guid, body, replace_all_properties))
 
-
     async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                             body: dict = None) -> None:
         """
@@ -3316,8 +3306,8 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str, body: dict = None) -> None:
+    def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                               body: dict = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -3360,9 +3350,7 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid,
-                                                                   child_data_class_guid, body))
-
+        loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                               body: dict = None) -> None:
@@ -3416,7 +3404,6 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
     def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
                                  body: dict = None) -> None:
         """
@@ -3461,13 +3448,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_nested_data_class(parent_data_class_guid,
-                                                                     child_data_class_guid,
-                                                                            body))
-
+        loop.run_until_complete(
+            self._async_detach_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     async def _async_link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                            body: dict = None) -> None:
+                                                body: dict = None) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
         Async version.
@@ -3518,8 +3503,8 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str, body: dict = None) -> None:
+    def link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                   body: dict = None) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
 
@@ -3562,12 +3547,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_specialist_data_class(parent_data_class_guid,
-                                                                   child_data_class_guid, body))
-
+        loop.run_until_complete(
+            self._async_link_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     async def _async_detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                              body: dict = None) -> None:
+                                                  body: dict = None) -> None:
         """
         Detach two data classes from each other. Request body is optional. Async version.
 
@@ -3618,9 +3602,8 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
     def detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                 body: dict = None) -> None:
+                                     body: dict = None) -> None:
         """
         Detach two data classes from each other. Request body is optional.
 
@@ -3663,11 +3646,8 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_specialist_data_class(parent_data_class_guid,
-                                                                     child_data_class_guid,
-                                                                            body))
-
-
+        loop.run_until_complete(
+            self._async_detach_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
 
     async def _async_delete_data_class(self, data_class_guid: str, body: dict = None) -> None:
         """
@@ -3717,8 +3697,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def delete_data_class(self, data_class_guid: str,  body: dict = None) -> None:
+    def delete_data_class(self, data_class_guid: str, body: dict = None) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -3759,9 +3738,7 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_class(data_class_guid,
-                                                                      body))
-
+        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body))
 
     async def _async_find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size, ) -> list | str:
         """ Returns a list of all data classes. Async version.
@@ -3804,7 +3781,6 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size, ) -> list | str:
         """ Returns a list of all data classes.
 
@@ -3835,10 +3811,9 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size))
         return response
 
-
     async def _async_find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                             starts_with: bool = True, ends_with: bool = False,
-                                             ignore_case: bool = True) -> list | str:
+                                              starts_with: bool = True, ends_with: bool = False,
+                                              ignore_case: bool = True) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
             Async version.
 
@@ -3890,8 +3865,8 @@ r       replace_all_properties: bool, default = False
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s), ("endsWith", ends_with_s),
-             ("ignoreCase", ignore_case_s), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s),
+             ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
                f"{possible_query_params}")
@@ -3904,9 +3879,9 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True) -> list | str:
+                                 starts_with: bool = True, ends_with: bool = False,
+                                 ignore_case: bool = True) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -3959,10 +3934,9 @@ r       replace_all_properties: bool, default = False
             self._async_find_data_classes_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case))
         return response
 
-
     async def _async_find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                                      starts_with: bool = True, ends_with: bool = False,
-                                      ignore_case: bool = True) -> list | str:
+                                       starts_with: bool = True, ends_with: bool = False,
+                                       ignore_case: bool = True) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -4014,9 +3988,8 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
-    def find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size, starts_with: bool = True,
-                         ends_with: bool = False, ignore_case: bool = True) -> list | str:
+    def find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -4056,9 +4029,8 @@ r       replace_all_properties: bool, default = False
             self._async_find_data_classes(filter, start_from, page_size, starts_with, ends_with, ignore_case))
         return response
 
-
     async def _async_get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                             page_size: int = max_paging_size) -> list | str:
+                                              page_size: int = max_paging_size) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -4117,9 +4089,8 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
-    def get_data_classes_by_name(self, filter: str, body: dict = None,
-                                start_from: int = 0, page_size: int = max_paging_size) -> list | str:
+    def get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
+                                 page_size: int = max_paging_size) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -4167,7 +4138,6 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_data_classes_by_name(filter, body, start_from, page_size))
         return response
-
 
     async def _async_get_data_class_by_guid(self, guid: str, body: dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
@@ -4219,7 +4189,6 @@ r       replace_all_properties: bool, default = False
                 return NO_ELEMENTS_FOUND
         return elements
 
-
     def get_data_class_by_guid(self, guid: str, body: str = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
@@ -4261,12 +4230,13 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_get_data_class_by_guid(guid, body))
         return response
 
-###
-# =====================================================================================================================
-# Assembling a data specification
-# https://egeria-project.org/concepts/data-specification
-#
-    async def _async_link_data_class_definition(self, data_definition_guid: str, data_class_guid: str, body: dict = None) -> None:
+    ###
+    # =====================================================================================================================
+    # Assembling a data specification
+    # https://egeria-project.org/concepts/data-specification
+    #
+    async def _async_link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
+                                                body: dict = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4317,8 +4287,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                    body: dict = None) -> None:
+    def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str, body: dict = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4362,12 +4331,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_data_class_definition(data_definition_guid,
-                                                                   data_class_guid, body))
-
+        loop.run_until_complete(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
 
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                              body: dict = None) -> None:
+                                                  body: dict = None) -> None:
         """
         Detach a data definition from a data class. Request body is optional. Async version.
 
@@ -4418,8 +4385,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                            body: dict = None) -> None:
+    def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str, body: dict = None) -> None:
         """
         Detach a data definition from a data class. Request body is optional.
 
@@ -4463,10 +4429,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_class_definition(data_definition_guid,
-                                                                       data_class_guid, body))
+        loop.run_until_complete(self._async_detach_data_class_definition(data_definition_guid, data_class_guid, body))
 
-    async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str, body: dict = None) -> None:
+    async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
+                                              body: dict = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4518,8 +4484,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                    body: dict = None) -> None:
+    def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str, body: dict = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4564,12 +4529,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_semantic_definition(data_definition_guid,
-                                                                   glossary_term_guid, body))
-
+        loop.run_until_complete(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
 
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                              body: dict = None) -> None:
+                                                body: dict = None) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional. Async version.
 
@@ -4620,8 +4583,7 @@ r       replace_all_properties: bool, default = False
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                            body: dict = None) -> None:
+    def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str, body: dict = None) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional.
 
@@ -4665,11 +4627,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_semantic_definition(data_definition_guid,
-                                                                       glossary_term_guid, body))
+        loop.run_until_complete(self._async_detach_semantic_definition(data_definition_guid, glossary_term_guid, body))
 
-    async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                              body: dict = None) -> None:
+    async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str,
+                                                               data_structure_guid: str, body: dict = None) -> None:
         """
          Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -4725,7 +4686,7 @@ r       replace_all_properties: bool, default = False
             await self._async_make_request("POST", url, body_slimmer(body))
 
     def link_certification_type_to_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                 body: dict = None) -> None:
+                                                  body: dict = None) -> None:
         """
         Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -4772,11 +4733,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_certification_type_to_data_structure(certification_type_guid,
-                                                                     data_structure_guid, body))
+        loop.run_until_complete(
+            self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
-    async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                body: dict = None) -> None:
+    async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
+                                                                   data_structure_guid: str, body: dict = None) -> None:
         """
         Detach a data structure from a certification type. Request body is optional. Async version.
 
@@ -4827,7 +4788,7 @@ r       replace_all_properties: bool, default = False
             await self._async_make_request("POST", url, body_slimmer(body))
 
     def detach_certification_type_from_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                   body: dict = None) -> None:
+                                                      body: dict = None) -> None:
         """
         Detach a data structure from a certification type. Request body is optional.
 
@@ -4870,8 +4831,18 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_certification_type_from_data_structure(certification_type_guid,
-                                                                       data_structure_guid, body))
+        loop.run_until_complete(
+            self._async_detach_certification_type_from_data_structure(certification_type_guid, data_structure_guid,
+                                                                      body))
+
+    def generate_data_structure_output(self, elements, filter, output_format) -> str | list:
+        match output_format:
+            case "MERMAID":
+                return extract_mermaid_only(elements)
+            case "DICT":
+                return extract_basic_dict(elements)
+            case _:
+                return None
 
 
 if __name__ == "__main__":

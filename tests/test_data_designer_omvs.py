@@ -135,7 +135,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures()
+            response = m_client.find_all_data_structures(output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -159,18 +159,47 @@ class TestMetadataExplorer:
 
 
     def test_get_data_structures_by_name(self):
-        name = "Test Data Structure"
+        name = "solar"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structures_by_name(name, add_implementation=False)
+            response = m_client.get_data_structures_by_name(name)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
             if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_structures_by_guid(self):
+        guid = "b4361286-31ad-42d2-8315-cb013b24fe1a"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_structures_by_guid(guid, output_format="MERMAID")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if isinstance(response, list | dict):
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
