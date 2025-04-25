@@ -5,10 +5,11 @@ This file contains project-related command functions for processing Egeria Markd
 from rich.markdown import Markdown
 
 from pyegeria.project_manager_omvs import ProjectManager
-from md_processing.utils.common_utils import (
-    debug_level, print_msg, ALWAYS, ERROR, INFO, pre_command, is_valid_iso_date
+from md_processing.md_processing_utils.common_utils import (
+    debug_level, print_msg,  is_valid_iso_date
 )
-from md_processing.utils.extraction_utils import (
+from md_processing.md_processing_utils.md_processing_constants import ALWAYS, ERROR, INFO, pre_command
+from md_processing.md_processing_utils.extraction_utils import (
     extract_command, process_simple_attribute
 )
 from pyegeria._globals import NO_PROJECTS_FOUND
@@ -23,7 +24,7 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
     :param directive: an optional string indicating the directive to be used - display, validate or execute
     :return: A string summarizing the outcome of the processing.
     """
-    from md_processing.utils.common_utils import set_debug_level
+    from md_processing.md_processing_utils.common_utils import set_debug_level
     
     command = extract_command(txt)
     object = command.split()

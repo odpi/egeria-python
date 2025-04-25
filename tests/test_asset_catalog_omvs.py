@@ -27,7 +27,7 @@ from pyegeria._exceptions import (
 )
 from pyegeria.asset_catalog_omvs import AssetCatalog
 
-# from pyegeria.utils import print_json_list_as_table
+# from pyegeria.md_processing_utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
 

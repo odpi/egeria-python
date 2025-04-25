@@ -1,6 +1,8 @@
 """
 This file contains display-related constants and formatting functions for Egeria Markdown processing
 """
+from rich.markdown import Markdown
+from pyegeria._globals import DEBUG_LEVEL
 
 # Constants for element labels
 GLOSSARY_NAME_LABELS = ["Glossary Name", "Glossary", "Glossaries", "Owning Glossary", "In Glossary"]
@@ -44,10 +46,25 @@ TERM_RELATIONSHPS = [
     "ISARelationship"
 ]
 
-# List of supported commands
+# List of supported md_commands
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms", "List Term Details",
                 "List Glossary Terms", "List Term History", "List Term Revision History", "List Term Update History",
                 "List Glossary Structure", "List Glossaries", "List Categories", "List Glossary Categories",
                 "Create Personal Project", "Update Personal Project", "Create Category", "Update Category",
                 "Create Solution Blueprint", "Update Solution Blueprint", "Create Solution Component",
                 "Update Solution Component", "Create Term-Term Relationship", "Update Term-Term Relationship",]
+
+
+message_types = {
+    "INFO": "INFO-", "WARNING": "WARNING->", "ERROR": "ERROR->", "DEBUG-INFO": "DEBUG-INFO->",
+    "DEBUG-WARNING": "DEBUG-WARNING->", "DEBUG-ERROR": "DEBUG-ERROR->", "ALWAYS": "\n\n==> "
+}
+ALWAYS = "ALWAYS"
+ERROR = "ERROR"
+INFO = "INFO"
+WARNING = "WARNING"
+pre_command = "\n---\n==> Processing command:"
+command_seperator = Markdown("\n---\n")
+EXISTS_REQUIRED = "Exists Required"
+
+debug_level = DEBUG_LEVEL

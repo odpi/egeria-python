@@ -198,7 +198,7 @@ def show(ctx):
 @show.group("platforms")
 @click.pass_context
 def show_platforms(ctx):
-    """Group of commands to show information about Egeria platforms"""
+    """Group of md_commands to show information about Egeria platforms"""
     pass
 
 
@@ -215,7 +215,7 @@ def show_platform_status(ctx):
 @show.group("servers")
 @click.pass_context
 def show_server(ctx):
-    """Group of commands to show information about Egeria servers"""
+    """Group of md_commands to show information about Egeria servers"""
     pass
 
 
@@ -259,7 +259,7 @@ def show_startup_status(ctx):
 @show.group("repository")
 @click.pass_context
 def show_repo(ctx):
-    """Group of commands to show repository information"""
+    """Group of md_commands to show repository information"""
     pass
 
 
@@ -281,7 +281,7 @@ def show_archives(ctx):
 @show.group("engines")
 @click.pass_context
 def engine_host(ctx):
-    """Group of commands to show information about Egeria engines"""
+    """Group of md_commands to show information about Egeria engines"""
     pass
 
 
@@ -364,7 +364,7 @@ def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
 @show.group("integrations")
 @click.pass_context
 def integrations(ctx):
-    """Group of commands to show information about Egeria integrations"""
+    """Group of md_commands to show information about Egeria integrations"""
     pass
 
 
@@ -438,7 +438,7 @@ servers.add_command(stop_server)
 @tell.group("integration-daemon")
 @click.pass_context
 def integration_daemon(ctx):
-    """Group of commands to an integration_daemon"""
+    """Group of md_commands to an integration_daemon"""
     pass
 
 
@@ -481,7 +481,7 @@ integration_daemon.add_command(update_catalog_target)
 @tell.group("engine-host")
 @click.pass_context
 def engine_host(ctx):
-    """Group of commands to an engine-host"""
+    """Group of md_commands to an engine-host"""
     pass
 
 
@@ -491,7 +491,7 @@ engine_host.add_command(refresh_gov_eng_config)
 @tell.group("repository")
 @click.pass_context
 def repository(ctx):
-    """Group of commands to a repository"""
+    """Group of md_commands to a repository"""
     pass
 
 

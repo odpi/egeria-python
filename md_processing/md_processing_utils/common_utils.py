@@ -9,24 +9,13 @@ from typing import List, Optional, Any
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
+from md_processing.md_processing_utils.md_processing_constants import message_types
 
 from pyegeria._globals import DEBUG_LEVEL
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
-
-message_types = {
-    "INFO": "INFO-", "WARNING": "WARNING->", "ERROR": "ERROR->", "DEBUG-INFO": "DEBUG-INFO->",
-    "DEBUG-WARNING": "DEBUG-WARNING->", "DEBUG-ERROR": "DEBUG-ERROR->", "ALWAYS": "\n\n==> "
-}
-ALWAYS = "ALWAYS"
-ERROR = "ERROR"
-INFO = "INFO"
-WARNING = "WARNING"
-pre_command = "\n---\n==> Processing command:"
-command_seperator = Markdown("\n---\n")
-EXISTS_REQUIRED = "Exists Required"
 
 debug_level = DEBUG_LEVEL
 
@@ -99,3 +88,72 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     file_name = os.path.basename(file_path)
     provenance = f"\n\n\n# Provenance:\n \n* Derived from processing file {file_name} on {now}\n"
     return provenance
+
+
+# Dictionary to store element information to avoid redundant API calls
+element_dictionary = {}
+
+
+def get_element_dictionary():
+    """
+    Get the shared element dictionary.
+
+    Returns:
+        dict: The shared element dictionary
+    """
+    global element_dictionary
+    return element_dictionary
+
+
+def update_element_dictionary(key, value):
+    """
+    Update the shared element dictionary with a new key-value pair.
+
+    Args:
+        key (str): The key to update
+        value (dict): The value to associate with the key
+    """
+    global element_dictionary
+    if (key is None or value is None):
+        print(f"===>ERROR Key is {key} and value is {value}")
+        return
+    element_dictionary[key] = value
+
+
+def clear_element_dictionary():
+    """
+    Clear the shared element dictionary.
+    """
+    global element_dictionary
+    element_dictionary.clear()
+
+
+def is_present(value: str) -> bool:
+    global element_dictionary
+    present = value in element_dictionary.keys() or any(
+        value in inner_dict.values() for inner_dict in element_dictionary.values())
+    return present
+
+
+def find_key_with_value(value: str) -> str | None:
+    """
+    Finds the top-level key whose nested dictionary contains the given value.
+
+    Args:
+        data (dict): A dictionary where keys map to nested dictionaries.
+        value (str): The value to search for.
+
+    Returns:
+        str | None: The top-level key that contains the value, or None if not found.
+    """
+    global element_dictionary
+    # Check if the value matches a top-level key
+    if value in element_dictionary.keys():
+        return value
+
+    # Check if the value exists in any of the nested dictionaries
+    for key, inner_dict in element_dictionary.items():
+        if value in inner_dict.values():
+            return key
+
+    return None  # If value not found

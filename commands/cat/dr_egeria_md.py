@@ -8,11 +8,12 @@ import click
 from rich import print
 from rich.console import Console
 
-from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+from pyegeria import EgeriaTech
+from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                       process_category_upsert_command, process_provenance_command,
                       get_current_datetime_string,
-                      process_per_proj_upsert_command, command_list, EgeriaTech, process_blueprint_upsert_command,
-                      process_solution_component_upsert_command, dr_egeria_state, process_term_list_command,
+                      process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
+                      process_solution_component_upsert_command, process_term_list_command,
                       process_category_list_command, process_glossary_list_command, process_term_history_command,
                       process_glossary_structure_command, process_term_revision_history_command,
                       process_create_term_term_relationship_command, process_term_details_command)
@@ -48,7 +49,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 def process_markdown_file(file_path: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
     """
-    Process a markdown file by parsing and executing Dr. Egeria commands. Write output to a new file.
+    Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
     cmd_list = command_list
     console = Console(width=int(EGERIA_WIDTH))

@@ -30,7 +30,7 @@ So here we go! First lets define a new Glossary::
 ___
 
 
-# Update Glossary Form - created at 2025-04-24 13:26
+# Update Glossary Form - created at 2025-04-24 20:18
 	 Glossary found from the search string:  `GUID`
 
 # Update Glossary
@@ -62,7 +62,7 @@ Glossary::Egeria-Markdown
 
 
 ## Guid
-c14e92e5-95e6-48bf-b37f-5ee5644deeb0
+74e3c2f1-3f9e-46e8-945c-06c31603e0f4
 
 
 
@@ -137,7 +137,7 @@ Glossary::Egeria-Markdown
 
 
 ## Guid
-5be312dd-ca35-4ff4-91aa-a180e3e1716c
+ad7500f9-8844-4dae-9f61-fafa2595262a
 
 
 
@@ -179,7 +179,7 @@ Glossary::Egeria-Markdown
 
 
 ## Guid
-79aed6f1-f9e8-4046-9a5d-b9bdac11feb0
+daf025e8-a695-48db-aebf-e361817f3a39
 
 
 
@@ -224,7 +224,7 @@ Glossary::Egeria-Markdown
 
 
 ## Guid
-e3f2898c-d3d3-4ce3-b9a6-e998a28a2400
+eb198c6e-a307-4843-82cc-e0cc99d98b6a
 
 
 
@@ -286,4 +286,4 @@ copy dr_egeria_intro_part2.md. The text of the document has also been updated
 to reflect the purpose. Let's open that now!
 # Provenance
 
-* Results from processing file dr_egeria_intro_part1.md on 2025-04-24 13:26
+* Results from processing file dr_egeria_intro_part1.md on 2025-04-24 20:18

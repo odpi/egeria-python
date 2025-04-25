@@ -4,7 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-pyegeria commands available also from python.
+pyegeria md_commands available also from python.
 """
 
 from .cat.list_deployed_catalogs import list_deployed_catalogs

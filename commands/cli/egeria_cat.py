@@ -225,7 +225,7 @@ def show():
 @show.group("info")
 @click.pass_context
 def info(ctx):
-    """Group of commands to show information about various Egeria objects"""
+    """Group of md_commands to show information about various Egeria objects"""
     pass
 
 
@@ -317,7 +317,7 @@ def show_asset_graph(ctx, asset_guid):
 
     Usage: show asset-graph <asset-guid>
 
-           asset-guid must be a valid asset guid. These can be found through other commands such as 'show tech-type-elements'
+           asset-guid must be a valid asset guid. These can be found through other md_commands such as 'show tech-type-elements'
 
     """
     c = ctx.obj
