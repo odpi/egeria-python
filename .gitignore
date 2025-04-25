@@ -162,7 +162,7 @@ dmypy.json
 
 .run/
 
-/pyegeria/commands/cat/dr_egeria_inbox/
-/pyegeria/commands/cat/dr_egeria_outbox/
+/md_processing/dr_egeria_inbox/
+/commands/cat/dr_egeria_outbox/
 /.junie/
 /.junie/

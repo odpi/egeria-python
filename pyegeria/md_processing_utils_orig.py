@@ -143,7 +143,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     return txt
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
-    """This commands processes a provenence command by pre-pending the current file name and time to the provenance
+    """This md_commands processes a provenence command by pre-pending the current file name and time to the provenance
     output"""
     output = (f"* Derived from processing file {file_path} on "
               f"{get_current_datetime_string()}\n")

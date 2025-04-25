@@ -52,7 +52,7 @@ devPlatformName = "Dev Platform"
 # The OMAG Server Platforms host one to many OMAG Servers.  An OMAG Server could be
 # a metadata server or a specialized governance server.  Its behavior is determined
 # by a configuration document that defines which OMAG services are activated.
-# All OMAG Server Platforms support the administration commands to define a server's
+# All OMAG Server Platforms support the administration md_commands to define a server's
 # configuration document.  It is also possible to create configuration documents
 # through admin calls to one OMAG Server Platform and then deploy them to the
 # OMAG Server Platform where they are to run.  In the Egeria hands on lab, the
