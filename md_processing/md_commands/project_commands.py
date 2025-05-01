@@ -4,15 +4,12 @@ This file contains project-related command functions for processing Egeria Markd
 
 from rich.markdown import Markdown
 
-from pyegeria.project_manager_omvs import ProjectManager
-from md_processing.md_processing_utils.common_utils import (
-    debug_level, print_msg,  is_valid_iso_date
-)
+from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, is_valid_iso_date)
+from md_processing.md_processing_utils.extraction_utils import (extract_command, process_simple_attribute)
 from md_processing.md_processing_utils.md_processing_constants import ALWAYS, ERROR, INFO, pre_command
-from md_processing.md_processing_utils.extraction_utils import (
-    extract_command, process_simple_attribute
-)
 from pyegeria._globals import NO_PROJECTS_FOUND
+from pyegeria.project_manager_omvs import ProjectManager
+
 
 def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, directive: str = "display") -> str | None:
     """
@@ -24,8 +21,8 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
     :param directive: an optional string indicating the directive to be used - display, validate or execute
     :return: A string summarizing the outcome of the processing.
     """
-    from md_processing.md_processing_utils.common_utils import set_debug_level
-    
+    from md_processing.md_processing_utils.common_md_utils import set_debug_level
+
     command = extract_command(txt)
     object = command.split()
     object_type = f"{object[1]} {object[2]}"
@@ -139,8 +136,8 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
                     return None
                 else:
                     project_guid = egeria_client.create_personal_project(project_name, description, project_identifier,
-                                                                        project_status, project_phase, project_health,
-                                                                        start_date, planned_end_date)
+                                                                         project_status, project_phase, project_health,
+                                                                         start_date, planned_end_date)
                     if project_guid:
                         print_msg(ALWAYS, f"Created Project {project_name} with GUID {project_guid}", debug_level)
                         return egeria_client.get_project_by_guid(project_guid, output_format='MD')
@@ -153,9 +150,9 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
                     return None
                 else:
                     project_guid = egeria_client.update_personal_project(known_guid, project_name, description,
-                                                                        project_identifier, project_status,
-                                                                        project_phase, project_health, start_date,
-                                                                        planned_end_date)
+                                                                         project_identifier, project_status,
+                                                                         project_phase, project_health, start_date,
+                                                                         planned_end_date)
                     if project_guid:
                         print_msg(ALWAYS, f"Updated Project {project_name} with GUID {project_guid}", debug_level)
                         return egeria_client.get_project_by_guid(project_guid, output_format='MD')

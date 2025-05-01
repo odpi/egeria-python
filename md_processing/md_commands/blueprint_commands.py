@@ -6,7 +6,7 @@ from typing import Optional
 from rich.markdown import Markdown
 
 from pyegeria.egeria_tech_client import EgeriaTech
-from md_processing.md_processing_utils.common_utils import (
+from md_processing.md_processing_utils.common_md_utils import (
     debug_level, print_msg, update_element_dictionary
 )
 from md_processing.md_processing_utils.extraction_utils import (
@@ -27,7 +27,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     :param directive: an optional string indicating the directive to be used - display, validate or execute
     :return: A string summarizing the outcome of the processing.
     """
-    from md_processing.md_processing_utils.common_utils import set_debug_level
+    from md_processing.md_processing_utils.common_md_utils import set_debug_level
     
     command, object_type, object_action = extract_command_plus(txt)
     set_debug_level(directive)
@@ -143,7 +143,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     :param directive: an optional string indicating the directive to be used - display, validate or execute
     :return: A string summarizing the outcome of the processing.
     """
-    from md_processing.md_processing_utils.common_utils import set_debug_level
+    from md_processing.md_processing_utils.common_md_utils import set_debug_level
     
     command, object_type, object_action = extract_command_plus(txt)
     set_debug_level(directive)

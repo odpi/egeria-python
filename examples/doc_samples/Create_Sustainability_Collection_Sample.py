@@ -20,7 +20,7 @@ from pyegeria import (
     UserNotAuthorizedException,
 )
 
-view_server = "view-server"
+view_server = "qs-view-server"
 platform_url = "https://localhost:9443"
 user = "erinoverview"
 console = Console()

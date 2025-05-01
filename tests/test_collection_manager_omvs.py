@@ -35,10 +35,10 @@ class TestCollectionManager:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "laz_kv"
+    good_server_2 = "qs-view-server"
     good_server_3 = "active-metadata-store"
     good_engine_host_1 = "governDL01"
-    good_view_server_1 = "view-server"
+    good_view_server_1 = "qs-view-server"
 
     def test_get_linked_collections(self):
         try:
@@ -125,10 +125,10 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Sentinel"
+            search_string = "*"
 
             response = c_client.find_collections(
-                search_string, None, True, ignore_case=False
+                search_string, None, True, ignore_case=False, output_format="JSON"
             )
             duration = time.perf_counter() - start_time
 
@@ -224,7 +224,7 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_get_collection(self):
+    def test_get_collection_by_guid(self):
         try:
             c_client = CollectionManager(
                 self.good_view_server_1,
@@ -233,9 +233,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d85163e3-ee6a-40f5-a27d-ee7c1f372c2b"
+            collection_guid = "5bc0641c-6016-499a-a64b-54dc46a8a07f"
 
-            response = c_client.get_collection(collection_guid)
+            response = c_client.get_collection_by_guid(collection_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -365,7 +365,7 @@ class TestCollectionManager:
     def test_create_root_collection(self):
         try:
             c_client = CollectionManager(
-                self.good_view_server_1,
+                'qs-view-servee',
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -379,8 +379,8 @@ class TestCollectionManager:
             parent_guid = None
             parent_relationship_type_name = None
             parent_at_end1 = False
-            display_name = "Quick Test"
-            description = "This is the root catalog for for a quick test"
+            display_name = "Base Collection"
+            description = "This is the root catalog Testing"
             collection_type = "Test Data"
             is_own_anchor = True
 
@@ -478,15 +478,19 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "11311b9a-58f9-4d8e-94cd-616b809c5f66"
+            parent_guid = '5bc0641c-6016-499a-a64b-54dc46a8a07f'
             parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
             parent_at_end1 = True
-            display_name = "First Data Specification Collection"
-            description = "First collection of data specs"
-            collection_type = "Data Spec Collection"
+            # parent_at_end1 = None
+            display_name = "Clinical Trial Data Spec"
+            description = "Clinical Trials Specification"
+            collection_type = "Data Specificationn"
             is_own_anchor = True
             collection_ordering = "NAME"
-            order_property_name = None
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataSpec",display_name)
 
             response = c_client.create_data_spec_collection(
                 anchor_guid,
@@ -496,9 +500,11 @@ class TestCollectionManager:
                 display_name,
                 description,
                 collection_type,
+                anchor_scope_guid,
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
+
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -807,7 +813,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d2fc48a5-85bb-41b3-a902-48ad91b1efad"
+            collection_guid = "2b7e1520-b508-40b9-8a36-fc8a1e189eda"
             response = c_client.delete_collection(collection_guid)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")

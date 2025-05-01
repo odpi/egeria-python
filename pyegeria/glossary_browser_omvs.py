@@ -50,7 +50,7 @@ class GlossaryBrowser(Client):
 
     def make_preamble(self, obj_type, search_string, output_format: str = 'MD') -> tuple[str, str | None]:
         """
-        Creates a preamble string and an elements action based on the given object type, search string,
+        Creates a preamble string and an elements action based on the given object type, search_string,
         and output format. The preamble provides a descriptive header based on the intent: To make a form,
         a report, or unadorned Markdown. The element action specifies the action to be taken on the object type.
 

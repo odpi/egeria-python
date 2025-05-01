@@ -8,15 +8,16 @@ import click
 from rich import print
 from rich.console import Console
 
-from pyegeria import EgeriaTech
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                      process_category_upsert_command, process_provenance_command,
-                      get_current_datetime_string,
-                      process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
-                      process_solution_component_upsert_command, process_term_list_command,
-                      process_category_list_command, process_glossary_list_command, process_term_history_command,
-                      process_glossary_structure_command, process_term_revision_history_command,
-                      process_create_term_term_relationship_command, process_term_details_command)
+                           process_category_upsert_command, process_provenance_command, get_current_datetime_string,
+                           process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
+                           process_solution_component_upsert_command, process_term_list_command,
+                           process_category_list_command, process_glossary_list_command, process_term_history_command,
+                           process_glossary_structure_command, process_term_revision_history_command,
+                           process_create_term_term_relationship_command, process_term_details_command,
+                           process_data_field_upsert_command)
+from md_processing.md_commands.data_designer_commands import process_data_spec_upsert_command
+from pyegeria import EgeriaTech
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -117,6 +118,11 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_blueprint_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Spec", "Create Data Specification", "Update Data Spec",
+                                       "Update Data Specification"]:
+                result = process_data_spec_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Field",  "Update Data Field"]:
+                result = process_data_field_upsert_command(client, current_block, directive)
 
 
             else:

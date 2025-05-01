@@ -2,22 +2,22 @@
 This file contains general utility functions for processing Egeria Markdown
 """
 import os
-import re
 from datetime import datetime
-from typing import List, Optional, Any
 
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
-from md_processing.md_processing_utils.md_processing_constants import message_types
 
 from pyegeria._globals import DEBUG_LEVEL
+from md_processing.md_processing_utils.message_constants import message_types
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
 
 debug_level = DEBUG_LEVEL
+global COMMAND_DEFINITIONS
+
 
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
@@ -55,7 +55,7 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
     formats the output accordingly.
 
     Args:
-        msg_type: The type of the message, such as 'WARNING', 'ERROR', 'INFO', or
+        msg_level: The type of the message, such as 'WARNING', 'ERROR', 'INFO', or
             'ALWAYS'.
         msg: The content of the message to display.
         verbosity: The verbosity level, which determines how the message is
@@ -63,14 +63,17 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
     """
     if msg_level == "ALWAYS":
         print(f"{message_types.get(msg_level, '')}{msg}")
-    elif verbosity == "verbose" and msg_level in ["INFO", "WARNING", "ERROR"]:
+    else:
         print(f"{message_types.get(msg_level, '')}{msg}")
-    elif verbosity == "quiet" and msg_level in ["WARNING", "ERROR"]:
-        print(f"{message_types.get(msg_level, '')}{msg}")
-    elif verbosity == "debug" and msg_level in ["INFO", "WARNING", "ERROR", "DEBUG-INFO", "DEBUG-WARNING", "DEBUG-ERROR"]:
-        print(f"{message_types.get(msg_level, '')}{msg}")
-    elif verbosity == "display-only" and msg_level in ["ALWAYS", "ERROR"]:
-        print(f"{message_types.get(msg_level, '')}{msg}")
+    # elif verbosity == "verbose" and msg_level in ["INFO", "WARNING", "ERROR"]:
+    #     print(f"{message_types.get(msg_level, '')}{msg}")
+    # elif verbosity == "quiet" and msg_level in ["WARNING", "ERROR"]:
+    #     print(f"{message_types.get(msg_level, '')}{msg}")
+    # elif verbosity == "debug" and msg_level in ["INFO", "WARNING", "ERROR", "DEBUG-INFO", "DEBUG-WARNING",
+    #                                             "DEBUG-ERROR"]:
+    #     print(f"{message_types.get(msg_level, '')}{msg}")
+    # elif verbosity == "display-only" and msg_level in ["ALWAYS", "ERROR"]:
+    #     print(f"{message_types.get(msg_level, '')}{msg}")
 
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:

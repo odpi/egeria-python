@@ -2,13 +2,14 @@
 This file contains functions for extracting data from text for Egeria Markdown processing
 """
 import re
-from typing import List, Optional, Any
-from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from typing import Any
 
-from md_processing.md_processing_utils.md_processing_constants import INFO,  EXISTS_REQUIRED
-from md_processing.md_processing_utils.common_utils import (debug_level, print_msg, find_key_with_value,
-                                                           get_element_dictionary, update_element_dictionary)
+from md_processing.md_processing_utils.common_md_utils import (print_msg, find_key_with_value, get_element_dictionary,
+                                                               update_element_dictionary)
+from md_processing.md_processing_utils.message_constants import INFO, EXISTS_REQUIRED
+from md_processing.md_processing_utils.md_processing_constants import debug_level
+from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.egeria_tech_client import EgeriaTech
 
 
 def extract_command_plus(block: str) -> tuple[str, str, str] | None:
@@ -73,7 +74,7 @@ def extract_command(block: str) -> str | None:
     return None
 
 
-def extract_attribute(text: str, labels: list[str]) -> str | None:
+def extract_attribute(text: str, labels: set) -> str | None:
     """
         Extracts the attribute value from a string.
 
@@ -90,6 +91,7 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
     # Iterate over the list of labels
     for label in labels:
         # Construct pattern for the current label
+        label = label.strip()
         pattern = rf"## {re.escape(label)}\n(.*?)(?:#|___|>|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:
@@ -107,7 +109,8 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
 
     return None
 
-def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO) -> str | None:
+
+def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> str | None:
     """Process a simple attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and return it if it exists.
        If it doesn`t exist, return None and print an error message with severity of if_missing.
@@ -129,12 +132,14 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
 
     if attribute is None:
         if if_missing == INFO:
-            msg = f"Optional attribute {labels[0]} missing"
+            msg = f"Optional attribute with labels `{labels}` missing"
         else:
-            msg = f"Missing {labels[0]} attribute"
+            msg = f"Missing attribute with labels `{labels}` "
         print_msg(if_missing, msg, debug_level)
         return None
     return attribute
+
+
 # def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO) -> str | None:
 #     """
 #     Processes a simple attribute from a string.
@@ -156,8 +161,8 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
 #     return attribute
 
 
-def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, element_labels: list[str]) \
-        -> tuple[str,list[Any], bool | Any, bool | None | Any] | None:
+def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, element_labels: set) -> tuple[str,
+list[Any], bool | Any, bool | None | Any] | None:
     """
     Processes a list of names specified in the given text, retrieves details for each
     element based on the provided type, and generates a list of valid qualified names.
@@ -218,13 +223,13 @@ def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, el
             msg = f"Found {element_type}: {elements}"
             print_msg("DEBUG-INFO", msg, debug_level)
         else:
-            msg = f" Name list contains one or more invalid qualified names."
+            msg = " Name list contains one or more invalid qualified names."
             print_msg("DEBUG-INFO", msg, debug_level)
         return elements, new_element_list, valid, exists
 
 
-
-# def process_name_list(egeria_client, element_type: str, txt: str, element_labels: list[str]) -> tuple[list, list, bool, bool]:
+# def process_name_list(egeria_client, element_type: str, txt: str, element_labels: list[str]) -> tuple[list, list,
+# bool, bool]:
 #     """
 #     Processes a list of names from a string.
 #
@@ -275,7 +280,7 @@ def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, el
 #
 #     return element_names, element_q_names, all_valid, any_exist
 
-def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, element_labels: list[str], txt: str,
+def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, element_labels: set, txt: str,
                                 action: str, version: str = None) -> tuple[str, str, bool, bool]:
     """
     Processes element identifiers by extracting display name and qualified name from the input text,
@@ -354,7 +359,6 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, el
     return q_name, guid, valid, exists
 
 
-
 def get_element_by_name(egeria_client, element_type: str, element_name: str) -> tuple[
     str | None, str | None, bool | None, bool | None]:
     """
@@ -420,6 +424,8 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     el_qname = details[0]["properties"].get('qualifiedName', None)
     el_guid = details[0]['elementHeader']['guid']
     el_display_name = details[0]["properties"].get('displayName', None)
+    if el_display_name is None:
+        el_display_name = details[0]["properties"].get('name', None)
     update_element_dictionary(el_qname, {
         'guid': el_guid, 'displayName': el_display_name
         })
@@ -428,8 +434,6 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     exists = True
     unique = True
     return el_qname, el_guid, unique, exists
-
-
 
 
 def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
