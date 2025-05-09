@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-A command line interface for Egeria Data techs.
+A object_action line interface for Egeria Data techs.
 
 This is an emerging capability based on the **click** package. Feedback welcome!
 
@@ -53,7 +53,7 @@ from commands.tech.list_solution_components import solution_component_list
 from commands.tech.list_solution_roles import solution_role_list
 from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
-
+from commands.tech.generic_actions import delete_element
 
 @tui()
 @click.version_option("0.0.1", prog_name="egeria_ops")
@@ -819,12 +819,12 @@ def list_solution_components(ctx, search_string):
 #
 
 
-# @cli.group("tell")
-# @click.pass_context
-# def tell(ctx):
-#     """Perform actions an Egeria Objects"""
-#     pass
-
+@cli.group("tell")
+@click.pass_context
+def tell(ctx):
+    """Perform actions an Egeria Objects"""
+    pass
+tell.add_command(delete_element)
 
 if __name__ == "__main__":
     cli()

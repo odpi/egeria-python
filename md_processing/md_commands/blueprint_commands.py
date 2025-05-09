@@ -1,5 +1,5 @@
 """
-This file contains blueprint/solution-related command functions for processing Egeria Markdown
+This file contains blueprint/solution-related object_action functions for processing Egeria Markdown
 """
 from typing import Optional
 
@@ -19,7 +19,7 @@ from md_processing.md_processing_utils.md_processing_constants import (
 
 def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a solution blueprint create or update command by extracting key attributes such as
+    Processes a solution blueprint create or update object_action by extracting key attributes such as
     blueprint name, description, and usage from the given text.
 
     :param txt: A string representing the input cell to be processed for
@@ -96,15 +96,15 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                 msg = f"Create failed because blueprint `{blueprint_name}` exists - changing `Create` to `Update` in processed output \n"
                 print_msg(ERROR, msg, debug_level)
                 print(Markdown(blueprint_display))
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 return None
 
         if object_action == "Update":
             if not blueprint_exists:
                 print(f"\n{ERROR}Blueprint `{blueprint_name}` does not exist! Updating result document with Create "
-                      f"command\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                      f"object_action\n")
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
 
             body = {
                 "class": "ReferenceableRequestBody", "elementProperties": {
@@ -122,7 +122,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         elif object_action == "Create":
             if blueprint_exists:
                 print(f"\nBlueprint `{blueprint_name}` already exists and result document updated\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 blueprint_guid = egeria_client.create_solution_blueprint(blueprint_name, description, usage)
                 if blueprint_guid:
@@ -135,7 +135,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
 def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a solution component create or update command by extracting key attributes such as
+    Processes a solution component create or update object_action by extracting key attributes such as
     component name, description, and parent components from the given text.
 
     :param txt: A string representing the input cell to be processed for
@@ -238,15 +238,15 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                 msg = f"Create failed because component `{component_name}` exists - changing `Create` to `Update` in processed output \n"
                 print_msg(ERROR, msg, debug_level)
                 print(Markdown(component_display))
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 return None
 
         if object_action == "Update":
             if not component_exists:
                 print(f"\n{ERROR}Component `{component_name}` does not exist! Updating result document with Create "
-                      f"command\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                      f"object_action\n")
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
 
             body = {
                 "class": "ReferenceableRequestBody", "elementProperties": {
@@ -285,7 +285,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
         elif object_action == "Create":
             if component_exists:
                 print(f"\nComponent `{component_name}` already exists and result document updated\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 component_guid = egeria_client.create_solution_component(component_name, description, known_blueprint_guid)
                 if component_guid:

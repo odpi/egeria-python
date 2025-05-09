@@ -13,6 +13,7 @@ from httpx import Response
 
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
 from pyegeria.utils import body_slimmer
 
 
@@ -37,32 +38,6 @@ def query_string(params):
 
 def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/data-designer"
-
-
-def extract_mermaid_only(elements) -> list:
-    result = []
-    if type(elements) is dict:
-        return(elements.get('mermaidGraph', '___'))
-    for element in elements:
-        result.append(element.get('mermaidGraph', '___'))
-    return result
-
-
-def extract_basic_dict(elements: dict) -> list:
-    list = []
-    body = {}
-    if type(elements) is dict:
-        body['guid'] = elements['elementHeader']['guid']
-        for key in elements['properties']:
-            body[key] = elements['properties'][key]
-        return body
-
-    for element in elements:
-        body['guid'] = element['elementHeader']['guid']
-        for key in element['properties']:
-            body[key] = element['properties'][key]
-        list.append(body)
-    return list
 
 
 class DataDesigner(Client):
@@ -596,7 +571,7 @@ r       replace_all_properties: bool, default = False
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
                                             body: dict = None) -> None:
         """
-        Connect a data structure to a data class. Async version.
+        Connect a data structure to a data field. Async version.
 
         Parameters
         ----------
@@ -655,7 +630,7 @@ r       replace_all_properties: bool, default = False
     def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
                                body: dict = None) -> None:
         """
-        Connect a data structure to a data class.
+        Connect a data structure to a data field.
 
         Parameters
         ----------
@@ -806,7 +781,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
 
-    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None) -> None:
+    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade: bool=False) -> None:
         """
         Delete a data structure. Request body is optional. Async version.
 
@@ -816,6 +791,8 @@ r       replace_all_properties: bool, default = False
             - the GUID of the parent data structure to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
 
         Returns
         -------
@@ -846,15 +823,15 @@ r       replace_all_properties: bool, default = False
 
 
         """
-
-        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/delete"
+        cascaded_s = str(cascade).lower()
+        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/delete?cascadedDelete={cascaded_s}"
 
         if body is None:
             await self._async_make_request("POST", url)
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_data_structure(self, data_struct_guid: str, body: dict = None) -> None:
+    def delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade: bool = False) -> None:
         """
         Delete a data structure. Request body is optional.
 
@@ -864,6 +841,9 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data structure to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
+
 
         Returns
         -------
@@ -895,7 +875,7 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body))
+        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade))
 
     async def _async_find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
                                               output_format: str = "DICT") -> list | str:
@@ -998,7 +978,7 @@ r       replace_all_properties: bool, default = False
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
+            - output format of the data structure. Possible values: "DICT", 'REPORT', 'FORM', "JSON", "MERMAID".
 
         Returns
         -------
@@ -1021,7 +1001,7 @@ r       replace_all_properties: bool, default = False
               "asOfTime": "{{$isoTimestamp}}",
               "effectiveTime": "{{$isoTimestamp}}",
               "forLineage": false,
-              "forDuplicateProcessing : false,
+              "forDuplicateProcessing": false,
               "limitResultsByStatus": ["ACTIVE"],
               "sequencingOrder": "PROPERTY_ASCENDING",
               "sequencingProperty": "qualifiedName",
@@ -1311,7 +1291,8 @@ r       replace_all_properties: bool, default = False
             self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_get_data_structures_by_guid(self, guid: str, body: dict = None, output_format: str = "DICT") -> list | str:
+    async def _async_get_data_structures_by_guid(self, guid: str, body: dict = None,
+                                                 output_format: str = "DICT") -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1364,8 +1345,7 @@ r       replace_all_properties: bool, default = False
             return self.generate_data_structure_output(element, filter, output_format)
         return element
 
-    def get_data_structures_by_guid(self, guid: str, body: str = None,
-                                    output_format: str = "DICT") -> list | str:
+    def get_data_structures_by_guid(self, guid: str, body: str = None, output_format: str = "DICT") -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1927,7 +1907,7 @@ r       replace_all_properties: bool, default = False
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                             body: dict = None) -> None:
         """
-        Connect a nested data class to a data class. Request body is optional. Async version.
+        Connect a nested data field to a data field. Request body is optional. Async version.
 
         Parameters
         ----------
@@ -2137,7 +2117,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
-    async def _async_delete_data_field(self, data_field_guid: str, body: dict = None) -> None:
+    async def _async_delete_data_field(self, data_field_guid: str, body: dict = None, cascade:bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
 
@@ -2147,6 +2127,9 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then all child data fields will be deleted as well.
+
 
         Returns
         -------
@@ -2177,15 +2160,15 @@ r       replace_all_properties: bool, default = False
 
 
         """
-
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
+        cascade_s = str(cascade).lower()
+        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete?cascadedDelete={cascade_s}"
 
         if body is None:
             await self._async_make_request("POST", url)
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_data_field(self, data_field_guid: str, body: dict = None) -> None:
+    def delete_data_field(self, data_field_guid: str, body: dict = None, cascade:bool = False) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -2195,6 +2178,9 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class the data class to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then all child data fields will be deleted as well.
+
 
         Returns
         -------
@@ -2226,9 +2212,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body))
+        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade))
 
-    async def _async_find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size, output_format: str = "DICT") -> list | str:
+    async def _async_find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
+                                          output_format: str = "DICT") -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
@@ -2273,8 +2260,8 @@ r       replace_all_properties: bool, default = False
             return self.generate_data_field_output(elements, filter, output_format)
         return elements
 
-
-    def find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size, output_format: str = "DICT") -> list | str:
+    def find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
+                             output_format: str = "DICT") -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
@@ -2379,8 +2366,8 @@ r       replace_all_properties: bool, default = False
         return elements
 
     def find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                starts_with: bool = True, ends_with: bool = False,
-                                ignore_case: bool = True, output_format: str = "DICT") -> list | str:
+                                starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                                output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -2433,13 +2420,12 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields_w_body(body, start_from, page_size, starts_with,
-                                                ends_with, ignore_case, output_format))
+            self._async_find_data_fields_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
+                                                output_format))
         return response
 
     async def _async_find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                                      starts_with: bool = True, ends_with: bool = False,
-                                      ignore_case: bool = True,
+                                      starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                                       output_format: str = "DICT") -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
@@ -2497,8 +2483,8 @@ r       replace_all_properties: bool, default = False
         return elements
 
     def find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                         starts_with: bool = True, ends_with: bool = False,
-                         ignore_case: bool = True, output_format: str = "DICT") -> list | str:
+                         starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                         output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2538,8 +2524,8 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields(filter, start_from, page_size, starts_with,
-                                         ends_with, ignore_case, output_format))
+            self._async_find_data_fields(filter, start_from, page_size, starts_with, ends_with, ignore_case,
+                                         output_format))
         return response
 
     async def _async_get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
@@ -2657,11 +2643,12 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_fields_by_name(filter, body, start_from,
-                                                                               page_size, output_format))
+        response = loop.run_until_complete(
+            self._async_get_data_fields_by_name(filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_get_data_field_by_guid(self, guid: str, body: dict = None, output_format: str = "DICT") -> list | str:
+    async def _async_get_data_field_by_guid(self, guid: str, body: dict = None,
+                                            output_format: str = "DICT") -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -3381,14 +3368,14 @@ r       replace_all_properties: bool, default = False
 
         Sample body:
 
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
+            {
+              "class": "MetadataSourceRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
 
         """
 
@@ -3692,7 +3679,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_detach_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
 
-    async def _async_delete_data_class(self, data_class_guid: str, body: dict = None) -> None:
+    async def _async_delete_data_class(self, data_class_guid: str, body: dict = None, cascade:bool= False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
 
@@ -3702,6 +3689,9 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then the delete cascades to dependents
+
 
         Returns
         -------
@@ -3732,15 +3722,15 @@ r       replace_all_properties: bool, default = False
 
 
         """
-
-        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete"
+        cascade_s = str(cascade).lower()
+        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete?cascadedDelete={cascade_s}"
 
         if body is None:
             await self._async_make_request("POST", url)
         else:
             await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_data_class(self, data_class_guid: str, body: dict = None) -> None:
+    def delete_data_class(self, data_class_guid: str, body: dict = None, cascade:bool= False) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -3750,6 +3740,9 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class the data class to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade: bool, optional
+            - if True, then the delete cascades to dependents
+
 
         Returns
         -------
@@ -3781,10 +3774,10 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body))
+        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade))
 
-    async def _async_find_all_data_classes(self, start_from: int = 0,
-                                           page_size: int = max_paging_size, output_format: str = "DICT") -> list | str:
+    async def _async_find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size,
+                                           output_format: str = "DICT") -> list | str:
         """ Returns a list of all data classes. Async version.
 
         Parameters
@@ -3860,14 +3853,12 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size,
-                                                                             output_format))
+        response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size, output_format))
         return response
 
     async def _async_find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                               starts_with: bool = True, ends_with: bool = False,
-                                              ignore_case: bool = True,
-                                              output_format: str = "DICT") -> list | str:
+                                              ignore_case: bool = True, output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
             Async version.
 
@@ -3938,8 +3929,8 @@ r       replace_all_properties: bool, default = False
         return elements
 
     def find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                 starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = True, output_format: str = "DICT") -> list | str:
+                                 starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                                 output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -3992,13 +3983,12 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_classes_w_body(body, start_from, page_size, starts_with,
-                                                 ends_with, ignore_case, output_format))
+            self._async_find_data_classes_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
+                                                 output_format))
         return response
 
     async def _async_find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                                       starts_with: bool = True, ends_with: bool = False,
-                                       ignore_case: bool = True,
+                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                                        output_format: str = "DICT") -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
@@ -4056,8 +4046,8 @@ r       replace_all_properties: bool, default = False
         return elements
 
     def find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
-                          starts_with: bool = True, ends_with: bool = False,
-                          ignore_case: bool = True, output_format: str = "DICT") -> list | str:
+                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
+                          output_format: str = "DICT") -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -4097,12 +4087,13 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_classes(filter, start_from, page_size, starts_with,
-                                          ends_with, ignore_case, output_format))
+            self._async_find_data_classes(filter, start_from, page_size, starts_with, ends_with, ignore_case,
+                                          output_format))
         return response
 
     async def _async_get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                              page_size: int = max_paging_size, output_format: str = "DICT") -> list | str:
+                                              page_size: int = max_paging_size,
+                                              output_format: str = "DICT") -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -4215,11 +4206,12 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_classes_by_name(filter, body, start_from,
-                                                                                page_size, output_format))
+        response = loop.run_until_complete(
+            self._async_get_data_classes_by_name(filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_get_data_class_by_guid(self, guid: str, body: dict = None ,output_format: str = "DICT") -> list | str:
+    async def _async_get_data_class_by_guid(self, guid: str, body: dict = None,
+                                            output_format: str = "DICT") -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -4922,23 +4914,179 @@ r       replace_all_properties: bool, default = False
             self._async_detach_certification_type_from_data_structure(certification_type_guid, data_structure_guid,
                                                                       body))
 
+    def _extract_data_structure_properties(self, element: dict) -> dict:
+        """
+        Extract common properties from a data structure element.
+
+        Args:
+            element (dict): The data structure element
+
+        Returns:
+            dict: Dictionary of extracted properties
+        """
+        guid = element['elementHeader'].get("guid", None)
+        properties = element.get('properties', {})
+        display_name = properties.get("displayName", "") or ""
+        description = properties.get("description", "") or ""
+        qualified_name = properties.get("qualifiedName", "") or ""
+        namespace = properties.get("namespace", "") or ""
+        version_id = properties.get("versionIdentifier", "") or ""
+
+        return {
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'qualified_name': qualified_name, 'namespace': namespace, 'version_identifier': version_id
+            }
+
+    def _extract_data_class_properties(self, element: dict) -> dict:
+        """
+        Extract common properties from a data class element.
+
+        Args:
+            element (dict): The data class element
+
+        Returns:
+            dict: Dictionary of extracted properties
+        """
+        guid = element['elementHeader'].get("guid", None)
+        properties = element.get('properties', {})
+        display_name = properties.get("displayName", "") or ""
+        description = properties.get("description", "") or ""
+        qualified_name = properties.get("qualifiedName", "") or ""
+
+        return {
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'qualified_name': qualified_name
+            }
+
+    def _extract_data_field_properties(self, element: dict) -> dict:
+        """
+        Extract common properties from a data field element.
+
+        Args:
+            element (dict): The data field element
+
+        Returns:
+            dict: Dictionary of extracted properties
+        """
+        guid = element['elementHeader'].get("guid", None)
+        properties = element.get('properties', {})
+        display_name = properties.get("displayName", "") or ""
+        description = properties.get("description", "") or ""
+        qualified_name = properties.get("qualifiedName", "") or ""
+
+        # Get data type from extendedProperties if available
+        extended_properties = properties.get("extendedProperties", {})
+        data_type = extended_properties.get("dataType", "")
+
+        return {
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'qualified_name': qualified_name, 'data_type': data_type
+            }
+
     def generate_basic_structured_output(self, elements, filter, output_format) -> str | list:
-        match output_format:
-            case "MERMAID":
-                return extract_mermaid_only(elements)
-            case "DICT":
-                return extract_basic_dict(elements)
-            case _:
-                return None
+        """
+        Generate output in the specified format for the given elements.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing element data
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        # Handle MERMAID and DICT formats using existing methods
+        if output_format == "MERMAID":
+            return extract_mermaid_only(elements)
+        elif output_format == "DICT":
+            return extract_basic_dict(elements)
+
+        # For other formats (MD, FORM, REPORT, LIST), use generate_output
+        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Name', 'key': 'display_name'}, {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Description', 'key': 'description', 'format': True}]
+
+            return generate_output(elements=elements, search_string=filter, entity_type="Data Element",
+                output_format=output_format, extract_properties_func=self._extract_data_structure_properties,
+                columns=columns if output_format == 'LIST' else None)
+
+        # Default case
+        return None
 
     def generate_data_structure_output(self, elements, filter, output_format) -> str | list:
-        return self.generate_basic_structured_output(elements, filter, output_format)
+        """
+        Generate output for data structures in the specified format.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing data structure elements
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        if output_format in ["MD", "FORM", "REPORT", "LIST"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Structure Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Namespace', 'key': 'namespace'},
+                {'name': 'Version', 'key': 'version_identifier'},
+                {'name': 'Description', 'key': 'description', 'format': True}]
+
+            return generate_output(elements=elements, search_string=filter, entity_type="Data Structure",
+                output_format=output_format, extract_properties_func=self._extract_data_structure_properties,
+                columns=columns if output_format == 'LIST' else None)
+        else:
+            return self.generate_basic_structured_output(elements, filter, output_format)
 
     def generate_data_class_output(self, elements, filter, output_format) -> str | list:
-        return self.generate_basic_structured_output(elements, filter, output_format)
+        """
+        Generate output for data classes in the specified format.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing data class elements
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        if output_format in ["MD", "FORM", "REPORT", "LIST"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Class Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Description', 'key': 'description', 'format': True}]
+
+            return generate_output(elements=elements, search_string=filter, entity_type="Data Class",
+                output_format=output_format, extract_properties_func=self._extract_data_class_properties,
+                columns=columns if output_format == 'LIST' else None)
+        else:
+            return self.generate_basic_structured_output(elements, filter, output_format)
 
     def generate_data_field_output(self, elements, filter, output_format) -> str | list:
-        return self.generate_basic_structured_output(elements, filter, output_format)
+        """
+        Generate output for data fields in the specified format.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing data field elements
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
+        Returns:
+            Formatted output as a string or list of dictionaries
+        """
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Field Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Data Type', 'key': 'data_type'},
+                {'name': 'Description', 'key': 'description', 'format': True}]
+
+            return generate_output(elements=elements, search_string=filter, entity_type="Data Field",
+                output_format=output_format, extract_properties_func=self._extract_data_field_properties,
+                columns=columns if output_format == 'LIST' else None)
+        else:
+            return self.generate_basic_structured_output(elements, filter, output_format)
+
 
 if __name__ == "__main__":
     print("Data Designer")

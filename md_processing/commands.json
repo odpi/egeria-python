@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "May 1, 2025 at 11:04:36 AM",
+    "exported": "May 9, 2025 at 1:59:48 PM",
     "Data Field": {
       "display_name": "Data Field",
       "qn_prefix": "DataField",
@@ -17,7 +17,7 @@
       "anchor_scope_guid": "",
       "parent_at_end1": true,
       "style": "",
-      "Comment": "",
+      "Comment": "external_source_guid = attributes.get('External Source Name',{}).get('guid', None)\nexternal_source_name = attributes.get('External Source Name',{}).get('value', None)\neffective_time = attributes.get('Effective Time', {}).get('value', None)\nfor_lineage = attributes.get('For Lineage', {}).get('value', None)\nfor_duplicate_processing = attributes.get('For Duplicate Processing', {}).get('value', None)\nanchor_guid = attributes.get('Anchor ID', {}).get('guid', None)\nis_own_anchor = attributes.get('Is Own Anchor', {}).get('value', None)\nparent_id = attributes.get('Parent ID', {}).get('value', None)\nparent_guid = attributes['Parent ID'].get('guid', None)\nparent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)\nparent_relationship_properties = attributes.get('Parent Relationship Properties',{}).get('value', None)\nparent_at_end1 = attributes.get('Parent at End1', {}).get('value', None)\n\n\ndisplay_name = attributes['Display Name'].get('value', None)\n\nnamespace = attributes['Namespace'].get('value', None)\ndescription = attributes['Description'].get('value', None)\nversion_id = attributes.get('Version Identifier',{}).get('value', None)\naliases = attributes.get('Aliases',{}).get('value', None)\nname_pattern = attributes.get('Name Pattern',{}).get('value', None)\nis_nullable = attributes.get('Is Nullable',{}).get('value', None)\ndefault_value = attributes.get('Default Value',{}).get('value', None)\ndata_type = attributes.get('Data Type',{}).get('value', None)\nmin_length = attributes.get('Minimum Length',{}).get('value', None)\nlength = attributes.get('Length',{}).get('value', None)\nprecision = attributes.get('Precision',{}).get('value', None)\nordered_values = attributes.get('Ordered Values',{}).get('value', None)\nsort_order = attributes.get('Sort Order',{}).get('value', None)\nadditional_properties = attributes.get('Additional Properties',{}).get('value', None)\neffective_from = attributes.get('Effective From',{}).get('value', None)\neffective_to = attributes.get('Effective To',{}).get('value', None)\n\nposition = attributes['Position'].get('value', None)\nmin_cardinality = attributes['Minimum Cardinality'].get('value', None)\nmax_cardinality = attributes['Maximum Cardinality'].get('value', None)\nin_data_structure = attributes['In Data Structure'].get('value', None)\ndata_class = attributes['Data Class'].get('value', None)\nglossary_term = attributes['Glossary Term'].get('value', None)\n\n\n\nin_data_dictionary = attributes['In Data Dictionary'].get('value', None)\nparent_data_field = attributes['Parent Data Field'].get('value', None)\nparent_data_field_guid = attributes['Parent Data Field'].get('guid', None)\n\n",
       "Attributes": [
         {
           "Display Name": {
@@ -36,7 +36,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "ID",
-            "attr_labels": "Name, Data Field",
+            "attr_labels": "Name; Data Field",
             "user_specified": true,
             "unique": false,
             "MyString": "",
@@ -76,7 +76,7 @@
             "min_cardinality": 1,
             "max_cardinality": 1,
             "default_value": "string",
-            "valid_values": "",
+            "valid_values": "Integer; String; Float; Big Int; Big Decimal; Double; Float; Char; integer; string; float; list; dict; str",
             "existing_element": "",
             "description": "The data type of the data field. Point to data type valid value list if exists.",
             "qualified_name_pattern": "",
@@ -88,7 +88,7 @@
             "attr_labels": "",
             "user_specified": true,
             "unique": false,
-            "input_required": false,
+            "input_required": true,
             "Comment": ""
           }
         },
@@ -97,7 +97,7 @@
             "variable_name": "position",
             "position": 3,
             "examples": "",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "-1",
             "valid_values": "",
@@ -121,7 +121,7 @@
             "variable_name": "min_cardinality",
             "position": 4,
             "examples": "",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "1",
             "valid_values": "",
@@ -133,7 +133,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "Simple Int",
-            "attr_labels": "",
+            "attr_labels": "Min Cardinality; min cardinality",
             "user_specified": true,
             "unique": false,
             "input_required": false,
@@ -145,7 +145,7 @@
             "variable_name": "max_cardinality",
             "position": 5,
             "examples": "",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "1",
             "valid_values": "",
@@ -157,7 +157,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "Simple Int",
-            "attr_labels": "",
+            "attr_labels": "max cardinality; Max Cardlinality",
             "user_specified": true,
             "unique": false,
             "input_required": false,
@@ -169,8 +169,8 @@
             "variable_name": "in_data_structure",
             "position": 6,
             "examples": "US_Address",
-            "min_cardinality": 1,
-            "max_cardinality": 1,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
             "default_value": "",
             "valid_values": "",
             "existing_element": "DataStructure",
@@ -181,10 +181,10 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "Reference Name List",
-            "attr_labels": "",
+            "attr_labels": "Data Structure",
             "user_specified": true,
             "unique": false,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
@@ -193,10 +193,10 @@
             "variable_name": "data_class",
             "position": 7,
             "examples": "zip code",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "",
-            "valid_values": "",
+            "valid_values": "Integer;oat,;String,;List; Dict;Boolean",
             "existing_element": "DataClass",
             "description": "The data class that values of this data field conform to.",
             "qualified_name_pattern": "",
@@ -217,7 +217,7 @@
             "variable_name": "glossary_term",
             "position": 8,
             "examples": "Term::Zip Code",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "",
             "valid_values": "",
@@ -241,8 +241,8 @@
             "variable_name": "aliases",
             "position": 9,
             "examples": "",
-            "min_cardinality": 1,
-            "max_cardinality": 1,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
@@ -261,11 +261,35 @@
           }
         },
         {
+          "Name Patterns": {
+            "variable_name": "name_patterns",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Name patterns  for the field.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
           "Namespace": {
             "variable_name": "namespace",
             "position": 10,
             "examples": "Shipping Department",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "",
             "valid_values": "",
@@ -285,11 +309,203 @@
           }
         },
         {
+          "isNullable": {
+            "variable_name": "is_nullable",
+            "position": 11,
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "true",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Can the values within the dataclass be absent?",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "attr_labels": "Nullable",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Minimum Length": {
+            "variable_name": "min_length",
+            "position": 12,
+            "attr_labels": "Min Length",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple Int",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Length": {
+            "variable_name": "length",
+            "position": 13,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The length of a value for a field.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple Int",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Precision": {
+            "variable_name": "precision",
+            "position": 14,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The precision of a numeric",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": "How do we express precision?"
+          }
+        },
+        {
+          "Ordered Values": {
+            "variable_name": "ordered_values",
+            "position": 15,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "is this field in an ordered list?",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": "Need good examples of this. Not sure I understand how to interpret."
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "position": 16,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Method by which this field should be sorted?",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": "Need examples of this."
+          }
+        },
+        {
+          "Additional Properties": {
+            "variable_name": "additional_properties",
+            "position": 17,
+            "attr_labels": "",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Default Value": {
+            "variable_name": "default_value",
+            "position": 18,
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Specify a default value for the data class.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "attr_labels": "Default",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
           "Version Identifier": {
             "variable_name": "version_id",
-            "position": 11,
+            "position": 19,
             "examples": "0.1",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "",
             "valid_values": "",
@@ -311,10 +527,10 @@
         {
           "In Data Dictionary": {
             "variable_name": "in_data_dictionary",
-            "position": 12,
+            "position": 20,
             "examples": "Shipping Data Dictionary",
-            "min_cardinality": 1,
-            "max_cardinality": 1,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
             "default_value": "",
             "valid_values": "",
             "existing_element": "DataDictionary",
@@ -335,9 +551,9 @@
         {
           "Parent Data Field": {
             "variable_name": "parent_data_field",
-            "position": 13,
+            "position": 21,
             "examples": "",
-            "min_cardinality": 1,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "default_value": "",
             "valid_values": "",
@@ -359,7 +575,7 @@
         {
           "Qualified Name": {
             "variable_name": "qualified_name",
-            "position": 14,
+            "position": 22,
             "examples": "dataField::a data field",
             "min_cardinality": 1,
             "max_cardinality": 1,
@@ -376,14 +592,14 @@
             "attr_labels": "",
             "user_specified": true,
             "unique": true,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
         {
           "GUID": {
             "variable_name": "guid",
-            "position": 15,
+            "position": 23,
             "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
             "min_cardinality": 1,
             "max_cardinality": 1,
@@ -400,6 +616,30 @@
             "attr_labels": "",
             "user_specified": false,
             "unique": true,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Merge Update": {
+            "variable_name": "merge_update",
+            "position": 0,
+            "attr_labels": "Merge",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, only those attributes specified in the update will be updated; If false, any attributes not provided during the update will be set to None.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
             "input_required": false,
             "Comment": ""
           }
@@ -441,7 +681,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "ID",
-            "attr_labels": "Name, Data Dictionary",
+            "attr_labels": "Name; Data Dictionary; Data Dict",
             "user_specified": true,
             "unique": false,
             "input_required": true,
@@ -600,7 +840,7 @@
             "examples": "",
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "default_value": "",
+            "default_value": "false",
             "valid_values": "",
             "existing_element": "",
             "description": "Is the parent at end1 of the relationship?",
@@ -636,7 +876,7 @@
             "attr_labels": "",
             "user_specified": true,
             "unique": true,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
@@ -661,6 +901,11 @@
             "user_specified": false,
             "unique": true,
             "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Merge Update": {
             "Comment": ""
           }
         }
@@ -860,7 +1105,7 @@
             "examples": "",
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "default_value": "",
+            "default_value": "false",
             "valid_values": "",
             "existing_element": "",
             "description": "Is the parent at end1 of the relationship?",
@@ -923,6 +1168,11 @@
             "input_required": false,
             "Comment": ""
           }
+        },
+        {
+          "Merge Update": {
+            "Comment": ""
+          }
         }
       ]
     },
@@ -961,7 +1211,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "ID",
-            "attr_labels": "",
+            "attr_labels": "Name; Display Name; Data Struct",
             "user_specified": true,
             "unique": false,
             "input_required": true,
@@ -993,26 +1243,26 @@
           }
         },
         {
-          "In Data Structure": {
-            "variable_name": "in_data_structure",
+          "In Data Specification": {
+            "variable_name": "in_data_spec",
             "position": 2,
-            "examples": "US_Address",
+            "examples": "",
             "min_cardinality": 0,
-            "max_cardinality": 1,
+            "max_cardinality": -1,
             "default_value": "",
             "valid_values": "",
-            "existing_element": "DataStructure",
-            "description": "The data structure this field is a member of.",
+            "existing_element": "DataSpecification",
+            "description": "The data specifications this structure is a member of.",
             "qualified_name_pattern": "",
             "isParent": false,
             "isAnchor": false,
             "ReferenceURL": "",
             "generated": false,
             "style": "Reference Name List",
-            "attr_labels": "",
+            "attr_labels": "In Data Spec",
             "user_specified": true,
             "unique": false,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
@@ -1036,7 +1286,7 @@
             "attr_labels": "",
             "user_specified": true,
             "unique": true,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
@@ -1061,6 +1311,11 @@
             "user_specified": false,
             "unique": true,
             "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Merge Update": {
             "Comment": ""
           }
         }
@@ -1101,7 +1356,7 @@
             "ReferenceURL": "",
             "generated": false,
             "style": "ID",
-            "attr_labels": "Data Class",
+            "attr_labels": "Data Class; Display Name; Name",
             "user_specified": true,
             "unique": false,
             "input_required": true,
@@ -1283,7 +1538,7 @@
             "examples": "",
             "min_cardinality": 1,
             "max_cardinality": 1,
-            "default_value": "",
+            "default_value": "true",
             "valid_values": "",
             "existing_element": "",
             "description": "Allow duplicate values within the data class?",
@@ -1307,7 +1562,7 @@
             "examples": "",
             "min_cardinality": 1,
             "max_cardinality": 1,
-            "default_value": "",
+            "default_value": "true",
             "valid_values": "",
             "existing_element": "",
             "description": "Can the values within the dataclass be absent?",
@@ -1436,7 +1691,7 @@
             "isAnchor": false,
             "ReferenceURL": "",
             "generated": false,
-            "style": "SImple Int",
+            "style": "Simple Int",
             "attr_labels": "Range To",
             "user_specified": true,
             "unique": false,
@@ -1512,7 +1767,7 @@
             "attr_labels": "",
             "user_specified": true,
             "unique": true,
-            "input_required": true,
+            "input_required": false,
             "Comment": ""
           }
         },
@@ -1536,6 +1791,563 @@
             "attr_labels": "",
             "user_specified": false,
             "unique": true,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Merge Update": {
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Data fields": {
+      "display_name": "View Data Fields",
+      "qn_prefix": "",
+      "alternate_names": "List Data Fields",
+      "description": "Return the data fields, optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report; Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Data Structures": {
+      "display_name": "View Data Structures",
+      "qn_prefix": "",
+      "alternate_names": "List Data Structures",
+      "description": "Return the data structures, optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report; Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Data Specifications": {
+      "display_name": "View Data Specifications",
+      "qn_prefix": "",
+      "alternate_names": "List Data Specifications; List Data Specs; View Data Specs",
+      "description": "Return the data specifications, optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "display",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report; Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Detailed Data Field": {
+      "display_name": "View Detailed Data Field",
+      "qn_prefix": "",
+      "alternate_names": "List Detailed Data Field",
+      "description": "Return the data field details optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report;Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Detailed data Structures": {
+      "display_name": "View Detailed Data Structures",
+      "qn_prefix": "",
+      "alternate_names": "List Detailed Data Structures",
+      "description": "Return the data structure details, optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report; Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        }
+      ]
+    },
+    "View Data Dictionaries": {
+      "display_name": "View Data Dictionaries",
+      "qn_prefix": "",
+      "alternate_names": "List Dictionary; List Dictionaries; View Data Dictionary",
+      "description": "Return the data dictionaries, optionally filtered by the search string.",
+      "upsert": false,
+      "list": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "isOwnAnchor": false,
+      "parent_guid": "",
+      "parent_relationship_type_name": "",
+      "anchor_scope_guid": "",
+      "parent_at_end1": false,
+      "style": "",
+      "Comment": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Filter",
+            "examples": "",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "*",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An optional search string to filter results by.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "position": 0,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "List",
+            "valid_values": "List; Form; Report; Dict",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "Comment": ""
+          }
+        },
+        {
+          "Detailed": {
+            "variable_name": "detailed",
+            "position": 0,
+            "attr_labels": "",
+            "examples": "True; False",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true a more detailed set of attributes will be teturned.",
+            "qualified_name_pattern": "",
+            "isParent": false,
+            "isAnchor": false,
+            "ReferenceURL": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
             "input_required": false,
             "Comment": ""
           }

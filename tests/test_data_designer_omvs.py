@@ -17,19 +17,18 @@ import time
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria import MetadataExplorer
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
-)
+    )
 from pyegeria.data_designer_omvs import DataDesigner
 
 disable_ssl_warnings = True
 
 
-console = Console()
+console = Console(width=250)
 
 
 def jprint(info, comment=None):
@@ -45,7 +44,7 @@ def valid_guid(guid):
         return True
 
 
-class TestMetadataExplorer:
+class TestDataDesigner:
     good_view_server_1 = "qs-view-server"
     platform_url = "https://localhost:9443"
     view_server = "qs-view-server"
@@ -126,9 +125,34 @@ class TestMetadataExplorer:
         finally:
             m_client.close_session()
 
-    def test_link_member_data_fieldy(self):
-        struct_guid = "b4361286-31ad-42d2-8315-cb013b24fe1a"
-        member_guid = "d58698e3-0e9c-4237-9855-3c5949e5e64a"
+    def test_delete_data_structure(self):
+        guid = '1a6ef664-a107-4d6a-ade2-e6906cc38c08'
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.delete_data_structure(guid, cascade=True)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+            )
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_link_member_data_field(self):
+        struct_guid = "e441f9f1-4dd0-4960-b11d-08a1b8c717f6"
+        member_guid = "ca085aa8-c5bb-4a15-ab2b-73be43166f3c"
 
         body = {
           "class" : "MemberDataFieldRequestBody",
@@ -149,7 +173,7 @@ class TestMetadataExplorer:
             m_client.link_member_data_field(struct_guid,member_guid, body)
             duration = time.perf_counter() - start_time
             print(
-                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                f"\n\tDuration was {duration:.2f} seconds"
             )
 
             assert True
@@ -163,6 +187,34 @@ class TestMetadataExplorer:
 
         finally:
             m_client.close_session()
+
+    def test_delete_data_field(self):
+        guid = 'c14ab70e-d3f5-440c-a389-50837cdc012b'
+        # guid = 'b18df5d5-23c6-4c85-a06d-e1da6088901c'
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.delete_data_field(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+            )
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
 
     def test_find_all_data_structures(self):
 
@@ -310,14 +362,14 @@ class TestMetadataExplorer:
         finally:
             m_client.close_session()
 
-    def test_find_all_data_field(self):
+    def test_find_all_data_fields(self):
 
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="MERMAID")
+            response = m_client.find_all_data_fields(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -419,8 +471,8 @@ class TestMetadataExplorer:
               "property2": "propertyValue2"
             },
             "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
+            "allowsDuplicateValues": True,
+            "isNullable": False,
             "defaultValue": "",
             "averageValue": "",
             "valueList": [],

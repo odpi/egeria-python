@@ -14,6 +14,7 @@ import json
 import time
 
 from rich import print, print_json
+from rich.console import Console
 
 from pyegeria import (
     CollectionManager,
@@ -25,6 +26,7 @@ from pyegeria import (
 
 disable_ssl_warnings = True
 
+console = Console(width=250)
 
 class TestCollectionManager:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -86,8 +88,8 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
             # classification = "RootCollection"
-            classification = "Folder"
-            response = c_client.get_classified_collections(classification)
+            classification = "DataDictionary"
+            response = c_client.get_classified_collections(classification, output_format="LIST")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -128,7 +130,7 @@ class TestCollectionManager:
             search_string = "*"
 
             response = c_client.find_collections(
-                search_string, None, True, ignore_case=False, output_format="JSON"
+                search_string, None, True, ignore_case=False, output_format="REPORT"
             )
             duration = time.perf_counter() - start_time
 
@@ -139,7 +141,7 @@ class TestCollectionManager:
                 print(f"Found {len(response)} collections {type(response)}\n\n")
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\nGUID is: " + response)
+                console.print(response)
             assert True
 
         except (
@@ -196,7 +198,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "Sustainability Collection"
+            collection_type = "Data Dictionary"
 
             response = c_client.get_collections_by_type(collection_type)
             duration = time.perf_counter() - start_time
@@ -233,15 +235,15 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5bc0641c-6016-499a-a64b-54dc46a8a07f"
+            collection_guid = "75d195f4-45b9-4b35-acba-8f878a7dd74b"
 
-            response = c_client.get_collection_by_guid(collection_guid)
+            response = c_client.get_collection_by_guid(collection_guid, output_format="FORM")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Type of response is {type(response)}")
 
-            if type(response) is dict:
+            if isinstance(response, (dict, list)):
                 print("dict:\n\n")
                 print_json(json.dumps(response, indent=4))
             elif type(response) is tuple:
@@ -813,8 +815,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "2b7e1520-b508-40b9-8a36-fc8a1e189eda"
-            response = c_client.delete_collection(collection_guid)
+            collection_guid = "49c844aa-8f4a-4b88-b7b0-e7793b7b1975"
+            response = c_client.delete_collection(collection_guid, cascade=True)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")
             print(f"\n\tDuration was {duration} seconds")
@@ -888,8 +890,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "fbcfdb5a-5d32-4f1e-b85b-0f67ff43275e"
-            element_guid = "5c8e1430-8944-466e-90ba-245e861d1285"
+            collection_guid = "acf076a8-f214-4464-9b52-6207063b2d0d"
+            element_guid = "0482af4a-12f2-4454-a7af-382ffc9e04fb"
             body = {
                 "class": "CollectionMembershipProperties",
                 "membershipRationale": "test purposes",

@@ -26,10 +26,10 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
     Args:
         block: A string containing the block of text to search for the
-            command and action.
+            object_action and action.
 
     Returns:
-        A tuple containing the command, the object type, and the object action if a
+        A tuple containing the object_action, the object type, and the object action if a
         match is found. Otherwise, returns None.
     """
     # Filter out lines beginning with '>'
@@ -54,7 +54,7 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
 def extract_command(block: str) -> str | None:
     """
-    Extracts a command from a block of text that is contained between a single hash ('#') and
+    Extracts a object_action from a block of text that is contained between a single hash ('#') and
     either a double hash ('##'), a newline character, or the end of the string.
 
     The function searches for a specific pattern within the block of text and extracts the
@@ -63,10 +63,10 @@ def extract_command(block: str) -> str | None:
 
     Args:
         block: A string representing the block of text to process. Contains the content
-            in which the command and delimiters are expected to be present.
+            in which the object_action and delimiters are expected to be present.
 
     Returns:
-        The extracted command as a string if a match is found, otherwise None.
+        The extracted object_action as a string if a match is found, otherwise None.
     """
     match = re.search(r"#(.*?)(?:##|\n|$)", block)  # Using a non-capturing group
     if match:
@@ -118,7 +118,7 @@ def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> s
        Parameters:
        ----------
        txt: str
-         The block of command text to extract attributes from.
+         The block of object_action text to extract attributes from.
        labels: list
          The possible attribute labels to search for. The first label will be used in messages.
        if_missing: str, default is INFO
@@ -296,7 +296,7 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, el
     txt: str
         A string representing the input text to be processed for extracting element identifiers.
     action: str
-        The action command to be executed (e.g., 'Create', 'Update', 'Display', ...)
+        The action object_action to be executed (e.g., 'Create', 'Update', 'Display', ...)
     version: str, optional = None
         An optional version identifier used if we need to construct the qualified name
 
@@ -382,16 +382,18 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     if q_name:  # use information from element_dictionary
         guid = element_dict[q_name].get('guid', None)
         unique = True
-        exists = True
+
         if guid is not None:  # Found complete entry in element_dictionary
             msg = f'Found {element_type} qualified name and guid in element_dictionary for `{element_name}`'
             print_msg("DEBUG-INFO", msg, debug_level)
+            exists = True
             return q_name, guid, unique, exists
 
         else:  # Missing guid from element_dictionary
             guid = egeria_client.get_element_guid_by_unique_name(element_name)
             if guid == NO_ELEMENTS_FOUND:
                 guid = None
+                exists = False
                 msg = f"No {element_type} guid found with name {element_name} in Egeria"
                 print_msg("DEBUG-INFO", msg, debug_level)
 
@@ -436,13 +438,13 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     return el_qname, el_guid, unique, exists
 
 
-def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
+def update_a_command(txt: str, object_action: str, obj_type: str, q_name: str, u_guid: str) -> str:
     """
     Updates a command in a string.
 
     Args:
         txt: The input string.
-        command: The command to update.
+        object_action: The command to update.
         obj_type: The type of object to update.
         q_name: The qualified name of the object.
         u_guid: The GUID of the object.
@@ -450,31 +452,28 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     Returns:
         The updated string.
     """
-    # Split the command into action and object
-    parts = command.split()
-    action = parts[0]
 
     # Determine the new action
-    new_action = "Update" if action == "Create" else "Create"
+    new_action = "Update" if object_action == "Create" else "Create"
 
-    # Replace the command
+    # Replace the object_action
     new_command = f"{new_action} {obj_type}"
-    pattern = rf"#{command}(?:##|\n|$)"
-    replacement = f"#{new_command}\n"
+    pattern = rf"#\s*{object_action}\s+{obj_type}"
+    replacement = f"# {new_command}"
     updated_txt = re.sub(pattern, replacement, txt)
 
     # Add qualified name and GUID if updating
     if new_action == "Update" and q_name and u_guid:
         # Check if Qualified Name section exists
         if "## Qualified Name" not in updated_txt:
-            # Add Qualified Name section before the first ## that's not part of the command
+            # Add Qualified Name section before the first ## that's not part of the object_action
             pattern = r"(##\s+[^#\n]+)"
             replacement = f"## Qualified Name\n{q_name}\n\n\\1"
             updated_txt = re.sub(pattern, replacement, updated_txt, count=1)
 
         # Check if GUID section exists
         if "## GUID" not in updated_txt and "## guid" not in updated_txt:
-            # Add GUID section before the first ## that's not part of the command or Qualified Name
+            # Add GUID section before the first ## that's not part of the object_action or Qualified Name
             pattern = r"(##\s+(?!Qualified Name)[^#\n]+)"
             replacement = f"## GUID\n{u_guid}\n\n\\1"
             updated_txt = re.sub(pattern, replacement, updated_txt, count=1)

@@ -173,7 +173,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+    element_guid = "07b3a6d3-45b0-4616-90e4-740b7cf6275f"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 

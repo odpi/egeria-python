@@ -2,7 +2,9 @@
 This file contains general utility functions for processing Egeria Markdown
 """
 import os
+import re
 from datetime import datetime
+from typing import Any
 
 from rich import print
 from rich.console import Console
@@ -18,6 +20,10 @@ console = Console(width=EGERIA_WIDTH)
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
+def split_tb_string(input: str)-> [Any]:
+    """Split the string and trim the items"""
+    l = [item.strip() for item in re.split(r'[;,\n]+',input)] if input is not None else None
+    return l
 
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
@@ -78,11 +84,11 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
     """
-    Processes a provenance command by extracting the file path and current datetime.
+    Processes a provenance object_action by extracting the file path and current datetime.
 
     Args:
         file_path: The path to the file being processed.
-        txt: The text containing the provenance command.
+        txt: The text containing the provenance object_action.
 
     Returns:
         A string containing the provenance information.

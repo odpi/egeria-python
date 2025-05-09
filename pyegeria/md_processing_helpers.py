@@ -17,7 +17,7 @@
 # ERROR = "ERROR-> "
 # INFO = "INFO- "
 # WARNING = "WARNING-> "
-# pre_command = "\n---\n==> Processing command:"
+# pre_command = "\n---\n==> Processing object_action:"
 #
 #
 #

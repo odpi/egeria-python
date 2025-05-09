@@ -107,10 +107,10 @@ def process_markdown_file(
     prov_found = False
     # Process each identified H1 block
     for block in h1_blocks:
-        potential_command = extract_command(block)  # Extract potential command
+        potential_command = extract_command(block)  # Extract potential object_action
 
         if potential_command in commands:
-            # Process the block based on the command
+            # Process the block based on the object_action
             if potential_command == "Provenance":
                 prov_found = True
                 result = process_provenance_command(file_path, block)
@@ -123,7 +123,7 @@ def process_markdown_file(
             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
                 result = process_per_proj_upsert_command(client, block, directive)
             else:
-                # If command is not recognized, copy the block as-is
+                # If object_action is not recognized, copy the block as-is
                 result = None
 
             if result:
@@ -137,7 +137,7 @@ def process_markdown_file(
                       f"\tPlease correct and try again. \n")
                 final_output += f"\n---\n{block}\n"
         else:
-            # If no command is detected, add the block to the final output as-is
+            # If no object_action is detected, add the block to the final output as-is
             final_output += f"\n---\n{block}\n"
 
 

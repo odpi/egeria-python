@@ -1,5 +1,5 @@
 """
-This file contains glossary-related command functions for processing Egeria Markdown
+This file contains glossary-related object_action functions for processing Egeria Markdown
 """
 
 import json
@@ -127,7 +127,7 @@ def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories
 
 def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary create or update command by extracting key attributes such as
+    Processes a glossary create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given text.
 
     :param txt: A string representing the input cell to be processed for
@@ -209,14 +209,14 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                 print_msg(ERROR, msg, debug_level)
                 print(Markdown(glossary_display))
                 print(command_seperator)
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 return None
         if object_action == "Update":
             if not glossary_exists:
                 print(f"\n{ERROR}Glossary `{glossary_name}` does not exist! Updating result document with Create "
-                      f"command\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                      f"object_action\n")
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
 
             body = {
                 "class": "ReferenceableRequestBody", "elementProperties": {
@@ -235,7 +235,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
 
             if glossary_exists:
                 print(f"\nGlossary `{glossary_name}` already exists and result document updated\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 glossary_guid = egeria_client.create_glossary(glossary_name, description, language, usage)
                 glossary = egeria_client.get_glossary_by_guid(glossary_guid)
@@ -246,7 +246,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                 update_element_dictionary(qualified_name, {
                     'guid': glossary_guid, 'display_name': glossary_name
                     })
-                # return update_a_command(txt, command, object_type, qualified_name, glossary_guid)
+                # return update_a_command(txt, object_action, object_type, qualified_name, glossary_guid)
                 print_msg(ALWAYS, f"Created Glossary `{glossary_name}` with GUID {glossary_guid}", debug_level)
                 return egeria_client.get_glossary_by_guid(glossary_guid, output_format='FORM')
         else:
@@ -257,7 +257,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
 
 def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary category create or update command by extracting key attributes such as
+    Processes a glossary category create or update object_action by extracting key attributes such as
     category name, qualified, description, and anchor glossary from the given txt..
 
     :param txt: A string representing the input cell to be processed for
@@ -357,15 +357,15 @@ def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                        f"processed output \n")
                 print_msg(ERROR, msg, debug_level)
                 print(Markdown(category_display))
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 return None
 
         if object_action == "Update":
             if not category_exists:
                 print(f"\n{ERROR}category `{category_name}` does not exist! Updating result document with Create "
-                      f"command\n")
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                      f"object_action\n")
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
 
             # Update the basic category properties
             egeria_client.update_category(known_guid, category_name, description, known_q_name, None)
@@ -390,7 +390,7 @@ def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                 msg = (f"Cannot create`{category_name}` because it already exists; result document written for "
                        f"category update\n")
                 print_msg(WARNING, msg, debug_level)
-                return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             else:
                 category_guid = egeria_client.create_category(known_glossary_guid, category_name, description, is_root)
                 category_details = egeria_client.get_category_by_guid(category_guid)
@@ -500,7 +500,7 @@ def update_category_parent(egeria_client, category_guid: str, parent_category_na
 
 def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a term create or update command by extracting key attributes such as
+    Processes a term create or update object_action by extracting key attributes such as
     term name, summary, description, abbreviation, examples, usage, version, and status from the given cell.
 
     :param txt: A string representing the input cell to be processed for
@@ -591,7 +591,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
             print_msg(ERROR, msg, debug_level)
             valid = False
 
-    elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
+    elif object_action == 'Create':  # if the object_action is create, check that it doesn't already exist
         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
                         f"* Term Name: {term_name}\n\t* Categories: {categories}\n\t* Summary: {summary}\n\t"
                         f"* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t* Description: {description}\n\t"
@@ -618,7 +618,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                            f"processed output \n")
                     print_msg(ERROR, msg, debug_level)
                     print(Markdown(term_display))
-                    return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                    return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
                 else:
                     return None
 
@@ -641,7 +641,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                           f"\tUpdated Term `{term_name}` with GUID {known_guid}\n\tand categories `{categories}`",
                           debug_level)
                 return egeria_client.get_term_by_guid(known_guid,
-                                                      'md')  # return update_a_command(txt, command, object_type,
+                                                      'md')  # return update_a_command(txt, object_action, object_type,
                 # known_q_name, known_guid)
             elif object_action == "Update" and directive == "validate":  # is sthis reachable?
                 return egeria_client.get_term_by_guid(known_guid, 'md')
@@ -650,7 +650,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                 if term_exists:
                     msg = f"Term {term_name} exists so result document modifies term create to term update"
                     print_msg(INFO, msg, debug_level)
-                    return update_a_command(txt, command, object_type, q_name, known_guid)
+                    return update_a_command(txt, object_action, object_type, q_name, known_guid)
                 else:
                     ## get the guid for the glossary from the name - first look in cache
                     cached = get_element_dictionary().get(known_glossary_q_name, None)
@@ -689,7 +689,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     update_element_dictionary(known_q_name, {'guid': term_guid, 'display_name': term_name})
                     print_msg(ALWAYS, f"Created term `{term_name}` with GUID {term_guid}", debug_level)
                     return egeria_client.get_term_by_guid(term_guid,
-                                                          'MD')  # return update_a_command(txt, command,
+                                                          'MD')  # return update_a_command(txt, object_action,
                     # object_type, q_name, term_guid)
         except Exception as e:
             print(f"{ERROR}Error creating term {term_name}: {e}")

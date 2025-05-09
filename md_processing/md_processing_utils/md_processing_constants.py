@@ -47,9 +47,10 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Update Category", "Create Solution Blueprint", "Update Solution Blueprint",
                 "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
                 "Update Term-Term Relationship","Create Data Spec", "Create Data Specification", "Update Data Spec",
-                "Update Data Specification" , "Create Data Field", "Update Data Field", "Update Data Field",]
+                "Update Data Specification" , "Create Data Field", "Update Data Field", "Create Data Structure", "Update Data Structure",
+                "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict", "Update Data Dict"," View Data Dictionary", "View Data Dictionaries"]
 
-pre_command = "\n---\n==> Processing command:"
+pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 COMMAND_DEFINITIONS = {}

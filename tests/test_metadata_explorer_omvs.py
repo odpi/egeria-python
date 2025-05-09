@@ -119,7 +119,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_graph(self):
-        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+        guid = "07b3a6d3-45b0-4616-90e4-740b7cf6275f"
         # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
         # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
         # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term

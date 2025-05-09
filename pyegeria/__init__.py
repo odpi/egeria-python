@@ -56,6 +56,7 @@ from .solution_architect_omvs import SolutionArchitect
 from .utils import body_slimmer, print_response
 from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
+from .template_manager_omvs import TemplateManager
 # from .md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
 #                                   process_category_upsert_command, get_current_datetime_string,
 #                                   process_per_proj_upsert_command, command_list, render_markdown,

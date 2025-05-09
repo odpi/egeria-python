@@ -1,5 +1,5 @@
 """
-This file contains project-related command functions for processing Egeria Markdown
+This file contains project-related object_action functions for processing Egeria Markdown
 """
 
 from rich.markdown import Markdown
@@ -13,7 +13,7 @@ from pyegeria.project_manager_omvs import ProjectManager
 
 def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, directive: str = "display") -> str | None:
     """
-    Processes a personal project create or update command by extracting key attributes such as
+    Processes a personal project create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given cell.
 
     :param txt: A string representing the input cell to be processed for

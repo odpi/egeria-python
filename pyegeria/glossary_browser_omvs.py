@@ -16,14 +16,22 @@ from pyegeria._exceptions import InvalidParameterException, PropertyServerExcept
 from pyegeria._globals import NO_CATEGORIES_FOUND, NO_TERMS_FOUND
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
-
-MD_SEPERATOR = "\n---\n\n"
+from pyegeria.output_formatter import (
+    make_preamble, 
+    make_md_attribute, 
+    format_for_markdown_table,
+    generate_entity_md,
+    generate_entity_md_table,
+    generate_entity_dict,
+    generate_output,
+    MD_SEPARATOR
+)
 
 
 class GlossaryBrowser(Client):
     """
     GlossaryBrowser is a class that extends the Client class. It provides methods to search and retrieve glossaries,
-    terms and categories.
+    terms, and categories.
 
     Attributes:
 
@@ -48,75 +56,14 @@ class GlossaryBrowser(Client):
 
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
-    def make_preamble(self, obj_type, search_string, output_format: str = 'MD') -> tuple[str, str | None]:
-        """
-        Creates a preamble string and an elements action based on the given object type, search_string,
-        and output format. The preamble provides a descriptive header based on the intent: To make a form,
-        a report, or unadorned Markdown. The element action specifies the action to be taken on the object type.
 
-        Args:
-            obj_type: The type of object being updated or reported on (e.g., "Product", "Category").
-            search_string: The search string used to filter objects. Defaults to "All Terms" if None.
-            output_format: A format identifier determining the output structure.
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-
-        Returns:
-            tuple: A tuple containing:
-                - A string representing the formatted update or report preamble.
-                - A string or None indicating the action description for the elements,
-                  depending on the output format.
-        """
-        search_string = search_string if search_string else "All Elements"
-        elements_action = "Update " + obj_type
-        if output_format == "FORM":
-            preamble = (f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                        f"\t {obj_type} found from the search string:  `{search_string}`\n\n")
-
-            return preamble, elements_action
-        elif output_format == "REPORT":
-            elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                           f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
-            elements_action = None
-            return elements_md, elements_action
-
-        else:
-            return "\n", elements_action
-
-    def make_md_attribute(self, attribute_name: str, attribute_value: str, output_type: str) -> str | None:
-        output = ""
-        attribute_value = attribute_value.strip() if attribute_value else ""
-        attribute_title = attribute_name.title() if attribute_name else ""
-        if output_type in ["FORM", "MD"]:
-            output = f"## {attribute_title}\n{attribute_value}\n\n"
-        elif output_type == "REPORT":
-            if attribute_value:
-                output = f"## {attribute_title}\n{attribute_value}\n\n"
-        return output
-
-    def _format_for_markdown_table(self, text: str) -> str:
-        """
-        Format text for markdown tables by replacing newlines with spaces and escaping pipe characters.
-
-        Args:
-            text (str): The text to format
-
-        Returns:
-            str: Formatted text safe for markdown tables
-        """
-        if not text:
-            return ""
-        # Replace newlines with spaces and escape pipe characters
-        return text.replace("\n", " ").replace("|", "\\|")
-
-    def _extract_glossary_properties(self, element: dict) -> dict:
+    def _extract_glossary_properties(self, element: dict, output_format: str = None) -> dict:
         """
         Extract common properties from a glossary element.
 
         Args:
             element (dict): The glossary element
+            output_format (str, optional): The output format (FORM, REPORT, etc.)
 
         Returns:
             dict: Dictionary of extracted properties
@@ -142,11 +89,18 @@ class GlossaryBrowser(Client):
             category_names = cat_md_display.rstrip(',')
             category_qualified_names = cat_md_qn.rstrip(',')
 
-        return {
+        result = {
             'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'language': language, 'usage': usage, 'qualified_name': qualified_name, 'categories_names': category_names,
-            'categories_qualified_names': category_qualified_names
-            }
+            'language': language, 'usage': usage, 'qualified_name': qualified_name
+        }
+
+        # Include appropriate category information based on output format
+        if output_format == 'FORM':
+            result['categories_qualified_names'] = category_qualified_names
+        else:
+            result['categories_names'] = category_names
+
+        return result
 
     def _generate_entity_md(self, elements: list, elements_action: str, output_format: str, entity_type: str,
                             extract_properties_func, get_additional_props_func=None) -> str:
@@ -164,55 +118,14 @@ class GlossaryBrowser(Client):
         Returns:
             str: Markdown representation
         """
-        elements_md = ""
-
-        for element in elements:
-            props = extract_properties_func(element)
-
-            # Get additional properties if function is provided
-            additional_props = {}
-            if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'], output_format)
-
-            # Format header based on output format
-            if output_format in ['FORM', 'MD']:
-                elements_md += f"# {elements_action}\n\n"
-                elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
-            elif output_format == 'REPORT':
-                elements_md += f"# {entity_type} Name: {props['display_name']}\n\n"
-            else:
-                elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
-
-            # Add common attributes
-            for key, value in props.items():
-                if key not in ['guid', 'properties', 'display_name']:
-                    # Handle categories based on output format
-                    if key == 'categories_qualified_names':
-                        if output_format == 'FORM':
-                            elements_md += self.make_md_attribute("Category Names", value, output_format)
-                        elif output_format != 'REPORT':  # Include for all formats except REPORT
-                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
-                    elif key == 'categories_names':
-                        if output_format == 'REPORT':
-                            elements_md += self.make_md_attribute("Category Names", value, output_format)
-                        elif output_format != 'FORM':  # Include for all formats except FORM
-                            elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
-                    else:
-                        elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
-
-            # Add additional properties
-            for key, value in additional_props.items():
-                elements_md += self.make_md_attribute(key.replace('_', ' '), value, output_format)
-
-            # Add GUID
-            # elements_md += self.make_md_attribute("qualified name", props['qualified_name'], output_format)
-            elements_md += self.make_md_attribute("GUID", props['guid'], output_format)
-
-            # Add separator if not the last element
-            if element != elements[-1]:
-                elements_md += MD_SEPERATOR
-
-        return elements_md
+        return generate_entity_md(
+            elements=elements,
+            elements_action=elements_action,
+            output_format=output_format,
+            entity_type=entity_type,
+            extract_properties_func=extract_properties_func,
+            get_additional_props_func=get_additional_props_func
+        )
 
     def _generate_glossary_md(self, elements: list, elements_action: str, output_format: str) -> str:
         """
@@ -226,9 +139,12 @@ class GlossaryBrowser(Client):
         Returns:
             str: Markdown representation
         """
+        # Store the current output format for use by _extract_glossary_properties_with_format
+        self._current_output_format = output_format
+
         return self._generate_entity_md(elements=elements, elements_action=elements_action, output_format=output_format,
                                         entity_type="Glossary",
-                                        extract_properties_func=self._extract_glossary_properties)
+                                        extract_properties_func=self._extract_glossary_properties_with_format)
 
     def _generate_entity_md_table(self, elements: list, search_string: str, entity_type: str, extract_properties_func,
                                   columns: list, get_additional_props_func=None, output_format: str = 'LIST') -> str:
@@ -247,54 +163,15 @@ class GlossaryBrowser(Client):
         Returns:
             str: Markdown table
         """
-        # Create table header
-
-        # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
-        entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
-
-        elements_md = f"# {entity_type_plural} Table\n\n"
-        elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
-
-        # Add column headers
-        header_row = "| "
-        separator_row = "|"
-        for column in columns:
-            header_row += f"{column['name']} | "
-            separator_row += "-------------|"
-
-        elements_md += header_row + "\n"
-        elements_md += separator_row + "\n"
-
-        # Add rows
-        for element in elements:
-            props = extract_properties_func(element)
-
-            # Get additional properties if function is provided
-            additional_props = {}
-            if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'], output_format)
-
-            # Build row
-            row = "| "
-            for column in columns:
-                key = column['key']
-                value = ""
-
-                # Check if the key is in props or additional_props
-                if key in props:
-                    value = props[key]
-                elif key in additional_props:
-                    value = additional_props[key]
-
-                # Format the value if needed
-                if 'format' in column and column['format']:
-                    value = self._format_for_markdown_table(value)
-
-                row += f"{value} | "
-
-            elements_md += row + "\n"
-
-        return elements_md
+        return generate_entity_md_table(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            extract_properties_func=extract_properties_func,
+            columns=columns,
+            get_additional_props_func=get_additional_props_func,
+            output_format=output_format
+        )
 
     def _generate_glossary_md_table(self, elements: list, search_string: str) -> str:
         """
@@ -307,6 +184,9 @@ class GlossaryBrowser(Client):
         Returns:
             str: Markdown table
         """
+        # Store the current output format for use by _extract_glossary_properties_with_format
+        self._current_output_format = 'LIST'  # Tables use LIST format
+
         columns = [{'name': 'Glossary Name', 'key': 'display_name'},
                    {'name': 'Qualified Name', 'key': 'qualified_name'},
                    {'name': 'Language', 'key': 'language', 'format': True},
@@ -315,7 +195,7 @@ class GlossaryBrowser(Client):
                    {'name': 'Categories', 'key': 'categories_names', 'format': True}, ]
 
         return self._generate_entity_md_table(elements=elements, search_string=search_string, entity_type="Glossary",
-                                              extract_properties_func=self._extract_glossary_properties,
+                                              extract_properties_func=self._extract_glossary_properties_with_format,
                                               columns=columns)
 
     def _generate_entity_dict(self, elements: list, extract_properties_func, get_additional_props_func=None,
@@ -334,34 +214,14 @@ class GlossaryBrowser(Client):
         Returns:
             list: List of entity dictionaries
         """
-        result = []
-
-        for element in elements:
-            props = extract_properties_func(element)
-
-            # Get additional properties if function is provided
-            additional_props = {}
-            if get_additional_props_func:
-                additional_props = get_additional_props_func(element, props['guid'], output_format)
-
-            # Create entity dictionary
-            entity_dict = {}
-
-            # Add properties based on include/exclude lists
-            for key, value in props.items():
-                if key != 'properties':  # Skip the raw properties object
-                    if (include_keys is None or key in include_keys) and (
-                            exclude_keys is None or key not in exclude_keys):
-                        entity_dict[key] = value
-
-            # Add additional properties
-            for key, value in additional_props.items():
-                if (include_keys is None or key in include_keys) and (exclude_keys is None or key not in exclude_keys):
-                    entity_dict[key] = value
-
-            result.append(entity_dict)
-
-        return result
+        return generate_entity_dict(
+            elements=elements,
+            extract_properties_func=extract_properties_func,
+            get_additional_props_func=get_additional_props_func,
+            include_keys=include_keys,
+            exclude_keys=exclude_keys,
+            output_format=output_format
+        )
 
     def _generate_glossary_dict(self, elements: list, output_format: str = 'DICT') -> list:
         """
@@ -374,8 +234,25 @@ class GlossaryBrowser(Client):
         Returns:
             list: List of glossary dictionaries
         """
-        return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_glossary_properties,
-                                          exclude_keys=['properties', 'categories_qualified_names'], output_format=output_format)
+        # Store the current output format for use by _extract_glossary_properties_with_format
+        self._current_output_format = output_format
+
+        return self._generate_entity_dict(elements=elements, extract_properties_func=self._extract_glossary_properties_with_format,
+                                          exclude_keys=['properties'], output_format=output_format)
+
+    def _extract_glossary_properties_with_format(self, element: dict) -> dict:
+        """
+        Wrapper function for _extract_glossary_properties that passes the current output format.
+        This is used internally by generate_glossaries_md.
+
+        Args:
+            element (dict): The glossary element
+
+        Returns:
+            dict: Dictionary of extracted properties
+        """
+        # The output_format is stored as an instance variable during generate_glossaries_md
+        return self._extract_glossary_properties(element, self._current_output_format)
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str,
                                output_format: str = 'MD') -> str | list:
@@ -390,25 +267,27 @@ class GlossaryBrowser(Client):
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
         """
-        elements_md, elements_action = self.make_preamble(obj_type="Glossary", search_string=search_string,
-                                                          output_format=output_format)
-        if isinstance(elements, dict):
-            elements = [elements]
+        # Store the current output format for use by _extract_glossary_properties_with_format
+        self._current_output_format = output_format
 
-        if search_string is None or search_string == '':
-            search_string = "All"
+        # Define columns for LIST format
+        columns = [
+            {'name': 'Glossary Name', 'key': 'display_name'},
+            {'name': 'Qualified Name', 'key': 'qualified_name'},
+            {'name': 'Language', 'key': 'language', 'format': True},
+            {'name': 'Description', 'key': 'description', 'format': True},
+            {'name': 'Usage', 'key': 'usage', 'format': True},
+            {'name': 'Categories', 'key': 'categories_names', 'format': True},
+        ]
 
-        # If output format is LIST, create a markdown table
-        if output_format == 'LIST':
-            return self._generate_glossary_md_table(elements, search_string)
-
-        # If output format is DICT, return a dictionary structure
-        elif output_format == 'DICT':
-            return self._generate_glossary_dict(elements, output_format)
-
-        # Original implementation for other formats (MD, FORM, REPORT)
-        elements_md += self._generate_glossary_md(elements, elements_action, output_format)
-        return elements_md
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type="Glossary",
+            output_format=output_format,
+            extract_properties_func=self._extract_glossary_properties_with_format,
+            columns=columns if output_format == 'LIST' else None
+        )
 
     def _extract_term_properties(self, element: dict) -> dict:
         """
@@ -621,25 +500,26 @@ class GlossaryBrowser(Client):
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
         """
-        elements_md, elements_action = self.make_preamble(obj_type="Term", search_string=search_string,
-                                                          output_format=output_format)
-        if isinstance(elements, dict):
-            elements = [elements]
+        # Define columns for LIST format
+        columns = [
+            {'name': 'Term Name', 'key': 'display_name'},
+            {'name': 'Qualified Name', 'key': 'qualified_name'},
+            {'name': 'Summary', 'key': 'summary', 'format': True},
+            {'name': 'Description', 'key': 'description', 'format': True},
+            {'name': 'Status', 'key': 'status'},
+            {'name': 'Categories', 'key': 'categories', 'format': True},
+            {'name': 'Glossary', 'key': 'glossary_name'},
+        ]
 
-        if search_string is None or search_string == '':
-            search_string = "All"
-
-        # If output format is LIST, create a markdown table
-        if output_format == 'LIST':
-            return self._generate_term_md_table(elements, search_string, output_format)
-
-        # If output format is DICT, return a dictionary structure
-        elif output_format == 'DICT':
-            return self._generate_term_dict(elements, output_format)
-
-        # Original implementation for other formats (MD, FORM, REPORT)
-        elements_md += self._generate_term_md(elements, elements_action, output_format)
-        return elements_md
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type="Term",
+            output_format=output_format,
+            extract_properties_func=self._extract_term_properties,
+            get_additional_props_func=self._get_term_additional_properties,
+            columns=columns if output_format == 'LIST' else None
+        )
 
     def _get_parent_category_name(self, category_guid: str, output_format: str = None) -> str:
         """
@@ -910,25 +790,29 @@ class GlossaryBrowser(Client):
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
         """
-        elements_md, elements_action = self.make_preamble(obj_type="Categories", search_string=search_string,
-                                                          output_format=output_format)
-        if isinstance(elements, dict):
-            elements = [elements]
+        # Define columns for LIST format
+        columns = [
+            {'name': 'Category Name', 'key': 'display_name'},
+            {'name': 'Qualified Name', 'key': 'qualified_name'},
+            {'name': 'Description', 'key': 'description', 'format': True},
+            {'name': 'Parent Category', 'key': 'parent_category', 'format': True},
+            {'name': 'Subcategories', 'key': 'subcategories', 'format': True},
+            {'name': 'Glossary', 'key': 'glossary_name'},
+        ]
 
-        if search_string is None or search_string == '':
-            search_string = "All"
+        # Create a wrapper function to pass output_format to _get_category_additional_properties
+        def get_additional_props_with_format(element, category_guid, output_format_param=None):
+            return self._get_category_additional_properties(element, category_guid, output_format)
 
-        # If output format is LIST, create a markdown table
-        if output_format == 'LIST':
-            return self._generate_category_md_table(elements, search_string, output_format)
-
-        # If output format is DICT, return a dictionary structure
-        elif output_format == 'DICT':
-            return self._generate_category_dict(elements, output_format)
-
-        # Original implementation for other formats (MD, FORM, REPORT)
-        elements_md += self._generate_category_md(elements, elements_action, output_format)
-        return elements_md
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type="Category",
+            output_format=output_format,
+            extract_properties_func=self._extract_category_properties,
+            get_additional_props_func=get_additional_props_with_format,
+            columns=columns if output_format == 'LIST' else None
+        )
 
     #
     #       Get Valid Values for Enumerations
@@ -1096,7 +980,7 @@ class GlossaryBrowser(Client):
                                      page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+            The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
 
         Parameters
         ----------
@@ -1194,7 +1078,7 @@ class GlossaryBrowser(Client):
                         page_size: int = None, output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string.
                 The search string is located in the request body and is interpreted as a plain string.
-                The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+                The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
 
         Parameters
         ----------
@@ -1636,7 +1520,7 @@ class GlossaryBrowser(Client):
                                               output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+            The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
             Async version.
 
         Parameters
@@ -1721,7 +1605,7 @@ class GlossaryBrowser(Client):
                                  page_size: int = None, output_format: str = "JSON") -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
          The search string is located in the request body and is interpreted as a plain string.
-         The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+         The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
 
         Parameters
         ----------
@@ -3610,7 +3494,7 @@ class GlossaryBrowser(Client):
         Notes
         -----
         The search string is located in the request body and is interpreted as a plain string.
-        The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+        The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
         The request body also supports the specification of a glossaryGUID to restrict the search to within a single
         glossary.
         """
@@ -3713,7 +3597,7 @@ class GlossaryBrowser(Client):
         Notes
         -----
         The search string is located in the request body and is interpreted as a plain string.
-        The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+        The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
         The request body also supports the specification of a glossaryGUID to restrict the search to within a
         single glossary.
         """
