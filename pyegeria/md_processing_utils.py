@@ -349,7 +349,7 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
             # Replace consecutive \n with a single \n
             extracted_text = re.sub(r'\n+', '\n', filtered_text)
             if not extracted_text.isspace() and extracted_text:
-                return extracted_text  # Return the cleaned text - I removed the title casing
+                return extracted_text.trim()  # Return the cleaned text - I removed the title casing
 
     return None
 

@@ -17,6 +17,7 @@ from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict,
 from pyegeria.utils import body_slimmer
 
 
+
 def query_seperator(current_string):
     if current_string == "":
         return "?"
@@ -1126,10 +1127,15 @@ r       replace_all_properties: bool, default = False
         """
 
         body = {"filter": filter}
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", str(starts_with).lower),
-             ("endsWith", str(ends_with).lower()), ("ignoreCase", str(ignore_case).lower()), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", ends_with_s), ("endsWith", ends_with_s),
+             ("ignoreCase", ignore_case_s),])
+
+
 
         url = (f"{base_path(self, self.view_server)}/data-structures/by-search-string"
                f"{possible_query_params}")
@@ -1291,7 +1297,7 @@ r       replace_all_properties: bool, default = False
             self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_get_data_structures_by_guid(self, guid: str, body: dict = None,
+    async def _async_get_data_structure_by_guid(self, guid: str, body: dict = None,
                                                  output_format: str = "DICT") -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
@@ -1345,7 +1351,7 @@ r       replace_all_properties: bool, default = False
             return self.generate_data_structure_output(element, filter, output_format)
         return element
 
-    def get_data_structures_by_guid(self, guid: str, body: str = None, output_format: str = "DICT") -> list | str:
+    def get_data_structure_by_guid(self, guid: str, body: str = None, output_format: str = "DICT") -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1385,7 +1391,7 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_structures_by_guid(guid, body, output_format))
+        response = loop.run_until_complete(self._async_get_data_structure_by_guid(guid, body, output_format))
         return response
 
     #
@@ -2465,10 +2471,12 @@ r       replace_all_properties: bool, default = False
         """
 
         body = {"filter": filter}
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", str(starts_with).lower),
-             ("endsWith", str(ends_with).lower()), ("ignoreCase", str(ignore_case).lower()), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith",ends_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s) ])
 
         url = (f"{base_path(self, self.view_server)}/data-fields/by-search-string"
                f"{possible_query_params}")
@@ -3526,7 +3534,7 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specialist-data-classes/{child_data_class_guid}/attach")
+               f"/specializeddata-classes/{child_data_class_guid}/attach")
 
         if body is None:
             await self._async_make_request("POST", url)
@@ -3625,7 +3633,7 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specialist-data-classes/{child_data_class_guid}/detach")
+               f"/specializeddata-classes/{child_data_class_guid}/detach")
 
         if body is None:
             await self._async_make_request("POST", url)
@@ -4029,9 +4037,13 @@ r       replace_all_properties: bool, default = False
 
         body = {"filter": filter}
 
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", str(starts_with).lower),
-             ("endsWith", str(ends_with).lower()), ("ignoreCase", str(ignore_case).lower()), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", ends_with_s), ("endsWith", ends_with_s),
+             ("ignoreCase", ignore_case_s)])
 
         url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
                f"{possible_query_params}")

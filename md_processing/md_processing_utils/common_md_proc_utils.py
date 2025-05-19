@@ -6,10 +6,13 @@ import sys
 from typing import List
 
 from rich.console import Console
+from rich import print
+
+
 
 from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, print_msg,
                                                                get_element_dictionary, update_element_dictionary,
-                                                               split_tb_string, )
+                                                               split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
@@ -18,7 +21,8 @@ from pyegeria import EgeriaTech
 from pyegeria._globals import DEBUG_LEVEL
 
 # Constants
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Basic")
 console = Console(width=EGERIA_WIDTH)
 
 debug_level = DEBUG_LEVEL
@@ -73,7 +77,27 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
     for attr in attributes:
         for key in attr:
-            if attr[key]['input_required'] is True:
+            # Run some checks to see if the attribute is appropriate to the operation and usage level
+            for_update = attr[key].get('inUpdate', True)
+            level = attr[key].get('level', 'Basic')
+            msg = (f"___\nProcessing `{key}` in `{object_action}` on a `{object_type}` "
+                  f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` and  attribute level `{level}` and for_update `{for_update}`\n")
+            print_msg(INFO, msg, debug_level)
+            if for_update is False and object_action == "Update":
+                console.print(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
+                continue
+            if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
+                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+                continue
+            if EGERIA_USAGE_LEVEL == "Advanced" and level in [ "Expert", "Invisible"]:
+                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+                continue
+            if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
+                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+                continue
+
+
+            if attr[key].get('input_required', False) is True:
                 if_missing = ERROR
             else:
                 if_missing = INFO
@@ -82,17 +106,16 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             lab =split_tb_string(attr[key]['attr_labels'] )
             labels: set = set()
             labels.add(key.strip())
+            if key == 'Display Name':
+                labels.add(object_type.strip())
             if lab is not None and lab != [""]:
                 labels.update(lab)
-            labels: set = set()
-            labels.add(key.strip())
-            if lab is not None and lab != [""]:
-                labels.update(lab)
+
 
             default_value = attr[key].get('default_value', None)
 
             style = attr[key]['style']
-            if style in ['Simple', 'Dictionary']:
+            if style in ['Simple', 'Dictionary', 'Comment']:
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
             elif style == 'Valid Value':
                 parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
@@ -101,7 +124,8 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             elif style == 'QN':
                 parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
                                                     object_action, version, if_missing)
-
+                if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key]['exists'] is False:
+                    parsed_output['exists'] = False
             elif style == 'ID':
                 parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
                                                     object_action, version, if_missing)
@@ -115,7 +139,8 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             elif style == 'Reference Name':
                 parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
-                if parsed_attributes[key].get("value", None) and parsed_attributes[key]['exists'] is False:
+                if ((if_missing==ERROR) and parsed_attributes[key].get("value", None) and
+                        parsed_attributes[key]['exists'] is False):
                     msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
                     print_msg(ERROR, msg, debug_level)
                     parsed_output['valid'] = False
@@ -139,6 +164,7 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             elif style == 'Bool':
                 parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
 
+
             elif style == 'Reference Name List':
                 parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
 
@@ -151,13 +177,14 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             if key == "Display Name":
                 display_name = parsed_attributes[key]['value']
 
-            if key == 'Qualified Name' and parsed_attributes[key]['exists'] is False:
-                parsed_output['exists'] = False
+
 
             value = parsed_attributes[key].get('value',None)
+
             if value is not None:
                 # if the value is a dict, get the flattened name list
                 value = parsed_attributes[key].get('name_list', None) if isinstance(value,(dict, list)) else value
+
                 parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
 
 
@@ -179,7 +206,7 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
         msg = f"Update request invalid, Term {display_name} does not exist\n"
         print_msg(ERROR, msg, debug_level)
         parsed_output['valid'] = False
-    if directive in ["validate", "process"] and not parsed_output['valid']:
+    if directive in ["validate", "process"] and not parsed_output['valid'] and object_action == "Update":
         msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
         print_msg(ERROR, msg, debug_level)
 
@@ -327,8 +354,10 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
 
     attribute = extract_attribute(txt, labels)
     if default_value == "":
-        default_value = None
-    attribute = default_value if attribute is None else attribute
+        default = None
+    else:
+        default = str_to_bool(default_value)
+    attribute = default if attribute is None else attribute
 
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
@@ -499,25 +528,30 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
         unique = None
 
     if exists is True and unique is False:
+        # Multiple elements found - so need to respecify with qualified name
         msg = f"Multiple elements named  {element_name} found"
         print_msg("DEBUG-ERROR", msg, debug_level)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True, }
 
 
     elif action == EXISTS_REQUIRED or if_missing == ERROR and not exists:
+        # a required identifier doesn't exist
         msg = f"Required {element_type} `{element_name}` does not exist"
         print_msg("DEBUG-ERROR", msg, debug_level)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
-    elif value is None and exists is False:
+    elif value is None  and if_missing == INFO:
+        # an optional identifier is empty
         msg = f"Optional attribute with label`{element_type}` missing"
         print_msg("INFO", msg, debug_level)
-        identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": False, "exists": False, }
+        identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": True, "exists": False, }
     elif value and exists is False:
+        # optional identifier specified but doesn't exist
         msg = f"Optional attribute with label`{element_type}` specified but doesn't exist"
         print_msg("ERROR", msg, debug_level)
         identifier_output = {"status": ERROR, "reason": msg, "value": value, "valid": False, "exists": False, }
 
     else:
+        # all good.
         msg = f"Element {element_type} `{element_name}` exists"
         print_msg("DEBUG-INFO", msg, debug_level)
         identifier_output = {
@@ -576,9 +610,9 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
             # Get the element using the generalized function
             known_q_name, known_guid, el_valid, el_exists = get_element_by_name(egeria_client, element_type, element)
             details = {"known_q_name": known_q_name, "known_guid": known_guid, "el_valid": el_valid}
+            elements = f"{element} {elements}"  # list of the input names
 
             if el_exists and el_valid:
-                elements = f"{element} {elements}"  # list of the input names
                 new_element_list.append(known_q_name)  # list of qualified names
             elif not el_exists:
                 msg = f"No {element_type} `{element}` found"
@@ -589,7 +623,6 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
             element_details[element] = details
 
         if elements:
-            # elements += "\n"
             msg = f"Found {element_type}: {elements}"
             print_msg("DEBUG-INFO", msg, debug_level)
             id_list_output = {
@@ -668,3 +701,24 @@ def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories
             egeria_client.remove_term_from_category(term_guid, cat)
             msg = f"Removed term {term_guid} from category {cat}"
             print_msg("DEBUG-INFO", msg, debug_level)
+
+def sync_data_dict_membership(egeria_client: EgeriaTech, in_data_dictionary_names: list , in_data_dictionary: dict,
+                              guid:str, object_type:str)->dict:
+    pass
+
+def sync_data_structure_membership(egeria_client: EgeriaTech, in_data_structure_names: list , in_data_structure: dict,
+                              guid:str, object_type:str)->dict:
+
+    pass
+
+def sync_data_spec_membership(egeria_client: EgeriaTech, in_data_spec_names: list , in_data_spec: dict,
+                              guid:str, object_type:str)->dict:
+    pass
+
+def sync_term_links(egeria_client: EgeriaTech, term_guid: str, links_exist: bool,
+                   links_list: List[str]) -> None:
+    pass
+
+def sync_parent_data_field(egeria_client: EgeriaTech, term_guid: str, links_exist: bool,
+                   links_list: List[str]) -> None:
+    pass

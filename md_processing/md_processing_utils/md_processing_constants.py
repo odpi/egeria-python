@@ -2,11 +2,15 @@
 This file contains display-related constants and formatting functions for Egeria Markdown processing
 """
 import json
-
+import os
 from rich.markdown import Markdown
 
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types, ALWAYS, ERROR, INFO, WARNING
+
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox")
+
 
 # Constants for element labels
 GLOSSARY_NAME_LABELS = ["Glossary Name", "Glossary", "Glossaries", "Owning Glossary", "In Glossary"]
@@ -58,10 +62,16 @@ COMMAND_DEFINITIONS = {}
 debug_level = DEBUG_LEVEL
 
 
+
 def load_commands(filename: str) -> None:
     global COMMAND_DEFINITIONS
+    # print("EGERIA_INBOX_PATH: ", EGERIA_INBOX_PATH)
+
+    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, filename)
+
+    # print("Loading commands from: ", full_file_path)
     try:
-        with open(filename, 'r') as file:
+        with open(full_file_path, 'r') as file:
             COMMAND_DEFINITIONS = json.load(file)
     except FileNotFoundError:
         msg = f"ERROR: File {filename} not found."

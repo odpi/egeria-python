@@ -708,7 +708,7 @@ class Client:
 
         if (not qualified_name) and display_name:
             if (tech_type) and (property_name == "qualifiedName"):
-                name = f"{tech_type}:{display_name}"
+                name = f"{tech_type}::{display_name}"
                 body = {
                     "class": "NameRequestBody",
                     "name": name,

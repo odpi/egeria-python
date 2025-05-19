@@ -428,14 +428,14 @@ def test_get_all_related_elements():
 
 def test_get_related_elements():
     # open_metadata_type_name = 'CertificationType'
-    element_guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"
+    element_guid = "d71c7ee2-b414-4c8f-bf9b-b16bd3601855"
     # open_metadata_type_name = "Organization"
     # open_metadata_type_name = "CSVFile"
     # open_metadata_type_name = "InformationSupplyChain"
     open_metadata_type_name = None
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    relationship_type = None
+    relationship_type = "CollectionMembership"
     # relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationManager(view_server, platform_url)
 

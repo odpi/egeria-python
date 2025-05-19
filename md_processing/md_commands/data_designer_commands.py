@@ -9,7 +9,9 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import parse_user_command
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_user_command, sync_data_dict_membership,
+        sync_data_spec_membership, sync_data_structure_membership, sync_term_links, sync_parent_data_field)
+
 from md_processing.md_processing_utils.common_md_utils import print_msg, update_element_dictionary
 from md_processing.md_processing_utils.extraction_utils import (extract_command, extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
@@ -17,11 +19,53 @@ from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.md_processing_utils import ALWAYS, INFO
 
-print("Current working directory: ", os.getcwd())
-load_commands('../../md_processing/commands.json')
+command_definitions = os.environ.get("COMMAND_DEFINITIONS")
+# print("Current working directory: ", os.getcwd())
+load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
+
+def  add_member_to_data_collections(egeria_client: EgeriaTech, in_data_collection:dict, display_name: str, guid:str )-> bool:
+    """
+    Add member to data dictionaries and data specifications.
+    """
+    try:
+        for collection in in_data_collection.keys():
+            collection_name = collection
+            collection_valid = in_data_collection[collection].get('el_valid', False)
+            collection_guid = in_data_collection[collection].get('guid', None)
+            if collection_guid and collection_valid:
+                egeria_client.add_to_collection(collection_guid, guid)
+                msg = f"Added `{display_name}` member to `{collection_name}`"
+                print_msg(INFO, msg, debug_level)
+        return True
+
+    except Exception as e:
+        console.print_exception()
+
+
+def find_memberships_in_collection_type(egeria_client: EgeriaTech, collection_type: str, guid: str) -> list:
+    """ Find the collections of a particular type that the element is a member of"""
+    collection_guid_list = []
+    collections = egeria_client.get_related_elements(guid, "CollectionMembership", "Collection")
+    for collection in collections:
+        print(collection["relationshipHeader"]['guid'])
+        related_el_guid = collection["relatedElement"]['elementHeader']["guid"]
+        coll_type = collection["relatedElement"]['properties'].get('collectionType', None)
+        print(coll_type)
+        if coll_type:
+            if coll_type == collection_type:
+                collection_guid_list.append(related_el_guid)
+                print(collection_guid_list)
+    return collection_guid_list
+
+
+
+
+def update_data_collection_memberships(egeria_client: EgeriaTech, in_data_collection:dict, guid: str, replace_all_props:bool = False) -> bool:
+    """ update the collection membership of the element """
+    pass
 
 
 # def update_term_categories(egeria_client: EgeriaTech, term_guid: str, current_categories: List[str],
@@ -80,6 +124,26 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
     print(Markdown(parsed_output['display']))
 
+    print(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+    description = attributes['Description'].get('value', None)
+    display_name = attributes['Display Name'].get('value', None)
+    anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
+    parent_guid = attributes.get('Parent ID', {}).get('guid', None)
+    parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', "CollectionMembership")
+    parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
+
+    anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
+    is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
+    collection_ordering = "NAME"
+    order_property_name = "Something"
+    collection_type = object_type
+    replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
+    in_data_spec_list = attributes.get('In Data Specification', {}).get('value', None)
+    in_data_spec_valid = attributes.get('In Data Specification', {}).get('valid', None)
+    in_data_spec_exists = attributes.get('In Data Specification', {}).get('exists', None)
+
     if directive == "display":
 
         return None
@@ -91,34 +155,22 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return valid
 
     elif directive == "process":
-        print(json.dumps(parsed_output, indent=4))
 
-        attributes = parsed_output['attributes']
-        description = attributes['Description'].get('value', None)
-        display_name = attributes['Display Name'].get('value', None)
-        anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
-        parent_guid = attributes.get('Parent ID', {}).get('guid', None)
-        parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
-        parent_at_end1 = attributes.get('Parent at End1', {}).get('value', None)
 
-        anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
-        is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', None)
-        collection_ordering = "NAME"
-        order_property_name = "Something"
-        collection_type = object_type
-        replace_all_props = True
 
-        if not valid:
-            return None
-        else:
-            print(Markdown(f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
         try:
             if object_action == "Update":
                 if not exists:
-                    print(f"\n{ERROR}Element `{display_name}` does not exist! Updating result document with Create "
+                    msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
                           f"object_action\n")
+                    print_msg(ERROR, msg, debug_level)
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                elif not valid:
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
                                                 collection_ordering, order_property_name, replace_all_props)
@@ -128,11 +180,17 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     })
                 return egeria_client.get_collection_by_guid(guid, output_format='FORM')
 
+
             elif object_action == "Create":
                 if valid is False and exists:
-                    print(f"\nData Specication `{display_name}` already exists and result document updated changing "
+                    msg = (f"  Data Specification `{display_name}` already exists and result document updated changing "
                           f"`Create` to `Update` in processed output\n")
+                    print_msg(ERROR, msg, debug_level)
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                elif valid is False and in_data_spec_valid is False:
+                    msg = (f" Invalid data specification(s) `{in_data_spec_list}` "
+                           f" perhaps they don't yet exist? - Correct and try again")
+                    print_msg(ERROR, msg, debug_level)
                 else:
                     guid = egeria_client.create_data_spec_collection(anchor_guid, parent_guid,
                                                                      parent_relationship_type_name, parent_at_end1,
@@ -141,6 +199,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                                                      collection_ordering, order_property_name,
                                                                      qualified_name)
                     if guid:
+
                         print_msg(ALWAYS, f"Created Element `{display_name}` with GUID {guid}", debug_level)
 
                         return egeria_client.get_collection_by_guid(guid, output_format='FORM')
@@ -200,29 +259,32 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         display_name = attributes['Display Name'].get('value', None)
         anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
         parent_guid = attributes.get('Parent ID', {}).get('guid', None)
-        parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
-        parent_at_end1 = attributes.get('Parent at End1', {}).get('value', None)
+        parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value',
+                                                                                                "CollectionMembership")
+        parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
 
         anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
-        is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', None)
+        is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
         if parent_guid is None:
             is_own_anchor = True
         collection_ordering = "NAME"
         order_property_name = "Something"
         collection_type = object_type
-        replace_all_props = True
+        replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
-        if not valid:
-            return None
-        else:
-            print(Markdown(f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
         try:
             if object_action == "Update":
+
                 if not exists:
                     print(f"\n{ERROR}Element `{display_name}` does not exist! Updating result document with Create "
                           f"object_action\n")
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                elif not valid:
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
                                                 collection_ordering, order_property_name, replace_all_props)
@@ -234,7 +296,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
             elif object_action == "Create":
                 if valid is False and exists:
-                    print(f"\nData Specification `{display_name}` already exists and result document updated changing "
+                    print(f"\nElement `{display_name}` already exists and result document updated changing "
                           f"`Create` to `Update` in processed output\n")
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 else:
@@ -315,8 +377,8 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
         display_name = attributes['Display Name'].get('value', None)
 
-        namespace = attributes['Namespace'].get('value', None)
-        description = attributes['Description'].get('value', None)
+        namespace = attributes.get('Namespace',{}).get('value', None)
+        description = attributes.get('Description',{}).get('value', None)
         version_id = attributes.get('Version Identifier', {}).get('value', None)
         aliases = attributes.get('Aliases', {}).get('value', None)
         name_patterns = attributes.get('Name Patterns', {}).get('value', None)
@@ -411,23 +473,46 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                 egeria_client.update_data_field(guid, body, not merge_update)
                 print_msg(ALWAYS, f"Updated  {object_type} `{display_name}` with GUID {guid}", debug_level)
+                # Update data dictionary membership
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
                 core_props = egeria_client.get_data_field_by_guid(guid, output_format='MD')
 
-                # Update data dictionary membership
+                existing_data_field = egeria_client.get_data_field_by_guid(guid, output_format='JSON')
+                existing_data_field_dicts = 3
 
-                # Update data structure membership
+                # Sync membership in data dictionaries
+                result = sync_data_dict_membership(egeria_client, in_data_dictionary_names, in_data_dictionary, guid, object_type)
+                print_msg(ALWAYS, f"Will update data dictionary `{in_data_dictionary}`", debug_level)
+                core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary}\n\n"
+
+                # Update data spec membership
+                result = sync_data_spec_membership(egeria_client, in_data_dictionary_names, in_data_dictionary, guid,
+                                                   object_type)
+                print_msg(ALWAYS, f"Will update data dictionary `{in_data_dictionary}`", debug_level)
+                core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary}\n\n"
+
+                # Sync membership in data structuress
+                result = sync_data_structure_membership(egeria_client, in_data_dictionary_names, in_data_dictionary, guid,
+                                                   object_type)
+                core_props += f"\n\n## In Data Structure {in_data_structure}\n\n"
 
                 # Update glossary links
+                result = sync_term_links(egeria_client, glossary_term, glossary_term_guid, guid, object_type)
+                print_msg(ALWAYS, f"Updating glossary term to `{glossary_term}`", debug_level)
 
-                # Update data spec?
+                core_props += f"\n\n## Glossary Term \n\n{glossary_term}\n\n"
+                # Update parent field
+                result = sync_parent_data_field(egeria_client, parent_data_field, parent_data_field_guid, guid, object_type)
+
+                core_props += f"\n\n## Parent Data Field\n\n{parent_data_field}\n\n"
 
                 # Update data classes
+                print_msg(ALWAYS, f"Created Element `{display_name}` ", debug_level)
 
-                # Update parent field
 
+                return core_props
 
 
             elif object_action == "Create":
@@ -460,7 +545,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         # Add the field to any data dictionaries
                         if in_data_dictionary:
                             print_msg(ALWAYS, f"Will add to data dictionary `{in_data_dictionary}`", debug_level)
-                            core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary}\n\n"
+                            core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary_names}\n\n"
                         # Add the field to any data structures
                         if in_data_structure:
                             core_props += f"\n\n## In Data Structure\n\n{in_data_structure_names}\n\n"
@@ -598,13 +683,16 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
         glossary_term = attributes.get('Glossary Term', {}).get('value', None)
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
 
-        name_details_list = attributes.get("dict_list", None)
+        # name_details_list = attributes.get("dict_list", None)
 
-        in_data_spec = attributes.get("In Data Specification", None)  # this is a [dict]
+        in_data_spec = attributes.get("In Data Specification", {}).get("dict_list")  # this is a [dict]
         data_spec_name_list = attributes.get("In Data Specification", {}).get("name_list", None)
         data_spec_value_list = attributes.get("In Data Specification", {}).get("value", None)
 
-        in_data_dictionary = attributes.get('In Data Dictionary', {}).get('value', None)
+        in_data_dictionary = attributes.get('In Data Dictionary', {}).get('dict_list', None)
+        data_dict_name_list = attributes.get('In Data Dictionary', {}).get('name_list', None)
+        data_dict_value_list = attributes.get('In Data Dictionary', {}).get('value', None)
+
         parent_data_field = attributes.get('Parent Data Field', {}).get('value', None)
         parent_data_field_guid = attributes.get('Parent Data Field', {}).get('guid', None)
 
@@ -622,23 +710,45 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
                 return update_a_command(txt, object_action, object_type, qualified_name, guid)
             else:
                 return None
+        elif object_action == "Update" and not exists:
+            print(f"\n{ERROR}Element `{display_name}` does not exist! Updating result document with Create "
+                  f"object_action\n")
+            return update_a_command(txt, object_action, object_type, qualified_name, guid)
+
         else:
             print(Markdown(f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
         try:
             if object_action == "Update":
-                if not exists:
-                    print(f"\n{ERROR}Element `{display_name}` does not exist! Updating result document with Create "
-                          f"object_action\n")
-                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                body = {
+                    "class": "UpdateDataStructureRequestBody",
+                    "externalSourceGUID": external_source_guid,
+                    "externalSourceName": external_source_name,
+                    "effectiveTime": effective_time,
+                    "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing,
+                    "properties": {
+                        "class": "DataStructureProperties",
+                        "qualifiedName": qualified_name,
+                        "displayName": display_name,
+                        "description": description,
+                        "namespace": namespace,
+                        "versionIdentifier": version_id,
+                        "additionalProperties": additional_properties,
+                        "effectiveFrom": effective_from,
+                        "effectiveTo": effective_to
+                        }
+                    }
+                egeria_client.update_data_structure_w_body(guid, body, replace_all_props)
+                print_msg(ALWAYS, f"Updated element `{display_name}` with GUID {guid}", debug_level)
+                core_props = egeria_client.get_data_structure_by_guid(guid, output_format='FORM')
 
-                # egeria_client.update_term(guid, body)
-                # print_msg(ALWAYS, f"Updated Term `{term_name}` with GUID {known_guid}", debug_level)
-                # update_element_dictionary(known_q_name, {
-                #     'guid': known_guid, 'display_name': term_name
-                #     })
+                update_element_dictionary(qualified_name, {
+                    'guid': guid, 'display_name': display_name
+                    })
+                update_data_collection_memberships(egeria_client, in_data_spec, guid, replace_all_props)
 
-                return egeria_client.get_term_by_guid(guid, output_format='MD')
+                return egeria_client.get_data_structure_by_guid(guid, output_format='MD')
 
             elif object_action == "Create":
                 if exists:
@@ -667,31 +777,35 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
                             'guid': guid, 'display_name': display_name
                             })
 
-                        core_props = egeria_client.get_data_structures_by_guid(guid, output_format='FORM')
+                        core_props = egeria_client.get_data_structure_by_guid(guid, output_format='FORM')
 
                         if in_data_dictionary:
-                            print_msg(ALWAYS, f"Will add to data dictionary `{in_data_dictionary}`", debug_level)
+                            print_msg(ALWAYS, f"Will add to data dictionary(s) `{in_data_dictionary}`", debug_level)
+                            result = add_member_to_data_collections(egeria_client, in_data_dictionary, display_name,guid )
                             core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary}\n\n"
+                        # ==>> update to use new function.
                         if in_data_spec:
-                            member_body = {
-                                "class": "CollectionMembershipProperties",
-                                "membershipRationale": "Adding data structure to data specification",
-                                "expression": None, "confidence": 100, "status": None, "userDefinedStatus": None,
-                                "steward": None, "stewardTypeName": None, "stewardPropertyName": None, "source": None,
-                                "notes": None,
-                                }
+                            # member_body = {
+                            #     "class": "CollectionMembershipProperties",
+                            #     "membershipRationale": "Adding data structure to data specification",
+                            #     "expression": None, "confidence": 100, "status": None, "userDefinedStatus": None,
+                            #     "steward": None, "stewardTypeName": None, "stewardPropertyName": None, "source": None,
+                            #     "notes": None,
+                            #     }
+                            #
+                            # if data_spec_name_list is not None:
+                            #     for el in data_spec_value_list:
+                            #         for key in el:
+                            #             ds = el[key]
+                            #             ds_qname = ds.get('known_q_name', None)
+                            #             ds_guid = ds.get('known_guid', None)
+                            #             if ds_guid is not None:
+                            #                 msg = f"Adding field to Data Specification `{ds_qname}`"
+                            #                 egeria_client.add_to_collection(ds_guid, guid, member_body)
+                            #                 print_msg(INFO, msg, debug_level)
+                            result = add_member_to_data_collections(egeria_client, in_data_spec, display_name,guid )
 
-                            if data_spec_name_list is not None:
-                                for el in data_spec_value_list:
-                                    for key in el:
-                                        ds = el[key]
-                                        ds_qname = ds.get('known_q_name', None)
-                                        ds_guid = ds.get('known_guid', None)
-                                        if ds_guid is not None:
-                                            msg = f"Adding field to Data Specification `{ds_qname}`"
-                                            egeria_client.add_to_collection(ds_guid, guid, member_body)
-                                            print_msg(INFO, msg, debug_level)
-                                core_props += f"\n\n## In Data Specifications\n\n`{data_spec_name_list}`\n\n"
+                            core_props += f"\n\n## In Data Specifications\n\n`{data_spec_name_list}`\n\n"
 
                         print_msg(ALWAYS, f"Created Element `{display_name}` with GUID {guid}", debug_level)
 

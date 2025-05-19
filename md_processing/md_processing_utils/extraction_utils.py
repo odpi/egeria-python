@@ -91,12 +91,17 @@ def extract_attribute(text: str, labels: set) -> str | None:
     # Iterate over the list of labels
     for label in labels:
         # Construct pattern for the current label
+        # text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r'\n\n+', '\n\n', text).strip()
+
         label = label.strip()
-        pattern = rf"## {re.escape(label)}\n(.*?)(?:#|___|>|$)"  # modified from --- to enable embedded tables
+        pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+
+        # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:
             # Extract matched text
-            matched_text = match.group(1).strip()
+            matched_text = match.group(1)
 
             # Filter out lines beginning with '>'
             filtered_lines = [line for line in matched_text.split('\n') if not line.strip().startswith('>')]
@@ -105,7 +110,7 @@ def extract_attribute(text: str, labels: set) -> str | None:
             # Replace consecutive \n with a single \n
             extracted_text = re.sub(r'\n+', '\n', filtered_text)
             if not extracted_text.isspace() and extracted_text:
-                return extracted_text  # Return the cleaned text - I removed the title casing
+                return extracted_text.strip()  # Return the cleaned text - I removed the title casing
 
     return None
 

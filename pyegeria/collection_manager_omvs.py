@@ -1103,7 +1103,7 @@ class CollectionManager(Client):
         parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/data-spec-collection"
         if qualified_name is None:
-            qualified_name = self.__create_qualified_name__("DataDict", display_name)
+            qualified_name = self.__create_qualified_name__("DataSpec", display_name)
 
         body = {
             "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
@@ -2158,7 +2158,9 @@ class CollectionManager(Client):
 
         if page_size is None:
             page_size = self.page_size
-        collection_guid = self.__get_guid__(collection_guid, collection_name, "name", collection_qname, None, )
+        if collection_guid is None:
+            collection_guid = self.__get_guid__(collection_guid, collection_name, "name", collection_qname, None, )
+
         url = (f"{self.collection_command_root}/{collection_guid}/"
                f"members?startFrom={start_from}&pageSize={page_size}")
 
@@ -2535,9 +2537,12 @@ class CollectionManager(Client):
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            member_resp = await self._async_get_collection(member_guid)
-            member = member_resp.get("element", None)
-            if member is None:
+            member_resp = await self._async_get_collection_by_guid(member_guid)
+            if isinstance(member_resp,(dict,list)):
+                member = member_resp.get("element", None)
+                if member is None:
+                    continue
+            else:
                 continue
             # print(json.dumps(member, indent = 4))
 

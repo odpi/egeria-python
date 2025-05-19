@@ -25,6 +25,10 @@ def split_tb_string(input: str)-> [Any]:
     l = [item.strip() for item in re.split(r'[;,\n]+',input)] if input is not None else None
     return l
 
+def str_to_bool(value: str) -> bool:
+    """Converts a string to a boolean value."""
+    return value.lower() in ("yes", "true", "t", "1")
+
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
     console.print(Markdown(markdown_text))
