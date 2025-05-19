@@ -3,6 +3,7 @@ This file contains display-related constants and formatting functions for Egeria
 """
 import json
 import os
+import importlib.resources
 from rich.markdown import Markdown
 
 from pyegeria._globals import DEBUG_LEVEL
@@ -10,6 +11,7 @@ from md_processing.md_processing_utils.message_constants import message_types, A
 
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox")
+
 
 
 # Constants for element labels
@@ -65,14 +67,12 @@ debug_level = DEBUG_LEVEL
 
 def load_commands(filename: str) -> None:
     global COMMAND_DEFINITIONS
-    # print("EGERIA_INBOX_PATH: ", EGERIA_INBOX_PATH)
 
-    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, filename)
-
-    # print("Loading commands from: ", full_file_path)
     try:
-        with open(full_file_path, 'r') as file:
-            COMMAND_DEFINITIONS = json.load(file)
+        config_path = importlib.resources.files("md_processing") / "data" / filename
+        config_str = config_path.read_text(encoding="utf-8")
+        COMMAND_DEFINITIONS = json.loads(config_str)
+
     except FileNotFoundError:
         msg = f"ERROR: File {filename} not found."
         print(ERROR, msg, debug_level)

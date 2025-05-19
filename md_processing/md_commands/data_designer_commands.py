@@ -19,8 +19,7 @@ from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.md_processing_utils import ALWAYS, INFO
 
-command_definitions = os.environ.get("COMMAND_DEFINITIONS")
-# print("Current working directory: ", os.getcwd())
+
 load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
