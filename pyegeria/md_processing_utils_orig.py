@@ -37,7 +37,7 @@ command_list = ["Provenance",
 ERROR = "ERROR-> "
 INFO = "INFO- "
 WARNING = "WARNING-> "
-pre_command = "\n---\n==> Processing command:"
+pre_command = "\n---\n==> Processing object_action:"
 
 element_dictionary = {}
 
@@ -120,7 +120,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     u_guid = u_guid if u_guid else " "
     verb = command.split(' ')[0].strip()
     action = "Update" if (verb == "Create" and u_guid is not None) else "Create"
-    txt = txt.replace(f"{command}", f'{action} {obj_type}\n')  # update the command
+    txt = txt.replace(f"{command}", f'{action} {obj_type}\n')  # update the object_action
     txt = txt.replace('<GUID>', f'GUID\n{u_guid}')  # update with GUID
     txt = txt.replace('<Qualified Name>', f"Qualified Name\n{q_name}")
     if "Qualified Name" not in txt:
@@ -128,7 +128,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     if "GUID" not in txt:
         txt += f"\n## GUID\n{u_guid}\n"
 
-    # if (command in {"Update Term", "Update Category", 'Update Glossary'}) and ("Update Description" not in txt):
+    # if (object_action in {"Update Term", "Update Category", 'Update Glossary'}) and ("Update Description" not in txt):
     #     txt += '\n** Update Description\n\n\n'
     # elif "Update Description" in txt:
     #     pattern = r"(## Update Description\n).*?(#)"
@@ -143,7 +143,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     return txt
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
-    """This md_commands processes a provenence command by pre-pending the current file name and time to the provenance
+    """This md_commands processes a provenence object_action by pre-pending the current file name and time to the provenance
     output"""
     output = (f"* Derived from processing file {file_path} on "
               f"{get_current_datetime_string()}\n")
@@ -219,7 +219,7 @@ def process_element_identifiers(egeria_client: EgeriaTech, txt: str) -> tuple[st
 def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictionary: dict, txt: str,
                                 directive: str = "display") -> Optional[str]:
     """
-    Processes a blueprint create or update command by extracting key attributes such as
+    Processes a blueprint create or update object_action by extracting key attributes such as
     blueprint name, description, and version from the given cell.
 
     Parameters:
@@ -269,7 +269,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
                 valid = False
                 element_dictionary[known_q_name] = {'display_name': display_name, 'guid': known_guid}
 
-        elif obj_action == 'Create':  # if the command is create, check that it doesn't already exist
+        elif obj_action == 'Create':  # if the object_action is create, check that it doesn't already exist
             if exists:
                 msg += f"\n{WARNING}Element \'{display_name}\' already exists.\n"
             elif not valid:
@@ -338,7 +338,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, element_dictiona
 def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                     directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary create or update command by extracting key attributes such as
+    Processes a glossary create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given text.
 
     :param txt: A string representing the input cell to be processed for
@@ -445,7 +445,7 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
         if object_action == "Update":
             if not exists:
                 print(
-                    f"\n{ERROR}Glossary {glossary_name} does not exist! Updating result document with Create command\n")
+                    f"\n{ERROR}Glossary {glossary_name} does not exist! Updating result document with Create object_action\n")
                 return update_a_command(txt, command, object_type, known_q_name, known_guid)
 
             body = {
@@ -459,7 +459,7 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
             element_dictionary[known_q_name] = {
                 'guid': known_guid, 'display_name': glossary_name
                 }
-            # return update_a_command(txt, command, object_type, known_q_name, known_guid)
+            # return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             return egeria_client.get_glossary_by_guid(known_guid, output_format='MD')
         elif object_action == "Create":
             glossary_guid = None
@@ -477,14 +477,14 @@ def process_glossary_upsert_command(egeria_client: GlossaryManager, element_dict
                 element_dictionary[qualified_name] = {
                     'guid': glossary_guid, 'display_name': glossary_name
                     }
-                # return update_a_command(txt, command, object_type, qualified_name, glossary_guid)
+                # return update_a_command(txt, object_action, object_type, qualified_name, glossary_guid)
                 return egeria_client.get_glossary_by_guid(glossary_guid, output_format = 'MD')
 
 
 def process_categories_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                       directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary category create or update command by extracting key attributes such as
+    Processes a glossary category create or update object_action by extracting key attributes such as
     category name, qualified, description, and anchor glossary from the given txt..
 
     :param txt: A string representing the input cell to be processed for
@@ -619,7 +619,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
             if not exists:
                 print(
                     f"\n{ERROR}category `{category_name}` does not exist! Updating result document with Create "
-                    f"command\n")
+                    f"object_action\n")
                 return update_a_command(txt, command, object_type, known_q_name, known_guid)
 
             egeria_client.update_category(glossary_guid, category_name, description, known_q_name, None,
@@ -628,7 +628,7 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
             element_dictionary[known_q_name] = {
                 'guid': known_guid, 'display_name': category_name
                 }
-            # return update_a_command(txt, command, object_type, known_q_name, known_guid)
+            # return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             return egeria_client.get_category_by_guid(known_guid, output_format='FORM')
 
         elif object_action == "Create":
@@ -648,14 +648,14 @@ def process_categories_upsert_command(egeria_client: GlossaryManager, element_di
                 element_dictionary[qualified_name] = {
                     'guid': category_guid, 'display_name': category_name
                     }
-                # return update_a_command(txt, command, object_type, qualified_name, category_guid)
+                # return update_a_command(txt, object_action, object_type, qualified_name, category_guid)
                 return egeria_client.get_category_by_guid(category_guid, output_format='MD')
 
 
 def process_term_upsert_command(egeria_client: GlossaryManager, element_dictionary: dict, txt: str,
                                 directive: str = "display") -> Optional[str]:
     """
-    Processes a term create or update command by extracting key attributes such as
+    Processes a term create or update object_action by extracting key attributes such as
     term name, summary, description, abbreviation, examples, usage, version, and status from the given cell.
 
     :param txt: A string representing the input cell to be processed for
@@ -812,7 +812,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
             print(Markdown(msg))
             return valid, term_exists, known_term_guid, known_q_name
 
-        elif obj_action == 'Create':  # if the command is create, check that it doesn't already exist
+        elif obj_action == 'Create':  # if the object_action is create, check that it doesn't already exist
             if term_exists:
                 msg += f"\n{WARNING}Term \'{term_name}\' already exists.\n"
             elif not valid:
@@ -893,7 +893,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                     element_dictionary)
                 print(f"\n-->Updated Term {term_name} with GUID {known_guid} and categories {categories_list}")
                 return egeria_client.get_terms_by_guid(known_guid, 'md')
-                # return update_a_command(txt, command, object_type, known_q_name, known_guid)
+                # return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
             elif object_action == "Update" and directive == "validate":
                 return egeria_client.get_terms_by_guid(known_guid, 'md')
 
@@ -947,7 +947,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
                     print(f"\n-->Created Term {term_name} with GUID {term_guid}")
                     element_dictionary[q_name] = {'guid': term_guid, 'display_name': term_name}
                     return egeria_client.get_terms_by_guid(term_guid, 'MD')
-                    # return update_a_command(txt, command, object_type, q_name, term_guid)
+                    # return update_a_command(txt, object_action, object_type, q_name, term_guid)
         except Exception as e:
             print(f"{ERROR}Error creating term {term_name}: {e}")
             console.print_exception(show_locals=True)
@@ -956,7 +956,7 @@ def process_term_upsert_command(egeria_client: GlossaryManager, element_dictiona
 def process_per_proj_upsert_command(egeria_client: ProjectManager, element_dictionary: dict, txt: str,
                                     directive: str = "display") -> str | None:
     """
-    Processes a personal project create or update command by extracting key attributes such as
+    Processes a personal project create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given cell.
 
     :param txt: A string representing the input cell to be processed for

@@ -17,10 +17,21 @@ from rich.markdown import Markdown
 
 from pyegeria import body_slimmer
 from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND, DEBUG_LEVEL)
-from md_processing.md_processing_utils.common_utils import get_element_dictionary, update_element_dictionary, find_key_with_value
 from pyegeria.egeria_tech_client import EgeriaTech
-# from pyegeria.md_processing_helpers import process_q_name_list
+from md_processing.md_processing_utils.md_processing_constants import (message_types,
+        pre_command, EXISTS_REQUIRED, load_commands, get_command_spec, get_attribute, get_attribute_labels, get_alternate_names)
+
+
 from pyegeria.project_manager_omvs import ProjectManager
+
+ALWAYS = "ALWAYS"
+ERROR = "ERROR"
+INFO = "INFO"
+WARNING = "WARNING"
+pre_command = "\n---\n==> Processing object_action:"
+command_seperator = Markdown("\n---\n")
+EXISTS_REQUIRED = "Exists Required"
+
 
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
@@ -41,7 +52,7 @@ ALWAYS = "ALWAYS"
 ERROR = "ERROR"
 INFO = "INFO"
 WARNING = "WARNING"
-pre_command = "\n---\n==> Processing command:"
+pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 
@@ -82,6 +93,77 @@ TERM_RELATIONSHPS = [
     "RelatedTerm",
     "ISARelationship"
 ]
+
+# Dictionary to store element information to avoid redundant API calls
+element_dictionary = {}
+
+
+def get_element_dictionary():
+    """
+    Get the shared element dictionary.
+
+    Returns:
+        dict: The shared element dictionary
+    """
+    global element_dictionary
+    return element_dictionary
+
+
+def update_element_dictionary(key, value):
+    """
+    Update the shared element dictionary with a new key-value pair.
+
+    Args:
+        key (str): The key to update
+        value (dict): The value to associate with the key
+    """
+    global element_dictionary
+    if (key is None or value is None):
+        print(f"===>ERROR Key is {key} and value is {value}")
+        return
+    element_dictionary[key] = value
+
+
+def clear_element_dictionary():
+    """
+    Clear the shared element dictionary.
+    """
+    global element_dictionary
+    element_dictionary.clear()
+
+
+def is_present(value: str) -> bool:
+    global element_dictionary
+    present = value in element_dictionary.keys() or any(
+        value in inner_dict.values() for inner_dict in element_dictionary.values())
+    return present
+
+
+def find_key_with_value(value: str) -> str | None:
+    """
+    Finds the top-level key whose nested dictionary contains the given value.
+
+    Args:
+        data (dict): A dictionary where keys map to nested dictionaries.
+        value (str): The value to search for.
+
+    Returns:
+        str | None: The top-level key that contains the value, or None if not found.
+    """
+    global element_dictionary
+    # Check if the value matches a top-level key
+    if value in element_dictionary.keys():
+        return value
+
+    # Check if the value exists in any of the nested dictionaries
+    for key, inner_dict in element_dictionary.items():
+        if value in inner_dict.values():
+            return key
+
+    return None  # If value not found
+
+
+
 
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
@@ -189,10 +271,10 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
     Args:
         block: A string containing the block of text to search for the
-            command and action.
+            object_action and action.
 
     Returns:
-        A tuple containing the command, the object type and the object action if a
+        A tuple containing the object_action, the object type and the object action if a
         match is found. Otherwise, returns None.
     """
     # Filter out lines beginning with '>'
@@ -217,7 +299,7 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
 def extract_command(block: str) -> str | None:
     """
-    Extracts a command from a block of text that is contained between a single hash ('#') and
+    Extracts a object_action from a block of text that is contained between a single hash ('#') and
     either a double hash ('##'), a newline character, or the end of the string.
 
     The function searches for a specific pattern within the block of text and extracts the
@@ -226,10 +308,10 @@ def extract_command(block: str) -> str | None:
 
     Args:
         block: A string representing the block of text to process. Contains the content
-            in which the command and delimiters are expected to be present.
+            in which the object_action and delimiters are expected to be present.
 
     Returns:
-        The extracted command as a string if a match is found, otherwise None.
+        The extracted object_action as a string if a match is found, otherwise None.
     """
     match = re.search(r"#(.*?)(?:##|\n|$)", block)  # Using a non capturing group
     if match:
@@ -267,7 +349,7 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
             # Replace consecutive \n with a single \n
             extracted_text = re.sub(r'\n+', '\n', filtered_text)
             if not extracted_text.isspace() and extracted_text:
-                return extracted_text  # Return the cleaned text - I removed the title casing
+                return extracted_text.trim()  # Return the cleaned text - I removed the title casing
 
     return None
 
@@ -316,7 +398,7 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
        Parameters:
        ----------
        txt: str
-         The block of command text to extract attributes from.
+         The block of object_action text to extract attributes from.
        labels: list
          The possible attribute labels to search for. The first label will be used in messages.
        if_missing: str, default is INFO
@@ -340,27 +422,27 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
 
 def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
     """
-    Updates a command by modifying the input text with corresponding actions, GUID, and qualified name.
-    The function processes the provided command based on the given parameters, updating the relevant
-    sections in the text, including command actions, GUID, qualified name, and optionally the status
+    Updates a object_action by modifying the input text with corresponding actions, GUID, and qualified name.
+    The function processes the provided object_action based on the given parameters, updating the relevant
+    sections in the text, including object_action actions, GUID, qualified name, and optionally the status
     of the attributes. It ensures that proper formatting and necessary fields are present in the text.
 
     Args:
         txt (str): The input text containing the content to be updated.
-        command (str): The command to be processed (e.g., "Create Term", "Update Term").
-        obj_type (str): The object type related to the command (e.g., "Term", "Category").
+        command (str): The object_action to be processed (e.g., "Create Term", "Update Term").
+        obj_type (str): The object type related to the object_action (e.g., "Term", "Category").
         q_name (str): The qualified name to be added or updated in the text.
         u_guid (str): The unique identifier (GUID) to be added or updated in the text. If not provided,
             it defaults to an empty string.
 
     Returns:
-        str: The updated text containing the modifications based on the provided command.
+        str: The updated text containing the modifications based on the provided object_action.
 
     """
     u_guid = u_guid if u_guid else " "
     verb = command.split(' ')[0].strip()
     action = "Update" if (verb == "Create" and u_guid is not None) else "Create"
-    txt = txt.replace(f"{command}", f'{action} {obj_type}\n')  # update the command
+    txt = txt.replace(f"{command}", f'{action} {obj_type}\n')  # update the object_action
 
     if "Qualified Name" not in txt:
         txt += f"\n## Qualified Name\n{q_name}\n"
@@ -376,7 +458,7 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
 
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
-    """This md_commands processes a provenence command by pre-pending the current file name and time to the provenance
+    """This md_commands processes a provenence object_action by pre-pending the current file name and time to the provenance
     output"""
     output = (f"* Derived from processing file {file_path} on "
               f"{get_current_datetime_string()}\n")
@@ -410,7 +492,7 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, el
     txt: str
         A string representing the input text to be processed for extracting element identifiers.
     action: str
-        The action command to be executed (e.g., 'Create', 'Update', 'Display', ...)
+        The action object_action to be executed (e.g., 'Create', 'Update', 'Display', ...)
     version: str, optional = None
         An optional version identifier used if we need to construct the qualified name
 
@@ -625,7 +707,7 @@ list[Any], bool | Any, bool | None | Any] | None:
 
 def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a blueprint create or update command by extracting key attributes such as
+    Processes a blueprint create or update object_action by extracting key attributes such as
     blueprint name, description, and version from the given cell.
 
     Parameters:
@@ -734,7 +816,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> \
 Optional[str]:
     """
-    Processes a solution componentt create or update command by extracting key attributes such as
+    Processes a solution componentt create or update object_action by extracting key attributes such as
     solution component name, description, version, solution component type etc from the given cell.
 
     Parameters:
@@ -830,7 +912,7 @@ Optional[str]:
                                                                        version_identifier=version)
             update_element_dictionary(known_q_name, {'display_name': display_name, 'guid': known_guid})
 
-    elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
+    elif object_action == 'Create':  # if the object_action is create, check that it doesn't already exist
         if exists:
             msg = f"{object_type} `{display_name}` already exists."
             print_msg("ERROR", msg, debug_level)
@@ -902,7 +984,7 @@ Optional[str]:
 
 def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary create or update command by extracting key attributes such as
+    Processes a glossary create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given text.
 
     :param txt: A string representing the input cell to be processed for
@@ -988,7 +1070,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
         if object_action == "Update":
             if not glossary_exists:
                 print(f"\n{ERROR}Glossary `{glossary_name}` does not exist! Updating result document with Create "
-                      f"command\n")
+                      f"object_action\n")
                 return update_a_command(txt, command, object_type, known_q_name, known_guid)
 
             body = {
@@ -1019,7 +1101,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                 update_element_dictionary(qualified_name, {
                     'guid': glossary_guid, 'display_name': glossary_name
                     })
-                # return update_a_command(txt, command, object_type, qualified_name, glossary_guid)
+                # return update_a_command(txt, object_action, object_type, qualified_name, glossary_guid)
                 print_msg(ALWAYS, f"Created Glossary `{glossary_name}` with GUID {glossary_guid}", debug_level)
                 return egeria_client.get_glossary_by_guid(glossary_guid, output_format='FORM')
         else:
@@ -1030,7 +1112,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
 
 def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a glossary category create or update command by extracting key attributes such as
+    Processes a glossary category create or update object_action by extracting key attributes such as
     category name, qualified, description, and anchor glossary from the given txt..
 
     :param txt: A string representing the input cell to be processed for
@@ -1136,7 +1218,7 @@ def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directi
         if object_action == "Update":
             if not category_exists:
                 print(f"\n{ERROR}category `{category_name}` does not exist! Updating result document with Create "
-                      f"command\n")
+                      f"object_action\n")
                 return update_a_command(txt, command, object_type, known_q_name, known_guid)
 
             # Update the basic category properties
@@ -1272,7 +1354,7 @@ def update_category_parent(egeria_client, category_guid: str, parent_category_na
 
 def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
-    Processes a term create or update command by extracting key attributes such as
+    Processes a term create or update object_action by extracting key attributes such as
     term name, summary, description, abbreviation, examples, usage, version, and status from the given cell.
 
     :param txt: A string representing the input cell to be processed for
@@ -1364,7 +1446,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
             print_msg(ERROR, msg, debug_level)
             valid = False
 
-    elif object_action == 'Create':  # if the command is create, check that it doesn't already exist
+    elif object_action == 'Create':  # if the object_action is create, check that it doesn't already exist
         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
                         f"* Term Name: {term_name}\n\t* Categories: {categories}\n\t* Summary: {summary}\n\t"
                         f"* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t* Description: {description}\n\t"
@@ -1412,7 +1494,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                           f"\tUpdated Term `{term_name}` with GUID {known_guid}\n\tand categories `{categories}`",
                           debug_level)
                 return egeria_client.get_term_by_guid(known_guid,
-                                                      'md')  # return update_a_command(txt, command, object_type,
+                                                      'md')  # return update_a_command(txt, object_action, object_type,
                 # known_q_name, known_guid)
             elif object_action == "Update" and directive == "validate":  # is sthis reachable?
                 return egeria_client.get_term_by_guid(known_guid, 'md')
@@ -1459,7 +1541,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     update_element_dictionary(known_q_name, {'guid': term_guid, 'display_name': term_name})
                     print_msg(ALWAYS, f"Created term `{term_name}` with GUID {term_guid}", debug_level)
                     return egeria_client.get_term_by_guid(term_guid,
-                                                          'MD')  # return update_a_command(txt, command,
+                                                          'MD')  # return update_a_command(txt, object_action,
                     # object_type, q_name, term_guid)
         except Exception as e:
             print(f"{ERROR}Error creating term {term_name}: {e}")
@@ -1528,7 +1610,7 @@ def process_create_term_term_relationship_command(egeria_client: EgeriaTech, txt
 
 def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, directive: str = "display") -> str | None:
     """
-    Processes a personal project create or update command by extracting key attributes such as
+    Processes a personal project create or update object_action by extracting key attributes such as
     glossary name, language, description, and usage from the given cell.
 
     :param txt: A string representing the input cell to be processed for

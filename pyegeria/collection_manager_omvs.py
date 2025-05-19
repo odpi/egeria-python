@@ -7,13 +7,24 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-import time
 
 # import json
 from pyegeria._client import Client
+from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.utils import body_slimmer
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.output_formatter import (
+    extract_mermaid_only, 
+    extract_basic_dict,
+    generate_output,
+    generate_entity_md,
+    generate_entity_md_table,
+    generate_entity_dict,
+    make_preamble,
+    make_md_attribute,
+    MD_SEPARATOR
+)
+
 
 class CollectionManager(Client):
     """
@@ -37,33 +48,21 @@ class CollectionManager(Client):
 
     """
 
-    def __init__(
-        self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
-        user_pwd: str = None,
-        token: str = None,
-    ):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
         self.collection_command_root: str = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
-        )
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections")
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
     #
-    async def _async_get_attached_collections(
-        self,
-        parent_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list:
+    async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0,
+            page_size: int = None, ) -> list:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
 
@@ -102,20 +101,13 @@ class CollectionManager(Client):
 
         body = {}
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
-            f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}"
-        )
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
+               f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json()
 
-    def get_attached_collections(
-        self,
-        parent_guid: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list:
+    def get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = None, ) -> list:
         """Returns the list of collections that are linked off of the supplied element.
 
         Parameters
@@ -148,17 +140,11 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_attached_collections(parent_guid, start_from, page_size)
-        )
+        resp = loop.run_until_complete(self._async_get_attached_collections(parent_guid, start_from, page_size))
         return resp
 
-    async def _async_get_classified_collections(
-        self,
-        classification: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    async def _async_get_classified_collections(self, classification: str, start_from: int = 0,
+            page_size: int = None, output_format: str = 'JSON') -> list | str | dict:
         """Returns the list of collections with a particular classification.  These classifications
             are typically "RootCollection", "Folder" or "DigitalProduct". Async version.
 
@@ -166,19 +152,20 @@ class CollectionManager(Client):
         ----------
         classification: str
             The classification of the collection to inspect.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
-        list | str
-            The list of collections (if found) with the specified classification. Returns a string if none found.
+        List | str | dict
+
+        A list of collections with the provided classification in the output format specified.
+        Returns a string if none found.
 
         Raises
         ------
@@ -197,22 +184,20 @@ class CollectionManager(Client):
 
         body = {"filter": classification}
 
-        url = (
-            f"{self.collection_command_root}/by-classifications?"
-            f"startFrom={start_from}&pageSize={page_size}"
-        )
+        url = (f"{self.collection_command_root}/by-classifications?"
+               f"startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body)
-        # result = resp.json().get("elements",NO_ELEMENTS_FOUND)
-        result = resp.json().get("elements", "No Elements to return")
-        return result
+        response = await self._async_make_request("POST", url, body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
 
-    def get_classified_collections(
-        self,
-        classification: str,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, output_format)
+        return elements
+
+    def get_classified_collections(self, classification: str, start_from: int = 0,
+            page_size: int = None, output_format:str = 'JSON') -> list | str | dict:
         """Returns the list of collections with a particular classification.  These classifications
              are typically "RootCollection", "Folder" or "DigitalProduct".
 
@@ -220,19 +205,19 @@ class CollectionManager(Client):
         ----------
         classification: str
             The classification of the collection to inspect.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
-        List | str
+        List | str | dict
 
-        A list of collections linked off of the supplied element.
+        A list of collections with the provided classification in the output format specified.
+        Returns a string if none found..
 
         Raises
         ------
@@ -246,23 +231,13 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_classified_collections(
-                classification, start_from, page_size
-            )
-        )
+        resp = loop.run_until_complete(self._async_get_classified_collections(classification,
+                                                                              start_from, page_size, output_format))
         return resp
 
-    async def _async_find_collections(
-        self,
-        search_string: str,
-        effective_time: str = None,
-        starts_with: bool = False,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    async def _async_find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
+            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
+            output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -273,9 +248,6 @@ class CollectionManager(Client):
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
-
-
-
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -287,6 +259,8 @@ class CollectionManager(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         List | str
@@ -319,25 +293,22 @@ class CollectionManager(Client):
         body = {"filter": search_string, "effective_time": effective_time}
 
         body_s = body_slimmer(body)
-        url = (
-            f"{self.collection_command_root}/"
-            f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-            f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}"
-        )
+        url = (f"{self.collection_command_root}/"
+               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
 
-        resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", NO_ELEMENTS_FOUND)
+        response = await self._async_make_request("POST", url, body_s)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
 
-    def find_collections(
-        self,
-        search_string: str,
-        effective_time: str = None,
-        starts_with: bool = False,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, output_format)
+        return elements
+
+    def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
+            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
+            output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -348,9 +319,6 @@ class CollectionManager(Client):
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -362,6 +330,8 @@ class CollectionManager(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         List | str
@@ -381,26 +351,13 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_find_collections(
-                search_string,
-                effective_time,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-            )
-        )
+            self._async_find_collections(search_string, effective_time, starts_with, ends_with, ignore_case, start_from,
+                page_size, output_format))
 
         return resp
 
-    async def _async_get_collections_by_name(
-        self,
-        name: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    async def _async_get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0,
+            page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Returns the list of collections with a particular name.
 
         Parameters
@@ -417,6 +374,8 @@ class CollectionManager(Client):
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
         Returns
         -------
         List | str
@@ -441,25 +400,23 @@ class CollectionManager(Client):
         validate_search_string(name)
 
         body = {
-            "filter": name,
-            effective_time: effective_time,
-        }
+            "filter": name, effective_time: effective_time,
+            }
         body_s = body_slimmer(body)
-        url = (
-            f"{self.collection_command_root}/"
-            f"by-name?startFrom={start_from}&pageSize={page_size}"
-        )
+        url = (f"{self.collection_command_root}/"
+               f"by-name?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", NO_ELEMENTS_FOUND)
+        response = await self._async_make_request("POST", url, body_s)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
 
-    def get_collections_by_name(
-        self,
-        name: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, output_format)
+        return elements
+
+    def get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0, page_size: int = None,
+            output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -470,14 +427,13 @@ class CollectionManager(Client):
             name to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -498,20 +454,12 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collections_by_name(
-                name, effective_time, start_from, page_size
-            )
-        )
+            self._async_get_collections_by_name(name, effective_time, start_from, page_size, output_format))
 
         return resp
 
-    async def _async_get_collections_by_type(
-        self,
-        collection_type: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    async def _async_get_collections_by_type(self, collection_type: str, effective_time: str = None,
+            start_from: int = 0, page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
@@ -521,14 +469,13 @@ class CollectionManager(Client):
             collection_type to use to find matching collections.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -554,26 +501,24 @@ class CollectionManager(Client):
         validate_search_string(collection_type)
 
         body = {
-            "filter": collection_type,
-            effective_time: effective_time,
-        }
+            "filter": collection_type, effective_time: effective_time,
+            }
         body_s = body_slimmer(body)
 
-        url = (
-            f"{self.collection_command_root}/"
-            f"by-collection-type?startFrom={start_from}&pageSize={page_size}"
-        )
+        url = (f"{self.collection_command_root}/"
+               f"by-collection-type?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", NO_ELEMENTS_FOUND)
+        response = await self._async_make_request("POST", url, body_s)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
 
-    def get_collections_by_type(
-        self,
-        collection_type: str,
-        effective_time: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, output_format)
+        return elements
+
+    def get_collections_by_type(self, collection_type: str, effective_time: str = None, start_from: int = 0,
+            page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -584,14 +529,13 @@ class CollectionManager(Client):
             collection type to find.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -612,16 +556,12 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collections_by_type(
-                collection_type, effective_time, start_from, page_size
-            )
-        )
+            self._async_get_collections_by_type(collection_type, effective_time, start_from, page_size, output_format))
 
         return resp
 
-    async def _async_get_collection(
-        self, collection_guid: str, effective_time: str = None
-    ) -> dict | str:
+    async def _async_get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
+            output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
@@ -630,9 +570,8 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -657,13 +596,18 @@ class CollectionManager(Client):
         url = f"{self.collection_command_root}/{collection_guid}"
         body = {
             "effective_time": effective_time,
-        }
-        resp = await self._async_make_request("GET", url, body)
-        return resp.json()
+            }
+        response = await self._async_make_request("GET", url, body)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
 
-    def get_collection(
-        self, collection_guid: str, effective_time: str = None
-    ) -> dict | str:
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, output_format)
+        return elements
+
+    def get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
+            output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection.
 
         Parameters
@@ -672,9 +616,8 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
-
-
-
+        output_format: str, default = "JSON"
+                    - one of "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
@@ -695,8 +638,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection(collection_guid, effective_time)
-        )
+            self._async_get_collection_by_guid(collection_guid, effective_time, output_format))
 
         return resp
 
@@ -709,7 +651,8 @@ class CollectionManager(Client):
     # Create Collections: https://egeria-project.org/concepts/collection
     # These requests use the following parameters:
     #
-    # anchorGUID - the unique identifier of the element that should be the anchor for the new element. Set to null if no anchor,
+    # anchorGUID - the unique identifier of the element that should be the anchor for the new element. Set to null if
+    # no anchor,
     # or if this collection is to be its own anchor.
     #
     # isOwnAnchor -this element should be classified as its own anchor or not.  The default is false.
@@ -717,15 +660,14 @@ class CollectionManager(Client):
     # parentGUID - the optional unique identifier for an element that should be connected to the newly created element.
     # If this property is specified, parentRelationshipTypeName must also be specified
     #
-    # parentRelationshipTypeName - the name of the relationship, if any, that should be established between the new element and the parent element.
+    # parentRelationshipTypeName - the name of the relationship, if any, that should be established between the new
+    # element and the parent element.
     # Examples could be "ResourceList" or "DigitalServiceProduct".
     #
     # parentAtEnd1 -identifies which end any parent entity sits on the relationship.
     #
 
-    async def _async_create_collection_w_body(
-        self, classification_name: str, body: dict
-    ) -> str:
+    async def _async_create_collection_w_body(self, classification_name: str, body: dict) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection Async version.
 
         Parameters
@@ -783,14 +725,11 @@ class CollectionManager(Client):
         }
         """
 
-        url = (
-            f"{self.collection_command_root}?"
-            f"classificationName={classification_name}"
-        )
+        url = (f"{self.collection_command_root}?"
+               f"classificationName={classification_name}")
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID returned")
-
 
     def create_collection_w_body(self, classification_name: str, body: dict) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
@@ -853,26 +792,13 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_collection_w_body(classification_name, body)
-        )
+        resp = loop.run_until_complete(self._async_create_collection_w_body(classification_name, body))
         return resp
 
-    async def _async_create_collection(
-        self,
-        classification_name: str,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-        collection_ordering: str = None,
-        order_property_name: str = None,
-    ) -> str:
+    async def _async_create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
+            collection_ordering: str = None, order_property_name: str = None, ) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection Async version.
 
         Parameters
@@ -930,47 +856,26 @@ class CollectionManager(Client):
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
 
-        url = (
-            f"{self.collection_command_root}?"
-            f"classificationName={classification_name}"
-        )
+        url = (f"{self.collection_command_root}?"
+               f"classificationName={classification_name}")
 
         body = {
-            "anchorGUID": anchor_guid,
-            "anchorScopeGUID": anchor_scope_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"{classification_name}::{display_name}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name,
-            },
-        }
+            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
+            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": f"{classification_name}::{display_name}",
+                "name": display_name, "description": description, "collectionType": collection_type,
+                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                },
+            }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    def create_collection(
-        self,
-        classification_name: str,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    def create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
+            collection_ordering: str = "OTHER", order_property_name: str = "Something", ) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
 
         Parameters
@@ -1023,35 +928,14 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_collection(
-                classification_name,
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name
-            )
-        )
+            self._async_create_collection(classification_name, anchor_guid, parent_guid, parent_relationship_type_name,
+                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
+                collection_ordering, order_property_name))
         return resp
 
-    async def _async_create_root_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-    ) -> str:
+    async def _async_create_root_collection(self, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False, ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
         collection hierarchy. Async version.
 
@@ -1099,36 +983,20 @@ class CollectionManager(Client):
         url = f"{self.collection_command_root}/root-collection"
 
         body = {
-            "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "anchorScopeGUID": anchor_scope_guid,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"root-collection::{display_name}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-            },
-        }
+            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor_s, "anchorScopeGUID": anchor_scope_guid,
+            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": f"root-collection::{display_name}",
+                "name": display_name, "description": description, "collectionType": collection_type,
+                },
+            }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID Returned")
 
-    def create_root_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-    ) -> str:
+    def create_root_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
+            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+            anchor_scope_guid: str = None, is_own_anchor: bool = False, ) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
          collection hierarchy.
 
@@ -1173,34 +1041,15 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_root_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-            )
-        )
+            self._async_create_root_collection(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
+                display_name, description, collection_type, anchor_scope_guid, is_own_anchor, ))
         return resp
 
-    async def _async_create_data_spec_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = True,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
+            collection_ordering: str = "OTHER", order_property_name: str = "Something",
+            qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types. Async version.
 
@@ -1232,6 +1081,8 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        qualified_name: str, optional, defaults to None
+            If not specified, a unique name will be created for the collection.
 
         Returns
         -------
@@ -1251,42 +1102,26 @@ class CollectionManager(Client):
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/data-spec-collection"
+        if qualified_name is None:
+            qualified_name = self.__create_qualified_name__("DataSpec", display_name)
 
         body = {
-            "anchorGUID": anchor_guid,
-            "anchorScopeGUID": anchor_scope_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"data-spec-collection::{display_name}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name,
-            },
-        }
+            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
+            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+                "description": description, "collectionType": collection_type,
+                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                },
+            }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID Returned")
 
-    def create_data_spec_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    def create_data_spec_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
+            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+            anchor_scope_guid: str = None, is_own_anchor: bool = False, collection_ordering: str = "OTHER",
+            order_property_name: str = "Something", qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1317,6 +1152,8 @@ class CollectionManager(Client):
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        qualified_name: str, optional, defaults to None
+            If not specified, a unique name will be created for the collection.
 
         Returns
         -------
@@ -1334,36 +1171,16 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_spec_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
-            )
-        )
+            self._async_create_data_spec_collection(anchor_guid, parent_guid, parent_relationship_type_name,
+                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
+                collection_ordering, order_property_name, qualified_name, ))
         return resp
 
-    async def _async_create_data_dictionary_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = True,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    async def _async_create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
+            collection_ordering: str = "OTHER", order_property_name: str = "Something",
+            qualified_name: str = None, ) -> str:
         """ Create a new collection with the Data Dictionary classification.  Used to identify a collection of
             data fields that represent a data store collection of common data types. Async version.
 
@@ -1395,7 +1212,8 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-
+        qualified_name: str, optional, defaults to None
+            If not specified a qualified name will be generated from the display name and the collection type.
         Returns
         -------
         str - the guid of the created collection
@@ -1413,43 +1231,27 @@ class CollectionManager(Client):
 
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
-        url = f"{self.collection_command_root}/data-spec-collection"
+        url = f"{self.collection_command_root}/data-dictionary-collection"
+        if qualified_name is None:
+            qualified_name = self.__create_qualified_name__("DataDict", display_name)
 
         body = {
-            "anchorGUID": anchor_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "anchorScopeGUID": anchor_scope_guid,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"data-dict-collection::{display_name}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name,
-            },
-        }
+            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor_s, "anchorScopeGUID": anchor_scope_guid,
+            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+                "description": description, "collectionType": collection_type,
+                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                },
+            }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID Returned")
 
-    def create_data_dictionary_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = False,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    def create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
+            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+            anchor_scope_guid: str = None, is_own_anchor: bool = False, collection_ordering: str = "OTHER",
+            order_property_name: str = "Something", qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1480,8 +1282,8 @@ class CollectionManager(Client):
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
-
-
+        qualified_name: str, optional, defaults to None
+            If not specified a qualified name will be generated from the display name and the collection type.
 
         Returns
         -------
@@ -1499,38 +1301,15 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_dictionary_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
-            )
-        )
+            self._async_create_data_dictionary_collection(anchor_guid, parent_guid, parent_relationship_type_name,
+                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
+                collection_ordering, order_property_name, qualified_name))
         return resp
 
-
-
-    async def _async_create_folder_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = True,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    async def _async_create_folder_collection(self, anchor_guid: str, parent_guid: str,
+            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
+            collection_ordering: str = "OTHER", order_property_name: str = "Something", ) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy. Async version.
 
@@ -1583,40 +1362,22 @@ class CollectionManager(Client):
         url = f"{self.collection_command_root}/folder"
 
         body = {
-            "anchorGUID": anchor_guid,
-            "anchorScopeGUID": anchor_scope_guid,
-            "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s,
-            "collectionProperties": {
-                "class": "CollectionProperties",
-                "qualifiedName": f"folder-collection::{display_name}",
-                "name": display_name,
-                "description": description,
-                "collectionType": collection_type,
-                "collectionOrdering": collection_ordering,
-                "orderPropertyName": order_property_name,
-            },
-        }
+            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
+            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
+            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": f"folder-collection::{display_name}",
+                "name": display_name, "description": description, "collectionType": collection_type,
+                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                },
+            }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    def create_folder_collection(
-        self,
-        anchor_guid: str,
-        parent_guid: str,
-        parent_relationship_type_name: str,
-        parent_at_end1: bool,
-        display_name: str,
-        description: str,
-        collection_type: str,
-        anchor_scope_guid: str = None,
-        is_own_anchor: bool = True,
-        collection_ordering: str = "OTHER",
-        order_property_name: str = "Something",
-    ) -> str:
+    def create_folder_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
+            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+            anchor_scope_guid: str = None, is_own_anchor: bool = True, collection_ordering: str = "OTHER",
+            order_property_name: str = "Something", ) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy.
 
@@ -1666,20 +1427,9 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_folder_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
-            )
-        )
+            self._async_create_folder_collection(anchor_guid, parent_guid, parent_relationship_type_name,
+                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
+                collection_ordering, order_property_name, ))
         return resp
 
     async def _async_create_collection_from_template(self, body: dict) -> str:
@@ -1794,9 +1544,7 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_collection_from_template(body)
-        )
+        resp = loop.run_until_complete(self._async_create_collection_from_template(body))
         return resp
 
     async def _async_create_digital_product(self, body: dict) -> str:
@@ -1936,17 +1684,9 @@ class CollectionManager(Client):
     #
     # Manage collections
     #
-    async def _async_update_collection(
-        self,
-        collection_guid: str,
-        qualified_name: str = None,
-        display_name: str = None,
-        description: str = None,
-        collection_type: str = None,
-        collection_ordering: str = None,
-        order_property_name: str = None,
-        replace_all_props: bool = False,
-    ) -> None:
+    async def _async_update_collection(self, collection_guid: str, qualified_name: str = None, display_name: str = None,
+            description: str = None, collection_type: str = None, collection_ordering: str = None,
+            order_property_name: str = None, replace_all_props: bool = False, ) -> None:
         """Update the properties of a collection.  Async version.
 
         Parameters
@@ -1987,35 +1727,21 @@ class CollectionManager(Client):
         """
 
         replace_all_props_s = str(replace_all_props).lower()
-        url = (
-            f"{self.collection_command_root}/{collection_guid}/update?"
-            f"replaceAllProperties={replace_all_props_s}"
-        )
+        url = (f"{self.collection_command_root}/{collection_guid}/update?"
+               f"replaceAllProperties={replace_all_props_s}")
 
         body = {
-            "class": "CollectionProperties",
-            "qualifiedName": qualified_name,
-            "name": display_name,
-            "description": description,
-            "collectionType": collection_type,
-            "collectionOrdering": collection_ordering,
+            "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+            "description": description, "collectionType": collection_type, "collectionOrdering": collection_ordering,
             "orderPropertyName": order_property_name,
-        }
+            }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
 
-    def update_collection(
-        self,
-        collection_guid,
-        qualified_name: str = None,
-        display_name: str = None,
-        description: str = None,
-        collection_type: str = None,
-        collection_ordering: str = None,
-        order_property_name: str = None,
-        replace_all_props: bool = False,
-    ) -> None:
+    def update_collection(self, collection_guid, qualified_name: str = None, display_name: str = None,
+            description: str = None, collection_type: str = None, collection_ordering: str = None,
+            order_property_name: str = None, replace_all_props: bool = False, ) -> None:
         """Update the properties of a collection.
 
         Parameters
@@ -2056,25 +1782,11 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_collection(
-                collection_guid,
-                qualified_name,
-                display_name,
-                description,
-                collection_type,
-                collection_ordering,
-                order_property_name,
-                replace_all_props,
-            )
-        )
+            self._async_update_collection(collection_guid, qualified_name, display_name, description, collection_type,
+                collection_ordering, order_property_name, replace_all_props, ))
         return
 
-    async def _async_update_digital_product(
-        self,
-        collection_guid: str,
-        body: dict,
-        replace_all_props: bool = False,
-    ):
+    async def _async_update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection. Async version.
 
         Parameters
@@ -2123,20 +1835,13 @@ class CollectionManager(Client):
         """
 
         replace_all_props_s = str(replace_all_props).lower()
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products/"
-            f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}"
-        )
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products/"
+               f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}")
 
         await self._async_make_request("POST", url, body)
         return
 
-    def update_digital_product(
-        self,
-        collection_guid: str,
-        body: dict,
-        replace_all_props: bool = False,
-    ):
+    def update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection.
 
         Parameters
@@ -2184,21 +1889,12 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_digital_product(collection_guid, body, replace_all_props)
-        )
+        loop.run_until_complete(self._async_update_digital_product(collection_guid, body, replace_all_props))
         return
 
-    async def _async_attach_collection(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        resource_use: str,
-        resource_use_description: str = None,
-        resource_use_props: dict = None,
-        watch_resources: bool = False,
-        make_anchor: bool = False,
-    ) -> None:
+    async def _async_attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
+            resource_use_description: str = None, resource_use_props: dict = None, watch_resources: bool = False,
+            make_anchor: bool = False, ) -> None:
         """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
         Parameters
         ----------
@@ -2236,30 +1932,19 @@ class CollectionManager(Client):
         watch_resources_s = str(watch_resources).lower()
         make_anchor_s = str(make_anchor).lower()
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
-            f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor_s}"
-        )
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+               f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor_s}")
 
         body = {
-            "class": "ResourceListProperties",
-            "resourceUse": resource_use,
-            "resourceUseDescription": resource_use_description,
-            "watchResource": watch_resources_s,
+            "class": "ResourceListProperties", "resourceUse": resource_use,
+            "resourceUseDescription": resource_use_description, "watchResource": watch_resources_s,
             "resourceUseProperties": resource_use_props,
-        }
+            }
         await self._async_make_request("POST", url, body)
 
-    def attach_collection(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        resource_use: str,
-        resource_use_description: str,
-        resource_use_props: dict = None,
-        watch_resources: bool = False,
-        make_anchor: bool = False,
-    ) -> None:
+    def attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
+            resource_use_description: str, resource_use_props: dict = None, watch_resources: bool = False,
+            make_anchor: bool = False, ) -> None:
         """Connect an existing collection to an element using the ResourceList relationship (0019).
         Parameters
         ----------
@@ -2297,21 +1982,11 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_attach_collection(
-                collection_guid,
-                element_guid,
-                resource_use,
-                resource_use_description,
-                resource_use_props,
-                watch_resources,
-                make_anchor,
-            )
-        )
+            self._async_attach_collection(collection_guid, element_guid, resource_use, resource_use_description,
+                resource_use_props, watch_resources, make_anchor, ))
         return
 
-    async def _async_detach_collection(
-        self, collection_guid: str, element_guid: str
-    ) -> None:
+    async def _async_detach_collection(self, collection_guid: str, element_guid: str) -> None:
         """Detach an existing collection from an element.  If the collection is anchored to the element, it is deleted.
         Async version.
 
@@ -2340,10 +2015,8 @@ class CollectionManager(Client):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
-            f"{element_guid}/collections/{collection_guid}/detach"
-        )
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+               f"{element_guid}/collections/{collection_guid}/detach")
 
         body = {"class": "NullRequestBody"}
 
@@ -2377,12 +2050,10 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_collection(collection_guid, element_guid)
-        )
+        loop.run_until_complete(self._async_detach_collection(collection_guid, element_guid))
         return
 
-    async def _async_delete_collection(self, collection_guid: str) -> None:
+    async def _async_delete_collection(self, collection_guid: str, cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted. Async version
 
@@ -2392,8 +2063,8 @@ class CollectionManager(Client):
         collection_guid: str
             The guid of the collection to update.
 
-             If not provided, the server name associated
-            with the instance is used.
+        cascade: bool, optional, defaults to True
+            If true, a cascade delete is performed.
 
         Returns
         -------
@@ -2409,14 +2080,14 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
-        url = f"{self.collection_command_root}/{collection_guid}/delete"
+        cascade_s = str(cascade).lower()
+        url = f"{self.collection_command_root}/{collection_guid}/delete?cascadedDelete={cascade_s}"
         body = {"class": "NullRequestBody"}
 
         await self._async_make_request("POST", url, body)
         return
 
-    def delete_collection(self, collection_guid: str) -> None:
+    def delete_collection(self, collection_guid: str, cascade:bool=False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted.
 
@@ -2425,8 +2096,8 @@ class CollectionManager(Client):
         collection_guid: str
             The guid of the collection to update.
 
-             If not provided, the server name associated
-            with the instance is used.
+        cascade: bool, optional, defaults to True
+            If true, a cascade delete is performed.
 
         Returns
         -------
@@ -2444,17 +2115,11 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_collection(collection_guid))
+        loop.run_until_complete(self._async_delete_collection(collection_guid, cascade))
         return
 
-    async def _async_get_collection_members(
-        self,
-        collection_guid: str = None,
-        collection_name: str = None,
-        collection_qname: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
+            collection_qname: str = None, start_from: int = 0, page_size: int = None, ) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -2493,29 +2158,17 @@ class CollectionManager(Client):
 
         if page_size is None:
             page_size = self.page_size
-        collection_guid = self.__get_guid__(
-            collection_guid,
-            collection_name,
-            "name",
-            collection_qname,
-            None,
-        )
-        url = (
-            f"{self.collection_command_root}/{collection_guid}/"
-            f"members?startFrom={start_from}&pageSize={page_size}"
-        )
+        if collection_guid is None:
+            collection_guid = self.__get_guid__(collection_guid, collection_name, "name", collection_qname, None, )
+
+        url = (f"{self.collection_command_root}/{collection_guid}/"
+               f"members?startFrom={start_from}&pageSize={page_size}")
 
         resp = await self._async_make_request("GET", url)
         return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def get_collection_members(
-        self,
-        collection_guid: str = None,
-        collection_name: str = None,
-        collection_qname: str = None,
-        start_from: int = 0,
-        page_size: int = None,
-    ) -> list | str:
+    def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
+            collection_qname: str = None, start_from: int = 0, page_size: int = None, ) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
                Parameters
@@ -2553,23 +2206,12 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection_members(
-                collection_guid,
-                collection_name,
-                collection_qname,
-                start_from,
-                page_size,
-            )
-        )
+            self._async_get_collection_members(collection_guid, collection_name, collection_qname, start_from,
+                page_size, ))
 
         return resp
 
-    async def _async_add_to_collection(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        body: dict = None,
-    ) -> None:
+    async def _async_add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
 
         Parameters
@@ -2618,20 +2260,13 @@ class CollectionManager(Client):
 
         """
 
-        url = (
-            f"{self.collection_command_root}/{collection_guid}/members/"
-            f"{element_guid}/attach"
-        )
+        url = (f"{self.collection_command_root}/{collection_guid}/members/"
+               f"{element_guid}/attach")
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
 
-    def add_to_collection(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        body: dict = None,
-    ) -> None:
+    def add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional.
 
         Parameters
@@ -2680,18 +2315,11 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_add_to_collection(collection_guid, element_guid, body)
-        )
+        loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
         return
 
-    async def _async_update_collection_membership(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        body: dict = None,
-        replace_all_props: bool = False,
-    ) -> None:
+    async def _async_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
+            replace_all_props: bool = False, ) -> None:
         """Update an element's membership to a collection. Async version.
 
         Parameters
@@ -2743,21 +2371,14 @@ class CollectionManager(Client):
         """
 
         replace_all_props_s = str(replace_all_props).lower()
-        url = (
-            f"{self.collection_command_root}/{collection_guid}/members/"
-            f"{element_guid}/update?replaceAllProperties={replace_all_props_s}"
-        )
+        url = (f"{self.collection_command_root}/{collection_guid}/members/"
+               f"{element_guid}/update?replaceAllProperties={replace_all_props_s}")
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
 
-    def update_collection_membership(
-        self,
-        collection_guid: str,
-        element_guid: str,
-        body: dict = None,
-        replace_all_props: bool = False,
-    ) -> None:
+    def update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
+            replace_all_props: bool = False, ) -> None:
         """Update an element's membership to a collection.
 
         Parameters
@@ -2809,15 +2430,10 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_collection_membership(
-                collection_guid, element_guid, body, replace_all_props
-            )
-        )
+            self._async_update_collection_membership(collection_guid, element_guid, body, replace_all_props))
         return
 
-    async def _async_remove_from_collection(
-        self, collection_guid: str, element_guid: str
-    ) -> None:
+    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -2846,10 +2462,8 @@ class CollectionManager(Client):
 
         """
 
-        url = (
-            f"{self.collection_command_root}/{collection_guid}/members/"
-            f"{element_guid}/detach"
-        )
+        url = (f"{self.collection_command_root}/{collection_guid}/members/"
+               f"{element_guid}/detach")
         body = {"class": "NullRequestBody"}
         await self._async_make_request("POST", url, body)
         return
@@ -2883,17 +2497,11 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_remove_from_collection(collection_guid, element_guid)
-        )
+        loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid))
         return
 
-    async def _async_get_member_list(
-        self,
-        collection_guid: str = None,
-        collection_name: str = None,
-        collection_qname: str = None,
-    ) -> list | bool:
+    async def _async_get_member_list(self, collection_guid: str = None, collection_name: str = None,
+            collection_qname: str = None, ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -2923,37 +2531,32 @@ class CollectionManager(Client):
 
         # now find the members of the collection
         member_list = []
-        members = await self._async_get_collection_members(
-            collection_guid, collection_name, collection_qname
-        )
+        members = await self._async_get_collection_members(collection_guid, collection_name, collection_qname)
         if (type(members) is str) or (len(members) == 0):
             return "No members found"
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            member_resp = await self._async_get_collection(member_guid)
-            member = member_resp.get("element", None)
-            if member is None:
+            member_resp = await self._async_get_collection_by_guid(member_guid)
+            if isinstance(member_resp,(dict,list)):
+                member = member_resp.get("element", None)
+                if member is None:
+                    continue
+            else:
                 continue
             # print(json.dumps(member, indent = 4))
 
             member_instance = {
-                "name": member["properties"]["name"],
-                "qualifiedName": member["properties"]["qualifiedName"],
-                "guid": member["elementHeader"]["guid"],
-                "description": member["properties"]["description"],
+                "name": member["properties"]["name"], "qualifiedName": member["properties"]["qualifiedName"],
+                "guid": member["elementHeader"]["guid"], "description": member["properties"]["description"],
                 "collectionType": member["properties"]["collectionType"],
-            }
+                }
             member_list.append(member_instance)
 
         return member_list if len(member_list) > 0 else "No members found"
 
-    def get_member_list(
-        self,
-        collection_guid: str = None,
-        collection_name: str = None,
-        collection_qname: str = None,
-    ) -> list | bool:
+    def get_member_list(self, collection_guid: str = None, collection_name: str = None,
+            collection_qname: str = None, ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -2978,12 +2581,163 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_member_list(
-                collection_guid, collection_name, collection_qname
-            )
-        )
+        resp = loop.run_until_complete(self._async_get_member_list(collection_guid, collection_name, collection_qname))
         return resp
+
+    def _extract_collection_properties(self, element: dict) -> dict:
+        """
+        Extract common properties from a collection element.
+
+        Args:
+            element (dict): The collection element
+
+        Returns:
+            dict: Dictionary of extracted properties
+        """
+        guid = element['elementHeader'].get("guid", None)
+        properties = element['properties']
+        display_name = properties.get("name", "") or ""
+        description = properties.get("description", "") or ""
+        qualified_name = properties.get("qualifiedName", "") or ""
+        collection_type = properties.get("collectionType", "") or ""
+        classifications = "\n* ".join(properties.get("classifications", [])) or ""
+        # classification_names = ""
+        # classifications = element['elementHeader'].get("classifications", [])
+        # for classification in classifications:
+        #     classification_names += f"{classification['classificationName']}, "
+
+
+
+        return {
+            'guid': guid, 
+            'properties': properties, 
+            'display_name': display_name, 
+            'description': description,
+            'qualified_name': qualified_name,
+            'classifications': classifications,
+            'collection_type': collection_type
+        }
+
+    def generate_basic_structured_output(self, elements, filter, output_format) -> str | list:
+        """
+        Generate output in the specified format for the given elements.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing element data
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        # Handle MERMAID and DICT formats using existing methods
+        if output_format == "MERMAID":
+            return extract_mermaid_only(elements)
+        elif output_format == "DICT":
+            return extract_basic_dict(elements)
+
+        # For other formats (MD, FORM, REPORT, LIST), use generate_output
+        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
+            # Define columns for LIST format
+            columns = [
+                {'name': 'Collection Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Collection Type', 'key': 'collection_type'},
+                {'name': 'Classifications', 'key': 'classifications'},
+                {'name': 'Description', 'key': 'description', 'format': True}
+            ]
+
+            return generate_output(
+                elements=elements,
+                search_string=filter,
+                entity_type="Collection",
+                output_format=output_format,
+                extract_properties_func=self._extract_collection_properties,
+                columns=columns if output_format == 'LIST' else None
+            )
+
+        # Default case
+        return None
+
+    def generate_collection_output(self, elements, filter, output_format) -> str | list | dict:
+        """
+        Generate output in the specified format for the given elements.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing element data
+            filter: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        # For LIST and DICT formats, get member information
+        if output_format in ["LIST", "DICT"]:
+            # Get the collection GUID
+            collection_guid = None
+            if isinstance(elements, dict):
+                collection_guid = elements.get('elementHeader', {}).get('guid')
+            elif isinstance(elements, list) and len(elements) > 0:
+                collection_guid = elements[0].get('elementHeader', {}).get('guid')
+
+            # Get member list if we have a valid collection GUID
+            members = []
+            if collection_guid:
+                members = self.get_member_list(collection_guid=collection_guid)
+                if isinstance(members, str):  # "No members found" case
+                    members = []
+
+            # For DICT format, include all member information in the result
+            if output_format == "DICT":
+                result = self.generate_basic_structured_output(elements, filter, output_format)
+                if isinstance(result, list):
+                    for item in result:
+                        item['members'] = members
+                    return result
+                elif isinstance(result, dict):
+                    result['members'] = members
+                    return result
+
+            # For LIST format, add a column with bulleted list of qualified names
+            elif output_format == "LIST":
+                # Define columns for LIST format, including the new Members column
+                columns = [
+                    {'name': 'Collection Name', 'key': 'display_name'},
+                    {'name': 'Qualified Name', 'key': 'qualified_name'},
+                    {'name': 'Collection Type', 'key': 'collection_type'},
+                    {'name': 'Description', 'key': 'description', 'format': True},
+                    {'name': 'Classifications', 'key': 'classifications'},
+                    {'name': 'Members', 'key': 'members', 'format': True}
+                ]
+
+                # Create a function to add member information to the properties
+                def get_additional_props(element, guid, output_format):
+                    if not members:
+                        return {'members': ''}
+
+                    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)
+                    member_list = ", ".join([member.get('qualifiedName', '') for member in members])
+                    return {'members': member_list}
+
+                # Generate output with the additional properties
+                return generate_output(
+                    elements=elements,
+                    search_string=filter,
+                    entity_type="Collection",
+                    output_format=output_format,
+                    extract_properties_func=self._extract_collection_properties,
+                    get_additional_props_func=get_additional_props,
+                    columns=columns
+                )
+
+        # For FORM, REPORT, JSON formats, keep behavior unchanged
+        return self.generate_basic_structured_output(elements, filter, output_format)
+
+    def generate_data_class_output(self, elements, filter, output_format) -> str | list:
+        return self.generate_basic_structured_output(elements, filter, output_format)
+
+    def generate_data_field_output(self, elements, filter, output_format) -> str | list:
+        return self.generate_basic_structured_output(elements, filter, output_format)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-A command line interface for Egeria Users - all md_commands
+A object_action line interface for Egeria Users - all md_commands
 
 This is an emerging capability based on the **click** package. Feedback welcome!
 
@@ -129,10 +129,10 @@ from commands.tech.list_solution_components import solution_component_list
 from commands.tech.list_solution_roles import solution_role_list
 from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
-
+from commands.tech.generic_actions import delete_element
 
 @tui()
-# @tui('menu', 'menu', 'A textual command line interface')
+# @tui('menu', 'menu', 'A textual object_action line interface')
 @click.version_option("0.5.2 ", prog_name="hey_egeria")
 @click.group()
 @click.option(
@@ -382,6 +382,14 @@ def tech(ctx):
     """Commands for tech Users"""
     pass
 
+@tech.group("tell")
+@click.pass_context
+def tech_tell(ctx):
+    """Perform actions on Egeria Objects"""
+    pass
+
+
+tech_tell.add_command(delete_element)
 
 @tech.group("show")
 @click.pass_context
@@ -1744,7 +1752,7 @@ def databases(ctx):
 #     pass
 #
 #
-# @survey.command("survey-uc-server")
+# @survey.object_action("survey-uc-server")
 # @click.pass_context
 # @click.option(
 #     "--uc_endpoint",

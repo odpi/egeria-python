@@ -63,7 +63,7 @@ class TestGlossaryBrowser:
                 ignore_case=True,
                 page_size=0,
                 effective_time=None,
-                output_format = 'REPORT',
+                output_format = 'JSON',
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -853,7 +853,7 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_guid = "79f9784d-26d6-47f0-bb50-c193ede03441"
+            glossary_guid = "c103d0c9-7581-47e1-a684-6bbe0ecd596f"
             response = g_client.get_categories_for_glossary(glossary_guid)
             print(f"type is {type(response)}")
             if type(response) is list:

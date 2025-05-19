@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-A simple display for collections
+A simple display for Data Structures
 """
 import argparse
 import json
@@ -47,7 +47,7 @@ EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
 
-def display_collections(
+def display_data_struct(
     search_string: str = "*",
     view_server: str = EGERIA_VIEW_SERVER,
     view_url: str = EGERIA_VIEW_SERVER_URL,
@@ -57,11 +57,11 @@ def display_collections(
     width: int = EGERIA_WIDTH,
     output_format: str = "TABLE"
 ):
-    """Display either a specified glossary or all collections if the search_string is '*'.
+    """Display data structures filtered by search_string. If search_string is not specified, all data structures are displayed.
     Parameters
     ----------
     search_string : str, default is '*'
-        The string used to search for collections.
+        The string used to search for structures.
     view_server : str
         The view server name or address where the Egeria services are hosted.
     view_url : str
@@ -87,29 +87,46 @@ def display_collections(
             action = "Report"
         elif output_format == "DICT":
             action = "Dict"
+        elif output_format == "MERMAID":
+            action = "Mermaid"
+        filter = search_string.strip() if search_string != "*" else None
+
+        body = {
+            "class": "FilterRequestBody",
+            "asOfTime": None,
+            "effectiveTime": None,
+            "forLineage": False,
+            "forDuplicateProcessing" : False,
+            "limitResultsByStatus": ["ACTIVE"],
+            "sequencingOrder": "PROPERTY_ASCENDING",
+            "sequencingProperty": "qualifiedName",
+            "filter": filter
+            }
 
         if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
             file_name = f"Terms-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = m_client.find_collections(
-                search_string.strip(), None, False, ends_with=False, ignore_case=True,
+            output = m_client.find_data_structures_w_body(
+                body, 0, None, starts_with= True, ends_with=False, ignore_case=False,
                 output_format=output_format
                 )
             if output == NO_ELEMENTS_FOUND:
-                print(f"\n==> No collections found for search string '{search_string}'")
+                print(f"\n==> No structures found for search string '{search_string}'")
                 return
             elif isinstance(output, str | list) and output_format == "DICT":
                 output = json.dumps(output, indent=4)
+            elif isinstance(output, list) and output_format == "MERMAID":
+                output = "\n\n".join(output)
 
             with open(full_file_path, 'w') as f:
                 f.write(output)
-            print(f"\n==> Collections output written to {full_file_path}")
+            print(f"\n==> structures output written to {full_file_path}")
             return
 
         table = Table(
-            title=f"Collection List @ {time.asctime()}",
+            title=f"Data Structure List @ {time.asctime()}",
             style="bright_white on black",
             header_style="bright_white on dark_blue",
             title_style="bold white on black",
@@ -119,42 +136,43 @@ def display_collections(
             caption=f"View Server '{view_server}' @ Platform - {view_url}",
             expand=True,
         )
-        table.add_column("Collection Name")
+        table.add_column("Data Structure Name")
+        table.add_column("Namespace")
         table.add_column(
             "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
         )
         table.add_column("Description")
-        table.add_column("Collection Type")
         table.add_column("Classifications")
-        table.add_column("Members")
+        table.add_column("Version Id")
 
-        collections = m_client.find_collections(
-            search_string.strip(), None, False, ends_with=False, ignore_case=True,
+
+        structures = m_client.find_data_structures_w_body(
+            body, 0, None, starts_with = True, ends_with=False, ignore_case=False,
             output_format = "DICT"
         )
-        if type(collections) is list:
-            sorted_collection_list = sorted(
-                collections, key=lambda k: k["name"]
+        if type(structures) is list:
+            sorted_structures_list = sorted(
+                structures, key=lambda k: k["displayName"]
             )
-            for collection in sorted_collection_list:
-                display_name = collection["name"]
-                qualified_name = collection["qualifiedName"]
-                guid = collection["guid"]
+            for structure in sorted_structures_list:
+                display_name = structure["displayName"]
+                qualified_name = structure["qualifiedName"]
+                namespace = structure.get("namespace",'---')
+                version_id = structure.get("versionId",'---')
+
+                guid = structure["guid"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                description = collection.get("description",'---')
-                collection_type = collection.get("collectionType", "---")
-                classifications = collection.get("classifications", "---")
+                description = structure.get("description",'---')
+                classifications = structure.get("classifications", "---")
                 classifications_md = Markdown(classifications)
-                members = "\n* ".join(collection.get("members", []))
-                members_md = Markdown(members)
 
                 table.add_row(
                     display_name,
+                    namespace,
                     q_name,
                     description,
-                    collection_type,
                     classifications_md,
-                    members_md,
+                    version_id
                 )
             console = Console(
                 style="bold bright_white on black",
@@ -163,7 +181,7 @@ def display_collections(
             )
             console.print(table)
         else:
-            print("==> No collections with that name found")
+            print("==> No structures with that name found")
 
     except (
         InvalidParameterException,
@@ -191,11 +209,11 @@ def main():
 
     try:
         search_string = Prompt.ask(
-            "Enter the collection you are searching for or '*' for all:", default="*"
+            "Enter the data structures you are searching for or '*' for all:", default="*"
         ).strip()
-        output_format = Prompt.ask("What output format do you want?", choices=["DICT", "TABLE", "FORM", "REPORT"], default="TABLE")
+        output_format = Prompt.ask("What output format do you want?", choices=["DICT", "TABLE", "FORM", "REPORT", "MERMAID"], default="TABLE")
 
-        display_collections(search_string, server, url, userid, user_pass, output_format = output_format)
+        display_data_struct(search_string, server, url, userid, user_pass, output_format = output_format)
 
     except KeyboardInterrupt:
         pass

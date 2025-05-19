@@ -26,6 +26,8 @@ from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.feedback_manager_omvs import FeedbackManager
 from pyegeria.my_profile_omvs import MyProfile
 from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.data_designer_omvs import DataDesigner
+from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.my_profile_omvs import MyProfile
 from pyegeria.utils import body_slimmer
 from pyegeria import (
@@ -46,6 +48,8 @@ class EgeriaTech(
     ValidMetadataManager,
     MetadataExplorer,
     SolutionArchitect,
+    DataDesigner,
+    TemplateManager,
 ):
     """
     Client for technical Egeria users.
@@ -100,7 +104,12 @@ class EgeriaTech(
         SolutionArchitect.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
         )
-
+        DataDesigner.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
+        TemplateManager.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
 
 if __name__ == "__main__":
     print("Main-Tech Client")

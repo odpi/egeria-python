@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.3.10"
+version = "5.3.9.7"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -21,13 +21,8 @@ packages = [
     { include = "commands/tech" },
     { include = "commands/my"},
     { include = "commands/ops"},
-    { include = "commands/cli"},
-    { include = "md_processing/md_commands"},
-    { include = "md_processing/md_processing_utils"},
-    { include = "md_processing"}
+    { include = "commands/cli"}
     ]
-include = ["md_Processing/data/"]
-
 
 [tool.poetry.dependencies]
 #python = "^3.11" # 3.12 seemed to fail

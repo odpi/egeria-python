@@ -2,13 +2,14 @@
 This file contains functions for extracting data from text for Egeria Markdown processing
 """
 import re
-from typing import List, Optional, Any
-from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from typing import Any
 
-from md_processing.md_processing_utils.md_processing_constants import INFO,  EXISTS_REQUIRED
-from md_processing.md_processing_utils.common_utils import (debug_level, print_msg, find_key_with_value,
-                                                           get_element_dictionary, update_element_dictionary)
+from md_processing.md_processing_utils.common_md_utils import (print_msg, find_key_with_value, get_element_dictionary,
+                                                               update_element_dictionary)
+from md_processing.md_processing_utils.message_constants import INFO, EXISTS_REQUIRED
+from md_processing.md_processing_utils.md_processing_constants import debug_level
+from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.egeria_tech_client import EgeriaTech
 
 
 def extract_command_plus(block: str) -> tuple[str, str, str] | None:
@@ -25,10 +26,10 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
     Args:
         block: A string containing the block of text to search for the
-            command and action.
+            object_action and action.
 
     Returns:
-        A tuple containing the command, the object type, and the object action if a
+        A tuple containing the object_action, the object type, and the object action if a
         match is found. Otherwise, returns None.
     """
     # Filter out lines beginning with '>'
@@ -53,7 +54,7 @@ def extract_command_plus(block: str) -> tuple[str, str, str] | None:
 
 def extract_command(block: str) -> str | None:
     """
-    Extracts a command from a block of text that is contained between a single hash ('#') and
+    Extracts a object_action from a block of text that is contained between a single hash ('#') and
     either a double hash ('##'), a newline character, or the end of the string.
 
     The function searches for a specific pattern within the block of text and extracts the
@@ -62,10 +63,10 @@ def extract_command(block: str) -> str | None:
 
     Args:
         block: A string representing the block of text to process. Contains the content
-            in which the command and delimiters are expected to be present.
+            in which the object_action and delimiters are expected to be present.
 
     Returns:
-        The extracted command as a string if a match is found, otherwise None.
+        The extracted object_action as a string if a match is found, otherwise None.
     """
     match = re.search(r"#(.*?)(?:##|\n|$)", block)  # Using a non-capturing group
     if match:
@@ -73,7 +74,7 @@ def extract_command(block: str) -> str | None:
     return None
 
 
-def extract_attribute(text: str, labels: list[str]) -> str | None:
+def extract_attribute(text: str, labels: set) -> str | None:
     """
         Extracts the attribute value from a string.
 
@@ -90,11 +91,17 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
     # Iterate over the list of labels
     for label in labels:
         # Construct pattern for the current label
-        pattern = rf"## {re.escape(label)}\n(.*?)(?:#|___|>|$)"  # modified from --- to enable embedded tables
+        # text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r'\n\n+', '\n\n', text).strip()
+
+        label = label.strip()
+        pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+
+        # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:
             # Extract matched text
-            matched_text = match.group(1).strip()
+            matched_text = match.group(1)
 
             # Filter out lines beginning with '>'
             filtered_lines = [line for line in matched_text.split('\n') if not line.strip().startswith('>')]
@@ -103,11 +110,12 @@ def extract_attribute(text: str, labels: list[str]) -> str | None:
             # Replace consecutive \n with a single \n
             extracted_text = re.sub(r'\n+', '\n', filtered_text)
             if not extracted_text.isspace() and extracted_text:
-                return extracted_text  # Return the cleaned text - I removed the title casing
+                return extracted_text.strip()  # Return the cleaned text - I removed the title casing
 
     return None
 
-def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO) -> str | None:
+
+def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> str | None:
     """Process a simple attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and return it if it exists.
        If it doesn`t exist, return None and print an error message with severity of if_missing.
@@ -115,7 +123,7 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
        Parameters:
        ----------
        txt: str
-         The block of command text to extract attributes from.
+         The block of object_action text to extract attributes from.
        labels: list
          The possible attribute labels to search for. The first label will be used in messages.
        if_missing: str, default is INFO
@@ -129,12 +137,14 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
 
     if attribute is None:
         if if_missing == INFO:
-            msg = f"Optional attribute {labels[0]} missing"
+            msg = f"Optional attribute with labels `{labels}` missing"
         else:
-            msg = f"Missing {labels[0]} attribute"
+            msg = f"Missing attribute with labels `{labels}` "
         print_msg(if_missing, msg, debug_level)
         return None
     return attribute
+
+
 # def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO) -> str | None:
 #     """
 #     Processes a simple attribute from a string.
@@ -156,8 +166,8 @@ def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO
 #     return attribute
 
 
-def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, element_labels: list[str]) \
-        -> tuple[str,list[Any], bool | Any, bool | None | Any] | None:
+def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, element_labels: set) -> tuple[str,
+list[Any], bool | Any, bool | None | Any] | None:
     """
     Processes a list of names specified in the given text, retrieves details for each
     element based on the provided type, and generates a list of valid qualified names.
@@ -218,13 +228,13 @@ def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, el
             msg = f"Found {element_type}: {elements}"
             print_msg("DEBUG-INFO", msg, debug_level)
         else:
-            msg = f" Name list contains one or more invalid qualified names."
+            msg = " Name list contains one or more invalid qualified names."
             print_msg("DEBUG-INFO", msg, debug_level)
         return elements, new_element_list, valid, exists
 
 
-
-# def process_name_list(egeria_client, element_type: str, txt: str, element_labels: list[str]) -> tuple[list, list, bool, bool]:
+# def process_name_list(egeria_client, element_type: str, txt: str, element_labels: list[str]) -> tuple[list, list,
+# bool, bool]:
 #     """
 #     Processes a list of names from a string.
 #
@@ -275,7 +285,7 @@ def process_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, el
 #
 #     return element_names, element_q_names, all_valid, any_exist
 
-def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, element_labels: list[str], txt: str,
+def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, element_labels: set, txt: str,
                                 action: str, version: str = None) -> tuple[str, str, bool, bool]:
     """
     Processes element identifiers by extracting display name and qualified name from the input text,
@@ -291,7 +301,7 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, el
     txt: str
         A string representing the input text to be processed for extracting element identifiers.
     action: str
-        The action command to be executed (e.g., 'Create', 'Update', 'Display', ...)
+        The action object_action to be executed (e.g., 'Create', 'Update', 'Display', ...)
     version: str, optional = None
         An optional version identifier used if we need to construct the qualified name
 
@@ -354,7 +364,6 @@ def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, el
     return q_name, guid, valid, exists
 
 
-
 def get_element_by_name(egeria_client, element_type: str, element_name: str) -> tuple[
     str | None, str | None, bool | None, bool | None]:
     """
@@ -378,16 +387,18 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     if q_name:  # use information from element_dictionary
         guid = element_dict[q_name].get('guid', None)
         unique = True
-        exists = True
+
         if guid is not None:  # Found complete entry in element_dictionary
             msg = f'Found {element_type} qualified name and guid in element_dictionary for `{element_name}`'
             print_msg("DEBUG-INFO", msg, debug_level)
+            exists = True
             return q_name, guid, unique, exists
 
         else:  # Missing guid from element_dictionary
             guid = egeria_client.get_element_guid_by_unique_name(element_name)
             if guid == NO_ELEMENTS_FOUND:
                 guid = None
+                exists = False
                 msg = f"No {element_type} guid found with name {element_name} in Egeria"
                 print_msg("DEBUG-INFO", msg, debug_level)
 
@@ -420,6 +431,8 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     el_qname = details[0]["properties"].get('qualifiedName', None)
     el_guid = details[0]['elementHeader']['guid']
     el_display_name = details[0]["properties"].get('displayName', None)
+    if el_display_name is None:
+        el_display_name = details[0]["properties"].get('name', None)
     update_element_dictionary(el_qname, {
         'guid': el_guid, 'displayName': el_display_name
         })
@@ -430,15 +443,13 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     return el_qname, el_guid, unique, exists
 
 
-
-
-def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid: str) -> str:
+def update_a_command(txt: str, object_action: str, obj_type: str, q_name: str, u_guid: str) -> str:
     """
     Updates a command in a string.
 
     Args:
         txt: The input string.
-        command: The command to update.
+        object_action: The command to update.
         obj_type: The type of object to update.
         q_name: The qualified name of the object.
         u_guid: The GUID of the object.
@@ -446,31 +457,28 @@ def update_a_command(txt: str, command: str, obj_type: str, q_name: str, u_guid:
     Returns:
         The updated string.
     """
-    # Split the command into action and object
-    parts = command.split()
-    action = parts[0]
 
     # Determine the new action
-    new_action = "Update" if action == "Create" else "Create"
+    new_action = "Update" if object_action == "Create" else "Create"
 
-    # Replace the command
+    # Replace the object_action
     new_command = f"{new_action} {obj_type}"
-    pattern = rf"#{command}(?:##|\n|$)"
-    replacement = f"#{new_command}\n"
+    pattern = rf"#\s*{object_action}\s+{obj_type}"
+    replacement = f"# {new_command}"
     updated_txt = re.sub(pattern, replacement, txt)
 
     # Add qualified name and GUID if updating
     if new_action == "Update" and q_name and u_guid:
         # Check if Qualified Name section exists
         if "## Qualified Name" not in updated_txt:
-            # Add Qualified Name section before the first ## that's not part of the command
+            # Add Qualified Name section before the first ## that's not part of the object_action
             pattern = r"(##\s+[^#\n]+)"
             replacement = f"## Qualified Name\n{q_name}\n\n\\1"
             updated_txt = re.sub(pattern, replacement, updated_txt, count=1)
 
         # Check if GUID section exists
         if "## GUID" not in updated_txt and "## guid" not in updated_txt:
-            # Add GUID section before the first ## that's not part of the command or Qualified Name
+            # Add GUID section before the first ## that's not part of the object_action or Qualified Name
             pattern = r"(##\s+(?!Qualified Name)[^#\n]+)"
             replacement = f"## GUID\n{u_guid}\n\n\\1"
             updated_txt = re.sub(pattern, replacement, updated_txt, count=1)

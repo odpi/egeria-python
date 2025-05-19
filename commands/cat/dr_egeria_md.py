@@ -8,15 +8,21 @@ import click
 from rich import print
 from rich.console import Console
 
-from pyegeria import EgeriaTech
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                      process_category_upsert_command, process_provenance_command,
-                      get_current_datetime_string,
-                      process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
-                      process_solution_component_upsert_command, process_term_list_command,
-                      process_category_list_command, process_glossary_list_command, process_term_history_command,
-                      process_glossary_structure_command, process_term_revision_history_command,
-                      process_create_term_term_relationship_command, process_term_details_command)
+                           process_category_upsert_command, process_provenance_command, get_current_datetime_string,
+                           process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
+                           process_solution_component_upsert_command, process_term_list_command,
+                           process_category_list_command, process_glossary_list_command, process_term_history_command,
+                           process_glossary_structure_command, process_term_revision_history_command,
+                           process_create_term_term_relationship_command, process_term_details_command,
+                           )
+from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
+                                                              process_data_dict_upsert_command,
+                                                              process_data_dict_list_command,
+                                                              process_data_field_upsert_command,
+                                                              process_data_structure_upsert_command)
+
+from pyegeria import EgeriaTech
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -81,9 +87,9 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
         if not current_block:
             return  # No block to process
 
-        potential_command = extract_command(current_block)  # Extract command
+        potential_command = extract_command(current_block)  # Extract object_action
         if potential_command in cmd_list:
-            # Process the block based on the command
+            # Process the block based on the object_action
             if potential_command == "Provenance":
                 result = process_provenance_command(file_path, current_block)
                 prov_found = True
@@ -117,10 +123,22 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_blueprint_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Spec", "Create Data Specification", "Update Data Spec",
+                                       "Update Data Specification"]:
+                result = process_data_spec_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Dict", "Create Data Dictionary", "Update Data Spec",
+                                       "Update Data Dictionary"]:
+                result = process_data_dict_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Field", "Update Data Field"]:
+                result = process_data_field_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Structure", "Update Data Structure"]:
+                result = process_data_structure_upsert_command(client, current_block, directive)
+            elif potential_command in ["View Data Dictionaries", "View Data Dictionary"]:
+                result = process_data_dict_list_command(client, current_block, directive)
 
 
             else:
-                # If command is not recognized, keep the block as-is
+                # If object_action is not recognized, keep the block as-is
                 result = None
             # print(json.dumps(dr_egeria_state.get_element_dictionary(), indent=4))
             if result:
@@ -136,7 +154,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 final_output.append(current_block)
                 final_output.append('\n___\n')
         else:
-            # If there is no command, append the block as-is
+            # If there is no object_action, append the block as-is
             final_output.append(current_block)
 
     # Main parsing loop
@@ -224,5 +242,6 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
 #
 # if __name__ == "__main__":
 #     main()
+
 if __name__ == "__main__":
     process_markdown_file()

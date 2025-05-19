@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-A command line interface for Egeria operations.
+A object_action line interface for Egeria operations.
 
 This is an emerging capability based on the **click** package. Feedback welcome!
 
@@ -58,7 +58,7 @@ from commands.ops.restart_integration_daemon import restart_connector
 
 
 @tui()
-# @tui('menu', 'menu', 'A textual command line interface')
+# @tui('menu', 'menu', 'A textual object_action line interface')
 @click.version_option("0.0.1", prog_name="egeria_ops")
 @click.group()
 @click.option(

@@ -1,3 +1,3 @@
 """
-This package contains command-specific functions for processing Egeria Markdown
+This package contains object_action-specific functions for processing Egeria Markdown
 """

@@ -293,7 +293,7 @@ class Egeria_login(App):
         )
 
 
-# @click.command("egeria-login")
+# @click.object_action("egeria-login")
 # @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 # @click.option(
 #     "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"

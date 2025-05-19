@@ -86,7 +86,7 @@ def process_jupyter_notebook(
                             elif potential_command in ["Create Personal Project", "Update Personal Project"]:
                                 result = process_per_proj_upsert_command(client, cell.source, directive)
                             else:
-                                # If command is not recognized, copy the block as-is
+                                # If object_action is not recognized, copy the block as-is
                                 result = None
 
                             if result:
