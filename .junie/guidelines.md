@@ -49,7 +49,7 @@ The project provides numerous CLI commands for interacting with Egeria:
 # Install the package
 poetry install
 
-# Run a command (examples)
+# Run a object_action (examples)
 poetry run list_assets
 poetry run list_terms
 poetry run hey_egeria  # Main CLI entry point

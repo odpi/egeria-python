@@ -1,9 +1,14 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
-import os
+import os, sys
 from datetime import datetime
-
+from loguru import logger
+log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
+logger.remove()
+logger.add(sys.stderr, level="SUCCESS", format=log_format, colorize=True)
+logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+           colorize=True)
 import click
 from rich import print
 from rich.console import Console
@@ -15,12 +20,14 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_category_list_command, process_glossary_list_command, process_term_history_command,
                            process_glossary_structure_command, process_term_revision_history_command,
                            process_create_term_term_relationship_command, process_term_details_command,
+
                            )
 from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_dict_list_command,
                                                               process_data_field_upsert_command,
-                                                              process_data_structure_upsert_command)
+                                                              process_data_structure_upsert_command,
+                                                              process_data_class_upsert_command)
 
 from pyegeria import EgeriaTech
 
@@ -53,10 +60,12 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@logger.catch
 def process_markdown_file(file_path: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
+
     cmd_list = command_list
     console = Console(width=int(EGERIA_WIDTH))
     client = EgeriaTech(server, url, user_id=userid)
@@ -64,7 +73,8 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
 
     updated = False
     full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, file_path)
-    print(f"Processing Markdown File: {full_file_path}")
+    logger.success("\n\n====================================================\n\n")
+    logger.success(f"Processing Markdown File: {full_file_path}")
     try:
         with open(full_file_path, 'r') as f:
             lines = f.readlines()
@@ -133,6 +143,8 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_data_field_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Data Structure", "Update Data Structure"]:
                 result = process_data_structure_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Data Class", "Update Data Class"]:
+                result = process_data_class_upsert_command(client, current_block, directive)
             elif potential_command in ["View Data Dictionaries", "View Data Dictionary"]:
                 result = process_data_dict_list_command(client, current_block, directive)
 

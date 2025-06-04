@@ -46,6 +46,7 @@ textual = "*"
 mermaid-py = "*"
 psycopg2-binary = "^2.9.9"
 jupyter-notebook-parser = "^0.1.4"
+loguru = "^0.7.3"
 
 
 [build-system]

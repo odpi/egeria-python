@@ -145,8 +145,14 @@ def display_collections(
                 collection_type = collection.get("collectionType", "---")
                 classifications = collection.get("classifications", "---")
                 classifications_md = Markdown(classifications)
-                members = "\n* ".join(collection.get("members", []))
-                members_md = Markdown(members)
+                members_struct = m_client.get_collection_members(collection_guid=guid)
+                member_list = ""
+                if isinstance(members_struct, list):
+                    for member in members_struct:
+                        member_list = member_list + f"- {member['properties'].get('qualifiedName','---')}\n"
+
+                # members = "\n* ".join(collection.get("members", []))
+                members_md = Markdown(member_list)
 
                 table.add_row(
                     display_name,

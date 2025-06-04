@@ -126,7 +126,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_delete_data_structure(self):
-        guid = '1a6ef664-a107-4d6a-ade2-e6906cc38c08'
+        guid = 'ff806689-e88a-425f-91de-7fe896f0f7aa'
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -189,7 +189,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_delete_data_field(self):
-        guid = 'c14ab70e-d3f5-440c-a389-50837cdc012b'
+        guid = 'a818312e-97d6-4923-88dc-d763232d5d3a'
         # guid = 'b18df5d5-23c6-4c85-a06d-e1da6088901c'
 
         try:
@@ -223,7 +223,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="DICT")
+            response = m_client.find_all_data_structures(output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -253,7 +253,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = "TBDF-Incoming Weekly Measurement Data"
-            response = m_client.find_data_structures(search_string, output_format="DICT")
+            response = m_client.find_data_structures(search_string, output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -274,6 +274,37 @@ class TestDataDesigner:
 
         finally:
             m_client.close_session()
+
+    def test_get_data_struct_coll(self):
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            guid = "feb88a1f-2e5d-4cdd-ae1d-36613d311ea8"
+            response = m_client.get_data_memberships(m_client.get_data_structure_by_guid, guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is dict:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
 
     def test_get_data_structures_by_name(self):
         name = "solar"
@@ -311,7 +342,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structures_by_guid(guid, output_format="JSON")
+            response = m_client.get_data_structure_by_guid(guid, output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -421,7 +452,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_field_by_name(self):
-        name = "radio_name"
+        name = "DataField::PatientId"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -450,7 +481,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_field_by_guid(self):
-        guid = "d58698e3-0e9c-4237-9855-3c5949e5e64a"
+        guid = "97902f9d-c988-4a3a-817a-061d65b086b6"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -478,72 +509,66 @@ class TestDataDesigner:
         finally:
             m_client.close_session()
 
-    def test_create_data_class(self):
-        name = "Purchase Date"
-        description = "Date of purchase in YYYY-MM-DD format"
-
-        body =  {
-          "properties": {
-            "class": "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
-            "matchPropertyNames": [
-              "name1",
-              "name2"
-            ],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": True,
-            "isNullable": False,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns": [],
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            }
-          }
-        }
-
-
-
+    def test_get_data_field_rel_elements(self):
+        guid = "407e0012-8a13-444a-8f96-e74ad77ed55c"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.create_data_class(body)
+            response = m_client.get_data_field_rel_elements(guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
-            )
-            if type(response) is list:
+                )
+            if isinstance(response, list | dict):
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
+
+    def test_link_nested_data_field(self):
+        parent_guid = "a16cb2dd-22cd-4ffe-bca0-b48ac1b1762d"
+        child_guid = "407e0012-8a13-444a-8f96-e74ad77ed55c"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.link_nested_data_field(parent_guid, child_guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if isinstance(response, list | dict):
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+
 
     def test_find_data_fields(self):
 
@@ -604,19 +629,104 @@ class TestDataDesigner:
         finally:
             m_client.close_session()
 
-    def test_get_data_field_by_guid(self):
-        guid = "5eeaab97-b6de-4788-b901-5c46845572f3"
+
+#
+# Data Classes
+#
+    def test_create_data_class(self):
+        name = "Purchase Date"
+        description = "Date of purchase in YYYY-MM-DD format"
+
+        body = {
+          "class" : "NewDataClassRequestBody",
+
+          "effectiveTime" : None,
+          "forLineage" : False,
+          "forDuplicateProcessing" : False,
+          # "anchorGUID" : "add guid here",
+          "isOwnAnchor": True,
+          # "parentGUID": "add guid here",
+          # "parentRelationshipTypeName": "add type name here",
+          # "parentRelationshipProperties": {
+          #   "class": "ElementProperties",
+          #   "propertyValueMap" : {
+          #     "description" : {
+          #       "class": "PrimitiveTypePropertyValue",
+          #       "typeName": "string",
+          #       "primitiveValue" : "New description"
+          #     }
+          #   }
+          # },
+          "parentAtEnd1": True,
+          "properties": {
+            "class" : "DataClassProperties",
+            "qualifiedName": "dataClass::moo",
+            "displayName": "Moo",
+            "description": "add description here",
+            # "namespace": "add scope of this data class's applicability.",
+            # "matchPropertyNames": ["name1", "name2"],
+            "matchThreshold": 0,
+            # "specification": "",
+            # "specificationDetails": {
+            #   "property1" : "propertyValue1",
+            #   "property2" : "propertyValue2"
+            # },
+            "dataType": "String",
+            "allowsDuplicateValues": True,
+            "isNullable": False,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns" : [],
+            "namePatterns": [],
+            # "additionalProperties": {
+            #   "property1" : "propertyValue1",
+            #   "property2" : "propertyValue2"
+            # },
+            # "effectiveFrom": "{{$isoTimestamp}}",
+            # "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+            # {
+            # "properties": {
+            #     "class": "DataClassProperties",
+            #     "qualifiedName": "DataClass::Purchase Date",
+            #     "displayName": name,
+            #     "description": description,
+            #     "namespace": None,
+            #     "matchPropertyNames": [],
+            #     "matchThreshold": 0,
+            #     "specification": None,
+            #     "specificationDetails": {},
+            #     "dataType": "Date",
+            #     "allowsDuplicateValues": True,
+            #     "isNullable": False,
+            #     "defaultValue": None,
+            #     "averageValue": None,
+            #     "valueList": [],
+            #     "valueRangeFrom": "",
+            #     "valueRangeTo": "",
+            #     "sampleValues": [],
+            #     "dataPatterns": [],
+            #     "additionalProperties": { }
+            #     }
+            # }
+
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_field_by_guid(guid, output_format="JSON")
+            response = m_client.create_data_class(body)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
                 )
-            if isinstance(response, list | dict):
+            if type(response) is list:
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
@@ -679,6 +789,91 @@ class TestDataDesigner:
                 print_json(data=response)
             elif type(response) is str:
                 console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_class_by_name(self):
+        name = "DataClass::ISO-Date"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_class_by_name(name)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_data_class_by_guid(self):
+        guid = "a818312e-97d6-4923-88dc-d763232d5d3a"
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            response = m_client.get_data_class_by_guid(guid, output_format="DICT")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if isinstance(response, list | dict):
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_link_nested_data_class(self):
+        containing_guid = "e441f9f1-4dd0-4960-b11d-08a1b8c717f6"
+        member_guid = "ca085aa8-c5bb-4a15-ab2b-73be43166f3c"
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.link_nested_data_class(containing_guid, member_guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+                )
 
             assert True
         except (

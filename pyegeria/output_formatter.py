@@ -26,11 +26,12 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
             - A string or None indicating the action description for the elements,
               depending on the output format.
     """
-    search_string = search_string if search_string else "All Elements"
+    # search_string = search_string if search_string else "All Elements"
     elements_action = "Update " + obj_type
     if output_format == "FORM":
-        preamble = (f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
-                    f"\t {obj_type} found from the search string:  `{search_string}`\n\n")
+        preamble = f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        if search_string:
+            preamble +=  f"\t {obj_type} found from the search string:  `{search_string}`\n\n"
         return preamble, elements_action
     elif output_format == "REPORT":
         elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
@@ -370,7 +371,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
             output_format=output_format
         )
 
-    else:  # MD, FORM, REPORT
+    else:  #  MD, FORM, REPORT
         elements_md, elements_action = make_preamble(
             obj_type=entity_type,
             search_string=search_string,

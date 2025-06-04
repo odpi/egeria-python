@@ -130,7 +130,7 @@ class TestCollectionManager:
             search_string = "*"
 
             response = c_client.find_collections(
-                search_string, None, True, ignore_case=False, output_format="JSON"
+                search_string, None, True, ignore_case=False, output_format="DICT"
             )
             duration = time.perf_counter() - start_time
 
@@ -367,7 +367,7 @@ class TestCollectionManager:
     def test_create_root_collection(self):
         try:
             c_client = CollectionManager(
-                'qs-view-servee',
+                'qs-view-server',
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -380,7 +380,7 @@ class TestCollectionManager:
             anchor_guid = None
             parent_guid = None
             parent_relationship_type_name = None
-            parent_at_end1 = False
+            parent_at_end1 = None
             display_name = "Base Collection"
             description = "This is the root catalog Testing"
             collection_type = "Test Data"
@@ -394,7 +394,8 @@ class TestCollectionManager:
                 display_name,
                 description,
                 collection_type,
-                is_own_anchor,
+                None,
+                is_own_anchor
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -483,14 +484,13 @@ class TestCollectionManager:
             parent_guid = None
             parent_relationship_type_name = "CollectionMembership"
             # parent_relationship_type_name = None
-            parent_at_end1 = True
+            parent_at_end1 = None
             # parent_at_end1 = None
-            display_name = "Clinical Trial Test Data Spec"
+            display_name = "MooClinical Trial Test Data Spec"
             description = "Test- Clinical Trials Specification"
             collection_type = "Data Specification"
             is_own_anchor = True
-            collection_ordering = "NAME"
-            order_property_name = "Something"
+
             anchor_scope_guid = None
             qualified_name = c_client.__create_qualified_name__("DataSpec",display_name)
 
@@ -503,10 +503,7 @@ class TestCollectionManager:
                 description,
                 collection_type,
                 anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
-
+                is_own_anchor
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -880,11 +877,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "4632e0c1-ea57-4eb4-bf26-80ea3cbe67d2"
-            # cname = "Coco Pharmaceuticals Governance Domains"
-            cname = "Sentinel 2"
-            cname = "Digital Products Root"
-            # response = c_client.get_collection_members(collection_name=cname)
+            collection_guid = '3ec3fdc6-5d79-4a7f-b663-bb384d0e2529'
+
             response = c_client.get_collection_members(collection_guid=collection_guid)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -1063,8 +1057,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "0471878d-8fa4-4c6c-84f0-eb935d8c9bc8"
-            element_guid = "d71c7ee2-b414-4c8f-bf9b-b16bd3601855"
+            collection_guid = "81edea89-0ae5-4729-86fe-0e4ed61aef9f"
+            element_guid = "feb88a1f-2e5d-4cdd-ae1d-36613d311ea8"
             body = {
                 "class": "CollectionMembershipProperties",
                 "membershipRationale": "test purposes",

@@ -5,13 +5,12 @@ import os
 import sys
 from typing import List
 
-from rich.console import Console
+from loguru import logger
 from rich import print
+from rich.console import Console
 
-
-
-from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, print_msg,
-                                                               get_element_dictionary, update_element_dictionary,
+from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
+                                                               update_element_dictionary,
                                                                split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
@@ -20,6 +19,11 @@ from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WA
 from pyegeria import EgeriaTech
 from pyegeria._globals import DEBUG_LEVEL
 
+log_format = "P {time} | {level} | {function} | {line} | {message} | {extra}"
+logger.remove()
+logger.add(sys.stderr, level="SUCCESS", format=log_format, colorize=True)
+logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+           colorize=True)
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Basic")
@@ -29,6 +33,7 @@ debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
 
+@logger.catch
 def process_provenance_command(file_path: str, txt: [str]) -> str:
     """
     Processes a provenance object_action by extracting the file path and current datetime.
@@ -46,7 +51,8 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     return provenance
 
 
-def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
+@logger.catch
+def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
                        directive: str = "display") -> dict:
     parsed_attributes, parsed_output = {}, {}
 
@@ -69,7 +75,7 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
     parsed_output['reason'] = ""
 
     msg = f"\tProcessing {object_action} on a {object_type}  \n"
-    print_msg(ALWAYS, msg, debug_level)
+    logger.info(msg)
 
     # get the version early because we may need it to construct qualified names.
     version = process_simple_attribute(txt, {'Version', "Version Identifier", "Published Version"}, INFO)
@@ -81,21 +87,24 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             for_update = attr[key].get('inUpdate', True)
             level = attr[key].get('level', 'Basic')
             msg = (f"___\nProcessing `{key}` in `{object_action}` on a `{object_type}` "
-                  f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` and  attribute level `{level}` and for_update `{for_update}`\n")
-            print_msg(INFO, msg, debug_level)
+                   f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` and  attribute level `{level}` and for_update `"
+                   f"{for_update}`\n")
+            logger.trace(msg)
             if for_update is False and object_action == "Update":
-                console.print(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
+                logger.trace(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
                 continue
             if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                            highlight=True)
                 continue
-            if EGERIA_USAGE_LEVEL == "Advanced" and level in [ "Expert", "Invisible"]:
-                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+            if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                            highlight=True)
                 continue
             if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
-                console.print(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",  highlight=True)
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                            highlight=True)
                 continue
-
 
             if attr[key].get('input_required', False) is True:
                 if_missing = ERROR
@@ -103,14 +112,13 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
                 if_missing = INFO
 
             # lab = [item.strip() for item in re.split(r'[;,\n]+',attr[key]['attr_labels'])]
-            lab =split_tb_string(attr[key]['attr_labels'] )
+            lab = split_tb_string(attr[key]['attr_labels'])
             labels: set = set()
             labels.add(key.strip())
             if key == 'Display Name':
                 labels.add(object_type.strip())
             if lab is not None and lab != [""]:
                 labels.update(lab)
-
 
             default_value = attr[key].get('default_value', None)
 
@@ -124,7 +132,8 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
             elif style == 'QN':
                 parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
                                                     object_action, version, if_missing)
-                if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key]['exists'] is False:
+                if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key][
+                    'exists'] is False:
                     parsed_output['exists'] = False
             elif style == 'ID':
                 parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
@@ -139,10 +148,10 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             elif style == 'Reference Name':
                 parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
-                if ((if_missing==ERROR) and parsed_attributes[key].get("value", None) and
-                        parsed_attributes[key]['exists'] is False):
+                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
+                    'exists'] is False):
                     msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
-                    print_msg(ERROR, msg, debug_level)
+                    logger.error(msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
 
@@ -167,64 +176,226 @@ def parse_user_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             elif style == 'Reference Name List':
                 parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
-
+                if (parsed_attributes[key].get("value", None) and (
+                        parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
+                    msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
+                           f"does not exist")
+                    logger.error(msg)
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += msg
             else:
                 msg = f"Unknown attribute style: {style}"
-                print_msg(ERROR, msg, debug_level)
+                logger.error(msg)
                 sys.exit(1)
                 parsed_attributes[key]['valid'] = False
                 parsed_attributes[key]['value'] = None
             if key == "Display Name":
                 display_name = parsed_attributes[key]['value']
 
-
-
-            value = parsed_attributes[key].get('value',None)
+            value = parsed_attributes[key].get('value', None)
 
             if value is not None:
                 # if the value is a dict, get the flattened name list
-                value = parsed_attributes[key].get('name_list', None) if isinstance(value,(dict, list)) else value
+                value = parsed_attributes[key].get('name_list', None) if isinstance(value, (dict, list)) else value
 
                 parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
+
+    parsed_output['attributes'] = parsed_attributes
+
+    if display_name is None:
+        msg = f"No displau name or name identifier found"
+        logger.error(msg)
+        parsed_output['valid'] = False
+        parsed_output['reason'] = msg
+        return parsed_output
 
 
     if parsed_attributes.get('Parent ID', {}).get('value', None) is not None:
         if (parsed_attributes['Parent Relationship Type Name']['value'] is None) or (
                 parsed_attributes['Parent at End1']['value'] is None):
             msg = "Parent ID was found but either Parent `Relationship Type Name` or `Parent at End1` are missing"
-            print_msg(ERROR, msg, debug_level)
+            logger.error(msg)
             parsed_output['valid'] = False
             parsed_output['reason'] = msg
         if parsed_attributes['Parent Relationship Type Name'].get('exists', False) is False:
             msg = "Parent ID was found but does not exist"
-            print_msg(ERROR, msg, debug_level)
+            logger.error(msg)
             parsed_output['valid'] = False
             parsed_output['reason'] = msg
 
     if directive in ["validate", "process"] and object_action == "Update" and not parsed_output[
         'exists']:  # check to see if provided information exists and is consistent with existing info
-        msg = f"Update request invalid, Term {display_name} does not exist\n"
-        print_msg(ERROR, msg, debug_level)
+        msg = f"Update request invalid, element `{display_name}` does not exist\n"
+        logger.error(msg)
         parsed_output['valid'] = False
     if directive in ["validate", "process"] and not parsed_output['valid'] and object_action == "Update":
         msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
-        print_msg(ERROR, msg, debug_level)
+        logger.error(msg)
 
     elif directive in ["validate",
                        "process"] and object_action == 'Create':  # if the object_action is create, check that it
         # doesn't already exist
         if parsed_output['exists']:
             msg = f"Element `{display_name}` cannot be created since it already exists\n"
-            print_msg(ERROR, msg, debug_level)
+            logger.error(msg)
             parsed_output['valid'] = False
         else:
             msg = f"It is valid to create Element `{display_name}`"
-            print_msg(ALWAYS, msg, debug_level)
+            logger.success(msg)
 
-    parsed_output['attributes'] = parsed_attributes
     return parsed_output
 
 
+@logger.catch
+def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
+                         directive: str = "display") -> dict:
+    parsed_attributes, parsed_output = {}, {}
+
+    parsed_output['valid'] = True
+    parsed_output['exists'] = False
+
+    labels = {}
+
+    command_spec = get_command_spec(f"{object_action} {object_type}")
+    attributes = command_spec.get('Attributes', [])
+    command_display_name = command_spec.get('display_name', None)
+
+    parsed_output['reason'] = ""
+    parsed_output['display'] = ""
+
+    msg = f"\tProcessing {object_action} on  {object_type}  \n"
+    logger.info(msg)
+
+    # get the version early because we may need it to construct qualified names.
+
+    for attr in attributes:
+        for key in attr:
+            # Run some checks to see if the attribute is appropriate to the operation and usage level
+
+            level = attr[key].get('level', 'Basic')
+            msg = (f"___\nProcessing `{key}` in `{object_action}` on a `{object_type}` "
+                   f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` ")
+            logger.trace(msg)
+
+            if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                             highlight=True)
+                continue
+            if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                             highlight=True)
+                continue
+            if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
+                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                             highlight=True)
+                continue
+
+            if attr[key].get('input_required', False) is True:
+                if_missing = ERROR
+            else:
+                if_missing = INFO
+
+            # lab = [item.strip() for item in re.split(r'[;,\n]+',attr[key]['attr_labels'])]
+            lab = split_tb_string(attr[key]['attr_labels'])
+            labels: set = set()
+            labels.add(key.strip())
+
+            if lab is not None and lab != [""]:
+                labels.update(lab)
+
+            # set these to none since not needed for view commands
+            version = None
+            command_qn_prefix = None
+
+            default_value = attr[key].get('default_value', None)
+
+            style = attr[key]['style']
+            if style in ['Simple', 'Dictionary', 'Comment']:
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == 'Valid Value':
+                parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
+                                                          attr[key].get('valid_values', None), if_missing,
+                                                          default_value)
+            elif style == 'QN':
+                parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
+                                                    object_action, version, if_missing)
+                if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key][
+                    'exists'] is False:
+                    parsed_output['exists'] = False
+            elif style == 'ID':
+                parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
+                                                    object_action, version, if_missing)
+
+                parsed_output['guid'] = parsed_attributes[key].get('guid', None)
+                parsed_output['qualified_name'] = parsed_attributes[key].get('qualified_name', None)
+                parsed_output['exists'] = parsed_attributes[key]['exists']
+                if parsed_attributes[key]['valid'] is False:
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += parsed_attributes[key]['reason']
+
+            elif style == 'Reference Name':
+                parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
+                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
+                    'exists'] is False):
+                    msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
+                    logger.error(msg)
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += msg
+
+            elif style == 'GUID':
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+            elif style == 'Ordered Int':
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+            elif style == 'Simple Int':
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == 'Simple List':
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                name_list = parsed_attributes[key]['value']
+                # attribute = re.split(r'[;,\n]+', name_list) if name_list is not None else None
+                attribute = split_tb_string(name_list)
+                parsed_attributes[key]['value'] = attribute
+                parsed_attributes[key]['name_list'] = name_list
+            elif style == 'Parent':
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == 'Bool':
+                parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
+
+
+            elif style == 'Reference Name List':
+                parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
+                if (parsed_attributes[key].get("value", None) and (
+                        parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
+                    msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
+                           f"does not exist")
+                    logger.error(msg)
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += msg
+            else:
+                msg = f"Unknown attribute style: {style}"
+                logger.error(msg)
+                sys.exit(1)
+                parsed_attributes[key]['valid'] = False
+                parsed_attributes[key]['value'] = None
+
+            value = parsed_attributes[key].get('value', None)
+
+            if value is not None:
+                # if the value is a dict, get the flattened name list
+                value = parsed_attributes[key].get('name_list', None) if isinstance(value, (dict, list)) else value
+                parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
+
+    parsed_output['attributes'] = parsed_attributes
+
+
+    if directive in ["validate", "process"] and not parsed_output['valid'] and object_action == "Update":
+        msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
+        logger.error(msg)
+
+
+    return parsed_output
+
+
+@logger.catch
 def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = INFO, default_value=None) -> dict:
     """Process a simple attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and store it in a dictionary along with valid.
@@ -245,7 +416,7 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     attribute = extract_attribute(txt, labels)
@@ -258,14 +429,16 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
             valid = True
+            logger.info(msg)
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-        print_msg(if_missing, msg, debug_level)
+            logger.error(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
 
+@logger.catch
 def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_missing: str = INFO,
                      default_value=None) -> dict:
     """Process a string attribute to check that it is a member of the associated value values list.
@@ -288,22 +461,22 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
     if valid_values is None:
         msg = "Missing valid values list"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
     if isinstance(valid_values, str):
         # v_values = [item.strip() for item in re.split(r'[;,\n]+', valid_values)]
         v_values = split_tb_string(valid_values)
     if not isinstance(v_values, list):
         msg = "Valid values list is not a list"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
     if len(v_values) == 0:
         msg = "Valid values list is empty"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
 
     attribute = extract_attribute(txt, labels)
@@ -314,21 +487,23 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
+            logger.info(msg)
             valid = True
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-        print_msg(if_missing, msg, debug_level)
+            logger.error(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
     else:
         if attribute not in v_values:
             msg = f"Invalid value for attribute `{labels}`"
-            print_msg(WARNING, msg, debug_level)
+            logger.warning(msg)
             return {"status": WARNING, "reason": msg, "value": attribute, "valid": False, "exists": True}
 
     return {"status": INFO, "OK": "OK", "value": attribute, "valid": valid, "exists": True}
 
 
+@logger.catch
 def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = INFO, default_value=None) -> dict:
     """Process a boolean attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and store it in a dictionary along with valid.
@@ -349,7 +524,7 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     attribute = extract_attribute(txt, labels)
@@ -362,11 +537,12 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
+            logger.info(msg)
             valid = True
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-        print_msg(if_missing, msg, debug_level)
+            logger.error(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
     if isinstance(attribute, str):
@@ -377,12 +553,13 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
             attribute = False
         else:
             msg = f"Invalid value for boolean attribute `{labels}`"
-            print_msg("ERROR", msg, debug_level)
+            logger.error(msg)
             return {"status": ERROR, "reason": msg, "value": attribute, "valid": False, "exists": True}
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
 
+@logger.catch
 def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, element_labels: list[str], txt: str,
                action: str, version: str = None, if_missing: str = INFO) -> dict:
     """
@@ -422,7 +599,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     if element_name is None:
         msg = f"Optional attribute with label`{element_type}` missing"
-        print_msg("INFO", msg, debug_level)
+        logger.info(msg)
         identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": False, "exists": False, }
         return identifier_output
 
@@ -436,18 +613,18 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     if unique is False:
         msg = f"Multiple elements named  {element_name} found"
-        print_msg("DEBUG-ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True, }
         valid = False
 
     if action == "Update" and not exists:
         msg = f"Element {element_name} does not exist"
-        print_msg("DEBUG-ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
 
     elif action == "Update" and exists:
         msg = f"Element {element_name} exists"
-        print_msg("DEBUG-INFO", msg, debug_level)
+        logger.info(msg)
         identifier_output = {
             "status": INFO, "reason": msg, "value": element_name, "valid": True, "exists": True,
             'qualified_name': q_name, 'guid': guid
@@ -455,7 +632,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     elif action == "Create" and exists:
         msg = f"Element {element_name} already exists"
-        print_msg("DEBUG-ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {
             "status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True,
             'qualified_name': qualified_name, 'guid': guid,
@@ -463,7 +640,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     elif action == "Create" and not exists and valid:
         msg = f"{element_type} `{element_name}` does not exist"
-        print_msg("DEBUG-INFO", msg, debug_level)
+        logger.info(msg)
 
         if q_name is None and qualified_name is None:
             q_name = egeria_client.__create_qualified_name__(qn_prefix, element_name, version_identifier=version)
@@ -481,6 +658,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
     return identifier_output
 
 
+@logger.catch
 def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, txt: str, action: str,
              if_missing: str = INFO, version: str = None) -> dict:
     """
@@ -530,30 +708,30 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     if exists is True and unique is False:
         # Multiple elements found - so need to respecify with qualified name
         msg = f"Multiple elements named  {element_name} found"
-        print_msg("DEBUG-ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True, }
 
 
     elif action == EXISTS_REQUIRED or if_missing == ERROR and not exists:
         # a required identifier doesn't exist
         msg = f"Required {element_type} `{element_name}` does not exist"
-        print_msg("DEBUG-ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
-    elif value is None  and if_missing == INFO:
+    elif value is None and if_missing == INFO:
         # an optional identifier is empty
         msg = f"Optional attribute with label`{element_type}` missing"
-        print_msg("INFO", msg, debug_level)
+        logger.info(msg)
         identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": True, "exists": False, }
     elif value and exists is False:
         # optional identifier specified but doesn't exist
         msg = f"Optional attribute with label`{element_type}` specified but doesn't exist"
-        print_msg("ERROR", msg, debug_level)
+        logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": value, "valid": False, "exists": False, }
 
     else:
         # all good.
         msg = f"Element {element_type} `{element_name}` exists"
-        print_msg("DEBUG-INFO", msg, debug_level)
+        logger.info(msg)
         identifier_output = {
             "status": INFO, "reason": msg, "value": element_name, "valid": True, "exists": True,
             "qualified_name": q_name, 'guid': guid
@@ -562,6 +740,7 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     return identifier_output
 
 
+@logger.catch
 def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, element_labels: set,
                    if_missing: str = INFO) -> dict:
     """
@@ -595,12 +774,12 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
     id_list_output = {}
     elements = ""
     new_element_list = []
-
+    guid_list = []
     elements_txt = extract_attribute(txt, element_labels)
 
     if elements_txt is None:
         msg = f"Attribute with labels `{{element_type}}` missing"
-        print_msg("DEBUG-INFO", msg, debug_level)
+        logger.info(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": False, "exists": False, }
     else:
         # element_list = re.split(r'[;,\n]+', elements_txt)
@@ -610,13 +789,14 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
             # Get the element using the generalized function
             known_q_name, known_guid, el_valid, el_exists = get_element_by_name(egeria_client, element_type, element)
             details = {"known_q_name": known_q_name, "known_guid": known_guid, "el_valid": el_valid}
-            elements = f"{element} {elements}"  # list of the input names
+            elements += element + ", "  # list of the input names
 
             if el_exists and el_valid:
                 new_element_list.append(known_q_name)  # list of qualified names
+                guid_list.append(known_guid)
             elif not el_exists:
                 msg = f"No {element_type} `{element}` found"
-                print_msg("DEBUG-INFO", msg, debug_level)
+                logger.warning(msg)
                 valid = False
             valid = valid if el_valid is None else (valid and el_valid)
             exists = exists and el_exists
@@ -624,19 +804,22 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
 
         if elements:
             msg = f"Found {element_type}: {elements}"
-            print_msg("DEBUG-INFO", msg, debug_level)
+            logger.info(msg)
             id_list_output = {
                 "status": INFO, "reason": msg, "value": element_details, "valid": valid, "exists": exists,
-                "name_list": new_element_list,
+                "name_list": new_element_list, "guid_list": guid_list,
                 }
         else:
             msg = f" Name list contains one or more invalid qualified names."
-            print_msg("DEBUG-INFO", msg, debug_level)
-            id_list_output = {"status": if_missing, "reason": msg, "value": elements, "valid": valid,
-                              "exists": exists, "dict_list" : element_details}
+            logger.info(msg)
+            id_list_output = {
+                "status": if_missing, "reason": msg, "value": elements, "valid": valid, "exists": exists,
+                "dict_list": element_details, "guid_list": guid_list
+                }
         return id_list_output
 
 
+@logger.catch
 def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
                            categories_list: List[str]) -> None:
     """
@@ -689,36 +872,349 @@ def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories
                 egeria_client.add_term_to_category(term_guid, cat)
                 current_categories.append(cat)
                 msg = f"Added term {term_guid} to category {cat}"
-                print_msg("DEBUG-INFO", msg, debug_level)
+                logger.info(msg)
 
         for cat in current_categories:
             if cat not in to_be_cat_guids:
                 egeria_client.remove_term_from_category(term_guid, cat)
                 msg = f"Removed term {term_guid} from category {cat}"
-                print_msg("DEBUG-INFO", msg, debug_level)
+                logger.info(msg)
     else:  # No categories specified - so remove any categories a term is in
         for cat in current_categories:
             egeria_client.remove_term_from_category(term_guid, cat)
             msg = f"Removed term {term_guid} from category {cat}"
-            print_msg("DEBUG-INFO", msg, debug_level)
+            logger.info(msg)
 
-def sync_data_dict_membership(egeria_client: EgeriaTech, in_data_dictionary_names: list , in_data_dictionary: dict,
-                              guid:str, object_type:str)->dict:
+
+@logger.catch
+def add_member_to_data_collections(egeria_client: EgeriaTech, collection_list: list, display_name: str,
+                                   guid: str) -> None:
+    """
+    Add member to data dictionaries and data specifications.
+    """
+    body = {
+        "class": "CollectionMembershipProperties", "membershipRationale": "User Specified",
+        "notes": "Added by Dr.Egeria"
+        }
+    try:
+        for collection in collection_list:
+            egeria_client.add_to_collection(collection, guid, body)
+            msg = f"Added `{display_name}` member to `{collection}`"
+            logger.info(msg)
+        return
+
+    except Exception as e:
+        console.print_exception()
+
+
+@logger.catch
+def remove_member_from_data_collections(egeria_client: EgeriaTech, collection_list: list, display_name: str,
+                                        guid: str) -> None:
+    try:
+        for collection in collection_list:
+            egeria_client.remove_from_collection(collection, guid)
+            msg = f"Removed `{display_name}` member from `{collection}`"
+            logger.info(msg)
+        return
+
+    except Exception as e:
+        console.print_exception()
+
+
+@logger.catch
+def update_data_collection_memberships(egeria_client: EgeriaTech, entity_type: str, guid_list: list,
+                                       collection_type: str, guid: str, display_name: str,
+                                       replace_all_props: bool = True) -> None:
+    """ update the collection membership of the element
+
+        If replace_all_props is set to True, all existing memberships are removed and new memberships are added.
+        If replace_all_props is set to False, only the new memberships are added.
+    """
+
+    if replace_all_props:
+        match entity_type:
+            case "Data Specification":
+                get_command = egeria_client.get_collection_by_guid
+            case "Data Structure":
+                get_command = egeria_client.get_data_structure_by_guid
+            case "Data Field":
+                get_command = egeria_client.get_data_field_by_guid
+            case "Data Class":
+                get_command = egeria_client.get_data_class_by_guid
+
+        coll_list = egeria_client.get_data_memberships(get_command, guid)
+        # compare the existing collections to desired collections
+        if collection_type == "Data Dictionary":
+            as_is = set(coll_list.get("DictList", None))
+        elif collection_type == "Data Specification":
+            as_is = set(coll_list.get("SpecList", None))
+
+        dict_set = set(coll_list.get("DictList", None))
+        spec_set = set(coll_list.get("SpecList", None))
+        to_be_set = set(guid_list) if guid_list is not None else set()
+        logger.debug(f"as_is: {as_is}")
+        logger.debug(f"to_be_set: {to_be_set}")
+
+        # Remove membership for collections that are in the as-is but not in the to-be
+        to_remove = as_is - to_be_set
+        logger.debug(f"to_remove: {to_remove}")
+        if len(to_remove) > 0:
+            remove_member_from_data_collections(egeria_client, to_remove, display_name, guid)
+
+        # add membership for collections that are in the to-be but are not in the as-is
+        to_add = to_be_set - as_is
+        logger.debug(f"to_add: {to_add}")
+        if len(to_add) > 0:
+            add_member_to_data_collections(egeria_client, to_add, display_name, guid)
+    else:
+        add_member_to_data_collections(egeria_client, guid_list, display_name, guid)
+
+# @logger.catch
+
+
+@logger.catch
+def add_field_to_data_structures(egeria_client: EgeriaTech, display_name: str, struct_list: list, guid) -> None:
+    """
+        Add data field to data structures.
+        """
+
+    try:
+        for structure_guid in struct_list:
+            egeria_client.link_member_data_field(structure_guid, guid, None)
+            msg = f"Added `{display_name}` to structure `{structure_guid}`"
+            logger.info(msg)
+        return
+
+    except Exception as e:
+        console.print_exception()
+
+
+@logger.catch
+def remove_field_from_data_structures(egeria_client: EgeriaTech, display_name: str, struct_list: list,
+                                      guid: str) -> None:
+    """Remove a data field from a list of data structures."""
+    try:
+        for structure_guid in struct_list:
+            egeria_client.detach_member_data_field(structure_guid, guid, None)
+            msg = f"Removed `{display_name}` from structure `{structure_guid}`"
+            logger.info(msg)
+        return
+
+    except Exception as e:
+        console.print_exception()
+
+
+@logger.catch
+def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list, parent_field_list: list, terms: list,
+                                 data_class_guid: str, guid: str, display_name: str,
+                                 replace_all_props: bool = True) -> None:
+    """Sync a field's related elements.
+
+    TODO: Need to add data class support when ready and may need to revisit bodies.
+
+    """
+    if replace_all_props:
+        rel_el_list = egeria_client.get_data_field_rel_elements(guid)
+        # should I throw an exception if empty?
+        as_is_data_structs = set(rel_el_list.get("data_structure_guids", []))
+        as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
+        as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
+        as_is_data_classes = set(rel_el_list.get("data_class_guids", []))
+
+        to_be_data_structs = set(structure_list) if structure_list is not None else set()
+        to_be_parent_fields = set(parent_field_list) if parent_field_list is not None else set()
+        to_be_assigned_meanings = set(terms) if terms is not None else set()
+        to_be_data_classes = set(data_class_guid) if data_class_guid is not None else set()
+
+        logger.trace(f"as_is_data_structs: {list(as_is_data_structs)} to_be_data_struct: {list(to_be_data_structs)}")
+        logger.trace(
+            f"as_is_parent_fields: {list(as_is_parent_fields)} to_be_parent_fields: {list(to_be_parent_fields)}")
+        logger.trace(
+            f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "
+            f"{list(to_be_assigned_meanings)}")
+        logger.trace(
+            f"as_is_data_classes: {list(as_is_data_classes)} to_be_assigned_data_classes: "
+            f"{list(to_be_data_classes)}")
+
+        data_struct_to_remove = as_is_data_structs - to_be_data_structs
+        logger.trace(f"data_struct_to_remove: {list(data_struct_to_remove)}")
+        if len(data_struct_to_remove) > 0:
+            for ds in data_struct_to_remove:
+                egeria_client.detach_member_data_field(ds, guid, None)
+                msg = f"Removed `{display_name}` from structure `{ds}`"
+                logger.trace(msg)
+        data_struct_to_add = to_be_data_structs - as_is_data_structs
+        logger.trace(f"data_struct_to_add: {list(data_struct_to_add)}")
+        if len(data_struct_to_add) > 0:
+            for ds in data_struct_to_add:
+                egeria_client.link_member_data_field(ds, guid, None)
+                msg = f"Added `{display_name}` to structure `{ds}`"
+                logger.trace(msg)
+
+        parent_field_to_remove = to_be_parent_fields - as_is_parent_fields
+        logger.trace(f"parent_field_to_remove: {list(parent_field_to_remove)}")
+        if len(parent_field_to_remove) > 0:
+            for field in parent_field_to_remove:
+                egeria_client.detach_nested_data_field(field, guid, None)
+                msg = f"Removed `{display_name}` from field `{field}`"
+                logger.trace(msg)
+        parent_field_to_add = to_be_parent_fields - as_is_parent_fields
+        logger.trace(f"parent_field_to_add: {list(parent_field_to_add)}")
+        if len(parent_field_to_add) > 0:
+            for field in parent_field_to_add:
+                egeria_client.link_nested_data_field(field, guid, None)
+                msg = f"Added `{display_name}` to field `{field}`"
+                logger.trace(msg)
+
+        terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
+        logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
+        if len(terms_to_remove) > 0:
+            for term in terms_to_remove:
+                egeria_client.detach_semantic_definition(guid, term, None)
+                msg = f"Removed `{term}` from `{display_name}`"
+                logger.trace(msg)
+        terms_to_add = to_be_assigned_meanings - as_is_assigned_meanings
+        logger.trace(f"terms_to_add: {list(terms_to_add)}")
+        if len(terms_to_add) > 0:
+            for term in terms_to_add:
+                egeria_client.link_semantic_definition(guid, term, None)
+                msg = f"Added `{term}` to`{display_name}`"
+                logger.trace(msg)
+
+        classes_to_remove = as_is_data_classes - to_be_data_classes
+        logger.trace(f"classes_to_remove: {list(classes_to_remove)}")
+        if len(terms_to_remove) > 0:
+            for dc in classes_to_remove:
+                egeria_client.detach_data_class_definition(guid, dc)
+                msg = f"Removed `{dc}` from `{display_name}`"
+                logger.trace(msg)
+        classes_to_add = to_be_data_classes - as_is_data_classes
+        logger.trace(f"classes_to_add: {list(classes_to_add)}")
+        if len(terms_to_add) > 0:
+            for dc in classes_to_add:
+                egeria_client.link_data_class_definition(guid, dc)
+                msg = f"Added `{dc}` to`{display_name}`"
+                logger.trace(msg)
+
+
+    else:  # merge - add field to related elements
+        add_field_to_data_structures(egeria_client, display_name, structure_list, guid)
+        msg = f"Added `{display_name}` to `{structure_list}`"
+        logger.trace(msg)
+
+        for field in parent_field_list:
+            egeria_client.link_nested_data_field(field, guid, None)
+            msg = f"Added `{display_name}` to `{field}`"
+            logger.trace(msg)
+        for term in terms:
+            egeria_client.link_semantic_definition(guid, term, None)
+            msg = f"Added `{term}` to `{display_name}`"
+            logger.trace(msg)
+
+        egeria_client.link_data_class_definition(guid, data_class_guid)
+        msg = f"Added `{data_class_guid}` to `{display_name}`"
+        logger.trace(msg)
+
+@logger.catch
+def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_class_guids: list, terms: list,
+                                 containing_data_classes: list, super_data_classes: list, guid: str,
+                                 display_name: str, replace_all_props: bool = True) -> None:
+    """Sync a data class' related elements.
+
+    TODO:  may need to revisit bodies.
+
+    """
+    if replace_all_props:
+        rel_el_list = egeria_client.get_data_field_rel_elements(guid)
+        # should I throw an exception if empty?
+        as_is_containing_data_class_guids = set(rel_el_list.get("data_structure_guids", []))
+        as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
+        as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
+        as_is_data_classes = set(rel_el_list.get("data_class_guids", []))
+
+    #     to_be_data_structs = set(structure_list) if structure_list is not None else set()
+    #     to_be_parent_fields = set(parent_field_list) if parent_field_list is not None else set()
+    #     to_be_assigned_meanings = set(terms) if data_class_list is not None else set()
+    #     to_be_assigned_data_classes = set(data_class_list) if data_class_list is not None else set()
+    #
+    #     logger.trace(f"as_is_data_structs: {list(as_is_data_structs)} to_be_data_struct: {list(to_be_data_structs)}")
+    #     logger.trace(
+    #         f"as_is_parent_fields: {list(as_is_parent_fields)} to_be_parent_fields: {list(to_be_parent_fields)}")
+    #     logger.trace(
+    #         f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "
+    #         f"{list(to_be_assigned_meanings)}")
+    #     logger.trace(
+    #         f"as_is_data_classes: {list(as_is_data_classes)} to_be_assigned_data_classes: "
+    #         f"{list(to_be_assigned_data_classes)}")
+    #
+    #     data_struct_to_remove = as_is_data_structs - to_be_data_structs
+    #     logger.trace(f"data_struct_to_remove: {list(data_struct_to_remove)}")
+    #     if len(data_struct_to_remove) > 0:
+    #         for ds in data_struct_to_remove:
+    #             egeria_client.detach_member_data_field(ds, guid, None)
+    #             msg = f"Removed `{display_name}` from structure `{ds}`"
+    #             logger.trace(msg)
+    #     data_struct_to_add = to_be_data_structs - as_is_data_structs
+    #     logger.trace(f"data_struct_to_add: {list(data_struct_to_add)}")
+    #     if len(data_struct_to_add) > 0:
+    #         for ds in data_struct_to_add:
+    #             egeria_client.link_member_data_field(ds, guid, None)
+    #             msg = f"Added `{display_name}` to structure `{ds}`"
+    #             logger.trace(msg)
+    #
+    #     parent_field_to_remove = to_be_parent_fields - as_is_parent_fields
+    #     logger.trace(f"parent_field_to_remove: {list(parent_field_to_remove)}")
+    #     if len(parent_field_to_remove) > 0:
+    #         for field in parent_field_to_remove:
+    #             egeria_client.detach_nested_data_field(field, guid, None)
+    #             msg = f"Removed `{display_name}` from field `{field}`"
+    #             logger.trace(msg)
+    #     parent_field_to_add = to_be_parent_fields - as_is_parent_fields
+    #     logger.trace(f"parent_field_to_add: {list(parent_field_to_add)}")
+    #     if len(parent_field_to_add) > 0:
+    #         for field in parent_field_to_add:
+    #             egeria_client.link_nested_data_field(field, guid, None)
+    #             msg = f"Added `{display_name}` to field `{field}`"
+    #             logger.trace(msg)
+    #
+    #     terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
+    #     logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
+    #     if len(terms_to_remove) > 0:
+    #         for term in terms_to_remove:
+    #             egeria_client.detach_semantic_definition(guid, term, None)
+    #             msg = f"Removed `{term}` from `{display_name}`"
+    #             logger.trace(msg)
+    #     terms_to_add = to_be_assigned_meanings - as_is_assigned_meanings
+    #     logger.trace(f"terms_to_add: {list(terms_to_add)}")
+    #     if len(terms_to_add) > 0:
+    #         for term in terms_to_add:
+    #             egeria_client.link_semantic_definition(guid, term, None)
+    #             msg = f"Added `{term}` to`{display_name}`"
+    #             logger.trace(msg)
+    #
+    # else:  # merge - add field to related elements
+    #     add_field_to_data_structures(egeria_client, display_name, structure_list, guid)
+    #     msg = f"Added `{display_name}` to `{structure_list}`"
+    #     logger.trace(msg)
+    #
+    #     for field in parent_field_list:
+    #         egeria_client.link_nested_data_field(field, guid, None)
+    #         msg = f"Added `{display_name}` to `{field}`"
+    #         logger.trace(msg)
+    #     for term in terms:
+    #         egeria_client.link_semantic_definition(guid, term, None)
+    #         msg = f"Added `{term}` to `{display_name}`"
+    #         logger.trace(msg)
+
+
+def sync_data_spec_membership(egeria_client: EgeriaTech, in_data_spec_names: list, in_data_spec: dict, guid: str,
+                              object_type: str) -> dict:
     pass
 
-def sync_data_structure_membership(egeria_client: EgeriaTech, in_data_structure_names: list , in_data_structure: dict,
-                              guid:str, object_type:str)->dict:
 
+def sync_term_links(egeria_client: EgeriaTech, term_guid: str, links_exist: bool, links_list: List[str]) -> None:
     pass
 
-def sync_data_spec_membership(egeria_client: EgeriaTech, in_data_spec_names: list , in_data_spec: dict,
-                              guid:str, object_type:str)->dict:
-    pass
 
-def sync_term_links(egeria_client: EgeriaTech, term_guid: str, links_exist: bool,
-                   links_list: List[str]) -> None:
-    pass
-
-def sync_parent_data_field(egeria_client: EgeriaTech, term_guid: str, links_exist: bool,
-                   links_list: List[str]) -> None:
+def sync_parent_data_field(egeria_client: EgeriaTech, term_guid: str, links_exist: bool, links_list: List[str]) -> None:
     pass
