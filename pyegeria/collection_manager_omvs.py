@@ -193,7 +193,7 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, filter, output_format)
+            return self.generate_collection_output(elements, None, classification,output_format)
         return elements
 
     def get_classified_collections(self, classification: str, start_from: int = 0,
@@ -237,7 +237,7 @@ class CollectionManager(Client):
 
     async def _async_find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
             ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON') -> list | str:
+            output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
         """Returns the list of collections matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -261,6 +261,8 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
         Returns
         -------
         List | str
@@ -303,12 +305,13 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, filter, output_format)
+            return self.generate_collection_output(elements, None, None,
+                                                   output_format, output_profile)
         return elements
 
     def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
             ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON') -> list | str:
+            output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -332,6 +335,8 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
         Returns
         -------
         List | str
@@ -352,7 +357,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_find_collections(search_string, effective_time, starts_with, ends_with, ignore_case, start_from,
-                page_size, output_format))
+                page_size, output_format, output_profile))
 
         return resp
 
@@ -561,7 +566,7 @@ class CollectionManager(Client):
         return resp
 
     async def _async_get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
-            output_format: str = 'JSON') -> dict | str:
+            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
@@ -570,6 +575,8 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+        collection_type: str, default = None, optional
+            type of collection - Data Dictionary, Data Spec, Data Product, etc.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
 
@@ -603,11 +610,11 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, filter, output_format)
+            return self.generate_collection_output(elements, None, collection_type, output_format)
         return elements
 
     def get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
-            output_format: str = 'JSON') -> dict | str:
+            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection.
 
         Parameters
@@ -616,6 +623,8 @@ class CollectionManager(Client):
             unique identifier of the collection.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
+        collection_type: str, default = None, optional
+            type of collection - Data Dictionary, Data Spec, Data Product, etc.
         output_format: str, default = "JSON"
                     - one of "DICT", "MERMAID" or "JSON"
 
@@ -638,7 +647,8 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection_by_guid(collection_guid, effective_time, output_format))
+            self._async_get_collection_by_guid(collection_guid, effective_time, collection_type,
+                                               output_format))
 
         return resp
 
@@ -978,20 +988,18 @@ class CollectionManager(Client):
 
         """
 
-        is_own_anchor_s = str(is_own_anchor).lower()
-        parent_at_end1_s = str(parent_at_end1).lower()
         url = f"{self.collection_command_root}/root-collection"
 
-        body = {
-            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor_s, "anchorScopeGUID": anchor_scope_guid,
+        body = body_slimmer({
+            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor, "anchorScopeGUID": anchor_scope_guid,
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": f"root-collection::{display_name}",
+            "parentAtEnd1": parent_at_end1, "collectionProperties": {
+                "class": "CollectionProperties", "qualifiedName": f"RootCollection::{display_name}",
                 "name": display_name, "description": description, "collectionType": collection_type,
                 },
-            }
+            })
 
-        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID Returned")
 
     def create_root_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
@@ -1048,7 +1056,6 @@ class CollectionManager(Client):
     async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
             parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
             collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
-            collection_ordering: str = "OTHER", order_property_name: str = "Something",
             qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types. Async version.
@@ -1076,11 +1083,6 @@ class CollectionManager(Client):
             optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should be classified as its own anchor or not.
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-            "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         qualified_name: str, optional, defaults to None
             If not specified, a unique name will be created for the collection.
 
@@ -1099,29 +1101,26 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        is_own_anchor_s = str(is_own_anchor).lower()
-        parent_at_end1_s = str(parent_at_end1).lower()
+
         url = f"{self.collection_command_root}/data-spec-collection"
         if qualified_name is None:
             qualified_name = self.__create_qualified_name__("DataSpec", display_name)
 
-        body = {
-            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
+        body = body_slimmer({
+            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor,
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
+            "parentAtEnd1": parent_at_end1, "collectionProperties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type,
-                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                "description": description, "collectionType": collection_type
                 },
-            }
+            })
 
-        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID Returned")
 
     def create_data_spec_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
             parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = False, collection_ordering: str = "OTHER",
-            order_property_name: str = "Something", qualified_name: str = None, ) -> str:
+            anchor_scope_guid: str = None, is_own_anchor: bool = False, qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1148,10 +1147,6 @@ class CollectionManager(Client):
             optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should be classified as its own anchor or not.
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         qualified_name: str, optional, defaults to None
             If not specified, a unique name will be created for the collection.
 
@@ -1173,13 +1168,12 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(
             self._async_create_data_spec_collection(anchor_guid, parent_guid, parent_relationship_type_name,
                 parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                collection_ordering, order_property_name, qualified_name, ))
+                 qualified_name, ))
         return resp
 
     async def _async_create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str,
             parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
             collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
-            collection_ordering: str = "OTHER", order_property_name: str = "Something",
             qualified_name: str = None, ) -> str:
         """ Create a new collection with the Data Dictionary classification.  Used to identify a collection of
             data fields that represent a data store collection of common data types. Async version.
@@ -1240,8 +1234,7 @@ class CollectionManager(Client):
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type,
-                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                "description": description, "collectionType": collection_type
                 },
             }
 
@@ -1250,8 +1243,7 @@ class CollectionManager(Client):
 
     def create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
             parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = False, collection_ordering: str = "OTHER",
-            order_property_name: str = "Something", qualified_name: str = None, ) -> str:
+            anchor_scope_guid: str = None, is_own_anchor: bool = False, qualified_name: str = None, ) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1303,7 +1295,7 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(
             self._async_create_data_dictionary_collection(anchor_guid, parent_guid, parent_relationship_type_name,
                 parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                collection_ordering, order_property_name, qualified_name))
+                 qualified_name))
         return resp
 
     async def _async_create_folder_collection(self, anchor_guid: str, parent_guid: str,
@@ -2618,7 +2610,8 @@ class CollectionManager(Client):
             'collection_type': collection_type
         }
 
-    def generate_basic_structured_output(self, elements, filter, output_format) -> str | list:
+    def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
+                                         collection_type: str = None) -> str | list:
         """
         Generate output in the specified format for the given elements.
 
@@ -2646,11 +2639,15 @@ class CollectionManager(Client):
                 {'name': 'Classifications', 'key': 'classifications'},
                 {'name': 'Description', 'key': 'description', 'format': True}
             ]
+            if collection_type is None:
+                entity_type = "Collection"
+            else:
+                entity_type = collection_type
 
             return generate_output(
                 elements=elements,
                 search_string=filter,
-                entity_type="Collection",
+                entity_type=entity_type,
                 output_format=output_format,
                 extract_properties_func=self._extract_collection_properties,
                 columns=columns if output_format == 'LIST' else None
@@ -2659,7 +2656,8 @@ class CollectionManager(Client):
         # Default case
         return None
 
-    def generate_collection_output(self, elements, filter, output_format) -> str | list | dict:
+    def generate_collection_output(self, elements, filter, collection_type: str, output_format,
+                                   output_profile: str = "CORE") -> str | list | dict:
         """
         Generate output in the specified format for the given elements.
 
@@ -2667,11 +2665,18 @@ class CollectionManager(Client):
             elements: Dictionary or list of dictionaries containing element data
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)
-
+            output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
         Returns:
             Formatted output as string or list of dictionaries
         """
+        if collection_type is None:
+            entity_type = "Collection"
+        else:
+            entity_type = collection_type
+
         # For LIST and DICT formats, get member information
+
         if output_format in ["LIST", "DICT"]:
             # Get the collection GUID
             collection_guid = None
@@ -2689,7 +2694,7 @@ class CollectionManager(Client):
 
             # For DICT format, include all member information in the result
             if output_format == "DICT":
-                result = self.generate_basic_structured_output(elements, filter, output_format)
+                result = self.generate_basic_structured_output(elements, filter, output_format, collection_type)
                 if isinstance(result, list):
                     for item in result:
                         item['members'] = members
@@ -2720,10 +2725,12 @@ class CollectionManager(Client):
                     return {'members': member_list}
 
                 # Generate output with the additional properties
+
+
                 return generate_output(
                     elements=elements,
                     search_string=filter,
-                    entity_type="Collection",
+                    entity_type=entity_type,
                     output_format=output_format,
                     extract_properties_func=self._extract_collection_properties,
                     get_additional_props_func=get_additional_props,
@@ -2731,7 +2738,7 @@ class CollectionManager(Client):
                 )
 
         # For FORM, REPORT, JSON formats, keep behavior unchanged
-        return self.generate_basic_structured_output(elements, filter, output_format)
+        return self.generate_basic_structured_output(elements, filter, output_format, collection_type)
 
     def generate_data_class_output(self, elements, filter, output_format) -> str | list:
         return self.generate_basic_structured_output(elements, filter, output_format)

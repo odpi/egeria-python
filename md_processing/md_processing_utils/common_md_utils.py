@@ -5,7 +5,7 @@ import os
 import re
 from datetime import datetime
 from typing import Any
-
+from loguru import logger
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -73,8 +73,8 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
     """
     if msg_level == "ALWAYS":
         print(f"{message_types.get(msg_level, '')}{msg}")
-    else:
-        print(f"{message_types.get(msg_level, '')}{msg}")
+    # else:
+    #     logger.info(f"{message_types.get(msg_level, '')}{msg}")
     # elif verbosity == "verbose" and msg_level in ["INFO", "WARNING", "ERROR"]:
     #     print(f"{message_types.get(msg_level, '')}{msg}")
     # elif verbosity == "quiet" and msg_level in ["WARNING", "ERROR"]:
@@ -84,7 +84,14 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
     #     print(f"{message_types.get(msg_level, '')}{msg}")
     # elif verbosity == "display-only" and msg_level in ["ALWAYS", "ERROR"]:
     #     print(f"{message_types.get(msg_level, '')}{msg}")
-
+    elif msg_level == "ERROR":
+        logger.error(f"{message_types.get(msg_level, '')}{msg}")
+    elif msg_level == "WARNING":
+        logger.warning(f"{message_types.get(msg_level, '')}{msg}")
+    elif msg_level == "DEBUG":
+        logger.debug(f"{message_types.get(msg_level, '')}{msg}")
+    else:
+        logger.info(f"{message_types.get(msg_level, '')}{msg}")
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
     """

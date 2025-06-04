@@ -8,6 +8,7 @@ This module provides access to the data-designer OMVS module.
 """
 
 import asyncio
+from os import terminal_size
 
 from httpx import Response
 
@@ -568,6 +569,140 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_data_structure_w_body(data_struct_guid, body, replace_all_properties))
+
+    def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict:
+        data_structure_info = data_get_fcn(data_struct_guid, output_format="JSON")
+        collection_list = {"DictList": [], "SpecList": [], "CollectionDetails": []}
+        if isinstance(data_structure_info, (dict, list)):
+            member_of_collections = data_structure_info['memberOfCollections']
+            if isinstance(member_of_collections, list):
+                for member_rel in member_of_collections:
+                    props = member_rel["relatedElement"]["properties"]
+                    qname = props.get('qualifiedName', None)
+                    guid = member_rel['relatedElement']['elementHeader']['guid']
+                    description = props.get('description', None)
+                    collection_type = props.get('collectionType', None)
+                    if collection_type == "Data Dictionary":
+                        collection_list["DictList"].append(guid)
+                    elif collection_type == "Data Specification":
+                        collection_list["SpecList"].append(guid)
+                    collection_list["CollectionDetails"].append({"guid":guid, "description":description,
+                                                             "collectionType":collection_type, "qualifiedName":qname})
+            else:
+                return None
+            return collection_list
+        else:
+            return None
+
+    def get_data_field_rel_elements(self, guid:str)-> dict | str:
+        """return the lists of objects related to a data field"""
+        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
+        if isinstance(data_field_entry, str):
+            return NO_ELEMENTS_FOUND
+
+        parent_guids = []
+        parent_names = []
+        parent_qnames = []
+
+        data_structure_guids = []
+        data_structure_names = []
+        data_structure_qnames = []
+
+        assigned_meanings_guids = []
+        assigned_meanings_names = []
+        assigned_meanings_qnames = []
+
+        data_class_guids = []
+        data_class_names = []
+        data_class_qnames = []
+
+        external_references_guids = []
+        external_references_names = []
+        external_references_qnames = []
+
+        member_of_data_dicts_guids = []
+        member_of_data_dicts_names = []
+        member_of_data_dicts_qnames = []
+
+        member_of_data_spec_guids = []
+        member_of_data_spec_names = []
+        member_of_data_specs_qnames = []
+
+
+        # terms
+        assigned_meanings = data_field_entry["assignedMeanings"]
+        for meaning in assigned_meanings:
+            assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
+            assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
+            assigned_meanings_qnames.append(meaning['relatedElement']['properties']['qualifiedName'])
+
+
+        # extract existing related data structure and data field elements
+        other_related_elements = data_field_entry["otherRelatedElements"]
+
+        for rel in other_related_elements:
+            related_element = rel["relatedElement"]
+            type = related_element["elementHeader"]["type"]["typeName"]
+            guid = related_element["elementHeader"]["guid"]
+            qualifiedName = related_element["properties"]["qualifiedName"]
+            display_name = related_element["properties"]["displayName"]
+            if type == "DataStructure":
+                data_structure_guids.append(guid)
+                data_structure_names.append(display_name)
+                data_structure_qnames.append(qualifiedName)
+
+            elif type == "DataField":
+                parent_guids.append(guid)
+                parent_names.append(display_name)
+                parent_qnames.append(qualifiedName)
+
+
+        member_of_collections = data_field_entry["memberOfCollections"]
+        for collection in member_of_collections:
+            c_type = collection["relatedElement"]["properties"]["collectionType"]
+            guid = collection["relatedElement"]["elementHeader"]["guid"]
+            name = collection["relatedElement"]["properties"]["name"]
+            qualifiedName = collection['relatedElement']["properties"]["qualifiedName"]
+            if c_type == "Data Dictionary":
+                member_of_data_dicts_guids.append(guid)
+                member_of_data_dicts_names.append(name)
+                member_of_data_dicts_qnames.append(qualifiedName)
+            elif c_type == "Data Specification":
+                member_of_data_spec_guids.append(guid)
+                member_of_data_spec_names.append(name)
+                member_of_data_specs_qnames.append(qualifiedName)
+
+
+
+        return {"parent_guids": parent_guids,
+                "parent_names": parent_names,
+                "parent_qnames": parent_qnames,
+
+                "data_structure_guids": data_structure_guids,
+                "data_structure_names": data_structure_names,
+                "data_structure_qnames": data_structure_qnames,
+
+                "assigned_meanings_guids": assigned_meanings_guids,
+                "assigned_meanings_names": assigned_meanings_names,
+                "assigned_meanings_qnames": assigned_meanings_qnames,
+
+                "data_class_guids": data_class_guids,
+                "data_class_names": data_class_names,
+                "data_class_qnames": data_class_qnames,
+
+                "external_references_guids": external_references_guids,
+                "external_references_names": external_references_names,
+                "external_references_qnames": external_references_qnames,
+
+                "member_of_data_dicts_guids": member_of_data_dicts_guids,
+                "member_of_data_dicts_names": member_of_data_dicts_names,
+                "member_of_data_dicts_qnames": member_of_data_dicts_qnames,
+
+                "member_of_data_spec_guids": member_of_data_spec_guids,
+                "member_of_data_spec_names": member_of_data_spec_names,
+                "member_of_data_specs_qnames": member_of_data_specs_qnames,
+            }
+
 
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
                                             body: dict = None) -> None:
@@ -1918,9 +2053,9 @@ r       replace_all_properties: bool, default = False
         Parameters
         ----------
         parent_data_field_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
+            - the GUID of the parent data field the nested data field will be connected to.
         nested_data_field_guid: str
-            - the GUID of the nested data class to be connected.
+            - the GUID of the nested data field to be connected.
         body: dict, optional
             - a dictionary containing additional properties.
 
@@ -1977,9 +2112,9 @@ r       replace_all_properties: bool, default = False
         Parameters
         ----------
         parent_data_field_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
+            - the GUID of the parent data field the nested data field will be connected to.
         nested_data_field_guid: str
-            - the GUID of the nested data class to be connected.
+            - the GUID of the nested data field to be connected.
         body: dict, optional
             - a dictionary containing additional properties.
 
@@ -2708,7 +2843,7 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self.generate_data_field_output(elements, filter, output_format)
+            return self.generate_data_field_output(elements, None, output_format)
         return elements
 
     def get_data_field_by_guid(self, guid: str, body: str = None, output_format: str = "DICT") -> list | str:
@@ -4988,7 +5123,7 @@ r       replace_all_properties: bool, default = False
 
         # Get data type from extendedProperties if available
         extended_properties = properties.get("extendedProperties", {})
-        data_type = extended_properties.get("dataType", "")
+        data_type = properties.get("dataType", "")
 
         return {
             'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
@@ -5098,6 +5233,9 @@ r       replace_all_properties: bool, default = False
                 columns=columns if output_format == 'LIST' else None)
         else:
             return self.generate_basic_structured_output(elements, filter, output_format)
+
+
+
 
 
 if __name__ == "__main__":

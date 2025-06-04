@@ -167,3 +167,6 @@ dmypy.json
 /.junie/
 /.junie/
 /.junie/
+/.junie/
+/dependency_graph.py
+/_orig.toml
