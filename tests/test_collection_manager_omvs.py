@@ -88,8 +88,8 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
             # classification = "RootCollection"
-            classification = "DataDictionary"
-            response = c_client.get_classified_collections(classification, output_format="LIST")
+            classification = "DataSpec"
+            response = c_client.get_classified_collections(classification, output_format="JSON")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -127,10 +127,11 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Test Spec2"
 
             response = c_client.find_collections(
-                search_string, None, True, ignore_case=False, output_format="DICT"
+                search_string, None, None, True, ignore_case=False,
+                output_format="FORM"
             )
             duration = time.perf_counter() - start_time
 
@@ -235,9 +236,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "75d195f4-45b9-4b35-acba-8f878a7dd74b"
+            collection_guid = "8d13b657-fcdf-4a67-afc8-98b5493cda1a"
 
-            response = c_client.get_collection_by_guid(collection_guid, output_format="FORM")
+            response = c_client.get_collection_by_guid(collection_guid, output_format="JSON")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -427,18 +428,22 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "766a0395-004a-4448-88ea-27527f1ed820"
+            parent_guid = None
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
-            display_name = "Oak Dene Clinical Trials Data"
+            display_name = "Dans Artifacts"
             description = (
-                "This folder contains Oak Denedata and collections of clinical data"
+                "This folder contains Dans artifacts"
             )
-            collection_type = "Medical Data"
+            collection_type = "User Data"
             is_own_anchor = True
             collection_ordering = "DATE_CREATED"
             order_property_name = None
 
+            additional_props = {
+                "user" : " dan",
+                "location" : "laz"
+                }
             response = c_client.create_folder_collection(
                 anchor_guid,
                 parent_guid,
@@ -447,9 +452,11 @@ class TestCollectionManager:
                 display_name,
                 description,
                 collection_type,
+                None,
                 is_own_anchor,
                 collection_ordering,
                 order_property_name,
+                additional_props,
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -877,7 +884,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = '3ec3fdc6-5d79-4a7f-b663-bb384d0e2529'
+            collection_guid = '803326f4-5b0a-44b4-8a2a-58263f16289c'
 
             response = c_client.get_collection_members(collection_guid=collection_guid)
             duration = time.perf_counter() - start_time
@@ -888,7 +895,7 @@ class TestCollectionManager:
             if type(response) is list:
                 print_json(json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\nGUID is: " + response)
+                print("\n\nResult is: " + response)
             assert True
 
         except (
@@ -1057,8 +1064,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "81edea89-0ae5-4729-86fe-0e4ed61aef9f"
-            element_guid = "feb88a1f-2e5d-4cdd-ae1d-36613d311ea8"
+            collection_guid = "803326f4-5b0a-44b4-8a2a-58263f16289c"
+            element_guid = "cf6f609f-bdb3-4aa3-abb3-20c2ba3fbdd6"
             body = {
                 "class": "CollectionMembershipProperties",
                 "membershipRationale": "test purposes",
@@ -1101,7 +1108,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = "4632e0c1-ea57-4eb4-bf26-80ea3cbe67d2"
+            guid = "803326f4-5b0a-44b4-8a2a-58263f16289c"
             # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
             name = "Sentinel 2"
@@ -1487,7 +1494,7 @@ class TestCollectionManager:
             search_string = "*"
 
             response = c_client.find_collections(
-                search_string, None, True, ignore_case=False
+                search_string, None, None, True, ignore_case=False
             )
             duration = time.perf_counter() - start_time
 

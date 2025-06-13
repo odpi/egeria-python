@@ -54,12 +54,15 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
         str: Formatted markdown for the attribute
     """
     output = ""
-    attribute_value = attribute_value.strip() if attribute_value else ""
+    if isinstance(attribute_value,str):
+        attribute_value = attribute_value.strip() if attribute_value else ""
     attribute_title = attribute_name.title() if attribute_name else ""
     if output_type in ["FORM", "MD"]:
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type == "REPORT":
-        if attribute_value:
+        if attribute_title == 'Mermaid Graph':
+            output = f"## Mermaid Graph\n```mermaid\n{attribute_value}\n```\n"
+        elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output
 
@@ -102,6 +105,8 @@ def generate_entity_md(elements: List[Dict],
     elements_md = ""
 
     for element in elements:
+        if element is None:
+            continue
         props = extract_properties_func(element)
 
         # Get additional properties if function is provided
@@ -228,6 +233,8 @@ def generate_entity_dict(elements: List[Dict],
     result = []
 
     for element in elements:
+        if element is None:
+            continue
         props = extract_properties_func(element)
 
         # Get additional properties if function is provided
@@ -290,10 +297,12 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         # Add classifications if present
         classifications = elements['elementHeader'].get('classifications', [])
         if classifications:
-            classification_names = ""
+            classification_names = "["
             for classification in classifications:
-                classification_names += f"* {classification['classificationName']}\n"
-            body['classification_names'] = classification_names
+                if len(classification_names) > 1:
+                    classification_names += ", "
+                classification_names += f"{classification['classificationName']}"
+            body['classification_names'] = classification_names + ']'
 
         return body
 
@@ -306,10 +315,12 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         # Add classifications if present
         classifications = element['elementHeader'].get('classifications', [])
         if classifications:
-            classification_names = ""
+            classification_names = "["
             for classification in classifications:
-                classification_names += f"* {classification['classificationName']}\n"
-            body['classifications'] = classification_names
+                if len(classification_names) > 1:
+                    classification_names += ", "
+                classification_names += f"{classification['classificationName']}"
+            body['classifications'] = classification_names + ']'
 
         result.append(body)
     return result

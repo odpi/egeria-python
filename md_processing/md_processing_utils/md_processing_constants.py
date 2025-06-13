@@ -52,6 +52,8 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
                 "List Glossary Categories", "Create Personal Project", "Update Personal Project", "Create Category",
                 "Update Category", "Create Solution Blueprint", "Update Solution Blueprint",
+                "Create Information Supply Chain", "Update Information Supply Chain",
+                "Create Information Supply Chain Segment", "Update Information Supply Chain Segment", "Link Segments", "Detach Segments",
                 "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
                 "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",

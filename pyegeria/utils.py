@@ -179,6 +179,7 @@ def get_last_guid(guids):
 
 def body_slimmer(body: dict) -> dict:
     """body_slimmer is a little function to remove unused keys from a dict
+    and recursively slim embedded dicts
 
     Parameters
     ----------
@@ -187,9 +188,21 @@ def body_slimmer(body: dict) -> dict:
     Returns
     -------
     dict:
-        a slimmed body
+        a slimmed body with all embedded dictionaries also slimmed
     """
-    slimmed = {key: value for key, value in body.items() if value}
+    if body is None:
+        return {}
+
+    slimmed = {}
+    for key, value in body.items():
+        if value:
+            if isinstance(value, dict):
+                # Recursively slim embedded dictionaries
+                slimmed_value = body_slimmer(value)
+                if slimmed_value:  # Only include non-empty dictionaries
+                    slimmed[key] = slimmed_value
+            else:
+                slimmed[key] = value
     return slimmed
 
 

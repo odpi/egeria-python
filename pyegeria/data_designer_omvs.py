@@ -11,6 +11,7 @@ import asyncio
 from os import terminal_size
 
 from httpx import Response
+from prompt_toolkit import data_structures
 
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
@@ -570,8 +571,10 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_update_data_structure_w_body(data_struct_guid, body, replace_all_properties))
 
-    def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict:
+    def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict | None:
         data_structure_info = data_get_fcn(data_struct_guid, output_format="JSON")
+        if data_structure_info == "No elements found":
+            return None
         collection_list = {"DictList": [], "SpecList": [], "CollectionDetails": []}
         if isinstance(data_structure_info, (dict, list)):
             member_of_collections = data_structure_info['memberOfCollections']
@@ -594,11 +597,35 @@ r       replace_all_properties: bool, default = False
         else:
             return None
 
-    def get_data_field_rel_elements(self, guid:str)-> dict | str:
+    def get_data_memberships_with_dict(self, data_field_elements: dict) -> dict:
+        collection_list = {"DictList_guid": [], "DictList_qn": [], "SpecList_guid": [], "SpecList_qn": [], "CollectionDetails": []}
+        if isinstance(data_field_elements, (dict, list)):
+
+            for member_rel in data_field_elements:
+                type_name = ""
+                props = member_rel["relatedElement"]["properties"]
+                qname = props.get('qualifiedName', None)
+                guid = member_rel['relatedElement']['elementHeader']['guid']
+                description = props.get('description', None)
+                collection_type = props.get('collectionType', None)
+                classifications = member_rel["relatedElement"]["elementHeader"]["classifications"]
+                for classification in classifications:
+                    type_name = classification["type"]['typeName']
+                    if type_name == "DataDictionary":
+                        collection_list["DictList_guid"].append(guid)
+                        collection_list["DictList_qn"].append(qname)
+                    elif type_name == "DataSpec":
+                        collection_list["SpecList_guid"].append(guid)
+                        collection_list["SpecList_qn"].append(qname)
+                collection_list["CollectionDetails"].append({"typeName":type_name, "guid":guid, "description":description,
+                                                                "collectionType": collection_type,
+                                                                "qualifiedName": qname
+                                                                })
+        return collection_list
+
+
+    def get_data_field_rel_elements_dict(self, field_struct: dict)-> dict | str:
         """return the lists of objects related to a data field"""
-        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
-        if isinstance(data_field_entry, str):
-            return NO_ELEMENTS_FOUND
 
         parent_guids = []
         parent_names = []
@@ -630,7 +657,7 @@ r       replace_all_properties: bool, default = False
 
 
         # terms
-        assigned_meanings = data_field_entry["assignedMeanings"]
+        assigned_meanings = field_struct["assignedMeanings"]
         for meaning in assigned_meanings:
             assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
             assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
@@ -638,41 +665,42 @@ r       replace_all_properties: bool, default = False
 
 
         # extract existing related data structure and data field elements
-        other_related_elements = data_field_entry["otherRelatedElements"]
+        other_related_elements = field_struct["otherRelatedElements"]
 
         for rel in other_related_elements:
             related_element = rel["relatedElement"]
             type = related_element["elementHeader"]["type"]["typeName"]
             guid = related_element["elementHeader"]["guid"]
-            qualifiedName = related_element["properties"]["qualifiedName"]
-            display_name = related_element["properties"]["displayName"]
+            qualified_name = related_element["properties"].get("qualifiedName","") or ""
+            display_name = related_element["properties"].get("displayName","") or ""
             if type == "DataStructure":
                 data_structure_guids.append(guid)
                 data_structure_names.append(display_name)
-                data_structure_qnames.append(qualifiedName)
+                data_structure_qnames.append(qualified_name)
 
             elif type == "DataField":
                 parent_guids.append(guid)
                 parent_names.append(display_name)
-                parent_qnames.append(qualifiedName)
+                parent_qnames.append(qualified_name)
 
 
-        member_of_collections = data_field_entry["memberOfCollections"]
+        member_of_collections = field_struct["memberOfCollections"]
         for collection in member_of_collections:
-            c_type = collection["relatedElement"]["properties"]["collectionType"]
+            c_type = collection["relatedElement"]["properties"].get("collectionType","") or ""
             guid = collection["relatedElement"]["elementHeader"]["guid"]
-            name = collection["relatedElement"]["properties"]["name"]
-            qualifiedName = collection['relatedElement']["properties"]["qualifiedName"]
-            if c_type == "Data Dictionary":
-                member_of_data_dicts_guids.append(guid)
-                member_of_data_dicts_names.append(name)
-                member_of_data_dicts_qnames.append(qualifiedName)
-            elif c_type == "Data Specification":
-                member_of_data_spec_guids.append(guid)
-                member_of_data_spec_names.append(name)
-                member_of_data_specs_qnames.append(qualifiedName)
-
-
+            name = collection["relatedElement"]["properties"].get("name","") or ""
+            qualifiedName = collection['relatedElement']["properties"].get("qualifiedName","") or ""
+            classifications = collection["relatedElement"]["elementHeader"]["classifications"]
+            for classification in classifications:
+                type_name = classification["type"]['typeName']
+                if type_name == "DataDictionary":
+                    member_of_data_dicts_guids.append(guid)
+                    member_of_data_dicts_names.append(name)
+                    member_of_data_dicts_qnames.append(qualifiedName)
+                elif type_name == "DataSpec":
+                    member_of_data_spec_guids.append(guid)
+                    member_of_data_spec_names.append(name)
+                    member_of_data_specs_qnames.append(qualifiedName)
 
         return {"parent_guids": parent_guids,
                 "parent_names": parent_names,
@@ -702,6 +730,15 @@ r       replace_all_properties: bool, default = False
                 "member_of_data_spec_names": member_of_data_spec_names,
                 "member_of_data_specs_qnames": member_of_data_specs_qnames,
             }
+
+
+    def get_data_field_rel_elements(self, guid:str)-> dict | str:
+        """return the lists of objects related to a data field"""
+
+        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
+        if isinstance(data_field_entry, str):
+            return NO_ELEMENTS_FOUND
+        return self.get_data_field_rel_elements_dict(data_field_entry)
 
 
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
@@ -1260,6 +1297,8 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
+        if filter == "*":
+            filter = None
 
         body = {"filter": filter}
         starts_with_s = str(starts_with).lower()
@@ -5079,6 +5118,17 @@ r       replace_all_properties: bool, default = False
         namespace = properties.get("namespace", "") or ""
         version_id = properties.get("versionIdentifier", "") or ""
 
+        # Get data type from extendedProperties and additionalProperties if available
+        extended_properties = properties.get("extendedProperties", {})
+        additional_properties = properties.get("additionalProperties", {})
+
+        # Now lets get the related elements
+        related_elements = self.get_data_field_rel_elements_dict(element)
+        data_dictionaries = related_elements.get("member_of_data_dicts_qnames", [])
+        data_structures = related_elements.get("data_structure_qnames", [])
+        assigned_meanings = related_elements.get("assigned_meanings_qnames", [])
+        parent_names = related_elements.get("parent_qnames", [])
+
         return {
             'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
             'qualified_name': qualified_name, 'namespace': namespace, 'version_identifier': version_id
@@ -5121,13 +5171,33 @@ r       replace_all_properties: bool, default = False
         description = properties.get("description", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
 
-        # Get data type from extendedProperties if available
+        is_nullable = properties.get('isNullable', False)
+        data_type = properties.get('dataType', "") or ""
+        minimum_length = properties.get('minimumLength', 0)
+        length = properties.get('length', 0)
+        precision = properties.get('precision', 0)
+        ordered_values = properties.get('orderedValues', False)
+        sort_order = properties.get('sortOrder', "") or ""
+
+
+
+        # Get data type from extendedProperties and additionalProperties if available
         extended_properties = properties.get("extendedProperties", {})
-        data_type = properties.get("dataType", "")
+        additional_properties = properties.get("additionalProperties", {})
+
+        # Now lets get the related elements
+        related_elements = self.get_data_field_rel_elements_dict(element)
+        data_dictionaries = related_elements.get("member_of_data_dicts_qnames",[])
+        data_structures = related_elements.get("data_structure_qnames",[])
+        assigned_meanings = related_elements.get("assigned_meanings_qnames",[])
+        parent_names = related_elements.get("parent_qnames",[])
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'qualified_name': qualified_name, 'data_type': data_type
+            'display_name': display_name, 'description': description, 'assigned_meanings': assigned_meanings,
+            'qualified_name': qualified_name, 'data_type': data_type, 'guid': guid, 'properties': properties,
+            'is_nullable': is_nullable, 'minimum_length': minimum_length, 'length': length, 'precision': precision,
+            'ordered_values': ordered_values, 'sort_order': sort_order, 'parent_names': parent_names, 'extended_properties': extended_properties,
+            'additional_properties': additional_properties,'data_dictionaries': data_dictionaries, 'data_structures': data_structures
             }
 
     def generate_basic_structured_output(self, elements, filter, output_format) -> str | list:

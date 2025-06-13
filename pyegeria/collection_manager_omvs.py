@@ -12,18 +12,8 @@ import asyncio
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
 from pyegeria.utils import body_slimmer
-from pyegeria.output_formatter import (
-    extract_mermaid_only, 
-    extract_basic_dict,
-    generate_output,
-    generate_entity_md,
-    generate_entity_md_table,
-    generate_entity_dict,
-    make_preamble,
-    make_md_attribute,
-    MD_SEPARATOR
-)
 
 
 class CollectionManager(Client):
@@ -62,7 +52,7 @@ class CollectionManager(Client):
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
     #
     async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0,
-            page_size: int = None, ) -> list:
+                                              page_size: int = None, ) -> list:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
 
@@ -143,8 +133,8 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(self._async_get_attached_collections(parent_guid, start_from, page_size))
         return resp
 
-    async def _async_get_classified_collections(self, classification: str, start_from: int = 0,
-            page_size: int = None, output_format: str = 'JSON') -> list | str | dict:
+    async def _async_get_classified_collections(self, classification: str, start_from: int = 0, page_size: int = None,
+                                                output_format: str = 'JSON') -> list | str | dict:
         """Returns the list of collections with a particular classification.  These classifications
             are typically "RootCollection", "Folder" or "DigitalProduct". Async version.
 
@@ -193,11 +183,11 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, classification,output_format)
+            return self.generate_collection_output(elements, None, classification, output_format)
         return elements
 
-    def get_classified_collections(self, classification: str, start_from: int = 0,
-            page_size: int = None, output_format:str = 'JSON') -> list | str | dict:
+    def get_classified_collections(self, classification: str, start_from: int = 0, page_size: int = None,
+                                   output_format: str = 'JSON') -> list | str | dict:
         """Returns the list of collections with a particular classification.  These classifications
              are typically "RootCollection", "Folder" or "DigitalProduct".
 
@@ -231,13 +221,14 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_classified_collections(classification,
-                                                                              start_from, page_size, output_format))
+        resp = loop.run_until_complete(
+            self._async_get_classified_collections(classification, start_from, page_size, output_format))
         return resp
 
-    async def _async_find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
+    async def _async_find_collections(self, search_string: str, as_of_time=None, effective_time: str = None,
+                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                                      start_from: int = 0, page_size: int = None, output_format: str = 'JSON',
+                                      output_profile: str = "CORE") -> list | str:
         """Returns the list of collections matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -246,6 +237,8 @@ class CollectionManager(Client):
         ----------
         search_string: str,
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
+        as_of_time: str, optional, [default=None]
+            The point in time to use for querying the repository - ISO8601 format.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
         starts_with : bool, [default=False], optional
@@ -279,6 +272,9 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Args:
+            as_of_time ():
+
         """
 
         if page_size is None:
@@ -292,7 +288,9 @@ class CollectionManager(Client):
         if search_string == "*":
             search_string = None
 
-        body = {"filter": search_string, "effective_time": effective_time}
+        body = {
+            "filter": search_string, "effective_time": effective_time, "asOfTime": as_of_time
+            }
 
         body_s = body_slimmer(body)
         url = (f"{self.collection_command_root}/"
@@ -305,13 +303,13 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, None,
-                                                   output_format, output_profile)
+            return self.generate_collection_output(elements, None, None, output_format, output_profile)
         return elements
 
-    def find_collections(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-            ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
+    def find_collections(self, search_string: str, as_of_time: str = None, effective_time: str = None,
+                         starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                         start_from: int = 0, page_size: int = None, output_format: str = 'JSON',
+                         output_profile: str = "CORE") -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -320,6 +318,8 @@ class CollectionManager(Client):
         ----------
         search_string: str,
             Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
+        as_of_time: str, optional, [default=None]
+            The point in time to use for querying the repository - ISO8601 format.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         starts_with : bool, [default=False], optional
@@ -356,13 +356,13 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_find_collections(search_string, effective_time, starts_with, ends_with, ignore_case, start_from,
-                page_size, output_format, output_profile))
+            self._async_find_collections(search_string, as_of_time, effective_time, starts_with, ends_with, ignore_case,
+                                         start_from, page_size, output_format, output_profile))
 
         return resp
 
     async def _async_get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, output_format: str = 'JSON') -> list | str:
+                                             page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Returns the list of collections with a particular name.
 
         Parameters
@@ -421,7 +421,7 @@ class CollectionManager(Client):
         return elements
 
     def get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0, page_size: int = None,
-            output_format: str = 'JSON') -> list | str:
+                                output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -464,7 +464,8 @@ class CollectionManager(Client):
         return resp
 
     async def _async_get_collections_by_type(self, collection_type: str, effective_time: str = None,
-            start_from: int = 0, page_size: int = None, output_format: str = 'JSON') -> list | str:
+                                             start_from: int = 0, page_size: int = None,
+                                             output_format: str = 'JSON') -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
@@ -523,7 +524,7 @@ class CollectionManager(Client):
         return elements
 
     def get_collections_by_type(self, collection_type: str, effective_time: str = None, start_from: int = 0,
-            page_size: int = None, output_format: str = 'JSON') -> list | str:
+                                page_size: int = None, output_format: str = 'JSON') -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -566,7 +567,7 @@ class CollectionManager(Client):
         return resp
 
     async def _async_get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
-            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
+                                            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
@@ -613,8 +614,8 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, collection_type, output_format)
         return elements
 
-    def get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
-            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
+    def get_collection_by_guid(self, collection_guid: str, effective_time: str = None, collection_type: str = None,
+                               output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection.
 
         Parameters
@@ -647,8 +648,7 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection_by_guid(collection_guid, effective_time, collection_type,
-                                               output_format))
+            self._async_get_collection_by_guid(collection_guid, effective_time, collection_type, output_format))
 
         return resp
 
@@ -806,9 +806,11 @@ class CollectionManager(Client):
         return resp
 
     async def _async_create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
-            collection_ordering: str = None, order_property_name: str = None, ) -> str:
+                                       parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
+                                       description: str, collection_type: str, anchor_scope_guid: str = None,
+                                       is_own_anchor: bool = False, collection_ordering: str = None,
+                                       order_property_name: str = None, additional_properties: dict = None,
+                                       extended_properties: dict = None) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection Async version.
 
         Parameters
@@ -842,6 +844,10 @@ class CollectionManager(Client):
              "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
 
         Returns
@@ -876,6 +882,7 @@ class CollectionManager(Client):
                 "class": "CollectionProperties", "qualifiedName": f"{classification_name}::{display_name}",
                 "name": display_name, "description": description, "collectionType": collection_type,
                 "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
@@ -883,9 +890,10 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID returned")
 
     def create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
-            collection_ordering: str = "OTHER", order_property_name: str = "Something", ) -> str:
+                          parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
+                          collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
+                          collection_ordering: str = None, order_property_name: str = None,
+                          additional_properties: dict = None, extended_properties: dict = None) -> str:
         """Create Collections: https://egeria-project.org/concepts/collection
 
         Parameters
@@ -920,6 +928,10 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
 
         Returns
@@ -939,13 +951,16 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_collection(classification_name, anchor_guid, parent_guid, parent_relationship_type_name,
-                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                collection_ordering, order_property_name))
+                                          parent_at_end1, display_name, description, collection_type, anchor_scope_guid,
+                                          is_own_anchor, collection_ordering, order_property_name,
+                                          additional_properties, extended_properties))
         return resp
 
     async def _async_create_root_collection(self, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False, ) -> str:
+                                            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
+                                            description: str, collection_type: str, anchor_scope_guid: str = None,
+                                            is_own_anchor: bool = False, additional_properties: dict = None,
+                                            extended_properties: dict = None) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
         collection hierarchy. Async version.
 
@@ -972,6 +987,10 @@ class CollectionManager(Client):
             optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should be classified as its own anchor or not.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -996,6 +1015,7 @@ class CollectionManager(Client):
             "parentAtEnd1": parent_at_end1, "collectionProperties": {
                 "class": "CollectionProperties", "qualifiedName": f"RootCollection::{display_name}",
                 "name": display_name, "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             })
 
@@ -1003,8 +1023,9 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID Returned")
 
     def create_root_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = False, ) -> str:
+                               parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+                               anchor_scope_guid: str = None, is_own_anchor: bool = False,
+                               additional_properties: dict = None, extended_properties: dict = None) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
          collection hierarchy.
 
@@ -1032,6 +1053,10 @@ class CollectionManager(Client):
             optional GUID of search scope
         is_own_anchor: bool, optional, defaults to False
             Indicates if the collection should be classified as its own anchor or not.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1050,13 +1075,16 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_root_collection(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                display_name, description, collection_type, anchor_scope_guid, is_own_anchor, ))
+                                               display_name, description, collection_type, anchor_scope_guid,
+                                               is_own_anchor, additional_properties, extended_properties))
         return resp
 
     async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
-            qualified_name: str = None, ) -> str:
+                                                 parent_relationship_type_name: str, parent_at_end1: bool,
+                                                 display_name: str, description: str, collection_type: str,
+                                                 anchor_scope_guid: str = None, is_own_anchor: bool = True,
+                                                 qualified_name: str = None, additional_properties: dict = None,
+                                                 extended_properties: dict = None) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types. Async version.
 
@@ -1085,6 +1113,10 @@ class CollectionManager(Client):
             Indicates if the collection should be classified as its own anchor or not.
         qualified_name: str, optional, defaults to None
             If not specified, a unique name will be created for the collection.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1101,7 +1133,6 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-
         url = f"{self.collection_command_root}/data-spec-collection"
         if qualified_name is None:
             qualified_name = self.__create_qualified_name__("DataSpec", display_name)
@@ -1111,7 +1142,8 @@ class CollectionManager(Client):
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1, "collectionProperties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             })
 
@@ -1119,8 +1151,10 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID Returned")
 
     def create_data_spec_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = False, qualified_name: str = None, ) -> str:
+                                    parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+                                    anchor_scope_guid: str = None, is_own_anchor: bool = False,
+                                    qualified_name: str = None, additional_properties: dict = None,
+                                    extended_properties: dict = None) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1149,6 +1183,10 @@ class CollectionManager(Client):
             Indicates if the collection should be classified as its own anchor or not.
         qualified_name: str, optional, defaults to None
             If not specified, a unique name will be created for the collection.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1167,14 +1205,17 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_data_spec_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                 qualified_name, ))
+                                                    parent_at_end1, display_name, description, collection_type,
+                                                    anchor_scope_guid, is_own_anchor, qualified_name,
+                                                    additional_properties, extended_properties))
         return resp
 
     async def _async_create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
-            qualified_name: str = None, ) -> str:
+                                                       parent_relationship_type_name: str, parent_at_end1: bool,
+                                                       display_name: str, description: str, collection_type: str,
+                                                       anchor_scope_guid: str = None, is_own_anchor: bool = True,
+                                                       qualified_name: str = None, additional_properties: dict = None,
+                                                       extended_properties: dict = None) -> str:
         """ Create a new collection with the Data Dictionary classification.  Used to identify a collection of
             data fields that represent a data store collection of common data types. Async version.
 
@@ -1208,6 +1249,11 @@ class CollectionManager(Client):
             Property to use for sequencing if collection_ordering is "OTHER"
         qualified_name: str, optional, defaults to None
             If not specified a qualified name will be generated from the display name and the collection type.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
         Returns
         -------
         str - the guid of the created collection
@@ -1234,7 +1280,8 @@ class CollectionManager(Client):
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties,
                 },
             }
 
@@ -1242,8 +1289,10 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID Returned")
 
     def create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = False, qualified_name: str = None, ) -> str:
+                                          parent_at_end1: bool, display_name: str, description: str,
+                                          collection_type: str, anchor_scope_guid: str = None,
+                                          is_own_anchor: bool = False, qualified_name: str = None,
+                                          additional_properties: dict = None, extended_properties: dict = None) -> str:
         """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
          and schema types.
 
@@ -1276,6 +1325,10 @@ class CollectionManager(Client):
             Property to use for sequencing if collection_ordering is "OTHER"
         qualified_name: str, optional, defaults to None
             If not specified a qualified name will be generated from the display name and the collection type.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1294,14 +1347,18 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_data_dictionary_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                 qualified_name))
+                                                          parent_at_end1, display_name, description, collection_type,
+                                                          anchor_scope_guid, is_own_anchor, qualified_name,
+                                                          additional_properties, extended_properties))
         return resp
 
     async def _async_create_folder_collection(self, anchor_guid: str, parent_guid: str,
-            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-            collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = True,
-            collection_ordering: str = "OTHER", order_property_name: str = "Something", ) -> str:
+                                              parent_relationship_type_name: str, parent_at_end1: bool,
+                                              display_name: str, description: str, collection_type: str,
+                                              anchor_scope_guid: str = None, is_own_anchor: bool = True,
+                                              collection_ordering: str = None, order_property_name: str = None,
+                                              additional_properties: dict = None,
+                                              extended_properties: dict = None) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy. Async version.
 
@@ -1333,6 +1390,10 @@ class CollectionManager(Client):
             "DATE_CREATED", "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1360,6 +1421,7 @@ class CollectionManager(Client):
                 "class": "CollectionProperties", "qualifiedName": f"folder-collection::{display_name}",
                 "name": display_name, "description": description, "collectionType": collection_type,
                 "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
@@ -1367,9 +1429,10 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID returned")
 
     def create_folder_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-            parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-            anchor_scope_guid: str = None, is_own_anchor: bool = True, collection_ordering: str = "OTHER",
-            order_property_name: str = "Something", ) -> str:
+                                 parent_at_end1: bool, display_name: str, description: str, collection_type: str,
+                                 anchor_scope_guid: str = None, is_own_anchor: bool = True,
+                                 collection_ordering: str = None, order_property_name: str = None,
+                                 additional_properties: dict = None, extended_properties: dict = None) -> str:
         """Create a new collection with the Folder classification.  This is used to identify the organizing
         collections in a collection hierarchy.
 
@@ -1401,6 +1464,10 @@ class CollectionManager(Client):
             "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
         Returns
         -------
@@ -1420,8 +1487,9 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_folder_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                parent_at_end1, display_name, description, collection_type, anchor_scope_guid, is_own_anchor,
-                collection_ordering, order_property_name, ))
+                                                 parent_at_end1, display_name, description, collection_type,
+                                                 anchor_scope_guid, is_own_anchor, collection_ordering,
+                                                 order_property_name, additional_properties, extended_properties))
         return resp
 
     async def _async_create_collection_from_template(self, body: dict) -> str:
@@ -1677,8 +1745,10 @@ class CollectionManager(Client):
     # Manage collections
     #
     async def _async_update_collection(self, collection_guid: str, qualified_name: str = None, display_name: str = None,
-            description: str = None, collection_type: str = None, collection_ordering: str = None,
-            order_property_name: str = None, replace_all_props: bool = False, ) -> None:
+                                       description: str = None, collection_type: str = None,
+                                       collection_ordering: str = None, order_property_name: str = None,
+                                       replace_all_props: bool = False, additional_properties: dict = None,
+                                       extended_properties: dict = None) -> None:
         """Update the properties of a collection.  Async version.
 
         Parameters
@@ -1700,9 +1770,11 @@ class CollectionManager(Client):
            Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
-            If not provided, the server name associated
-           with the instance is used.
 
         Returns
         -------
@@ -1725,15 +1797,17 @@ class CollectionManager(Client):
         body = {
             "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
             "description": description, "collectionType": collection_type, "collectionOrdering": collection_ordering,
-            "orderPropertyName": order_property_name,
+            "orderPropertyName": order_property_name, "additionalProperties": additional_properties,
+            "extendedProperties": extended_properties
             }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
         return
 
     def update_collection(self, collection_guid, qualified_name: str = None, display_name: str = None,
-            description: str = None, collection_type: str = None, collection_ordering: str = None,
-            order_property_name: str = None, replace_all_props: bool = False, ) -> None:
+                          description: str = None, collection_type: str = None, collection_ordering: str = None,
+                          order_property_name: str = None, replace_all_props: bool = False,
+                          additional_properties: dict = None, extended_properties: dict = None) -> None:
         """Update the properties of a collection.
 
         Parameters
@@ -1755,9 +1829,11 @@ class CollectionManager(Client):
            Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
 
-            If not provided, the server name associated
-           with the instance is used.
 
         Returns
         -------
@@ -1775,7 +1851,8 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_collection(collection_guid, qualified_name, display_name, description, collection_type,
-                collection_ordering, order_property_name, replace_all_props, ))
+                                          collection_ordering, order_property_name, replace_all_props,
+                                          additional_properties, extended_properties))
         return
 
     async def _async_update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
@@ -1885,8 +1962,8 @@ class CollectionManager(Client):
         return
 
     async def _async_attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-            resource_use_description: str = None, resource_use_props: dict = None, watch_resources: bool = False,
-            make_anchor: bool = False, ) -> None:
+                                       resource_use_description: str = None, resource_use_props: dict = None,
+                                       watch_resources: bool = False, make_anchor: bool = False, ) -> None:
         """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
         Parameters
         ----------
@@ -1935,8 +2012,8 @@ class CollectionManager(Client):
         await self._async_make_request("POST", url, body)
 
     def attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-            resource_use_description: str, resource_use_props: dict = None, watch_resources: bool = False,
-            make_anchor: bool = False, ) -> None:
+                          resource_use_description: str, resource_use_props: dict = None, watch_resources: bool = False,
+                          make_anchor: bool = False, ) -> None:
         """Connect an existing collection to an element using the ResourceList relationship (0019).
         Parameters
         ----------
@@ -1975,7 +2052,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_attach_collection(collection_guid, element_guid, resource_use, resource_use_description,
-                resource_use_props, watch_resources, make_anchor, ))
+                                          resource_use_props, watch_resources, make_anchor, ))
         return
 
     async def _async_detach_collection(self, collection_guid: str, element_guid: str) -> None:
@@ -2079,7 +2156,7 @@ class CollectionManager(Client):
         await self._async_make_request("POST", url, body)
         return
 
-    def delete_collection(self, collection_guid: str, cascade:bool=False) -> None:
+    def delete_collection(self, collection_guid: str, cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted.
 
@@ -2111,7 +2188,8 @@ class CollectionManager(Client):
         return
 
     async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-            collection_qname: str = None, start_from: int = 0, page_size: int = None, ) -> list | str:
+                                            collection_qname: str = None, start_from: int = 0,
+                                            page_size: int = None, ) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -2160,7 +2238,8 @@ class CollectionManager(Client):
         return resp.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-            collection_qname: str = None, start_from: int = 0, page_size: int = None, ) -> list | str:
+                               collection_qname: str = None, start_from: int = 0,
+                               page_size: int = None, ) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
                Parameters
@@ -2199,7 +2278,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collection_members(collection_guid, collection_name, collection_qname, start_from,
-                page_size, ))
+                                               page_size, ))
 
         return resp
 
@@ -2311,7 +2390,7 @@ class CollectionManager(Client):
         return
 
     async def _async_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
-            replace_all_props: bool = False, ) -> None:
+                                                  replace_all_props: bool = False, ) -> None:
         """Update an element's membership to a collection. Async version.
 
         Parameters
@@ -2370,7 +2449,7 @@ class CollectionManager(Client):
         return
 
     def update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
-            replace_all_props: bool = False, ) -> None:
+                                     replace_all_props: bool = False, ) -> None:
         """Update an element's membership to a collection.
 
         Parameters
@@ -2493,7 +2572,7 @@ class CollectionManager(Client):
         return
 
     async def _async_get_member_list(self, collection_guid: str = None, collection_name: str = None,
-            collection_qname: str = None, ) -> list | bool:
+                                     collection_qname: str = None, ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -2529,26 +2608,21 @@ class CollectionManager(Client):
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            member_resp = await self._async_get_collection_by_guid(member_guid)
-            if isinstance(member_resp,(dict,list)):
-                member = member_resp.get("element", None)
-                if member is None:
-                    continue
-            else:
-                continue
-            # print(json.dumps(member, indent = 4))
-
-            member_instance = {
-                "name": member["properties"]["name"], "qualifiedName": member["properties"]["qualifiedName"],
-                "guid": member["elementHeader"]["guid"], "description": member["properties"]["description"],
-                "collectionType": member["properties"]["collectionType"],
-                }
-            member_list.append(member_instance)
+            # member_resp = await self._async_get_collection_by_guid(member_guid)
+            member = await self._async_get_element_by_guid_(member_guid)
+            if isinstance(member, dict):
+                member_instance = {
+                    "name": member["properties"].get('displayName', ''),
+                    "qualifiedName": member["properties"]["qualifiedName"], "guid": member["elementHeader"]["guid"],
+                    "description": member["properties"].get("description", ''),
+                    "type": member["elementHeader"]["type"]['typeName'],
+                    }
+                member_list.append(member_instance)
 
         return member_list if len(member_list) > 0 else "No members found"
 
     def get_member_list(self, collection_guid: str = None, collection_name: str = None,
-            collection_qname: str = None, ) -> list | bool:
+                        collection_qname: str = None, ) -> list | bool:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -2592,23 +2666,19 @@ class CollectionManager(Client):
         description = properties.get("description", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
         collection_type = properties.get("collectionType", "") or ""
-        classifications = "\n* ".join(properties.get("classifications", [])) or ""
+        additional_properties = properties.get("additionalProperties", {}) or {}
+        extended_properties = properties.get("extendedProperties", {}) or {}
+        classifications = ",  ".join(properties.get("classifications", [])) or ""
         # classification_names = ""
         # classifications = element['elementHeader'].get("classifications", [])
         # for classification in classifications:
         #     classification_names += f"{classification['classificationName']}, "
 
-
-
         return {
-            'guid': guid, 
-            'properties': properties, 
-            'display_name': display_name, 
-            'description': description,
-            'qualified_name': qualified_name,
-            'classifications': classifications,
-            'collection_type': collection_type
-        }
+            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'qualified_name': qualified_name, 'classifications': classifications, 'collection_type': collection_type,
+            'additional_properties': additional_properties, 'extended_properties': extended_properties,
+            }
 
     def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
                                          collection_type: str = None) -> str | list:
@@ -2632,26 +2702,19 @@ class CollectionManager(Client):
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
-            columns = [
-                {'name': 'Collection Name', 'key': 'display_name'},
+            columns = [{'name': 'Collection Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name'},
                 {'name': 'Collection Type', 'key': 'collection_type'},
                 {'name': 'Classifications', 'key': 'classifications'},
-                {'name': 'Description', 'key': 'description', 'format': True}
-            ]
+                {'name': 'Description', 'key': 'description', 'format': True}]
             if collection_type is None:
                 entity_type = "Collection"
             else:
                 entity_type = collection_type
 
-            return generate_output(
-                elements=elements,
-                search_string=filter,
-                entity_type=entity_type,
-                output_format=output_format,
-                extract_properties_func=self._extract_collection_properties,
-                columns=columns if output_format == 'LIST' else None
-            )
+            return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
+                output_format=output_format, extract_properties_func=self._extract_collection_properties,
+                columns=columns if output_format == 'LIST' else None)
 
         # Default case
         return None
@@ -2706,14 +2769,12 @@ class CollectionManager(Client):
             # For LIST format, add a column with bulleted list of qualified names
             elif output_format == "LIST":
                 # Define columns for LIST format, including the new Members column
-                columns = [
-                    {'name': 'Collection Name', 'key': 'display_name'},
+                columns = [{'name': 'Collection Name', 'key': 'display_name'},
                     {'name': 'Qualified Name', 'key': 'qualified_name'},
                     {'name': 'Collection Type', 'key': 'collection_type'},
                     {'name': 'Description', 'key': 'description', 'format': True},
                     {'name': 'Classifications', 'key': 'classifications'},
-                    {'name': 'Members', 'key': 'members', 'format': True}
-                ]
+                    {'name': 'Members', 'key': 'members', 'format': True}]
 
                 # Create a function to add member information to the properties
                 def get_additional_props(element, guid, output_format):
@@ -2726,25 +2787,17 @@ class CollectionManager(Client):
 
                 # Generate output with the additional properties
 
-
-                return generate_output(
-                    elements=elements,
-                    search_string=filter,
-                    entity_type=entity_type,
-                    output_format=output_format,
-                    extract_properties_func=self._extract_collection_properties,
-                    get_additional_props_func=get_additional_props,
-                    columns=columns
-                )
+                return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
+                    output_format=output_format, extract_properties_func=self._extract_collection_properties,
+                    get_additional_props_func=get_additional_props, columns=columns)
 
         # For FORM, REPORT, JSON formats, keep behavior unchanged
         return self.generate_basic_structured_output(elements, filter, output_format, collection_type)
 
-    def generate_data_class_output(self, elements, filter, output_format) -> str | list:
-        return self.generate_basic_structured_output(elements, filter, output_format)
-
-    def generate_data_field_output(self, elements, filter, output_format) -> str | list:
-        return self.generate_basic_structured_output(elements, filter, output_format)
+    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return
+    # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(
+    # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(
+    # elements, filter, output_format)
 
 
 if __name__ == "__main__":

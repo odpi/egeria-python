@@ -94,7 +94,7 @@ def display_collections(
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
             output = m_client.find_collections(
-                search_string.strip(), None, False, ends_with=False, ignore_case=True,
+                search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
                 output_format=output_format
                 )
             if output == NO_ELEMENTS_FOUND:
@@ -129,7 +129,7 @@ def display_collections(
         table.add_column("Members")
 
         collections = m_client.find_collections(
-            search_string.strip(), None, False, ends_with=False, ignore_case=True,
+            search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
             output_format = "DICT"
         )
         if type(collections) is list:

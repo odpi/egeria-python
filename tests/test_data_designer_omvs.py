@@ -188,32 +188,7 @@ class TestDataDesigner:
         finally:
             m_client.close_session()
 
-    def test_delete_data_field(self):
-        guid = 'a818312e-97d6-4923-88dc-d763232d5d3a'
-        # guid = 'b18df5d5-23c6-4c85-a06d-e1da6088901c'
 
-        try:
-            m_client = DataDesigner(self.view_server, self.platform_url)
-
-            m_client.create_egeria_bearer_token(self.user, self.password)
-            start_time = time.perf_counter()
-            m_client.delete_data_field(guid)
-            duration = time.perf_counter() - start_time
-            print(
-                f"\n\tDuration was {duration:.2f} seconds"
-            )
-
-            assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            m_client.close_session()
 
 
     def test_find_all_data_structures(self):
@@ -223,7 +198,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="JSON")
+            response = m_client.find_all_data_structures(output_format="LIST")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -429,7 +404,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="DICT")
+            response = m_client.find_all_data_fields(output_format="FORM")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -481,7 +456,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_field_by_guid(self):
-        guid = "97902f9d-c988-4a3a-817a-061d65b086b6"
+        guid = 'cebe4255-e2bb-44f0-947e-8b7f3f731791'
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -503,6 +478,33 @@ class TestDataDesigner:
                 PropertyServerException,
                 UserNotAuthorizedException,
                 ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_delete_data_field(self):
+        guid = 'cebe4255-e2bb-44f0-947e-8b7f3f731791'
+        # guid = 'b18df5d5-23c6-4c85-a06d-e1da6088901c'
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.delete_data_field(guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+            )
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
@@ -577,7 +579,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            search_string = "PatientId"
+            search_string = 'Patient'
             response = m_client.find_data_fields(search_string,output_format="DICT")
             duration = time.perf_counter() - start_time
             print(

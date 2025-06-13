@@ -786,6 +786,45 @@ class Client:
         return q_name
 
 
+    async def _async_get_element_by_guid_(self, element_guid: str) -> dict | str:
+        """
+        Simplified, internal version of get_element_by_guid found in Classification Manager.
+        Retrieve an element by its guid.  Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier for the element
+
+        Returns
+        -------
+        dict | str
+            Returns a string if no element found; otherwise a dict of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        body = {
+            "class": "EffectiveTimeQueryRequestBody",
+            "effectiveTime": None,
+        }
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/elements/"
+               f"{element_guid}?forLineage=false&forDuplicateProcessing=false")
+
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        return elements
+
 
 if __name__ == "__main__":
     print("Main-__client")
