@@ -89,7 +89,7 @@ class TestCollectionManager:
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
             # classification = "RootCollection"
             classification = "DataSpec"
-            response = c_client.get_classified_collections(classification, output_format="JSON")
+            response = c_client.get_classified_collections(classification, output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -131,7 +131,7 @@ class TestCollectionManager:
 
             response = c_client.find_collections(
                 search_string, None, None, True, ignore_case=False,
-                output_format="FORM"
+                output_format="DICT"
             )
             duration = time.perf_counter() - start_time
 
@@ -1108,7 +1108,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = "803326f4-5b0a-44b4-8a2a-58263f16289c"
+            guid = '2b885cad-1e02-44d7-99bd-23e92706f044'
             # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
             name = "Sentinel 2"

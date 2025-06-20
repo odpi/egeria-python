@@ -656,7 +656,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_solution_blueprint_by_guid(self):
-        guid = "ef1ce8f0-41a0-4be1-ac6b-a6febfea125e"
+        guid = "423d0074-6b8a-40f5-8116-8540220bd1c2"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -664,7 +664,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_solution_blueprint_by_guid(guid, output_format='LIST')
+            response = s_client.get_solution_blueprint_by_guid(guid, output_format='DICT')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

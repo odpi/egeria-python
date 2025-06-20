@@ -303,7 +303,7 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, None, output_format, output_profile)
+            return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
     def find_collections(self, search_string: str, as_of_time: str = None, effective_time: str = None,
@@ -2665,18 +2665,31 @@ class CollectionManager(Client):
         display_name = properties.get("name", "") or ""
         description = properties.get("description", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
-        collection_type = properties.get("collectionType", "") or ""
+        # collection_type = properties.get("collectionType", "") or ""
         additional_properties = properties.get("additionalProperties", {}) or {}
         extended_properties = properties.get("extendedProperties", {}) or {}
-        classifications = ",  ".join(properties.get("classifications", [])) or ""
-        # classification_names = ""
-        # classifications = element['elementHeader'].get("classifications", [])
-        # for classification in classifications:
-        #     classification_names += f"{classification['classificationName']}, "
+        # classifications = ",  ".join(properties.get("classifications", [])) or ""
+
+        classification_names = ""
+        classifications = element['elementHeader'].get("classifications", [])
+        for classification in classifications:
+            classification_names += f"{classification['classificationName']}, "
+        classification_names = classification_names[:-2]
+
+        member_names = ""
+        members = self.get_member_list(collection_guid=guid)
+        if isinstance(members, list):
+            for member in members:
+                member_names += f"{member['qualifiedName']}, "
+            member_names = member_names[:-2]
+
+
+
 
         return {
             'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'qualified_name': qualified_name, 'classifications': classifications, 'collection_type': collection_type,
+            'qualified_name': qualified_name, 'classifications': classification_names, 'members': member_names,
+            # 'collection_type': collection_type,
             'additional_properties': additional_properties, 'extended_properties': extended_properties,
             }
 
@@ -2719,80 +2732,116 @@ class CollectionManager(Client):
         # Default case
         return None
 
-    def generate_collection_output(self, elements, filter, collection_type: str, output_format,
-                                   output_profile: str = "CORE") -> str | list | dict:
+
+    def generate_collection_output(self, elements, filter, collection_type,  output_format) -> str | list:
         """
-        Generate output in the specified format for the given elements.
+        Generate output for collections in the specified format.
 
         Args:
-            elements: Dictionary or list of dictionaries containing element data
+            elements: Dictionary or list of dictionaries containing data field elements
+            collection_type: str
+                The type of collection.
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)
-            output_profile: str, optional, default = "CORE"
-                The desired output profile - BASIC, CORE, FULL
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+
         Returns:
-            Formatted output as string or list of dictionaries
+            Formatted output as a string or list of dictionaries
         """
         if collection_type is None:
             entity_type = "Collection"
         else:
             entity_type = collection_type
 
-        # For LIST and DICT formats, get member information
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Description', 'key': 'description', 'format': True},
+                {'name': "Classifications", 'key': 'classifications' },
+                {'name': 'Members', 'key': 'members', 'format': True},
+                ]
 
-        if output_format in ["LIST", "DICT"]:
-            # Get the collection GUID
-            collection_guid = None
-            if isinstance(elements, dict):
-                collection_guid = elements.get('elementHeader', {}).get('guid')
-            elif isinstance(elements, list) and len(elements) > 0:
-                collection_guid = elements[0].get('elementHeader', {}).get('guid')
+            return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
+                output_format=output_format, extract_properties_func=self._extract_collection_properties,
+                columns=columns if output_format == 'LIST' else None)
+        else:
+            return self.generate_basic_structured_output(elements, filter, output_format)
 
-            # Get member list if we have a valid collection GUID
-            members = []
-            if collection_guid:
-                members = self.get_member_list(collection_guid=collection_guid)
-                if isinstance(members, str):  # "No members found" case
-                    members = []
 
-            # For DICT format, include all member information in the result
-            if output_format == "DICT":
-                result = self.generate_basic_structured_output(elements, filter, output_format, collection_type)
-                if isinstance(result, list):
-                    for item in result:
-                        item['members'] = members
-                    return result
-                elif isinstance(result, dict):
-                    result['members'] = members
-                    return result
-
-            # For LIST format, add a column with bulleted list of qualified names
-            elif output_format == "LIST":
-                # Define columns for LIST format, including the new Members column
-                columns = [{'name': 'Collection Name', 'key': 'display_name'},
-                    {'name': 'Qualified Name', 'key': 'qualified_name'},
-                    {'name': 'Collection Type', 'key': 'collection_type'},
-                    {'name': 'Description', 'key': 'description', 'format': True},
-                    {'name': 'Classifications', 'key': 'classifications'},
-                    {'name': 'Members', 'key': 'members', 'format': True}]
-
-                # Create a function to add member information to the properties
-                def get_additional_props(element, guid, output_format):
-                    if not members:
-                        return {'members': ''}
-
-                    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)
-                    member_list = ", ".join([member.get('qualifiedName', '') for member in members])
-                    return {'members': member_list}
-
-                # Generate output with the additional properties
-
-                return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-                    output_format=output_format, extract_properties_func=self._extract_collection_properties,
-                    get_additional_props_func=get_additional_props, columns=columns)
-
-        # For FORM, REPORT, JSON formats, keep behavior unchanged
-        return self.generate_basic_structured_output(elements, filter, output_format, collection_type)
+    # def generate_collection_output(self, elements, filter, collection_type: str, output_format,
+    #                                output_profile: str = "CORE") -> str | list | dict:
+    #     """
+    #     Generate output in the specified format for the given elements.
+    #
+    #     Args:
+    #         elements: Dictionary or list of dictionaries containing element data
+    #         filter: The search string used to find the elements
+    #         output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)
+    #         output_profile: str, optional, default = "CORE"
+    #             The desired output profile - BASIC, CORE, FULL
+    #     Returns:
+    #         Formatted output as string or list of dictionaries
+    #     """
+    #     if collection_type is None:
+    #         entity_type = "Collection"
+    #     else:
+    #         entity_type = collection_type
+    #
+    #     # For LIST and DICT formats, get member information
+    #
+    #     if output_format in ["LIST", "DICT"]:
+    #         # Get the collection GUID
+    #         collection_guid = None
+    #         if isinstance(elements, dict):
+    #             collection_guid = elements.get('elementHeader', {}).get('guid')
+    #         elif isinstance(elements, list) and len(elements) > 0:
+    #             collection_guid = elements[0].get('elementHeader', {}).get('guid')
+    #
+    #         # Get member list if we have a valid collection GUID
+    #         members = []
+    #         if collection_guid:
+    #             members = self.get_member_list(collection_guid=collection_guid)
+    #             if isinstance(members, str):  # "No members found" case
+    #                 members = []
+    #
+    #         # For DICT format, include all member information in the result
+    #         if output_format == "DICT":
+    #             result = self.generate_basic_structured_output(elements, filter, output_format, collection_type)
+    #             if isinstance(result, list):
+    #                 for item in result:
+    #                     item['members'] = members
+    #                 return result
+    #             elif isinstance(result, dict):
+    #                 result['members'] = members
+    #                 return result
+    #
+    #         # For LIST format, add a column with bulleted list of qualified names
+    #         elif output_format == "LIST":
+    #             # Define columns for LIST format, including the new Members column
+    #             columns = [{'name': 'Collection Name', 'key': 'display_name'},
+    #                 {'name': 'Qualified Name', 'key': 'qualified_name'},
+    #                 {'name': 'Collection Type', 'key': 'collection_type'},
+    #                 {'name': 'Description', 'key': 'description', 'format': True},
+    #                 {'name': 'Classifications', 'key': 'classifications'},
+    #                 {'name': 'Members', 'key': 'members', 'format': True}]
+    #
+    #             # Create a function to add member information to the properties
+    #             def get_additional_props(element, guid, output_format):
+    #                 if not members:
+    #                     return {'members': ''}
+    #
+    #                 # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)
+    #                 member_list = ", ".join([member.get('qualifiedName', '') for member in members])
+    #                 return {'members': member_list}
+    #
+    #             # Generate output with the additional properties
+    #
+    #             return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
+    #                 output_format=output_format, extract_properties_func=self._extract_collection_properties,
+    #                 get_additional_props_func=get_additional_props, columns=columns)
+    #
+    #     # For FORM, REPORT, JSON formats, keep behavior unchanged
+    #     return self.generate_basic_structured_output(elements, filter, output_format, collection_type)
 
     # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return
     # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(

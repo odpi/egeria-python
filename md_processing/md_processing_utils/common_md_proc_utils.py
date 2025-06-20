@@ -154,6 +154,9 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     logger.error(msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
+                elif parsed_attributes[key]['valid'] is False:
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += parsed_attributes[key]['reason']
 
             elif style == 'GUID':
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
@@ -244,7 +247,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
             logger.info(msg)
 
 
-    if parsed_output.get('qualified_name',None):
+    if parsed_output.get('qualified_name',None) and "* Qualified Name" not in parsed_output['display']:
         parsed_output['display'] += f"\n\t* Qualified Name: `{parsed_output['qualified_name']}`\n\t"
     if parsed_output.get('guid',None):
         parsed_output['display'] += f"\n\t* GUID: `{parsed_output['guid']}`\n\t"
@@ -341,8 +344,12 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             elif style == 'Reference Name':
                 parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
-                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
-                    'exists'] is False):
+                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None)):
+                    msg = f"Required parameter `{parsed_attributes[key]['value']}` is missing"
+                    logger.error(msg)
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += msg
+                elif parsed_attributes[key]['value'] and parsed_attributes['exists'] is False:
                     msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
                     logger.error(msg)
                     parsed_output['valid'] = False
@@ -365,7 +372,6 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
             elif style == 'Bool':
                 parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
-
 
             elif style == 'Reference Name List':
                 parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
@@ -671,6 +677,7 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     """
     Processes element identifiers from the input text using the labels supplied,
     checking if the element exists in Egeria, and validating the information.
+    Only a single element is allowed.
 
     Parameters
     ----------
@@ -704,7 +711,12 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     value = None
 
     element_name = extract_attribute(txt, element_labels)
+
     if element_name:
+        if '\n' in element_name or ',' in element_name:
+            msg = f"Element name `{element_name}` appears to be a list rather than a single element"
+            logger.error(msg)
+            return {"status": ERROR, "reason": msg, "value": None, "valid": False, "exists": False, }
         q_name, guid, unique, exists = get_element_by_name(egeria_client, element_type, element_name)
         value = element_name
     else:

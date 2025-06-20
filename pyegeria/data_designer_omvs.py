@@ -624,7 +624,7 @@ r       replace_all_properties: bool, default = False
         return collection_list
 
 
-    def get_data_field_rel_elements_dict(self, field_struct: dict)-> dict | str:
+    def get_data_rel_elements_dict(self, el_struct: dict)-> dict | str:
         """return the lists of objects related to a data field"""
 
         parent_guids = []
@@ -653,11 +653,24 @@ r       replace_all_properties: bool, default = False
 
         member_of_data_spec_guids = []
         member_of_data_spec_names = []
-        member_of_data_specs_qnames = []
+        member_of_data_spec_qnames = []
+
+        member_data_field_guids = []
+        member_data_field_names = []
+        member_data_field_qnames = []
+
+        nested_data_classes_guids = []
+        nested_data_classes_names = []
+        nested_data_classes_qnames = []
+
+        specialized_data_classes_guids = []
+        specialized_data_classes_names = []
+        specialized_data_classes_qnames = []
+
 
 
         # terms
-        assigned_meanings = field_struct["assignedMeanings"]
+        assigned_meanings = el_struct.get("assignedMeanings", {})
         for meaning in assigned_meanings:
             assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
             assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
@@ -665,7 +678,7 @@ r       replace_all_properties: bool, default = False
 
 
         # extract existing related data structure and data field elements
-        other_related_elements = field_struct["otherRelatedElements"]
+        other_related_elements = el_struct["otherRelatedElements"]
 
         for rel in other_related_elements:
             related_element = rel["relatedElement"]
@@ -684,7 +697,7 @@ r       replace_all_properties: bool, default = False
                 parent_qnames.append(qualified_name)
 
 
-        member_of_collections = field_struct["memberOfCollections"]
+        member_of_collections = el_struct.get("memberOfCollections",{})
         for collection in member_of_collections:
             c_type = collection["relatedElement"]["properties"].get("collectionType","") or ""
             guid = collection["relatedElement"]["elementHeader"]["guid"]
@@ -700,7 +713,33 @@ r       replace_all_properties: bool, default = False
                 elif type_name == "DataSpec":
                     member_of_data_spec_guids.append(guid)
                     member_of_data_spec_names.append(name)
-                    member_of_data_specs_qnames.append(qualifiedName)
+                    member_of_data_spec_qnames.append(qualifiedName)
+
+        member_data_fields = el_struct.get("memberDataFields", {})
+        for data_field in member_data_fields:
+            member_data_field_guids.append(data_field["elementHeader"]["guid"])
+            member_data_field_names.append(data_field["properties"]["displayName"])
+            member_data_field_qnames.append(data_field["properties"]["qualifiedName"])
+
+        data_classes = el_struct.get("assignedDataClasses", {})
+        for data_class in data_classes:
+            data_class_guids.append(data_class['relatedElement']["elementHeader"]["guid"])
+            data_class_names.append(data_class['relatedElement']["properties"]["displayName"])
+            data_class_qnames.append(data_class['relatedElement']["properties"]["qualifiedName"])
+
+        nested_data_classes = el_struct.get("nestedDataClasses", {})
+        for nested_data_class in nested_data_classes:
+            nested_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
+            nested_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
+            nested_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+
+        specialized_data_classes = el_struct.get("nestedDataClasses", {})
+        for nested_data_class in specialized_data_classes:
+            specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
+            specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
+            specialized_data_classes_qnames.appe
+
+        mermaid = el_struct.get("mermaidGraph", {})
 
         return {"parent_guids": parent_guids,
                 "parent_names": parent_names,
@@ -718,6 +757,14 @@ r       replace_all_properties: bool, default = False
                 "data_class_names": data_class_names,
                 "data_class_qnames": data_class_qnames,
 
+                "nested_data_class_guids": nested_data_classes_guids,
+                "nested_data_class_names": nested_data_classes_names,
+                "nested data_class_qnames": nested_data_classes_qnames,
+
+                "specialized_data_class_guids": specialized_data_classes_guids,
+                "specialized_data_class_names": specialized_data_classes_names,
+                "specialized data_class_qnames": specialized_data_classes_qnames,
+
                 "external_references_guids": external_references_guids,
                 "external_references_names": external_references_names,
                 "external_references_qnames": external_references_qnames,
@@ -728,7 +775,13 @@ r       replace_all_properties: bool, default = False
 
                 "member_of_data_spec_guids": member_of_data_spec_guids,
                 "member_of_data_spec_names": member_of_data_spec_names,
-                "member_of_data_specs_qnames": member_of_data_specs_qnames,
+                "member_of_data_spec_qnames": member_of_data_spec_qnames,
+
+                "member_data_field_guids": member_data_field_guids,
+                "member_data_field_names": member_data_field_names,
+                "member_data_field_qnames": member_data_field_qnames,
+
+                "mermaid" : mermaid,
             }
 
 
@@ -737,8 +790,8 @@ r       replace_all_properties: bool, default = False
 
         data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
         if isinstance(data_field_entry, str):
-            return NO_ELEMENTS_FOUND
-        return self.get_data_field_rel_elements_dict(data_field_entry)
+            return None
+        return self.get_data_rel_elements_dict(data_field_entry)
 
 
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
@@ -2526,6 +2579,8 @@ r       replace_all_properties: bool, default = False
             }
 
         """
+        if filter == "*":
+            filter = None
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
@@ -2643,7 +2698,8 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
-
+        if filter == "*":
+            filter = None
         body = {"filter": filter}
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
@@ -3391,7 +3447,7 @@ r       replace_all_properties: bool, default = False
         """
         replace_all_properties_s = str(replace_all_properties).lower()
 
-        url = (f"{base_path(self, self.view_server)}/data-class/{data_class_guid}/update?"
+        url = (f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/update?"
                f"replaceAllProperties={replace_all_properties_s}")
 
         await self._async_make_request("POST", url, body_slimmer(body))
@@ -4091,6 +4147,7 @@ r       replace_all_properties: bool, default = False
             }
 
         """
+
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
@@ -4208,7 +4265,8 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
-
+        if filter == "*":
+            filter = None
         body = {"filter": filter}
 
         starts_with_s = str(starts_with).lower()
@@ -5123,15 +5181,20 @@ r       replace_all_properties: bool, default = False
         additional_properties = properties.get("additionalProperties", {})
 
         # Now lets get the related elements
-        related_elements = self.get_data_field_rel_elements_dict(element)
-        data_dictionaries = related_elements.get("member_of_data_dicts_qnames", [])
-        data_structures = related_elements.get("data_structure_qnames", [])
-        assigned_meanings = related_elements.get("assigned_meanings_qnames", [])
-        parent_names = related_elements.get("parent_qnames", [])
+        associated_elements = self.get_data_rel_elements_dict(element)
+        data_specs = associated_elements.get("member_of_data_spec_qnames", [])
+        # data_structures = associated_elements.get("member_of_data_struct_qnames", [])
+        assigned_meanings = associated_elements.get("assigned_meanings_qnames", [])
+        parent_names = associated_elements.get("parent_qnames", [])
+        member_data_fields = associated_elements.get("member_data_field_qnames", [])
+
+        mermaid = element.get('mermaidGraph', "") or ""
+        # mermaid_md = "```mermaid\n" + mermaid + "\n```"
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'qualified_name': qualified_name, 'namespace': namespace, 'version_identifier': version_id
+             'properties': properties, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description, 'data_fields': member_data_fields,
+            'data_specification': data_specs,  'namespace': namespace, 'version_identifier': version_id,
+            'extended_properties': extended_properties, 'additional_properties': additional_properties, 'GUID': guid,'mermaid': mermaid
             }
 
     def _extract_data_class_properties(self, element: dict) -> dict:
@@ -5150,9 +5213,36 @@ r       replace_all_properties: bool, default = False
         description = properties.get("description", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
 
+        data_type = properties.get('dataType', "") or ""
+        match_property_names = properties.get('matchPropertyNames', []) or []
+        match_threshold = properties.get('matchThreshold', 0)
+        allow_duplicate_values = properties.get('allowDuplicateValues', False)
+        is_case_sensitive = properties.get('isCaseSensitive', False)
+        is_nullable = properties.get('isNullable', False)
+
+        # Get data type from extendedProperties and additionalProperties if available
+        extended_properties = properties.get("extendedProperties", {})
+        additional_properties = properties.get("additionalProperties", {})
+
+        # Now lets get the related elements
+        associated_elements = self.get_data_rel_elements_dict(element)
+        data_dictionaries = associated_elements.get("member_of_data_dicts_qnames", [])
+        assigned_meanings = associated_elements.get("assigned_meanings_qnames", [])
+        parent_names = associated_elements.get("parent_qnames", [])
+        nested_data_classes = associated_elements.get("nested_data_class_qnames", [])
+        specialized_data_classes = associated_elements.get("specialized_data_class_qnames", [])
+        mermaid = element.get('mermaidGraph', "") or ""
+
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'qualified_name': qualified_name
+            'display_name': display_name, 'description': description, 'assigned_meanings': assigned_meanings,
+            'qualified_name': qualified_name, 'data_type': data_type, 'match_property_names': match_property_names,
+            'match_threshold': match_threshold, 'allow_duplicate_values': allow_duplicate_values,
+            'is_case_sensitive': is_case_sensitive, 'is_nullable': is_nullable, 'GUID': guid,
+            'properties': properties, 'parent_names': parent_names, 'nested_data_classes': nested_data_classes,
+            'specialized_data_classes': specialized_data_classes,
+            'extended_properties': extended_properties,
+            'additional_properties': additional_properties, 'data_dictionaries': data_dictionaries,
+             'mermaid': mermaid
             }
 
     def _extract_data_field_properties(self, element: dict) -> dict:
@@ -5179,25 +5269,25 @@ r       replace_all_properties: bool, default = False
         ordered_values = properties.get('orderedValues', False)
         sort_order = properties.get('sortOrder', "") or ""
 
-
-
         # Get data type from extendedProperties and additionalProperties if available
         extended_properties = properties.get("extendedProperties", {})
         additional_properties = properties.get("additionalProperties", {})
 
         # Now lets get the related elements
-        related_elements = self.get_data_field_rel_elements_dict(element)
-        data_dictionaries = related_elements.get("member_of_data_dicts_qnames",[])
-        data_structures = related_elements.get("data_structure_qnames",[])
-        assigned_meanings = related_elements.get("assigned_meanings_qnames",[])
-        parent_names = related_elements.get("parent_qnames",[])
+        associated_elements = self.get_data_rel_elements_dict(element)
+        data_dictionaries = associated_elements.get("member_of_data_dicts_qnames",[])
+        data_structures = associated_elements.get("data_structure_qnames",[])
+        assigned_meanings = associated_elements.get("assigned_meanings_qnames",[])
+        parent_names = associated_elements.get("parent_qnames",[])
+        data_class = associated_elements.get("data_class_qnames",[])
+        mermaid = element.get('mermaidGraph', "") or ""
 
         return {
             'display_name': display_name, 'description': description, 'assigned_meanings': assigned_meanings,
-            'qualified_name': qualified_name, 'data_type': data_type, 'guid': guid, 'properties': properties,
+            'qualified_name': qualified_name, 'data_type': data_type, 'data_class': data_class, 'GUID': guid, 'properties': properties,
             'is_nullable': is_nullable, 'minimum_length': minimum_length, 'length': length, 'precision': precision,
             'ordered_values': ordered_values, 'sort_order': sort_order, 'parent_names': parent_names, 'extended_properties': extended_properties,
-            'additional_properties': additional_properties,'data_dictionaries': data_dictionaries, 'data_structures': data_structures
+            'additional_properties': additional_properties,'data_dictionaries': data_dictionaries, 'data_structures': data_structures, 'mermaid': mermaid
             }
 
     def generate_basic_structured_output(self, elements, filter, output_format) -> str | list:
@@ -5243,7 +5333,7 @@ r       replace_all_properties: bool, default = False
         Returns:
             Formatted output as string or list of dictionaries
         """
-        if output_format in ["MD", "FORM", "REPORT", "LIST"]:
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Structure Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Namespace', 'key': 'namespace'},
@@ -5268,7 +5358,7 @@ r       replace_all_properties: bool, default = False
         Returns:
             Formatted output as string or list of dictionaries
         """
-        if output_format in ["MD", "FORM", "REPORT", "LIST"]:
+        if output_format in ["DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Class Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name'},
@@ -5292,7 +5382,7 @@ r       replace_all_properties: bool, default = False
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT"]:
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Field Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Data Type', 'key': 'data_type'},

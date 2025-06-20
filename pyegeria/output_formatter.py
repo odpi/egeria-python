@@ -56,11 +56,22 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
     output = ""
     if isinstance(attribute_value,str):
         attribute_value = attribute_value.strip() if attribute_value else ""
-    attribute_title = attribute_name.title() if attribute_name else ""
+    elif isinstance(attribute_value,list):
+        attribute_value = ",\n".join(attribute_value)
+    if attribute_name:
+        if attribute_name.upper() == "GUID":
+            attribute_title = attribute_name.upper()
+        else:
+            attribute_title = attribute_name.title()
+    else:
+        attribute_title = ""
+
     if output_type in ["FORM", "MD"]:
+        if attribute_name.lower() == "mermaid":
+            return "\n"
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type == "REPORT":
-        if attribute_title == 'Mermaid Graph':
+        if attribute_title in ['Mermaid Graph', 'Mermaid']:
             output = f"## Mermaid Graph\n```mermaid\n{attribute_value}\n```\n"
         elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
@@ -125,15 +136,15 @@ def generate_entity_md(elements: List[Dict],
 
         # Add common attributes
         for key, value in props.items():
-            if key not in ['guid', 'properties', 'display_name']:
+            if key not in [ 'properties', 'display_name']:
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
         # Add additional properties
         for key, value in additional_props.items():
             elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
-        # Add GUID
-        elements_md += make_md_attribute("GUID", props['guid'], output_format)
+        # # Add GUID
+        # elements_md += make_md_attribute("GUID", props['guid'], output_format)
 
         # Add separator if not the last element
         if element != elements[-1]:
@@ -308,6 +319,8 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
 
     result = []
     for element in elements:
+        if element is None:
+            continue
         body = {'guid': element['elementHeader']['guid']}
         for key in element['properties']:
             body[key] = element['properties'][key]

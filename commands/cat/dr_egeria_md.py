@@ -21,10 +21,13 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_glossary_structure_command, process_term_revision_history_command,
                            process_create_term_term_relationship_command, process_term_details_command,
                            process_information_supply_chain_upsert_command, process_information_supply_chain_segment_upsert_command,
-                           process_information_supply_chain_link_unlink_command)
+                           process_information_supply_chain_link_unlink_command,process_sol_arch_list_command)
 from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
-                                                              process_data_dict_list_command,
+                                                              process_data_collection_list_command,
+                                                              process_data_structure_list_command,
+                                                              process_data_field_list_command,
+                                                              process_data_class_list_command,
                                                               process_data_field_upsert_command,
                                                               process_data_structure_upsert_command,
                                                               process_data_class_upsert_command)
@@ -131,6 +134,14 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
             elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint",
                                        "Update Solution Blueprint"]:
                 result = process_blueprint_upsert_command(client, current_block, directive)
+            elif potential_command in ["View Solution Blueprints", "View Blueprint", "View Solution Blueprint"]:
+                result = process_sol_arch_list_command(client, current_block, "Solution Blueprints",directive)
+            elif potential_command in ["View Solution Component", "View Solution Components"]:
+                result = process_sol_arch_list_command(client, current_block, "Solution Components",directive)
+            elif potential_command in ["View Solution Roles", "View Solution Role"]:
+                result = process_sol_arch_list_command(client, current_block, "Solution Roles",directive)
+            elif potential_command in ["View Information Supply Chain", "View Information Supply Chains"]:
+                result = process_sol_arch_list_command(client, current_block, "Information Supply Chains",directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Information Supply Chain", "Update Information Supply Chain"]:
@@ -152,8 +163,14 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
                 result = process_data_structure_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Data Class", "Update Data Class"]:
                 result = process_data_class_upsert_command(client, current_block, directive)
-            elif potential_command in ["View Data Dictionaries", "View Data Dictionary"]:
-                result = process_data_dict_list_command(client, current_block, directive)
+            elif potential_command in ["View Data Dictionaries", "View Data Dictionary", "View Data Specifications", "View Data Specs"]:
+                result = process_data_collection_list_command(client, current_block, directive)
+            elif potential_command in ["View Data Structures", "View Data Structure"]:
+                result = process_data_structure_list_command(client, current_block, directive)
+            elif potential_command in ["View Data Fields", "View Data Field"]:
+                result = process_data_field_list_command(client, current_block, directive)
+            elif potential_command in ["View Data Classes", "View Data Class"]:
+                result = process_data_class_list_command(client, current_block, directive)
 
 
             else:

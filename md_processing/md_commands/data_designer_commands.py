@@ -90,8 +90,8 @@ def update_data_collection_memberships(egeria_client: EgeriaTech, entity_type: s
 
         coll_list = egeria_client.get_data_memberships(get_command, guid)
         if coll_list is None:
-            logger.error("Internal Error -> the collection list cannot be None")
-            return
+            logger.warning("Unexpected -> the collection list was None - assigning empty dict")
+            coll_list = {}
         # compare the existing collections to desired collections
         if collection_class == "DataDictionary":
             as_is = set(coll_list.get("DictList", {}))
@@ -166,6 +166,9 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
     if replace_all_props:
         rel_el_list = egeria_client.get_data_field_rel_elements(guid)
         # should I throw an exception if empty?
+        if rel_el_list is None:
+            logger.warning("Unexpected -> the list was None - assigning empty list")
+            rel_el_list = {}
         as_is_data_structs = set(rel_el_list.get("data_structure_guids", []))
         as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
         as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
@@ -174,7 +177,7 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         to_be_data_structs = set(structure_list) if structure_list is not None else set()
         to_be_parent_fields = set(parent_field_list) if parent_field_list is not None else set()
         to_be_assigned_meanings = set(terms) if terms is not None else set()
-        to_be_data_classes = set(data_class_guid) if data_class_guid is not None else set()
+        to_be_data_classes = set([data_class_guid]) if data_class_guid is not None else set()
 
         logger.trace(f"as_is_data_structs: {list(as_is_data_structs)} to_be_data_struct: {list(to_be_data_structs)}")
         logger.trace(
@@ -233,14 +236,24 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         logger.trace(f"classes_to_remove: {list(classes_to_remove)}")
         if len(terms_to_remove) > 0:
             for dc in classes_to_remove:
-                egeria_client.detach_data_class_definition(guid, dc)
+                body = {
+                    "class": "MetadataSourceRequestBody",
+                    "forLineage": False,
+                    "forDuplicateProcessing": False
+                }
+                egeria_client.detach_data_class_definition(guid, dc, body)
                 msg = f"Removed `{dc}` from `{display_name}`"
                 logger.trace(msg)
         classes_to_add = to_be_data_classes - as_is_data_classes
         logger.trace(f"classes_to_add: {list(classes_to_add)}")
         if len(terms_to_add) > 0:
             for dc in classes_to_add:
-                egeria_client.link_data_class_definition(guid, dc)
+                body = {
+                    "class": "MetadataSourceRequestBody",
+                    "forLineage": False,
+                    "forDuplicateProcessing": False
+                    }
+                egeria_client.link_data_class_definition(guid, dc, body)
                 msg = f"Added `{dc}` to`{display_name}`"
                 logger.trace(msg)
 
@@ -847,6 +860,8 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         in_data_structure_names = attributes.get('In Data Structure Names', {}).get('name_list', None)
 
         data_class = attributes.get('Data Class', {}).get('value', None)
+        data_class_guid = attributes.get('Data Class', {}).get('guid', None)
+
         glossary_term = attributes.get('Glossary Term', {}).get('value', None)
 
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
@@ -924,11 +939,12 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                 # Sync data field related elements (data structure, parent data fields, terms, data classes
                 sync_data_field_rel_elements(egeria_client, data_structure_guid_list, parent_data_field_guids,
-                                             [glossary_term_guid], data_class, guid, display_name, replace_all_props)
+                                             glossary_term_guid, data_class_guid, guid, display_name, replace_all_props)
                 core_props += f"\n\n## In Data Structure {in_data_structure_names}\n\n"
                 core_props += f"\n\n## Glossary Term \n\n{glossary_term}\n\n"
                 core_props += f"\n\n## Parent Data Field\n\n{parent_data_field_names}\n\n"
-                core_props += "\n___\n\n"
+                core_props += f"\n\n## Data Class\n\n{data_class}\n\n"
+                core_props += "\n_______________________________________________________________________________\n\n"
 
                 # Update data classes
                 logger.success(f"Updated Element `{display_name}`\n\n___")
@@ -1008,13 +1024,22 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             core_props += f"\n\n## Parent Data Field\n\n{parent_data_field_names}\n\n"
 
                         # Link data class
-                        # if data_class:
-                        #     egeria_client.link_data_class_definition(guid, data_class)
-                        #     msg = f"Adding data class `{data_class}` to data field {display_name}"
-                        #     logger.info(msg)
+                        if data_class:
+                            body = {
+                              "class": "MetadataSourceRequestBody",
+                              "externalSourceGUID": external_source_guid,
+                              "externalSourceName": external_source_name,
+                              "effectiveTime": effective_time,
+                              "forLineage": for_lineage,
+                              "forDuplicateProcessing": for_duplicate_processing
+                            }
+                            egeria_client.link_data_class_definition(guid, data_class_guid, body)
+                            msg = f"Adding data class `{data_class}` to data field {display_name}"
+                            logger.info(msg)
 
                         logger.success(f"Created Element `{display_name}` with guid `{guid}`")
-                        core_props += "\n====================================================\n\n"
+                        logger.success("=====================================================\n\n")
+                        core_props += "\n___\n\n"
                         return core_props
 
                     else:
@@ -1070,8 +1095,8 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         external_source_guid = attributes.get('External Source Name', {}).get('guid', None)
         external_source_name = attributes.get('External Source Name', {}).get('value', None)
         effective_time = attributes.get('Effective Time', {}).get('value', None)
-        for_lineage = attributes.get('For Lineage', {}).get('value', None)
-        for_duplicate_processing = attributes.get('For Duplicate Processing', {}).get('value', None)
+        for_lineage = attributes.get('For Lineage', {}).get('value', False)
+        for_duplicate_processing = attributes.get('For Duplicate Processing', {}).get('value', False)
         anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
         is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', None)
         # parent_id = attributes.get('Parent ID', {}).get('value', None)
@@ -1282,7 +1307,76 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
 
 @logger.catch
-def process_data_dict_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a Data Dictionary list object_action by extracting key attributes such as
+     search string from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting term-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+    if object_type in ["Data Dictionary", "Data Dictionaries", "DataDict", "DataDictionary"]:
+        col_type = "DataDictionary"
+    elif object_type in ["Data Specification", "Data Specifications", "Data Specs"]:
+        col_type = "DataSpec"
+    else:
+        col_type = "Collection"
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    attributes = parsed_output['attributes']
+
+    valid = parsed_output['valid']
+
+    print(Markdown(parsed_output['display']))
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+            logger.error(msg)
+        return valid
+
+    elif directive == "process":
+        attributes = parsed_output['attributes']
+        search_string = attributes.get('Search String', {}).get('value', '*')
+        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
+        detailed = attributes.get('Detailed', {}).get('value', False)
+
+        try:
+            if not valid:  # First validate the command before we process it
+                msg = f"Validation failed for {object_action} `{object_type}`\n"
+                logger.error(msg)
+                return None
+
+            list_md = f"\n# `{col_type}` with filter: `{search_string}`\n\n"
+            if search_string == "*":
+                struct = egeria_client.get_classified_collections(col_type, output_format=output_format)
+            else:
+                struct = egeria_client.find_collections(search_string, output_format=output_format)
+
+            if output_format == "DICT":
+                list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
+            else:
+                list_md += struct
+            logger.info(f"Wrote `{col_type}` for search string: `{search_string}`")
+
+            return list_md
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            console.print_exception(show_locals=True)
+            return None
+    else:
+        return None
+
+def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a Data Dictionary list object_action by extracting key attributes such as
      search string from the given text.
@@ -1324,13 +1418,134 @@ def process_data_dict_list_command(egeria_client: EgeriaTech, txt: str, directiv
                 logger.error(msg)
                 return None
 
-            list_md = f"\n# Data Dictionaries with filter: `{search_string}`\n\n"
+            list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
+            struct = egeria_client.find_data_structures(search_string, output_format=output_format)
+
             if output_format == "DICT":
-                struct = egeria_client.get_classified_collections('DataDictionary', output_format=output_format)
-                list_md += f"```{json.dumps(struct, indent=4)}```\n"
+                list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
             else:
-                list_md += egeria_client.find_collections(search_string, output_format=output_format)
-            logger.info(f"Wrote Dictionaries for search string: `{search_string}`")
+                list_md += struct
+            logger.info(f"Wrote `{object_type}` for search string: `{search_string}`")
+
+            return list_md
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            console.print_exception(show_locals=True)
+            return None
+    else:
+        return None
+
+def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a Data Dictionary list object_action by extracting key attributes such as
+     search string from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting term-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    attributes = parsed_output['attributes']
+
+    valid = parsed_output['valid']
+
+    print(Markdown(parsed_output['display']))
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+            logger.error(msg)
+        return valid
+
+    elif directive == "process":
+        attributes = parsed_output['attributes']
+        search_string = attributes.get('Search String', {}).get('value', '*')
+        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
+        detailed = attributes.get('Detailed', {}).get('value', False)
+
+        try:
+            if not valid:  # First validate the command before we process it
+                msg = f"Validation failed for {object_action} `{object_type}`\n"
+                logger.error(msg)
+                return None
+
+            list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
+            struct = egeria_client.find_data_fields(search_string, output_format=output_format)
+
+            if output_format == "DICT":
+                list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
+            else:
+                list_md += struct
+            logger.info(f"Wrote `{object_type}` for search string: `{search_string}`")
+
+            return list_md
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            console.print_exception(show_locals=True)
+            return None
+    else:
+        return None
+
+def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a Data Dictionary list object_action by extracting key attributes such as
+     search string from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting term-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    attributes = parsed_output['attributes']
+
+    valid = parsed_output['valid']
+
+    print(Markdown(parsed_output['display']))
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+            logger.error(msg)
+        return valid
+
+    elif directive == "process":
+        attributes = parsed_output['attributes']
+        search_string = attributes.get('Search String', {}).get('value', '*')
+        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
+        detailed = attributes.get('Detailed', {}).get('value', False)
+
+        try:
+            if not valid:  # First validate the command before we process it
+                msg = f"Validation failed for {object_action} `{object_type}`\n"
+                logger.error(msg)
+                return None
+
+            list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
+            struct = egeria_client.find_data_classes(search_string, output_format=output_format)
+
+            if output_format == "DICT":
+                list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
+            else:
+                list_md += struct
+            logger.info(f"Wrote `{object_type}` for search string: `{search_string}`")
 
             return list_md
 

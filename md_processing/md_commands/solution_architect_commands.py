@@ -11,7 +11,7 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
@@ -283,7 +283,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1,
                     "properties": {
                         "class": "SolutionBlueprintProperties", "effectiveFrom": effective_from,
-                        "effectiveTo": effective_to, # "typeName": type_name,
+                        "effectiveTo": effective_to,  # "typeName": type_name,
                         "extendedProperties": extended_properties, "qualifiedName": qualified_name,
                         "additionalProperties": additional_properties, "displayName": display_name,
                         "description": description, "version": version_identifier
@@ -312,7 +312,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
 @logger.catch
 def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> \
-Optional[str]:
+        Optional[str]:
     """
     Processes a solution component create or update object_action by extracting key attributes such as
     component name, description, and parent components from the given text.
@@ -494,7 +494,7 @@ Optional[str]:
 @logger.catch
 def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") \
         -> \
-Optional[str]:
+        Optional[str]:
     """
     Processes a solution blueprint create or update object_action by extracting key attributes such as
     blueprint name, description, and usage from the given text.
@@ -799,9 +799,10 @@ def process_information_supply_chain_segment_upsert_command(egeria_client: Egeri
     else:
         return None
 
+
 @logger.catch
 def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTech, txt: str,
-                                                            directive: str = "display") -> Optional[str]:
+                                                         directive: str = "display") -> Optional[str]:
     """
     Processes a solution blueprint create or update object_action by extracting key attributes such as
     blueprint name, description, and usage from the given text.
@@ -814,8 +815,6 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
     command, object_type, object_action = extract_command_plus(txt)
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
-
-
 
     print(Markdown(parsed_output['display']))
 
@@ -843,8 +842,6 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
     extended_prop = attributes.get('Extended Properties', {}).get('value', None)
     extended_properties = json.loads(extended_prop) if extended_prop is not None else None
 
-
-
     if directive == "display":
 
         return None
@@ -871,28 +868,24 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                     body = body_slimmer({
-                      "class" : "MetadataSourceRequestBody",
-                      "externalSourceGUID": external_source_guid,
-                      "externalSourceName": external_source_name,
-                      "effectiveTime" : effective_time,
-                      "forLineage" : False,
-                      "forDuplicateProcessing" : False
+                        "class": "MetadataSourceRequestBody", "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name, "effectiveTime": effective_time,
+                        "forLineage": False, "forDuplicateProcessing": False
 
                         })
 
                 egeria_client.detach_info_supply_chain_segments(segment1, segment2, body)
 
                 logger.success(f"===> Detached segment with {label} from `{segment1}`to {segment2}\n")
-                out = parsed_output['display'].replace('Detach','Link',1)
+                out = parsed_output['display'].replace('Detach', 'Link', 1)
 
                 return (out)
 
 
             elif object_action == "Link":
                 if valid is False and exists:
-                    msg = (
-                        f"-->  Link called `{label}` already exists and result document updated changing "
-                        f"`Link` to `Detach` in processed output\n")
+                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
+                           f"`Link` to `Detach` in processed output\n")
                     logger.error(msg)
 
                 elif valid is False:
@@ -901,16 +894,10 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                     return
                 else:
                     body = {
-                        "class": "InformationSupplyChainLinkRequestBody",
-                        "effectiveTime": effective_time,
-                        "forLineage": False,
-                        "forDuplicateProcessing": False,
-                        "properties": {
-                            "class": "InformationSupplyChainLinkProperties",
-                            "label": label,
-                            "description": description,
-                            "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to
+                        "class": "InformationSupplyChainLinkRequestBody", "effectiveTime": effective_time,
+                        "forLineage": False, "forDuplicateProcessing": False, "properties": {
+                            "class": "InformationSupplyChainLinkProperties", "label": label, "description": description,
+                            "effectiveFrom": effective_from, "effectiveTo": effective_to
                             }
                         }
 
@@ -923,6 +910,76 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
 
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
+            return None
+    else:
+        return None
+
+@logger.catch
+def process_sol_arch_list_command(egeria_client: EgeriaTech, txt: str, kind:str, directive: str = "display" ) -> Optional[str]:
+    """
+    Processes Solution Blueprint list object_action by extracting key attributes such as
+     search string from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting term-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    attributes = parsed_output['attributes']
+
+    valid = parsed_output['valid']
+
+    print(Markdown(parsed_output['display']))
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+            logger.error(msg)
+        return valid
+
+    elif directive == "process":
+        attributes = parsed_output['attributes']
+        search_string = attributes.get('Search String', {}).get('value', '*')
+        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
+        detailed = attributes.get('Detailed', {}).get('value', False)
+
+        match kind:
+            case "Solution Blueprints":
+                find_proc = egeria_client.find_solution_blueprints
+            case "Information Supply Chains":
+                find_proc = egeria_client.find_information_supply_chains
+            case "Solution Components":
+                find_proc = egeria_client.find_solution_components
+            case "Solution Roles":
+                find_proc = egeria_client.find_solution_roles
+
+        try:
+            if not valid:  # First validate the command before we process it
+                msg = f"Validation failed for {object_action} `{object_type}`\n"
+                logger.error(msg)
+                return None
+
+            list_md = f"\n# {kind} with filter: `{search_string}`\n\n"
+            if output_format == "DICT":
+                struct = find_proc(search_string, output_format=output_format)
+                list_md += f"```{json.dumps(struct, indent=4)}```\n"
+            else:
+                list_md += find_proc(search_string, output_format=output_format)
+            logger.info(f"Wrote Output for search string: `{search_string}`")
+
+            return list_md
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            console.print_exception(show_locals=True)
             return None
     else:
         return None

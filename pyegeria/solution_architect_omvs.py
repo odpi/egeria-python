@@ -129,6 +129,8 @@ class SolutionArchitect(Client):
                 purpose_md += f"{purpose},\n"
         extended_properties = properties.get("extendedProperties", {})
         additional_properties = properties.get("additionalProperties", {})
+        mer = f"```mermaid\n\n{element.get('mermaidGraph', None)}\n\n```"
+
         segments = element.get("segments", [])
         segments_list = []
         if len(segments) > 0:
@@ -159,7 +161,8 @@ class SolutionArchitect(Client):
             'purposes': purpose_md,
             'extended_properties': extended_properties,
             'additional_properties': additional_properties,
-            'segments': segments_list
+            'segments': segments_list,
+            'mermaid': mer
         }
 
     def _extract_solution_blueprint_properties(self, element: dict) -> dict:
@@ -187,6 +190,7 @@ class SolutionArchitect(Client):
                 sol_comp_name = sol_comp_prop.get("displayName", None)
                 sol_comp_desc = sol_comp_prop.get("description", None)
                 solution_components_md += '{' + f" {sol_comp_name}:\t {sol_comp_desc}" + " },\n"
+        mer = f"```mermaid\n\n{element.get('mermaidGraph', None)}\n\n```"
 
         return {
             'guid': guid,
@@ -194,7 +198,8 @@ class SolutionArchitect(Client):
             'display_name': display_name,
             'description': description,
             'version': version,
-            'solution_components': solution_components_md
+            'solution_components': solution_components_md,
+            'mermaid': mer
         }
 
     def _extract_solution_roles_properties(self, element: dict) -> dict:
@@ -855,6 +860,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class" : "InformationSupplyChainProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -916,6 +922,7 @@ class SolutionArchitect(Client):
               "forLineage": false,
               "forDuplicateProcessing": false,
               "properties": {
+                "class" : "InformationSupplyChainProperties",
                 "qualifiedName": "add unique name here",
                 "displayName": "add short name here",
                 "description": "add description here",
@@ -972,6 +979,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class" : "InformationSupplyChainSegmentProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -1038,6 +1046,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class" : "InformationSupplyChainSegmentProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -1100,6 +1109,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class" : "InformationSupplyChainSegmentProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -1165,6 +1175,7 @@ class SolutionArchitect(Client):
               "forLineage": false,
               "forDuplicateProcessing": false,
               "properties": {
+                "class" : "InformationSupplyChainSegmentProperties",
                 "qualifiedName": "add unique name here",
                 "displayName": "add short name here",
                 "description": "add description here",
@@ -1244,6 +1255,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class": "InformationSupplyChainLinkProperties",
             "label": "add label here",
             "description": "add description here",
             "effectiveFrom": {{isotime}},
@@ -1295,6 +1307,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class": "InformationSupplyChainLinkProperties",
             "label": "add label here",
             "description": "add description here",
             "effectiveFrom": {{isotime}},
@@ -1623,6 +1636,21 @@ class SolutionArchitect(Client):
                 There is a problem adding the element properties to the metadata repository or
             UserNotAuthorizedException
                 the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+
+            {
+              "class" : "FilterRequestBody",
+              "asOfTime" : "{{$isoTimestamp}}",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+              "limitResultsByStatus" : ["ACTIVE"],
+              "sequencingOrder" : "PROPERTY_ASCENDING",
+              "sequencingProperty" : "qualifiedName"
+            }
+
             """
 
         possible_query_params = query_string(
@@ -1697,6 +1725,21 @@ class SolutionArchitect(Client):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+
+            {
+              "class" : "FilterRequestBody",
+              "asOfTime" : "{{$isoTimestamp}}",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+              "limitResultsByStatus" : ["ACTIVE"],
+              "sequencingOrder" : "PROPERTY_ASCENDING",
+              "sequencingProperty" : "qualifiedName"
+            }
+
         """
 
         loop = asyncio.get_event_loop()
@@ -2006,6 +2049,7 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "SolutionBlueprintProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2078,6 +2122,7 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "SolutionBlueprintProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -2287,6 +2332,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class": "SolutionBlueprintCompositionProperties",
             "role": "add role here",
             "description": "add description here",
             "effectiveFrom": {{isotime}},
@@ -2338,6 +2384,7 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class": "SolutionBlueprintCompositionProperties",
             "role": "add role here",
             "description": "add description here",
             "effectiveFrom": {{isotime}},
@@ -2802,10 +2849,11 @@ class SolutionArchitect(Client):
           "forLineage": false,
           "forDuplicateProcessing": false,
           "properties": {
+            "class" : "SolutionBlueprintProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "version": "add version identifier here",
+            "versionIdentifier": "add version identifier here",
             "additionalProperties": {
               "property1": "propertyValue1",
               "property2": "propertyValue2"
@@ -2862,10 +2910,11 @@ class SolutionArchitect(Client):
               "forLineage": false,
               "forDuplicateProcessing": false,
               "properties": {
+                "class" : "SolutionBlueprintProperties",
                 "qualifiedName": "add unique name here",
                 "displayName": "add short name here",
                 "description": "add description here",
-                "version": "add version identifier here",
+                "versionIdentifier": "add version identifier here",
                 "purposes": ["purpose1", "purpose2"],
                 "additionalProperties": {
                   "property1": "propertyValue1",
@@ -2920,6 +2969,20 @@ class SolutionArchitect(Client):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
         """
 
         possible_query_params = query_string(
@@ -2990,6 +3053,20 @@ class SolutionArchitect(Client):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
         """
 
         loop = asyncio.get_event_loop()
@@ -3498,6 +3575,201 @@ class SolutionArchitect(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
+
+
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
+        """ Attach a solution component to a solution component as a peer in a solution. Async Version.
+
+        Parameters
+        ----------
+        component1_guid: str
+            GUID of the first component to link.
+        component2_guid: str
+           GUID of the second component to link.
+        body: dict
+            The body describing the link.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "properties" : {
+             "class" : "SolutionLinkingWireProperties",
+             "label" : "",
+             "description" : "",
+             "informationSupplyChainSegmentGUIDs" : []
+          },
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        validate_guid(component1_guid)
+        validate_guid(component2_guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
+
+
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
+        """ Attach a solution component to a solution component as a peer in a solution.
+
+                Parameters
+                ----------
+                component1_guid: str
+                    GUID of the first component to link.
+                component2_guid: str
+                   GUID of the second component to link.
+                body: dict
+                    The body describing the link.
+
+                Returns
+                -------
+                None
+
+                Raises
+                ------
+                InvalidParameterException
+                    one of the parameters is null or invalid or
+                PropertyServerException
+                    There is a problem adding the element properties to the metadata repository or
+                UserNotAuthorizedException
+                    the requesting user is not authorized to issue this request.
+
+                Notes
+                ----
+
+                Body structure:
+                {
+                  "class" : "RelationshipRequestBody",
+                  "externalSourceGUID": "add guid here",
+                  "externalSourceName": "add qualified name here",
+                  "properties" : {
+                     "class" : "SolutionLinkingWireProperties",
+                     "label" : "",
+                     "description" : "",
+                     "informationSupplyChainSegmentGUIDs" : []
+                  },
+                  "effectiveTime" : "{{$isoTimestamp}}",
+                  "forLineage" : false,
+                  "forDuplicateProcessing" : false
+                }
+                """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
+
+    async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
+                                          body: dict = None) -> None:
+        """ Detach a solution component from a peer solution component.
+            Async Version.
+
+        Parameters
+        ----------
+        component1_guid: str
+            GUID of the first component to unlink.
+        component2_guid: str
+            GUID of the second component to unlink.
+        body: dict
+            The body describing the request.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        validate_guid(component1_guid)
+        validate_guid(component2_guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/{component1_guid}/wired-to/{component2_guid}/detach")
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict = None) -> None:
+        """ Detach a solution component from a peer solution component.
+                    Async Version.
+
+                Parameters
+                ----------
+                component1_guid: str
+                    GUID of the first component to unlink.
+                component2_guid: str
+                    GUID of the second component to unlink.
+                body: dict
+                    The body describing the request.
+
+                Returns
+                -------
+                None
+
+                Raises
+                ------
+                InvalidParameterException
+                    one of the parameters is null or invalid or
+                PropertyServerException
+                    There is a problem adding the element properties to the metadata repository or
+                UserNotAuthorizedException
+                    the requesting user is not authorized to issue this request.
+
+                Notes
+                ----
+
+                Body structure:
+                {
+                  "class" : "MetadataSourceRequestBody",
+                  "externalSourceGUID": "add guid here",
+                  "externalSourceName": "add qualified name here",
+                  "effectiveTime" : "{{$isoTimestamp}}",
+                  "forLineage" : false,
+                  "forDuplicateProcessing" : false
+                }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_linking_wire(component1_guid, component2_guid, body))
+
+
 
     async def _async_update_solution_component(self, guid: str, body: dict,
                                                replace_all_properties: bool = False) -> None:
@@ -4257,7 +4529,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewSolutionBlueprintRequestBody",
+          "class": "NewActorRoleRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -4279,10 +4551,11 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "ActorRoleProperties",
             "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
+            "name": "add short name here",
             "description": "add description here",
-            "version": "add version here",
+           ######## is this right?
             "roleID": "string",
             "scope": "string",
             "title": "string",
