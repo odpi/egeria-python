@@ -1138,6 +1138,7 @@ class CollectionManager(Client):
             qualified_name = self.__create_qualified_name__("DataSpec", display_name)
 
         body = body_slimmer({
+            "class": "NewCollectionRequestBody",
             "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor,
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1, "collectionProperties": {
@@ -1276,6 +1277,7 @@ class CollectionManager(Client):
             qualified_name = self.__create_qualified_name__("DataDict", display_name)
 
         body = {
+            "class": "NewCollectionRequestBody",
             "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor_s, "anchorScopeGUID": anchor_scope_guid,
             "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
             "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
@@ -2683,12 +2685,9 @@ class CollectionManager(Client):
                 member_names += f"{member['qualifiedName']}, "
             member_names = member_names[:-2]
 
-
-
-
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
-            'qualified_name': qualified_name, 'classifications': classification_names, 'members': member_names,
+             'GUID': guid,'display_name': display_name,'qualified_name': qualified_name, 'description': description,
+             'classifications': classification_names, 'members': member_names, 'properties': properties,
             # 'collection_type': collection_type,
             'additional_properties': additional_properties, 'extended_properties': extended_properties,
             }
@@ -2755,7 +2754,7 @@ class CollectionManager(Client):
         if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name','format': True},
                 {'name': 'Description', 'key': 'description', 'format': True},
                 {'name': "Classifications", 'key': 'classifications' },
                 {'name': 'Members', 'key': 'members', 'format': True},

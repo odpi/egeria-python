@@ -437,7 +437,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="LIST")
+            response = m_client.find_all_data_fields(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -758,7 +758,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_classes(output_format="DICT")
+            response = m_client.find_all_data_classes(output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -818,7 +818,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_classes_by_name(name)
+            response = m_client.get_data_classes_by_name(name, output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -841,7 +841,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_class_by_guid(self):
-        guid = "67e8744f-447d-4d79-8272-a811a3048326"
+        guid = '6af8cfc5-3218-4abc-a174-4c852856765e'
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -879,6 +879,33 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             m_client.link_nested_data_class(containing_guid, member_guid)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+                )
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_link_specialist_data_class(self):
+        containing_guid = "6af8cfc5-3218-4abc-a174-4c852856765e"
+        member_guid = "198ca7cf-76d5-4504-8a94-c1158c23cc7a"
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            m_client.link_specialist_data_class(containing_guid, member_guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds"

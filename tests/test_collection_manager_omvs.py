@@ -884,7 +884,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = '803326f4-5b0a-44b4-8a2a-58263f16289c'
+            collection_guid = '0af6423a-daaa-493b-a353-85fe3a71eff4'
 
             response = c_client.get_collection_members(collection_guid=collection_guid)
             duration = time.perf_counter() - start_time
@@ -1108,7 +1108,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = '2b885cad-1e02-44d7-99bd-23e92706f044'
+            guid = '0af6423a-daaa-493b-a353-85fe3a71eff4'
             # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
             name = "Sentinel 2"

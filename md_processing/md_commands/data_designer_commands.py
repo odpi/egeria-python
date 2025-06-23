@@ -24,7 +24,7 @@ console = Console(width=int(200))
 
 log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
+logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
 logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
 
@@ -43,10 +43,13 @@ def add_member_to_data_collections(egeria_client: EgeriaTech, collection_list: l
         "notes": "Added by Dr.Egeria"
         }
     try:
-        for collection in collection_list:
-            egeria_client.add_to_collection(collection, guid, body)
-            msg = f"Added `{display_name}` member to `{collection}`"
-            logger.info(msg)
+        if collection_list is not None:
+            for collection in collection_list:
+                egeria_client.add_to_collection(collection, guid, body)
+                msg = f"Added `{display_name}` member to `{collection}`"
+                logger.info(msg)
+        else:
+            logger.info("There were no data collections to add.")
         return
 
     except Exception as e:
@@ -163,12 +166,17 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
     TODO: Need to add data class support when ready and may need to revisit bodies.
 
     """
+    if terms:
+        terms = [terms]
+
     if replace_all_props:
         rel_el_list = egeria_client.get_data_field_rel_elements(guid)
         # should I throw an exception if empty?
         if rel_el_list is None:
             logger.warning("Unexpected -> the list was None - assigning empty list")
             rel_el_list = {}
+
+
         as_is_data_structs = set(rel_el_list.get("data_structure_guids", []))
         as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
         as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
@@ -219,7 +227,7 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
 
         terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
         logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
-        if len(terms_to_remove) > 0:
+        if terms:
             for term in terms_to_remove:
                 egeria_client.detach_semantic_definition(guid, term, None)
                 msg = f"Removed `{term}` from `{display_name}`"
@@ -249,7 +257,7 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         if len(terms_to_add) > 0:
             for dc in classes_to_add:
                 body = {
-                    "class": "MetadataSourceRequestBody",
+                    "class": "RelationshipRequestBody",
                     "forLineage": False,
                     "forDuplicateProcessing": False
                     }
@@ -259,81 +267,137 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
 
 
     else:  # merge - add field to related elements
-        add_field_to_data_structures(egeria_client, display_name, structure_list, guid)
-        msg = f"Added `{display_name}` to `{structure_list}`"
-        logger.trace(msg)
-
-        for field in parent_field_list:
-            egeria_client.link_nested_data_field(field, guid, None)
-            msg = f"Added `{display_name}` to `{field}`"
-            logger.trace(msg)
-        for term in terms:
-            egeria_client.link_semantic_definition(guid, term, None)
-            msg = f"Added `{term}` to `{display_name}`"
+        if structure_list:
+            add_field_to_data_structures(egeria_client, display_name, structure_list, guid)
+            msg = f"Added `{display_name}` to `{structure_list}`"
             logger.trace(msg)
 
-        egeria_client.link_data_class_definition(guid, data_class_guid)
-        msg = f"Added `{data_class_guid}` to `{display_name}`"
-        logger.trace(msg)
+        if parent_field_list:
+            for field in parent_field_list:
+                egeria_client.link_nested_data_field(field, guid, None)
+                msg = f"Added `{display_name}` to `{field}`"
+                logger.trace(msg)
+        if terms:
+            for term in terms:
+                egeria_client.link_semantic_definition(guid, term, None)
+                msg = f"Added `{term}` to `{display_name}`"
+                logger.trace(msg)
+
+        if data_class_guid:
+            egeria_client.link_data_class_definition(guid, data_class_guid)
+            msg = f"Added `{data_class_guid}` to `{display_name}`"
+            logger.trace(msg)
 
 
 @logger.catch
 def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_class_guids: list, terms: list,
-                                 containing_data_classes: list, super_data_classes: list, guid: str, display_name: str,
+                                 specializes_data_classes: list, guid: str, display_name: str,
                                  replace_all_props: bool = True) -> None:
     """Sync a data class' related elements.
 
-    TODO:  may need to revisit bodies.
-
     """
-    if replace_all_props:
-        rel_el_list = egeria_client.get_data_field_rel_elements(guid)
-        # should I throw an exception if empty?
-        as_is_containing_data_class_guids = set(rel_el_list.get("data_structure_guids", []))
-        as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
-        as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
-        as_is_data_classes = set(rel_el_list.get("data_class_guids", []))
+    if terms:
+        terms = [terms]
 
-        # to_be_data_structs = set(structure_list) if structure_list is not None else set()  #
-        # to_be_parent_fields = set(parent_field_list) if parent_field_list is not None else set()  #
-        # to_be_assigned_meanings = set(terms) if data_class_list is not None else set()  #
-        # to_be_assigned_data_classes = set(data_class_list) if data_class_list is not None else set()  #  #
-        # logger.trace(f"as_is_data_structs: {list(as_is_data_structs)} to_be_data_struct: {list(
-        # to_be_data_structs)}")  #     logger.trace(  #         f"as_is_parent_fields: {list(as_is_parent_fields)}
-        # to_be_parent_fields: {list(to_be_parent_fields)}")  #     logger.trace(  #
-        # f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "  #         f"{list(
-        # to_be_assigned_meanings)}")  #     logger.trace(  #         f"as_is_data_classes: {list(
-        # as_is_data_classes)} to_be_assigned_data_classes: "  #         f"{list(to_be_assigned_data_classes)}")  #
-        # data_struct_to_remove = as_is_data_structs - to_be_data_structs  #     logger.trace(
-        # f"data_struct_to_remove: {list(data_struct_to_remove)}")  #     if len(data_struct_to_remove) > 0:  #
-        # for ds in data_struct_to_remove:  #             egeria_client.detach_member_data_field(ds, guid,
-        # None)  #             msg = f"Removed `{display_name}` from structure `{ds}`"  #             logger.trace(
-        # msg)  #     data_struct_to_add = to_be_data_structs - as_is_data_structs  #     logger.trace(
-        # f"data_struct_to_add: {list(data_struct_to_add)}")  #     if len(data_struct_to_add) > 0:  #         for ds
-        # in data_struct_to_add:  #             egeria_client.link_member_data_field(ds, guid, None)  #
-        # msg = f"Added `{display_name}` to structure `{ds}`"  #             logger.trace(msg)  #  #
-        # parent_field_to_remove = to_be_parent_fields - as_is_parent_fields  #     logger.trace(
-        # f"parent_field_to_remove: {list(parent_field_to_remove)}")  #     if len(parent_field_to_remove) > 0:  #
-        # for field in parent_field_to_remove:  #             egeria_client.detach_nested_data_field(field, guid,
-        # None)  #             msg = f"Removed `{display_name}` from field `{field}`"  #             logger.trace(
-        # msg)  #     parent_field_to_add = to_be_parent_fields - as_is_parent_fields  #     logger.trace(
-        # f"parent_field_to_add: {list(parent_field_to_add)}")  #     if len(parent_field_to_add) > 0:  #         for
-        # field in parent_field_to_add:  #             egeria_client.link_nested_data_field(field, guid, None)  #
-        # msg = f"Added `{display_name}` to field `{field}`"  #             logger.trace(msg)  #  #
-        # terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings  #     logger.trace(f"terms_to_remove:
-        # {list(terms_to_remove)}")  #     if len(terms_to_remove) > 0:  #         for term in terms_to_remove:  #
-        # egeria_client.detach_semantic_definition(guid, term, None)  #             msg = f"Removed `{term}` from `{
-        # display_name}`"  #             logger.trace(msg)  #     terms_to_add = to_be_assigned_meanings -
-        # as_is_assigned_meanings  #     logger.trace(f"terms_to_add: {list(terms_to_add)}")  #     if len(
-        # terms_to_add) > 0:  #         for term in terms_to_add:  #
-        # egeria_client.link_semantic_definition(guid, term, None)  #             msg = f"Added `{term}` to`{
-        # display_name}`"  #             logger.trace(msg)  #  # else:  # merge - add field to related elements  #
-        # add_field_to_data_structures(egeria_client, display_name, structure_list, guid)  #     msg = f"Added `{
-        # display_name}` to `{structure_list}`"  #     logger.trace(msg)  #  #     for field in parent_field_list:  #
-        # egeria_client.link_nested_data_field(field, guid, None)  #         msg = f"Added `{display_name}` to `{
-        # field}`"  #         logger.trace(msg)  #     for term in terms:  #
-        # egeria_client.link_semantic_definition(guid, term, None)  #         msg = f"Added `{term}` to `{
-        # display_name}`"  #         logger.trace(msg)
+    if replace_all_props:
+        rel_el_list = egeria_client.get_data_class_rel_elements(guid)
+        if rel_el_list is None:
+            logger.warning("Unexpected -> the list was None - assigning empty list")
+            rel_el_list = {}
+        if terms:
+            terms = [terms]
+
+        as_is_nested_classes = set(rel_el_list.get("nested_data_class_guids", []))
+        as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
+        as_is_specialized_classes = set(rel_el_list.get("specialized_data_class_guids", []))
+
+        to_be_nested_classes = set(containing_data_class_guids) if containing_data_class_guids is not None else set()
+        to_be_assigned_meanings = set(terms) if terms is not None else set()
+        to_be_specialized_classes = set([specializes_data_classes]) if specializes_data_classes is not None else set()
+
+        logger.trace(
+            f"as_is_nested_classes: {list(as_is_nested_classes)} to_be_nested_classes: {list(to_be_nested_classes)}")
+        logger.trace(f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "
+                     f"{list(to_be_assigned_meanings)}")
+        logger.trace(f"as_is_specialized_classes: {list(as_is_specialized_classes)} to_be_specizialized_data_classes: "
+                     f"{list(to_be_specialized_classes)}")
+
+
+        nested_classes_to_remove = to_be_nested_classes - as_is_nested_classes
+        logger.trace(f"nested_classes_to_remove: {list(nested_classes_to_remove)}")
+        if len(nested_classes_to_remove) > 0:
+            for field in nested_classes_to_remove:
+                egeria_client.detach_nested_data_class(field, guid, None)
+                msg = f"Removed `{display_name}` from field `{field}`"
+                logger.trace(msg)
+        nested_classes_to_add = to_be_nested_classes - as_is_nested_classes
+        logger.trace(f"nested_classes_to_add: {list(nested_classes_to_add)}")
+        if len(nested_classes_to_add) > 0:
+            for field in nested_classes_to_add:
+                egeria_client.link_nested_data_class(field, guid, None)
+                msg = f"Added `{display_name}` to field `{field}`"
+                logger.trace(msg)
+
+        terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
+        logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
+        if len(terms_to_remove) > 0:
+            for term in terms_to_remove:
+                egeria_client.detach_semantic_definition(guid, term, None)
+                msg = f"Removed `{term}` from `{display_name}`"
+                logger.trace(msg)
+        terms_to_add = to_be_assigned_meanings - as_is_assigned_meanings
+        logger.trace(f"terms_to_add: {list(terms_to_add)}")
+        if len(terms_to_add) > 0:
+            for term in terms_to_add:
+                egeria_client.link_semantic_definition(guid, term, None)
+                msg = f"Added `{term}` to`{display_name}`"
+                logger.trace(msg)
+
+        specialized_classes_to_remove = as_is_specialized_classes - to_be_specialized_classes
+        logger.trace(f"classes_to_remove: {list(specialized_classes_to_remove)}")
+        if len(terms_to_remove) > 0:
+            for dc in specialized_classes_to_remove:
+                body = {
+                    "class": "MetadataSourceRequestBody",
+                    "forLineage": False,
+                    "forDuplicateProcessing": False
+                    }
+                egeria_client.detach_specialist_data_class(guid, dc, body)
+                msg = f"Removed `{dc}` from `{display_name}`"
+                logger.trace(msg)
+        specialized_classes_to_add = to_be_specialized_classes - as_is_specialized_classes
+        logger.trace(f"classes_to_add: {list(specialized_classes_to_add)}")
+        if len(specialized_classes_to_add) > 0:
+            for dc in specialized_classes_to_add:
+                body = {
+                    "class": "RelationshipRequestBody",
+                    "forLineage": False,
+                    "forDuplicateProcessing": False
+                    }
+                egeria_client.link_specialist_data_class(guid, dc, body)
+                msg = f"Added `{dc}` to`{display_name}`"
+                logger.trace(msg)
+
+
+    else:  # merge - add field to related elements
+        if containing_data_class_guids:
+            for field in containing_data_class_guids:
+                egeria_client.link_nested_data_class(field, guid, None)
+                msg = f"Added `{display_name}` to `{field}`"
+                logger.trace(msg)
+
+        if terms:
+            for term in terms:
+                egeria_client.link_semantic_definition(guid, term, None)
+                msg = f"Added `{term}` to `{display_name}`"
+                logger.trace(msg)
+        if specializes_data_classes:
+            for el in specializes_data_classes:
+                egeria_client.link_specialist_data_class(guid, el)
+            msg = f"Linked `{el}` to `{display_name}`"
+            logger.trace(msg)
+
+
 
 
 @logger.catch
@@ -696,7 +760,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
         try:
             if object_action == "Update":
                 body = {
-                    "class": "UpdateDataStructureRequestBody", "externalSourceGUID": external_source_guid,
+                    "class": "UpdateElementRequestBody", "externalSourceGUID": external_source_guid,
                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing, "properties": {
                         "class": "DataStructureProperties", "qualifiedName": qualified_name,
@@ -727,7 +791,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
                 else:
 
                     body = {
-                        "class": "NewDataStructureRequestBody", "externalSourceGUID": external_source_guid,
+                        "class": "NewElementRequestBody", "externalSourceGUID": external_source_guid,
                         "externalSourceName": external_source_name, "effectiveTime": effective_time,
                         "forLineage": False, "forDuplicateProcessing": False, "anchorGUID": anchor_guid,
                         "isOwnAnchor": is_own_anchor, "parentGUID": parent_guid,
@@ -862,7 +926,9 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         data_class = attributes.get('Data Class', {}).get('value', None)
         data_class_guid = attributes.get('Data Class', {}).get('guid', None)
 
-        glossary_term = attributes.get('Glossary Term', {}).get('value', None)
+        glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
+        if glossary_term_guid:
+            glossary_term_guid = [glossary_term_guid]
 
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
 
@@ -906,7 +972,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                 # first update the base data field
                 body = {
-                    "class": "UpdateDataFieldRequestBody", "externalSourceGUID": external_source_guid,
+                    "class": "UpdateElementRequestBody", "externalSourceGUID": external_source_guid,
                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing, "properties": {
                         "class": "DataFieldProperties", "qualifiedName": qualified_name, "displayName": display_name,
@@ -959,6 +1025,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 else:
                     # First lets create the data field
                     body = {
+                        "class": "NewElementRequestBody",
                         "properties": {
                             "class": "DataFieldProperties", "qualifiedName": qualified_name,
                             "displayName": display_name, "namespace": namespace, "description": description,
@@ -990,7 +1057,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             for ds_guid in data_structure_guid_list:
                                 # todo This is too naive? - need to better accommodate the relationship
                                 df_body = {
-                                    "class": "MemberDataFieldRequestBody", "properties": {
+                                    "class": "RelationshipRequestBody", "properties": {
                                         "class": "MemberDataFieldProperties", "dataFieldPosition": position,
                                         "minCardinality": min_cardinality, "maxCardinality": max_cardinality,
                                         }
@@ -1004,7 +1071,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         if glossary_term:
                             if glossary_term_guid:
                                 glossary_body = {
-                                    "class": "MetadataSourceRequestBody", "externalSourceGUID": external_source_guid,
+                                    "class": "RelationshipRequestBody", "externalSourceGUID": external_source_guid,
                                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing
                                     }
@@ -1026,7 +1093,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         # Link data class
                         if data_class:
                             body = {
-                              "class": "MetadataSourceRequestBody",
+                              "class": "RelationshipRequestBody",
                               "externalSourceGUID": external_source_guid,
                               "externalSourceName": external_source_name,
                               "effectiveTime": effective_time,
@@ -1141,7 +1208,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         glossary_term = attributes.get('Glossary Term', {}).get('value', None)
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
 
-        merge_update = attributes.get('Merge Update', {}).get('value', None)
+        merge_update = attributes.get('Merge Update', {}).get('value', True)
 
         position = attributes.get('Position', {}).get('value', None)
         min_cardinality = attributes.get('Minimum Cardinality', {}).get('value', None)
@@ -1155,6 +1222,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         glossary_term = attributes.get('Glossary Term', {}).get('value', None)
 
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
+
 
         in_data_dictionary = attributes.get('In Data Dictionary', {}).get('value', None)
         in_data_dictionary_names = attributes.get('In Data Dictionary', {}).get('name_list', None)
@@ -1193,7 +1261,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                 # first update the base data class
                 body = {
-                    "class": "UpdateDataClassRequestBody", "externalSourceGUID": external_source_guid,
+                    "class": "UpdateElementRequestBody", "externalSourceGUID": external_source_guid,
                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing, "properties": {
                         "class": "DataClassProperties", "qualifiedName": qualified_name, "displayName": display_name,
@@ -1223,8 +1291,8 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 core_props += f"\n\n## In Data Dictionary\n\n{in_data_dictionary_names}\n\n"
 
                 # Sync data field related elements (data structure, parent data fields, terms, data classes
-                sync_data_class_rel_elements(egeria_client, containing_data_class_guids, [glossary_term_guid],
-                                             specializes_data_class_guid, [glossary_term_guid], guid, display_name,
+                sync_data_class_rel_elements(egeria_client, containing_data_class_guids, glossary_term_guid,
+                                             specializes_data_class_guid, guid, display_name,
                                              replace_all_props)
 
                 core_props += f"\n\n## Glossary Term \n\n{glossary_term}\n\n"
@@ -1244,6 +1312,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 else:
                     # First lets create the data class
                     body = {
+                        "class": "NewElementRequestBody",
                         "properties": {
                             "class": "DataClassProperties", "qualifiedName": qualified_name,
                             "displayName": display_name, "description": description, "namespace": namespace,
@@ -1274,7 +1343,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         if glossary_term:
                             if glossary_term_guid:
                                 glossary_body = {
-                                    "class": "MetadataSourceRequestBody", "externalSourceGUID": external_source_guid,
+                                    "class": "RelationshipRequestBody", "externalSourceGUID": external_source_guid,
                                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing
                                     }

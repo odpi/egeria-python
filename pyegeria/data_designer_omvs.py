@@ -577,7 +577,7 @@ r       replace_all_properties: bool, default = False
             return None
         collection_list = {"DictList": [], "SpecList": [], "CollectionDetails": []}
         if isinstance(data_structure_info, (dict, list)):
-            member_of_collections = data_structure_info['memberOfCollections']
+            member_of_collections = data_structure_info.get('memberOfCollections',"")
             if isinstance(member_of_collections, list):
                 for member_rel in member_of_collections:
                     props = member_rel["relatedElement"]["properties"]
@@ -733,11 +733,11 @@ r       replace_all_properties: bool, default = False
             nested_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
             nested_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
 
-        specialized_data_classes = el_struct.get("nestedDataClasses", {})
+        specialized_data_classes = el_struct.get("specializedDataClasses", {})
         for nested_data_class in specialized_data_classes:
             specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
             specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
-            specialized_data_classes_qnames.appe
+            specialized_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
 
         mermaid = el_struct.get("mermaidGraph", {})
 
@@ -759,11 +759,11 @@ r       replace_all_properties: bool, default = False
 
                 "nested_data_class_guids": nested_data_classes_guids,
                 "nested_data_class_names": nested_data_classes_names,
-                "nested data_class_qnames": nested_data_classes_qnames,
+                "nested_data_class_qnames": nested_data_classes_qnames,
 
                 "specialized_data_class_guids": specialized_data_classes_guids,
                 "specialized_data_class_names": specialized_data_classes_names,
-                "specialized data_class_qnames": specialized_data_classes_qnames,
+                "specialized_data_class_qnames": specialized_data_classes_qnames,
 
                 "external_references_guids": external_references_guids,
                 "external_references_names": external_references_names,
@@ -792,6 +792,15 @@ r       replace_all_properties: bool, default = False
         if isinstance(data_field_entry, str):
             return None
         return self.get_data_rel_elements_dict(data_field_entry)
+
+    def get_data_class_rel_elements(self, guid:str)-> dict | str:
+        """return the lists of objects related to a data class"""
+
+        data_class_entry = self.get_data_class_by_guid(guid, output_format="JSON")
+        if isinstance(data_class_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(data_class_entry)
+
 
 
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
@@ -3665,7 +3674,7 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/member-data-classes/{child_data_class_guid}/detach")
+               f"/nested-data-classes/{child_data_class_guid}/detach")
 
         if body is None:
             await self._async_make_request("POST", url)
@@ -3764,7 +3773,7 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specializeddata-classes/{child_data_class_guid}/attach")
+               f"/specialized-data-classes/{child_data_class_guid}/attach")
 
         if body is None:
             await self._async_make_request("POST", url)
@@ -3863,7 +3872,7 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specializeddata-classes/{child_data_class_guid}/detach")
+               f"/specialized-data-classes/{child_data_class_guid}/detach")
 
         if body is None:
             await self._async_make_request("POST", url)
@@ -4502,7 +4511,7 @@ r       replace_all_properties: bool, default = False
         else:
             response: Response = await self._async_make_request("POST", url)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
@@ -5192,9 +5201,9 @@ r       replace_all_properties: bool, default = False
         # mermaid_md = "```mermaid\n" + mermaid + "\n```"
 
         return {
-             'properties': properties, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description, 'data_fields': member_data_fields,
-            'data_specification': data_specs,  'namespace': namespace, 'version_identifier': version_id,
-            'extended_properties': extended_properties, 'additional_properties': additional_properties, 'GUID': guid,'mermaid': mermaid
+             'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description, 'data_fields': member_data_fields,
+            'data_specification': data_specs,  'namespace': namespace, 'version_identifier': version_id, 'properties': properties,
+            'extended_properties': extended_properties, 'additional_properties': additional_properties, 'mermaid': mermaid
             }
 
     def _extract_data_class_properties(self, element: dict) -> dict:
@@ -5234,10 +5243,11 @@ r       replace_all_properties: bool, default = False
         mermaid = element.get('mermaidGraph', "") or ""
 
         return {
-            'display_name': display_name, 'description': description, 'assigned_meanings': assigned_meanings,
-            'qualified_name': qualified_name, 'data_type': data_type, 'match_property_names': match_property_names,
+             'GUID': guid,'display_name': display_name, 'qualified_name': qualified_name,'description': description,
+            'assigned_meanings': assigned_meanings,
+             'data_type': data_type, 'match_property_names': match_property_names,
             'match_threshold': match_threshold, 'allow_duplicate_values': allow_duplicate_values,
-            'is_case_sensitive': is_case_sensitive, 'is_nullable': is_nullable, 'GUID': guid,
+            'is_case_sensitive': is_case_sensitive, 'is_nullable': is_nullable,
             'properties': properties, 'parent_names': parent_names, 'nested_data_classes': nested_data_classes,
             'specialized_data_classes': specialized_data_classes,
             'extended_properties': extended_properties,
@@ -5283,8 +5293,9 @@ r       replace_all_properties: bool, default = False
         mermaid = element.get('mermaidGraph', "") or ""
 
         return {
-            'display_name': display_name, 'description': description, 'assigned_meanings': assigned_meanings,
-            'qualified_name': qualified_name, 'data_type': data_type, 'data_class': data_class, 'GUID': guid, 'properties': properties,
+            'GUID': guid,'display_name': display_name, 'qualified_name': qualified_name,'description': description,
+            'assigned_meanings': assigned_meanings,
+             'data_type': data_type, 'data_class': data_class,  'properties': properties,
             'is_nullable': is_nullable, 'minimum_length': minimum_length, 'length': length, 'precision': precision,
             'ordered_values': ordered_values, 'sort_order': sort_order, 'parent_names': parent_names, 'extended_properties': extended_properties,
             'additional_properties': additional_properties,'data_dictionaries': data_dictionaries, 'data_structures': data_structures, 'mermaid': mermaid
@@ -5336,7 +5347,7 @@ r       replace_all_properties: bool, default = False
         if output_format in ["MD", "FORM", "REPORT", "LIST", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Structure Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Namespace', 'key': 'namespace'},
+                {'name': 'Qualified Name', 'key': 'qualified_name','format': True}, {'name': 'Namespace', 'key': 'namespace'},
                 {'name': 'Version', 'key': 'version_identifier'},
                 {'name': 'Description', 'key': 'description', 'format': True}]
 
@@ -5361,7 +5372,7 @@ r       replace_all_properties: bool, default = False
         if output_format in ["DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Class Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name','format': True},
                 {'name': 'Description', 'key': 'description', 'format': True}]
 
             return generate_output(elements=elements, search_string=filter, entity_type="Data Class",
@@ -5385,7 +5396,7 @@ r       replace_all_properties: bool, default = False
         if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Field Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name'}, {'name': 'Data Type', 'key': 'data_type'},
+                {'name': 'Qualified Name', 'key': 'qualified_name','format': True}, {'name': 'Data Type', 'key': 'data_type'},
                 {'name': 'Description', 'key': 'description', 'format': True}]
 
             return generate_output(elements=elements, search_string=filter, entity_type="Data Field",

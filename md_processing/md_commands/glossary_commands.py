@@ -95,36 +95,6 @@ def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories
             print_msg("DEBUG-INFO", msg, debug_level)
 
 
-# def update_term_categories(egeria_client: EgeriaTech, term_guid: str, current_categories: List[str],
-# new_categories: List[str]) -> None:
-#     """
-#     Updates the categories of a term.
-#
-#     Args:
-#         egeria_client: The Egeria client to use for the update.
-#         term_guid: The GUID of the term to update.
-#         current_categories: The current categories of the term.
-#         new_categories: The new categories of the term.
-#     """
-#     if new_categories:  # If categories are specified, add them
-#         for cat in new_categories:
-#             if cat not in current_categories:
-#                 egeria_client.add_term_to_category(term_guid, cat)
-#                 msg = f"Added term {term_guid} to category {cat}"
-#                 print_msg("DEBUG-INFO", msg, debug_level)
-#         # Remove any categories that are not in the new list
-#         for cat in current_categories:
-#             if cat not in new_categories:
-#                 egeria_client.remove_term_from_category(term_guid, cat)
-#                 msg = f"Removed term {term_guid} from category {cat}"
-#                 print_msg("DEBUG-INFO", msg, debug_level)
-#     else:  # No categories specified - so remove any categories a term is in
-#         for cat in current_categories:
-#             egeria_client.remove_term_from_category(term_guid, cat)
-#             msg = f"Removed term {term_guid} from category {cat}"
-#             print_msg("DEBUG-INFO", msg, debug_level)
-
-
 def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a glossary create or update object_action by extracting key attributes such as

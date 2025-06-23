@@ -27,6 +27,7 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
               depending on the output format.
     """
     # search_string = search_string if search_string else "All Elements"
+    elements_md = ""
     elements_action = "Update " + obj_type
     if output_format == "FORM":
         preamble = f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
@@ -34,7 +35,7 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
             preamble +=  f"\t {obj_type} found from the search string:  `{search_string}`\n\n"
         return preamble, elements_action
     elif output_format == "REPORT":
-        elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        elements_md += (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
                        f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
         elements_action = None
         return elements_md, elements_action
@@ -77,7 +78,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output
 
-def format_for_markdown_table(text: str) -> str:
+def format_for_markdown_table(text: str, guid: str = None) -> str:
     """
     Format text for markdown tables by replacing newlines with spaces and escaping pipe characters.
     No truncation is applied to allow full-length text display regardless of console width.
@@ -91,9 +92,13 @@ def format_for_markdown_table(text: str) -> str:
     if not text:
         return ""
     # Replace newlines with spaces and escape pipe characters
-    return text.replace("\n", " ").replace("|", "\\|")
+    t = text.replace("\n", " ").replace("|", "\\|")
+    if '::' in t and guid:
+        t = f" [{t}](#{guid}) "
+    return t
 
-def generate_entity_md(elements: List[Dict], 
+
+def generate_entity_md(elements: List[Dict],
                       elements_action: str, 
                       output_format: str, 
                       entity_type: str,
@@ -125,12 +130,13 @@ def generate_entity_md(elements: List[Dict],
         if get_additional_props_func:
             additional_props = get_additional_props_func(element, props['guid'], output_format)
 
+
         # Format header based on output format
         if output_format in ['FORM', 'MD']:
             elements_md += f"# {elements_action}\n\n"
             elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f"# {entity_type} Name: {props['display_name']}\n\n"
+            elements_md += f'<a id="{props["GUID"]}"></a>\n\n# {entity_type} Name: {props["display_name"]}\n\n'
         else:
             elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
 
@@ -213,7 +219,7 @@ def generate_entity_md_table(elements: List[Dict],
 
             # Format the value if needed
             if 'format' in column and column['format']:
-                value = format_for_markdown_table(value)
+                value = format_for_markdown_table(value, props['GUID'])
 
             row += f"{value} | "
 
