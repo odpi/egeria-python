@@ -613,7 +613,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = 'DataField::PatientId'
-            response = m_client.find_data_fields(search_string,output_format="DICT")
+            response = m_client.find_data_fields(search_string,output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

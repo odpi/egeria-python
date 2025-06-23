@@ -678,23 +678,23 @@ r       replace_all_properties: bool, default = False
 
 
         # extract existing related data structure and data field elements
-        other_related_elements = el_struct["otherRelatedElements"]
+        other_related_elements = el_struct.get("otherRelatedElements",None)
+        if other_related_elements:
+            for rel in other_related_elements:
+                related_element = rel["relatedElement"]
+                type = related_element["elementHeader"]["type"]["typeName"]
+                guid = related_element["elementHeader"]["guid"]
+                qualified_name = related_element["properties"].get("qualifiedName","") or ""
+                display_name = related_element["properties"].get("displayName","") or ""
+                if type == "DataStructure":
+                    data_structure_guids.append(guid)
+                    data_structure_names.append(display_name)
+                    data_structure_qnames.append(qualified_name)
 
-        for rel in other_related_elements:
-            related_element = rel["relatedElement"]
-            type = related_element["elementHeader"]["type"]["typeName"]
-            guid = related_element["elementHeader"]["guid"]
-            qualified_name = related_element["properties"].get("qualifiedName","") or ""
-            display_name = related_element["properties"].get("displayName","") or ""
-            if type == "DataStructure":
-                data_structure_guids.append(guid)
-                data_structure_names.append(display_name)
-                data_structure_qnames.append(qualified_name)
-
-            elif type == "DataField":
-                parent_guids.append(guid)
-                parent_names.append(display_name)
-                parent_qnames.append(qualified_name)
+                elif type == "DataField":
+                    parent_guids.append(guid)
+                    parent_names.append(display_name)
+                    parent_qnames.append(qualified_name)
 
 
         member_of_collections = el_struct.get("memberOfCollections",{})

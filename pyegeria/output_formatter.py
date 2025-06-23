@@ -128,7 +128,7 @@ def generate_entity_md(elements: List[Dict],
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
 
         # Format header based on output format
@@ -150,7 +150,7 @@ def generate_entity_md(elements: List[Dict],
             elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
         # # Add GUID
-        # elements_md += make_md_attribute("GUID", props['guid'], output_format)
+        # elements_md += make_md_attribute("GUID",props['GUID'], output_format)
 
         # Add separator if not the last element
         if element != elements[-1]:
@@ -203,7 +203,7 @@ def generate_entity_md_table(elements: List[Dict],
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
         # Build row
         row = "| "
@@ -257,7 +257,7 @@ def generate_entity_dict(elements: List[Dict],
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
         # Create entity dictionary
         entity_dict = {}

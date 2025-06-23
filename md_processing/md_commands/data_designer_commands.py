@@ -2,7 +2,7 @@
 This file contains term-related object_action functions for processing Egeria Markdown
 """
 import json
-import sys
+import sys, os
 from typing import Optional
 
 from loguru import logger
@@ -17,6 +17,26 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
 from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
 
+
+GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
+EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
+EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443")
+EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 220)
+EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
+EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
+EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
+
 load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
@@ -25,7 +45,10 @@ console = Console(width=int(200))
 log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
 logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
-logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
+# logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+#            colorize=True)
+logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
 
 

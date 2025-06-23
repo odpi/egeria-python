@@ -167,7 +167,7 @@ def main(object_type: str="Data Fields"):
 
     try:
         search_string = Prompt.ask(
-            "Enter the category you are searching for or '*' for all:", default="*"
+            "Enter the element you are searching for or '*' for all:", default="*"
         )
         output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"],
                                    default="TABLE")

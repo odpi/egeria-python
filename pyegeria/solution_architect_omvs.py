@@ -153,7 +153,7 @@ class SolutionArchitect(Client):
                 segments_list.append(segment_dict)
 
         return {
-            'guid': guid,
+            'GUID': guid,
             'qualified_name': qualified_name,
             'display_name': display_name,
             'description': description,
@@ -193,7 +193,7 @@ class SolutionArchitect(Client):
         mer = f"```mermaid\n\n{element.get('mermaidGraph', None)}\n\n```"
 
         return {
-            'guid': guid,
+            'GUID': guid,
             'qualified_name': qualified_name,
             'display_name': display_name,
             'description': description,
@@ -232,7 +232,7 @@ class SolutionArchitect(Client):
                     solution_components_md += "{" + f" {sol_comp_name}:\t {sol_comp_desc}" + " },\n"
 
         return {
-            'guid': guid,
+            'GUID': guid,
             'qualified_name': qualified_name,
             'display_name': display_name,
             'description': description,
@@ -334,7 +334,7 @@ class SolutionArchitect(Client):
         comp_graph = element.get('mermaidGraph', None)
 
         return {
-            'guid': guid,
+            'GUID': guid,
             'qualified_name': qualified_name,
             'display_name': display_name,
             'description': description,
