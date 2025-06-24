@@ -183,8 +183,10 @@ def generate_entity_md_table(elements: List[Dict],
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
 
-    elements_md = f"# {entity_type_plural} Table\n\n"
-    elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
+    elements_md = ""
+    if output_format == "LIST":
+        elements_md = f"# {entity_type_plural} Table\n\n"
+        elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
 
     # Add column headers
     header_row = "| "
@@ -198,7 +200,10 @@ def generate_entity_md_table(elements: List[Dict],
 
     # Add rows
     for element in elements:
-        props = extract_properties_func(element)
+        if output_format == "help":
+            props = element
+        else:
+            props = extract_properties_func(element)
 
         # Get additional properties if function is provided
         additional_props = {}

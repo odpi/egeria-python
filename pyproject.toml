@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.4.0-dev6"
+version = "5.4.0-dev7"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -98,8 +98,10 @@ isort = "^6.0.0"
     add_term_to_category = "commands.cat.glossary_actions:add_term_to_category"
     remove_term_from_category = "commands.cat.glossary_actions:remove_term_from_category"
 
+
     dr_egeria_md = "commands.cat.dr_egeria_md:process_markdown_file"
     dr_egeria_jupyter = "commands.cat.dr_egeria_jupyter:process_jupyter_notebook"
+    dr_egeria_help = "commands.cat.dr_egeria_command_help:main"
 
     list_data_structures_full = "commands.cat.list_data_structures_full:main"
     list_data_structures = "commands.cat.list_data_designer:main_structs"

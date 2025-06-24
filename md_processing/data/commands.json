@@ -1,13 +1,14 @@
 {
   "Command Specifications": {
-    "exported": "Jun 20, 2025 at 8:22:20 AM",
+    "exported": "Jun 24, 2025 at 11:54:54 AM",
     "Data Dictionary": {
       "display_name": "Data Dictionary",
       "qn_prefix": "DataDict",
       "alternate_names": "Data Dict",
       "description": "A Data Dictionary is an organized and curated collection of data definitions that can serve as a reference for data professionals",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -18,6 +19,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -78,7 +80,7 @@
             "inUpdate": true,
             "attr_labels": "Own Anchor",
             "examples": "",
-            "default_value": "true",
+            "default_value": "True",
             "valid_values": "",
             "existing_element": "",
             "description": "Generally true. ",
@@ -276,7 +278,7 @@
             "isAnchor": false,
             "min_cardinality": 1,
             "max_cardinality": 1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -315,7 +317,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -458,7 +460,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -573,8 +575,9 @@
       "qn_prefix": "DataSpec",
       "alternate_names": "Data Spec",
       "description": "A Data Specification defines the data requirements for a project or initiative. This includes the data structures , data fields and data classes.",
+      "verb": "Create",
       "upsert": true,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "https://egeria-project.org/concepts/data-specification",
@@ -585,6 +588,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -645,7 +649,7 @@
             "inUpdate": true,
             "attr_labels": "Own Anchor",
             "examples": "",
-            "default_value": "true",
+            "default_value": "True",
             "valid_values": "",
             "existing_element": "",
             "description": "This collection is its own anchor.",
@@ -882,7 +886,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -1025,7 +1029,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -1140,8 +1144,9 @@
       "qn_prefix": "DataStruct",
       "alternate_names": "",
       "description": "A collection of data fields that for a data specification for a data source.",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -1152,6 +1157,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -1293,7 +1299,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -1499,8 +1505,9 @@
       "qn_prefix": "DataField",
       "alternate_names": "",
       "description": "A data field is a fundamental building block for a data structure.",
+      "verb": "Create",
       "upsert": true,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -1511,6 +1518,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "\n\n",
       "Attributes": [
         {
@@ -1702,7 +1710,7 @@
             "attr_labels": "",
             "examples": "zip code",
             "default_value": "",
-            "valid_values": "Integer;oat,;String,;List; Dict;Boolean",
+            "valid_values": "",
             "existing_element": "DataClass",
             "description": "The data class that values of this data field conform to.",
             "qualified_name_pattern": "",
@@ -1769,7 +1777,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -2029,7 +2037,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -2198,7 +2206,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -2352,8 +2360,9 @@
       "qn_prefix": "DataClass",
       "alternate_names": "",
       "description": "Describes the data values that may be stored in data fields. Can be used to configure quality validatiors and data field classifiers.",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -2364,6 +2373,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -2581,7 +2591,7 @@
             "attr_labels": "",
             "examples": "",
             "default_value": "",
-            "valid_values": "String; Integer; ",
+            "valid_values": "string; int; long; date; boolean; char; byte; float; double; biginteger; bigdecimal; array<string>; array<int>; map<string,string>; map<string, boolean>; map<string, int>; map<string, long>; map<string,double>; map<string, date> map<string, object>; short; map<string, array<string>>; other",
             "existing_element": "",
             "description": "Data type for the data class.",
             "qualified_name_pattern": "",
@@ -2947,7 +2957,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "Specializes the inherited data class.",
+            "description": "Specializes a parent  data class.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Reference Name",
@@ -2999,7 +3009,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -3142,7 +3152,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -3200,13 +3210,14 @@
         }
       ]
     },
-    "View Data Fields": {
+    "Data Fields": {
       "display_name": "View Data Fields",
       "qn_prefix": "",
-      "alternate_names": "List Data Fields",
+      "alternate_names": "View Data Fields; List Data Fields",
       "description": "Return the data fields, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3217,6 +3228,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3272,6 +3284,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3322,16 +3412,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Data Classes": {
+    "Data Classes": {
       "display_name": "View Data Fields",
       "qn_prefix": "",
-      "alternate_names": "List Data Class; View Data Class; List Data Class",
+      "alternate_names": "View Data Fields. List Data Class; View Data Class; List Data Class",
       "description": "Return the data classes, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3342,6 +3537,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3397,6 +3593,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3447,16 +3721,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Data Structures": {
+    "Data Structures": {
       "display_name": "View Data Structures",
       "qn_prefix": "",
-      "alternate_names": "List Data Structures",
+      "alternate_names": "View Data Structures; List Data Structures",
       "description": "Return the data structures, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3467,6 +3846,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3522,6 +3902,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3572,16 +4030,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Data Specifications": {
+    "Data Specifications": {
       "display_name": "View Data Specifications",
       "qn_prefix": "",
-      "alternate_names": "List Data Specifications; List Data Specs; View Data Specs",
+      "alternate_names": "View Data Specifications; List Data Specifications; List Data Specs; View Data Specs",
       "description": "Return the data specifications, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3592,6 +4155,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3647,6 +4211,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3697,16 +4339,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Detailed Data Field": {
+    "Detailed Data Field": {
       "display_name": "View Detailed Data Field",
       "qn_prefix": "",
-      "alternate_names": "List Detailed Data Field",
+      "alternate_names": "View Detailed Data Field; List Detailed Data Field",
       "description": "Return the data field details optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3716,7 +4463,8 @@
       "style": "display",
       "anchor_scope_id": "",
       "parent_id": "",
-      "level": "Basic",
+      "level": "Advanced",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3772,6 +4520,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3822,16 +4648,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Detailed data Structures": {
+    "Detailed data Structures": {
       "display_name": "View Detailed Data Structures",
       "qn_prefix": "",
-      "alternate_names": "List Detailed Data Structures",
+      "alternate_names": "View Detailed Data Structures; List Detailed Data Structures",
       "description": "Return the data structure details, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3841,7 +4772,8 @@
       "style": "display",
       "anchor_scope_id": "",
       "parent_id": "",
-      "level": "Basic",
+      "level": "Advanced",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3897,6 +4829,84 @@
           }
         },
         {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Detailed": {
             "variable_name": "detailed",
             "inUpdate": true,
@@ -3947,16 +4957,121 @@
             "level": "Advanced",
             "Journal Entry": ""
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
-    "View Data Dictionaries": {
+    "Data Dictionaries": {
       "display_name": "View Data Dictionaries",
       "qn_prefix": "",
-      "alternate_names": "List Dictionary; List Dictionaries; View Data Dictionary",
+      "alternate_names": "View Data Dictionaries; List Dictionary; List Dictionaries; View Data Dictionary",
       "description": "Return the data dictionaries, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -3967,6 +5082,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3990,6 +5106,110 @@
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "Format",
+            "examples": "List, Form, Report",
+            "default_value": "LIST",
+            "valid_values": "LIST; FORM; DICT; MD; MERMAID; REPORT",
+            "existing_element": "",
+            "description": "Optional specification of output format for the query.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "False",
+            "valid_values": "",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Bool",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
@@ -4022,32 +5242,6 @@
           }
         },
         {
-          "Output Format": {
-            "variable_name": "",
-            "inUpdate": true,
-            "attr_labels": "Format",
-            "examples": "List, Form, Report",
-            "default_value": "LIST",
-            "valid_values": "LIST; FORM; DICT; MD; MERMAID; REPORT",
-            "existing_element": "",
-            "description": "Optional specification of output format for the query.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Valid Value",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
           "Output Profile": {
             "variable_name": "output_profile",
             "inUpdate": false,
@@ -4072,6 +5266,110 @@
             "level": "Invisible",
             "Journal Entry": "BASIC - just show the basic properties  of the collection without members, additional properties or extended properties.\nCORE - add members, additional properties\n FULL - add anchor, parent, etc?\n\n"
           }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "inUpdate": true,
+            "attr_labels": "As Of Time",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "default_value": "",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "existing_element": "",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": " ACTIVE; DELETED; ",
+            "existing_element": "",
+            "description": "One of the status values from a list of valid values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
         }
       ]
     },
@@ -4080,8 +5378,9 @@
       "qn_prefix": "SupplyChain",
       "alternate_names": "Supply Chain",
       "description": "The flow of a particular type of data across a digital landscape.",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -4092,6 +5391,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -4259,7 +5559,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -4402,7 +5702,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -4491,8 +5791,9 @@
       "qn_prefix": "SupplyChainSegment",
       "alternate_names": "",
       "description": "A collection of data fields that for a data specification for a data source.",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -4503,6 +5804,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -4696,7 +5998,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -4839,7 +6141,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -4928,8 +6230,9 @@
       "qn_prefix": "SolutionBlueprint",
       "alternate_names": "",
       "description": "A solution blueprint describes the architecture of a digital service in terms of solution components.",
+      "verb": "Create",
       "upsert": true,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -4940,6 +6243,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -5081,7 +6385,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -5224,7 +6528,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -5313,8 +6617,9 @@
       "qn_prefix": "SolutionComponent",
       "alternate_names": "",
       "description": "A reusable solution component.",
+      "verb": "Create",
       "upsert": true,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -5325,6 +6630,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -5570,7 +6876,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -5713,7 +7019,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -5802,8 +7108,9 @@
       "qn_prefix": "SolutionRole",
       "alternate_names": "",
       "description": "A collection of data fields that for a data specification for a data source.",
-      "upsert": false,
-      "list": false,
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -5814,6 +7121,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -6033,7 +7341,7 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A generated unique identifier.",
+            "description": "A system generated unique identifier.",
             "qualified_name_pattern": "",
             "generated": true,
             "style": "GUID",
@@ -6176,7 +7484,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -6265,8 +7573,9 @@
       "qn_prefix": "",
       "alternate_names": "Segments",
       "description": "",
+      "verb": "Attach",
       "upsert": false,
-      "list": false,
+      "attach": true,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -6277,6 +7586,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": false,
       "Journal Entry": "This command can be used to link or detach information supply chain segments.",
       "Attributes": [
         {
@@ -6483,7 +7793,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Invisible",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -6567,12 +7877,14 @@
         }
       ]
     },
-    "View Information Supply Chains": {
+    "Information Supply Chains": {
       "display_name": "View Information Supply Chains",
       "qn_prefix": "",
+      "alternate_names": "List Detailed Data Structures",
       "description": "Return information supply chains filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -6583,6 +7895,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -6691,13 +8004,14 @@
         }
       ]
     },
-    "View Supply Chain Segments": {
+    "Supply Chain Segments": {
       "display_name": "View Supply Chain Segments",
       "qn_prefix": "",
-      "alternate_names": "List Detailed Data Structures",
+      "alternate_names": "View Supply Chain Segments; List Detailed Data Structures",
       "description": "Return the data structure details, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -6708,6 +8022,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -6816,13 +8131,14 @@
         }
       ]
     },
-    "View Solution Components": {
+    "Solution Components": {
       "display_name": "View Solution Components",
       "qn_prefix": "",
-      "alternate_names": "View Components",
+      "alternate_names": "View Solution Components; View Components",
       "description": "Return the data structure details, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -6833,6 +8149,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -6941,13 +8258,14 @@
         }
       ]
     },
-    "View Solution Blueprints": {
+    "Solution Blueprints": {
       "display_name": "View Solution Blueprints",
       "qn_prefix": "",
-      "alternate_names": "View Blueprints; List Solution Blueprints",
+      "alternate_names": "View Solution Blueprints; View Blueprints; List Solution Blueprints",
       "description": "Return the data structure details, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -6958,6 +8276,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {
@@ -7066,13 +8385,14 @@
         }
       ]
     },
-    "View Solution Roles": {
+    "Solution Roles": {
       "display_name": "View Solution Roles",
       "qn_prefix": "",
-      "alternate_names": "List Detailed Data Structures",
+      "alternate_names": "View Solution Roles; List Detailed Data Structures",
       "description": "Return the data structure details, optionally filtered by the search string.",
+      "verb": "View",
       "upsert": false,
-      "list": false,
+      "attach": false,
       "details": false,
       "form": false,
       "ReferenceURL": "",
@@ -7083,6 +8403,7 @@
       "anchor_scope_id": "",
       "parent_id": "",
       "level": "Basic",
+      "view": true,
       "Journal Entry": "",
       "Attributes": [
         {

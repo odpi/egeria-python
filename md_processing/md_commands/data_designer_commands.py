@@ -16,6 +16,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
 
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -1422,7 +1423,7 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
     attributes = parsed_output['attributes']
 
     valid = parsed_output['valid']
-
+    print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
 
     if directive == "display":
@@ -1485,7 +1486,7 @@ def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, dir
     attributes = parsed_output['attributes']
 
     valid = parsed_output['valid']
-
+    print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
 
     if directive == "display":
@@ -1545,7 +1546,7 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
     attributes = parsed_output['attributes']
 
     valid = parsed_output['valid']
-
+    print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
 
     if directive == "display":
@@ -1605,7 +1606,7 @@ def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directi
     attributes = parsed_output['attributes']
 
     valid = parsed_output['valid']
-
+    print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
 
     if directive == "display":
@@ -1648,125 +1649,4 @@ def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directi
     else:
         return None
 
-# @logger.catch
-# def process_list_data_dictionary_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") ->
-# Optional[str]:
-#     """
-#     Processes a list data dictionary.
-#
-#     :param txt: A string representing the input cell to be processed for
-#         extracting term-related attributes.
-#     :param directive: an optional string indicating the directive to be used - display, validate or execute
-#     :return: A string summarizing the outcome of the processing.
-#     """
-#
-#
-#     if directive == "display":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return True
-#     elif directive == "process":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return egeria_client.get_term_by_guid(known_guid, output_format=output_format)
 
-#
-# def process_term_history_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-#     """
-#     Processes a term history object_action by extracting key attributes such as
-#     term name and output format from the given text.
-#
-#     :param txt: A string representing the input cell to be processed for
-#         extracting term-related attributes.
-#     :param directive: an optional string indicating the directive to be used - display, validate or execute
-#     :return: A string summarizing the outcome of the processing.
-#     """
-#     from md_processing.md_processing_utils.common_md_utils import set_debug_level
-#
-#     object_action = extract_command(txt)
-#     set_debug_level(directive)
-#     print(Markdown(f"{pre_command} `{object_action}` with directive: `{directive}`"))
-#
-#     term_name = process_simple_attribute(txt, TERM_NAME_LABELS, ERROR)
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS)
-#     output_format = output_format.upper() if output_format else "MD"
-#     if output_format not in ELEMENT_OUTPUT_FORMATS:
-#         print_msg(WARNING, f"Output format {output_format} not recognized, using MD", debug_level)
-#         output_format = "MD"
-#
-#     if term_name is None:
-#         print_msg(ERROR, "No term name found", debug_level)
-#         return None
-#
-#     known_q_name, known_guid, valid, term_exists = process_element_identifiers(egeria_client, "Term",
-#                                                                               TERM_NAME_LABELS, txt,
-#                                                                               EXISTS_REQUIRED, None)
-#     if not term_exists:
-#         print_msg(ERROR, f"Term {term_name} not found", debug_level)
-#         return None
-#
-#     if directive == "display":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return True
-#     elif directive == "process":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return egeria_client.get_term_history(known_guid, output_format=output_format)
-#
-#
-# def process_term_revision_history_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") ->
-# Optional[str]:
-#     """
-#     Processes a term revision history object_action by extracting key attributes such as
-#     term name and output format from the given text.
-#
-#     :param txt: A string representing the input cell to be processed for
-#         extracting term-related attributes.
-#     :param directive: an optional string indicating the directive to be used - display, validate or execute
-#     :return: A string summarizing the outcome of the processing.
-#     """
-#     from md_processing.md_processing_utils.common_md_utils import set_debug_level
-#
-#     object_action = extract_command(txt)
-#     set_debug_level(directive)
-#     print(Markdown(f"{pre_command} `{object_action}` with directive: `{directive}`"))
-#
-#     term_name = process_simple_attribute(txt, TERM_NAME_LABELS, ERROR)
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS)
-#     output_format = output_format.upper() if output_format else "MD"
-#     if output_format not in ELEMENT_OUTPUT_FORMATS:
-#         print_msg(WARNING, f"Output format {output_format} not recognized, using MD", debug_level)
-#         output_format = "MD"
-#
-#     if term_name is None:
-#         print_msg(ERROR, "No term name found", debug_level)
-#         return None
-#
-#     known_q_name, known_guid, valid, term_exists = process_element_identifiers(egeria_client, "Term",
-#                                                                               TERM_NAME_LABELS, txt,
-#                                                                               EXISTS_REQUIRED, None)
-#     if not term_exists:
-#         print_msg(ERROR, f"Term {term_name} not found", debug_level)
-#         return None
-#
-#     if directive == "display":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return True
-#     elif directive == "process":
-#         print(Markdown(f"\n* Command: {object_action}\n\t* Term Name: {term_name}\n\t* Output Format: {
-#         output_format}"))
-#         return egeria_client.get_term_revision_history(known_guid, output_format=output_format)
