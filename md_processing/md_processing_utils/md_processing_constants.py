@@ -51,12 +51,18 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
                 "List Glossary Categories", "Create Personal Project", "Update Personal Project", "Create Category",
-                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint",
+                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint", "View Solution Blueprints", "View Blueprints",
+                "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains", "View Supply Chain",
+                "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
+                "Create Information Supply Chain", "Update Information Supply Chain",
+                "Create Information Supply Chain Segment", "Update Information Supply Chain Segment", "Link Segments", "Detach Segments",
                 "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
                 "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",
                 "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
-                "Update Data Dict", " View Data Dictionary", "View Data Dictionaries", "Create Data Class", "Update Data Class",]
+                "Update Data Dict", " View Data Dictionary", "View Data Dictionaries", "View Data Specifications",
+                "View Data Specs", "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
+                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",]
 
 
 pre_command = "\n---\n==> Processing object_action:"

@@ -27,6 +27,7 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
               depending on the output format.
     """
     # search_string = search_string if search_string else "All Elements"
+    elements_md = ""
     elements_action = "Update " + obj_type
     if output_format == "FORM":
         preamble = f"\n# Update {obj_type} Form - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
@@ -34,7 +35,7 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
             preamble +=  f"\t {obj_type} found from the search string:  `{search_string}`\n\n"
         return preamble, elements_action
     elif output_format == "REPORT":
-        elements_md = (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        elements_md += (f"# {obj_type} Report - created at {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
                        f"\t{obj_type}  found from the search string:  `{search_string}`\n\n")
         elements_action = None
         return elements_md, elements_action
@@ -54,16 +55,30 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
         str: Formatted markdown for the attribute
     """
     output = ""
-    attribute_value = attribute_value.strip() if attribute_value else ""
-    attribute_title = attribute_name.title() if attribute_name else ""
+    if isinstance(attribute_value,str):
+        attribute_value = attribute_value.strip() if attribute_value else ""
+    elif isinstance(attribute_value,list):
+        attribute_value = ",\n".join(attribute_value)
+    if attribute_name:
+        if attribute_name.upper() == "GUID":
+            attribute_title = attribute_name.upper()
+        else:
+            attribute_title = attribute_name.title()
+    else:
+        attribute_title = ""
+
     if output_type in ["FORM", "MD"]:
+        if attribute_name.lower() == "mermaid":
+            return "\n"
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type == "REPORT":
-        if attribute_value:
+        if attribute_title in ['Mermaid Graph', 'Mermaid']:
+            output = f"## Mermaid Graph\n```mermaid\n{attribute_value}\n```\n"
+        elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output
 
-def format_for_markdown_table(text: str) -> str:
+def format_for_markdown_table(text: str, guid: str = None) -> str:
     """
     Format text for markdown tables by replacing newlines with spaces and escaping pipe characters.
     No truncation is applied to allow full-length text display regardless of console width.
@@ -77,9 +92,13 @@ def format_for_markdown_table(text: str) -> str:
     if not text:
         return ""
     # Replace newlines with spaces and escape pipe characters
-    return text.replace("\n", " ").replace("|", "\\|")
+    t = text.replace("\n", " ").replace("|", "\\|")
+    if '::' in t and guid:
+        t = f" [{t}](#{guid}) "
+    return t
 
-def generate_entity_md(elements: List[Dict], 
+
+def generate_entity_md(elements: List[Dict],
                       elements_action: str, 
                       output_format: str, 
                       entity_type: str,
@@ -102,33 +121,36 @@ def generate_entity_md(elements: List[Dict],
     elements_md = ""
 
     for element in elements:
+        if element is None:
+            continue
         props = extract_properties_func(element)
 
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
+
 
         # Format header based on output format
         if output_format in ['FORM', 'MD']:
             elements_md += f"# {elements_action}\n\n"
             elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f"# {entity_type} Name: {props['display_name']}\n\n"
+            elements_md += f'<a id="{props["GUID"]}"></a>\n\n# {entity_type} Name: {props["display_name"]}\n\n'
         else:
             elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
 
         # Add common attributes
         for key, value in props.items():
-            if key not in ['guid', 'properties', 'display_name']:
+            if key not in [ 'properties', 'display_name']:
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
         # Add additional properties
         for key, value in additional_props.items():
             elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
-        # Add GUID
-        elements_md += make_md_attribute("GUID", props['guid'], output_format)
+        # # Add GUID
+        # elements_md += make_md_attribute("GUID",props['GUID'], output_format)
 
         # Add separator if not the last element
         if element != elements[-1]:
@@ -161,8 +183,10 @@ def generate_entity_md_table(elements: List[Dict],
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
 
-    elements_md = f"# {entity_type_plural} Table\n\n"
-    elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
+    elements_md = ""
+    if output_format == "LIST":
+        elements_md = f"# {entity_type_plural} Table\n\n"
+        elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
 
     # Add column headers
     header_row = "| "
@@ -176,12 +200,15 @@ def generate_entity_md_table(elements: List[Dict],
 
     # Add rows
     for element in elements:
-        props = extract_properties_func(element)
+        if output_format == "help":
+            props = element
+        else:
+            props = extract_properties_func(element)
 
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
         # Build row
         row = "| "
@@ -197,7 +224,7 @@ def generate_entity_md_table(elements: List[Dict],
 
             # Format the value if needed
             if 'format' in column and column['format']:
-                value = format_for_markdown_table(value)
+                value = format_for_markdown_table(value, props['GUID'])
 
             row += f"{value} | "
 
@@ -228,12 +255,14 @@ def generate_entity_dict(elements: List[Dict],
     result = []
 
     for element in elements:
+        if element is None:
+            continue
         props = extract_properties_func(element)
 
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element, props['guid'], output_format)
+            additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
         # Create entity dictionary
         entity_dict = {}
@@ -290,15 +319,19 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         # Add classifications if present
         classifications = elements['elementHeader'].get('classifications', [])
         if classifications:
-            classification_names = ""
+            classification_names = "["
             for classification in classifications:
-                classification_names += f"* {classification['classificationName']}\n"
-            body['classification_names'] = classification_names
+                if len(classification_names) > 1:
+                    classification_names += ", "
+                classification_names += f"{classification['classificationName']}"
+            body['classification_names'] = classification_names + ']'
 
         return body
 
     result = []
     for element in elements:
+        if element is None:
+            continue
         body = {'guid': element['elementHeader']['guid']}
         for key in element['properties']:
             body[key] = element['properties'][key]
@@ -306,10 +339,12 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         # Add classifications if present
         classifications = element['elementHeader'].get('classifications', [])
         if classifications:
-            classification_names = ""
+            classification_names = "["
             for classification in classifications:
-                classification_names += f"* {classification['classificationName']}\n"
-            body['classifications'] = classification_names
+                if len(classification_names) > 1:
+                    classification_names += ", "
+                classification_names += f"{classification['classificationName']}"
+            body['classifications'] = classification_names + ']'
 
         result.append(body)
     return result

@@ -89,7 +89,7 @@ class TestMetadataExplorer:
     def test_get_element_by_guid(self):
         # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
         # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
-        guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
+        guid = '5539a643-875b-450c-adc1-aba38912d822'  # a glossary term
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
@@ -119,7 +119,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_graph(self):
-        guid = "07b3a6d3-45b0-4616-90e4-740b7cf6275f"
+        guid = "43e630ec-2afb-40fb-a0ba-c08e0c6215dc"
         # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
         # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
         # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
@@ -256,8 +256,8 @@ class TestMetadataExplorer:
     def test_find_metadata_elements_with_string(self):
         body = {
             "class": "SearchStringRequestBody",
-            "searchString": "Process",
-            "typeName": "ValidValueDefinition",
+            "searchString": None,
+            "typeName": "DataStructure",
             "effectiveTime": None,
             "limitResultsByStatus": [],
             "asOfTime": None,
@@ -295,7 +295,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements(self):
-        guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"  # active-metadata-store
+        guid = "43e630ec-2afb-40fb-a0ba-c08e0c6215dc"
         # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
         # guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # sustainability glossary
         # guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # Clinical trials project
@@ -306,7 +306,7 @@ class TestMetadataExplorer:
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
-            "mermaidOnly": True
+            "mermaidOnly": False
         }
 
         try:

@@ -90,7 +90,7 @@ class GlossaryBrowser(Client):
             category_qualified_names = cat_md_qn.rstrip(',')
 
         result = {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'GUID': guid, 'properties': properties, 'display_name': display_name, 'description': description,
             'language': language, 'usage': usage, 'qualified_name': qualified_name
         }
 
@@ -312,7 +312,7 @@ class GlossaryBrowser(Client):
         aliases = ", ".join(properties.get("aliases", "")) or ""
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'aliases': aliases,
+            'GUID': guid, 'properties': properties, 'display_name': display_name, 'aliases': aliases,
             'summary': summary, 'description': description, 'examples': examples, 'usage': usage,
             'version identifier': pub_version, 'qualified_name': qualified_name, 'status': status
             }
@@ -626,7 +626,7 @@ class GlossaryBrowser(Client):
         qualified_name = properties.get("qualifiedName", "") or ""
 
         return {
-            'guid': guid, 'properties': properties, 'display_name': display_name, 'description': description,
+            'GUID': guid, 'properties': properties, 'display_name': display_name, 'description': description,
             'qualified_name': qualified_name
             }
 
@@ -1051,7 +1051,6 @@ class GlossaryBrowser(Client):
             "class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time,
             "typeName": type_name,
             }
-        body = body_slimmer(body)
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
                f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
@@ -2176,11 +2175,11 @@ class GlossaryBrowser(Client):
                 parent_guid = parent['elementHeader']['guid']
                 parent_name = parent['glossaryCategoryProperties'].get('displayName', '---')
                 parent_info = {
-                    'guid': parent_guid, 'name': parent_name
+                    'GUID': parent_guid, 'name': parent_name
                     }
 
             return {
-                'guid': category_guid, 'name': display_name, 'qualifiedName': qualified_name,
+                'GUID': category_guid, 'name': display_name, 'qualifiedName': qualified_name,
                 'description': description, 'parent': parent_info, 'children': children
                 }
 

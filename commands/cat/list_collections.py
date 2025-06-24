@@ -94,7 +94,7 @@ def display_collections(
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
             output = m_client.find_collections(
-                search_string.strip(), None, False, ends_with=False, ignore_case=True,
+                search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
                 output_format=output_format
                 )
             if output == NO_ELEMENTS_FOUND:
@@ -129,27 +129,28 @@ def display_collections(
         table.add_column("Members")
 
         collections = m_client.find_collections(
-            search_string.strip(), None, False, ends_with=False, ignore_case=True,
+            search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
             output_format = "DICT"
         )
         if type(collections) is list:
             sorted_collection_list = sorted(
-                collections, key=lambda k: k["name"]
+                collections, key=lambda k: k["display_name"]
             )
             for collection in sorted_collection_list:
-                display_name = collection["name"]
-                qualified_name = collection["qualifiedName"]
-                guid = collection["guid"]
+                display_name = collection["display_name"]
+                qualified_name = collection["qualified_name"]
+                guid = collection["GUID"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
                 description = collection.get("description",'---')
                 collection_type = collection.get("collectionType", "---")
                 classifications = collection.get("classifications", "---")
+
                 classifications_md = Markdown(classifications)
-                members_struct = m_client.get_collection_members(collection_guid=guid)
+                members_struct = m_client.get_member_list(collection_guid=guid)
                 member_list = ""
                 if isinstance(members_struct, list):
                     for member in members_struct:
-                        member_list = member_list + f"- {member['properties'].get('qualifiedName','---')}\n"
+                        member_list = member_list + f"- {member.get('qualifiedName','---')}\n"
 
                 # members = "\n* ".join(collection.get("members", []))
                 members_md = Markdown(member_list)

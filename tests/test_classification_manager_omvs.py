@@ -28,6 +28,7 @@ from pyegeria._exceptions import (
 )
 from pyegeria.classification_manager_omvs import ClassificationManager
 from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria.output_formatter import make_preamble, make_md_attribute
 
 disable_ssl_warnings = True
 
@@ -70,7 +71,7 @@ def test_get_elements():
     # open_metadata_type_name = 'CertificationType'
     #
     # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "Project"
+    open_metadata_type_name = "DataField"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -89,7 +90,7 @@ def test_get_elements_by_property_value():
     # open_metadata_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # open_metadata_type_name = "ValidValueDefinition"
-    open_metadata_type_name = None
+    open_metadata_type_name = "InformationSupplyChainSegment"
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
     # open_metadata_type_name = "Asset"
@@ -97,7 +98,7 @@ def test_get_elements_by_property_value():
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name","displayName",'qualifiedName']
-    property_value = "Egeria-Markdown"
+    property_value = "first segment"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -135,12 +136,12 @@ def test_find_elements_by_property_value():
     # open_metadata_type_name = "ValidValueDefinition"
     # open_metadata_type_name = None
     # open_metadata_type_name = "ArchiveFile"
-    open_metadata_type_name = "InformationSupplyChain"
+    open_metadata_type_name = "SolutionBlueprint"
     # open_metadata_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
     property_names = ["displayName"]
-    property_value = "Clinical"
+    property_value = "my_first_blueprint"
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -173,7 +174,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = "07b3a6d3-45b0-4616-90e4-740b7cf6275f"
+    element_guid = 'bda24e8a-4798-4cc0-b693-b09c688d5a6f'
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -235,7 +236,7 @@ def test_get_guid_for_name():
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
     # property_value = "Sustainability Glossary"
-    property_value = "Coco Pharmaceuticals Governance Domains"
+    property_value = "SupplyChainSegment::first segment"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -256,13 +257,13 @@ def test_get_element_guid_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
-    property_value = "Coco Pharmaceuticals Governance Domains"
+    property_value = "SupplyChainSegment::first segment"
 
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     start_time = time.perf_counter()
-    result = c_client.get_element_guid_by_unique_name(property_value, "name")
+    result = c_client.get_element_guid_by_unique_name(property_value, "")
     duration = time.perf_counter() - start_time
     print(f"\n\tDuration was {duration} seconds")
     if type(result) is list:
@@ -277,13 +278,13 @@ def test_get_element_guid_by_unique_name():
 def test_get_element_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
-    property_value = "coco_sustainability"
+    property_value = "SupplyChainSegment::first segment"
 
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     start_time = time.perf_counter()
-    result = c_client.get_element_by_unique_name(property_value, "name")
+    result = c_client.get_element_by_unique_name(property_value, "qualifiedName")
     duration = time.perf_counter() - start_time
     print(f"\n\tDuration was {duration} seconds")
     if type(result) is dict:
@@ -298,9 +299,9 @@ def test_get_element_by_unique_name():
 def test_get_elements_by_classification():
     # open_metadata_type_name = "Project"
     # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "Catalog"
+    open_metadata_type_name = "DataStructure"
     # classification = "GovernanceProject"
-    classification = "Anchors"
+    classification = "DataSpec"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -319,12 +320,12 @@ def test_get_elements_by_classification():
 
 def test_get_elements_by_classification_with_property_value():
     # open_metadata_type_name = "Project"
-    open_metadata_type_name = "InformationSupplyChain"
-    classification = "Anchors"
+    open_metadata_type_name = None
+    classification = "DataSpec"
     # property_value = "Collection"
     # property_names = ["anchorTypeName"]
-    property_value = "InformationSupplyChain"
-    property_names = ["anchorTypeName"]
+    property_value = ""
+    property_names = [""]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -358,10 +359,10 @@ def test_find_elements_by_classification_with_property_value():
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
-    classification = "Anchors"
+    classification = "DataSpec"
     # open_metadata_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
-    property_value = "Clinical Trial Treatment Validation"
+    property_value = ""
     property_names = ["displayName"]
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -591,7 +592,7 @@ def test_retrieve_instance_for_guid():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    element_guid = "5929cf40-3035-45f0-9770-2a6df02f7c83"
+    element_guid = "bda24e8a-4798-4cc0-b693-b09c688d5a6f"
     response = c_client.retrieve_instance_for_guid(element_guid)
 
     if type(response) is dict:

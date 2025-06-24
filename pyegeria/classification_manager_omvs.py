@@ -961,7 +961,7 @@ class ClassificationManager(Client):
             the requesting user is not authorized to issue this request.
         """
 
-        property_name = ["name", "displayName", "title"]
+        property_name = ["name", "displayName", "title","qualifiedName"]
         elements = await self._async_get_elements_by_property_value(
             name, property_name, None
         )
