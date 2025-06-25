@@ -55,9 +55,9 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 
 
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
-@click.option("--file-path", help="File path to markdown file", default="glossary_test1.md", required=True,
+@click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md", required=True,
               prompt=False)
-@click.option("--directive", default="display", help="How to process the file",
+@click.option("--directive", default="process", help="How to process the file",
               type=click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")

@@ -613,7 +613,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = 'DataField::PatientId'
-            response = m_client.find_data_fields(search_string,output_format="JSON")
+            response = m_client.find_data_fields(search_string,output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -634,6 +634,50 @@ class TestDataDesigner:
 
         finally:
             m_client.close_session()
+
+
+    def test_find_data_fields_w_body(self):
+
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            start_time = time.perf_counter()
+            search_string = None
+
+            body = {
+                "class": "FilterRequestBody",
+                "asOfTime": "2025-06-24T17:10",
+                "effectiveTime": None,
+                "forLineage": False,
+                "forDuplicateProcessing": False,
+                "limitResultsByStatus": ["ACTIVE"],
+                "sequencingOrder": None,
+                "sequencingProperty": None,
+                "filter": search_string,
+                }
+            response = m_client.find_data_fields_w_body(body,output_format="DICT")
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
+                )
+            if type(response) is list:
+                print_json(data=response)
+            elif type(response) is str:
+                console.print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
 
 
 
