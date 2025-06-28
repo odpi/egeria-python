@@ -16,6 +16,7 @@ import time
 from rich import print, print_json
 from rich.console import Console
 
+
 from pyegeria import (
     CollectionManager,
     InvalidParameterException,
@@ -42,7 +43,7 @@ class TestCollectionManager:
     good_engine_host_1 = "governDL01"
     good_view_server_1 = "qs-view-server"
 
-    def test_get_linked_collections(self):
+    def test_get_attached_collections(self):
         try:
             c_client = CollectionManager(
                 self.good_view_server_1,
@@ -51,9 +52,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "eefedc09-98d6-4f65-9a3e-b2c546571f44"
+            parent_guid = "f3e4de0e-320a-4b17-8581-b9613fa6cbbb"
 
-            response = c_client.get_attached_collections(parent_guid)
+            response = c_client.get_attached_collections(parent_guid, output_format="JSON")
             duration = time.perf_counter() - start_time
             print(f"response type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -77,7 +78,8 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_get_classified_collections(self):
+
+    def test_find_collections(self):
         try:
             c_client = CollectionManager(
                 self.good_view_server_1,
@@ -86,25 +88,22 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
-            # classification = "RootCollection"
-            classification = "DataSpec"
-            response = c_client.get_classified_collections(classification, output_format="DICT")
+            search_string = "*"
+
+            response = c_client.find_collections(
+                search_string,
+                output_format="DICT"
+            )
             duration = time.perf_counter() - start_time
 
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"response type is: {type(response)}")
-            if type(response) is tuple:
-                t = response[0]
-                count = len(t)
-                print(f"Found {count} collections {type(t)}\n\n")
-                print_json(json.dumps(response, indent=4))
-            elif type(response) is list:
-                count = len(response)
-                print(f"Found {count} collections\n\n")
-                print_json(json.dumps(response, indent=4))
+            print(
+                f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds"
+            )
+            if type(response) is list:
+                print(f"Found {len(response)} collections {type(response)}\n\n")
+                print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\n" + response)
+                console.print(response)
             assert True
 
         except (
@@ -118,7 +117,7 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_find_collections(self):
+    def test_find_collections_w_body(self):
         try:
             c_client = CollectionManager(
                 self.good_view_server_1,
@@ -127,11 +126,21 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Test Spec2"
+            classification_name = "Folder"
+            body = {
+                "class": "FilterRequestBody",
+                "asOfTime" : "2025-06-27T09:00:00",
+                "effectiveTime": None,
+                "forLineage": False,
+                "forDuplicateProcessing": False,
+                "limitResultsByStatus": ["ACTIVE"],
+                "sequencingOrder": "PROPERTY_ASCENDING",
+                "sequencingProperty": "qualifiedName",
+                "filter": None
+                }
 
-            response = c_client.find_collections(
-                search_string, None, None, True, ignore_case=False,
-                output_format="DICT"
+            response = c_client.find_collections_w_body(
+                body, classification_name, output_format="DICT"
             )
             duration = time.perf_counter() - start_time
 
@@ -165,9 +174,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "Scope 2 Emissions"
+            collection_name = "Dans Artifacts"
 
-            response = c_client.get_collections_by_name(collection_name)
+            response = c_client.get_collections_by_name(collection_name, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -199,9 +208,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "Data Dictionary"
+            collection_type = "DataSpec"
 
-            response = c_client.get_collections_by_type(collection_type)
+            response = c_client.get_collections_by_type('Test Data Specification', 'DataSpec', output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(
@@ -236,9 +245,9 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "8d13b657-fcdf-4a67-afc8-98b5493cda1a"
+            collection_guid = "cbe168a1-9551-47b6-94a6-e2bce92d8288"
 
-            response = c_client.get_collection_by_guid(collection_guid, output_format="JSON")
+            response = c_client.get_collection_by_guid(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -265,6 +274,44 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
+    def test_get_collection_graph(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            collection_guid = "cbe168a1-9551-47b6-94a6-e2bce92d8288"
+
+            response = c_client.get_collection_graph(collection_guid, output_format="JSON")
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Type of response is {type(response)}")
+
+            if isinstance(response, (dict, list)):
+                print("dict:\n\n")
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}\n\n")
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            c_client.close_session()
+
     def test_create_collection(self):
         try:
             c_client = CollectionManager(
@@ -276,7 +323,7 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "cbf16227-c3cd-4fe2-8175-a768cd2bfb74"
+            parent_guid = "f3e4de0e-320a-4b17-8581-b9613fa6cbbb"
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
             display_name = "Elecraft Radio collection"
@@ -287,15 +334,16 @@ class TestCollectionManager:
             order_property_name = None
 
             response = c_client.create_collection(
-                "ResultsSet",
-                anchor_guid,
+                display_name,
+                description,
+                is_own_anchor,
+                None,
+                None,
                 parent_guid,
                 parent_relationship_type_name,
                 parent_at_end1,
-                display_name,
-                description,
                 collection_type,
-                is_own_anchor,
+                None,
                 collection_ordering,
                 order_property_name,
             )
@@ -330,19 +378,20 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             classification_name = "Set"
             body = {
+                "class": "NewElementRequestBody",
                 "anchorGUID": None,
                 "isOwnAnchor": True,
                 "parentGUID": "11311b9a-58f9-4d8e-94cd-616b809c5f66",
                 "parentRelationshipTypeName": "CollectionMembership",
                 "parentAtEnd1": True,
                 "collectionProperties": {
-                    "class": "CollectionProperties",
+                    "class": "CollectionFolderProperties",
                     "name": "A radio collection",
                     "qualifiedName": f"{classification_name}-My Radios-{time.asctime()}",
                     "description": "A collection of my radios",
                     "collectionType": "Hobby Collection",
-                    "collectionOrdering": "NAME",
-                    "orderPropertyName": None,
+                    "collectionOrder": "NAME",
+                    "orderByPropertyName": None,
                 },
             }
             response = c_client.create_collection_w_body(classification_name, body)
@@ -388,15 +437,8 @@ class TestCollectionManager:
             is_own_anchor = True
 
             response = c_client.create_root_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                None,
-                is_own_anchor
+                display_name,description,is_own_anchor,
+                anchor_guid,parent_guid,parent_relationship_type_name,
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -445,18 +487,7 @@ class TestCollectionManager:
                 "location" : "laz"
                 }
             response = c_client.create_folder_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                None,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
-                additional_props,
+                display_name,description,is_own_anchor
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -495,22 +526,14 @@ class TestCollectionManager:
             # parent_at_end1 = None
             display_name = "MooClinical Trial Test Data Spec"
             description = "Test- Clinical Trials Specification"
-            collection_type = "Data Specification"
+            collection_type = "Test Data Specification"
             is_own_anchor = True
 
             anchor_scope_guid = None
             qualified_name = c_client.__create_qualified_name__("DataSpec",display_name)
 
             response = c_client.create_data_spec_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor
+                display_name,description,is_own_anchor, collection_type=collection_type
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -614,19 +637,10 @@ class TestCollectionManager:
             qualified_name = c_client.__create_qualified_name__("DataDict",display_name)
 
             response = c_client.create_data_dictionary_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                collection_type,
-                anchor_scope_guid,
-                is_own_anchor,
-                collection_ordering,
-                order_property_name,
+                display_name,description,is_own_anchor, anchor_guid,
+                parent_guid)
 
-            )
+
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -681,9 +695,7 @@ class TestCollectionManager:
                         collection_type,
                         anchor_scope_guid,
                         is_own_anchor,
-                        collection_ordering,
-                        order_property_name,
-
+                        qualified_name
                         )
                     duration = time.perf_counter() - start_time
                     # resp_str = json.loads(response)
@@ -796,30 +808,28 @@ class TestCollectionManager:
                 "parentGUID": parent_guid,
                 "parentRelationshipTypeName": parent_relationship_type_name,
                 "parentAtEnd1": True,
-                "collectionProperties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                    "name": display_name,
-                    "description": description,
-                    "collectionType": collection_type,
-                    "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
+                "properties": {
                     "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Land Use Classifications",
-                    "productType": "Geospatial Data Assets",
+                    "qualifiedName": f"DigitalProduct::{collection_type}::{display_name}",
+                    "userDefinedStatus": "ACTIVE",
+                    "name": "Land Use Classifications",
+                    "productType": "Periodic Delta",
+                    "identifier": "sent2",
+                    "productName": "My sentinel",
+                    "serviceLife": "While budgets last",
                     "description": "Land use classification assets",
                     "introductionDate": "2023-12-31",
                     "maturity": "Nacent",
-                    "serviceLife": "3 years",
                     "currentVersion": "V.5",
-                    "nextVersionDate": "2024-06-01",
+                    "nextVersionDate": "2025-08-01",
                     "withdrawDate": "2030-01-01",
                     "additionalProperties": {
                         "thought_id": "a guid",
                         "license": "cc-by-sa",
                     },
+                "initialStatus": "DRAFT",
+                "forLineage": False,
+                "forDuplicateProcessing": False
                 },
             }
             response = c_client.create_digital_product(body)
@@ -989,7 +999,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "49c844aa-8f4a-4b88-b7b0-e7793b7b1975"
+            collection_guid = "c3a0bd96-7405-4317-8919-890561b2daad"
             response = c_client.delete_collection(collection_guid, cascade=True)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")
@@ -1017,28 +1027,33 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "Digital Product"
+            # collection_type = "Digital Product"
             # collection_type = "Product Catalog"
             # collection_type = "Digital Product Marketplace"
             # collection_type = "Data Spec Collection"
             # collection_type = "Medical Data"
             # collection_type = "Data Product Marketplace"
-            collection_type = "Digital Products Root"
+            collection_type = "Test"
 
-            response = c_client.get_collections_by_type(collection_type)
+            response = c_client.get_collections_by_type(collection_type, '*')
             if type(response) is list:
                 count = len(response)
                 print(f"\n\nAbout to delete {count} collections")
                 print_json(json.dumps(response, indent=4))
                 for member in response:
-                    member_guid = member["elementHeader"]["guid"]
-                    member_name = member["properties"]["name"]
-                    print(f"\n about to delete member {member_name} of count members")
-                    c_client.delete_collection(member_guid)
+                    try:
+                        member_guid = member["elementHeader"]["guid"]
+                        member_name = member["properties"]["name"]
+                        print(f"\n about to delete member {member_name} of count members")
+                        c_client.delete_collection(member_guid, cascade=True)
+                    except (InvalidParameterException) as e:
+                        print(e)
+                        print("Continueing")
+                        continue
                 duration = time.perf_counter() - start_time
                 # resp_str = json.loads(response)
                 print(f"\n\tDuration was {duration} seconds\n")
-                response = c_client.get_collections_by_type(collection_type)
+                response = c_client.get_collections_by_type(collection_type, '*')
 
             elif type(response) is str:
                 print("No members found")
@@ -1194,283 +1209,272 @@ class TestCollectionManager:
             parent_guid = None
             parent_relationship_type_name = None
             parent_at_end1 = False
-            display_name = "Digital Products Root"
+            anchor_scope_guid = None
+            display_name = "Digital Insights Root"
             description = "This is the root catalog for digital products"
-            collection_type = "Digital Products Root"
+            collection_type = "Test"
             is_own_anchor = True
 
-            response = c_client.create_root_collection(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
+            root = c_client.create_root_collection(
                 display_name,
-                description,
-                collection_type,
-                is_own_anchor,
+                description,is_own_anchor,
+                collection_type=collection_type
             )
 
             # Create first folder for Agriculture Insights
-            parent_guid = response
+            parent_guid = root
             parent_relationship_type_name = "CollectionMembership"
             display_name = "Agriculture Insights Collection"
             description = "A folder for agricultural insights data product collections"
-            collection_type = "Digital Product Marketplace"
+            collection_type = "Digital Insights Marketplace"
 
             folder1 = c_client.create_folder_collection(
+                display_name,
+                description,
+                True,
                 None,
                 parent_guid,
                 parent_relationship_type_name,
                 True,
-                display_name,
-                description,
                 collection_type,
-                True,
-                "DATE_CREATED",
                 None,
+                None,
+                None,
+                None,
+                None
             )
-            print(f"\n\n created a folder with guid {folder1}")
+            print(f"\n\n created a folder `{display_name}` with guid {folder1}")
             # create second folder for Earth Observations
             display_name = "Earth Observation Data Collection"
             description = "A folder for Earth Observation data product collections"
+            collection_ordering = None
+            parent_guid = root
 
             folder2 = c_client.create_folder_collection(
+                display_name,
+                description,
+                True,
                 None,
                 parent_guid,
                 parent_relationship_type_name,
                 True,
-                display_name,
-                description,
                 collection_type,
-                True,
-                "DATE_CREATED",
+                None,
+                collection_ordering,
+                None,
+                None,
                 None,
             )
-            print(f"\n\n created a folder with guid {folder2}")
+            print(f"\n\n created a folder `{display_name}` with guid {folder2}")
 
             # create a digital product, child of folder 1, for Land Use products
             parent_guid = folder1
             parent_relationship_type_name = "CollectionMembership"
             display_name = "Land Use Classification"
             description = "Land use classification assets"
-            collection_type = "Digital Product"
-            classification_name = "Digital Product"
+            collection_type = "Test"
+            classification_name = "DataDictionary"
             body_3 = {
-                "class": "NewDigitalProductRequestBody",
+                "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "parentGUID": parent_guid,
                 "parentRelationshipTypeName": parent_relationship_type_name,
                 "parentAtEnd1": True,
-                "collectionProperties": {
+                "properties": {
                     "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                    "qualifiedName": f"{classification_name}::{display_name}",
                     "name": display_name,
                     "description": description,
                     "collectionType": collection_type,
                     "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
-                    "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Land Use Classifications",
-                    "productType": "Geospatial Data Assets",
-                    "description": "Land use classification assets",
-                    "introductionDate": "2023-12-01",
-                    "maturity": "Nacent",
-                    "serviceLife": "3 years",
-                    "currentVersion": "V.5",
-                    "nextVersionDate": "2024-12-01",
-                    "withdrawDate": "2030-01-01",
-                    "additionalProperties": {
-                        "thought_id": "a guid",
-                        "license": "cc-by-sa",
-                    },
-                },
+                }
             }
-            folder3 = c_client.create_digital_product(body_3)
-            print(f"\n\n created a collection with guid {folder3}")
+
+
+            folder3 = c_client.create_collection_w_body(body_3, classification_name)
+            print(f"\n\n created a collection `{display_name}` with guid {folder3}")
 
             # create a fourth collection, a digital product, child of folder 2, for Landsat 8
-            parent_guid = folder2
-            display_name = "Landsat 8"
-            description = "Landsat 8 data products"
-
-            body_4 = {
-                "class": "NewDigitalProductRequestBody",
-                "isOwnAnchor": True,
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "collectionProperties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                    "name": display_name,
-                    "description": description,
-                    "collectionType": collection_type,
-                    "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
-                    "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Landsat 8 Imagery",
-                    "productType": "Geospatial Data Assets",
-                    "description": description,
-                    "introductionDate": "2024-01-01",
-                    "maturity": "Mature",
-                    "serviceLife": "3 years",
-                    "currentVersion": "V1.5",
-                    "nextVersion": "2024-06-01",
-                    "withdrawDate": "2030-01-01",
-                    "additionalProperties": {
-                        "thought_id": "a guid",
-                        "license": "cc-by-sa",
-                    },
-                },
-            }
-            folder4 = c_client.create_digital_product(body_4)
-            print(f"\n\n created a collection with guid {folder4}")
-
-            # Now create a 5th collection for sentinel 2 data
-            parent_guid = folder2
-            display_name = "Sentinel 2"
-            description = "Sentinel 2 products"
-            parent_relationship_type_name = "CollectionMembership"
-            collection_type = "Digital Product Marketplace"
-
-            folder5 = c_client.create_folder_collection(
-                None,
-                parent_guid,
-                parent_relationship_type_name,
-                True,
-                display_name,
-                description,
-                collection_type,
-                True,
-                "DATE_CREATED",
-                None,
-            )
-            # Create a DigitalProduct for Level-1B
-            parent_guid = folder5
-            display_name = "Sentinel 2 - Level 1B"
-            description = "Level 1B of Sentinel 2"
-
-            body_6 = {
-                "class": "NewDigitalProductRequestBody",
-                "anchor_guid": parent_guid,
-                "isOwnAnchor": False,
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "collectionProperties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                    "name": display_name,
-                    "description": description,
-                    "collectionType": collection_type,
-                    "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
-                    "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Sentinel 2 - Level 1B",
-                    "productType": "Geospatial Data Assets",
-                    "description": description,
-                    "introductionDate": "2024-01-01",
-                    "maturity": "Mature",
-                    "serviceLife": "3 years",
-                    "currentVersion": "V1.5",
-                    "nextVersion": "2024-06-01",
-                    "withdrawDate": "2030-01-01",
-                    "additionalProperties": {
-                        "thought_id": "a guid",
-                        "license": "cc-by-sa",
-                    },
-                },
-            }
-            folder6 = c_client.create_digital_product(body_6)
-            print(f"\n\n created a collection with guid {folder6}")
-
-            # now lets create a digital product for - Level - 1c
-            parent_guid = folder5
-            display_name = "Sentinel 2 - Level 1C"
-            description = "Level 1C of Sentinel 2"
-            body_7 = {
-                "class": "NewDigitalProductRequestBody",
-                "anchor_guid": parent_guid,
-                "isOwnAnchor": False,
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "collectionProperties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                    "name": display_name,
-                    "description": description,
-                    "collectionType": collection_type,
-                    "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
-                    "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Sentinel 2 - Level 1B",
-                    "productType": "Geospatial Data Assets",
-                    "description": description,
-                    "introductionDate": "2024-01-01",
-                    "maturity": "Mature",
-                    "serviceLife": "3 years",
-                    "currentVersion": "V1.5",
-                    "nextVersion": "2024-06-01",
-                    "withdrawDate": "2030-01-01",
-                    "additionalProperties": {
-                        "thought_id": "a guid",
-                        "license": "cc-by-sa",
-                    },
-                },
-            }
-            folder7 = c_client.create_digital_product(body_7)
-            print(f"\n\n created a collection with guid {folder7}")
-            assert True
-
-            # now lets create a digital product for - Level - 2A
-            parent_guid = folder5
-            display_name = "Sentinel 2 - Level 2A"
-            description = "Level 2A of Sentinel 2"
-            body_8 = {
-                "class": "NewDigitalProductRequestBody",
-                "anchor_guid": parent_guid,
-                "isOwnAnchor": False,
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "collectionProperties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
-                    "name": display_name,
-                    "description": description,
-                    "collectionType": collection_type,
-                    "collectionOrdering": "DATE_CREATED",
-                },
-                "digitalProductProperties": {
-                    "class": "DigitalProductProperties",
-                    "productStatus": "ACTIVE",
-                    "productName": "Sentinel 2 - Level 1B",
-                    "productType": "Geospatial Data Assets",
-                    "description": description,
-                    "introductionDate": "2024-01-01",
-                    "maturity": "Mature",
-                    "serviceLife": "3 years",
-                    "currentVersion": "V1.5",
-                    "nextVersion": "2024-06-01",
-                    "withdrawDate": "2030-01-01",
-                    "additionalProperties": {
-                        "thought_id": "a guid",
-                        "license": "cc-by-sa",
-                    },
-                },
-            }
-            folder8 = c_client.create_digital_product(body_8)
-            print(f"\n\n created a collection with guid {folder8}")
-            assert True
+            # parent_guid = folder2
+            # display_name = "Landsat 8"
+            # description = "Landsat 8 data products"
+            #
+            # body_4 = {
+            #     "class": "NewDigitalProductRequestBody",
+            #     "isOwnAnchor": True,
+            #     "parentGUID": parent_guid,
+            #     "parentRelationshipTypeName": parent_relationship_type_name,
+            #     "parentAtEnd1": True,
+            #     "collectionProperties": {
+            #         "class": "CollectionProperties",
+            #         "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+            #         "name": display_name,
+            #         "description": description,
+            #         "collectionType": collection_type,
+            #         "collectionOrdering": "DATE_CREATED",
+            #     },
+            #     "digitalProductProperties": {
+            #         "class": "DigitalProductProperties",
+            #         "productStatus": "ACTIVE",
+            #         "productName": "Landsat 8 Imagery",
+            #         "productType": "Geospatial Data Assets",
+            #         "description": description,
+            #         "introductionDate": "2024-01-01",
+            #         "maturity": "Mature",
+            #         "serviceLife": "3 years",
+            #         "currentVersion": "V1.5",
+            #         "nextVersion": "2024-06-01",
+            #         "withdrawDate": "2030-01-01",
+            #         "additionalProperties": {
+            #             "thought_id": "a guid",
+            #             "license": "cc-by-sa",
+            #         },
+            #     },
+            # }
+            # folder4 = c_client.create_digital_product(body_4)
+            # print(f"\n\n created a collection with guid {folder4}")
+            #
+            # # Now create a 5th collection for sentinel 2 data
+            # parent_guid = folder2
+            # display_name = "Sentinel 2"
+            # description = "Sentinel 2 products"
+            # parent_relationship_type_name = "CollectionMembership"
+            # collection_type = "Digital Product Marketplace"
+            #
+            # folder5 = c_client.create_folder_collection(
+            #     None,
+            #     parent_guid,
+            #     parent_relationship_type_name,
+            #     True,
+            #     display_name,
+            #     description,
+            #     collection_type,
+            #     True,
+            #     "DATE_CREATED",
+            #     None,
+            # )
+            # # Create a DigitalProduct for Level-1B
+            # parent_guid = folder5
+            # display_name = "Sentinel 2 - Level 1B"
+            # description = "Level 1B of Sentinel 2"
+            #
+            # body_6 = {
+            #     "class": "NewDigitalProductRequestBody",
+            #     "anchor_guid": parent_guid,
+            #     "isOwnAnchor": False,
+            #     "parentGUID": parent_guid,
+            #     "parentRelationshipTypeName": parent_relationship_type_name,
+            #     "parentAtEnd1": True,
+            #     "collectionProperties": {
+            #         "class": "CollectionProperties",
+            #         "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+            #         "name": display_name,
+            #         "description": description,
+            #         "collectionType": collection_type,
+            #         "collectionOrdering": "DATE_CREATED",
+            #     },
+            #     "digitalProductProperties": {
+            #         "class": "DigitalProductProperties",
+            #         "productStatus": "ACTIVE",
+            #         "productName": "Sentinel 2 - Level 1B",
+            #         "productType": "Geospatial Data Assets",
+            #         "description": description,
+            #         "introductionDate": "2024-01-01",
+            #         "maturity": "Mature",
+            #         "serviceLife": "3 years",
+            #         "currentVersion": "V1.5",
+            #         "nextVersion": "2024-06-01",
+            #         "withdrawDate": "2030-01-01",
+            #         "additionalProperties": {
+            #             "thought_id": "a guid",
+            #             "license": "cc-by-sa",
+            #         },
+            #     },
+            # }
+            # folder6 = c_client.create_digital_product(body_6)
+            # print(f"\n\n created a collection with guid {folder6}")
+            #
+            # # now lets create a digital product for - Level - 1c
+            # parent_guid = folder5
+            # display_name = "Sentinel 2 - Level 1C"
+            # description = "Level 1C of Sentinel 2"
+            # body_7 = {
+            #     "class": "NewDigitalProductRequestBody",
+            #     "anchor_guid": parent_guid,
+            #     "isOwnAnchor": False,
+            #     "parentGUID": parent_guid,
+            #     "parentRelationshipTypeName": parent_relationship_type_name,
+            #     "parentAtEnd1": True,
+            #     "collectionProperties": {
+            #         "class": "CollectionProperties",
+            #         "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+            #         "name": display_name,
+            #         "description": description,
+            #         "collectionType": collection_type,
+            #         "collectionOrdering": "DATE_CREATED",
+            #     },
+            #     "digitalProductProperties": {
+            #         "class": "DigitalProductProperties",
+            #         "productStatus": "ACTIVE",
+            #         "productName": "Sentinel 2 - Level 1B",
+            #         "productType": "Geospatial Data Assets",
+            #         "description": description,
+            #         "introductionDate": "2024-01-01",
+            #         "maturity": "Mature",
+            #         "serviceLife": "3 years",
+            #         "currentVersion": "V1.5",
+            #         "nextVersion": "2024-06-01",
+            #         "withdrawDate": "2030-01-01",
+            #         "additionalProperties": {
+            #             "thought_id": "a guid",
+            #             "license": "cc-by-sa",
+            #         },
+            #     },
+            # }
+            # folder7 = c_client.create_digital_product(body_7)
+            # print(f"\n\n created a collection with guid {folder7}")
+            # assert True
+            #
+            # # now lets create a digital product for - Level - 2A
+            # parent_guid = folder5
+            # display_name = "Sentinel 2 - Level 2A"
+            # description = "Level 2A of Sentinel 2"
+            # body_8 = {
+            #     "class": "NewDigitalProductRequestBody",
+            #     "anchor_guid": parent_guid,
+            #     "isOwnAnchor": False,
+            #     "parentGUID": parent_guid,
+            #     "parentRelationshipTypeName": parent_relationship_type_name,
+            #     "parentAtEnd1": True,
+            #     "collectionProperties": {
+            #         "class": "CollectionProperties",
+            #         "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+            #         "name": display_name,
+            #         "description": description,
+            #         "collectionType": collection_type,
+            #         "collectionOrdering": "DATE_CREATED",
+            #     },
+            #     "digitalProductProperties": {
+            #         "class": "DigitalProductProperties",
+            #         "productStatus": "ACTIVE",
+            #         "productName": "Sentinel 2 - Level 1B",
+            #         "productType": "Geospatial Data Assets",
+            #         "description": description,
+            #         "introductionDate": "2024-01-01",
+            #         "maturity": "Mature",
+            #         "serviceLife": "3 years",
+            #         "currentVersion": "V1.5",
+            #         "nextVersion": "2024-06-01",
+            #         "withdrawDate": "2030-01-01",
+            #         "additionalProperties": {
+            #             "thought_id": "a guid",
+            #             "license": "cc-by-sa",
+            #         },
+            #     },
+            # }
+            # folder8 = c_client.create_digital_product(body_8)
+            # print(f"\n\n created a collection with guid {folder8}")
+            # assert True
 
         except (
             InvalidParameterException,
@@ -1494,7 +1498,7 @@ class TestCollectionManager:
             search_string = "*"
 
             response = c_client.find_collections(
-                search_string, None, None, True, ignore_case=False
+                search_string, None, True, False, ignore_case=False
             )
             duration = time.perf_counter() - start_time
 
@@ -1502,7 +1506,7 @@ class TestCollectionManager:
             if type(response) is list:
                 print(f"Found {len(response)} collections {type(response)}\n\n")
                 for collection in response:
-                    c_client.delete_collection(collection["elementHeader"]["guid"])
+                    c_client.delete_collection(collection["elementHeader"]["guid"], cascade=True)
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True

@@ -63,8 +63,12 @@ def add_member_to_data_collections(egeria_client: EgeriaTech, collection_list: l
     Add member to data dictionaries and data specifications.
     """
     body = {
-        "class": "CollectionMembershipProperties", "membershipRationale": "User Specified",
-        "notes": "Added by Dr.Egeria"
+        "class": "RelationshipRequestBody",
+        "properties": {
+            "class": "CollectionMembershipProperties",
+            "membershipRationale": "User Specified",
+            "notes": "Added by Dr.Egeria"
+            }
         }
     try:
         if collection_list is not None:

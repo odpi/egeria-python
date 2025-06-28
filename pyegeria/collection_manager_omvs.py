@@ -16,6 +16,25 @@ from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict,
 from pyegeria.utils import body_slimmer
 
 
+def query_seperator(current_string):
+    if current_string == "":
+        return "?"
+    else:
+        return "&"
+
+
+# ("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
+# "the query string")
+
+
+def query_string(params):
+    result = ""
+    for i in range(len(params)):
+        if params[i][1] is not None:
+            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
+    return result
+
+
 class CollectionManager(Client):
     """
     Maintain and explore the contents of nested collections. These collections can be used to represent digital
@@ -51,8 +70,8 @@ class CollectionManager(Client):
     #
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
     #
-    async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0,
-                                              page_size: int = None, ) -> list:
+    async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0,
+                                              body: dict = None, output_format: str = "JSON") -> list:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
 
@@ -60,14 +79,16 @@ class CollectionManager(Client):
         ----------
         parent_guid: str
             The identity of the parent to find linked collections from.
-
-
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
+        body: dict, optional, default = None
+            If supplied, adds addition request details - for instance, to filter the results on collectionType
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
         Returns
         -------
         List
@@ -84,130 +105,340 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add collectionType value here"
+        }
+
         """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        body = {}
+        if body is None:
+            body = {}
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
                f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
 
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json()
-
-    def get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = None, ) -> list:
-        """Returns the list of collections that are linked off of the supplied element.
-
-        Parameters
-        ----------
-        parent_guid: str
-            The identity of the parent to find linked collections from.
-
-
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List
-
-        A list of collections linked off of the supplied element.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_get_attached_collections(parent_guid, start_from, page_size))
-        return resp
-
-    async def _async_get_classified_collections(self, classification: str, start_from: int = 0, page_size: int = None,
-                                                output_format: str = 'JSON') -> list | str | dict:
-        """Returns the list of collections with a particular classification.  These classifications
-            are typically "RootCollection", "Folder" or "DigitalProduct". Async version.
-
-        Parameters
-        ----------
-        classification: str
-            The classification of the collection to inspect.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-
-        Returns
-        -------
-        List | str | dict
-
-        A list of collections with the provided classification in the output format specified.
-        Returns a string if none found.
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        body = {"filter": classification}
-
-        url = (f"{self.collection_command_root}/by-classifications?"
-               f"startFrom={start_from}&pageSize={page_size}")
-
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, body_slimmer(body))
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, classification, output_format)
+            return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def get_classified_collections(self, classification: str, start_from: int = 0, page_size: int = None,
-                                   output_format: str = 'JSON') -> list | str | dict:
-        """Returns the list of collections with a particular classification.  These classifications
-             are typically "RootCollection", "Folder" or "DigitalProduct".
+    def get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0, body: dict = None,
+                                 output_format: str = "JSON") -> list:
+        """Returns the list of collections that are linked off of the supplied element using the ResourceList
+           relationship. Async version.
 
         Parameters
         ----------
-        classification: str
-            The classification of the collection to inspect.
+        parent_guid: str
+            The identity of the parent to find linked collections from.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        body: dict, optional, default = None
+            If supplied, adds addition request details - for instance, to filter the results on collectionType
+        Returns
+        -------
+        List
+
+        A list of collections linked off of the supplied element.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add collectionType value here"
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_attached_collections(parent_guid, start_from, page_size, body, output_format))
+        return resp
+
+    async def _async_find_collections_w_body(self, body: dict, classification_name: str = None,
+                                             starts_with: bool = False, ends_with: bool = False,
+                                             ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
+        """ Returns the list of collections matching the search string filtered by the optional classification.
+            The search string is located in the request body and is interpreted as a plain string. The full
+            body allows complete control including status, asOfTime and effectiveTime.
+            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+
+        Parameters
+        ----------
+        body: dict
+            Details of the search request - see the notes below for details.
+        classification_name: str, optional, default=None
+            A classification name to filter on - for example, DataSpec for data specifications. If none,
+            then all classifications are returned.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
         output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
         Returns
         -------
-        List | str | dict
+        List | str
 
-        A list of collections with the provided classification in the output format specified.
-        Returns a string if none found..
+        A list of collections match matching the search string. Returns a string if none found.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Data Product Development Journey"
+        }
+
+        """
+
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
+        if classification_name == "*":
+            classification_name = None
+
+        body_s = body_slimmer(body)
+        url = (f"{self.collection_command_root}/"
+               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
+               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
+
+        if classification_name:
+            url += f"&classificationName={classification_name}"
+
+        response = await self._async_make_request("POST", url, body_s)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, None, None, output_format)
+        return elements
+
+    def find_collections_w_body(self, body: dict, classification_name: str = None, starts_with: bool = False,
+                                ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                page_size: int = 0, output_format: str = 'JSON',
+                                output_profile: str = "CORE") -> list | str:
+        """ Returns the list of collections matching the search string filtered by the optional classification.
+            The search string is located in the request body and is interpreted as a plain string. The full
+            body allows complete control including status, asOfTime and effectiveTime.
+            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+
+        Parameters
+        ----------
+        body: dict
+            Details of the search request - see the notes below for details.
+        classification_name: str, optional, default=None
+            A classification name to filter on - for example, DataSpec for data specifications. If none,
+            then all classifications are returned.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
+        Returns
+        -------
+        List | str
+
+        A list of collections match matching the search string. Returns a string if none found.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Data Product Development Journey"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
+                                                start_from, page_size, output_format, output_profile))
+
+        return resp
+
+    async def _async_find_collections(self, search_string: str = '*', classification_name: str = None,
+                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                                      start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                      output_profile: str = "CORE") -> list | str:
+        """ Returns the list of collections matching the search string filtered by the optional classification.
+            The search string is located in the request body and is interpreted as a plain string. The full
+            body allows complete control including status, asOfTime and effectiveTime.
+            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all collections (may be filtered by
+            classification).
+        classification_name: str, optional, default=None
+            A classification name to filter on - for example, DataSpec for data specifications. If none,
+            then all classifications are returned.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
+        Returns
+        -------
+        List | str
+
+        A list of collections match matching the search string. Returns a string if none found.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        body = {
+            "class": "FilterRequestBody", "filter": search_string
+            }
+
+        resp = await self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
+                                                         start_from, page_size, output_format, output_profile)
+        return resp
+
+    def find_collections(self, search_string: str = '*', classification_name: str = None, starts_with: bool = False,
+                         ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+                         output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
+        """ Returns the list of collections matching the search string filtered by the optional classification.
+            The search string is located in the request body and is interpreted as a plain string. The full
+            body allows complete control including status, asOfTime and effectiveTime.
+            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+
+        Parameters
+        ----------
+        body: dict
+            Details of the search request - see the notes below for details.
+        classification_name: str, optional, default=None
+            A classification name to filter on - for example, DataSpec for data specifications. If none,
+            then all classifications are returned.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        output_profile: str, optional, default = "CORE"
+                The desired output profile - BASIC, CORE, FULL
+        Returns
+        -------
+        List | str
+
+        A list of collections match matching the search string. Returns a string if none found.
 
         Raises
         ------
@@ -222,31 +453,82 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_classified_collections(classification, start_from, page_size, output_format))
+            self._async_find_collections(search_string, classification_name, starts_with, ends_with, ignore_case,
+                                         start_from, page_size, output_format, output_profile))
+
         return resp
 
-    async def _async_find_collections(self, search_string: str, as_of_time=None, effective_time: str = None,
-                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
-                                      start_from: int = 0, page_size: int = None, output_format: str = 'JSON',
-                                      output_profile: str = "CORE") -> list | str:
-        """Returns the list of collections matching the search string.
+    async def _async_get_collections_by_name(self, name: str, classification_name: str = None, body: dict = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON') -> list | str:
+        """ Returns the list of collections with a particular name.
+
+            Parameters
+            ----------
+            name: str,
+                name to use to find matching collections.
+            classification_name: str, optional, default = None
+                type of collection to filter by - e.g., DataDict, Folder, Root
+            body: dict, optional, default = None
+                Provides, a full request body. If specified, the body supercedes the name parameter.
+            start_from: int, [default=0], optional
+                        When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=None]
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+            output_format: str, default = "JSON"
+                - one of "DICT", "MERMAID" or "JSON"
+            Returns
+            -------
+            List | str
+
+            A list of collections match matching the name. Returns a string if none found.
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+        """
+
+        if body is None:
+            validate_search_string(name)
+            body = {
+                "class": "FilterRequestBody", "filter": name
+                }
+
+        possible_query_params = query_string(
+            [("startFrom", start_from), ("pageSize", page_size), ('classificationName', classification_name)])
+
+        url = f"{self.collection_command_root}/by-name{possible_query_params}"
+
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, filter, classification_name, output_format)
+        return elements
+
+    def get_collections_by_name(self, name: str, classification_name: str = None, body: dict = None,
+                                start_from: int = 0, page_size: int = None, output_format: str = 'JSON') -> list | str:
+        """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
 
         Parameters
         ----------
-        search_string: str,
-            Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
-        as_of_time: str, optional, [default=None]
-            The point in time to use for querying the repository - ISO8601 format.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. ISO8601 format is assumed.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
+        name: str,
+            name to use to find matching collections.
+        classification_name: str, optional, default = None
+            type of collection to filter by - e.g., DataDict, Folder, Root
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body supercedes the name parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -254,8 +536,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        output_profile: str, optional, default = "CORE"
-                The desired output profile - BASIC, CORE, FULL
+
         Returns
         -------
         List | str
@@ -276,205 +557,27 @@ class CollectionManager(Client):
             as_of_time ():
 
         """
-
-        if page_size is None:
-            page_size = self.page_size
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-
-        validate_search_string(search_string)
-
-        if search_string == "*":
-            search_string = None
-
-        body = {
-            "filter": search_string, "effective_time": effective_time, "asOfTime": as_of_time
-            }
-
-        body_s = body_slimmer(body)
-        url = (f"{self.collection_command_root}/"
-               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}")
-
-        response = await self._async_make_request("POST", url, body_s)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, None, output_format)
-        return elements
-
-    def find_collections(self, search_string: str, as_of_time: str = None, effective_time: str = None,
-                         starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
-                         start_from: int = 0, page_size: int = None, output_format: str = 'JSON',
-                         output_profile: str = "CORE") -> list | str:
-        """Returns the list of collections matching the search string. Async version.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-
-        Parameters
-        ----------
-        search_string: str,
-            Search string to use to find matching collections. If the search string is '*' then all glossaries returned.
-        as_of_time: str, optional, [default=None]
-            The point in time to use for querying the repository - ISO8601 format.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        output_profile: str, optional, default = "CORE"
-                The desired output profile - BASIC, CORE, FULL
-        Returns
-        -------
-        List | str
-
-        A list of collections match matching the search string. Returns a string if none found.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_find_collections(search_string, as_of_time, effective_time, starts_with, ends_with, ignore_case,
-                                         start_from, page_size, output_format, output_profile))
+            self._async_get_collections_by_name(name, classification_name, body, start_from, page_size, output_format))
 
         return resp
 
-    async def _async_get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0,
-                                             page_size: int = None, output_format: str = 'JSON') -> list | str:
-        """Returns the list of collections with a particular name.
-
-        Parameters
-        ----------
-        name: str,
-            name to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-
-
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-        Returns
-        -------
-        List | str
-
-        A list of collections match matching the name. Returns a string if none found.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        validate_search_string(name)
-
-        body = {
-            "filter": name, effective_time: effective_time,
-            }
-        body_s = body_slimmer(body)
-        url = (f"{self.collection_command_root}/"
-               f"by-name?startFrom={start_from}&pageSize={page_size}")
-
-        response = await self._async_make_request("POST", url, body_s)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, filter, output_format)
-        return elements
-
-    def get_collections_by_name(self, name: str, effective_time: str = None, start_from: int = 0, page_size: int = None,
-                                output_format: str = 'JSON') -> list | str:
-        """Returns the list of collections matching the search string. Async version.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
-
-        Parameters
-        ----------
-        name: str,
-            name to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        output_format: str, default = "JSON"
-            - one of "DICT", "MERMAID" or "JSON"
-
-        Returns
-        -------
-        List | str
-
-        A list of collections match matching the search string. Returns a string if none found.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_collections_by_name(name, effective_time, start_from, page_size, output_format))
-
-        return resp
-
-    async def _async_get_collections_by_type(self, collection_type: str, effective_time: str = None,
-                                             start_from: int = 0, page_size: int = None,
+    async def _async_get_collections_by_type(self, collection_type: str, classification_name: str = None,
+                                             body: dict = None, start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON') -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
         Parameters
         ----------
-        collection_type: str,
+        collection_type: str
             collection_type to use to find matching collections.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+        classification_name: str, optional
+            An optional filter on the search,  e.g., DataSpec
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body filter parameter supercedes the collection_type
+            parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -487,7 +590,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections match matching the name. Returns a string if none found.
+        A list of collections matching the collection type. Returns a string if none found.
 
         Raises
         ------
@@ -499,20 +602,37 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        Body sample:
+
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add collection type here"
+        }
+
         """
 
-        if page_size is None:
-            page_size = self.page_size
+        if classification_name:
+            classification_name = None if classification_name is '*' else classification_name
 
-        validate_search_string(collection_type)
-
-        body = {
-            "filter": collection_type, effective_time: effective_time,
-            }
+        if body is None:
+            body = {
+                "class": "FilterRequestBody", "filter": collection_type,
+                }
         body_s = body_slimmer(body)
 
-        url = (f"{self.collection_command_root}/"
-               f"by-collection-type?startFrom={start_from}&pageSize={page_size}")
+        possible_query_params = query_string(
+            [("startFrom", start_from), ("pageSize", page_size), ('classificationName', classification_name)])
+
+        url = f"{self.collection_command_root}/by-collection-type{possible_query_params}"
 
         response = await self._async_make_request("POST", url, body_s)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -520,21 +640,23 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, filter, output_format)
+            return self.generate_collection_output(elements, filter, collection_type, output_format)
         return elements
 
-    def get_collections_by_type(self, collection_type: str, effective_time: str = None, start_from: int = 0,
-                                page_size: int = None, output_format: str = 'JSON') -> list | str:
-        """Returns the list of collections matching the search string. Async version.
-            The search string is located in the request body and is interpreted as a plain string.
-            The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
+    def get_collections_by_type(self, collection_type: str, classification_name: str = None, body: dict = None,
+                                start_from: int = 0, page_size: int = 0, output_format: str = 'JSON') -> list | str:
+        """Returns the list of collections with a particular collectionType. This is an optional text field in the
+            collection element.
 
         Parameters
         ----------
-        collection_type: str,
-            collection type to find.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
+        collection_type: str
+            collection_type to use to find matching collections.
+        classification_name: str, optional
+            An optional filter on the search, e.g., DataSpec
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body filter parameter supersedes the collection_type
+            parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -547,7 +669,7 @@ class CollectionManager(Client):
         -------
         List | str
 
-        A list of collections match matching the search string. Returns a string if none found.
+        A list of collections the specified collection type. Returns a string if none found.
 
         Raises
         ------
@@ -559,25 +681,43 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        Body sample:
+
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add collection type here"
+        }
+
         """
+
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collections_by_type(collection_type, effective_time, start_from, page_size, output_format))
+            self._async_get_collections_by_type(collection_type, classification_name, body, start_from, page_size,
+                                                output_format))
 
         return resp
 
-    async def _async_get_collection_by_guid(self, collection_guid: str, effective_time: str = None,
-                                            collection_type: str = None, output_format: str = 'JSON') -> dict | str:
+    async def _async_get_collection_by_guid(self, collection_guid: str, collection_type: str = None, body: dict = None,
+                                            output_format: str = 'JSON') -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
         ----------
         collection_guid: str,
             unique identifier of the collection.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time in ISO8601 format is assumed.
         collection_type: str, default = None, optional
             type of collection - Data Dictionary, Data Spec, Data Product, etc.
+        body: dict, optional, default = None
+            full request body.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
 
@@ -597,15 +737,26 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        ----
+        Body sample:
+        {
+          "class": "AnyTimeRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
         """
 
         validate_guid(collection_guid)
 
         url = f"{self.collection_command_root}/{collection_guid}"
-        body = {
-            "effective_time": effective_time,
-            }
-        response = await self._async_make_request("GET", url, body)
+
+        if body:
+            response = await self._async_make_request("GET", url, body_slimmer(body))
+        else:
+            response = await self._async_make_request("GET", url)
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
@@ -614,26 +765,85 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, collection_type, output_format)
         return elements
 
-    def get_collection_by_guid(self, collection_guid: str, effective_time: str = None, collection_type: str = None,
+    def get_collection_by_guid(self, collection_guid: str, collection_type: str = None, body: dict = None,
                                output_format: str = 'JSON') -> dict | str:
-        """Return the properties of a specific collection.
+        """ Return the properties of a specific collection. Async version.
+
+            Parameters
+            ----------
+            collection_guid: str,
+                unique identifier of the collection.
+            collection_type: str, default = None, optional
+                type of collection - Data Dictionary, Data Spec, Data Product, etc.
+            body: dict, optional, default = None
+                full request body.
+            output_format: str, default = "JSON"
+                - one of "DICT", "MERMAID" or "JSON"
+
+            Returns
+            -------
+            dict | str
+
+            A JSON dict representing the specified collection. Returns a string if none found.
+
+            Raises
+            ------
+
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            ----
+            Body sample:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": "{{$isoTimestamp}}",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_collection_by_guid(collection_guid, collection_type, body, output_format))
+
+        return resp
+
+    async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
+                                            collection_qname: str = None, body: dict= None, start_from: int = 0, page_size: int = 0,
+                                            output_format: str = "JSON") -> list | str:
+        """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
         ----------
         collection_guid: str,
-            unique identifier of the collection.
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time.
-        collection_type: str, default = None, optional
-            type of collection - Data Dictionary, Data Spec, Data Product, etc.
+            identity of the collection to return members for. If none, collection_name or
+            collection_qname are used.
+        collection_name: str,
+            display the name of the collection to return members for. If none, collection_guid
+            or collection_qname are used.
+        collection_qname: str,
+            qualified name of the collection to return members for. If none, collection_guid
+            or collection_name are used.
+        body: dict, optional, default = None
+            Providing the body allows full control of the request and replaces filter parameters.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
         output_format: str, default = "JSON"
-                    - one of "DICT", "MERMAID" or "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
 
         Returns
         -------
-        dict | str
+        List | str
 
-        A JSON dict representing the specified collection. Returns a string if none found.
+        A list of collection members in the collection.
 
         Raises
         ------
@@ -645,10 +855,337 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes:
+        -----
+        Body sample:
+        {
+          "class": "ResultsRequestBody",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "limitResultsByStatus": ["ACTIVE"],
+          "asOfTime": "{{$isoTimestamp}}",
+          "sequencingOrder": "CREATION_DATE_RECENT",
+          "sequencingProperty": ""
+        }
+
+        """
+
+        if collection_guid is None:
+            collection_guid = self.__get_guid__(collection_guid, collection_name, "name", collection_qname, None, )
+
+        url = (f"{self.collection_command_root}/{collection_guid}/"
+               f"members?startFrom={start_from}&pageSize={page_size}")
+
+        if body:
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            response = await self._async_make_request("POST", url)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, None, None, output_format)
+        return elements
+
+    def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
+                               collection_qname: str = None, body: dict = None, start_from: int = 0, page_size: int = 0,
+                               output_format: str = "JSON") -> list | str:
+        """Return a list of elements that are a member of a collection.
+        Parameters
+        ----------
+        collection_guid: str,
+            identity of the collection to return members for. If none, collection_name or
+            collection_qname are used.
+        collection_name: str,
+            display the name of the collection to return members for. If none, collection_guid
+            or collection_qname are used.
+        collection_qname: str,
+            qualified name of the collection to return members for. If none, collection_guid
+            or collection_name are used.
+        body: dict, optional, default = None
+            Providing the body allows full control of the request and replaces filter parameters.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+        Returns
+        -------
+        List | str
+
+        A list of collection members in the collection.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        Body sample:
+        {
+          "class": "ResultsRequestBody",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "limitResultsByStatus": ["ACTIVE"],
+          "asOfTime": "{{$isoTimestamp}}",
+          "sequencingOrder": "CREATION_DATE_RECENT",
+          "sequencingProperty": ""
+        }
+
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_collection_by_guid(collection_guid, effective_time, collection_type, output_format))
+            self._async_get_collection_members(collection_guid, collection_name, collection_qname, body, start_from,
+                                               page_size, output_format))
+
+        return resp
+
+
+    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0, page_size: int = 0,
+                                          output_format: str = "JSON") -> list | str:
+        """ Return a graph of elements that are the nested members of a collection along
+            with elements immediately connected to the starting collection.  The result
+            includes a mermaid graph of the returned elements. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str,
+            identity of the collection to return members for. If none, collection_name or
+            collection_qname are used.
+        body: dict, optional, default = None
+            Providing the body allows full control of the request and replaces filter parameters.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+        Returns
+        -------
+        List | str
+
+        A graph anchored in the collection.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+            Body sample:
+            {
+              "class": "ResultsRequestBody",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "limitResultsByStatus": ["ACTIVE"],
+              "asOfTime": "{{$isoTimestamp}}",
+              "sequencingOrder": "CREATION_DATE_RECENT",
+              "sequencingProperty": ""
+            }
+        """
+
+        url = (f"{self.collection_command_root}/{collection_guid}/"
+               f"graph?startFrom={start_from}&pageSize={page_size}")
+
+        if body:
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            response = await self._async_make_request("POST", url)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, None, None, output_format)
+        return elements
+
+    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0, page_size: int = 0,
+                             output_format: str = "JSON") -> list | str:
+        """ Return a graph of elements that are the nested members of a collection along
+            with elements immediately connected to the starting collection.  The result
+            includes a mermaid graph of the returned elements.
+
+        Parameters
+        ----------
+        collection_guid: str,
+            identity of the collection to return members for. If none, collection_name or
+            collection_qname are used.
+        body: dict, optional, default = None
+            Providing the body allows full control of the request and replaces filter parameters.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+        Returns
+        -------
+        List | str
+
+        A graph anchored in the collection.
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+            Body sample:
+            {
+              "class": "ResultsRequestBody",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "limitResultsByStatus": ["ACTIVE"],
+              "asOfTime": "{{$isoTimestamp}}",
+              "sequencingOrder": "CREATION_DATE_RECENT",
+              "sequencingProperty": ""
+            }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_collection_graph(collection_guid, body, start_from, page_size, output_format))
+
+        return resp
+
+    async def _async_get_collection_graph_w_body(self, collection_guid: str, body: dict, start_from: int = 0,
+                                                 page_size: int = None, output_format: str = "JSON") -> list | str:
+        """ Return a graph of elements that are the nested members of a collection along
+            with elements immediately connected to the starting collection.  The result
+            includes a mermaid graph of the returned elements. Async version.
+
+            Parameters
+            ----------
+            collection_guid: str,
+                identity of the collection to return members for.
+            body: dict
+                A dictionary containing the body of the request. See Note.
+            start_from: int, [default=0], optional
+                        When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=None]
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+            output_format: str, default = "JSON"
+                - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+            Returns
+            -------
+            List | str
+
+            A list of collection members in the collection.
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Note
+            ____
+            {
+              "class": "ResultsRequestBody",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "limitResultsByStatus": ["ACTIVE"],
+              "asOfTime": "{{$isoTimestamp}}",
+              "sequencingOrder": "CREATION_DATE_RECENT",
+              "sequencingProperty": ""
+            }
+
+        """
+
+        if page_size is None:
+            page_size = self.page_size
+
+        url = (f"{self.collection_command_root}/{collection_guid}/"
+               f"graph?startFrom={start_from}&pageSize={page_size}")
+
+        response = await self._async_make_request("GET", url, body_slimmer(body))
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_collection_output(elements, None, None, output_format)
+        return elements
+
+    def get_collection_graph_w_body(self, collection_guid: str, body: str, start_from: int = 0, page_size: int = None,
+                                    output_format: str = "JSON") -> list | str:
+
+        """ Return a graph of elements that are the nested members of a collection along
+            with elements immediately connected to the starting collection.  The result
+            includes a mermaid graph of the returned elements.
+
+            Parameters
+            ----------
+            collection_guid: str,
+               identity of the collection to return members for.
+            body: dict
+               A dictionary containing the body of the request. See Note.
+            start_from: int, [default=0], optional
+                       When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=None]
+               The number of items to return in a single page. If not specified, the default will be taken from
+               the class instance.
+            output_format: str, default = "JSON"
+               - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+            Returns
+            -------
+            List | str
+
+            A list of collection members in the collection.
+
+            Raises
+            ------
+            InvalidParameterException
+               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+               Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Note
+            ____
+            {
+              "class": "ResultsRequestBody",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "limitResultsByStatus": ["ACTIVE"],
+              "asOfTime": "{{$isoTimestamp}}",
+              "sequencingOrder": "CREATION_DATE_RECENT",
+              "sequencingProperty": ""
+            }
+
+       """
+
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_collection_graph_w_body(collection_guid, body, start_from, page_size, output_format))
 
         return resp
 
@@ -677,22 +1214,22 @@ class CollectionManager(Client):
     # parentAtEnd1 -identifies which end any parent entity sits on the relationship.
     #
 
-    async def _async_create_collection_w_body(self, classification_name: str, body: dict) -> str:
-        """Create Collections: https://egeria-project.org/concepts/collection Async version.
+    async def _async_create_collection_w_body(self, body: dict, classification_name: str = None) -> str:
+        """ Create a new generic collection.
+            Collections: https://egeria-project.org/concepts/collection
+            Async version.
 
         Parameters
         ----------
-        classification_name: str
-            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
         body: dict
             A dict representing the details of the collection to create.
+        classification_name: str, optional, default=None
+            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
 
 
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -708,8 +1245,9 @@ class CollectionManager(Client):
 
         Sample body:
         {
+        "class": "NewElementRequestBody",
           "isOwnAnchor" : true,
-          "collectionProperties": {
+          "properties": {
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
@@ -717,15 +1255,18 @@ class CollectionManager(Client):
             "collectionType": "Add appropriate valid value for type"
           }
         }
+
+
         or
         {
+          "class": "NewElementRequestBody",
           "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-          "isOwnAnchor" : false,
+          "isOwnAnchor" : False,
           "anchorScopeGUID" : "optional GUID of search scope",
           "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName" : "open metadata type name",
           "parentAtEnd1": true,
-          "collectionProperties": {
+          "properties": {
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
@@ -734,31 +1275,27 @@ class CollectionManager(Client):
           }
         }
         """
-
-        url = (f"{self.collection_command_root}?"
-               f"classificationName={classification_name}")
+        possible_query_params = query_string([("classificationName", classification_name)])
+        url = f"{self.collection_command_root}{possible_query_params}"
 
         resp = await self._async_make_request("POST", url, body)
         return resp.json().get("guid", "No GUID returned")
 
-    def create_collection_w_body(self, classification_name: str, body: dict) -> str:
-        """Create Collections: https://egeria-project.org/concepts/collection
+    def create_collection_w_body(self, body: dict, classification_name: str = None, ) -> str:
+        """ Create a new generic collection.
+            Collections: https://egeria-project.org/concepts/collection
 
         Parameters
         ----------
-        classification_name: str
-            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
         body: dict
             A dict representing the details of the collection to create.
+        classification_name: str, optional, default=None
+            Type of collection to create; e.g RootCollection, Folder, Set, DigitalProduct, etc.
 
-             If not provided, the server name associated with the instance is
-            used.
 
         Returns
         -------
         str - the guid of the created collection
-
-        A JSON dict representing the specified collection. Returns a string if none found.
 
         Raises
         ------
@@ -769,14 +1306,14 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
-
         Notes:
         -----
 
         Sample body:
         {
+        "class": "NewElementRequestBody",
           "isOwnAnchor" : true,
-          "collectionProperties": {
+          "properties": {
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
@@ -786,13 +1323,14 @@ class CollectionManager(Client):
         }
         or
         {
+          "class": "NewElementRequestBody",
           "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-          "isOwnAnchor" : false,
+          "isOwnAnchor" : False,
           "anchorScopeGUID" : "optional GUID of search scope",
           "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName" : "open metadata type name",
           "parentAtEnd1": true,
-          "collectionProperties": {
+          "properties": {
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
@@ -801,20 +1339,30 @@ class CollectionManager(Client):
           }
         }
         """
+
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection_w_body(classification_name, body))
+        resp = loop.run_until_complete(self._async_create_collection_w_body(body, classification_name))
         return resp
 
-    async def _async_create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-                                       parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                       description: str, collection_type: str, anchor_scope_guid: str = None,
-                                       is_own_anchor: bool = False, collection_ordering: str = None,
+    async def _async_create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                       classification_name: str = None, anchor_guid: str = None,
+                                       parent_guid: str = None, parent_relationship_type_name: str = None,
+                                       parent_at_end1: bool = True, collection_type: str = None,
+                                       anchor_scope_guid: str = None, collection_ordering: str = None,
                                        order_property_name: str = None, additional_properties: dict = None,
                                        extended_properties: dict = None) -> str:
-        """Create Collections: https://egeria-project.org/concepts/collection Async version.
+        """ Create a new generic collection.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
 
         Parameters
         ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
         classification_name: str
             Type of collection to create; e.g RootCollection, Folder, ResultsSet, DigitalProduct, HomeCollection,
             RecentAccess, WorkItemList, etc.
@@ -827,18 +1375,12 @@ class CollectionManager(Client):
         parent_relationship_type_name: str
             The name of the relationship, if any, that should be established between the new element and the parent
             element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
+        parent_at_end1: bool, defaults to True
             Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
         collection_type: str
-            Adds an appropriate valid value for the collection type.
+            Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
              "OTHER"
@@ -854,8 +1396,6 @@ class CollectionManager(Client):
         -------
         str - the guid of the created collection
 
-        A JSON dict representing the specified collection. Returns a string if none found.
-
         Raises
         ------
         InvalidParameterException
@@ -867,65 +1407,70 @@ class CollectionManager(Client):
 
         """
 
-        if parent_guid is None:
-            is_own_anchor = False
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
 
-        url = (f"{self.collection_command_root}?"
-               f"classificationName={classification_name}")
+        possible_query_params = query_string([("classificationName", classification_name)])
+
+        url = f"{self.collection_command_root}{possible_query_params}"
+        if classification_name is not None:
+            qualified_name = self.__create_qualified_name__(classification_name, display_name)
+        else:
+            qualified_name = self.__create_qualified_name__("Collection", display_name)
 
         body = {
-            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": f"{classification_name}::{display_name}",
-                "name": display_name, "description": description, "collectionType": collection_type,
-                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
-                "additionalProperties": additional_properties, "extendedProperties": extended_properties
+            "class": "NewElementRequestBody", "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid,
+            "isOwnAnchor": is_own_anchor_s, "parentGUID": parent_guid,
+            "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
+            "properties": {
+                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
+                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
+                "extendedProperties": extended_properties
                 },
             }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    def create_collection(self, classification_name: str, anchor_guid: str, parent_guid: str,
-                          parent_relationship_type_name: str, parent_at_end1: bool, display_name: str, description: str,
-                          collection_type: str, anchor_scope_guid: str = None, is_own_anchor: bool = False,
-                          collection_ordering: str = None, order_property_name: str = None,
-                          additional_properties: dict = None, extended_properties: dict = None) -> str:
-        """Create Collections: https://egeria-project.org/concepts/collection
+    def create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                          classification_name: str = None, anchor_guid: str = None, parent_guid: str = None,
+                          parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                          collection_type: str = None, anchor_scope_guid: str = None, collection_ordering: str = None,
+                          order_property_name: str = None, additional_properties: dict = None,
+                          extended_properties: dict = None) -> str:
+        """ Create a new generic collection.
+            Create Collections: https://egeria-project.org/concepts/collection
 
         Parameters
         ----------
-
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
         classification_name: str
             Type of collection to create; e.g RootCollection, Folder, ResultsSet, DigitalProduct, HomeCollection,
             RecentAccess, WorkItemList, etc.
         anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
         parent_guid: str
            The optional unique identifier for an element that should be connected to the newly created element.
            If this property is specified, parentRelationshipTypeName must also be specified
         parent_relationship_type_name: str
             The name of the relationship, if any, that should be established between the new element and the parent
             element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
+        parent_at_end1: bool, defaults to True
             Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
         collection_type: str
-            Adds an appropriate valid value for the collection type.
+            Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-            "DATE_CREATED", "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
@@ -950,82 +1495,12 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_collection(classification_name, anchor_guid, parent_guid, parent_relationship_type_name,
-                                          parent_at_end1, display_name, description, collection_type, anchor_scope_guid,
-                                          is_own_anchor, collection_ordering, order_property_name,
+            self._async_create_collection(display_name, description, is_own_anchor, classification_name, anchor_guid,
+                                          parent_guid, parent_relationship_type_name, parent_at_end1, collection_type,
+                                          anchor_scope_guid, collection_ordering, order_property_name,
                                           additional_properties, extended_properties))
         return resp
 
-    async def _async_create_root_collection(self, anchor_guid: str, parent_guid: str,
-                                            parent_relationship_type_name: str, parent_at_end1: bool, display_name: str,
-                                            description: str, collection_type: str, anchor_scope_guid: str = None,
-                                            is_own_anchor: bool = False, additional_properties: dict = None,
-                                            extended_properties: dict = None) -> str:
-        """Create a new collection with the RootCollection classification.  Used to identify the top of a
-        collection hierarchy. Async version.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Adds an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        url = f"{self.collection_command_root}/root-collection"
-
-        body = body_slimmer({
-            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor, "anchorScopeGUID": anchor_scope_guid,
-            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": f"RootCollection::{display_name}",
-                "name": display_name, "description": description, "collectionType": collection_type,
-                "additionalProperties": additional_properties, "extendedProperties": extended_properties
-                },
-            })
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid", "No GUID Returned")
-
-    def create_root_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-                               parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-                               anchor_scope_guid: str = None, is_own_anchor: bool = False,
-                               additional_properties: dict = None, extended_properties: dict = None) -> str:
         """Create a new collection with the RootCollection classification.  Used to identify the top of a
          collection hierarchy.
 
@@ -1079,323 +1554,53 @@ class CollectionManager(Client):
                                                is_own_anchor, additional_properties, extended_properties))
         return resp
 
-    async def _async_create_data_spec_collection(self, anchor_guid: str, parent_guid: str,
-                                                 parent_relationship_type_name: str, parent_at_end1: bool,
-                                                 display_name: str, description: str, collection_type: str,
-                                                 anchor_scope_guid: str = None, is_own_anchor: bool = True,
-                                                 qualified_name: str = None, additional_properties: dict = None,
-                                                 extended_properties: dict = None) -> str:
-        """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
-         and schema types. Async version.
+    async def _async_create_generic_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                               classification_name: str = None, anchor_guid: str = None,
+                                               parent_guid: str = None, parent_relationship_type_name: str = None,
+                                               parent_at_end1: bool = True, collection_type: str = None,
+                                               anchor_scope_guid: str = None, collection_ordering: str = None,
+                                               order_property_name: str = None, additional_properties: dict = None,
+                                               extended_properties: dict = None) -> str:
+        """ Create a new generic collection.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
 
         Parameters
         ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        classification_name: str
+            Type of collection to create; e.g RootCollection, Folder, ResultsSet, DigitalProduct, HomeCollection,
+            RecentAccess, WorkItemList, etc.
         anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
         parent_guid: str
            The optional unique identifier for an element that should be connected to the newly created element.
            If this property is specified, parentRelationshipTypeName must also be specified
         parent_relationship_type_name: str
             The name of the relationship, if any, that should be established between the new element and the parent
             element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
+        parent_at_end1: bool, defaults to True
             Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
         collection_type: str
-            Adds an appropriate valid value for the collection type.
+            Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        qualified_name: str, optional, defaults to None
-            If not specified, a unique name will be created for the collection.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        """
-
-        url = f"{self.collection_command_root}/data-spec-collection"
-        if qualified_name is None:
-            qualified_name = self.__create_qualified_name__("DataSpec", display_name)
-
-        body = body_slimmer({
-            "class": "NewCollectionRequestBody",
-            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor,
-            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type,
-                "additionalProperties": additional_properties, "extendedProperties": extended_properties
-                },
-            })
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid", "No GUID Returned")
-
-    def create_data_spec_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-                                    parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-                                    anchor_scope_guid: str = None, is_own_anchor: bool = False,
-                                    qualified_name: str = None, additional_properties: dict = None,
-                                    extended_properties: dict = None) -> str:
-        """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
-         and schema types.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Adds an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        qualified_name: str, optional, defaults to None
-            If not specified, a unique name will be created for the collection.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_data_spec_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                                                    parent_at_end1, display_name, description, collection_type,
-                                                    anchor_scope_guid, is_own_anchor, qualified_name,
-                                                    additional_properties, extended_properties))
-        return resp
-
-    async def _async_create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str,
-                                                       parent_relationship_type_name: str, parent_at_end1: bool,
-                                                       display_name: str, description: str, collection_type: str,
-                                                       anchor_scope_guid: str = None, is_own_anchor: bool = True,
-                                                       qualified_name: str = None, additional_properties: dict = None,
-                                                       extended_properties: dict = None) -> str:
-        """ Create a new collection with the Data Dictionary classification.  Used to identify a collection of
-            data fields that represent a data store collection of common data types. Async version.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Add an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            GUID for search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-            "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
-        qualified_name: str, optional, defaults to None
-            If not specified a qualified name will be generated from the display name and the collection type.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        """
-
-        is_own_anchor_s = str(is_own_anchor).lower()
-        parent_at_end1_s = str(parent_at_end1).lower()
-        url = f"{self.collection_command_root}/data-dictionary-collection"
-        if qualified_name is None:
-            qualified_name = self.__create_qualified_name__("DataDict", display_name)
-
-        body = {
-            "class": "NewCollectionRequestBody",
-            "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor_s, "anchorScopeGUID": anchor_scope_guid,
-            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type,
-                "additionalProperties": additional_properties, "extendedProperties": extended_properties,
-                },
-            }
-
-        resp = await self._async_make_request("POST", url, body_slimmer(body))
-        return resp.json().get("guid", "No GUID Returned")
-
-    def create_data_dictionary_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-                                          parent_at_end1: bool, display_name: str, description: str,
-                                          collection_type: str, anchor_scope_guid: str = None,
-                                          is_own_anchor: bool = False, qualified_name: str = None,
-                                          additional_properties: dict = None, extended_properties: dict = None) -> str:
-        """Create a new collection with the DataSpec classification.  Used to identify a collection of data fields
-         and schema types.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Adds an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
-        qualified_name: str, optional, defaults to None
-            If not specified a qualified name will be generated from the display name and the collection type.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_data_dictionary_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                                                          parent_at_end1, display_name, description, collection_type,
-                                                          anchor_scope_guid, is_own_anchor, qualified_name,
-                                                          additional_properties, extended_properties))
-        return resp
-
-    async def _async_create_folder_collection(self, anchor_guid: str, parent_guid: str,
-                                              parent_relationship_type_name: str, parent_at_end1: bool,
-                                              display_name: str, description: str, collection_type: str,
-                                              anchor_scope_guid: str = None, is_own_anchor: bool = True,
-                                              collection_ordering: str = None, order_property_name: str = None,
-                                              additional_properties: dict = None,
-                                              extended_properties: dict = None) -> str:
-        """Create a new collection with the Folder classification.  This is used to identify the organizing
-        collections in a collection hierarchy. Async version.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Adds an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-            "DATE_CREATED", "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
             Properties defined by extensions to Egeria types to add to the collection definition.
+
 
         Returns
         -------
@@ -1414,56 +1619,68 @@ class CollectionManager(Client):
 
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
-        url = f"{self.collection_command_root}/folder"
+
+        possible_query_params = query_string([("classificationName", classification_name)])
+
+        url = f"{self.collection_command_root}/{classification_name}"
+        if classification_name is not None:
+            qualified_name = self.__create_qualified_name__(classification_name, display_name)
+        else:
+            qualified_name = self.__create_qualified_name__("Collection", display_name)
 
         body = {
-            "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid, "isOwnAnchor": is_own_anchor_s,
-            "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-            "parentAtEnd1": parent_at_end1_s, "collectionProperties": {
-                "class": "CollectionProperties", "qualifiedName": f"folder-collection::{display_name}",
-                "name": display_name, "description": description, "collectionType": collection_type,
-                "collectionOrdering": collection_ordering, "orderPropertyName": order_property_name,
-                "additionalProperties": additional_properties, "extendedProperties": extended_properties
+            "class": "NewElementRequestBody", "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid,
+            "isOwnAnchor": is_own_anchor_s, "parentGUID": parent_guid,
+            "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
+            "properties": {
+                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
+                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
+                "extendedProperties": extended_properties
                 },
             }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    def create_folder_collection(self, anchor_guid: str, parent_guid: str, parent_relationship_type_name: str,
-                                 parent_at_end1: bool, display_name: str, description: str, collection_type: str,
-                                 anchor_scope_guid: str = None, is_own_anchor: bool = True,
-                                 collection_ordering: str = None, order_property_name: str = None,
-                                 additional_properties: dict = None, extended_properties: dict = None) -> str:
-        """Create a new collection with the Folder classification.  This is used to identify the organizing
-        collections in a collection hierarchy.
+    async def _async_create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                            anchor_guid: str = None, parent_guid: str = None,
+                                            parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                            collection_type: str = None, anchor_scope_guid: str = None,
+                                            collection_ordering: str = None, order_property_name: str = None,
+                                            additional_properties: dict = None,
+                                            extended_properties: dict = None) -> str:
+        """ Create a new collection with the RootCollection classification.  Used to identify the top of a collection
+        hierarchy.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
 
         Parameters
         ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor, or if this collection is to be its own anchor.
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
         parent_guid: str
            The optional unique identifier for an element that should be connected to the newly created element.
            If this property is specified, parentRelationshipTypeName must also be specified
         parent_relationship_type_name: str
             The name of the relationship, if any, that should be established between the new element and the parent
             element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
+        parent_at_end1: bool, defaults to True
             Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
         collection_type: str
-            Adds an appropriate valid value for the collection type.
+            Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
         collection_ordering: str, optional, defaults to "OTHER"
             Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-            "OTHER"
+             "OTHER"
         order_property_name: str, optional, defaults to "Something"
             Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
@@ -1471,10 +1688,77 @@ class CollectionManager(Client):
         extended_properties: dict, optional, defaults to None
             Properties defined by extensions to Egeria types to add to the collection definition.
 
+
         Returns
         -------
         str - the guid of the created collection
 
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "root-collection",
+                                                           anchor_guid, parent_guid, parent_relationship_type_name,
+                                                           parent_at_end1, collection_type, anchor_scope_guid,
+                                                           collection_ordering, order_property_name,
+                                                           additional_properties, extended_properties)
+
+        return resp
+
+    def create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                               anchor_guid: str = None, parent_guid: str = None,
+                               parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                               collection_type: str = None, anchor_scope_guid: str = None,
+                               collection_ordering: str = None, order_property_name: str = None,
+                               additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the RootCollection classification.
+            Used to identify the top of a collection hierarchy.
+            Create Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
 
         Raises
         ------
@@ -1488,12 +1772,975 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_folder_collection(anchor_guid, parent_guid, parent_relationship_type_name,
-                                                 parent_at_end1, display_name, description, collection_type,
-                                                 anchor_scope_guid, is_own_anchor, collection_ordering,
-                                                 order_property_name, additional_properties, extended_properties))
+            self._async_create_root_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
+                                               parent_relationship_type_name, parent_at_end1, collection_type,
+                                               anchor_scope_guid, collection_ordering, order_property_name,
+                                               additional_properties, extended_properties))
         return resp
 
+    async def _async_create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                                 anchor_guid: str = None, parent_guid: str = None,
+                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                                 collection_type: str = None, anchor_scope_guid: str = None,
+                                                 collection_ordering: str = None, order_property_name: str = None,
+                                                 additional_properties: dict = None,
+                                                 extended_properties: dict = None) -> str:
+        """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
+        structures and
+            data fields used to define data requirements for a project or initiative.
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "data-spec-collection", anchor_guid, parent_guid,
+                                                           parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                    anchor_guid: str = None, parent_guid: str = None,
+                                    parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                    collection_type: str = None, anchor_scope_guid: str = None,
+                                    collection_ordering: str = None, order_property_name: str = None,
+                                    additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
+        structures and
+            data fields used to define data requirements for a project or initiative.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_data_spec_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
+                                                    parent_relationship_type_name, parent_at_end1, collection_type,
+                                                    anchor_scope_guid, collection_ordering, order_property_name,
+                                                    additional_properties, extended_properties))
+        return resp
+
+    async def _async_create_data_dictionary_collection(self, display_name: str, description: str,
+                                                       is_own_anchor: bool = True, anchor_guid: str = None,
+                                                       parent_guid: str = None,
+                                                       parent_relationship_type_name: str = None,
+                                                       parent_at_end1: bool = True, collection_type: str = None,
+                                                       anchor_scope_guid: str = None, collection_ordering: str = None,
+                                                       order_property_name: str = None,
+                                                       additional_properties: dict = None,
+                                                       extended_properties: dict = None) -> str:
+        """ Create a new collection with the DataDictionary classification.  Used to identify a collection of data
+        structures and
+            data fields used to define data requirements for a project or initiative.
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "data-dictionary-collection", anchor_guid, parent_guid,
+                                                           parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_data_dictionary_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                          anchor_guid: str = None, parent_guid: str = None,
+                                          parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                          collection_type: str = None, anchor_scope_guid: str = None,
+                                          collection_ordering: str = None, order_property_name: str = None,
+                                          additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
+        structures and
+            data fields used to define data requirements for a project or initiative.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_data_dictionary_collection(display_name, description, is_own_anchor, anchor_guid,
+                                                          parent_guid, parent_relationship_type_name, parent_at_end1,
+                                                          collection_type, anchor_scope_guid, collection_ordering,
+                                                          order_property_name, additional_properties,
+                                                          extended_properties))
+        return resp
+
+    async def _async_create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                              anchor_guid: str = None, parent_guid: str = None,
+                                              parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                              collection_type: str = None, anchor_scope_guid: str = None,
+                                              collection_ordering: str = None, order_property_name: str = None,
+                                              additional_properties: dict = None,
+                                              extended_properties: dict = None) -> str:
+        """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
+            in a collection hierarchy.
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "folder",
+                                                           anchor_guid, parent_guid, parent_relationship_type_name,
+                                                           parent_at_end1, collection_type, anchor_scope_guid,
+                                                           collection_ordering, order_property_name,
+                                                           additional_properties, extended_properties)
+
+        return resp
+
+    def create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                 anchor_guid: str = None, parent_guid: str = None,
+                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                 collection_type: str = None, anchor_scope_guid: str = None,
+                                 collection_ordering: str = None, order_property_name: str = None,
+                                 additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
+            in a collection hierarchy.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_folder_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
+                                                 parent_relationship_type_name, parent_at_end1, collection_type,
+                                                 anchor_scope_guid, collection_ordering, order_property_name,
+                                                 additional_properties, extended_properties))
+        return resp
+
+    async def _async_create_context_event_collection(self, display_name: str, description: str,
+                                                     is_own_anchor: bool = True, anchor_guid: str = None,
+                                                     parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                     parent_at_end1: bool = True, collection_type: str = None,
+                                                     anchor_scope_guid: str = None, collection_ordering: str = None,
+                                                     order_property_name: str = None,
+                                                     additional_properties: dict = None,
+                                                     extended_properties: dict = None) -> str:
+        """ Create a new collection with the ContextEventCollection classification.  This is used to group context
+        events together.
+            For example, the collection may be a series of events that affect a set of resources.
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "context-event-collection", anchor_guid, parent_guid,
+                                                           parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_context_event_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                        anchor_guid: str = None, parent_guid: str = None,
+                                        parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                        collection_type: str = None, anchor_scope_guid: str = None,
+                                        collection_ordering: str = None, order_property_name: str = None,
+                                        additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the ContextEventCollection classification.  This is used to group context
+        events together.
+            For example, the collection may be a series of events that affect a set of resources.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_contex_event_collection(display_name, description, is_own_anchor, anchor_guid,
+                                                       parent_guid, parent_relationship_type_name, parent_at_end1,
+                                                       collection_type, anchor_scope_guid, collection_ordering,
+                                                       order_property_name, additional_properties, extended_properties))
+        return resp
+
+    async def _async_create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                                  anchor_guid: str = None, parent_guid: str = None,
+                                                  parent_relationship_type_name: str = None,
+                                                  parent_at_end1: bool = True, collection_type: str = None,
+                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
+                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  extended_properties: dict = None) -> str:
+        """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
+        the same namespace.
+         For example, the collection may be a series of processes that are recording OpenLineage under a single
+         namespace.
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "namespace-collection", anchor_guid, parent_guid,
+                                                           parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                     anchor_guid: str = None, parent_guid: str = None,
+                                     parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                     collection_type: str = None, anchor_scope_guid: str = None,
+                                     collection_ordering: str = None, order_property_name: str = None,
+                                     additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
+        the same namespace.
+         For example, the collection may be a series of processes that are recording OpenLineage under a single
+         namespace.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_name_space_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
+                                                     parent_relationship_type_name, parent_at_end1, collection_type,
+                                                     anchor_scope_guid, collection_ordering, order_property_name,
+                                                     additional_properties, extended_properties))
+        return resp
+
+    async def _async_create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                                 anchor_guid: str = None, parent_guid: str = None,
+                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                                 collection_type: str = None, anchor_scope_guid: str = None,
+                                                 collection_ordering: str = None, order_property_name: str = None,
+                                                 additional_properties: dict = None,
+                                                 extended_properties: dict = None) -> str:
+        """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
+            For example, the collection may describe a set of events emitted by a specific system or to disseminate
+            information about a certain situation.
+            Async Version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "event-set-collection", anchor_guid, parent_guid,
+                                                           parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                    anchor_guid: str = None, parent_guid: str = None,
+                                    parent_relationship_type_name: str = None, parent_at_end1: bool = True,
+                                    collection_type: str = None, anchor_scope_guid: str = None,
+                                    collection_ordering: str = None, order_property_name: str = None,
+                                    additional_properties: dict = None, extended_properties: dict = None) -> str:
+        """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
+            For example, the collection may describe a set of events emitted by a specific system or to disseminate
+            information about a certain situation.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_event_set_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
+                                                    parent_relationship_type_name, parent_at_end1, collection_type,
+                                                    anchor_scope_guid, collection_ordering, order_property_name,
+                                                    additional_properties, extended_properties))
+        return resp
+
+    async def _async_create_naming_standard_ruleset_collection(self, display_name: str, description: str,
+                                                               is_own_anchor: bool = True, anchor_guid: str = None,
+                                                               parent_guid: str = None,
+                                                               parent_relationship_type_name: str = None,
+                                                               parent_at_end1: bool = True, collection_type: str = None,
+                                                               anchor_scope_guid: str = None,
+                                                               collection_ordering: str = None,
+                                                               order_property_name: str = None,
+                                                               additional_properties: dict = None,
+                                                               extended_properties: dict = None) -> str:
+        """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
+        standard rule
+            governance definitions together.
+            Async Version.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+
+        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
+                                                           "naming-standard-rule-set-collection", anchor_guid,
+                                                           parent_guid, parent_relationship_type_name, parent_at_end1,
+                                                           collection_type, anchor_scope_guid, collection_ordering,
+                                                           order_property_name, additional_properties,
+                                                           extended_properties)
+
+        return resp
+
+    def create_naming_standard_ruleset_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+                                                  anchor_guid: str = None, parent_guid: str = None,
+                                                  parent_relationship_type_name: str = None,
+                                                  parent_at_end1: bool = True, collection_type: str = None,
+                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
+                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  extended_properties: dict = None) -> str:
+        """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
+        standard rule
+            governance definitions together.
+
+        Parameters
+        ----------
+        display_name: str
+            The display name of the element. Will also be used as the basis of the qualified_name.
+        description: str
+            A description of the collection.
+        is_own_anchor: bool, optional, defaults to True
+            Indicates if the collection should be classified as its own anchor or not.
+        anchor_guid: str
+            The unique identifier of the element that should be the anchor for the new element. Set to null if no
+            anchor, or if this collection is to be its own anchor.
+        parent_guid: str
+           The optional unique identifier for an element that should be connected to the newly created element.
+           If this property is specified, parentRelationshipTypeName must also be specified
+        parent_relationship_type_name: str
+            The name of the relationship, if any, that should be established between the new element and the parent
+            element. Examples could be "ResourceList" or "DigitalServiceProduct".
+        parent_at_end1: bool, defaults to True
+            Identifies which end any parent entity sits on the relationship.
+        collection_type: str
+            Adds an user supplied valid value for the collection type.
+        anchor_scope_guid: str, optional, defaults to None
+            optional GUID of search scope
+        collection_ordering: str, optional, defaults to "OTHER"
+            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
+             "OTHER"
+        order_property_name: str, optional, defaults to "Something"
+            Property to use for sequencing if collection_ordering is "OTHER"
+        additional_properties: dict, optional, defaults to None
+            User specified Additional properties to add to the collection definition.
+        extended_properties: dict, optional, defaults to None
+            Properties defined by extensions to Egeria types to add to the collection definition.
+
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_create_naming_standard_ruleset_collection(display_name, description, is_own_anchor, anchor_guid,
+                                                                  parent_guid, parent_relationship_type_name,
+                                                                  parent_at_end1, collection_type, anchor_scope_guid,
+                                                                  collection_ordering, order_property_name,
+                                                                  additional_properties, extended_properties))
+        return resp
+
+    #
+    #
+    #
     async def _async_create_collection_from_template(self, body: dict) -> str:
         """Create a new metadata element to represent a collection using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new collection.
@@ -1609,140 +2856,6 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(self._async_create_collection_from_template(body))
         return resp
 
-    async def _async_create_digital_product(self, body: dict) -> str:
-        """Create a new collection that represents a digital product. Async version.
-
-        Parameters
-        ----------
-        body: dict
-            A dict representing the details of the collection to create.
-
-             If not provided, the server name associated
-            with the instance is used.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-        {
-          "class" : "NewDigitalProductRequestBody",
-          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-          "isOwnAnchor" : false,
-          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
-          "parentRelationshipTypeName" : "open metadata type name",
-          "parentAtEnd1": true,
-          "collectionProperties": {
-            "class" : "CollectionProperties",
-            "qualifiedName": "Must provide a unique name here",
-            "name" : "Add display name here",
-            "description" : "Add description of the collection here",
-            "collectionType": "Add appropriate valid value for type",
-            "collectionOrdering" : "OTHER",
-            "orderPropertyName" : "Add property name if 'collectionOrdering' is OTHER"
-          },
-          "digitalProductProperties" : {
-            "class" : "DigitalProductProperties",
-            "productStatus" : "ACTIVE",
-            "productName" : "Add name here",
-            "productType" : "Add valid value here",
-            "description" : "Add description here",
-            "introductionDate" : "date",
-            "maturity" : "Add valid value here",
-            "serviceLife" : "Add the estimated lifetime of the product",
-            "currentVersion": "V1.0",
-            "nextVersion": "V1.1",
-            "withdrawDate": "date",
-            "additionalProperties": {
-              "property1Name" : "property1Value",
-              "property2Name" : "property2Value"
-            }
-          }
-        }
-        """
-
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products"
-
-        resp = await self._async_make_request("POST", url, body)
-        return resp.json().get("guid", "No GUID returned")
-
-    def create_digital_product(self, body: dict) -> str:
-        """Create a new collection that represents a digital product. Async version.
-
-        Parameters
-        ----------
-        body: dict
-            A dict representing the details of the collection to create.
-
-             If not provided, the server name associated
-            with the instance is used.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-        {
-          "class" : "NewDigitalProductRequestBody",
-          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-          "isOwnAnchor" : false,
-          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
-          "parentRelationshipTypeName" : "open metadata type name",
-          "parentAtEnd1": true,
-          "collectionProperties": {
-            "class" : "CollectionProperties",
-            "qualifiedName": "Must provide a unique name here",
-            "name" : "Add display name here",
-            "description" : "Add description of the collection here",
-            "collectionType": "Add appropriate valid value for type",
-            "collectionOrdering" : "OTHER",
-            "orderPropertyName" : "Add property name if 'collectionOrdering' is OTHER"
-          },
-          "digitalProductProperties" : {
-            "class" : "DigitalProductProperties",
-            "productStatus" : "ACTIVE",
-            "productName" : "Add name here",
-            "productType" : "Add valid value here",
-            "description" : "Add description here",
-            "introductionDate" : "date",
-            "maturity" : "Add valid value here",
-            "serviceLife" : "Add the estimated lifetime of the product",
-            "currentVersion": "V1.0",
-            "nextVersion": "V1.1",
-            "withdrawDate": "date",
-            "additionalProperties": {
-              "property1Name" : "property1Value",
-              "property2Name" : "property2Value"
-            }
-          }
-        }
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_digital_product(body))
-        return resp
-
     #
     # Manage collections
     #
@@ -1797,10 +2910,12 @@ class CollectionManager(Client):
                f"replaceAllProperties={replace_all_props_s}")
 
         body = {
-            "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-            "description": description, "collectionType": collection_type, "collectionOrdering": collection_ordering,
-            "orderPropertyName": order_property_name, "additionalProperties": additional_properties,
-            "extendedProperties": extended_properties
+            "class": "UpdateElementRequestBody", "properties": {
+                "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
+                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
+                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
+                "extendedProperties": extended_properties
+                }
             }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
@@ -1857,6 +2972,183 @@ class CollectionManager(Client):
                                           additional_properties, extended_properties))
         return
 
+    async def _async_create_digital_product(self, body: dict) -> str:
+        """Create a new collection that represents a digital product. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+             If not provided, the server name associated
+            with the instance is used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor" : false,
+          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName" : "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type",
+            "collectionOrder" : "OTHER",
+            "orderByPropertyName" : "Add property name if 'collectionOrder' is OTHER"
+          },
+          "digitalProductProperties" : {
+            "class" : "DigitalProductProperties",
+            "productStatus" : "ACTIVE",
+            "productName" : "Add name here",
+            "productType" : "Add valid value here",
+            "description" : "Add description here",
+            "introductionDate" : "date",
+            "maturity" : "Add valid value here",
+            "serviceLife" : "Add the estimated lifetime of the product",
+            "currentVersion": "V1.0",
+            "nextVersion": "V1.1",
+            "withdrawDate": "date",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          }
+        }
+
+        With a lifecycle, the body is:
+        {
+          "class" : "NewDigitalProductRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "DigitalProductProperties",
+            "qualifiedName": "DigitalProduct:Add product name here",
+            "userDefinedStatus" : "Optional value here - used when initial status is OTHER",
+            "name" : "Product display name",
+            "description" : "Add description of product and its expected usage here",
+            "identifier" : "Add product identifier here",
+            "productName" : "Add product name here",
+            "productType" : "Periodic Delta",
+            "maturity" : "Add valid value here",
+            "serviceLife" : "Add the estimated lifetime of the product",
+            "introductionDate" : "date",
+            "nextVersionDate": "date",
+            "withdrawDate": "date",
+            "currentVersion": "V0.1",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "initialStatus" : "DRAFT",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
+        """
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        return resp.json().get("guid", "No GUID returned")
+
+    def create_digital_product(self, body: dict) -> str:
+        """Create a new collection that represents a digital product. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+             If not provided, the server name associated
+            with the instance is used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "NewDigitalProductRequestBody",
+          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor" : false,
+          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName" : "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "name" : "Add display name here",
+            "description" : "Add description of the collection here",
+            "collectionType": "Add appropriate valid value for type",
+            "collectionOrder" : "OTHER",
+            "orderByPropertyName" : "Add property name if 'collectionOrder' is OTHER"
+          },
+          "digitalProductProperties" : {
+            "class" : "DigitalProductProperties",
+            "productStatus" : "ACTIVE",
+            "productName" : "Add name here",
+            "productType" : "Add valid value here",
+            "description" : "Add description here",
+            "introductionDate" : "date",
+            "maturity" : "Add valid value here",
+            "serviceLife" : "Add the estimated lifetime of the product",
+            "currentVersion": "V1.0",
+            "nextVersion": "V1.1",
+            "withdrawDate": "date",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_digital_product(body))
+        return resp
+
     async def _async_update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection. Async version.
 
@@ -1886,23 +3178,24 @@ class CollectionManager(Client):
         Notes
         -----
         JSON Structure looks like:
-        {
-          "class" : "DigitalProductProperties",
-          "productStatus" : "ACTIVE",
-          "productName" : "Add name here",
-          "productType" : "Add valid value here",
-          "description" : "Add description here",
-          "introductionDate" : "date",
-          "maturity" : "Add valid value here",
-          "serviceLife" : "Add the estimated lifetime of the product",
-          "currentVersion": "V1.0",
-          "nextVersion": "V1.1",
-          "withdrawDate": "date",
-          "additionalProperties": {
-            "property1Name" : "property1Value",
-            "property2Name" : "property2Value"
-          }
-        }
+        {"class": "UpdateElementRequestBody",
+        "properties": {
+              "class" : "DigitalProductProperties",
+              "productName" : "Add name here",
+              "productType" : "Add valid value here",
+              "description" : "Add description here",
+              "introductionDate" : "date",
+              "maturity" : "Add valid value here",
+              "serviceLife" : "Add the estimated lifetime of the product",
+              "currentVersion": "V1.0",
+              "nextVersion": "V1.1",
+              "withdrawDate": "date",
+              "additionalProperties": {
+                "property1Name" : "property1Value",
+                "property2Name" : "property2Value"
+              }
+            }
+         }
         """
 
         replace_all_props_s = str(replace_all_props).lower()
@@ -2189,101 +3482,6 @@ class CollectionManager(Client):
         loop.run_until_complete(self._async_delete_collection(collection_guid, cascade))
         return
 
-    async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                                            collection_qname: str = None, start_from: int = 0,
-                                            page_size: int = None, ) -> list | str:
-        """Return a list of elements that are a member of a collection. Async version.
-
-        Parameters
-        ----------
-        collection_guid: str,
-            identity of the collection to return members for. If none, collection_name or
-            collection_qname are used.
-        collection_name: str,
-            display the name of the collection to return members for. If none, collection_guid
-            or collection_qname are used.
-        collection_qname: str,
-            qualified name of the collection to return members for. If none, collection_guid
-            or collection_name are used.
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of collection members in the collection.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-        if collection_guid is None:
-            collection_guid = self.__get_guid__(collection_guid, collection_name, "name", collection_qname, None, )
-
-        url = (f"{self.collection_command_root}/{collection_guid}/"
-               f"members?startFrom={start_from}&pageSize={page_size}")
-
-        resp = await self._async_make_request("GET", url)
-        return resp.json().get("elements", NO_ELEMENTS_FOUND)
-
-    def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                               collection_qname: str = None, start_from: int = 0,
-                               page_size: int = None, ) -> list | str:
-        """Return a list of elements that are a member of a collection. Async version.
-
-               Parameters
-               ----------
-               collection_guid: str,
-                   identity of the collection to return members for. If none, collection_name or
-                   collection_qname are used.
-               collection_name: str,
-                   display the name of the collection to return members for. If none, collection_guid
-                   or collection_qname are used.
-               collection_qname: str,
-                   qualified name of the collection to return members for. If none, collection_guid
-                   or collection_name are used.
-               start_from: int, [default=0], optional
-                           When multiple pages of results are available, the page number to start from.
-               page_size: int, [default=None]
-                   The number of items to return in a single page. If not specified, the default will be taken from
-                   the class instance.
-        Returns
-        -------
-        List | str
-
-        A list of collection members in the collection.
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_collection_members(collection_guid, collection_name, collection_qname, start_from,
-                                               page_size, ))
-
-        return resp
-
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
 
@@ -2316,19 +3514,21 @@ class CollectionManager(Client):
         Notes
         -----
         Example body:
-        {
-          "class" : "CollectionMembershipProperties",
-          "membershipRationale": "xxx",
-          "createdBy": "user id here",
-          "expression": "expression that described why the element is a part of this collection",
-          "confidence": 100,
-          "status": "PROPOSED",
-          "userDefinedStatus": "Add valid value here",
-          "steward": "identifier of steward that validated this member",
-          "stewardTypeName": "type name of element identifying the steward",
-          "stewardPropertyName": "property name if the steward's identifier",
-          "source": "source of the member",
-          "notes": "Add notes here"
+        { "class": "RelationshipRequestBody",
+           "properties" : {
+              "class" : "CollectionMembershipProperties",
+              "membershipRationale": "xxx",
+              "createdBy": "user id here",
+              "expression": "expression that described why the element is a part of this collection",
+              "confidence": 100,
+              "status": "PROPOSED",
+              "userDefinedStatus": "Add valid value here",
+              "steward": "identifier of steward that validated this member",
+              "stewardTypeName": "type name of element identifying the steward",
+              "stewardPropertyName": "property name if the steward's identifier",
+              "source": "source of the member",
+              "notes": "Add notes here"
+              }
         }
 
         """
@@ -2371,19 +3571,21 @@ class CollectionManager(Client):
         Notes
         -----
         Example body:
-        {
-          "class" : "CollectionMembershipProperties",
-          "membershipRationale": "xxx",
-          "createdBy": "user id here",
-          "expression": "expression that described why the element is a part of this collection",
-          "confidence": 100,
-          "status": "PROPOSED",
-          "userDefinedStatus": "Add valid value here",
-          "steward": "identifier of steward that validated this member",
-          "stewardTypeName": "type name of element identifying the steward",
-          "stewardPropertyName": "property name if the steward's identifier",
-          "source": "source of the member",
-          "notes": "Add notes here"
+         { "class": "RelationshipRequestBody",
+           "properties" : {
+              "class" : "CollectionMembershipProperties",
+              "membershipRationale": "xxx",
+              "createdBy": "user id here",
+              "expression": "expression that described why the element is a part of this collection",
+              "confidence": 100,
+              "status": "PROPOSED",
+              "userDefinedStatus": "Add valid value here",
+              "steward": "identifier of steward that validated this member",
+              "stewardTypeName": "type name of element identifying the steward",
+              "stewardPropertyName": "property name if the steward's identifier",
+              "source": "source of the member",
+              "notes": "Add notes here"
+              }
         }
 
         """
@@ -2667,7 +3869,7 @@ class CollectionManager(Client):
         display_name = properties.get("name", "") or ""
         description = properties.get("description", "") or ""
         qualified_name = properties.get("qualifiedName", "") or ""
-        # collection_type = properties.get("collectionType", "") or ""
+        collection_type = properties.get("collectionType", "") or ""
         additional_properties = properties.get("additionalProperties", {}) or {}
         extended_properties = properties.get("extendedProperties", {}) or {}
         # classifications = ",  ".join(properties.get("classifications", [])) or ""
@@ -2686,9 +3888,8 @@ class CollectionManager(Client):
             member_names = member_names[:-2]
 
         return {
-             'GUID': guid,'display_name': display_name,'qualified_name': qualified_name, 'description': description,
-             'classifications': classification_names, 'members': member_names, 'properties': properties,
-            # 'collection_type': collection_type,
+            'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description,
+            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names, 'properties': properties,
             'additional_properties': additional_properties, 'extended_properties': extended_properties,
             }
 
@@ -2715,24 +3916,24 @@ class CollectionManager(Client):
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
             columns = [{'name': 'Collection Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name'},
-                {'name': 'Collection Type', 'key': 'collection_type'},
-                {'name': 'Classifications', 'key': 'classifications'},
-                {'name': 'Description', 'key': 'description', 'format': True}]
+                       {'name': 'Qualified Name', 'key': 'qualified_name'},
+                       {'name': 'Collection Type', 'key': 'collection_type'},
+                       {'name': 'Classifications', 'key': 'classifications'},
+                       {'name': 'Description', 'key': 'description', 'format': True}]
             if collection_type is None:
                 entity_type = "Collection"
             else:
                 entity_type = collection_type
 
             return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-                output_format=output_format, extract_properties_func=self._extract_collection_properties,
-                columns=columns if output_format == 'LIST' else None)
+                                   output_format=output_format,
+                                   extract_properties_func=self._extract_collection_properties,
+                                   columns=columns if output_format == 'LIST' else None)
 
         # Default case
         return None
 
-
-    def generate_collection_output(self, elements, filter, collection_type,  output_format) -> str | list:
+    def generate_collection_output(self, elements, filter, classification_name, output_format) -> str | list:
         """
         Generate output for collections in the specified format.
 
@@ -2746,105 +3947,67 @@ class CollectionManager(Client):
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        if collection_type is None:
+        if classification_name is None:
             entity_type = "Collection"
         else:
-            entity_type = collection_type
+            entity_type = classification_name
 
         if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name','format': True},
-                {'name': 'Description', 'key': 'description', 'format': True},
-                {'name': "Classifications", 'key': 'classifications' },
-                {'name': 'Members', 'key': 'members', 'format': True},
-                ]
+                       {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                       {'name': 'Description', 'key': 'description', 'format': True},
+                       {'name': "Classifications", 'key': 'classifications'},
+                       {'name': 'Members', 'key': 'members', 'format': True}, ]
 
             return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-                output_format=output_format, extract_properties_func=self._extract_collection_properties,
-                columns=columns if output_format == 'LIST' else None)
+                                   output_format=output_format,
+                                   extract_properties_func=self._extract_collection_properties,
+                                   columns=columns if output_format == 'LIST' else None)
         else:
             return self.generate_basic_structured_output(elements, filter, output_format)
 
-
     # def generate_collection_output(self, elements, filter, collection_type: str, output_format,
-    #                                output_profile: str = "CORE") -> str | list | dict:
-    #     """
-    #     Generate output in the specified format for the given elements.
-    #
-    #     Args:
-    #         elements: Dictionary or list of dictionaries containing element data
-    #         filter: The search string used to find the elements
-    #         output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)
-    #         output_profile: str, optional, default = "CORE"
-    #             The desired output profile - BASIC, CORE, FULL
-    #     Returns:
-    #         Formatted output as string or list of dictionaries
-    #     """
-    #     if collection_type is None:
-    #         entity_type = "Collection"
-    #     else:
-    #         entity_type = collection_type
-    #
-    #     # For LIST and DICT formats, get member information
-    #
-    #     if output_format in ["LIST", "DICT"]:
-    #         # Get the collection GUID
-    #         collection_guid = None
-    #         if isinstance(elements, dict):
-    #             collection_guid = elements.get('elementHeader', {}).get('guid')
-    #         elif isinstance(elements, list) and len(elements) > 0:
-    #             collection_guid = elements[0].get('elementHeader', {}).get('guid')
-    #
-    #         # Get member list if we have a valid collection GUID
-    #         members = []
-    #         if collection_guid:
-    #             members = self.get_member_list(collection_guid=collection_guid)
-    #             if isinstance(members, str):  # "No members found" case
-    #                 members = []
-    #
-    #         # For DICT format, include all member information in the result
-    #         if output_format == "DICT":
-    #             result = self.generate_basic_structured_output(elements, filter, output_format, collection_type)
-    #             if isinstance(result, list):
-    #                 for item in result:
-    #                     item['members'] = members
-    #                 return result
-    #             elif isinstance(result, dict):
-    #                 result['members'] = members
-    #                 return result
-    #
-    #         # For LIST format, add a column with bulleted list of qualified names
-    #         elif output_format == "LIST":
-    #             # Define columns for LIST format, including the new Members column
-    #             columns = [{'name': 'Collection Name', 'key': 'display_name'},
-    #                 {'name': 'Qualified Name', 'key': 'qualified_name'},
-    #                 {'name': 'Collection Type', 'key': 'collection_type'},
-    #                 {'name': 'Description', 'key': 'description', 'format': True},
-    #                 {'name': 'Classifications', 'key': 'classifications'},
-    #                 {'name': 'Members', 'key': 'members', 'format': True}]
-    #
-    #             # Create a function to add member information to the properties
-    #             def get_additional_props(element, guid, output_format):
-    #                 if not members:
-    #                     return {'members': ''}
-    #
-    #                 # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)
-    #                 member_list = ", ".join([member.get('qualifiedName', '') for member in members])
-    #                 return {'members': member_list}
-    #
-    #             # Generate output with the additional properties
-    #
-    #             return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-    #                 output_format=output_format, extract_properties_func=self._extract_collection_properties,
-    #                 get_additional_props_func=get_additional_props, columns=columns)
-    #
-    #     # For FORM, REPORT, JSON formats, keep behavior unchanged
-    #     return self.generate_basic_structured_output(elements, filter, output_format, collection_type)
+    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified
+    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries
+    #  containing  # element data  #         filter: The search string used to find the elements  #
+    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #
+    #  output_profile: str, optional,  # default = "CORE"  #             The desired output profile - BASIC, CORE,
+    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if
+    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =
+    #  collection_type  #  #     # For LIST and DICT  # formats, get member information  #  #     if output_format in
+    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if
+    #  isinstance(elements, dict):  #             collection_guid  # = elements.get('elementHeader', {}).get('guid')
+    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[
+    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid
+    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =
+    #         self.get_member_list(collection_guid=collection_guid)  #             if isinstance(members,
+    # str):  # "No members found" case  #                 members = []  #  #         # For DICT format, include all
+    # member information in the result  #         if output_format == "DICT":  #             result =  #
+    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #
+    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #
+    # members  #                 return result  #             elif isinstance(result, dict):  #  # result['members']
+    # = members  #                 return result  #  #         # For LIST format, add a column with  # bulleted list
+    # of qualified names  #         elif output_format == "LIST":  #             # Define columns for  # LIST format,
+    # including the new Members column  #             columns = [{'name': 'Collection Name',
+    # 'key': 'display_name'},  #                 {'name': 'Qualified Name', 'key': 'qualified_name'},  #  # {'name':
+    # 'Collection Type', 'key': 'collection_type'},  #                 {'name': 'Description',
+    # 'key': 'description', 'format': True},  #                 {'name': 'Classifications',
+    # 'key': 'classifications'},  #                 {'name': 'Members', 'key': 'members', 'format': True}]  #  #  #
+    # Create a function to add member information to the properties  #             def get_additional_props(element,
+    # guid, output_format):  #                 if not members:  #                     return {'members': ''}  #  #  #
+    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #
+    # member_list = ", ".join([member.get('qualifiedName', '') for member in members])  #                 return {  #
+    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return
+    # generate_output(elements=elements, search_string=filter, entity_type=entity_type,
+    #  # output_format=output_format, extract_properties_func=self._extract_collection_properties,
+    #  # get_additional_props_func=get_additional_props, columns=columns)  #  #     # For FORM, REPORT, JSON formats,
+    # keep behavior unchanged  #     return self.generate_basic_structured_output(elements, filter, output_format,
+    # collection_type)
 
-    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return
-    # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(
-    # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(
+    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #
+    # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(  #
+    # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(  #
     # elements, filter, output_format)
 
 

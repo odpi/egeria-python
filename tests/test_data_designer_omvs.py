@@ -231,7 +231,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="LIST")
+            response = m_client.find_all_data_structures(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -374,29 +374,33 @@ class TestDataDesigner:
 
 
     def test_create_data_field(self):
-        name = "Test Data Structure"
-        description = "Test Data Structure Description"
+        name = "Radio Name"
+        description = "Test Data Field Description"
 
         body =  {
-          "properties": {
-            "class": "DataFieldProperties",
-            "qualifiedName": "dataField::radio_name",
-            "displayName": "radio_name",
-            "namespace": "",
-            "description": "What is the name of the radio",
-            "versionIdentifier": ".1",
-            "aliases": [
-              "transmitter"
-            ],
-            "namePatterns": [],
-            "isDeprecated": False,
-            "isNullable": False,
-            "dataType": "String",
-            "minimumLength": 3,
-            "length": 20,
-            "precision": 0,
-            "orderedValues": False,
-            "sortOrder": "UNSORTED",
+            "class": "NewElementRequestBody",
+            "forLineage": False,
+            "forDuplicateProcessing": False,
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "DataFieldProperties",
+                "qualifiedName": "dataField::radio_name",
+                "displayName": "radio_name",
+                "namespace": "",
+                "description": "What is the name of the radio",
+                "versionIdentifier": ".1",
+                "aliases": [
+                  "transmitter"
+                ],
+                "namePatterns": [],
+                "isDeprecated": False,
+                "isNullable": False,
+                "dataType": "String",
+                "minimumLength": 3,
+                "length": 20,
+                "precision": 0,
+                "orderedValues": False,
+                "sortOrder": "UNSORTED",
 
             }
           }
@@ -437,7 +441,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="DICT")
+            response = m_client.find_all_data_fields(output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -612,7 +616,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            search_string = 'DataField::PatientId'
+            search_string = '*'
             response = m_client.find_data_fields(search_string,output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
@@ -643,11 +647,11 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            search_string = None
+            search_string = "*"
 
             body = {
                 "class": "FilterRequestBody",
-                "asOfTime": "2025-06-24T17:10",
+                "asOfTime": "2025-06-27T16:10:00-05:00",
                 "effectiveTime": None,
                 "forLineage": False,
                 "forDuplicateProcessing": False,
@@ -832,7 +836,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             search_string = "DataClass::ISO-Date"
             start_time = time.perf_counter()
-            response = m_client.find_data_classes(search_string,output_format="FORM")
+            response = m_client.find_data_classes(search_string,output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

@@ -64,7 +64,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @logger.catch
-def process_markdown_file(file_path: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
+def process_markdown_file(input_file: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
@@ -75,7 +75,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
     token = client.create_egeria_bearer_token(userid, user_pass)
 
     updated = False
-    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, file_path)
+    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
     logger.info("\n\n====================================================\n\n")
     logger.info(f"Processing Markdown File: {full_file_path}")
     try:
@@ -87,7 +87,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
 
     final_output = []
     prov_found = False
-    prov_output = (f"\n# Provenance\n\n* Results from processing file {file_path} on "
+    prov_output = (f"\n# Provenance\n\n* Results from processing file {input_file} on "
                    f"{datetime.now().strftime("%Y-%m-%d %H:%M")}\n")
     h1_blocks = []
     current_block = ""
@@ -104,7 +104,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
         if potential_command in cmd_list:
             # Process the block based on the object_action
             if potential_command == "Provenance":
-                result = process_provenance_command(file_path, current_block)
+                result = process_provenance_command(input_file, current_block)
                 prov_found = True
 
             elif potential_command in ["Create Glossary", "Update Glossary"]:
@@ -233,7 +233,7 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
 
     try:
         if updated:
-            path, filename = os.path.split(file_path)  # Get both parts
+            path, filename = os.path.split(input_file)  # Get both parts
             new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
             new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
@@ -267,11 +267,11 @@ def process_markdown_file(file_path: str, directive: str, server: str, url: str,
 #     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 #     time_out = args.time_out if args.time_out is not None else 60
 #     try:
-#         file_path = Prompt.ask("Markdown File name to process:", default="")
+#         input_file = Prompt.ask("Markdown File name to process:", default="")
 #         directive = Prompt.ask("Processing Directive:", choices=[ "display", "validate", "process"],
 #         default="validate")
 #
-#         process_markdown_file(file_path, directive, server, url, userid, user_pass)
+#         process_markdown_file(input_file, directive, server, url, userid, user_pass)
 #     except KeyboardInterrupt:
 #         pass
 #
