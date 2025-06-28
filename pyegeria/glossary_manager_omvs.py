@@ -1147,7 +1147,7 @@ class GlossaryManager(GlossaryBrowser):
             Identity of the glossary to export.
         target_file: str
             Complete file name with path and extension to export to.
-        file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
+        input_file: str, default is EGERIA_GLOSSARY_PATH if specified or None
                 If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
                 prepended to the filename parameter to form the full path to the file.
 
@@ -1221,7 +1221,7 @@ class GlossaryManager(GlossaryBrowser):
             Identity of the glossary to export.
         target_file: str
             Complete file name with path and extension to export to.
-        file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
+        input_file: str, default is EGERIA_GLOSSARY_PATH if specified or None
                 If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
                 prepended to the filename parameter to form the full path to the file.
 

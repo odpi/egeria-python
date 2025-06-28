@@ -63,8 +63,12 @@ def add_member_to_data_collections(egeria_client: EgeriaTech, collection_list: l
     Add member to data dictionaries and data specifications.
     """
     body = {
-        "class": "CollectionMembershipProperties", "membershipRationale": "User Specified",
-        "notes": "Added by Dr.Egeria"
+        "class": "RelationshipRequestBody",
+        "properties": {
+            "class": "CollectionMembershipProperties",
+            "membershipRationale": "User Specified",
+            "notes": "Added by Dr.Egeria"
+            }
         }
     try:
         if collection_list is not None:
@@ -1564,6 +1568,15 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
         search_string = attributes.get('Search String', {}).get('value', '*')
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
         detailed = attributes.get('Detailed', {}).get('value', False)
+        as_of_time = attributes.get('AsOfTime', {}).get('value', None)
+        effective_time = attributes.get('Effective Time', {}).get('value', None)
+        sort_order = attributes.get('Sort Order', {}).get('value', None)
+        order_property = attributes.get('Order Property', {}).get('value', None)
+        starts_with = attributes.get('Start With', {}).get('value', True)
+        ends_with = attributes.get('End With', {}).get('value', False)
+        ignore_case = attributes.get('Ignore Case', {}).get('value', False)
+        start_from = attributes.get('Start From', {}).get('value', 0)
+        page_size = attributes.get('Page Size', {}).get('value', None)
 
         try:
             if not valid:  # First validate the command before we process it
@@ -1572,7 +1585,19 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
                 return None
 
             list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
-            struct = egeria_client.find_data_fields(search_string, output_format=output_format)
+            body = {
+                "class": "FilterRequestBody",
+                "asOfTime": as_of_time,
+                "effectiveTime": effective_time,
+                "forLineage": False,
+                "forDuplicateProcessing" : False,
+                "limitResultsByStatus": ["ACTIVE"],
+                "sequencingOrder": sort_order,
+                "sequencingProperty": order_property,
+                "filter": search_string,
+                }
+            struct = egeria_client.find_data_fields_w_body(body, start_from, page_size, starts_with,
+                                                           ends_with, ignore_case,output_format)
 
             if output_format == "DICT":
                 list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"

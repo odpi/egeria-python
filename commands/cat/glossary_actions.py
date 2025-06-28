@@ -315,7 +315,7 @@ def remove_term_from_category(server, url, userid, password, timeout, term_guid,
 @click.option("--glossary_name", help="Name of Glossary", required=True)
 @click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
-    "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+    "--input_file", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
 )
 @click.option(
     "--verbose",
@@ -380,7 +380,7 @@ def import_terms_csv(
 )
 @click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
-    "--file_path", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+    "--input_file", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
 )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
 @click.option(

@@ -527,6 +527,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     else:
         known_glossary_q_name, known_glossary_guid, glossary_valid, glossary_exists = process_element_identifiers(
             egeria_client, "Glossary", GLOSSARY_NAME_LABELS, txt, EXISTS_REQUIRED, None)
+# Todo - add logic to fail if no valid glossary provided.
 
     # process categories, if present
     categories = process_simple_attribute(txt, ['Glossary Categories', 'Glossary Category', 'Category', 'Categories'])

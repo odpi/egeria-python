@@ -2588,8 +2588,8 @@ r       replace_all_properties: bool, default = False
             }
 
         """
-        if filter == "*":
-            filter = None
+        if body['filter'] == "*":
+            body['filter'] = None
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
