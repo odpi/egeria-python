@@ -245,7 +245,7 @@ class TestCollectionManager:
             )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "cbe168a1-9551-47b6-94a6-e2bce92d8288"
+            collection_guid = "c18a75c2-ce4f-461f-b710-43ef9cee60ab"
 
             response = c_client.get_collection_by_guid(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
@@ -283,9 +283,9 @@ class TestCollectionManager:
                 )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "cbe168a1-9551-47b6-94a6-e2bce92d8288"
+            collection_guid = "d4adc047-9005-471f-b2a1-e86201961e0b"
 
-            response = c_client.get_collection_graph(collection_guid, output_format="JSON")
+            response = c_client.get_collection_graph(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -293,6 +293,53 @@ class TestCollectionManager:
 
             if isinstance(response, (dict, list)):
                 print("dict:\n\n")
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}\n\n")
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            c_client.close_session()
+
+    def test_get_collection_graph_w_body(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            collection_guid = "d4adc047-9005-471f-b2a1-e86201961e0b"
+            body = {
+                "class": "ResultsRequestBody",
+                "effectiveTime": None,
+                "limitResultsByStatus": ["ACTIVE"],
+                "asOfTime": None,
+                "sequencingOrder": "CREATION_DATE_RECENT",
+                "sequencingProperty": ""
+                }
+
+            response = c_client.get_collection_graph(collection_guid, output_format="MERMAID")
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Type of response is {type(response)}")
+
+            if isinstance(response, (dict, list)):
+                print("dict:\n\n")
+                # print_json(response[0])
                 print_json(json.dumps(response, indent=4))
             elif type(response) is tuple:
                 print(f"Type is {type(response)}\n\n")
@@ -715,6 +762,424 @@ class TestCollectionManager:
                     assert False, "Invalid request"
                 finally:
                     c_client.close_session()
+
+    def test_create_name_space_collection(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "Austria"
+            description = "A namespace collection"
+            collection_type = "Namespaces"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataDict",display_name)
+
+            response = c_client.create_name_space_collection(
+                display_name,description,is_own_anchor, anchor_guid,
+                parent_guid, collection_type=collection_type)
+
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+            def test_create_data_spec_collection(self):
+                try:
+                    c_client = CollectionManager(
+                        self.good_view_server_1,
+                        self.good_platform1_url,
+                        user_id=self.good_user_2,
+                        )
+
+                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+                    start_time = time.perf_counter()
+                    anchor_guid = None
+                    parent_guid = None
+                    parent_relationship_type_name = "CollectionMembership"
+                    # parent_relationship_type_name = None
+                    parent_at_end1 = True
+                    # parent_at_end1 = None
+                    display_name = "Clinical Trial Data Spec"
+                    description = "Clinical Trials Specification"
+                    collection_type = "Data Specificationn"
+                    is_own_anchor = True
+                    collection_ordering = "NAME"
+                    order_property_name = "Something"
+                    anchor_scope_guid = None
+                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
+
+                    response = c_client.create_data_spec_collection(
+                        anchor_guid,
+                        parent_guid,
+                        parent_relationship_type_name,
+                        parent_at_end1,
+                        display_name,
+                        description,
+                        collection_type,
+                        anchor_scope_guid,
+                        is_own_anchor,
+                        qualified_name
+                        )
+                    duration = time.perf_counter() - start_time
+                    # resp_str = json.loads(response)
+                    print(f"\n\tDuration was {duration} seconds\n")
+                    if type(response) is dict:
+                        print_json(json.dumps(response, indent=4))
+                    elif type(response) is str:
+                        print("\n\nGUID is: " + response)
+                    assert True
+
+                except (
+                        InvalidParameterException,
+                        PropertyServerException,
+                        UserNotAuthorizedException,
+                        ) as e:
+                    print_exception_response(e)
+                    assert False, "Invalid request"
+                finally:
+                    c_client.close_session()
+
+    def test_create_context_event_collection(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "Audits"
+            description = "Testing context events"
+            collection_type = "Audit"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataDict", display_name)
+
+            response = c_client.create_context_event_collection(
+                display_name, description, is_own_anchor, anchor_guid,
+                parent_guid, None, True,collection_type, anchor_scope_guid,)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+            def test_create_data_spec_collection(self):
+                try:
+                    c_client = CollectionManager(
+                        self.good_view_server_1,
+                        self.good_platform1_url,
+                        user_id=self.good_user_2,
+                        )
+
+                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+                    start_time = time.perf_counter()
+                    anchor_guid = None
+                    parent_guid = None
+                    parent_relationship_type_name = "CollectionMembership"
+                    # parent_relationship_type_name = None
+                    parent_at_end1 = True
+                    # parent_at_end1 = None
+                    display_name = "Clinical Trial Data Spec"
+                    description = "Clinical Trials Specification"
+                    collection_type = "Data Specificationn"
+                    is_own_anchor = True
+                    collection_ordering = "NAME"
+                    order_property_name = "Something"
+                    anchor_scope_guid = None
+                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
+
+                    response = c_client.create_data_spec_collection(
+                        anchor_guid,
+                        parent_guid,
+                        parent_relationship_type_name,
+                        parent_at_end1,
+                        display_name,
+                        description,
+                        collection_type,
+                        anchor_scope_guid,
+                        is_own_anchor,
+                        qualified_name
+                        )
+                    duration = time.perf_counter() - start_time
+                    # resp_str = json.loads(response)
+                    print(f"\n\tDuration was {duration} seconds\n")
+                    if type(response) is dict:
+                        print_json(json.dumps(response, indent=4))
+                    elif type(response) is str:
+                        print("\n\nGUID is: " + response)
+                    assert True
+
+                except (
+                        InvalidParameterException,
+                        PropertyServerException,
+                        UserNotAuthorizedException,
+                        ) as e:
+                    print_exception_response(e)
+                    assert False, "Invalid request"
+                finally:
+                    c_client.close_session()
+
+    def test_event_set_collection(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "Events collection"
+            description = "Testing  events"
+            collection_type = "Events"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataDict", display_name)
+
+            response = c_client.create_event_set_collection(
+                display_name, description, is_own_anchor, anchor_guid,
+                parent_guid, None, True,collection_type, anchor_scope_guid,)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+            def test_create_data_spec_collection(self):
+                try:
+                    c_client = CollectionManager(
+                        self.good_view_server_1,
+                        self.good_platform1_url,
+                        user_id=self.good_user_2,
+                        )
+
+                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+                    start_time = time.perf_counter()
+                    anchor_guid = None
+                    parent_guid = None
+                    parent_relationship_type_name = "CollectionMembership"
+                    # parent_relationship_type_name = None
+                    parent_at_end1 = True
+                    # parent_at_end1 = None
+                    display_name = "Clinical Trial Data Spec"
+                    description = "Clinical Trials Specification"
+                    collection_type = "Data Specificationn"
+                    is_own_anchor = True
+                    collection_ordering = "NAME"
+                    order_property_name = "Something"
+                    anchor_scope_guid = None
+                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
+
+                    response = c_client.create_data_spec_collection(
+                        anchor_guid,
+                        parent_guid,
+                        parent_relationship_type_name,
+                        parent_at_end1,
+                        display_name,
+                        description,
+                        collection_type,
+                        anchor_scope_guid,
+                        is_own_anchor,
+                        qualified_name
+                        )
+                    duration = time.perf_counter() - start_time
+                    # resp_str = json.loads(response)
+                    print(f"\n\tDuration was {duration} seconds\n")
+                    if type(response) is dict:
+                        print_json(json.dumps(response, indent=4))
+                    elif type(response) is str:
+                        print("\n\nGUID is: " + response)
+                    assert True
+
+                except (
+                        InvalidParameterException,
+                        PropertyServerException,
+                        UserNotAuthorizedException,
+                        ) as e:
+                    print_exception_response(e)
+                    assert False, "Invalid request"
+                finally:
+                    c_client.close_session()
+
+    def test_naming_standard_ruleset_collection(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "ruleset1"
+            description = "a first ruleset"
+            collection_type = "hoyle"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataDict", display_name)
+
+            response = c_client.create_naming_standard_ruleset_collection(
+                display_name, description, is_own_anchor, anchor_guid,
+                parent_guid, None, True,collection_type, anchor_scope_guid,)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+            def test_create_data_spec_collection(self):
+                try:
+                    c_client = CollectionManager(
+                        self.good_view_server_1,
+                        self.good_platform1_url,
+                        user_id=self.good_user_2,
+                        )
+
+                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+                    start_time = time.perf_counter()
+                    anchor_guid = None
+                    parent_guid = None
+                    parent_relationship_type_name = "CollectionMembership"
+                    # parent_relationship_type_name = None
+                    parent_at_end1 = True
+                    # parent_at_end1 = None
+                    display_name = "Clinical Trial Data Spec"
+                    description = "Clinical Trials Specification"
+                    collection_type = "Data Specificationn"
+                    is_own_anchor = True
+                    collection_ordering = "NAME"
+                    order_property_name = "Something"
+                    anchor_scope_guid = None
+                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
+
+                    response = c_client.create_data_spec_collection(
+                        anchor_guid,
+                        parent_guid,
+                        parent_relationship_type_name,
+                        parent_at_end1,
+                        display_name,
+                        description,
+                        collection_type,
+                        anchor_scope_guid,
+                        is_own_anchor,
+                        qualified_name
+                        )
+                    duration = time.perf_counter() - start_time
+                    # resp_str = json.loads(response)
+                    print(f"\n\tDuration was {duration} seconds\n")
+                    if type(response) is dict:
+                        print_json(json.dumps(response, indent=4))
+                    elif type(response) is str:
+                        print("\n\nGUID is: " + response)
+                    assert True
+
+                except (
+                        InvalidParameterException,
+                        PropertyServerException,
+                        UserNotAuthorizedException,
+                        ) as e:
+                    print_exception_response(e)
+                    assert False, "Invalid request"
+                finally:
+                    c_client.close_session()
+
     def test_create_collection_from_template(self):
         try:
             c_client = CollectionManager(
@@ -796,14 +1261,14 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            parent_guid = "a133a7a3-197a-4bf3-837a-780867c25c2b"
+            parent_guid = "5d4fec06-f033-4743-bc50-06e7fd2eef10"
             parent_relationship_type_name = "CollectionMembership"
-            display_name = "Land Use Classification"
-            description = "Land use classification assets"
+            display_name = "Sentinel1 Raw Data"
+            description = "Raw Sentinel 1 data"
             collection_type = "Data Product Marketplace"
-            classification_name = "Data Product Marketplace"
+
             body = {
-                "class": "NewDigitalProductRequestBody",
+                "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "parentGUID": parent_guid,
                 "parentRelationshipTypeName": parent_relationship_type_name,
@@ -814,10 +1279,10 @@ class TestCollectionManager:
                     "userDefinedStatus": "ACTIVE",
                     "name": "Land Use Classifications",
                     "productType": "Periodic Delta",
-                    "identifier": "sent2",
-                    "productName": "My sentinel",
+                    "identifier": "sent1",
+                    "productName": "My sentinel 1",
                     "serviceLife": "While budgets last",
-                    "description": "Land use classification assets",
+                    "description": description,
                     "introductionDate": "2023-12-31",
                     "maturity": "Nacent",
                     "currentVersion": "V.5",
@@ -862,9 +1327,10 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "79f43cb7-0e1b-4785-9bf4-7f8b4bb6d4f1"
-            new_desc = " A somewhat general collection of product catalogs"
-            response = c_client.update_collection(collection_guid, description=new_desc)
+            collection_guid = "c18a75c2-ce4f-461f-b710-43ef9cee60ab"
+            new_desc = " Where audit events are kept"
+            collection_type = "Audits"
+            response = c_client.update_collection(collection_guid, collection_type=collection_type, description=new_desc)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -894,9 +1360,9 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = '0af6423a-daaa-493b-a353-85fe3a71eff4'
+            collection_guid = 'd4adc047-9005-471f-b2a1-e86201961e0b'
 
-            response = c_client.get_collection_members(collection_guid=collection_guid)
+            response = c_client.get_collection_members(collection_guid=collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(
@@ -1079,23 +1545,58 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "803326f4-5b0a-44b4-8a2a-58263f16289c"
-            element_guid = "cf6f609f-bdb3-4aa3-abb3-20c2ba3fbdd6"
+            collection_guid = "dca6f6d0-ad6a-4c75-a8b3-b1ce465af02a"
+            element_guid = "32b53e8e-7b2f-467b-a3a9-3f55852f4919"
             body = {
-                "class": "CollectionMembershipProperties",
-                "membershipRationale": "test purposes",
-                "expression": "just testing",
-                "confidence": 50,
-                "status": "PROPOSED",
-                "userDefinedStatus": "Maybe",
-                "steward": "peterprofile",
-                "stewardTypeName": "a type name?",
-                "stewardPropertyName": "a property name?",
-                "source": "clinical data",
-                "notes": "just an experiment",
+                "class": "RelationshipRequestBody",
+                "properties" : {
+                    "class" : "CollectionMembershipProperties",
+                    "membershipRationale": "test purposes",
+                    "expression": "just testing",
+                    "confidence": 50,
+                    "status": "PROPOSED",
+                    "userDefinedStatus": "Maybe",
+                    "steward": "peterprofile",
+                    "stewardTypeName": "a type name?",
+                    "stewardPropertyName": "a property name?",
+                    "source": "clinical data",
+                    "notes": "just an experiment"
+                    }
             }
 
             c_client.add_to_collection(collection_guid, element_guid, body)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+    def test_remove_from_collection(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            collection_guid = "dca6f6d0-ad6a-4c75-a8b3-b1ce465af02a"
+            element_guid = "32b53e8e-7b2f-467b-a3a9-3f55852f4919"
+
+
+            c_client.remove_from_collection(collection_guid, element_guid, None)
 
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -1123,7 +1624,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = '0af6423a-daaa-493b-a353-85fe3a71eff4'
+            guid = 'd4adc047-9005-471f-b2a1-e86201961e0b'
             # name = "Earth Observation Data Collection"
             # name = "Land Use Classification"
             name = "Sentinel 2"
@@ -1521,3 +2022,145 @@ class TestCollectionManager:
 
         finally:
             c_client.close_session()
+
+    #
+    # Agreements
+    #
+    def test_create_agreement(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "No Biting"
+            description = "Pets"
+            identifier = "who me"
+            collection_type = "Pets"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("Agreement", display_name)
+
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": anchor_guid,
+                "isOwnAnchor": is_own_anchor,
+                "parentGUID": parent_guid,
+                "parentRelationshipTypeName": parent_relationship_type_name,
+                "parentAtEnd1": parent_at_end1,
+                "properties": {
+                    "class": "AgreementProperties",
+                    "name": display_name,
+                    "qualifiedName": qualified_name,
+                    "description": description,
+                    "identifier": identifier,
+                    "collectionType": collection_type,
+                    "collectionOrder": collection_ordering,
+                    "orderByPropertyName": order_property_name,
+                },
+            }
+
+
+
+
+            response = c_client.create_agreement(body)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+    def test_create_data_sharing_agreement(self):
+        try:
+            c_client = CollectionManager(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "Fur balls per day"
+            description = "Pets"
+            identifier = "who me"
+            collection_type = "Pets"
+            is_own_anchor = True
+            collection_ordering = "NAME"
+            order_property_name = "Something"
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("Agreement", display_name)
+
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": anchor_guid,
+                "isOwnAnchor": is_own_anchor,
+                "parentGUID": parent_guid,
+                "parentRelationshipTypeName": parent_relationship_type_name,
+                "parentAtEnd1": parent_at_end1,
+                "properties": {
+                    "class": "AgreementProperties",
+                    "name": display_name,
+                    "qualifiedName": qualified_name,
+                    "description": description,
+                    "identifier": identifier,
+                    "collectionType": collection_type,
+                    "collectionOrder": collection_ordering,
+                    "orderByPropertyName": order_property_name,
+                },
+            }
+
+
+
+
+            response = c_client.create_data_sharing_agreement(body)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+

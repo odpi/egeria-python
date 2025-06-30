@@ -530,10 +530,11 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     logger.error(msg)
                     return None
                 else:
-                    guid = egeria_client.create_data_spec_collection(anchor_guid, parent_guid,
-                                                                     parent_relationship_type_name, parent_at_end1,
-                                                                     display_name, description, collection_type,
-                                                                     anchor_scope_guid, is_own_anchor, qualified_name)
+                    guid = egeria_client.create_data_spec_collection(display_name, description,
+                                                                     is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name,
+                                                                     parent_at_end1, collection_type,
+                                                                     anchor_scope_guid, collection_ordering,order_property_name,
+                                                                     additional_properties, extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
@@ -643,12 +644,12 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                  f"`Create` to `Update` in processed output\n\n___")
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 else:
-                    guid = egeria_client.create_data_dictionary_collection(anchor_guid, parent_guid,
-                                                                           parent_relationship_type_name,
-                                                                           parent_at_end1, display_name, description,
-                                                                           collection_type, anchor_scope_guid,
-                                                                           is_own_anchor, qualified_name,
-                                                                           additional_properties, extended_properties)
+                    guid = egeria_client.create_data_dictionary_collection(display_name,description, is_own_anchor, anchor_guid,
+                                                                           parent_guid, parent_relationship_type_name,
+                                                                           parent_at_end1, collection_type,
+                                                                           anchor_scope_guid, collection_ordering,
+                                                                           order_property_name, additional_properties,
+                                                                           extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name

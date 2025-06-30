@@ -651,7 +651,7 @@ class TestDataDesigner:
 
             body = {
                 "class": "FilterRequestBody",
-                "asOfTime": "2025-06-27T16:10:00-05:00",
+                # "asOfTime": "2025-06-27T16:10:00-05:00",
                 "effectiveTime": None,
                 "forLineage": False,
                 "forDuplicateProcessing": False,
