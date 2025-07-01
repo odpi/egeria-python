@@ -70,7 +70,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "dw"
+            search_string = "*"
 
             response = c_client.find_collections(search_string, output_format="DICT")
             duration = time.perf_counter() - start_time
@@ -95,9 +95,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            classification_name = "Folder"
+            classification_name = "DataDictionary"
             body = {
-                "class": "FilterRequestBody", "asOfTime": "2025-06-27T09:00:00", "effectiveTime": None,
+                "class": "FilterRequestBody", "asOfTime": "2025-07-01T15:00:00", "effectiveTime": None,
                 "forLineage": False, "forDuplicateProcessing": False, "limitResultsByStatus": ["ACTIVE"],
                 "sequencingOrder": "PROPERTY_ASCENDING", "sequencingProperty": "qualifiedName", "filter": None
                 }
@@ -151,9 +151,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "DataSpec"
+            collection_type = "*"
+            classification_name = "DataSpec"
 
-            response = c_client.get_collections_by_type('Test Data Specification', 'DataSpec', output_format="DICT")
+            response = c_client.get_collections_by_type(collection_type, classification_name, output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds")
@@ -178,7 +179,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "8a1ac963-3589-4a5a-ba3f-7479e96a32f6"
+            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
 
             response = c_client.get_collection_by_guid(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
@@ -208,9 +209,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d4adc047-9005-471f-b2a1-e86201961e0b"
+            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
 
-            response = c_client.get_collection_graph(collection_guid, output_format="DICT")
+            response = c_client.get_collection_graph(collection_guid, output_format="REPORT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

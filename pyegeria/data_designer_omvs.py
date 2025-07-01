@@ -4283,7 +4283,7 @@ r       replace_all_properties: bool, default = False
         ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", ends_with_s), ("endsWith", ends_with_s),
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s), ("endsWith", ends_with_s),
              ("ignoreCase", ignore_case_s)])
 
         url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
@@ -5308,7 +5308,7 @@ r       replace_all_properties: bool, default = False
         Args:
             elements: Dictionary or list of dictionaries containing element data
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -5318,6 +5318,14 @@ r       replace_all_properties: bool, default = False
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=filter, 
+                entity_type="Data Element",
+                output_format="HTML",
+                extract_properties_func=self._extract_data_structure_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -5339,12 +5347,12 @@ r       replace_all_properties: bool, default = False
         Args:
             elements: Dictionary or list of dictionaries containing data structure elements
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        if output_format in ["MD", "FORM", "REPORT", "LIST", "MERMAID"]:
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "MERMAID", "HTML"]:
             # Define columns for LIST format
             columns = [{'name': 'Structure Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name','format': True}, {'name': 'Namespace', 'key': 'namespace'},
@@ -5364,12 +5372,12 @@ r       replace_all_properties: bool, default = False
         Args:
             elements: Dictionary or list of dictionaries containing data class elements
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        if output_format in ["DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID"]:
+        if output_format in ["DICT", "MD", "FORM", "REPORT", "LIST", "MERMAID", "HTML"]:
             # Define columns for LIST format
             columns = [{'name': 'Class Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name','format': True},
@@ -5388,12 +5396,12 @@ r       replace_all_properties: bool, default = False
         Args:
             elements: Dictionary or list of dictionaries containing data field elements
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
+        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID", "HTML"]:
             # Define columns for LIST format
             columns = [{'name': 'Field Name', 'key': 'display_name'},
                 {'name': 'Qualified Name', 'key': 'qualified_name','format': True}, {'name': 'Data Type', 'key': 'data_type'},

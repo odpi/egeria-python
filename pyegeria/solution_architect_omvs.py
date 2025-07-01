@@ -359,7 +359,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing information supply chain elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -370,6 +370,14 @@ class SolutionArchitect(Client):
         elif output_format == "DICT":
             # return extract_basic_dict(elements)
             return self._extract_supply_chain_list(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Information Supply Chain",
+                output_format="HTML",
+                extract_properties_func=self._extract_info_supply_chain_properties
+            )
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
@@ -400,7 +408,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution blueprint elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -410,6 +418,14 @@ class SolutionArchitect(Client):
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Blueprint",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_blueprint_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -440,7 +456,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution role elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -450,6 +466,14 @@ class SolutionArchitect(Client):
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Role",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_roles_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -487,7 +511,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution component elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -499,6 +523,14 @@ class SolutionArchitect(Client):
             return self._extract_component_list(elements)
             # return extract_basic_dict(elements)
             # add more to the body
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Component",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_components_properties
+            )
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format

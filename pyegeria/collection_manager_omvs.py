@@ -7,11 +7,10 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output, markdown_to_html)
 from pyegeria.utils import body_slimmer
 
 
@@ -32,6 +31,8 @@ def query_string(params):
         if params[i][1] is not None:
             result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
     return result
+
+
 
 
 class CollectionManager(Client):
@@ -191,7 +192,7 @@ class CollectionManager(Client):
             self._async_get_attached_collections(parent_guid, start_from, page_size, body, output_format))
 
     async def _async_find_collections_w_body(self, body: dict, classification_name: str = None,
-                                             starts_with: bool = False, ends_with: bool = False,
+                                             starts_with: bool = True, ends_with: bool = False,
                                              ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
@@ -278,7 +279,7 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def find_collections_w_body(self, body: dict, classification_name: str = None, starts_with: bool = False,
+    def find_collections_w_body(self, body: dict, classification_name: str = None, starts_with: bool = True,
                                 ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
                                 page_size: int = 0, output_format: str = 'JSON',
                                 output_profile: str = "CORE") -> list | str:
@@ -345,7 +346,7 @@ class CollectionManager(Client):
                                                 start_from, page_size, output_format, output_profile))
 
     async def _async_find_collections(self, search_string: str = '*', classification_name: str = None,
-                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                                      starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       output_profile: str = "CORE") -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
@@ -402,8 +403,7 @@ class CollectionManager(Client):
                                                          start_from, page_size, output_format, output_profile)
         return resp
 
-    def find_collections(self, search_string: str = '*', classification_name: str = None, starts_with: bool = False,
-                         ends_with: bool = False, ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+    def find_collections(self, search_string: str = '*', classification_name: str = None, starts_with: bool = True,
                          output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
@@ -6060,6 +6060,7 @@ class CollectionManager(Client):
         for classification in classifications:
             classification_names += f"{classification['classificationName']}, "
         classification_names = classification_names[:-2]
+        mermaid = element.get('mermaidGraph', "") or ""
 
         member_names = ""
         members = self.get_member_list(collection_guid=guid)
@@ -6072,7 +6073,7 @@ class CollectionManager(Client):
             'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description,
             'classifications': classification_names, 'collection_type': collection_type, 'members': member_names,
             'properties': properties, 'additional_properties': additional_properties,
-            'extended_properties': extended_properties,
+            'extended_properties': extended_properties, 'mermaid': mermaid
             }
 
     def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
@@ -6083,7 +6084,7 @@ class CollectionManager(Client):
         Args:
             elements: Dictionary or list of dictionaries containing element data
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -6093,6 +6094,19 @@ class CollectionManager(Client):
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            if collection_type is None:
+                entity_type = "Collection"
+            else:
+                entity_type = collection_type
+
+            return generate_output(
+                elements=elements, 
+                search_string=filter, 
+                entity_type=entity_type,
+                output_format="HTML",
+                extract_properties_func=self._extract_collection_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -6121,7 +6135,7 @@ class CollectionManager(Client):
             classification_name: str
                 The type of collection.
             filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as a string or list of dictionaries
@@ -6131,10 +6145,20 @@ class CollectionManager(Client):
         else:
             entity_type = classification_name
 
-        if output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
+        if output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=filter, 
+                entity_type=entity_type,
+                output_format="HTML",
+                extract_properties_func=self._extract_collection_properties
+            )
+
+        elif output_format in ["MD", "FORM", "REPORT", "LIST", "DICT", "MERMAID"]:
             # Define columns for LIST format
             columns = [{'name': 'Name', 'key': 'display_name'},
                        {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                       {'name': 'Collection Type', 'key': 'collection_type'},
                        {'name': 'Description', 'key': 'description', 'format': True},
                        {'name': "Classifications", 'key': 'classifications'},
                        {'name': 'Members', 'key': 'members', 'format': True}, ]
@@ -6145,49 +6169,6 @@ class CollectionManager(Client):
                                    columns=columns if output_format == 'LIST' else None)
         else:
             return self.generate_basic_structured_output(elements, filter, output_format)
-
-    # def generate_collection_output(self, elements, filter, collection_type: str, output_format,
-    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified  #
-    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries  #
-    #  containing  # element data  #         filter: The search string used to find the elements  #  #
-    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #  #
-    #  output_profile: str, optional,  # default = "CORE"  #             The desired output profile - BASIC, CORE,
-    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if  #
-    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =  #
-    #  collection_type  #  #     # For LIST and DICT  # formats, get member information  #  #     if output_format in
-    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if  #
-    #  isinstance(elements, dict):  #             collection_guid  # = elements.get('elementHeader', {}).get('guid')
-    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[  #
-    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid  #
-    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =  #
-    #         self.get_member_list(collection_guid=collection_guid)  #             if isinstance(members,
-    # str):  # "No members found" case  #                 members = []  #  #         # For DICT format, include all
-    # member information in the result  #         if output_format == "DICT":  #             result =  #  #
-    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #  #
-    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #  #
-    # members  #                 return result  #             elif isinstance(result, dict):  #  # result['members']
-    # = members  #                 return result  #  #         # For LIST format, add a column with  # bulleted list
-    # of qualified names  #         elif output_format == "LIST":  #             # Define columns for  # LIST format,
-    # including the new Members column  #             columns = [{'name': 'Collection Name',
-    # 'key': 'display_name'},  #                 {'name': 'Qualified Name', 'key': 'qualified_name'},  #  # {'name':
-    # 'Collection Type', 'key': 'collection_type'},  #                 {'name': 'Description',
-    # 'key': 'description', 'format': True},  #                 {'name': 'Classifications',
-    # 'key': 'classifications'},  #                 {'name': 'Members', 'key': 'members', 'format': True}]  #  #  #
-    # Create a function to add member information to the properties  #             def get_additional_props(element,
-    # guid, output_format):  #                 if not members:  #                     return {'members': ''}  #  #  #
-    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #  #
-    # member_list = ", ".join([member.get('qualifiedName', '') for member in members])  #                 return {  #
-    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return  #
-    # generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-    #  # output_format=output_format, extract_properties_func=self._extract_collection_properties,
-    #  # get_additional_props_func=get_additional_props, columns=columns)  #  #     # For FORM, REPORT, JSON formats,
-    # keep behavior unchanged  #     return self.generate_basic_structured_output(elements, filter, output_format,
-    # collection_type)
-
-    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #  #
-    # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(  #
-    # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(  #
-    # elements, filter, output_format)
 
 
 if __name__ == "__main__":

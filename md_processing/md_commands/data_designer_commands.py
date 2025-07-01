@@ -454,8 +454,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         is_own_anchor = True
 
     collection_type = attributes.get('Collection Type', {}).get('value', None)
-    collection_ordering = attributes.get('Collection Ordering', {}).get('value', None)
-    order_property_name = attributes.get('Order Property Name', {}).get('value', None)
+
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
@@ -493,7 +492,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, additional_properties,
+                                                 additional_properties,
                                                 extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -519,7 +518,6 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                                                      is_own_anchor, anchor_guid, parent_guid,
                                                                      parent_relationship_type_name, parent_at_end1,
                                                                      collection_type, anchor_scope_guid,
-                                                                     collection_ordering, order_property_name,
                                                                      additional_properties, extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
@@ -581,8 +579,6 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     if parent_guid is None:
         is_own_anchor = True
     collection_type = attributes.get('Collection Type', {}).get('value', None)
-    collection_ordering = attributes.get('Collection Ordering', {}).get('value', None)
-    order_property_name = attributes.get('Order Property Name', {}).get('value', None)
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
@@ -616,7 +612,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes."))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, additional_properties,
+                                                 additional_properties,
                                                 extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -634,8 +630,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                                                            is_own_anchor, anchor_guid, parent_guid,
                                                                            parent_relationship_type_name,
                                                                            parent_at_end1, collection_type,
-                                                                           anchor_scope_guid, collection_ordering,
-                                                                           order_property_name, additional_properties,
+                                                                           anchor_scope_guid, additional_properties,
                                                                            extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
@@ -1406,11 +1401,23 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    attributes = parsed_output['attributes']
+
 
     valid = parsed_output['valid']
     print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
+
+    attr = parsed_output.get('attributes',{})
+    effective_time = attr.get('effectiveTime', {}).get('value', None)
+    as_of_time = attr.get('asOfTime', {}).get('value', None)
+    for_duplicate_processing = attr.get('forDuplicateProcessing', {}).get('value', False)
+    for_lineage = attr.get('forLineage',{}).get('value', False)
+    limit_result_by_status = attr.get('limitResultsByStatus',{}).get('value', ['ACTIVE'])
+    sequencing_property = attr.get('sequencingProperty',{}).get('value',"qualifiedName" )
+    sequencing_order = attr.get('sequencingOrder',{}).get('value', "PROPERTY_ASCENDING")
+    search_string = attr.get('Search String', {}).get('value', '*')
+    output_format = attr.get('Output Format', {}).get('value', 'LIST')
+    detailed = attr.get('Detailed', {}).get('value', False)
 
     if directive == "display":
         return None
@@ -1423,11 +1430,6 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
         return valid
 
     elif directive == "process":
-        attributes = parsed_output['attributes']
-        search_string = attributes.get('Search String', {}).get('value', '*')
-        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
-        detailed = attributes.get('Detailed', {}).get('value', False)
-
         try:
             if not valid:  # First validate the command before we process it
                 msg = f"Validation failed for {object_action} `{object_type}`\n"
@@ -1435,11 +1437,19 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
                 return None
 
             list_md = f"\n# `{col_type}` with filter: `{search_string}`\n\n"
-            if search_string == "*":
-                struct = egeria_client.get_classified_collections(col_type, output_format=output_format)
-            else:
-                struct = egeria_client.find_collections(search_string, output_format=output_format)
+            body = {
+                    "class": "FilterRequestBody",
+                    "asOfTime": as_of_time,
+                    "effectiveTime": effective_time,
+                    "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing,
+                    "limitResultsByStatus": limit_result_by_status,
+                    "sequencingOrder": sequencing_order,
+                    "sequencingProperty": sequencing_property,
+                    "filter": search_string,
+                }
 
+            struct = egeria_client.find_collections_w_body(body, col_type, output_format=output_format)
             if output_format == "DICT":
                 list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
             else:

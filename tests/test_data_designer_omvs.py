@@ -834,9 +834,10 @@ class TestDataDesigner:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
-            search_string = "DataClass::ISO-Date"
+            # search_string = "DataClass::ISO-Date"
+            search_string = "*"
             start_time = time.perf_counter()
-            response = m_client.find_data_classes(search_string,output_format="JSON")
+            response = m_client.find_data_classes(search_string,output_format="REPORT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

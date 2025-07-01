@@ -1,10 +1,73 @@
 from datetime import datetime
+import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from markdown_it import MarkdownIt
 from rich.console import Console
+
+from pyegeria.mermaid_utilities import construct_mermaid_web
 
 console = Console(width= 250)
 # Constants
 MD_SEPARATOR = "\n---\n\n"
+
+def markdown_to_html(markdown_text: str) -> str:
+    """
+    Convert markdown text to HTML, with special handling for mermaid code blocks.
+
+    Args:
+        markdown_text: The markdown text to convert
+
+    Returns:
+        HTML string
+    """
+    # Initialize markdown-it
+    md = MarkdownIt()
+
+    # Find all mermaid code blocks
+    mermaid_blocks = re.findall(r'```mermaid\n(.*?)\n```', markdown_text, re.DOTALL)
+
+    # Replace each mermaid block with a placeholder
+    placeholders = []
+    for i, block in enumerate(mermaid_blocks):
+        placeholder = f"MERMAID_PLACEHOLDER_{i}"
+        markdown_text = markdown_text.replace(f"```mermaid\n{block}\n```", placeholder)
+        placeholders.append((placeholder, block))
+
+    # Convert markdown to HTML
+    html_text = md.render(markdown_text)
+
+    # Replace placeholders with rendered mermaid HTML
+    for placeholder, mermaid_block in placeholders:
+        mermaid_html = construct_mermaid_web(mermaid_block)
+        html_text = html_text.replace(placeholder, mermaid_html)
+
+    # Add basic HTML structure
+    html_text = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Egeria Report</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }}
+            h1 {{ color: #2c3e50; }}
+            h2 {{ color: #3498db; }}
+            pre {{ background-color: #f8f8f8; padding: 10px; border-radius: 5px; overflow-x: auto; }}
+            table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #f2f2f2; }}
+            tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        </style>
+    </head>
+    <body>
+        {html_text}
+    </body>
+    </html>
+    """
+
+    return html_text
 
 def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') -> Tuple[str, Optional[str]]:
     """
@@ -142,6 +205,8 @@ def generate_entity_md(elements: List[Dict],
 
         # Add common attributes
         for key, value in props.items():
+            if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
+                continue
             if key not in [ 'properties', 'display_name']:
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
@@ -269,7 +334,7 @@ def generate_entity_dict(elements: List[Dict],
 
         # Add properties based on include/exclude lists
         for key, value in props.items():
-            if key != 'properties':  # Skip the raw properties object
+            if key not in [ 'properties', 'mermaid']:  # Skip the raw properties object
                 if (include_keys is None or key in include_keys) and (
                         exclude_keys is None or key not in exclude_keys):
                     entity_dict[key] = value
@@ -363,7 +428,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         elements: Dictionary or list of dictionaries containing element data
         search_string: The search string used to find the elements
         entity_type: The type of entity (e.g., "Glossary", "Term", "Category")
-        output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+        output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
         extract_properties_func: Function to extract properties from an element
         get_additional_props_func: Optional function to get additional properties
         columns: Optional list of column definitions for table output
@@ -382,6 +447,20 @@ def generate_output(elements: Union[Dict, List[Dict]],
     # Generate output based on format
     if output_format == 'MERMAID':
         return extract_mermaid_only(elements)
+
+    elif output_format == 'HTML':
+        # First generate the REPORT format output
+        report_output = generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format="REPORT",
+            extract_properties_func=extract_properties_func,
+            get_additional_props_func=get_additional_props_func
+        )
+
+        # Convert the markdown to HTML
+        return markdown_to_html(report_output)
 
     elif output_format == 'DICT':
         return generate_entity_dict(

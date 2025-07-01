@@ -32,7 +32,6 @@ from pyegeria._validators import (
     validate_url,
     validate_user_id,
 )
-from pyegeria.output_formatter import make_preamble, make_md_attribute
 
 ...
 

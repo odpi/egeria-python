@@ -198,7 +198,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_information_supply_chain_by_guid(self):
-        guid = "a7981a48-bd4a-480d-ba63-6584cddad153"
+        guid = "39a035f0-3b2b-45fe-adb8-ee8a19581f6a"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -206,7 +206,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_info_supply_chain_by_guid(guid, output_format='JSON')
+            response = s_client.get_info_supply_chain_by_guid(guid, output_format='HTML')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
@@ -385,7 +385,7 @@ class TestSolutionArchitect:
 
     def test_get_information_supply_chain_segment_by_guid(self):
         segment_guid = "242eca0f-cdcf-4df3-b3fc-e485d62fd422"
-        supply_chain_guid = "26834888-3ddf-4eb2-a8bb-bbb321579f94"
+        supply_chain_guid = "39a035f0-3b2b-45fe-adb8-ee8a19581f6a"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
