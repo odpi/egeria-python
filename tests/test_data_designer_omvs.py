@@ -441,7 +441,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="JSON")
+            response = m_client.find_all_data_fields(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -549,7 +549,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_field_rel_elements(self):
-        guid = "407e0012-8a13-444a-8f96-e74ad77ed55c"
+        guid = "485a9d93-78ef-4ccb-a946-be31c05fc3b3"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -616,7 +616,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            search_string = '*'
+            search_string = ''
             response = m_client.find_data_fields(search_string,output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
@@ -651,7 +651,7 @@ class TestDataDesigner:
 
             body = {
                 "class": "FilterRequestBody",
-                "asOfTime": "2025-06-27T16:10:00-05:00",
+                # "asOfTime": "2025-06-27T16:10:00-05:00",
                 "effectiveTime": None,
                 "forLineage": False,
                 "forDuplicateProcessing": False,
@@ -806,7 +806,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_classes(output_format="JSON")
+            response = m_client.find_all_data_classes(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

@@ -8,7 +8,6 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-# import json
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
@@ -152,6 +151,10 @@ class CollectionManager(Client):
             the class instance.
         body: dict, optional, default = None
             If supplied, adds addition request details - for instance, to filter the results on collectionType
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+
         Returns
         -------
         List
@@ -184,10 +187,8 @@ class CollectionManager(Client):
         }
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_attached_collections(parent_guid, start_from, page_size, body, output_format))
-        return resp
 
     async def _async_find_collections_w_body(self, body: dict, classification_name: str = None,
                                              starts_with: bool = False, ends_with: bool = False,
@@ -339,12 +340,9 @@ class CollectionManager(Client):
           "filter": "Data Product Development Journey"
         }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
                                                 start_from, page_size, output_format, output_profile))
-
-        return resp
 
     async def _async_find_collections(self, search_string: str = '*', classification_name: str = None,
                                       starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
@@ -414,8 +412,8 @@ class CollectionManager(Client):
 
         Parameters
         ----------
-        body: dict
-            Details of the search request - see the notes below for details.
+        search_string: str
+            String to match against - None or '*' indicate match against all collections (may be filtered
         classification_name: str, optional, default=None
             A classification name to filter on - for example, DataSpec for data specifications. If none,
             then all classifications are returned.
@@ -451,12 +449,9 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_find_collections(search_string, classification_name, starts_with, ends_with, ignore_case,
                                          start_from, page_size, output_format, output_profile))
-
-        return resp
 
     async def _async_get_collections_by_name(self, name: str, classification_name: str = None, body: dict = None,
                                              start_from: int = 0, page_size: int = 0,
@@ -557,11 +552,8 @@ class CollectionManager(Client):
             as_of_time ():
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_collections_by_name(name, classification_name, body, start_from, page_size, output_format))
-
-        return resp
 
     async def _async_get_collections_by_type(self, collection_type: str, classification_name: str = None,
                                              body: dict = None, start_from: int = 0, page_size: int = 0,
@@ -621,7 +613,7 @@ class CollectionManager(Client):
         """
 
         if classification_name:
-            classification_name = None if classification_name is '*' else classification_name
+            classification_name = None if classification_name == '*' else classification_name
 
         if body is None:
             body = {
@@ -699,12 +691,9 @@ class CollectionManager(Client):
 
         """
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_collections_by_type(collection_type, classification_name, body, start_from, page_size,
                                                 output_format))
-
-        return resp
 
     async def _async_get_collection_by_guid(self, collection_guid: str, collection_type: str = None, body: dict = None,
                                             output_format: str = 'JSON') -> dict | str:
@@ -807,15 +796,12 @@ class CollectionManager(Client):
               "forDuplicateProcessing": false
             }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_by_guid(collection_guid, collection_type, body, output_format))
 
-        return resp
-
     async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                                            collection_qname: str = None, body: dict= None, start_from: int = 0, page_size: int = 0,
-                                            output_format: str = "JSON") -> list | str:
+                                            collection_qname: str = None, body: dict = None, start_from: int = 0,
+                                            page_size: int = 0, output_format: str = "JSON") -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -949,9 +935,8 @@ class CollectionManager(Client):
 
         return resp
 
-
-    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0, page_size: int = 0,
-                                          output_format: str = "JSON") -> list | str:
+    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0,
+                                          page_size: int = 0, output_format: str = "JSON") -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements. Async version.
@@ -1008,7 +993,7 @@ class CollectionManager(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = response.json().get("graph", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
 
@@ -1016,8 +1001,8 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0, page_size: int = 0,
-                             output_format: str = "JSON") -> list | str:
+    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0,
+                             page_size: int = 0, output_format: str = "JSON") -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements.
@@ -1065,13 +1050,10 @@ class CollectionManager(Client):
               "sequencingProperty": ""
             }
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_graph(collection_guid, body, start_from, page_size, output_format))
 
-        return resp
-
-    async def _async_get_collection_graph_w_body(self, collection_guid: str, body: dict, start_from: int = 0,
+    async def _async_get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
                                                  page_size: int = None, output_format: str = "JSON") -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
@@ -1134,8 +1116,8 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def get_collection_graph_w_body(self, collection_guid: str, body: str, start_from: int = 0, page_size: int = None,
-                                    output_format: str = "JSON") -> list | str:
+    def get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
+                                    page_size: int = None, output_format: str = "JSON") -> list | str:
 
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
@@ -1183,11 +1165,8 @@ class CollectionManager(Client):
 
        """
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_graph_w_body(collection_guid, body, start_from, page_size, output_format))
-
-        return resp
 
     #
     #   Create collection methods
@@ -1340,16 +1319,14 @@ class CollectionManager(Client):
         }
         """
 
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_collection_w_body(body, classification_name))
-        return resp
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection_w_body(body, classification_name))
 
     async def _async_create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
                                        classification_name: str = None, anchor_guid: str = None,
                                        parent_guid: str = None, parent_relationship_type_name: str = None,
                                        parent_at_end1: bool = True, collection_type: str = None,
-                                       anchor_scope_guid: str = None, collection_ordering: str = None,
-                                       order_property_name: str = None, additional_properties: dict = None,
+                                       anchor_scope_guid: str = None, additional_properties: dict = None,
                                        extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1381,11 +1358,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1424,9 +1396,8 @@ class CollectionManager(Client):
             "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
             "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
@@ -1436,9 +1407,8 @@ class CollectionManager(Client):
     def create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
                           classification_name: str = None, anchor_guid: str = None, parent_guid: str = None,
                           parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                          collection_type: str = None, anchor_scope_guid: str = None, collection_ordering: str = None,
-                          order_property_name: str = None, additional_properties: dict = None,
-                          extended_properties: dict = None) -> str:
+                          collection_type: str = None, anchor_scope_guid: str = None,
+                          additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
 
@@ -1468,11 +1438,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1493,73 +1458,17 @@ class CollectionManager(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
+        return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, is_own_anchor, classification_name, anchor_guid,
                                           parent_guid, parent_relationship_type_name, parent_at_end1, collection_type,
-                                          anchor_scope_guid, collection_ordering, order_property_name,
-                                          additional_properties, extended_properties))
-        return resp
+                                          anchor_scope_guid, additional_properties, extended_properties))
 
-        """Create a new collection with the RootCollection classification.  Used to identify the top of a
-         collection hierarchy.
-
-        Parameters
-        ----------
-        anchor_guid: str
-            The unique identifier of the element that should be the anchor for the new element.
-            Set to null if no anchor,
-            or if this collection is to be its own anchor.
-        parent_guid: str
-           The optional unique identifier for an element that should be connected to the newly created element.
-           If this property is specified, parentRelationshipTypeName must also be specified
-        parent_relationship_type_name: str
-            The name of the relationship, if any, that should be established between the new element and the parent
-            element. Examples could be "ResourceList" or "DigitalServiceProduct".
-        parent_at_end1: bool
-            Identifies which end any parent entity sits on the relationship.
-        display_name: str
-            The display name of the element. Will also be used as the basis of the qualified_name.
-        description: str
-            A description of the collection.
-        collection_type: str
-            Adds an appropriate valid value for the collection type.
-        anchor_scope_guid: str, optional, defaults to None
-            optional GUID of search scope
-        is_own_anchor: bool, optional, defaults to False
-            Indicates if the collection should be classified as its own anchor or not.
-        additional_properties: dict, optional, defaults to None
-            User specified Additional properties to add to the collection definition.
-        extended_properties: dict, optional, defaults to None
-            Properties defined by extensions to Egeria types to add to the collection definition.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_create_root_collection(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                                               display_name, description, collection_type, anchor_scope_guid,
-                                               is_own_anchor, additional_properties, extended_properties))
-        return resp
-
-    async def _async_create_generic_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+    async def _async_create_generic_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                               is_own_anchor: bool = True, url_item=None,
                                                classification_name: str = None, anchor_guid: str = None,
                                                parent_guid: str = None, parent_relationship_type_name: str = None,
                                                parent_at_end1: bool = True, collection_type: str = None,
-                                               anchor_scope_guid: str = None, collection_ordering: str = None,
-                                               order_property_name: str = None, additional_properties: dict = None,
+                                               anchor_scope_guid: str = None, additional_properties: dict = None,
                                                extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1571,6 +1480,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         classification_name: str
@@ -1591,11 +1502,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1615,18 +1521,21 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Args:
+            url_item ():
+            qualified_name ():
+
         """
 
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
 
-        possible_query_params = query_string([("classificationName", classification_name)])
-
-        url = f"{self.collection_command_root}/{classification_name}"
-        if classification_name is not None:
-            qualified_name = self.__create_qualified_name__(classification_name, display_name)
-        else:
-            qualified_name = self.__create_qualified_name__("Collection", display_name)
+        url = f"{self.collection_command_root}/{url_item}"
+        if qualified_name is None:
+            if classification_name is not None:
+                qualified_name = self.__create_qualified_name__(classification_name, display_name)
+            else:
+                qualified_name = self.__create_qualified_name__("Collection", display_name)
 
         body = {
             "class": "NewElementRequestBody", "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid,
@@ -1634,20 +1543,20 @@ class CollectionManager(Client):
             "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
             "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    async def _async_create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                            anchor_guid: str = None, parent_guid: str = None,
-                                            parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                            collection_type: str = None, anchor_scope_guid: str = None,
-                                            collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_root_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                            is_own_anchor: bool = True, anchor_guid: str = None,
+                                            parent_guid: str = None, parent_relationship_type_name: str = None,
+                                            parent_at_end1: bool = True, collection_type: str = None,
+                                            anchor_scope_guid: str = None,
+
                                             additional_properties: dict = None,
                                             extended_properties: dict = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a collection
@@ -1661,6 +1570,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1678,11 +1589,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1704,19 +1610,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "root-collection",
-                                                           anchor_guid, parent_guid, parent_relationship_type_name,
-                                                           parent_at_end1, collection_type, anchor_scope_guid,
-                                                           collection_ordering, order_property_name,
-                                                           additional_properties, extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="root-collection",
+                                                           classification_name="RootCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                               anchor_guid: str = None, parent_guid: str = None,
+    def create_root_collection(self, display_name: str, description: str, qualified_name: str = None,
+                               is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                collection_type: str = None, anchor_scope_guid: str = None,
-                               collection_ordering: str = None, order_property_name: str = None,
+
                                additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the RootCollection classification.
             Used to identify the top of a collection hierarchy.
@@ -1728,6 +1639,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1745,11 +1658,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1772,18 +1680,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_root_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                               parent_relationship_type_name, parent_at_end1, collection_type,
-                                               anchor_scope_guid, collection_ordering, order_property_name,
-                                               additional_properties, extended_properties))
+            self._async_create_root_collection(display_name, description, qualified_name, is_own_anchor, anchor_guid,
+                                               parent_guid, parent_relationship_type_name, parent_at_end1,
+                                               collection_type, anchor_scope_guid, additional_properties,
+                                               extended_properties))
         return resp
 
-    async def _async_create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                 anchor_guid: str = None, parent_guid: str = None,
-                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                                 collection_type: str = None, anchor_scope_guid: str = None,
-                                                 collection_ordering: str = None, order_property_name: str = None,
-                                                 additional_properties: dict = None,
+    async def _async_create_data_spec_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                 is_own_anchor: bool = True, anchor_guid: str = None,
+                                                 parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                 parent_at_end1: bool = True, collection_type: str = None,
+                                                 anchor_scope_guid: str = None, additional_properties: dict = None,
                                                  extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -1796,6 +1703,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1813,11 +1722,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1839,20 +1743,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "data-spec-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="data-spec-collection",
+                                                           classification_name="DataSpec", anchor_guid=anchor_guid,
+                                                           parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                    anchor_guid: str = None, parent_guid: str = None,
+    def create_data_spec_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                    is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                     parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                     collection_type: str = None, anchor_scope_guid: str = None,
-                                    collection_ordering: str = None, order_property_name: str = None,
+
                                     additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -1864,6 +1772,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1881,11 +1791,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1908,19 +1813,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_spec_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                    parent_relationship_type_name, parent_at_end1, collection_type,
-                                                    anchor_scope_guid, collection_ordering, order_property_name,
+            self._async_create_data_spec_collection(display_name, description, qualified_name, is_own_anchor,
+                                                    anchor_guid, parent_guid, parent_relationship_type_name,
+                                                    parent_at_end1, collection_type, anchor_scope_guid,
                                                     additional_properties, extended_properties))
         return resp
 
     async def _async_create_data_dictionary_collection(self, display_name: str, description: str,
-                                                       is_own_anchor: bool = True, anchor_guid: str = None,
-                                                       parent_guid: str = None,
+                                                       qualified_name: str = None, is_own_anchor: bool = True,
+                                                       anchor_guid: str = None, parent_guid: str = None,
                                                        parent_relationship_type_name: str = None,
                                                        parent_at_end1: bool = True, collection_type: str = None,
-                                                       anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                       order_property_name: str = None,
+                                                       anchor_scope_guid: str = None,
                                                        additional_properties: dict = None,
                                                        extended_properties: dict = None) -> str:
         """ Create a new collection with the DataDictionary classification.  Used to identify a collection of data
@@ -1934,6 +1838,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1951,11 +1857,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1977,20 +1878,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "data-dictionary-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="data-dictionary-collection",
+                                                           classification_name="DataDictionary",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_data_dictionary_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                          anchor_guid: str = None, parent_guid: str = None,
+    def create_data_dictionary_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                          is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                           parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                           collection_type: str = None, anchor_scope_guid: str = None,
-                                          collection_ordering: str = None, order_property_name: str = None,
+
                                           additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -2002,6 +1908,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2019,11 +1927,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2046,18 +1949,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_dictionary_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                          parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                          collection_type, anchor_scope_guid, collection_ordering,
-                                                          order_property_name, additional_properties,
-                                                          extended_properties))
+            self._async_create_data_dictionary_collection(display_name, description, qualified_name, is_own_anchor,
+                                                          anchor_guid, parent_guid, parent_relationship_type_name,
+                                                          parent_at_end1, collection_type, anchor_scope_guid,
+                                                          additional_properties, extended_properties))
         return resp
 
-    async def _async_create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                              anchor_guid: str = None, parent_guid: str = None,
-                                              parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                              collection_type: str = None, anchor_scope_guid: str = None,
-                                              collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_folder_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                              is_own_anchor: bool = True, anchor_guid: str = None,
+                                              parent_guid: str = None, parent_relationship_type_name: str = None,
+                                              parent_at_end1: bool = True, collection_type: str = None,
+                                              anchor_scope_guid: str = None,
+
                                               additional_properties: dict = None,
                                               extended_properties: dict = None) -> str:
         """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
@@ -2070,6 +1973,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2087,11 +1992,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2113,19 +2013,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "folder",
-                                                           anchor_guid, parent_guid, parent_relationship_type_name,
-                                                           parent_at_end1, collection_type, anchor_scope_guid,
-                                                           collection_ordering, order_property_name,
-                                                           additional_properties, extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="folder",
+                                                           classification_name="Folder", anchor_guid=anchor_guid,
+                                                           parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                 anchor_guid: str = None, parent_guid: str = None,
+    def create_folder_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                 is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                  parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                  collection_type: str = None, anchor_scope_guid: str = None,
-                                 collection_ordering: str = None, order_property_name: str = None,
+
                                  additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
             in a collection hierarchy.
@@ -2136,6 +2041,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2153,11 +2060,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2180,19 +2082,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_folder_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                 parent_relationship_type_name, parent_at_end1, collection_type,
-                                                 anchor_scope_guid, collection_ordering, order_property_name,
-                                                 additional_properties, extended_properties))
+            self._async_create_folder_collection(display_name, description, qualified_name, is_own_anchor, anchor_guid,
+                                                 parent_guid, parent_relationship_type_name, parent_at_end1,
+                                                 collection_type, anchor_scope_guid, additional_properties,
+                                                 extended_properties))
         return resp
 
     async def _async_create_context_event_collection(self, display_name: str, description: str,
-                                                     is_own_anchor: bool = True, anchor_guid: str = None,
-                                                     parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                     qualified_name: str = None, is_own_anchor: bool = True,
+                                                     anchor_guid: str = None, parent_guid: str = None,
+                                                     parent_relationship_type_name: str = None,
                                                      parent_at_end1: bool = True, collection_type: str = None,
-                                                     anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                     order_property_name: str = None,
-                                                     additional_properties: dict = None,
+                                                     anchor_scope_guid: str = None, additional_properties: dict = None,
                                                      extended_properties: dict = None) -> str:
         """ Create a new collection with the ContextEventCollection classification.  This is used to group context
         events together.
@@ -2205,6 +2106,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2222,11 +2125,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2248,20 +2146,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "context-event-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="context-event-collection",
+                                                           classification_name="CtxEventCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_context_event_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                        anchor_guid: str = None, parent_guid: str = None,
+    def create_context_event_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                        is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                         parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                         collection_type: str = None, anchor_scope_guid: str = None,
-                                        collection_ordering: str = None, order_property_name: str = None,
+
                                         additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the ContextEventCollection classification.  This is used to group context
         events together.
@@ -2273,6 +2176,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2290,11 +2195,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2317,18 +2217,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_contex_event_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                       parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                       collection_type, anchor_scope_guid, collection_ordering,
-                                                       order_property_name, additional_properties, extended_properties))
+            self._async_create_context_event_collection(display_name, description, qualified_name, is_own_anchor,
+                                                        anchor_guid, parent_guid, parent_relationship_type_name,
+                                                        parent_at_end1, collection_type, anchor_scope_guid,
+                                                        additional_properties, extended_properties))
         return resp
 
-    async def _async_create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                  anchor_guid: str = None, parent_guid: str = None,
-                                                  parent_relationship_type_name: str = None,
+    async def _async_create_name_space_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                  is_own_anchor: bool = True, anchor_guid: str = None,
+                                                  parent_guid: str = None, parent_relationship_type_name: str = None,
                                                   parent_at_end1: bool = True, collection_type: str = None,
-                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  anchor_scope_guid: str = None, additional_properties: dict = None,
                                                   extended_properties: dict = None) -> str:
         """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
         the same namespace.
@@ -2342,6 +2241,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2359,11 +2260,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2385,20 +2281,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "namespace-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="namespace-collection",
+                                                           classification_name="NamespaceCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                     anchor_guid: str = None, parent_guid: str = None,
+    def create_name_space_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                     is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                      parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                      collection_type: str = None, anchor_scope_guid: str = None,
-                                     collection_ordering: str = None, order_property_name: str = None,
+
                                      additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
         the same namespace.
@@ -2411,6 +2311,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2428,11 +2330,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2455,17 +2352,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_name_space_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                     parent_relationship_type_name, parent_at_end1, collection_type,
-                                                     anchor_scope_guid, collection_ordering, order_property_name,
-                                                     additional_properties, extended_properties))
+            self._async_create_name_space_collection(display_name, description, qualified_name, is_own_anchor,
+                                                     anchor_guid, parent_guid, parent_relationship_type_name,
+                                                     parent_at_end1, collection_type, anchor_scope_guid))
         return resp
 
-    async def _async_create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                 anchor_guid: str = None, parent_guid: str = None,
-                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                                 collection_type: str = None, anchor_scope_guid: str = None,
-                                                 collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_event_set_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                 is_own_anchor: bool = True, anchor_guid: str = None,
+                                                 parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                 parent_at_end1: bool = True, collection_type: str = None,
+                                                 anchor_scope_guid: str = None,
+
                                                  additional_properties: dict = None,
                                                  extended_properties: dict = None) -> str:
         """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
@@ -2479,6 +2376,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2496,11 +2395,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2522,20 +2416,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "event-set-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="event-set-collection",
+                                                           classification_name="EventSetCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                    anchor_guid: str = None, parent_guid: str = None,
+    def create_event_set_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                    is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                     parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                     collection_type: str = None, anchor_scope_guid: str = None,
-                                    collection_ordering: str = None, order_property_name: str = None,
+
                                     additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
             For example, the collection may describe a set of events emitted by a specific system or to disseminate
@@ -2547,6 +2445,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2564,11 +2464,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2591,20 +2486,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_event_set_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                    parent_relationship_type_name, parent_at_end1, collection_type,
-                                                    anchor_scope_guid, collection_ordering, order_property_name,
+            self._async_create_event_set_collection(display_name, description, qualified_name, is_own_anchor,
+                                                    anchor_guid, parent_guid, parent_relationship_type_name,
+                                                    parent_at_end1, collection_type, anchor_scope_guid,
                                                     additional_properties, extended_properties))
         return resp
 
     async def _async_create_naming_standard_ruleset_collection(self, display_name: str, description: str,
-                                                               is_own_anchor: bool = True, anchor_guid: str = None,
-                                                               parent_guid: str = None,
+                                                               qualified_name: str = None, is_own_anchor: bool = True,
+                                                               anchor_guid: str = None, parent_guid: str = None,
                                                                parent_relationship_type_name: str = None,
                                                                parent_at_end1: bool = True, collection_type: str = None,
                                                                anchor_scope_guid: str = None,
-                                                               collection_ordering: str = None,
-                                                               order_property_name: str = None,
                                                                additional_properties: dict = None,
                                                                extended_properties: dict = None) -> str:
         """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
@@ -2618,6 +2511,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2635,11 +2530,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2661,21 +2551,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "naming-standard-rule-set-collection", anchor_guid,
-                                                           parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="naming-standard-rule-set-collection",
+                                                           classification_name="NamingRulesCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_naming_standard_ruleset_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                  anchor_guid: str = None, parent_guid: str = None,
-                                                  parent_relationship_type_name: str = None,
+    def create_naming_standard_ruleset_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                  is_own_anchor: bool = True, anchor_guid: str = None,
+                                                  parent_guid: str = None, parent_relationship_type_name: str = None,
                                                   parent_at_end1: bool = True, collection_type: str = None,
-                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  anchor_scope_guid: str = None, additional_properties: dict = None,
                                                   extended_properties: dict = None) -> str:
         """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
         standard rule
@@ -2687,6 +2581,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2704,11 +2600,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2731,11 +2622,10 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_naming_standard_ruleset_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                                  parent_guid, parent_relationship_type_name,
-                                                                  parent_at_end1, collection_type, anchor_scope_guid,
-                                                                  collection_ordering, order_property_name,
-                                                                  additional_properties, extended_properties))
+            self._async_create_naming_standard_ruleset_collection(display_name, description, qualified_name,
+                                                                  is_own_anchor, anchor_guid, parent_guid,
+                                                                  parent_relationship_type_name, parent_at_end1,
+                                                                  collection_type, anchor_scope_guid))
         return resp
 
     #
@@ -2861,9 +2751,9 @@ class CollectionManager(Client):
     #
     async def _async_update_collection(self, collection_guid: str, qualified_name: str = None, display_name: str = None,
                                        description: str = None, collection_type: str = None,
-                                       collection_ordering: str = None, order_property_name: str = None,
-                                       replace_all_props: bool = False, additional_properties: dict = None,
-                                       extended_properties: dict = None) -> None:
+
+                                       additional_properties: dict = None, extended_properties: dict = None,
+                                       replace_all_props: bool = False) -> None:
         """Update the properties of a collection.  Async version.
 
         Parameters
@@ -2878,11 +2768,6 @@ class CollectionManager(Client):
            A description of the collection.
         collection_type: str, optional, defaults to None
            Add appropriate valid value for the collection type.
-        collection_ordering: str, optional, defaults to None
-           Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-           "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to None
-           Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
         additional_properties: dict, optional, defaults to None
@@ -2912,19 +2797,16 @@ class CollectionManager(Client):
         body = {
             "class": "UpdateElementRequestBody", "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 }
             }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
-        return
 
     def update_collection(self, collection_guid, qualified_name: str = None, display_name: str = None,
-                          description: str = None, collection_type: str = None, collection_ordering: str = None,
-                          order_property_name: str = None, replace_all_props: bool = False,
-                          additional_properties: dict = None, extended_properties: dict = None) -> None:
+                          description: str = None, collection_type: str = None, additional_properties: dict = None,
+                          extended_properties: dict = None, replace_all_props: bool = False) -> None:
         """Update the properties of a collection.
 
         Parameters
@@ -2939,11 +2821,6 @@ class CollectionManager(Client):
            A description of the collection.
         collection_type: str
            Add appropriate valid value for the collection type.
-        collection_ordering: str, optional, defaults to "OTHER"
-           Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-           "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-           Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
         additional_properties: dict, optional, defaults to None
@@ -2968,10 +2845,112 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_collection(collection_guid, qualified_name, display_name, description, collection_type,
-                                          collection_ordering, order_property_name, replace_all_props,
-                                          additional_properties, extended_properties))
-        return
 
+                                          additional_properties, extended_properties, replace_all_props))
+
+    async def _async_update_collection_w_body(self, collection_guid: str, body: dict,
+                                              replace_all_props: bool = False) -> None:
+        """Update the properties of a collection.  Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to update.
+        body: dict
+            The body of the request containing the details.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+         If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+         Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+         The principle specified by the user_id does not have authorization for the requested action
+
+         Notes
+         -----
+           {
+              "class" : "UpdateElementRequestBody",
+              "properties": {
+                "class" : "CollectionProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "name" : "Add display name here",
+                "description" : "Add description of the collection here",
+                "collectionType": "Add appropriate valid value for type"
+              },
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+        """
+
+        replace_all_props_s = str(replace_all_props).lower()
+        url = (f"{self.collection_command_root}/{collection_guid}/update?"
+               f"replaceAllProperties={replace_all_props_s}")
+
+        body_s = body_slimmer(body)
+        await self._async_make_request("POST", url, body_s)
+
+    def update_collection_w_body(self, collection_guid: str, body: dict, replace_all_props: bool = False) -> None:
+        """Update the properties of a collection.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to update.
+        body: dict
+            The body of the request containing the details.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+         If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+         Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+         The principle specified by the user_id does not have authorization for the requested action
+
+         Notes
+         -----
+           {
+              "class" : "UpdateElementRequestBody",
+              "properties": {
+                "class" : "CollectionProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "name" : "Add display name here",
+                "description" : "Add description of the collection here",
+                "collectionType": "Add appropriate valid value for type"
+              },
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_collection_w_body(collection_guid, body, replace_all_props))
+
+    #
+    #   Digital Products
+    #
     async def _async_create_digital_product(self, body: dict) -> str:
         """Create a new collection that represents a digital product. Async version.
 
@@ -2979,9 +2958,6 @@ class CollectionManager(Client):
         ----------
         body: dict
             A dict representing the details of the collection to create.
-
-             If not provided, the server name associated
-            with the instance is used.
 
         Returns
         -------
@@ -3091,9 +3067,6 @@ class CollectionManager(Client):
         body: dict
             A dict representing the details of the collection to create.
 
-             If not provided, the server name associated
-            with the instance is used.
-
         Returns
         -------
         str - the guid of the created collection
@@ -3111,7 +3084,7 @@ class CollectionManager(Client):
         -----
         JSON Structure looks like:
         {
-          "class" : "NewDigitalProductRequestBody",
+          "class" : "NewElementRequestBody",
           "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor" : false,
           "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
@@ -3199,11 +3172,10 @@ class CollectionManager(Client):
         """
 
         replace_all_props_s = str(replace_all_props).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/digital-products/"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"{collection_guid}/update?replaceAllProperties={replace_all_props_s}")
 
         await self._async_make_request("POST", url, body)
-        return
 
     def update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection.
@@ -3254,28 +3226,742 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_digital_product(collection_guid, body, replace_all_props))
-        return
 
-    async def _async_attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-                                       resource_use_description: str = None, resource_use_props: dict = None,
-                                       watch_resources: bool = False, make_anchor: bool = False, ) -> None:
-        """ Connect an existing collection to an element using the ResourceList relationship (0019). Async version.
+    async def _async_update_digital_product_status(self, digital_prod_guid: str, body: dict):
+        """Update the status of a DigitalProduct collection. Async version.
+
         Parameters
         ----------
-        collection_guid: str
-            The guid of the collection to update.
-        element_guid: str
-            The guid of the element to attach.
-        resource_use: str,
-            How the resource is being used.
-        resource_use_description: str
-            Describes how the resource is being used.
-        resource_use_props: dict, optional, defaults to None
-            The properties of the resource to be used.
-        watch_resources, bool, optional, defaults to False
-            Whether to watch for the resources to be updated.
-        make_anchor, bool, optional, defaults to False
-            Whether to make this an anchor.
+        digital_prod_guid: str
+            The guid of the digital product collection to update.
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+           {
+              "class": "DigitalProductStatusRequestBody",
+              "status": "APPROVED",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/update=status")
+
+        await self._async_make_request("POST", url, body)
+
+    def update_digital_product_status(self, digital_prod_guid: str, body: dict):
+        """Update the status of a DigitalProduct collection. Async version.
+
+            Parameters
+            ----------
+            digital_prod_guid: str
+                The guid of the digital product collection to update.
+            body: dict
+                A dict representing the details of the collection to create.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+               {
+                  "class": "DigitalProductStatusRequestBody",
+                  "status": "APPROVED",
+                  "externalSourceGUID": "add guid here",
+                  "externalSourceName": "add qualified name here",
+                  "effectiveTime": "{{$isoTimestamp}}",
+                  "forLineage": false,
+                  "forDuplicateProcessing": false
+                }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_digital_product_status(digital_prod_guid, body))
+
+    async def _async_link_digital_product_dependency(self, upstream_digital_prod_guid: str,
+                                                     downstream_digital_prod_guid: str, body: dict = None):
+        """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        upstream_digital_prod_guid: str
+            The guid of the first digital product
+        downstream_digital_prod_guid: str
+            The guid of the downstream digital product
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "InformationSupplyChainLinkProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_digital_product_dependency(self, upstream_digital_prod_guid: str, downstream_digital_prod_guid: str,
+                                        body: dict = None):
+        """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
+            Request body is optional.
+
+            Parameters
+            ----------
+            upstream_digital_prod_guid: str
+                The guid of the first digital product
+            downstream_digital_prod_guid: str
+                The guid of the downstream digital product
+            body: dict, optional, default = None
+                A dict representing the details of the relationship.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+            {
+              "class" : "RelationshipRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+              "properties": {
+                "class": "InformationSupplyChainLinkProperties",
+                "label": "add label here",
+                "description": "add description here",
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              }
+            }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_digital_product_dependency(upstream_digital_prod_guid, downstream_digital_prod_guid, body))
+
+    async def _async_detach_digital_product_dependency(self, upstream_digital_prod_guid: str,
+                                                       downstream_digital_prod_guid: str, body: dict = None):
+        """ Unlink two dependent digital products.  The linked elements are of type DigitalProduct.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        upstream_digital_prod_guid: str
+            The guid of the first digital product
+        downstream_digital_prod_guid: str
+            The guid of the downstream digital product
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    async def _async_link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
+                                          body: dict = None) -> None:
+        """ Attach a product manager to a digital product. Request body is optional.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        digital_prod_guid: str
+            The guid of the digital product
+        digital_prod_manager_guid: str
+            The guid of the digital_product_manager
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict = None):
+        """ Link a product manager to a digital product.
+            Request body is optional.
+
+            Parameters
+            ----------
+            digital_prod_guid: str
+                The guid of the digital product
+            digital_prod_manager_guid: str
+                The guid of the product manager
+            body: dict, optional, default = None
+                A dict representing the details of the relationship.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+            {
+              "class": "RelationshipRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
+
+    async def _async_detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
+                                            body: dict = None):
+        """ Detach a product manager from a digital product. Request body is optional.
+            Async version.
+
+        Parameters
+        ----------
+        digital_prod_guid: str
+            The guid of the digital product
+        digital_prod_manager_guid: str
+            The guid of the product manager
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict = None):
+        """ Detach a product manager from a digital product. Request body is optional.
+
+            Parameters
+            ----------
+            digital_prod_guid: str
+                The guid of the digital product
+            digital_prod_manager_guid: str
+                The guid of the product manager
+            body: dict, optional, default = None
+                A dict representing the details of the relationship.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+            {
+              "class": "MetadataSourceRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
+
+    #
+    # Agreements
+    #
+    async def _async_create_agreement(self, body: dict) -> str:
+        """Create a new collection that represents am agreement. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        With a lifecycle, the body is:
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "NEW",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "initialStatus" : "OTHER",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED,
+        DEPRECATED,
+        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
+        """
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        return resp.json().get("guid", "No GUID returned")
+
+    def create_agreement(self, body: dict) -> str:
+        """Create a new collection that represents am agreement. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        With a lifecycle, the body is:
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "NEW",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "initialStatus" : "OTHER",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED,
+        DEPRECATED,
+        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_agreement(body))
+        return resp
+
+    async def _async_create_data_sharing_agreement(self, body: dict) -> str:
+        """ Create a new collection with the DataSharingAgreement classification.  The collection is typically
+            an agreement which may use the NewElementRequestBody, or the NewAgreementRequestBody if the
+            initial status needs to be set. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "NEW",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "initialStatus" : "OTHER",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/data"
+               f"-sharing-agreement")
+
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        return resp.json().get("guid", "No GUID returned")
+
+    def create_data_sharing_agreement(self, body: dict) -> str:
+        """ Create a new collection with the DataSharingAgreement classification.  The collection is typically
+            an agreement which may use the NewElementRequestBody, or the NewAgreementRequestBody if the
+            initial status needs to be set.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "NEW",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "initialStatus" : "OTHER",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_data_sharing_agreement(body))
+        return resp
+
+    async def _async_update_agreement(self, agreement_guid: str, body: dict, replace_all_props: bool = False, ):
+        """Update the properties of the agreement collection. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to update.
+        body: dict
+            A dict representing the details of the collection to create.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
 
 
         Returns
@@ -3290,45 +3976,51 @@ class CollectionManager(Client):
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
 
         """
 
-        watch_resources_s = str(watch_resources).lower()
-        make_anchor_s = str(make_anchor).lower()
+        replace_all_props_s = str(replace_all_props).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
+               f"{agreement_guid}/update?replaceAllProperties={replace_all_props_s}")
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{element_guid}/collections/{collection_guid}/attach?makeAnchor={make_anchor_s}")
-
-        body = {
-            "class": "ResourceListProperties", "resourceUse": resource_use,
-            "resourceUseDescription": resource_use_description, "watchResource": watch_resources_s,
-            "resourceUseProperties": resource_use_props,
-            }
         await self._async_make_request("POST", url, body)
 
-    def attach_collection(self, collection_guid: str, element_guid: str, resource_use: str,
-                          resource_use_description: str, resource_use_props: dict = None, watch_resources: bool = False,
-                          make_anchor: bool = False, ) -> None:
-        """Connect an existing collection to an element using the ResourceList relationship (0019).
+    def update_agreement(self, agreement_guid: str, body: dict, replace_all_props: bool = False, ):
+        """Update the properties of the DigitalProduct classification attached to a collection.
+
         Parameters
         ----------
-        collection_guid: str
-            The guid of the collection to update.
-        element_guid: str
-            The guid of the element to attach.
-        resource_use: str,
-            How the resource is being used.
-        resource_use_description: str
-            Describe how the resource is being used.
-        resource_use_props: dict, optional, defaults to None
-            The properties of the resource to be used.
-        watch_resources: bool, optional, defaults to False
-            Whether to watch for the resources to be updated.
-        make_anchor: bool, optional, defaults to False
-            Whether to make the this an anchor.
+        agreement_guid: str
+            The guid of the agreement to update.
+        body: dict
+            A dict representing the details of the collection to create.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
 
-             If not provided, the server name associated
-            with the instance is used.
 
         Returns
         -------
@@ -3342,27 +4034,1032 @@ class CollectionManager(Client):
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+         {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add agreement name here",
+            "name" : "display name",
+            "description" : "Add description of the agreement here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add agreement identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_digital_product(agreement_guid, body, replace_all_props))
+
+    async def _async_update_agreement_status(self, agreement_guid: str, body: dict):
+        """Update the status of an agreement collection. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the digital product collection to update.
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+           {
+              "class": "AgreementStatusRequestBody",
+              "status": "APPROVED",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/update-status")
+
+        await self._async_make_request("POST", url, body)
+
+    def update_agreement_status(self, agreement_guid: str, body: dict):
+        """Update the status of an agreement collection. Async version.
+
+            Parameters
+            ----------
+            agreement_guid: str
+                The guid of the digital product collection to update.
+            body: dict
+                A dict representing the details of the collection to create.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+               {
+                  "class": "AgreementStatusRequestBody",
+                  "status": "APPROVED",
+                  "externalSourceGUID": "add guid here",
+                  "externalSourceName": "add qualified name here",
+                  "effectiveTime": "{{$isoTimestamp}}",
+                  "forLineage": false,
+                  "forDuplicateProcessing": false
+                }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_agreement_status(agreement_guid, body))
+
+    async def _async_link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
+        """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
+            actor role (person role, team role or IT profile role); or user identity. Request body is optional.
+            Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement.
+        actor_guid: str
+            The guid of the actor assigned.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+           "properties": {
+            "class": "AgreementActorProperties",
+            "actorName": "add name of actor used in agreement text",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/agreement-actors/{actor_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
+        """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
+            actor role (person role, team role or IT profile role); or user identity. Request body is optional.
+
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement.
+        actor_guid: str
+            The guid of the actor assigned.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+           "properties": {
+            "class": "AgreementActorProperties",
+            "actorName": "add name of actor used in agreement text",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_agreement_actor(agreement_guid, actor_guid, body))
+
+    async def _async_detach_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
+        """ Unlink an actor from an agreement. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the first digital product
+        actor_guid: str
+            The guid of the downstream digital product
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
+        """ Unlink an actor from an agreement. Request body is optional.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the first digital product
+        actor_guid: str
+            The guid of the downstream digital product
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_agreement_actor(agreement_guid, actor_guid, body))
+
+    async def _async_link_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
+                                         body: dict = None) -> None:
+        """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
+           'Referenceable' to allow the agreement to refer to many things. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to update.
+        agreement_item_guid: str
+            The guid of the element to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "AgreementItemProperties",
+            "agreementItemId": "add label here",
+            "agreementStart": "{{$isoTimestamp}}",
+            "agreementEnd": "{{$isoTimestamp}}",
+            "restrictions": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "obligations" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "usageMeasurements" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
+               f"agreements/{agreement_guid}/agreement-items/{agreement_item_guid}/attach")
+
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
+        """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
+                  'Referenceable' to allow the agreement to refer to many things. Request body is optional.
+
+               Parameters
+               ----------
+               agreement_guid: str
+                   The guid of the agreement to update.
+               agreement_item_guid: str
+                   The guid of the element to attach.
+               body: dict, optional, default = None
+                   A dict representing the details of the relationship.
+
+               Returns
+               -------
+               Nothing
+
+               Raises
+               ------
+               InvalidParameterException
+                 If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+               PropertyServerException
+                 Raised by the server when an issue arises in processing a valid request
+               NotAuthorizedException
+                 The principle specified by the user_id does not have authorization for the requested action
+
+               Notes
+               _____
+
+               {
+                 "class" : "RelationshipRequestBody",
+                 "externalSourceGUID": "add guid here",
+                 "externalSourceName": "add qualified name here",
+                 "effectiveTime" : "{{$isoTimestamp}}",
+                 "forLineage" : false,
+                 "forDuplicateProcessing" : false,
+                 "properties": {
+                   "class": "AgreementItemProperties",
+                   "agreementItemId": "add label here",
+                   "agreementStart": "{{$isoTimestamp}}",
+                   "agreementEnd": "{{$isoTimestamp}}",
+                   "restrictions": {
+                     "property1Name" : "property1Value",
+                     "property2Name" : "property2Value"
+                   },
+                   "obligations" : {
+                     "property1Name" : "property1Value",
+                     "property2Name" : "property2Value"
+                   },
+                   "usageMeasurements" : {
+                     "property1Name" : "property1Value",
+                     "property2Name" : "property2Value"
+                   },
+                   "effectiveFrom": "{{$isoTimestamp}}",
+                   "effectiveTo": "{{$isoTimestamp}}"
+                 }
+               }
+
+               """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
+
+    async def _async_detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
+                                           body: dict = None) -> None:
+        """Detach an agreement item from an agreement. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to link.
+        agreement_item_guid: str
+            The guid of the element to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements"
+            f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
+
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
+        """Detach an agreement item from an agreement. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to link.
+        agreement_item_guid: str
+            The guid of the element to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_agreement_item(agreement_guid, agreement_item_guid, body))
+
+    async def _async_link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
+        """ Attach an agreement to an external reference element that describes the location of the contract documents.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to update.
+        external_ref_guid: str
+            The guid of the external reference to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ContractLinkProperties",
+            "contractId": "add id here",
+            "contractLiaison": "add identifier of actor here",
+            "contractLiaisonTypeName": "add type of actor here",
+            "contractLiaisonPropertyName": "add property of actor's identifier here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
+               f"agreements/{agreement_guid}/contract-links/{external_ref_guid}/attach")
+
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
+        """ Attach an agreement to an external reference element that describes the location of the contract documents.
+            Request body is optional.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to update.
+        external_ref_guid: str
+            The guid of the external reference to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "ContractLinkProperties",
+            "contractId": "add id here",
+            "contractLiaison": "add identifier of actor here",
+            "contractLiaisonTypeName": "add type of actor here",
+            "contractLiaisonPropertyName": "add property of actor's identifier here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_contract(agreement_guid, external_ref_guid, body))
+
+    async def _async_detach_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
+        """Detach an external reference to a contract, from an agreement. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to link.
+        external_ref_guid: str
+            The guid of the element to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements"
+            f"{agreement_guid}/contract-links/{external_ref_guid}/detach")
+
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
+        """Detach an external reference to a contract, from an agreement. Request body is optional.
+
+        Parameters
+        ----------
+        agreement_guid: str
+            The guid of the agreement to link.
+        external_ref_guid: str
+            The guid of the element to attach.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        _____
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_contract(agreement_guid, external_ref_guid, body))
+
+    #
+    # Digital Subscriptions
+    #
+
+    async def _async_create_digital_subscription(self, body: dict) -> str:
+        """Create a new collection that represents a type of agreement called a digital_subscription. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "DigitalSubscriptionProperties",
+            "qualifiedName": "DigitalSubscription::Add subscription name here",
+            "name" : "display name",
+            "description" : "Add description of the subscription here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add subscription identifier here",
+            "supportLevel" : "Add the level of support agreed/requested",
+            "serviceLevels" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+             }
+           },
+           "externalSourceGUID": "add guid here",
+           "externalSourceName": "add qualified name here",
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "forLineage" : false,
+           "forDuplicateProcessing" : false
+        }
+
+        With a lifecycle, the body is:
+
+        The DigitalSubscription is a type of Agreement and so can have lifecycle states.
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must be valid dates if specified,
+        otherwise you will get a 400 error response.
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED
+        ACTIVE, DEPRECATED, OTHER.  If using OTHER, set the userDefinedStatus with the statu value you want.
+
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "DigitalSubscriptionProperties",
+            "qualifiedName": "DigitalSubscription::Add subscription name here",
+            "name" : "display name",
+            "description" : "Add description of the subscription here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add subscription identifier here",
+            "supportLevel" : "Add the level of support agreed/requested",
+            "serviceLevels" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+             }
+           },
+           "initialStatus" : "OTHER",
+           "externalSourceGUID": "add guid here",
+           "externalSourceName": "add qualified name here",
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "forLineage" : false,
+           "forDuplicateProcessing" : false
+        }
+        """
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+
+        resp = await self._async_make_request("POST", url, body_slimmer(body))
+        return resp.json().get("guid", "No GUID returned")
+
+    def create_digital_subscription(self, body: dict) -> str:
+        """Create a new collection that represents a type of agreement called a digital_subscription.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the collection to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        JSON Structure looks like:
+        With a lifecycle, the body is:
+
+        The DigitalSubscription is a type of Agreement and so can have lifecycle states.
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must be valid dates if specified,
+        otherwise you will get a 400 error response.
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED
+        ACTIVE, DEPRECATED, OTHER.  If using OTHER, set the userDefinedStatus with the statu value you want.
+
+        {
+          "class" : "NewAgreementRequestBody",
+          "isOwnAnchor" : true,
+          "anchorScopeGUID" : "optional GUID of search scope",
+          "parentGUID" : "xxx",
+          "parentRelationshipTypeName" : "CollectionMembership",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "DigitalSubscriptionProperties",
+            "qualifiedName": "DigitalSubscription::Add subscription name here",
+            "name" : "display name",
+            "description" : "Add description of the subscription here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add subscription identifier here",
+            "supportLevel" : "Add the level of support agreed/requested",
+            "serviceLevels" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+             }
+           },
+           "initialStatus" : "OTHER",
+           "externalSourceGUID": "add guid here",
+           "externalSourceName": "add qualified name here",
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "forLineage" : false,
+           "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(self._async_create_digital_subscription(body))
+        return resp
+
+    async def _async_update_digital_subscription(self, digital_subscription_guid: str, body: dict,
+                                                 replace_all_props: bool = False, ):
+        """Update the properties of the digital_subscription collection. Async version.
+
+        Parameters
+        ----------
+        digital_subscription_guid: str
+            The guid of the digital_subscription to update.
+        body: dict
+            A dict representing the details of the collection to create.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
+
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "DigitalSubscriptionProperties",
+            "qualifiedName": "DigitalSubscription::Add subscription name here",
+            "name" : "display name",
+            "description" : "Add description of the subscription here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add subscription identifier here",
+            "supportLevel" : "Add the level of support agreed/requested",
+            "serviceLevels" : {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            },
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        replace_all_props_s = str(replace_all_props).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
+               f"{digital_subscription_guid}/update?replaceAllProperties={replace_all_props_s}")
+
+        await self._async_make_request("POST", url, body)
+
+    def update_digital_subscription(self, digital_subscription_guid: str, body: dict,
+                                    replace_all_props: bool = False, ):
+        """Update the properties of the DigitalProduct classification attached to a collection.
+
+        Parameters
+        ----------
+        digital_subscription_guid: str
+            The guid of the digital_subscription to update.
+        body: dict
+            A dict representing the details of the collection to create.
+        replace_all_props: bool, optional, defaults to False
+            Whether to replace all properties in the collection.
+
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+         {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "AgreementProperties",
+            "qualifiedName": "Agreement::Add digital_subscription name here",
+            "name" : "display name",
+            "description" : "Add description of the digital_subscription here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add digital_subscription identifier here",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
 
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_attach_collection(collection_guid, element_guid, resource_use, resource_use_description,
-                                          resource_use_props, watch_resources, make_anchor, ))
-        return
+            self._async_update_digital_subscription(digital_subscription_guid, body, replace_all_props))
 
-    async def _async_detach_collection(self, collection_guid: str, element_guid: str) -> None:
-        """Detach an existing collection from an element.  If the collection is anchored to the element, it is deleted.
-        Async version.
+    async def _async_update_digital_subscription_status(self, digital_subscription_guid: str, body: dict):
+        """Update the status of an digital_subscription collection. Async version.
 
         Parameters
         ----------
-        collection_guid: str
-            The guid of the collection to update.
-        element_guid: str
-            The guid of the element to attach.
-
-             If not provided, the server name associated
-            with the instance is used.
+        digital_subscription_guid: str
+            The guid of the digital product collection to update.
+        body: dict
+            A dict representing the details of the collection to create.
 
         Returns
         -------
@@ -3376,28 +5073,385 @@ class CollectionManager(Client):
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+           {
+              "class": "AgreementStatusRequestBody",
+              "status": "APPROVED",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": "{{$isoTimestamp}}",
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{digital_subscription_guid}/update-status")
+
+        await self._async_make_request("POST", url, body)
+
+    def update_digital_digital_subscription_status(self, digital_subscription_guid: str, body: dict):
+        """Update the status of an digital_subscription collection. Async version.
+
+            Parameters
+            ----------
+            digital_subscription_guid: str
+                The guid of the digital product collection to update.
+            body: dict
+                A dict representing the details of the collection to create.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+               {
+                  "class": "AgreementStatusRequestBody",
+                  "status": "APPROVED",
+                  "externalSourceGUID": "add guid here",
+                  "externalSourceName": "add qualified name here",
+                  "effectiveTime": "{{$isoTimestamp}}",
+                  "forLineage": false,
+                  "forDuplicateProcessing": false
+                }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_digital_subscription_status(digital_subscription_guid, body))
+
+    async def _async_link_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
+        """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
+            products, team or business capabilities to be the subscriber. The subscription is an element of type
+            DigitalSubscription.
+            Async version.
+
+        Parameters
+        ----------
+        subscriber_guid: str
+            The unique identifier of the subscriber.
+        subscription_guid: str
+            The identifier of the subscription.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "DigitalSubscriberProperties",
+            "subscriberId": "add id here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/subscribers/"
+            f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def link_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
+        """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
+            products, team or business capabilities to be the subscriber. The subscription is an element of type
+            DigitalSubscription.
+            Async version.
+
+        Parameters
+        ----------
+        subscriber_guid: str
+            The unique identifier of the subscriber.
+        subscription_guid: str
+            The identifier of the subscription.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "DigitalSubscriberProperties",
+            "subscriberId": "add id here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
+
+    async def _async_detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
+        """ Detach a subscriber from a subscription Request body is optional. Async version.
+
+        Parameters
+        ----------
+        subscriber_guid: str
+            The unique identifier of the subscriber.
+        subscription_guid: str
+            The unique identifier of the subscription.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
+        """ Detach a subscriber from a subscription. Request body is optional.
+
+        Parameters
+        ----------
+        subscriber_guid: str
+            The unique identifier of the subscriber.
+        subscription_guid: str
+            The unique identifier of the subscription.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_subscriber(subscriber_guid, subscription_guid, body))
+
+    #
+    #
+    #
+
+    async def _async_attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+        """ Connect an existing collection to an element using the ResourceList relationship (0019).
+            Async version.
+
+        Parameters
+        ----------
+        parent_guid: str
+            The unique identifier of the parent to attach to.
+        collection_guid: str
+            The identifier of the collection being attached.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+
+        {
+          "class" : "RelationshipRequestBody",
+          "properties": {
+            "class": "ResourceListProperties",
+            "resourceUse": "Add valid value here",
+            "resourceUseDescription": "Add description here",
+            "watchResource": false,
+            "resourceUseProperties": {
+              "property1Name": "property1Value",
+              "property2Name": "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
 
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{element_guid}/collections/{collection_guid}/detach")
+               f"{parent_guid}/collections/{collection_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
 
-        body = {"class": "NullRequestBody"}
+    def attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+        """ Connect an existing collection to an element using the ResourceList relationship (0019).
 
-        await self._async_make_request("POST", url, body)
-        return
+            Parameters
+            ----------
+            parent_guid: str
+                The unique identifier of the parent to attach to.
+            collection_guid: str
+                The identifier of the collection being attached.
+            body: dict, optional, default = None
+                A dict representing the details of the relationship.
 
-    def detach_collection(self, collection_guid: str, element_guid: str) -> None:
-        """Connect an existing collection to an element using the ResourceList relationship (0019).
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            JSON Structure looks like:
+
+            {
+              "class" : "RelationshipRequestBody",
+              "properties": {
+                "class": "ResourceListProperties",
+                "resourceUse": "Add valid value here",
+                "resourceUseDescription": "Add description here",
+                "watchResource": false,
+                "resourceUseProperties": {
+                  "property1Name": "property1Value",
+                  "property2Name": "property2Value"
+                }
+              },
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_attach_collection(parent_guid, collection_guid, body))
+
+    async def _async_detach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+        """ Detach an existing collection from an element. If the collection is anchored to the element, it is delete.
+            Async version.
+
         Parameters
         ----------
+        parent_guid: str
+                The unique identifier of the parent to detach from.
         collection_guid: str
-            The guid of the collection to update.
-        element_guid: str
-            The guid of the element to attach.
-
-             If not provided, the server name associated
-            with the instance is used.
+                The identifier of the collection being detached.
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
 
         Returns
         -------
@@ -3412,12 +5466,67 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_collection(collection_guid, element_guid))
-        return
 
-    async def _async_delete_collection(self, collection_guid: str, cascade: bool = False) -> None:
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+               f"{parent_guid}/collections/{collection_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
+    def detach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+        """ Detach an existing collection from an element. If the collection is anchored to the element, it is delete.
+
+          Parameters
+          ----------
+          parent_guid: str
+                  The unique identifier of the parent to detach from.
+          collection_guid: str
+                 The identifier of the collection being detached.
+          body: dict, optional, default = None
+              A dict representing the details of the relationship.
+
+          Returns
+          -------
+          Nothing
+
+          Raises
+          ------
+          InvalidParameterException
+            If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+          PropertyServerException
+            Raised by the server when an issue arises in processing a valid request
+          NotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
+
+          Notes
+          -----
+          JSON Structure looks like:
+          {
+            "class": "MetadataSourceRequestBody",
+            "externalSourceGUID": "add guid here",
+            "externalSourceName": "add qualified name here",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false
+          }
+          """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_collection(parent_guid, collection_guid, body))
+
+    async def _async_delete_collection(self, collection_guid: str, body: dict = None, cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted. Async version
 
@@ -3430,6 +5539,9 @@ class CollectionManager(Client):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
         Returns
         -------
         Nothing
@@ -3443,15 +5555,28 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        _____
+        JSON Structure looks like:
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+
         """
         cascade_s = str(cascade).lower()
         url = f"{self.collection_command_root}/{collection_guid}/delete?cascadedDelete={cascade_s}"
-        body = {"class": "NullRequestBody"}
+        if body is None:
+            body = {"class": "NullRequestBody"}
 
         await self._async_make_request("POST", url, body)
-        return
 
-    def delete_collection(self, collection_guid: str, cascade: bool = False) -> None:
+    def delete_collection(self, collection_guid: str, body: dict = None, cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted.
 
@@ -3463,13 +5588,15 @@ class CollectionManager(Client):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
+        body: dict, optional, default = None
+            A dict representing the details of the relationship.
+
         Returns
         -------
         Nothing
 
         Raises
         ------
-
         InvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
         PropertyServerException
@@ -3477,10 +5604,22 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        _____
+        JSON Structure looks like:
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_collection(collection_guid, cascade))
-        return
+        loop.run_until_complete(self._async_delete_collection(collection_guid, body, cascade))
 
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
@@ -3528,7 +5667,13 @@ class CollectionManager(Client):
               "stewardPropertyName": "property name if the steward's identifier",
               "source": "source of the member",
               "notes": "Add notes here"
-              }
+              },
+              },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -3537,7 +5682,6 @@ class CollectionManager(Client):
                f"{element_guid}/attach")
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
-        return
 
     def add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional.
@@ -3585,13 +5729,18 @@ class CollectionManager(Client):
               "stewardPropertyName": "property name if the steward's identifier",
               "source": "source of the member",
               "notes": "Add notes here"
-              }
+              },
+              },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
-        return
 
     async def _async_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
                                                   replace_all_props: bool = False, ) -> None:
@@ -3629,20 +5778,27 @@ class CollectionManager(Client):
         -----
         Example body:
         {
-          "class" : "CollectionMembershipProperties",
-          "membershipRationale": "xxx",
-          "createdBy": "user id here",
-          "expression": "expression that described why the element is a part of this collection",
-          "confidence": 100,
-          "status": "PROPOSED",
-          "userDefinedStatus": "Add valid value here",
-          "steward": "identifier of steward that validated this member",
-          "stewardTypeName": "type name of element identifying the steward",
-          "stewardPropertyName": "property name if the steward's identifier",
-          "source": "source of the member",
-          "notes": "Add notes here"
+          "class" : "RelationshipRequestBody",
+          "properties" : {
+            "class": "CollectionMembershipProperties",
+            "membershipRationale": "xxx",
+            "createdBy": "user id here",
+            "expression": "expression that described why the element is a part of this collection",
+            "confidence": 100,
+            "membershipStatus": "PROPOSED",
+            "userDefinedStatus": "Add valid value here",
+            "steward": "identifier of steward that validated this member",
+            "stewardTypeName": "type name of element identifying the steward",
+            "stewardPropertyName": "property name if the steward's identifier",
+            "source": "source of the member",
+            "notes": "Add notes here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
-
         """
 
         replace_all_props_s = str(replace_all_props).lower()
@@ -3650,7 +5806,6 @@ class CollectionManager(Client):
                f"{element_guid}/update?replaceAllProperties={replace_all_props_s}")
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
-        return
 
     def update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
                                      replace_all_props: bool = False, ) -> None:
@@ -3659,7 +5814,7 @@ class CollectionManager(Client):
         Parameters
         ----------
         collection_guid: str
-            identity of the collection to update members for.
+            identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
@@ -3688,27 +5843,33 @@ class CollectionManager(Client):
         -----
         Example body:
         {
-          "class" : "CollectionMembershipProperties",
-          "membershipRationale": "xxx",
-          "createdBy": "user id here",
-          "expression": "expression that described why the element is a part of this collection",
-          "confidence": 100,
-          "status": "PROPOSED",
-          "userDefinedStatus": "Add valid value here",
-          "steward": "identifier of steward that validated this member",
-          "stewardTypeName": "type name of element identifying the steward",
-          "stewardPropertyName": "property name if the steward's identifier",
-          "source": "source of the member",
-          "notes": "Add notes here"
+          "class" : "RelationshipRequestBody",
+          "properties" : {
+            "class": "CollectionMembershipProperties",
+            "membershipRationale": "xxx",
+            "createdBy": "user id here",
+            "expression": "expression that described why the element is a part of this collection",
+            "confidence": 100,
+            "membershipStatus": "PROPOSED",
+            "userDefinedStatus": "Add valid value here",
+            "steward": "identifier of steward that validated this member",
+            "stewardTypeName": "type name of element identifying the steward",
+            "stewardPropertyName": "property name if the steward's identifier",
+            "source": "source of the member",
+            "notes": "Add notes here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
-
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_collection_membership(collection_guid, element_guid, body, replace_all_props))
-        return
 
-    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str) -> None:
+    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str, body: dict = None) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -3717,9 +5878,8 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
-
-            The name of the server to use.
-
+        body: dict, optional, defaults to None
+            The body of the request to add to the collection. See notes.
 
         Returns
         -------
@@ -3735,16 +5895,27 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
         """
 
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/detach")
-        body = {"class": "NullRequestBody"}
+        if body is None:
+            body = {"class": "NullRequestBody"}
         await self._async_make_request("POST", url, body)
-        return
 
-    def remove_from_collection(self, collection_guid: str, element_guid: str) -> None:
-        """Remove an element from a collection.
+    def remove_from_collection(self, collection_guid: str, element_guid: str, body: dict = None) -> None:
+        """Remove an element from a collection. Async version.
 
         Parameters
         ----------
@@ -3752,9 +5923,8 @@ class CollectionManager(Client):
             identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
-
-            The name of the server to use.
-
+        body: dict, optional, defaults to None
+            The body of the request to add to the collection. See notes.
 
         Returns
         -------
@@ -3770,13 +5940,27 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Notes
+        -----
+        {
+          "class" : "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid))
-        return
+        loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid, body))
+
+    #
+    #
+    #
 
     async def _async_get_member_list(self, collection_guid: str = None, collection_name: str = None,
-                                     collection_qname: str = None, ) -> list | bool:
+                                     collection_qname: str = None, ) -> list | str:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -3812,7 +5996,6 @@ class CollectionManager(Client):
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            # member_resp = await self._async_get_collection_by_guid(member_guid)
             member = await self._async_get_element_by_guid_(member_guid)
             if isinstance(member, dict):
                 member_instance = {
@@ -3872,8 +6055,6 @@ class CollectionManager(Client):
         collection_type = properties.get("collectionType", "") or ""
         additional_properties = properties.get("additionalProperties", {}) or {}
         extended_properties = properties.get("extendedProperties", {}) or {}
-        # classifications = ",  ".join(properties.get("classifications", [])) or ""
-
         classification_names = ""
         classifications = element['elementHeader'].get("classifications", [])
         for classification in classifications:
@@ -3889,8 +6070,9 @@ class CollectionManager(Client):
 
         return {
             'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description,
-            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names, 'properties': properties,
-            'additional_properties': additional_properties, 'extended_properties': extended_properties,
+            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names,
+            'properties': properties, 'additional_properties': additional_properties,
+            'extended_properties': extended_properties,
             }
 
     def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
@@ -3930,16 +6112,13 @@ class CollectionManager(Client):
                                    extract_properties_func=self._extract_collection_properties,
                                    columns=columns if output_format == 'LIST' else None)
 
-        # Default case
-        return None
-
     def generate_collection_output(self, elements, filter, classification_name, output_format) -> str | list:
         """
         Generate output for collections in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data field elements
-            collection_type: str
+            classification_name: str
                 The type of collection.
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
@@ -3968,24 +6147,24 @@ class CollectionManager(Client):
             return self.generate_basic_structured_output(elements, filter, output_format)
 
     # def generate_collection_output(self, elements, filter, collection_type: str, output_format,
-    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified
-    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries
-    #  containing  # element data  #         filter: The search string used to find the elements  #
-    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #
+    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified  #
+    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries  #
+    #  containing  # element data  #         filter: The search string used to find the elements  #  #
+    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #  #
     #  output_profile: str, optional,  # default = "CORE"  #             The desired output profile - BASIC, CORE,
-    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if
-    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =
+    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if  #
+    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =  #
     #  collection_type  #  #     # For LIST and DICT  # formats, get member information  #  #     if output_format in
-    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if
+    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if  #
     #  isinstance(elements, dict):  #             collection_guid  # = elements.get('elementHeader', {}).get('guid')
-    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[
-    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid
-    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =
+    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[  #
+    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid  #
+    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =  #
     #         self.get_member_list(collection_guid=collection_guid)  #             if isinstance(members,
     # str):  # "No members found" case  #                 members = []  #  #         # For DICT format, include all
-    # member information in the result  #         if output_format == "DICT":  #             result =  #
-    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #
-    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #
+    # member information in the result  #         if output_format == "DICT":  #             result =  #  #
+    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #  #
+    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #  #
     # members  #                 return result  #             elif isinstance(result, dict):  #  # result['members']
     # = members  #                 return result  #  #         # For LIST format, add a column with  # bulleted list
     # of qualified names  #         elif output_format == "LIST":  #             # Define columns for  # LIST format,
@@ -3996,16 +6175,16 @@ class CollectionManager(Client):
     # 'key': 'classifications'},  #                 {'name': 'Members', 'key': 'members', 'format': True}]  #  #  #
     # Create a function to add member information to the properties  #             def get_additional_props(element,
     # guid, output_format):  #                 if not members:  #                     return {'members': ''}  #  #  #
-    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #
+    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #  #
     # member_list = ", ".join([member.get('qualifiedName', '') for member in members])  #                 return {  #
-    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return
+    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return  #
     # generate_output(elements=elements, search_string=filter, entity_type=entity_type,
     #  # output_format=output_format, extract_properties_func=self._extract_collection_properties,
     #  # get_additional_props_func=get_additional_props, columns=columns)  #  #     # For FORM, REPORT, JSON formats,
     # keep behavior unchanged  #     return self.generate_basic_structured_output(elements, filter, output_format,
     # collection_type)
 
-    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #
+    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #  #
     # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(  #
     # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(  #
     # elements, filter, output_format)

@@ -21,7 +21,7 @@ from pyegeria._globals import DEBUG_LEVEL
 
 log_format = "P {time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
-logger.add(sys.stderr, level="SUCCESS", format=log_format, colorize=True)
+logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
 # Constants
