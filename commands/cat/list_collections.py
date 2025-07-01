@@ -90,11 +90,11 @@ def display_collections(
 
         if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
-            file_name = f"Terms-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
+            file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
             output = m_client.find_collections(
-                search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
+                search_string.strip(), None, True, False, ignore_case=True,
                 output_format=output_format
                 )
             if output == NO_ELEMENTS_FOUND:
@@ -129,7 +129,7 @@ def display_collections(
         table.add_column("Members")
 
         collections = m_client.find_collections(
-            search_string.strip(), None, None, False, ends_with=False, ignore_case=True,
+            search_string.strip(), None, True, False, ignore_case=True,
             output_format = "DICT"
         )
         if type(collections) is list:

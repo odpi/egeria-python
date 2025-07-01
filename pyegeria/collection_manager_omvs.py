@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
@@ -150,6 +151,10 @@ class CollectionManager(Client):
             the class instance.
         body: dict, optional, default = None
             If supplied, adds addition request details - for instance, to filter the results on collectionType
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+
+
         Returns
         -------
         List
@@ -795,8 +800,8 @@ class CollectionManager(Client):
             self._async_get_collection_by_guid(collection_guid, collection_type, body, output_format))
 
     async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                                            collection_qname: str = None, body: dict= None, start_from: int = 0, page_size: int = 0,
-                                            output_format: str = "JSON") -> list | str:
+                                            collection_qname: str = None, body: dict = None, start_from: int = 0,
+                                            page_size: int = 0, output_format: str = "JSON") -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -930,9 +935,8 @@ class CollectionManager(Client):
 
         return resp
 
-
-    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0, page_size: int = 0,
-                                          output_format: str = "JSON") -> list | str:
+    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0,
+                                          page_size: int = 0, output_format: str = "JSON") -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements. Async version.
@@ -997,8 +1001,8 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0, page_size: int = 0,
-                             output_format: str = "JSON") -> list | str:
+    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0,
+                             page_size: int = 0, output_format: str = "JSON") -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements.
@@ -1112,8 +1116,8 @@ class CollectionManager(Client):
             return self.generate_collection_output(elements, None, None, output_format)
         return elements
 
-    def get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0, page_size: int = None,
-                                    output_format: str = "JSON") -> list | str:
+    def get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
+                                    page_size: int = None, output_format: str = "JSON") -> list | str:
 
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
@@ -1315,14 +1319,14 @@ class CollectionManager(Client):
         }
         """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_collection_w_body(body, classification_name))
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection_w_body(body, classification_name))
 
     async def _async_create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
                                        classification_name: str = None, anchor_guid: str = None,
                                        parent_guid: str = None, parent_relationship_type_name: str = None,
                                        parent_at_end1: bool = True, collection_type: str = None,
-                                       anchor_scope_guid: str = None, collection_ordering: str = None,
-                                       order_property_name: str = None, additional_properties: dict = None,
+                                       anchor_scope_guid: str = None, additional_properties: dict = None,
                                        extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1354,11 +1358,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1397,9 +1396,8 @@ class CollectionManager(Client):
             "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
             "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
@@ -1409,9 +1407,8 @@ class CollectionManager(Client):
     def create_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
                           classification_name: str = None, anchor_guid: str = None, parent_guid: str = None,
                           parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                          collection_type: str = None, anchor_scope_guid: str = None, collection_ordering: str = None,
-                          order_property_name: str = None, additional_properties: dict = None,
-                          extended_properties: dict = None) -> str:
+                          collection_type: str = None, anchor_scope_guid: str = None,
+                          additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
 
@@ -1441,11 +1438,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1469,17 +1461,14 @@ class CollectionManager(Client):
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, is_own_anchor, classification_name, anchor_guid,
                                           parent_guid, parent_relationship_type_name, parent_at_end1, collection_type,
-                                          anchor_scope_guid, collection_ordering, order_property_name,
-                                          additional_properties, extended_properties))
+                                          anchor_scope_guid, additional_properties, extended_properties))
 
-
-
-    async def _async_create_generic_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
+    async def _async_create_generic_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                               is_own_anchor: bool = True, url_item=None,
                                                classification_name: str = None, anchor_guid: str = None,
                                                parent_guid: str = None, parent_relationship_type_name: str = None,
                                                parent_at_end1: bool = True, collection_type: str = None,
-                                               anchor_scope_guid: str = None, collection_ordering: str = None,
-                                               order_property_name: str = None, additional_properties: dict = None,
+                                               anchor_scope_guid: str = None, additional_properties: dict = None,
                                                extended_properties: dict = None) -> str:
         """ Create a new generic collection.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1491,6 +1480,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         classification_name: str
@@ -1511,11 +1502,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1535,17 +1521,21 @@ class CollectionManager(Client):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Args:
+            url_item ():
+            qualified_name ():
+
         """
 
         is_own_anchor_s = str(is_own_anchor).lower()
         parent_at_end1_s = str(parent_at_end1).lower()
 
-
-        url = f"{self.collection_command_root}/{classification_name}"
-        if classification_name is not None:
-            qualified_name = self.__create_qualified_name__(classification_name, display_name)
-        else:
-            qualified_name = self.__create_qualified_name__("Collection", display_name)
+        url = f"{self.collection_command_root}/{url_item}"
+        if qualified_name is None:
+            if classification_name is not None:
+                qualified_name = self.__create_qualified_name__(classification_name, display_name)
+            else:
+                qualified_name = self.__create_qualified_name__("Collection", display_name)
 
         body = {
             "class": "NewElementRequestBody", "anchorGUID": anchor_guid, "anchorScopeGUID": anchor_scope_guid,
@@ -1553,20 +1543,20 @@ class CollectionManager(Client):
             "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1_s,
             "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 },
             }
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-    async def _async_create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                            anchor_guid: str = None, parent_guid: str = None,
-                                            parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                            collection_type: str = None, anchor_scope_guid: str = None,
-                                            collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_root_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                            is_own_anchor: bool = True, anchor_guid: str = None,
+                                            parent_guid: str = None, parent_relationship_type_name: str = None,
+                                            parent_at_end1: bool = True, collection_type: str = None,
+                                            anchor_scope_guid: str = None,
+
                                             additional_properties: dict = None,
                                             extended_properties: dict = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a collection
@@ -1580,6 +1570,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1597,11 +1589,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1623,19 +1610,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "root-collection",
-                                                           anchor_guid, parent_guid, parent_relationship_type_name,
-                                                           parent_at_end1, collection_type, anchor_scope_guid,
-                                                           collection_ordering, order_property_name,
-                                                           additional_properties, extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="root-collection",
+                                                           classification_name="RootCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_root_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                               anchor_guid: str = None, parent_guid: str = None,
+    def create_root_collection(self, display_name: str, description: str, qualified_name: str = None,
+                               is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                collection_type: str = None, anchor_scope_guid: str = None,
-                               collection_ordering: str = None, order_property_name: str = None,
+
                                additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the RootCollection classification.
             Used to identify the top of a collection hierarchy.
@@ -1647,6 +1639,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1664,11 +1658,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1691,18 +1680,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_root_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                               parent_relationship_type_name, parent_at_end1, collection_type,
-                                               anchor_scope_guid, collection_ordering, order_property_name,
-                                               additional_properties, extended_properties))
+            self._async_create_root_collection(display_name, description, qualified_name, is_own_anchor, anchor_guid,
+                                               parent_guid, parent_relationship_type_name, parent_at_end1,
+                                               collection_type, anchor_scope_guid, additional_properties,
+                                               extended_properties))
         return resp
 
-    async def _async_create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                 anchor_guid: str = None, parent_guid: str = None,
-                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                                 collection_type: str = None, anchor_scope_guid: str = None,
-                                                 collection_ordering: str = None, order_property_name: str = None,
-                                                 additional_properties: dict = None,
+    async def _async_create_data_spec_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                 is_own_anchor: bool = True, anchor_guid: str = None,
+                                                 parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                 parent_at_end1: bool = True, collection_type: str = None,
+                                                 anchor_scope_guid: str = None, additional_properties: dict = None,
                                                  extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -1715,6 +1703,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1732,11 +1722,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1758,20 +1743,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "data-spec-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="data-spec-collection",
+                                                           classification_name="DataSpec", anchor_guid=anchor_guid,
+                                                           parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_data_spec_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                    anchor_guid: str = None, parent_guid: str = None,
+    def create_data_spec_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                    is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                     parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                     collection_type: str = None, anchor_scope_guid: str = None,
-                                    collection_ordering: str = None, order_property_name: str = None,
+
                                     additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -1783,6 +1772,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1800,11 +1791,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1827,19 +1813,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_spec_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                    parent_relationship_type_name, parent_at_end1, collection_type,
-                                                    anchor_scope_guid, collection_ordering, order_property_name,
+            self._async_create_data_spec_collection(display_name, description, qualified_name, is_own_anchor,
+                                                    anchor_guid, parent_guid, parent_relationship_type_name,
+                                                    parent_at_end1, collection_type, anchor_scope_guid,
                                                     additional_properties, extended_properties))
         return resp
 
     async def _async_create_data_dictionary_collection(self, display_name: str, description: str,
-                                                       is_own_anchor: bool = True, anchor_guid: str = None,
-                                                       parent_guid: str = None,
+                                                       qualified_name: str = None, is_own_anchor: bool = True,
+                                                       anchor_guid: str = None, parent_guid: str = None,
                                                        parent_relationship_type_name: str = None,
                                                        parent_at_end1: bool = True, collection_type: str = None,
-                                                       anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                       order_property_name: str = None,
+                                                       anchor_scope_guid: str = None,
                                                        additional_properties: dict = None,
                                                        extended_properties: dict = None) -> str:
         """ Create a new collection with the DataDictionary classification.  Used to identify a collection of data
@@ -1853,6 +1838,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1870,11 +1857,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1896,20 +1878,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "data-dictionary-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="data-dictionary-collection",
+                                                           classification_name="DataDictionary",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_data_dictionary_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                          anchor_guid: str = None, parent_guid: str = None,
+    def create_data_dictionary_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                          is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                           parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                           collection_type: str = None, anchor_scope_guid: str = None,
-                                          collection_ordering: str = None, order_property_name: str = None,
+
                                           additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the DataSpec classification.  Used to identify a collection of data
         structures and
@@ -1921,6 +1908,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -1938,11 +1927,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -1965,18 +1949,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_data_dictionary_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                          parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                          collection_type, anchor_scope_guid, collection_ordering,
-                                                          order_property_name, additional_properties,
-                                                          extended_properties))
+            self._async_create_data_dictionary_collection(display_name, description, qualified_name, is_own_anchor,
+                                                          anchor_guid, parent_guid, parent_relationship_type_name,
+                                                          parent_at_end1, collection_type, anchor_scope_guid,
+                                                          additional_properties, extended_properties))
         return resp
 
-    async def _async_create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                              anchor_guid: str = None, parent_guid: str = None,
-                                              parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                              collection_type: str = None, anchor_scope_guid: str = None,
-                                              collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_folder_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                              is_own_anchor: bool = True, anchor_guid: str = None,
+                                              parent_guid: str = None, parent_relationship_type_name: str = None,
+                                              parent_at_end1: bool = True, collection_type: str = None,
+                                              anchor_scope_guid: str = None,
+
                                               additional_properties: dict = None,
                                               extended_properties: dict = None) -> str:
         """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
@@ -1989,6 +1973,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2006,11 +1992,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2032,19 +2013,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor, "folder",
-                                                           anchor_guid, parent_guid, parent_relationship_type_name,
-                                                           parent_at_end1, collection_type, anchor_scope_guid,
-                                                           collection_ordering, order_property_name,
-                                                           additional_properties, extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="folder",
+                                                           classification_name="Folder", anchor_guid=anchor_guid,
+                                                           parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_folder_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                 anchor_guid: str = None, parent_guid: str = None,
+    def create_folder_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                 is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                  parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                  collection_type: str = None, anchor_scope_guid: str = None,
-                                 collection_ordering: str = None, order_property_name: str = None,
+
                                  additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the Folder classification.  This is used to identify the organizing collections
             in a collection hierarchy.
@@ -2055,6 +2041,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2072,11 +2060,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2099,19 +2082,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_folder_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                 parent_relationship_type_name, parent_at_end1, collection_type,
-                                                 anchor_scope_guid, collection_ordering, order_property_name,
-                                                 additional_properties, extended_properties))
+            self._async_create_folder_collection(display_name, description, qualified_name, is_own_anchor, anchor_guid,
+                                                 parent_guid, parent_relationship_type_name, parent_at_end1,
+                                                 collection_type, anchor_scope_guid, additional_properties,
+                                                 extended_properties))
         return resp
 
     async def _async_create_context_event_collection(self, display_name: str, description: str,
-                                                     is_own_anchor: bool = True, anchor_guid: str = None,
-                                                     parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                     qualified_name: str = None, is_own_anchor: bool = True,
+                                                     anchor_guid: str = None, parent_guid: str = None,
+                                                     parent_relationship_type_name: str = None,
                                                      parent_at_end1: bool = True, collection_type: str = None,
-                                                     anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                     order_property_name: str = None,
-                                                     additional_properties: dict = None,
+                                                     anchor_scope_guid: str = None, additional_properties: dict = None,
                                                      extended_properties: dict = None) -> str:
         """ Create a new collection with the ContextEventCollection classification.  This is used to group context
         events together.
@@ -2124,6 +2106,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2141,11 +2125,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2167,20 +2146,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "context-event-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="context-event-collection",
+                                                           classification_name="CtxEventCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_context_event_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                        anchor_guid: str = None, parent_guid: str = None,
+    def create_context_event_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                        is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                         parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                         collection_type: str = None, anchor_scope_guid: str = None,
-                                        collection_ordering: str = None, order_property_name: str = None,
+
                                         additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the ContextEventCollection classification.  This is used to group context
         events together.
@@ -2192,6 +2176,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2209,11 +2195,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2236,18 +2217,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_context_event_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                       parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                       collection_type, anchor_scope_guid, collection_ordering,
-                                                       order_property_name, additional_properties, extended_properties))
+            self._async_create_context_event_collection(display_name, description, qualified_name, is_own_anchor,
+                                                        anchor_guid, parent_guid, parent_relationship_type_name,
+                                                        parent_at_end1, collection_type, anchor_scope_guid,
+                                                        additional_properties, extended_properties))
         return resp
 
-    async def _async_create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                  anchor_guid: str = None, parent_guid: str = None,
-                                                  parent_relationship_type_name: str = None,
+    async def _async_create_name_space_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                  is_own_anchor: bool = True, anchor_guid: str = None,
+                                                  parent_guid: str = None, parent_relationship_type_name: str = None,
                                                   parent_at_end1: bool = True, collection_type: str = None,
-                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  anchor_scope_guid: str = None, additional_properties: dict = None,
                                                   extended_properties: dict = None) -> str:
         """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
         the same namespace.
@@ -2261,6 +2241,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2278,11 +2260,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2304,20 +2281,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "namespace-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="namespace-collection",
+                                                           classification_name="NamespaceCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_name_space_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                     anchor_guid: str = None, parent_guid: str = None,
+    def create_name_space_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                     is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                      parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                      collection_type: str = None, anchor_scope_guid: str = None,
-                                     collection_ordering: str = None, order_property_name: str = None,
+
                                      additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the Namespace classification.  This is used to group elements that belong to
         the same namespace.
@@ -2330,6 +2311,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2347,11 +2330,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2374,17 +2352,17 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_name_space_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                     parent_relationship_type_name, parent_at_end1, collection_type,
-                                                     anchor_scope_guid, collection_ordering, order_property_name,
-                                                     additional_properties, extended_properties))
+            self._async_create_name_space_collection(display_name, description, qualified_name, is_own_anchor,
+                                                     anchor_guid, parent_guid, parent_relationship_type_name,
+                                                     parent_at_end1, collection_type, anchor_scope_guid))
         return resp
 
-    async def _async_create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                 anchor_guid: str = None, parent_guid: str = None,
-                                                 parent_relationship_type_name: str = None, parent_at_end1: bool = True,
-                                                 collection_type: str = None, anchor_scope_guid: str = None,
-                                                 collection_ordering: str = None, order_property_name: str = None,
+    async def _async_create_event_set_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                 is_own_anchor: bool = True, anchor_guid: str = None,
+                                                 parent_guid: str = None, parent_relationship_type_name: str = None,
+                                                 parent_at_end1: bool = True, collection_type: str = None,
+                                                 anchor_scope_guid: str = None,
+
                                                  additional_properties: dict = None,
                                                  extended_properties: dict = None) -> str:
         """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
@@ -2398,6 +2376,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2415,11 +2395,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2441,20 +2416,24 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "event-set-collection", anchor_guid, parent_guid,
-                                                           parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor, url_item="event-set-collection",
+                                                           classification_name="EventSetCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_event_set_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                    anchor_guid: str = None, parent_guid: str = None,
+    def create_event_set_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                    is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                     parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                     collection_type: str = None, anchor_scope_guid: str = None,
-                                    collection_ordering: str = None, order_property_name: str = None,
+
                                     additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the EventSet classification.  This is used to group event schemas together.
             For example, the collection may describe a set of events emitted by a specific system or to disseminate
@@ -2466,6 +2445,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2483,11 +2464,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2510,20 +2486,18 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_event_set_collection(display_name, description, is_own_anchor, anchor_guid, parent_guid,
-                                                    parent_relationship_type_name, parent_at_end1, collection_type,
-                                                    anchor_scope_guid, collection_ordering, order_property_name,
+            self._async_create_event_set_collection(display_name, description, qualified_name, is_own_anchor,
+                                                    anchor_guid, parent_guid, parent_relationship_type_name,
+                                                    parent_at_end1, collection_type, anchor_scope_guid,
                                                     additional_properties, extended_properties))
         return resp
 
     async def _async_create_naming_standard_ruleset_collection(self, display_name: str, description: str,
-                                                               is_own_anchor: bool = True, anchor_guid: str = None,
-                                                               parent_guid: str = None,
+                                                               qualified_name: str = None, is_own_anchor: bool = True,
+                                                               anchor_guid: str = None, parent_guid: str = None,
                                                                parent_relationship_type_name: str = None,
                                                                parent_at_end1: bool = True, collection_type: str = None,
                                                                anchor_scope_guid: str = None,
-                                                               collection_ordering: str = None,
-                                                               order_property_name: str = None,
                                                                additional_properties: dict = None,
                                                                extended_properties: dict = None) -> str:
         """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
@@ -2537,6 +2511,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2554,11 +2530,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2580,21 +2551,25 @@ class CollectionManager(Client):
 
         """
 
-        resp = await self._async_create_generic_collection(display_name, description, is_own_anchor,
-                                                           "naming-standard-rule-set-collection", anchor_guid,
-                                                           parent_guid, parent_relationship_type_name, parent_at_end1,
-                                                           collection_type, anchor_scope_guid, collection_ordering,
-                                                           order_property_name, additional_properties,
-                                                           extended_properties)
+        resp = await self._async_create_generic_collection(display_name, description, qualified_name,
+                                                           is_own_anchor=is_own_anchor,
+                                                           url_item="naming-standard-rule-set-collection",
+                                                           classification_name="NamingRulesCollection",
+                                                           anchor_guid=anchor_guid, parent_guid=parent_guid,
+                                                           parent_relationship_type_name=parent_relationship_type_name,
+                                                           parent_at_end1=parent_at_end1,
+                                                           collection_type=collection_type,
+                                                           anchor_scope_guid=anchor_scope_guid,
+                                                           additional_properties=additional_properties,
+                                                           extended_properties=extended_properties)
 
         return resp
 
-    def create_naming_standard_ruleset_collection(self, display_name: str, description: str, is_own_anchor: bool = True,
-                                                  anchor_guid: str = None, parent_guid: str = None,
-                                                  parent_relationship_type_name: str = None,
+    def create_naming_standard_ruleset_collection(self, display_name: str, description: str, qualified_name: str = None,
+                                                  is_own_anchor: bool = True, anchor_guid: str = None,
+                                                  parent_guid: str = None, parent_relationship_type_name: str = None,
                                                   parent_at_end1: bool = True, collection_type: str = None,
-                                                  anchor_scope_guid: str = None, collection_ordering: str = None,
-                                                  order_property_name: str = None, additional_properties: dict = None,
+                                                  anchor_scope_guid: str = None, additional_properties: dict = None,
                                                   extended_properties: dict = None) -> str:
         """ Create a new collection with the NamingStandardRuleSet classification.  This is used to group naming
         standard rule
@@ -2606,6 +2581,8 @@ class CollectionManager(Client):
             The display name of the element. Will also be used as the basis of the qualified_name.
         description: str
             A description of the collection.
+        qualified_name: str, optional, defaults to None
+            Allows user to specify a qualified name of the collection.
         is_own_anchor: bool, optional, defaults to True
             Indicates if the collection should be classified as its own anchor or not.
         anchor_guid: str
@@ -2623,11 +2600,6 @@ class CollectionManager(Client):
             Adds an user supplied valid value for the collection type.
         anchor_scope_guid: str, optional, defaults to None
             optional GUID of search scope
-        collection_ordering: str, optional, defaults to "OTHER"
-            Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER", "DATE_CREATED",
-             "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-            Property to use for sequencing if collection_ordering is "OTHER"
         additional_properties: dict, optional, defaults to None
             User specified Additional properties to add to the collection definition.
         extended_properties: dict, optional, defaults to None
@@ -2650,11 +2622,10 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_naming_standard_ruleset_collection(display_name, description, is_own_anchor, anchor_guid,
-                                                                  parent_guid, parent_relationship_type_name,
-                                                                  parent_at_end1, collection_type, anchor_scope_guid,
-                                                                  collection_ordering, order_property_name,
-                                                                  additional_properties, extended_properties))
+            self._async_create_naming_standard_ruleset_collection(display_name, description, qualified_name,
+                                                                  is_own_anchor, anchor_guid, parent_guid,
+                                                                  parent_relationship_type_name, parent_at_end1,
+                                                                  collection_type, anchor_scope_guid))
         return resp
 
     #
@@ -2780,9 +2751,9 @@ class CollectionManager(Client):
     #
     async def _async_update_collection(self, collection_guid: str, qualified_name: str = None, display_name: str = None,
                                        description: str = None, collection_type: str = None,
-                                       collection_ordering: str = None, order_property_name: str = None,
-                                       additional_properties: dict = None,
-                                       extended_properties: dict = None, replace_all_props: bool = False) -> None:
+
+                                       additional_properties: dict = None, extended_properties: dict = None,
+                                       replace_all_props: bool = False) -> None:
         """Update the properties of a collection.  Async version.
 
         Parameters
@@ -2797,11 +2768,6 @@ class CollectionManager(Client):
            A description of the collection.
         collection_type: str, optional, defaults to None
            Add appropriate valid value for the collection type.
-        collection_ordering: str, optional, defaults to None
-           Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-           "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to None
-           Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
         additional_properties: dict, optional, defaults to None
@@ -2831,17 +2797,16 @@ class CollectionManager(Client):
         body = {
             "class": "UpdateElementRequestBody", "properties": {
                 "class": "CollectionProperties", "qualifiedName": qualified_name, "name": display_name,
-                "description": description, "collectionType": collection_type, "collectionOrder": collection_ordering,
-                "orderByPropertyName": order_property_name, "additionalProperties": additional_properties,
-                "extendedProperties": extended_properties
+                "description": description, "collectionType": collection_type,
+                "additionalProperties": additional_properties, "extendedProperties": extended_properties
                 }
             }
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
 
     def update_collection(self, collection_guid, qualified_name: str = None, display_name: str = None,
-                          description: str = None, collection_type: str = None, collection_ordering: str = None,
-                          order_property_name: str = None, additional_properties: dict = None, extended_properties: dict = None, replace_all_props: bool = False) -> None:
+                          description: str = None, collection_type: str = None, additional_properties: dict = None,
+                          extended_properties: dict = None, replace_all_props: bool = False) -> None:
         """Update the properties of a collection.
 
         Parameters
@@ -2856,11 +2821,6 @@ class CollectionManager(Client):
            A description of the collection.
         collection_type: str
            Add appropriate valid value for the collection type.
-        collection_ordering: str, optional, defaults to "OTHER"
-           Specifies the sequencing to use in a collection. Examples include "NAME", "OWNER",
-           "DATE_CREATED", "OTHER"
-        order_property_name: str, optional, defaults to "Something"
-           Property to use for sequencing if collection_ordering is "OTHER"
         replace_all_props: bool, optional, defaults to False
             Whether to replace all properties in the collection.
         additional_properties: dict, optional, defaults to None
@@ -2885,11 +2845,11 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_collection(collection_guid, qualified_name, display_name, description, collection_type,
-                                          collection_ordering, order_property_name,
+
                                           additional_properties, extended_properties, replace_all_props))
 
-
-    async def _async_update_collection_w_body(self, collection_guid: str, body: dict, replace_all_props: bool=False) -> None:
+    async def _async_update_collection_w_body(self, collection_guid: str, body: dict,
+                                              replace_all_props: bool = False) -> None:
         """Update the properties of a collection.  Async version.
 
         Parameters
@@ -2940,7 +2900,7 @@ class CollectionManager(Client):
         body_s = body_slimmer(body)
         await self._async_make_request("POST", url, body_s)
 
-    def update_collection_w_body(self, collection_guid: str, body:dict, replace_all_props: bool=False) -> None:
+    def update_collection_w_body(self, collection_guid: str, body: dict, replace_all_props: bool = False) -> None:
         """Update the properties of a collection.
 
         Parameters
@@ -2986,9 +2946,7 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_collection_w_body(collection_guid, body, replace_all_props))
-
+        loop.run_until_complete(self._async_update_collection_w_body(collection_guid, body, replace_all_props))
 
     #
     #   Digital Products
@@ -3219,7 +3177,6 @@ class CollectionManager(Client):
 
         await self._async_make_request("POST", url, body)
 
-
     def update_digital_product(self, collection_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection.
 
@@ -3270,7 +3227,6 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_digital_product(collection_guid, body, replace_all_props))
 
-
     async def _async_update_digital_product_status(self, digital_prod_guid: str, body: dict):
         """Update the status of a DigitalProduct collection. Async version.
 
@@ -3308,11 +3264,12 @@ class CollectionManager(Client):
             }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
-               f"{digital_prod_guid}/update=status")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/update=status")
 
         await self._async_make_request("POST", url, body)
-
 
     def update_digital_product_status(self, digital_prod_guid: str, body: dict):
         """Update the status of a DigitalProduct collection. Async version.
@@ -3353,8 +3310,6 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_digital_product_status(digital_prod_guid, body))
-
-
 
     async def _async_link_digital_product_dependency(self, upstream_digital_prod_guid: str,
                                                      downstream_digital_prod_guid: str, body: dict = None):
@@ -3403,16 +3358,17 @@ class CollectionManager(Client):
         }
         """
 
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
-               f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/attach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/attach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
 
-
-    def link_digital_product_dependency(self, upstream_digital_prod_guid: str, downstream_digital_prod_guid: str, body: dict = None):
+    def link_digital_product_dependency(self, upstream_digital_prod_guid: str, downstream_digital_prod_guid: str,
+                                        body: dict = None):
         """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
             Request body is optional.
 
@@ -3461,7 +3417,6 @@ class CollectionManager(Client):
         loop.run_until_complete(
             self._async_link_digital_product_dependency(upstream_digital_prod_guid, downstream_digital_prod_guid, body))
 
-
     async def _async_detach_digital_product_dependency(self, upstream_digital_prod_guid: str,
                                                        downstream_digital_prod_guid: str, body: dict = None):
         """ Unlink two dependent digital products.  The linked elements are of type DigitalProduct.
@@ -3502,13 +3457,14 @@ class CollectionManager(Client):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
-               f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/detach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     async def _async_link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
                                           body: dict = None) -> None:
@@ -3550,14 +3506,14 @@ class CollectionManager(Client):
         }
         """
 
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
-               f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/attach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/attach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     def link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict = None):
         """ Link a product manager to a digital product.
@@ -3598,11 +3554,10 @@ class CollectionManager(Client):
             }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
+        loop.run_until_complete(self._async_link_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
 
-
-    async def _async_detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict = None):
+    async def _async_detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
+                                            body: dict = None):
         """ Detach a product manager from a digital product. Request body is optional.
             Async version.
 
@@ -3641,13 +3596,14 @@ class CollectionManager(Client):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
-               f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/digital"
+            f"-products/"
+            f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/detach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     def detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict = None):
         """ Detach a product manager from a digital product. Request body is optional.
@@ -3687,9 +3643,7 @@ class CollectionManager(Client):
             }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
-
+        loop.run_until_complete(self._async_detach_product_manager(digital_prod_guid, digital_prod_manager_guid, body))
 
     #
     # Agreements
@@ -3775,7 +3729,8 @@ class CollectionManager(Client):
         }
 
 
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED,
+        DEPRECATED,
         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
         """
 
@@ -3783,7 +3738,6 @@ class CollectionManager(Client):
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
-
 
     def create_agreement(self, body: dict) -> str:
         """Create a new collection that represents am agreement. Async version.
@@ -3866,7 +3820,8 @@ class CollectionManager(Client):
         }
 
 
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, ACTIVE, DISABLED,
+        DEPRECATED,
         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
         """
         loop = asyncio.get_event_loop()
@@ -3930,11 +3885,11 @@ class CollectionManager(Client):
         }
         """
 
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/data-sharing-agreement"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/data"
+               f"-sharing-agreement")
 
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
-
 
     def create_data_sharing_agreement(self, body: dict) -> str:
         """ Create a new collection with the DataSharingAgreement classification.  The collection is typically
@@ -3996,7 +3951,6 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(self._async_create_data_sharing_agreement(body))
         return resp
 
-
     async def _async_update_agreement(self, agreement_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the agreement collection. Async version.
 
@@ -4055,7 +4009,6 @@ class CollectionManager(Client):
 
         await self._async_make_request("POST", url, body)
 
-
     def update_agreement(self, agreement_guid: str, body: dict, replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection.
 
@@ -4110,7 +4063,6 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_digital_product(agreement_guid, body, replace_all_props))
 
-
     async def _async_update_agreement_status(self, agreement_guid: str, body: dict):
         """Update the status of an agreement collection. Async version.
 
@@ -4148,11 +4100,12 @@ class CollectionManager(Client):
             }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-               f"{agreement_guid}/update-status")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/update-status")
 
         await self._async_make_request("POST", url, body)
-
 
     def update_agreement_status(self, agreement_guid: str, body: dict):
         """Update the status of an agreement collection. Async version.
@@ -4194,10 +4147,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_agreement_status(agreement_guid, body))
 
-
-
-    async def _async_link_agreement_actor(self, agreement_guid: str,
-                                                     actor_guid: str, body: dict = None):
+    async def _async_link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
             actor role (person role, team role or IT profile role); or user identity. Request body is optional.
             Async version.
@@ -4243,14 +4193,14 @@ class CollectionManager(Client):
         }
         """
 
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-               f"{agreement_guid}/agreement-actors/{actor_guid}/attach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/agreement-actors/{actor_guid}/attach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
@@ -4298,12 +4248,9 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_agreement_actor(agreement_guid, actor_guid, body))
+        loop.run_until_complete(self._async_link_agreement_actor(agreement_guid, actor_guid, body))
 
-
-    async def _async_detach_agreement_actor(self, agreement_guid: str,
-                                                       actor_guid: str, body: dict = None):
+    async def _async_detach_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
         """ Unlink an actor from an agreement. Request body is optional. Async version.
 
         Parameters
@@ -4341,13 +4288,14 @@ class CollectionManager(Client):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-               f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     def detach_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict = None):
         """ Unlink an actor from an agreement. Request body is optional.
@@ -4387,12 +4335,10 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_agreement_actor(agreement_guid, actor_guid, body))
+        loop.run_until_complete(self._async_detach_agreement_actor(agreement_guid, actor_guid, body))
 
-
-
-    async def _async_link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict=None ) -> None:
+    async def _async_link_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
+                                         body: dict = None) -> None:
         """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
            'Referenceable' to allow the agreement to refer to many things. Request body is optional. Async version.
 
@@ -4460,9 +4406,7 @@ class CollectionManager(Client):
         else:
             await self._async_make_request("POST", url)
 
-
-
-    def link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None ) -> None:
+    def link_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
         """ Attach an agreement to an element referenced in its definition. The agreement item element is of type
                   'Referenceable' to allow the agreement to refer to many things. Request body is optional.
 
@@ -4522,11 +4466,10 @@ class CollectionManager(Client):
 
                """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_agreement_item(agreement_guid, agreement_item_guid, body ))
+        loop.run_until_complete(self._async_link_agreement_item(agreement_guid, agreement_item_guid, body))
 
-
-    async def _async_detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
+    async def _async_detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
+                                           body: dict = None) -> None:
         """Detach an agreement item from an agreement. Request body is optional. Async version.
 
         Parameters
@@ -4564,15 +4507,15 @@ class CollectionManager(Client):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements"
-               f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements"
+            f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
 
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
-
 
     def detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str, body: dict = None) -> None:
         """Detach an agreement item from an agreement. Request body is optional. Async version.
@@ -4614,9 +4557,7 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_agreement_item(agreement_guid, agreement_item_guid, body))
 
-
-    async def _async_link_contract(self, agreement_guid: str, external_ref_guid: str,
-                                         body: dict = None) -> None:
+    async def _async_link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
         """ Attach an agreement to an external reference element that describes the location of the contract documents.
             Request body is optional. Async version.
 
@@ -4673,8 +4614,6 @@ class CollectionManager(Client):
         else:
             await self._async_make_request("POST", url)
 
-
-
     def link_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
         """ Attach an agreement to an external reference element that describes the location of the contract documents.
             Request body is optional.
@@ -4724,12 +4663,9 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_contract(agreement_guid, external_ref_guid, body))
+        loop.run_until_complete(self._async_link_contract(agreement_guid, external_ref_guid, body))
 
-
-    async def _async_detach_contract(self, agreement_guid: str, external_ref_guid: str,
-                                           body: dict = None) -> None:
+    async def _async_detach_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
         """Detach an external reference to a contract, from an agreement. Request body is optional. Async version.
 
         Parameters
@@ -4768,15 +4704,14 @@ class CollectionManager(Client):
         """
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements"
             f"{agreement_guid}/contract-links/{external_ref_guid}/detach")
 
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
-
 
     def detach_contract(self, agreement_guid: str, external_ref_guid: str, body: dict = None) -> None:
         """Detach an external reference to a contract, from an agreement. Request body is optional.
@@ -4817,7 +4752,6 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_contract(agreement_guid, external_ref_guid, body))
-
 
     #
     # Digital Subscriptions
@@ -4927,7 +4861,6 @@ class CollectionManager(Client):
         resp = await self._async_make_request("POST", url, body_slimmer(body))
         return resp.json().get("guid", "No GUID returned")
 
-
     def create_digital_subscription(self, body: dict) -> str:
         """Create a new collection that represents a type of agreement called a digital_subscription.
 
@@ -4999,8 +4932,8 @@ class CollectionManager(Client):
         resp = loop.run_until_complete(self._async_create_digital_subscription(body))
         return resp
 
-
-    async def _async_update_digital_subscription(self, digital_subscription_guid: str, body: dict, replace_all_props: bool = False, ):
+    async def _async_update_digital_subscription(self, digital_subscription_guid: str, body: dict,
+                                                 replace_all_props: bool = False, ):
         """Update the properties of the digital_subscription collection. Async version.
 
         Parameters
@@ -5062,8 +4995,8 @@ class CollectionManager(Client):
 
         await self._async_make_request("POST", url, body)
 
-
-    def update_digital_subscription(self, digital_subscription_guid: str, body: dict, replace_all_props: bool = False, ):
+    def update_digital_subscription(self, digital_subscription_guid: str, body: dict,
+                                    replace_all_props: bool = False, ):
         """Update the properties of the DigitalProduct classification attached to a collection.
 
         Parameters
@@ -5115,8 +5048,8 @@ class CollectionManager(Client):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_digital_subscription(digital_subscription_guid, body, replace_all_props))
-
+        loop.run_until_complete(
+            self._async_update_digital_subscription(digital_subscription_guid, body, replace_all_props))
 
     async def _async_update_digital_subscription_status(self, digital_subscription_guid: str, body: dict):
         """Update the status of an digital_subscription collection. Async version.
@@ -5155,11 +5088,12 @@ class CollectionManager(Client):
             }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-               f"{digital_subscription_guid}/update-status")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{digital_subscription_guid}/update-status")
 
         await self._async_make_request("POST", url, body)
-
 
     def update_digital_digital_subscription_status(self, digital_subscription_guid: str, body: dict):
         """Update the status of an digital_subscription collection. Async version.
@@ -5201,12 +5135,10 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_digital_subscription_status(digital_subscription_guid, body))
 
-
-
-    async def _async_link_subscriber(self, subscriber_guid: str,
-                                                     subscription_guid: str, body: dict = None):
+    async def _async_link_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
         """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
-            products, team or business capabilities to be the subscriber. The subscription is an element of type DigitalSubscription.
+            products, team or business capabilities to be the subscriber. The subscription is an element of type
+            DigitalSubscription.
             Async version.
 
         Parameters
@@ -5250,18 +5182,19 @@ class CollectionManager(Client):
         }
         """
 
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/subscribers/"
-               f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/subscribers/"
+            f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
 
-
     def link_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
         """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
-            products, team or business capabilities to be the subscriber. The subscription is an element of type DigitalSubscription.
+            products, team or business capabilities to be the subscriber. The subscription is an element of type
+            DigitalSubscription.
             Async version.
 
         Parameters
@@ -5305,12 +5238,9 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_subscriber(subscriber_guid, subscription_guid, body))
+        loop.run_until_complete(self._async_link_subscriber(subscriber_guid, subscription_guid, body))
 
-
-    async def _async_detach_subscriber(self, subscriber_guid: str,
-                                                       subscription_guid: str, body: dict = None):
+    async def _async_detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
         """ Detach a subscriber from a subscription Request body is optional. Async version.
 
         Parameters
@@ -5348,13 +5278,14 @@ class CollectionManager(Client):
         }
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
-               f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"/agreements/"
+            f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
-
 
     def detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict = None):
         """ Detach a subscriber from a subscription. Request body is optional.
@@ -5394,18 +5325,13 @@ class CollectionManager(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_subscriber(subscriber_guid, subscription_guid, body))
-
-
-
+        loop.run_until_complete(self._async_detach_subscriber(subscriber_guid, subscription_guid, body))
 
     #
     #
     #
 
-    async def _async_attach_collection(self, parent_guid: str,
-                                                     collection_guid: str, body: dict = None):
+    async def _async_attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
         """ Connect an existing collection to an element using the ResourceList relationship (0019).
             Async version.
 
@@ -5455,7 +5381,6 @@ class CollectionManager(Client):
         }
 
         """
-
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
                f"{parent_guid}/collections/{collection_guid}/attach")
@@ -5513,11 +5438,9 @@ class CollectionManager(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_attach_collection(parent_guid, collection_guid, body))
+        loop.run_until_complete(self._async_attach_collection(parent_guid, collection_guid, body))
 
-    async def _async_detach_collection(self, parent_guid: str,
-                                                       collection_guid: str, body: dict = None):
+    async def _async_detach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element, it is delete.
             Async version.
 
@@ -5601,8 +5524,7 @@ class CollectionManager(Client):
           }
           """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_collection(parent_guid, collection_guid, body))
+        loop.run_until_complete(self._async_detach_collection(parent_guid, collection_guid, body))
 
     async def _async_delete_collection(self, collection_guid: str, body: dict = None, cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
@@ -5698,7 +5620,6 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_collection(collection_guid, body, cascade))
-
 
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str, body: dict = None, ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
@@ -5948,7 +5869,7 @@ class CollectionManager(Client):
         loop.run_until_complete(
             self._async_update_collection_membership(collection_guid, element_guid, body, replace_all_props))
 
-    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str, body:dict = None) -> None:
+    async def _async_remove_from_collection(self, collection_guid: str, element_guid: str, body: dict = None) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -5993,7 +5914,6 @@ class CollectionManager(Client):
             body = {"class": "NullRequestBody"}
         await self._async_make_request("POST", url, body)
 
-
     def remove_from_collection(self, collection_guid: str, element_guid: str, body: dict = None) -> None:
         """Remove an element from a collection. Async version.
 
@@ -6034,7 +5954,6 @@ class CollectionManager(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid, body))
-
 
     #
     #
@@ -6151,8 +6070,9 @@ class CollectionManager(Client):
 
         return {
             'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name, 'description': description,
-            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names, 'properties': properties,
-            'additional_properties': additional_properties, 'extended_properties': extended_properties,
+            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names,
+            'properties': properties, 'additional_properties': additional_properties,
+            'extended_properties': extended_properties,
             }
 
     def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
@@ -6192,7 +6112,6 @@ class CollectionManager(Client):
                                    extract_properties_func=self._extract_collection_properties,
                                    columns=columns if output_format == 'LIST' else None)
 
-
     def generate_collection_output(self, elements, filter, classification_name, output_format) -> str | list:
         """
         Generate output for collections in the specified format.
@@ -6228,24 +6147,24 @@ class CollectionManager(Client):
             return self.generate_basic_structured_output(elements, filter, output_format)
 
     # def generate_collection_output(self, elements, filter, collection_type: str, output_format,
-    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified
-    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries
-    #  containing  # element data  #         filter: The search string used to find the elements  #
-    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #
+    #  # output_profile: str = "CORE") -> str | list | dict:  #     """  #     Generate output in the specified  #
+    #  format  # for the given elements.  #  #     Args:  #         elements: Dictionary or list of dictionaries  #
+    #  containing  # element data  #         filter: The search string used to find the elements  #  #
+    #  output_format: The  # desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, JSON)  #  #
     #  output_profile: str, optional,  # default = "CORE"  #             The desired output profile - BASIC, CORE,
-    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if
-    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =
+    #  FULL  #     Returns:  #  # Formatted output as string or list of dictionaries  #     """  #     if  #
+    #  collection_type is None:  #  # entity_type = "Collection"  #     else:  #         entity_type =  #
     #  collection_type  #  #     # For LIST and DICT  # formats, get member information  #  #     if output_format in
-    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if
+    #  ["LIST", "DICT"]:  #         # Get the collection  # GUID  #         collection_guid = None  #         if  #
     #  isinstance(elements, dict):  #             collection_guid  # = elements.get('elementHeader', {}).get('guid')
-    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[
-    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid
-    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =
+    #         elif isinstance(elements, list) and len(elements) >  # 0:  #             collection_guid = elements[  #
+    #         0].get('elementHeader', {}).get('guid')  #  #         # Get member  # list if we have a valid  #
+    #         collection GUID  #         members = []  #         if collection_guid:  #  # members =  #
     #         self.get_member_list(collection_guid=collection_guid)  #             if isinstance(members,
     # str):  # "No members found" case  #                 members = []  #  #         # For DICT format, include all
-    # member information in the result  #         if output_format == "DICT":  #             result =  #
-    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #
-    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #
+    # member information in the result  #         if output_format == "DICT":  #             result =  #  #
+    # self.generate_basic_structured_output(elements, filter, output_format, collection_type)  #             if  #  #
+    # isinstance(result, list):  #                 for item in result:  #                     item['members'] =  #  #
     # members  #                 return result  #             elif isinstance(result, dict):  #  # result['members']
     # = members  #                 return result  #  #         # For LIST format, add a column with  # bulleted list
     # of qualified names  #         elif output_format == "LIST":  #             # Define columns for  # LIST format,
@@ -6256,16 +6175,16 @@ class CollectionManager(Client):
     # 'key': 'classifications'},  #                 {'name': 'Members', 'key': 'members', 'format': True}]  #  #  #
     # Create a function to add member information to the properties  #             def get_additional_props(element,
     # guid, output_format):  #                 if not members:  #                     return {'members': ''}  #  #  #
-    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #
+    # Create a comma-separated list of qualified names (no newlines to avoid table formatting issues)  #  #  #
     # member_list = ", ".join([member.get('qualifiedName', '') for member in members])  #                 return {  #
-    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return
+    # 'members': member_list}  #  #             # Generate output with the additional properties  #  #  # return  #
     # generate_output(elements=elements, search_string=filter, entity_type=entity_type,
     #  # output_format=output_format, extract_properties_func=self._extract_collection_properties,
     #  # get_additional_props_func=get_additional_props, columns=columns)  #  #     # For FORM, REPORT, JSON formats,
     # keep behavior unchanged  #     return self.generate_basic_structured_output(elements, filter, output_format,
     # collection_type)
 
-    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #
+    # def generate_data_class_output(self, elements, filter, output_format) -> str | list:  #     return  #  #  #
     # self.generate_basic_structured_output(elements, filter, output_format)  #  # def generate_data_field_output(  #
     # self, elements, filter, output_format) -> str | list:  #     return self.generate_basic_structured_output(  #
     # elements, filter, output_format)

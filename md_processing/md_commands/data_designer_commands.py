@@ -2,7 +2,8 @@
 This file contains term-related object_action functions for processing Egeria Markdown
 """
 import json
-import sys, os
+import os
+import sys
 from typing import Optional
 
 from loguru import logger
@@ -16,8 +17,6 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
-
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -45,7 +44,7 @@ console = Console(width=int(200))
 
 log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
-logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
+logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
 # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
 #            colorize=True)
@@ -63,10 +62,8 @@ def add_member_to_data_collections(egeria_client: EgeriaTech, collection_list: l
     Add member to data dictionaries and data specifications.
     """
     body = {
-        "class": "RelationshipRequestBody",
-        "properties": {
-            "class": "CollectionMembershipProperties",
-            "membershipRationale": "User Specified",
+        "class": "RelationshipRequestBody", "properties": {
+            "class": "CollectionMembershipProperties", "membershipRationale": "User Specified",
             "notes": "Added by Dr.Egeria"
             }
         }
@@ -204,7 +201,6 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
             logger.warning("Unexpected -> the list was None - assigning empty list")
             rel_el_list = {}
 
-
         as_is_data_structs = set(rel_el_list.get("data_structure_guids", []))
         as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
         as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
@@ -273,10 +269,8 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         if len(terms_to_remove) > 0:
             for dc in classes_to_remove:
                 body = {
-                    "class": "MetadataSourceRequestBody",
-                    "forLineage": False,
-                    "forDuplicateProcessing": False
-                }
+                    "class": "MetadataSourceRequestBody", "forLineage": False, "forDuplicateProcessing": False
+                    }
                 egeria_client.detach_data_class_definition(guid, dc, body)
                 msg = f"Removed `{dc}` from `{display_name}`"
                 logger.trace(msg)
@@ -285,9 +279,7 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         if len(terms_to_add) > 0:
             for dc in classes_to_add:
                 body = {
-                    "class": "RelationshipRequestBody",
-                    "forLineage": False,
-                    "forDuplicateProcessing": False
+                    "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
                     }
                 egeria_client.link_data_class_definition(guid, dc, body)
                 msg = f"Added `{dc}` to`{display_name}`"
@@ -350,7 +342,6 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
         logger.trace(f"as_is_specialized_classes: {list(as_is_specialized_classes)} to_be_specizialized_data_classes: "
                      f"{list(to_be_specialized_classes)}")
 
-
         nested_classes_to_remove = to_be_nested_classes - as_is_nested_classes
         logger.trace(f"nested_classes_to_remove: {list(nested_classes_to_remove)}")
         if len(nested_classes_to_remove) > 0:
@@ -386,9 +377,7 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
         if len(terms_to_remove) > 0:
             for dc in specialized_classes_to_remove:
                 body = {
-                    "class": "MetadataSourceRequestBody",
-                    "forLineage": False,
-                    "forDuplicateProcessing": False
+                    "class": "MetadataSourceRequestBody", "forLineage": False, "forDuplicateProcessing": False
                     }
                 egeria_client.detach_specialist_data_class(guid, dc, body)
                 msg = f"Removed `{dc}` from `{display_name}`"
@@ -398,9 +387,7 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
         if len(specialized_classes_to_add) > 0:
             for dc in specialized_classes_to_add:
                 body = {
-                    "class": "RelationshipRequestBody",
-                    "forLineage": False,
-                    "forDuplicateProcessing": False
+                    "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
                     }
                 egeria_client.link_specialist_data_class(guid, dc, body)
                 msg = f"Added `{dc}` to`{display_name}`"
@@ -424,8 +411,6 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
                 egeria_client.link_specialist_data_class(guid, el)
             msg = f"Linked `{el}` to `{display_name}`"
             logger.trace(msg)
-
-
 
 
 @logger.catch
@@ -508,8 +493,8 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, replace_all_props,
-                                                additional_properties, extended_properties)
+                                                collection_ordering, order_property_name, additional_properties,
+                                                extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
@@ -530,10 +515,11 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     logger.error(msg)
                     return None
                 else:
-                    guid = egeria_client.create_data_spec_collection(display_name, description,
-                                                                     is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name,
-                                                                     parent_at_end1, collection_type,
-                                                                     anchor_scope_guid, collection_ordering,order_property_name,
+                    guid = egeria_client.create_data_spec_collection(display_name, description, qualified_name,
+                                                                     is_own_anchor, anchor_guid, parent_guid,
+                                                                     parent_relationship_type_name, parent_at_end1,
+                                                                     collection_type, anchor_scope_guid,
+                                                                     collection_ordering, order_property_name,
                                                                      additional_properties, extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
@@ -630,8 +616,8 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes."))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, replace_all_props,
-                                                additional_properties, extended_properties)
+                                                collection_ordering, order_property_name, additional_properties,
+                                                extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
@@ -644,8 +630,9 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                  f"`Create` to `Update` in processed output\n\n___")
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 else:
-                    guid = egeria_client.create_data_dictionary_collection(display_name,description, is_own_anchor, anchor_guid,
-                                                                           parent_guid, parent_relationship_type_name,
+                    guid = egeria_client.create_data_dictionary_collection(display_name, description, qualified_name,
+                                                                           is_own_anchor, anchor_guid, parent_guid,
+                                                                           parent_relationship_type_name,
                                                                            parent_at_end1, collection_type,
                                                                            anchor_scope_guid, collection_ordering,
                                                                            order_property_name, additional_properties,
@@ -1054,8 +1041,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 else:
                     # First lets create the data field
                     body = {
-                        "class": "NewElementRequestBody",
-                        "properties": {
+                        "class": "NewElementRequestBody", "properties": {
                             "class": "DataFieldProperties", "qualifiedName": qualified_name,
                             "displayName": display_name, "namespace": namespace, "description": description,
                             "versionIdentifier": version_id, "aliases": aliases, "namePatterns": name_patterns,
@@ -1122,13 +1108,10 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         # Link data class
                         if data_class:
                             body = {
-                              "class": "RelationshipRequestBody",
-                              "externalSourceGUID": external_source_guid,
-                              "externalSourceName": external_source_name,
-                              "effectiveTime": effective_time,
-                              "forLineage": for_lineage,
-                              "forDuplicateProcessing": for_duplicate_processing
-                            }
+                                "class": "RelationshipRequestBody", "externalSourceGUID": external_source_guid,
+                                "externalSourceName": external_source_name, "effectiveTime": effective_time,
+                                "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing
+                                }
                             egeria_client.link_data_class_definition(guid, data_class_guid, body)
                             msg = f"Adding data class `{data_class}` to data field {display_name}"
                             logger.info(msg)
@@ -1252,7 +1235,6 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
         glossary_term_guid = attributes.get('Glossary Term', {}).get('guid', None)
 
-
         in_data_dictionary = attributes.get('In Data Dictionary', {}).get('value', None)
         in_data_dictionary_names = attributes.get('In Data Dictionary', {}).get('name_list', None)
         data_dict_guid_list = attributes.get("In Data Dictionary", {}).get("guid_list", None)
@@ -1321,8 +1303,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                 # Sync data field related elements (data structure, parent data fields, terms, data classes
                 sync_data_class_rel_elements(egeria_client, containing_data_class_guids, glossary_term_guid,
-                                             specializes_data_class_guid, guid, display_name,
-                                             replace_all_props)
+                                             specializes_data_class_guid, guid, display_name, replace_all_props)
 
                 core_props += f"\n\n## Glossary Term \n\n{glossary_term}\n\n"
                 core_props += f"\n\n## Containing Data Class\n\n{containing_data_class_names}\n\n"
@@ -1341,8 +1322,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 else:
                     # First lets create the data class
                     body = {
-                        "class": "NewElementRequestBody",
-                        "properties": {
+                        "class": "NewElementRequestBody", "properties": {
                             "class": "DataClassProperties", "qualifiedName": qualified_name,
                             "displayName": display_name, "description": description, "namespace": namespace,
                             "matchPropertyNames": match_property_names, "matchThreshold": match_threshold,
@@ -1405,7 +1385,8 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
 
 @logger.catch
-def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[
+    str]:
     """
     Processes a Data Dictionary list object_action by extracting key attributes such as
      search string from the given text.
@@ -1474,7 +1455,9 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
     else:
         return None
 
-def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+
+def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[
+    str]:
     """
     Processes a Data Dictionary list object_action by extracting key attributes such as
      search string from the given text.
@@ -1534,6 +1517,7 @@ def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, dir
     else:
         return None
 
+
 def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a Data Dictionary list object_action by extracting key attributes such as
@@ -1587,18 +1571,12 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
 
             list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
             body = {
-                "class": "FilterRequestBody",
-                "asOfTime": as_of_time,
-                "effectiveTime": effective_time,
-                "forLineage": False,
-                "forDuplicateProcessing" : False,
-                "limitResultsByStatus": ["ACTIVE"],
-                "sequencingOrder": sort_order,
-                "sequencingProperty": order_property,
-                "filter": search_string,
+                "class": "FilterRequestBody", "asOfTime": as_of_time, "effectiveTime": effective_time,
+                "forLineage": False, "forDuplicateProcessing": False, "limitResultsByStatus": ["ACTIVE"],
+                "sequencingOrder": sort_order, "sequencingProperty": order_property, "filter": search_string,
                 }
-            struct = egeria_client.find_data_fields_w_body(body, start_from, page_size, starts_with,
-                                                           ends_with, ignore_case,output_format)
+            struct = egeria_client.find_data_fields_w_body(body, start_from, page_size, starts_with, ends_with,
+                                                           ignore_case, output_format)
 
             if output_format == "DICT":
                 list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
@@ -1614,6 +1592,7 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
             return None
     else:
         return None
+
 
 def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
@@ -1674,5 +1653,3 @@ def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directi
             return None
     else:
         return None
-
-
