@@ -1,9 +1,12 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
-import os, sys
+import os
+import sys
 from datetime import datetime
+
 from loguru import logger
+
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
 logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
@@ -20,8 +23,8 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_category_list_command, process_glossary_list_command, process_term_history_command,
                            process_glossary_structure_command, process_term_revision_history_command,
                            process_create_term_term_relationship_command, process_term_details_command,
-                           process_information_supply_chain_upsert_command, process_information_supply_chain_segment_upsert_command,
-                           process_information_supply_chain_link_unlink_command,process_sol_arch_list_command)
+                           process_information_supply_chain_upsert_command,
+                           process_information_supply_chain_link_unlink_command, process_sol_arch_list_command)
 from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_collection_list_command,
@@ -64,7 +67,8 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @logger.catch
-def process_markdown_file(input_file: str, directive: str, server: str, url: str, userid: str, user_pass: str, ) -> None:
+def process_markdown_file(input_file: str, directive: str, server: str, url: str, userid: str,
+                          user_pass: str, ) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
@@ -135,20 +139,21 @@ def process_markdown_file(input_file: str, directive: str, server: str, url: str
                                        "Update Solution Blueprint"]:
                 result = process_blueprint_upsert_command(client, current_block, directive)
             elif potential_command in ["View Solution Blueprints", "View Blueprint", "View Solution Blueprint"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Blueprints",directive)
+                result = process_sol_arch_list_command(client, current_block, "Solution Blueprints", directive)
             elif potential_command in ["View Solution Component", "View Solution Components"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Components",directive)
+                result = process_sol_arch_list_command(client, current_block, "Solution Components", directive)
             elif potential_command in ["View Solution Roles", "View Solution Role"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Roles",directive)
+                result = process_sol_arch_list_command(client, current_block, "Solution Roles", directive)
             elif potential_command in ["View Information Supply Chain", "View Information Supply Chains"]:
-                result = process_sol_arch_list_command(client, current_block, "Information Supply Chains",directive)
+                result = process_sol_arch_list_command(client, current_block, "Information Supply Chains", directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Information Supply Chain", "Update Information Supply Chain"]:
                 result = process_information_supply_chain_upsert_command(client, current_block, directive)
-            elif potential_command in ["Create Information Supply Chain Segment", "Update Information Supply Chain Segment"]:
-                result = process_information_supply_chain_segment_upsert_command(client, current_block, directive)
-            elif potential_command in ["Link Segments", "Detach Segments"]:
+
+            elif potential_command in ["Link Information Supply Chain Peers", "Link Information Supply Chains",
+                                       "Link Supply Chains", "Unlink Information Supply Chain Peers",
+                                       "Unlink Information Supply Chains", "Unlink Supply Chains"]:
                 result = process_information_supply_chain_link_unlink_command(client, current_block, directive)
 
             elif potential_command in ["Create Data Spec", "Create Data Specification", "Update Data Spec",
@@ -163,7 +168,8 @@ def process_markdown_file(input_file: str, directive: str, server: str, url: str
                 result = process_data_structure_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Data Class", "Update Data Class"]:
                 result = process_data_class_upsert_command(client, current_block, directive)
-            elif potential_command in ["View Data Dictionaries", "View Data Dictionary", "View Data Specifications", "View Data Specs"]:
+            elif potential_command in ["View Data Dictionaries", "View Data Dictionary", "View Data Specifications",
+                                       "View Data Specs"]:
                 result = process_data_collection_list_command(client, current_block, directive)
             elif potential_command in ["View Data Structures", "View Data Structure"]:
                 result = process_data_structure_list_command(client, current_block, directive)

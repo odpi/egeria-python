@@ -55,7 +55,8 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains", "View Supply Chain",
                 "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
                 "Create Information Supply Chain", "Update Information Supply Chain",
-                "Create Information Supply Chain Segment", "Update Information Supply Chain Segment", "Link Segments", "Detach Segments",
+                "Link Information Supply Chain Peers", "Link Supply Chains", "Link Information Supply Chains",
+                "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains"
                 "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
                 "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",

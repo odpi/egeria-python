@@ -87,10 +87,17 @@ def display_collections(
             action = "Report"
         elif output_format == "DICT":
             action = "Dict"
+        elif output_format == "HTML":
+            action = "html"
+        elif output_format == "LIST":
+            action = "List"
 
         if output_format != "TABLE":
             file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
-            file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
+            if output_format == "HTML":
+                file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.html"
+            else:
+                file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
             output = m_client.find_collections(
@@ -200,7 +207,7 @@ def main():
         search_string = Prompt.ask(
             "Enter the collection you are searching for or '*' for all:", default="*"
         ).strip()
-        output_format = Prompt.ask("What output format do you want?", choices=["DICT", "TABLE", "FORM", "REPORT"], default="TABLE")
+        output_format = Prompt.ask("What output format do you want?", choices=["DICT", "TABLE", "FORM", "REPORT", "HTML", "LIST"], default="TABLE")
 
         display_collections(search_string, server, url, userid, user_pass, output_format = output_format)
 

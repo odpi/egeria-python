@@ -1,7 +1,7 @@
 {
   "Command Specifications": {
-    "exported": "Jun 24, 2025 at 4:35:31 PM",
-    "Data Dictionary": {
+    "exported": "Jul 7, 2025 at 9:45:58 AM",
+    "Create Data Dictionary": {
       "display_name": "Data Dictionary",
       "qn_prefix": "DataDict",
       "alternate_names": "Data Dict",
@@ -515,62 +515,10 @@
             "level": "Invisible",
             "Journal Entry": ""
           }
-        },
-        {
-          "Collection Ordering": {
-            "variable_name": "collection_ordering",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Property to order a collection.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": "If collection order  is “other” then specify property with orderByPropertyName.\n"
-          }
-        },
-        {
-          "Order Property Name": {
-            "variable_name": "order_property_name",
-            "inUpdate": false,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Property name to use for ordering if the order property is Other.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
         }
       ]
     },
-    "Data Specification": {
+    "Create Data Specification": {
       "display_name": "Data Specification",
       "qn_prefix": "DataSpec",
       "alternate_names": "Data Spec",
@@ -1084,62 +1032,10 @@
             "level": "Invisible",
             "Journal Entry": ""
           }
-        },
-        {
-          "Collection Ordering": {
-            "variable_name": "collection_ordering",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Property to order a collection.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": "If collection order  is “other” then specify property with orderByPropertyName.\n"
-          }
-        },
-        {
-          "Order Property Name": {
-            "variable_name": "order_property_name",
-            "inUpdate": false,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Property name to use for ordering if the order property is Other.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
         }
       ]
     },
-    "Data Structure": {
+    "Create Data Structure": {
       "display_name": "Data Structure",
       "qn_prefix": "DataStruct",
       "alternate_names": "",
@@ -1500,7 +1396,7 @@
         }
       ]
     },
-    "Data Field": {
+    "Create Data Field": {
       "display_name": "Data Field",
       "qn_prefix": "DataField",
       "alternate_names": "",
@@ -2355,7 +2251,7 @@
         }
       ]
     },
-    "Data Class": {
+    "Create Data Class": {
       "display_name": "Data Class",
       "qn_prefix": "DataClass",
       "alternate_names": "",
@@ -3210,7 +3106,7 @@
         }
       ]
     },
-    "Data Fields": {
+    "View Data Fields": {
       "display_name": "View Data Fields",
       "qn_prefix": "",
       "alternate_names": "View Data Fields; List Data Fields",
@@ -3571,7 +3467,7 @@
         }
       ]
     },
-    "Data Classes": {
+    "View Data Classes": {
       "display_name": "View Data Fields",
       "qn_prefix": "",
       "alternate_names": "View Data Fields. List Data Class; View Data Class; List Data Class",
@@ -3932,7 +3828,7 @@
         }
       ]
     },
-    "Data Structures": {
+    "View Data Structures": {
       "display_name": "View Data Structures",
       "qn_prefix": "",
       "alternate_names": "View Data Structures; List Data Structures",
@@ -4293,7 +4189,7 @@
         }
       ]
     },
-    "Data Specifications": {
+    "View Data Specifications": {
       "display_name": "View Data Specifications",
       "qn_prefix": "",
       "alternate_names": "View Data Specifications; List Data Specifications; List Data Specs; View Data Specs",
@@ -4654,7 +4550,7 @@
         }
       ]
     },
-    "Detailed Data Field": {
+    "View Detailed Data Field": {
       "display_name": "View Detailed Data Field",
       "qn_prefix": "",
       "alternate_names": "View Detailed Data Field; List Detailed Data Field",
@@ -5015,7 +4911,7 @@
         }
       ]
     },
-    "Detailed data Structures": {
+    "View Detailed data Structures": {
       "display_name": "View Detailed Data Structures",
       "qn_prefix": "",
       "alternate_names": "View Detailed Data Structures; List Detailed Data Structures",
@@ -5376,7 +5272,7 @@
         }
       ]
     },
-    "Data Dictionaries": {
+    "View Data Dictionaries": {
       "display_name": "View Data Dictionaries",
       "qn_prefix": "",
       "alternate_names": "View Data Dictionaries; List Dictionary; List Dictionaries; View Data Dictionary",
@@ -5737,7 +5633,7 @@
         }
       ]
     },
-    "Information Supply Chain": {
+    "Create Information Supply Chain": {
       "display_name": "Information Supply Chain",
       "qn_prefix": "SupplyChain",
       "alternate_names": "Supply Chain",
@@ -5863,22 +5759,22 @@
           }
         },
         {
-          "Information Supply Chain Segments": {
-            "variable_name": "supply_chain_segments",
+          "Nested Information Supply Chains": {
+            "variable_name": "nested_info_supply_chains",
             "inUpdate": true,
-            "attr_labels": "Supply Chain Segments; Segments",
+            "attr_labels": "Nested Supply Chains",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "InformationSupplyChain",
-            "description": "A list of supply chain segments that make up the supply chain.",
+            "description": "A list of supply chains that compose this supply chain.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Reference Name List",
             "user_specified": true,
             "unique": false,
             "input_required": false,
-            "position": 2,
+            "position": 0,
             "ReferenceURL": "",
             "isParent": false,
             "isAnchor": false,
@@ -5889,431 +5785,18 @@
           }
         },
         {
-          "Qualified Name": {
-            "variable_name": "qualified_name",
+          "In Information Supply Chain": {
+            "variable_name": "in_supply_chain",
             "inUpdate": true,
-            "attr_labels": "",
-            "examples": "DataStructure::a data field",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
-            "qualified_name_pattern": "local_qualifier::namespace::DataStructure:display_name::version_id",
-            "generated": true,
-            "style": "QN",
-            "user_specified": true,
-            "unique": true,
-            "input_required": false,
-            "position": 2,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "GUID": {
-            "variable_name": "guid",
-            "inUpdate": true,
-            "attr_labels": "Guid; guid",
-            "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A system generated unique identifier.",
-            "qualified_name_pattern": "",
-            "generated": true,
-            "style": "GUID",
-            "user_specified": false,
-            "unique": true,
-            "input_required": false,
-            "position": 13,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Effective Time": {
-            "variable_name": "effective_time",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Effective From": {
-            "variable_name": "effective_from",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Effective To": {
-            "variable_name": "effective_to",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Merge Update": {
-            "variable_name": "merge_update",
-            "inUpdate": true,
-            "attr_labels": "Merge",
-            "examples": "",
-            "default_value": "True",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "If true, only those attributes specified in the update will be updated; If false, any attributes not provided during the update will be set to None.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Bool",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Additional Properties": {
-            "variable_name": "additional_properties",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Additional user defined values organized as name value pairs in a dictionary.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Dictionary",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 17,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": -1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Extended Properties": {
-            "variable_name": "additional_properties",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Additional user defined values organized as name value pairs in a dictionary.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Dictionary",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 17,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": -1,
-            "level": "Invisible",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Glossary Term": {
-            "variable_name": "glossary_term",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "Term::Zip Code",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "GlossaryTerm",
-            "description": "Term that provides meaning to this field.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Reference Name",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 8,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Journal Entry": {
-            "variable_name": "journal_entry",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Invisible",
-            "Journal Entry": ""
-          }
-        }
-      ]
-    },
-    "Information Supply Chain Segment": {
-      "display_name": "Information Suppy Chain Segment",
-      "qn_prefix": "SupplyChainSegment",
-      "alternate_names": "",
-      "description": "A collection of data fields that for a data specification for a data source.",
-      "verb": "Create",
-      "upsert": true,
-      "attach": false,
-      "details": false,
-      "form": false,
-      "ReferenceURL": "",
-      "isOwnAnchor": true,
-      "parent_relationship_type_name": "",
-      "parent_at_end1": true,
-      "style": "",
-      "anchor_scope_id": "",
-      "parent_id": "",
-      "level": "Basic",
-      "view": false,
-      "Journal Entry": "",
-      "Attributes": [
-        {
-          "Display Name": {
-            "variable_name": "display_name",
-            "inUpdate": true,
-            "attr_labels": "Name; Display Name; Supply Chain Segment; Segment Name",
-            "examples": "Clinical Trial Subject Onboarding",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Name of the Information Supply Chain",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "ID",
-            "user_specified": true,
-            "unique": false,
-            "input_required": true,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Description": {
-            "variable_name": "description",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A description of the data structure.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 1,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Scope": {
-            "variable_name": "scope",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "Within Project",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Scope of the supply chain.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Integration Style": {
-            "variable_name": "integration_style",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Style of integration connecting this segment.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Estimated Volumetrics": {
-            "variable_name": "estimated_volumetrics",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Estimated volumetrics for rough analysis and planning.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Dictionary",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 2,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": -1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Information Supply Chain": {
-            "variable_name": "information_supply_chain",
-            "inUpdate": true,
-            "attr_labels": "Owning Supply Chain; Info Supply Chain; Parent Information Supply Chain",
+            "attr_labels": "In Supply Chain; In Supply Chains; In Information Supply Chains",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "InformationSupplyChain",
-            "description": "The owning information supply chain for this segment.",
+            "description": "Supply chains that this supply chain is in.",
             "qualified_name_pattern": "",
             "generated": false,
-            "style": "Reference Name",
+            "style": "Reference Name List",
             "user_specified": true,
             "unique": false,
             "input_required": false,
@@ -6479,7 +5962,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Advanced",
+            "level": "Basic",
             "Journal Entry": ""
           }
         },
@@ -6589,7 +6072,7 @@
         }
       ]
     },
-    "Solution Blueprint": {
+    "Create Solution Blueprint": {
       "display_name": "Solution Blueprint",
       "qn_prefix": "SolutionBlueprint",
       "alternate_names": "",
@@ -6976,7 +6459,7 @@
         }
       ]
     },
-    "Solution Component": {
+    "Create Solution Component": {
       "display_name": "Solution Component",
       "qn_prefix": "SolutionComponent",
       "alternate_names": "",
@@ -7467,7 +6950,7 @@
         }
       ]
     },
-    "Solution Role": {
+    "Create Solution Role": {
       "display_name": "Solution Role",
       "qn_prefix": "SolutionRole",
       "alternate_names": "",
@@ -7932,12 +7415,12 @@
         }
       ]
     },
-    "Information Supply Chain Segments": {
+    "Link Information Supply Chain Peers": {
       "display_name": "Segments",
       "qn_prefix": "",
-      "alternate_names": "Segments",
-      "description": "",
-      "verb": "Attach",
+      "alternate_names": "Information Supply Chain Segments; Supply Chain Segments; Supply Chain Peers",
+      "description": "This command can be used to link or unlink information supply chain segments.",
+      "verb": "Link",
       "upsert": false,
       "attach": true,
       "details": false,
@@ -7951,7 +7434,7 @@
       "parent_id": "",
       "level": "Basic",
       "view": false,
-      "Journal Entry": "This command can be used to link or detach information supply chain segments.",
+      "Journal Entry": "",
       "Attributes": [
         {
           "Segment1": {
@@ -8241,10 +7724,10 @@
         }
       ]
     },
-    "Information Supply Chains": {
-      "display_name": "View Information Supply Chains",
+    "View Information Supply Chains": {
+      "display_name": "Information Supply Chains",
       "qn_prefix": "",
-      "alternate_names": "List Detailed Data Structures",
+      "alternate_names": "Supply Chains",
       "description": "Return information supply chains filtered by the search string.",
       "verb": "View",
       "upsert": false,
@@ -8293,9 +7776,9 @@
             "variable_name": "",
             "inUpdate": true,
             "attr_labels": "Format",
-            "examples": "List, Form, Report",
+            "examples": "LIST; FORM; MD; REPORT; MERMAID; LIST; DICT; HTML",
             "default_value": "List",
-            "valid_values": "List; Form; Report; Dict",
+            "valid_values": "LIST; FORM; MD; REPORT; MERMAID; LIST; DICT; HTML",
             "existing_element": "",
             "description": "Optional specification of output format for the query.",
             "qualified_name_pattern": "",
@@ -8368,134 +7851,7 @@
         }
       ]
     },
-    "Supply Chain Segments": {
-      "display_name": "View Supply Chain Segments",
-      "qn_prefix": "",
-      "alternate_names": "View Supply Chain Segments; List Detailed Data Structures",
-      "description": "Return the data structure details, optionally filtered by the search string.",
-      "verb": "View",
-      "upsert": false,
-      "attach": false,
-      "details": false,
-      "form": false,
-      "ReferenceURL": "",
-      "isOwnAnchor": true,
-      "parent_relationship_type_name": "",
-      "parent_at_end1": true,
-      "style": "display",
-      "anchor_scope_id": "",
-      "parent_id": "",
-      "level": "Basic",
-      "view": true,
-      "Journal Entry": "",
-      "Attributes": [
-        {
-          "Search String": {
-            "variable_name": "",
-            "inUpdate": true,
-            "attr_labels": "Filter",
-            "examples": "",
-            "default_value": "*",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "An optional search string to filter results by.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Output Format": {
-            "variable_name": "",
-            "inUpdate": true,
-            "attr_labels": "Format",
-            "examples": "List, Form, Report",
-            "default_value": "List",
-            "valid_values": "List; Form; Report; Dict",
-            "existing_element": "",
-            "description": "Optional specification of output format for the query.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Valid Value",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Detailed": {
-            "variable_name": "detailed",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "True; False",
-            "default_value": "True",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "If true a more detailed set of attributes will be returned.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Bool",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Effective Time": {
-            "variable_name": "effective_time",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 0,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        }
-      ]
-    },
-    "Solution Components": {
+    "View Solution Components": {
       "display_name": "View Solution Components",
       "qn_prefix": "",
       "alternate_names": "View Solution Components; View Components",
@@ -8622,7 +7978,7 @@
         }
       ]
     },
-    "Solution Blueprints": {
+    "View Solution Blueprints": {
       "display_name": "View Solution Blueprints",
       "qn_prefix": "",
       "alternate_names": "View Solution Blueprints; View Blueprints; List Solution Blueprints",
@@ -8749,7 +8105,7 @@
         }
       ]
     },
-    "Solution Roles": {
+    "View Solution Roles": {
       "display_name": "View Solution Roles",
       "qn_prefix": "",
       "alternate_names": "View Solution Roles; List Detailed Data Structures",
@@ -8876,7 +8232,7 @@
         }
       ]
     },
-    "Glossary": {
+    "Create Glossary": {
       "display_name": "Glossary",
       "qn_prefix": "",
       "alternate_names": "",
@@ -9055,7 +8411,7 @@
         }
       ]
     },
-    "Category": {
+    "Create Category": {
       "display_name": "Category",
       "qn_prefix": "",
       "alternate_names": "",
@@ -9208,12 +8564,12 @@
         }
       ]
     },
-    "Term": {
+    "Create Term": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": "",
       "description": "",
-      "verb": "",
+      "verb": "Create",
       "upsert": false,
       "attach": false,
       "details": false,
@@ -9491,7 +8847,7 @@
         }
       ]
     },
-    "Category Parent": {
+    "Attach Category Parent": {
       "display_name": "",
       "qn_prefix": "",
       "alternate_names": "",
@@ -9566,7 +8922,7 @@
         }
       ]
     },
-    "Term-Term Relationship": {
+    "Attach Term-Term Relationship": {
       "display_name": "Term-Term Relationship",
       "qn_prefix": "",
       "alternate_names": "",
@@ -9615,6 +8971,27 @@
         },
         {
           "Term  2": {
+            "variable_name": "term_2",
+            "inUpdate": true,
+            "attr_labels": "Term Name 2",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The name of the second term term to connect.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "ID",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
             "Journal Entry": ""
           }
         },

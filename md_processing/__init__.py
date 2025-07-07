@@ -5,7 +5,7 @@ This package contains functions to parse and process Egeria Markdown (Freddie)
 from md_processing.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
                                                                    process_solution_component_upsert_command,
                                                                    process_information_supply_chain_upsert_command,
-                                                                   process_information_supply_chain_segment_upsert_command,
+
                                                                    process_information_supply_chain_link_unlink_command,
                                                                    process_sol_arch_list_command)
 

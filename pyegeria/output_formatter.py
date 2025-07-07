@@ -133,10 +133,13 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
     if output_type in ["FORM", "MD"]:
         if attribute_name.lower() == "mermaid":
             return "\n"
+        elif attribute_name.lower() == "links":
+            return "\n"
+
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type == "REPORT":
         if attribute_title in ['Mermaid Graph', 'Mermaid']:
-            output = f"## Mermaid Graph\n```mermaid\n{attribute_value}\n```\n"
+            output = f"## Mermaid Graph\n\n```mermaid\n{attribute_value}\n```\n"
         elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output
@@ -155,6 +158,8 @@ def format_for_markdown_table(text: str, guid: str = None) -> str:
     if not text:
         return ""
     # Replace newlines with spaces and escape pipe characters
+    if isinstance(text, list):
+        text = "\n".join(text)
     t = text.replace("\n", " ").replace("|", "\\|")
     if '::' in t and guid:
         t = f" [{t}](#{guid}) "

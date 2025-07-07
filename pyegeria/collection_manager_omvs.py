@@ -404,7 +404,8 @@ class CollectionManager(Client):
         return resp
 
     def find_collections(self, search_string: str = '*', classification_name: str = None, starts_with: bool = True,
-                         output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
+                         ends_with: bool = False, ignore_case: bool = False,
+                        start_from: int = 0, page_size: int = 0, output_format: str = 'JSON', output_profile: str = "CORE") -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
             body allows complete control including status, asOfTime and effectiveTime.
@@ -2952,7 +2953,10 @@ class CollectionManager(Client):
     #   Digital Products
     #
     async def _async_create_digital_product(self, body: dict) -> str:
-        """Create a new collection that represents a digital product. Async version.
+        """ Create a new collection that represents a digital product. To set a lifecycle status
+            use a NewDigitalProductRequestBody which has a default status of DRAFT. Using a
+            NewElementRequestBody sets the status to ACTIVE.
+            Async version.
 
         Parameters
         ----------
@@ -2978,6 +2982,8 @@ class CollectionManager(Client):
         be valid dates if specified, otherwise you will get a 400 error response.
 
         JSON Structure looks like:
+
+        Without lifecycle status:
         {
           "class" : "NewElementRequestBody",
           "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
@@ -3060,64 +3066,111 @@ class CollectionManager(Client):
         return resp.json().get("guid", "No GUID returned")
 
     def create_digital_product(self, body: dict) -> str:
-        """Create a new collection that represents a digital product. Async version.
+        """ Create a new collection that represents a digital product. To set a lifecycle status
+               use a NewDigitalProductRequestBody which has a default status of DRAFT. Using a
+               NewElementRequestBody sets the status to ACTIVE.
 
-        Parameters
-        ----------
-        body: dict
-            A dict representing the details of the collection to create.
+           Parameters
+           ----------
+           body: dict
+               A dict representing the details of the collection to create.
 
-        Returns
-        -------
-        str - the guid of the created collection
+           Returns
+           -------
+           str - the guid of the created collection
 
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+           Raises
+           ------
+           InvalidParameterException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+           PropertyServerException
+             Raised by the server when an issue arises in processing a valid request
+           NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
-        Notes
-        -----
-        JSON Structure looks like:
-        {
-          "class" : "NewElementRequestBody",
-          "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
-          "isOwnAnchor" : false,
-          "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
-          "parentRelationshipTypeName" : "open metadata type name",
-          "parentAtEnd1": true,
-          "properties": {
-            "class" : "CollectionProperties",
-            "qualifiedName": "Must provide a unique name here",
-            "name" : "Add display name here",
-            "description" : "Add description of the collection here",
-            "collectionType": "Add appropriate valid value for type",
-            "collectionOrder" : "OTHER",
-            "orderByPropertyName" : "Add property name if 'collectionOrder' is OTHER"
-          },
-          "digitalProductProperties" : {
-            "class" : "DigitalProductProperties",
-            "productStatus" : "ACTIVE",
-            "productName" : "Add name here",
-            "productType" : "Add valid value here",
-            "description" : "Add description here",
-            "introductionDate" : "date",
-            "maturity" : "Add valid value here",
-            "serviceLife" : "Add the estimated lifetime of the product",
-            "currentVersion": "V1.0",
-            "nextVersion": "V1.1",
-            "withdrawDate": "date",
-            "additionalProperties": {
-              "property1Name" : "property1Value",
-              "property2Name" : "property2Value"
-            }
-          }
-        }
-        """
+           Notes
+           -----
+           Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+           be valid dates if specified, otherwise you will get a 400 error response.
+
+           JSON Structure looks like:
+
+           Without lifecycle status:
+           {
+             "class" : "NewElementRequestBody",
+             "anchorGUID" : "anchor GUID, if set then isOwnAnchor=false",
+             "isOwnAnchor" : false,
+             "parentGUID" : "parent GUID, if set, set all parameters beginning 'parent'",
+             "parentRelationshipTypeName" : "open metadata type name",
+             "parentAtEnd1": true,
+             "properties": {
+               "class" : "CollectionProperties",
+               "qualifiedName": "Must provide a unique name here",
+               "name" : "Add display name here",
+               "description" : "Add description of the collection here",
+               "collectionType": "Add appropriate valid value for type",
+               "collectionOrder" : "OTHER",
+               "orderByPropertyName" : "Add property name if 'collectionOrder' is OTHER"
+             },
+             "digitalProductProperties" : {
+               "class" : "DigitalProductProperties",
+               "productStatus" : "ACTIVE",
+               "productName" : "Add name here",
+               "productType" : "Add valid value here",
+               "description" : "Add description here",
+               "introductionDate" : "date",
+               "maturity" : "Add valid value here",
+               "serviceLife" : "Add the estimated lifetime of the product",
+               "currentVersion": "V1.0",
+               "nextVersion": "V1.1",
+               "withdrawDate": "date",
+               "additionalProperties": {
+                 "property1Name" : "property1Value",
+                 "property2Name" : "property2Value"
+               }
+             }
+           }
+
+           With a lifecycle, the body is:
+           {
+             "class" : "NewDigitalProductRequestBody",
+             "isOwnAnchor" : true,
+             "anchorScopeGUID" : "optional GUID of search scope",
+             "parentGUID" : "xxx",
+             "parentRelationshipTypeName" : "CollectionMembership",
+             "parentAtEnd1": true,
+             "properties": {
+               "class" : "DigitalProductProperties",
+               "qualifiedName": "DigitalProduct:Add product name here",
+               "userDefinedStatus" : "Optional value here - used when initial status is OTHER",
+               "name" : "Product display name",
+               "description" : "Add description of product and its expected usage here",
+               "identifier" : "Add product identifier here",
+               "productName" : "Add product name here",
+               "productType" : "Periodic Delta",
+               "maturity" : "Add valid value here",
+               "serviceLife" : "Add the estimated lifetime of the product",
+               "introductionDate" : "date",
+               "nextVersionDate": "date",
+               "withdrawDate": "date",
+               "currentVersion": "V0.1",
+               "additionalProperties": {
+                 "property1Name" : "property1Value",
+                 "property2Name" : "property2Value"
+               }
+             },
+             "initialStatus" : "DRAFT",
+             "externalSourceGUID": "add guid here",
+             "externalSourceName": "add qualified name here",
+             "effectiveTime" : "{{$isoTimestamp}}",
+             "forLineage" : false,
+             "forDuplicateProcessing" : false
+           }
+
+           The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+           UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+           OTHER.  If using OTHER, set the userDefinedStatus with the status value you want.
+           """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_create_digital_product(body))
         return resp

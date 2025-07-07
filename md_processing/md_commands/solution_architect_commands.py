@@ -27,6 +27,47 @@ logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 logger.add("solution_architect_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE",
            format=log_format, colorize=True)
 
+@logger.catch
+def sync_chain_related_elements(egeria_client: EgeriaTech, guid:str, in_supply_chain_guids:list, display_name:str,
+                               replace_all_props:bool):
+    if replace_all_props:
+        rel_el_list = egeria_client._get_supply_chain_rel_elements(guid)
+        if rel_el_list is None:
+            logger.warning("Unexpected -> the list was None - assigning empty list")
+            rel_el_list = {}
+
+        as_is_parent_guids = set(rel_el_list.get("parent_guids", []))
+
+        to_be_parent_guids = set(in_supply_chain_guids) if in_supply_chain_guids is not None else set()
+
+        logger.trace(
+            f"as_is_parent supply chains: {list(as_is_parent_guids)} to_be_parent supply chains: {list(to_be_parent_guids)}")
+
+
+        parent_guids_to_remove =  as_is_parent_guids - to_be_parent_guids
+        logger.trace(f"parent_guids_to_remove: {list(parent_guids_to_remove)}")
+        if len(parent_guids_to_remove) > 0:
+            for parent_guid in parent_guids_to_remove:
+                egeria_client.decompose_info_supply_chains(parent_guid, guid,  None)
+                msg = f"Removed `{display_name}` from supply chain parent `{parent_guid}`"
+                logger.trace(msg)
+
+        parent_guids_to_add = to_be_parent_guids - as_is_parent_guids
+        logger.trace(f"parent supply chains_to_add: {list(parent_guids_to_add)}")
+        if len(parent_guids_to_add) > 0:
+            for parent_guid in parent_guids_to_add:
+                egeria_client.compose_info_supply_chains(parent_guid, guid, None)
+                msg = f"Added `{display_name}` to supply chain parent `{parent_guid}`"
+                logger.trace(msg)
+
+    else:  # merge - add supply chain to parents
+        if in_supply_chain_guids:
+            for parent_guid in in_supply_chain_guids:
+                egeria_client.compose_info_supply_chains(parent_guid, guid, None)
+                msg = f"Added `{display_name}` to supply chain `{parent_guid}`"
+                logger.trace(msg)
+
+
 
 @logger.catch
 def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str, sub_component_guids: list,
@@ -537,7 +578,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
     if parent_guid is None:
         is_own_anchor = True
-
+    nested_supply_chain_guids = attributes.get('Nested Supply Chain', {}).get('guids', None)
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
     additional_properties = json.loads(additional_prop) if additional_prop is not None else None
     extended_prop = attributes.get('Extended Properties', {}).get('value', None)
@@ -545,7 +586,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
 
     scope = attributes.get('Scope', {}).get('value', None)
     purposes = attributes.get('Purposes', {}).get('value', None)
-    segment_guids = attributes.get('Information Supply Chain Segments', {}).get('guid_list', None)
+    in_supply_chain_guids = attributes.get('In Information Supply Chain', {}).get('guid_list', None)
 
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
@@ -574,7 +615,8 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                     body = body_slimmer({
-                        "class": "UpdateInformationSupplyChainRequestBody", "externalSourceGUID": external_source_guid,
+                        "class": "UpdateElementRequestBody",
+                        "externalSourceGUID": external_source_guid,
                         "externalSourceName": external_source_name, "effectiveTime": effective_time,
                         "forLineage": False, "forDuplicateProcessing": False, "properties": {
                             "class": "InformationSupplyChainProperties", "effectiveFrom": effective_from,
@@ -586,12 +628,13 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                         })
 
                 egeria_client.update_info_supply_chain(guid, body, replace_all_props)
+
+                sync_chain_related_elements(egeria_client, guid, in_supply_chain_guids, display_name, replace_all_props)
                 logger.success(f"==> Updated  {object_type} `{display_name}` with GUID {guid}\n\n")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
-                # sync_blueprint_related_elements(egeria_client,object_type, segment_guids, guid, qualified_name,
-                # display_name, replace_all_props)
+
                 # logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
                 return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD')
 
@@ -610,17 +653,30 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                     return
                 else:
                     body = {
-                        "class": "NewInformationSupplyChainRequestBody", "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name, "forLineage": False,
-                        "forDuplicateProcessing": False, "effectiveTime": effective_time, "anchorGUID": anchor_guid,
-                        "isOwnAnchor": is_own_anchor, "anchorScopeGUID": anchor_scope_guid, "parentGUID": parent_guid,
-                        "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1,
+                        "class": "NewElementRequestBody",
+                        "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False,
+                        "effectiveTime": effective_time,
+                        "anchorGUID": anchor_guid,
+                        "isOwnAnchor": is_own_anchor,
+                        "anchorScopeGUID": anchor_scope_guid,
+                        "parentGUID": parent_guid,
+                        "parentRelationshipTypeName": parent_relationship_type_name,
+                        "parentAtEnd1": parent_at_end1,
                         "properties": {
-                            "class": "InformationSupplyChainProperties", "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to, "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name, "additionalProperties": additional_properties,
-                            "displayName": display_name, "description": description, "scope": scope,
-                            "purposes": purposes, "version": version_identifier
+                            "class": "InformationSupplyChainProperties",
+                            "effectiveFrom": effective_from,
+                            "effectiveTo": effective_to,
+                            "extendedProperties": extended_properties,
+                            "qualifiedName": qualified_name,
+                            "additionalProperties": additional_properties,
+                            "displayName": display_name,
+                            "description": description,
+                            "scope": scope,
+                            "purposes": purposes,
+                            "version": version_identifier
                             }
                         }
 
@@ -629,6 +685,10 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
                             })
+                        if len(in_supply_chain_guids) > 0:
+                            for nested_chain in in_supply_chain_guids:
+                                egeria_client.compose_info_supply_chains(guid, nested_chain)
+
                         msg = f"==>Created Element `{display_name}` with GUID {guid}\n"
                         logger.success(msg)
                         return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD')
@@ -644,168 +704,12 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
         return None
 
 
-@logger.catch
-def process_information_supply_chain_segment_upsert_command(egeria_client: EgeriaTech, txt: str,
-                                                            directive: str = "display") -> Optional[str]:
-    """
-    Processes a solution blueprint create or update object_action by extracting key attributes such as
-    blueprint name, description, and usage from the given text.
-
-    :param txt: A string representing the input cell to be processed for
-        extracting blueprint-related attributes.
-    :param directive: an optional string indicating the directive to be used - display, validate or execute
-    :return: A string summarizing the outcome of the processing.
-    """
-    command, object_type, object_action = extract_command_plus(txt)
-
-    parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
-
-    valid = parsed_output['valid']
-    exists = parsed_output['exists']
-
-    qualified_name = parsed_output.get('qualified_name', None)
-    guid = parsed_output.get('guid', None)
-
-    print(Markdown(parsed_output['display']))
-
-    logger.debug(json.dumps(parsed_output, indent=4))
-
-    attributes = parsed_output['attributes']
-    description = attributes.get('Description', {}).get('value', None)
-    display_name = attributes['Display Name'].get('value', None)
-    version_identifier = attributes.get('Version Identifier', {}).get('value', None)
-    effective_time = attributes.get('Effective Time', {}).get('value', None)
-    effective_from = attributes.get('Effective From', {}).get('value', None)
-    effective_to = attributes.get('Effective To', {}).get('value', None)
-    external_source_guid = attributes.get('External Source GUID', {}).get('value', None)
-    external_source_name = attributes.get('External Source Name', {}).get('value', None)
-
-    anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
-    parent_guid = attributes.get('Parent ID', {}).get('guid', None)
-    parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
-    parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
-
-    anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
-    is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
-    if parent_guid is None:
-        is_own_anchor = True
-
-    additional_prop = attributes.get('Additional Properties', {}).get('value', None)
-    additional_properties = json.loads(additional_prop) if additional_prop is not None else None
-    extended_prop = attributes.get('Extended Properties', {}).get('value', None)
-    extended_properties = json.loads(extended_prop) if extended_prop is not None else None
-
-    scope = attributes.get('Scope', {}).get('value', None)
-    integration_style = attributes.get('Integration Style', {}).get('value', None)
-    volumetrics = attributes.get('Estimated Volumetrics', {}).get('value', None)
-    info_supply_chain = attributes.get('Information Supply Chain', {}).get('value', None)
-    info_supply_chain_guid = attributes.get('Information Supply Chain', {}).get('guid', None)
-    replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
-
-    if directive == "display":
-
-        return None
-    elif directive == "validate":
-        if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
-        else:
-            msg = f"Validation failed for object_action `{command}`\n"
-        return valid
-
-    elif directive == "process":
-        try:
-            if object_action == "Update":
-                if not exists:
-                    msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
-                           f"object_action\n")
-                    logger.error(msg)
-                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
-                elif not valid:
-                    return None
-                else:
-                    print(Markdown(
-                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-
-                    body = body_slimmer({
-                        "class": "UpdateInformationSupplyChainSegmentRequestBody",
-                        "externalSourceGUID": external_source_guid, "externalSourceName": external_source_name,
-                        "effectiveTime": effective_time, "forLineage": False, "forDuplicateProcessing": False,
-                        "properties": {
-                            "class": "InformationSupplyChainSegmentProperties", "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to, "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name, "additionalProperties": additional_properties,
-                            "displayName": display_name, "description": description, "scope": scope,
-                            "integrationStyle": integration_style, "estimatedVolumetrics": volumetrics,
-                            "version": version_identifier
-                            }
-                        })
-
-                egeria_client.update_info_supply_chain_segment(info_supply_chain_guid, body, replace_all_props)
-                update_element_dictionary(qualified_name, {
-                    'guid': guid, 'display_name': display_name
-                    })
-                logger.success(f"===> Updated {object_type} `{display_name}` with GUID {guid}\n")
-                # sync_blueprint_related_elements(egeria_client,object_type, segment_guids, guid, qualified_name,
-                # display_name, replace_all_props)
-                # logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
-                return egeria_client.get_info_supply_chain_segment_by_guid(guid, info_supply_chain_guid)
-
-
-            elif object_action == "Create":
-                if valid is False and exists:
-                    msg = (
-                        f"-->  Data Specification `{display_name}` already exists and result document updated changing "
-                        f"`Create` to `Update` in processed output\n")
-                    logger.error(msg)
-                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
-
-                elif valid is False:
-                    msg = f"==>{object_type} `{display_name}` is not valid and can't be created"
-                    logger.error(msg)
-                    return
-                else:
-                    body = {
-                        "class": "NewInformationSupplyChainSegmentRequestBody",
-                        "externalSourceGUID": external_source_guid, "externalSourceName": external_source_name,
-                        "forLineage": False, "forDuplicateProcessing": False, "effectiveTime": effective_time,
-                        "anchorGUID": anchor_guid, "isOwnAnchor": is_own_anchor, "anchorScopeGUID": anchor_scope_guid,
-                        "parentGUID": parent_guid, "parentRelationshipTypeName": parent_relationship_type_name,
-                        "parentAtEnd1": parent_at_end1, "properties": {
-                            "class": "InformationSupplyChainSegmentProperties", "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to, "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name, "additionalProperties": additional_properties,
-                            "displayName": display_name, "description": description, "scope": scope,
-                            "integrationStyle": integration_style, "estimatedVolumetrics": volumetrics,
-                            "version": version_identifier
-                            }
-                        }
-
-                    guid = egeria_client.create_info_supply_chain_segment(info_supply_chain_guid, body)
-                    if guid:
-                        update_element_dictionary(qualified_name, {
-                            'guid': guid, 'display_name': display_name
-                            })
-                        msg = f"==>Created Element `{display_name}` with GUID {guid}\n"
-                        logger.success(msg)
-                        return egeria_client.get_info_supply_chain_segment_by_guid(guid, info_supply_chain_guid)
-                    else:
-                        msg = f"==>Failed to create element `{display_name}` with GUID {guid}\n"
-                        logger.error(msg)
-                        return None
-
-        except Exception as e:
-            logger.error(f"Error performing {command}: {e}")
-            return None
-    else:
-        return None
-
 
 @logger.catch
 def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                                                          directive: str = "display") -> Optional[str]:
     """
-    Processes a solution blueprint create or update object_action by extracting key attributes such as
-    blueprint name, description, and usage from the given text.
+    Processes a link or unlink command to associate or break up peer supply chains..
 
     :param txt: A string representing the input cell to be processed for
         extracting blueprint-related attributes.
@@ -814,7 +718,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
     """
     command, object_type, object_action = extract_command_plus(txt)
 
-    parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
     print(Markdown(parsed_output['display']))
 
@@ -823,12 +727,13 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
     attributes = parsed_output['attributes']
 
     segment1 = attributes.get('Segment1', {}).get('guid', None)
-    segment2 = attributes.get('Segment1', {}).get('guid', None)
+    segment2 = attributes.get('Segment2', {}).get('guid', None)
     label = attributes.get('Link Label', {}).get('value', None)
     description = attributes.get('Description', {}).get('value', None)
 
     valid = parsed_output['valid']
-    exists = parsed_output['exists']
+    exists = segment1 is not None and  segment2 is not None
+
 
     external_source_guid = attributes.get('External Source GUID', {}).get('value', None)
     external_source_name = attributes.get('External Source Name', {}).get('value', None)
@@ -854,7 +759,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
 
     elif directive == "process":
         try:
-            if object_action == "Detach":
+            if object_action == "Unlink":
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -868,16 +773,18 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                     body = body_slimmer({
-                        "class": "MetadataSourceRequestBody", "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name, "effectiveTime": effective_time,
-                        "forLineage": False, "forDuplicateProcessing": False
-
+                        "class": "MetadataSourceRequestBody",
+                        "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name,
+                        "effectiveTime": effective_time,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False
                         })
 
-                egeria_client.detach_info_supply_chain_segments(segment1, segment2, body)
+                egeria_client.unlink_peer_info_supply_chains(segment1, segment2, body)
 
                 logger.success(f"===> Detached segment with {label} from `{segment1}`to {segment2}\n")
-                out = parsed_output['display'].replace('Detach', 'Link', 1)
+                out = parsed_output['display'].replace('Unlink', 'Link', 1)
 
                 return (out)
 
@@ -894,14 +801,20 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                     return
                 else:
                     body = {
-                        "class": "InformationSupplyChainLinkRequestBody", "effectiveTime": effective_time,
-                        "forLineage": False, "forDuplicateProcessing": False, "properties": {
-                            "class": "InformationSupplyChainLinkProperties", "label": label, "description": description,
-                            "effectiveFrom": effective_from, "effectiveTo": effective_to
+                        "class": "RelationshipRequestBody",
+                        "effectiveTime": effective_time,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False,
+                        "properties": {
+                            "class": "InformationSupplyChainLinkProperties",
+                            "label": label,
+                            "description": description,
+                            "effectiveFrom": effective_from,
+                            "effectiveTo": effective_to
                             }
                         }
 
-                    egeria_client.link_info_supply_chain_segments(segment1, segment2, body)
+                    egeria_client.link_peer_info_supply_chain(segment1, segment2, body)
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -983,3 +896,5 @@ def process_sol_arch_list_command(egeria_client: EgeriaTech, txt: str, kind:str,
             return None
     else:
         return None
+
+

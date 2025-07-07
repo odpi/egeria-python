@@ -62,7 +62,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
     display_name = ""
     labels = {}
 
-    command_spec = get_command_spec(object_type)
+    command_spec = get_command_spec(f"Create {object_type}")
     attributes = command_spec.get('Attributes', [])
     command_display_name = command_spec.get('display_name', None)
     command_qn_prefix = command_spec.get('qn_prefix', None)
@@ -264,8 +264,10 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
     parsed_output['exists'] = False
 
     labels = {}
-
-    command_spec = get_command_spec(f"{object_action} {object_type}")
+    if object_action == "Unlink":
+        command_spec = get_command_spec(f"Link {object_type}")
+    else:
+        command_spec = get_command_spec(f"{object_action} {object_type}")
     attributes = command_spec.get('Attributes', [])
     command_display_name = command_spec.get('display_name', None)
 
@@ -344,12 +346,12 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             elif style == 'Reference Name':
                 parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
-                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None)):
+                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) is None):
                     msg = f"Required parameter `{parsed_attributes[key]['value']}` is missing"
                     logger.error(msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
-                elif parsed_attributes[key]['value'] and parsed_attributes['exists'] is False:
+                elif parsed_attributes[key]['value'] and parsed_attributes[key]['exists'] is False:
                     msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
                     logger.error(msg)
                     parsed_output['valid'] = False
