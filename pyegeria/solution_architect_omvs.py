@@ -99,9 +99,9 @@ class SolutionArchitect(Client):
         parent_names = []
         parent_qnames = []
 
-        implementation_guids = []
-        implementation_names = []
-        implementation_qnames = []
+        implemented_by_guids = []
+        implemented_by_names = []
+        implemented_by_qnames = []
 
         external_references_guids = []
         external_references_names = []
@@ -143,19 +143,27 @@ class SolutionArchitect(Client):
         #             parent_qnames.append(qualified_name)
 
         parents = el_struct.get("parents", {})
-        if len(parents) > 0:
+        if parents:
             for parent in parents:
                 parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
                 parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
                 parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
 
         peer_supply_chains = el_struct.get("links", {})
-        if len(peer_supply_chains) > 0:
+        if peer_supply_chains:
             for peer in peer_supply_chains:
                 peer_supply_chains_guids.append(peer['relatedElement']['elementHeader']['guid'])
                 peer_supply_chains_names.append(peer['relatedElement']['properties'].get("displayName",""))
                 peer_supply_chains_qnames.append(peer['relatedElement']['properties'].get("qualifiedName",""))
                 peer_supply_chain_linl_label.append(peer['relationshipProperties'].get('label',""))
+
+        implemented_by = el_struct.get("implementedByList", {})
+        if implemented_by:
+            for peer in peer_supply_chains:
+                implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
+                implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
+                implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
+
 
 
         # nested_supply_chains = el_struct.get("nestedDataClasses", {})
@@ -171,9 +179,13 @@ class SolutionArchitect(Client):
                 "parent_names": parent_names,
                 "parent_qnames": parent_qnames,
 
-                "implementation_guids": implementation_guids,
-                "implementation_names": implementation_names,
-                "implementation_qnames": implementation_qnames,
+                "implemented_by_guids": implemented_by_guids,
+                "implemented_by_names": implemented_by_names,
+                "implemented_by_qnames": implemented_by_qnames,
+
+                "peer_supply_chains_guids": peer_supply_chains_guids,
+                "peer_supply_chains_names": peer_supply_chains_names,
+                "peer_supply_chains_qnames": peer_supply_chains_qnames,
 
                 "nested_data_class_guids": nested_supply_chains_guids,
                 "nested_data_class_names": nested_supply_chains_names,
@@ -225,7 +237,7 @@ class SolutionArchitect(Client):
         scope = properties.get("scope", None)
         purposes = properties.get("purposes", [])
         purpose_md = ""
-        if len(purposes) > 0:
+        if purposes:
             for purpose in purposes:
                 purpose_md += f"{purpose},\n"
         extended_properties = properties.get("extendedProperties", {})
@@ -235,7 +247,7 @@ class SolutionArchitect(Client):
 
         parents = element.get("parents", [])
         parents_list = []
-        if len(parents) > 0:
+        if parents:
             for sub in parents:
                 sub_rel_label = sub.get('relationshipProperties',{}).get("label", None)
                 sub_qn = sub['relatedElement']['properties']['qualifiedName']
@@ -245,13 +257,18 @@ class SolutionArchitect(Client):
 
         peer_supply_chains = element.get("links", {})
         peer_supply_chains_list = []
-        if len(peer_supply_chains) > 0:
+        if peer_supply_chains:
             for peer in peer_supply_chains:
                 peer_supply_chain_qnames = peer['relatedElement']['properties'].get("qualifiedName", "")
                 peer_supply_chain_label = peer['relationshipProperties'].get('label', None)
                 peer_lab = f"==> <{peer_supply_chain_label}> ==>" if peer_supply_chain_label else ""
                 peer_supply_chains_list.append(f"{peer_lab} {peer_supply_chain_qnames}")
 
+        implemented_by = element.get("implementedByList", {})
+        implemented_by_qnames = []
+        if implemented_by:
+            for peer in peer_supply_chains:
+                implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
 
         return {
             'GUID': guid,
@@ -264,6 +281,7 @@ class SolutionArchitect(Client):
             'additional_properties': additional_properties,
             'parents_list': parents_list,
             'links': peer_supply_chains_list,
+            'implemented_by': implemented_by_qnames,
             'mermaid': mer
         }
 
@@ -344,6 +362,168 @@ class SolutionArchitect(Client):
             'solution_components': solution_components_md
         }
 
+
+
+
+
+    def _get_component_rel_elements(self, guid:str)-> dict | str:
+        elements = self.get_info_supply_chain_by_guid(guid)
+        return self._get_supply_chain_rel_elements_dict(elements)
+
+
+    def _get_component_rel_elements_dict(self, el_struct: dict)-> dict | str:
+        """return the lists of objects related to a data field"""
+
+        actor_guids = []
+        actor_name_roles = []
+        actor_qnames = []
+        
+        parent_guids = []
+        parent_names = []
+        parent_qnames = []
+
+        sub_component_guids = []
+        sub_component_names = []
+        sub_component_qnames = []
+
+        implemented_by_guids = []
+        implemented_by_names = []
+        implemented_by_qnames = []
+
+        blueprint_guids = []
+        blueprint_names = []
+        blueprint_qnames = []
+
+
+        external_references_guids = []
+        external_references_names = []
+        external_references_qnames = []
+
+        other_related_elements_guids = []
+        other_related_elements_names = []
+        other_related_elements_qnames = []
+        
+        owning_info_supply_chain_guids = []
+        owning_info_supply_chain_qnames = []
+        owning_info_supply_chain_names = []
+
+        wired_to_guids = []
+        wired_to_names = []
+        wired_to_link_labels = []
+        wired_to_qnames = []
+        
+        wired_from_guids = []
+        wired_from_names = []
+        wired_from_link_labels = []
+        wired_from_qnames = []
+
+        actors = el_struct.get("actors", {})
+        if actors:
+            for actor in actors:
+                actor_guids.append(actor['relatedElement']['elementHeader'].get("guid", None))
+                actor_role = actor['relationshipProperties'].get('role',"")      
+                actor_name = actor['relatedElement']['properties'].get("displayName", "")
+                actor_name_roles.append(f"`{actor_name}` in role `{actor_role}`")
+                actor_qnames.append(actor['relatedElement']['properties'].get("qualifiedName", ""))
+
+        wired_to = el_struct.get("wiredToLinks", {})
+        if wired_to:
+            for wire in wired_to:
+                wired_to_link_labels.append(wire['properties'].get("label", ""))
+                wired_to_guids.append(wire['linkedElement']['elementHeader']['guid'])
+                wired_to_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
+                wired_to_names.append(wire['linkedElement']['properties'].get('displayName', ""))
+                
+        wired_from = el_struct.get("wiredFromLinks", {})
+        if wired_from:
+            for wire in wired_from:
+                wired_from_link_labels.append(wire['properties'].get("label", ""))
+                wired_from_guids.append(wire['linkedElement']['elementHeader']['guid'])
+                wired_from_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
+                wired_from_names.append(wire['linkedElement']['properties'].get('displayName', ""))
+
+        blueprints = el_struct.get("blueprints", {})
+        if blueprints:
+            for bp in blueprints:
+                blueprint_guids.append(bp['relatedElement']['elementHeader']['guid'])
+                blueprint_qnames.append(bp['relatedElement']['properties'].get("qualifiedName", ""))
+                blueprint_names.append(bp['relatedElement']['properties'].get('displayName', ""))
+
+        sub_components = el_struct.get("subComponents", {})
+        if sub_components:
+            for sub_component in sub_components:
+                sub_component_guids.append(sub_component['elementHeader']['guid'])
+                sub_component_qnames.append(sub_component['properties'].get("qualifiedName", ""))
+                sub_component_names.append(sub_component['properties'].get('displayName', ""))
+
+        context = el_struct.get("context", {})[0]
+        parents = context.get("parentComponents", [])
+        if parents:
+            for parent in parents:
+                parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
+                parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
+                parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
+
+        owning_isc = context.get("owningInformationSupplyChains", {})
+        if owning_isc:
+            for isc in owning_isc:
+                owning_info_supply_chain_guids.append(isc['relatedElement']['elementHeader']["guid"])
+                owning_info_supply_chain_names.append(isc['relatedElement']['properties'].get("displayName", ""))
+                owning_info_supply_chain_qnames.append(isc['relatedElement']['properties'].get("qualifiedName", ""))
+
+
+
+        # implemented_by = el_struct.get("implementedByList", {})
+        # if len(implemented_by) > 0:
+        #     for peer in peer_supply_chains:
+        #         implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
+        #         implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
+        #         implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
+
+
+        mermaid = el_struct.get("mermaidGraph", {})
+
+        return {"parent_guids": parent_guids,
+                "parent_names": parent_names,
+                "parent_qnames": parent_qnames,
+
+                "actor_guids": actor_guids,
+                "actor_name_roles": actor_name_roles,
+                "actor_qnames": actor_qnames,
+
+                "sub_component_guids": sub_component_guids,
+                "sub_component_names": sub_component_names,
+                "sub_component_qnames": sub_component_qnames,
+
+                "blueprint_guids": blueprint_guids,
+                "blueprint_names": blueprint_names,
+                "blueprint_qnames": blueprint_qnames,
+
+                "owning_info_supply_chain_guids": owning_info_supply_chain_guids,
+                "owning_info_supply_chain_names": owning_info_supply_chain_names,
+                "owning_info_supply_chain_qnames": owning_info_supply_chain_qnames,
+
+                "implemented_by_guids": implemented_by_guids,
+                "implemented_by_names": implemented_by_names,
+                "implemented_by_qnames": implemented_by_qnames,
+
+                "wired_from_guids": wired_from_guids,
+                "wired_from_names": wired_from_names,
+                "wired_from_qnames": wired_from_qnames,
+                "wired_from_link_labels": wired_from_link_labels,
+
+                "wired_to_guids": wired_to_guids,
+                "wired_to_names": wired_to_names,
+                "wired_to_qnames": wired_to_qnames,
+                "wired_to_link_labels": wired_to_link_labels,
+
+                "external_references_guids": external_references_guids,
+                "external_references_names": external_references_names,
+                "external_references_qnames": external_references_qnames,
+
+                "mermaid" : mermaid,
+            }
+
     def _extract_component_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
         """
         Normalize for a list of dictionaries.
@@ -397,41 +577,25 @@ class SolutionArchitect(Client):
             for key in additional_props.keys():
                 additional_props_md += "{" + f" {key}: {additional_props[key]}" + " }, "
 
-        # Extract blueprints
-        blueprints_md = ""
-        blueprints = element.get('blueprints', None)
-        if blueprints:
-            for blueprint in blueprints:
-                if 'relatedElement' in blueprint:
-                    bp_q_name = blueprint["relatedElement"]['properties']['qualifiedName']
-                    blueprints_md +=  f" {bp_q_name}, \n"
-                elif 'blueprint' in blueprint:
-                    bp_prop = blueprint['blueprint']['properties']
-                    bp_name = bp_prop.get("displayName", None)
-                    bp_desc = bp_prop.get("description", None)
-                    blueprints_md += "{" + f" {bp_name}:\t {bp_desc}" + " },\n"
+        rel_elements = self._get_component_rel_elements_dict(element)
+
+        # actors
+        actors_md = ", ".join(rel_elements.get("actor.qnames", []) )
+
+        # Extract blueprints & supply chains
+        blueprints_md = ", ".join(rel_elements.get("blueprint_qnames",[]))
+        owning_supply_chains_md = ", ".join(rel_elements.get("owning_info_supply_chain_qnames",[]))
 
         # Extract parent components
-        parent_comp_md = ""
-        context = element.get("context", None)
-        if context:
-            parent_components = element.get('parentComponents', None)
-            if parent_components:
-                for parent_component in parent_components:
-                    parent_comp_prop = parent_component['parentComponent']['properties']
-                    parent_comp_name = parent_comp_prop.get("name", None)
-                    parent_comp_desc = parent_comp_prop.get("description", None)
-                    parent_comp_md += f" {parent_comp_name}"
+        parent_comp_md = ", ".join(rel_elements.get("parent_qnames",[]))
 
-        # Extract sub components
-        sub_comp_md = ""
-        sub_components = element.get('subComponents', None)
-        if sub_components:
-            for sub_component in sub_components:
-                sub_comp_prop = sub_component['properties']
-                sub_comp_name = sub_comp_prop.get("displayName", None)
-                sub_comp_desc = sub_comp_prop.get("description", None)
-                sub_comp_md +=  f" {sub_comp_name}"
+        # Extract sub-components
+        sub_comp_md = ", ".join(rel_elements.get("sub_component_qnames",[]))
+
+        # wired from and to
+        wired_from_md = ", ".join(rel_elements.get("wired_from_qnames",[]))
+        wired_to_md = ", ".join(rel_elements.get("wired_to_qnames",[]))
+
 
         comp_graph = element.get('mermaidGraph', None)
 
@@ -443,8 +607,12 @@ class SolutionArchitect(Client):
             'component_type': component_type,
             'version': version,
             'blueprints': blueprints_md,
+            'owning_supply_chains': owning_supply_chains_md,
+            'actors': actors_md,
             'parent_components': parent_comp_md,
             'sub_components': sub_comp_md,
+            'wired_from_components': wired_from_md,
+            'wired_to_components': wired_to_md,
             'additional_properties': additional_props_md,
             'extended_properties': extended_props_md,
             'mermaid_graph': comp_graph
@@ -1676,10 +1844,13 @@ class SolutionArchitect(Client):
             }
 
             """
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
             [("addImplementation", add_implementation), ("startFrom", start_from), ("pageSize", page_size),
-             ("startsWith", starts_with), ("endsWith", ends_with), ("ignoreCase", ignore_case), ])
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         if search_filter is None or search_filter == "*":
             search_filter = None
@@ -2952,10 +3123,13 @@ class SolutionArchitect(Client):
         }
 
         """
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
+            [("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         if search_filter is None or search_filter == "*":
             search_filter = None
@@ -4333,9 +4507,13 @@ class SolutionArchitect(Client):
         }
         """
 
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
+            [ ("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         if search_filter is None or search_filter == "*":
             search_filter = None
@@ -5512,7 +5690,7 @@ class SolutionArchitect(Client):
 
     async def _async_find_solution_roles(self, search_filter: str = "*", body: dict = None, starts_with: bool = True,
                                          ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                         page_size: int = max_paging_size,
+                                         page_size: int = 0,
                                          output_format: str = "JSON", ) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
@@ -5556,22 +5734,26 @@ class SolutionArchitect(Client):
         Notes
         -----
         Sample body:
+        
         {
-          "class" : "FilterRequestBody",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
         }
         """
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
-
+            [ ("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
         if search_filter is None or search_filter == "*":
             search_filter = None
 
@@ -5637,6 +5819,21 @@ class SolutionArchitect(Client):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
+        }
         """
 
         loop = asyncio.get_event_loop()

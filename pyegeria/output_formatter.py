@@ -131,10 +131,8 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
         attribute_title = ""
 
     if output_type in ["FORM", "MD"]:
-        if attribute_name.lower() == "mermaid":
-            return "\n"
-        elif attribute_name.lower() == "links":
-            return "\n"
+        if attribute_name.lower() in [ "mermaid", "links", "implemented by", "sub_components"]:
+            return '\n'
 
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type == "REPORT":

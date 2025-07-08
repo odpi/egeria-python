@@ -378,9 +378,28 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
+
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
     version_identifier = attributes.get('Version Identifier', {}).get('value', None)
+    solution_component_type = attributes.get('Solution Component Type', {}).get('value', None)
+    planned_deployed_impl_type = attributes.get('Planned Deployed Implementation Type', {}).get('value', None)
+    initial_status = attributes.get('Initial Status', {}).get('value', None)
+    user_defined_status = attributes.get('User Defined Status', {}).get('value', None)
+    if initial_status != "OTHER":
+        user_defined_status = None
+
+    # sub_component_names = attributes.get('Solution SubComponents', {}).get('name_list', None)
+    # sub_component_guids = attributes.get('Solution SubComponents', {}).get('guid_list', None)
+    actor_names = attributes.get('Actors', {}).get('name_list', None)
+    actor_guids = attributes.get('Actors', {}).get('guid_list', None)
+    in_blueprint_names = attributes.get('Solution Blueprints', {}).get('name_list', None)
+    in_blueprint_guids = attributes.get('Solution Blueprints', {}).get('guid_list', None)
+    in_supply_chain_names = attributes.get('In Information Supply Chains', {}).get('name_list', None)
+    in_supply_chain_guids = attributes.get('In Information Supply Chains', {}).get('guid_list', None)
+    in_component_names = attributes.get('In Solution Components', {}).get('name_list', None)
+    in_component_guids = attributes.get('In Solution Components', {}).get('guid_list', None)
+
     effective_time = attributes.get('Effective Time', {}).get('value', None)
     effective_from = attributes.get('Effective From', {}).get('value', None)
     effective_to = attributes.get('Effective To', {}).get('value', None)
@@ -390,6 +409,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
     parent_guid = attributes.get('Parent ID', {}).get('guid', None)
     parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
+    parent_relationship_properties = attributes.get('Parent Relationship Properties', {}).get('value', None)
     parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
 
     anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
@@ -404,14 +424,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
 
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
-    solution_component_type = attributes.get('Solution Component Type', {}).get('value', None)
-    planned_deployed_impl_type = attributes.get('Planned Deployed Implementation Type', {}).get('value', None)
-    sub_component_names = attributes.get('Solution SubComponents', {}).get('name_list', None)
-    sub_component_guids = attributes.get('Solution SubComponents', {}).get('guid_list', None)
-    actor_names = attributes.get('Actors', {}).get('name_list', None)
-    actor_guids = attributes.get('Actors', {}).get('guid_list', None)
-    in_blueprint_names = attributes.get('Solution Blueprints', {}).get('name_list', None)
-    in_blueprint_guids = attributes.get('Solution Blueprints', {}).get('guid_list', None)
+
 
     if directive == "display":
 
@@ -439,15 +452,23 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 body = body_slimmer({
-                    "class": "UpdateSolutionComponentRequestBody", "externalSourceGUID": external_source_guid,
-                    "externalSourceName": external_source_name, "effectiveTime": effective_time, "forLineage": False,
-                    "forDuplicateProcessing": False, "parentAtEnd1": parent_at_end1, "properties": {
-                        "class": "SolutionComponentProperties", "qualifiedName": qualified_name,
-                        "displayName": display_name, "description": description,
+                    "class": "UpdateElementRequestBody",
+                    "externalSourceGUID": external_source_guid,
+                    "externalSourceName": external_source_name,
+                    "effectiveTime": effective_time, "forLineage": False,
+                    "forDuplicateProcessing": False,
+                    "parentAtEnd1": parent_at_end1,
+                    "properties": {
+                        "class": "SolutionComponentProperties",
+                        "qualifiedName": qualified_name,
+                        "displayName": display_name,
+                        "description": description,
                         "solutionComponentType": solution_component_type,
                         "plannedDeployedImplementationType": planned_deployed_impl_type,
-                        "additionalProperties": additional_properties, "extendedProperties": extended_properties,
-                        "effectiveFrom": effective_from, "effectiveTo": effective_to
+                        "additionalProperties": additional_properties,
+                        "extendedProperties": extended_properties,
+                        "effectiveFrom": effective_from,
+                        "effectiveTo": effective_to
                         }
                     })
 
@@ -457,7 +478,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                     'guid': guid, 'display_name': display_name
                     })
                 # Sync Parent Components and Blueprints
-                sync_component_related_elements(egeria_client, object_type, sub_component_guids, actor_guids,
+                sync_component_related_elements(egeria_client, object_type, in_component_guids, actor_guids,
                                                 in_blueprint_guids, guid, qualified_name, display_name,
                                                 replace_all_props)
                 logger.success(f"==>Updated  {object_type} `{display_name}` with related elements")
@@ -478,21 +499,34 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
 
                 else:
                     body = body_slimmer({
-                        "class": "NewSolutionComponentRequestBody", "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name, "forLineage": False,
-                        "forDuplicateProcessing": False, "effectiveTime": effective_time, "anchorGUID": anchor_guid,
-                        "isOwnAnchor": True, "anchorScopeGUID": anchor_scope_guid, "parentGUID": parent_guid,
-                        "parentRelationshipTypeName": parent_relationship_type_name, "parentAtEnd1": parent_at_end1,
+                        "class": "NewSolutionComponentRequestBody",
+                        "anchorGUID": anchor_guid,
+                        "isOwnAnchor": is_own_anchor,
+                        "parentGUID": parent_guid,
+                        "parentRelationshipTypeName": parent_relationship_type_name,
+                        "parentRelationshipProperties": parent_relationship_properties,
+                        "parentAtEnd1": parent_at_end1,
                         "properties": {
-                            "class": "SolutionComponentProperties", "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to, "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name, "additionalProperties": additional_properties,
-                            "displayName": display_name, "description": description,
+                            "class": "SolutionComponentProperties",
+                            "qualifiedName": qualified_name,
+                            "displayName": display_name,
+                            "description": description,
                             "solutionComponentType": solution_component_type,
-                            "plannedDeployedImplementationType": planned_deployed_impl_type
-
-                            }
-                        })
+                            "versionIdentifier" : version_identifier,
+                            "plannedDeployedImplementationType": planned_deployed_impl_type,
+                            "userDefinedStatus" : user_defined_status,
+                            "additionalProperties": additional_properties,
+                            "extendedProperties": extended_properties,
+                            "effectiveFrom": effective_from,
+                            "effectiveTo": effective_to
+                        },
+                        "initialStatus": initial_status,
+                        "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name,
+                        "effectiveTime": effective_time,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False
+                    })
 
                     guid = egeria_client.create_solution_component(body)
                     if guid:
@@ -501,10 +535,10 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        if sub_component_guids:
-                            for comp in sub_component_guids:
-                                egeria_client.link_subcomponent(guid, comp, None)
-                            msg = f"Added `{sub_component_guids}` to `{display_name}`"
+                        if in_component_guids:
+                            for comp in in_component_guids:
+                                egeria_client.link_subcomponent(comp, guid, None)
+                            msg = f"Added to parent components `{in_component_names}` "
                             logger.trace(msg)
 
                         if actor_guids:
@@ -516,8 +550,14 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                         if in_blueprint_guids:
                             for bp in in_blueprint_guids:
                                 egeria_client.link_solution_component_to_blueprint(bp, guid, None)
-                            msg = f"Added `{in_blueprint_guids}` to `{display_name}`"
+                            msg = f"Added  `{display_name}`to blueprints `{in_blueprint_names}`"
                             logger.trace(msg)
+
+                        # if in_supply_chain_guids:
+                        #     for isc in in_supply_chain_guids:
+                        #         egeria_client.link_solution_component_to_blueprint(bp, guid, None)
+                        #     msg = f"Added  `{display_name}`to blueprints `{in_blueprint_names}`"
+                        #     logger.trace(msg)
 
                         return egeria_client.get_solution_component_by_guid(guid, output_format='MD')
                     else:
@@ -617,8 +657,11 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                     body = body_slimmer({
                         "class": "UpdateElementRequestBody",
                         "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name, "effectiveTime": effective_time,
-                        "forLineage": False, "forDuplicateProcessing": False, "properties": {
+                        "externalSourceName": external_source_name,
+                        "effectiveTime": effective_time,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False,
+                        "properties": {
                             "class": "InformationSupplyChainProperties", "effectiveFrom": effective_from,
                             "effectiveTo": effective_to, "extendedProperties": extended_properties,
                             "qualifiedName": qualified_name, "additionalProperties": additional_properties,

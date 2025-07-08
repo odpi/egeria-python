@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "Jul 7, 2025 at 9:45:58 AM",
+    "exported": "Jul 8, 2025 at 8:49:52 AM",
     "Create Data Dictionary": {
       "display_name": "Data Dictionary",
       "qn_prefix": "DataDict",
@@ -6507,6 +6507,32 @@
           }
         },
         {
+          "Qualified Name": {
+            "variable_name": "qualified_name",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "DataStructure::a data field",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
+            "qualified_name_pattern": "local_qualifier::namespace::DataStructure:display_name::version_id",
+            "generated": true,
+            "style": "QN",
+            "user_specified": true,
+            "unique": true,
+            "input_required": false,
+            "position": 2,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Description": {
             "variable_name": "description",
             "inUpdate": true,
@@ -6529,6 +6555,32 @@
             "min_cardinality": 1,
             "max_cardinality": 1,
             "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Version Identifier": {
+            "variable_name": "version_id",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "0.1",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A user supplied version identifier.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 19,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Invisible",
             "Journal Entry": ""
           }
         },
@@ -6585,6 +6637,58 @@
           }
         },
         {
+          "User Defined Status": {
+            "variable_name": "user_defined_status",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "cogitating",
+            "default_value": "DRAFT",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Supporting user managed lifecycle statuses. Only used if the Intial Status is set to OTHER.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Initial Status": {
+            "variable_name": "initial_status",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "ACTIVE",
+            "default_value": "ACTIVE",
+            "valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE; DISABLED; DEPRECATED; OTHER",
+            "existing_element": "",
+            "description": "Optional lifecycle status. If not specified, set to ACTIVE. If set to Other then the value in User Defined Status will be used.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Solution SubComponents": {
             "variable_name": "solution_sub_components",
             "inUpdate": true,
@@ -6606,12 +6710,17 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
+            "level": "INVISIBLE",
+            "Journal Entry": "In our current approach, the parent doesn’t specify the sub-components but rather the components can specify one or more parents."
           }
         },
         {
-          "Solution Blueprints": {
+          "In Solution Components": {
+            "Journal Entry": "In our current approach, the parent doesn’t specify the sub-components but rather the components can specify one or more parents."
+          }
+        },
+        {
+          "In Solution Blueprints": {
             "variable_name": "solution_blueprints",
             "inUpdate": true,
             "attr_labels": "In Solution Blueprints",
@@ -6637,6 +6746,32 @@
           }
         },
         {
+          "In Information Supply Chains": {
+            "variable_name": "in_supply_chains",
+            "inUpdate": true,
+            "attr_labels": "In Supply Chains",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "InformationSupplyChain",
+            "description": "The Information Supply Chains that this component is a member of.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Reference Name List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "position": 0,
+            "ReferenceURL": "",
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 0,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Actors": {
             "variable_name": "actors",
             "inUpdate": true,
@@ -6657,58 +6792,6 @@
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Version Identifier": {
-            "variable_name": "version_id",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "0.1",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A user supplied version identifier.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "position": 19,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Invisible",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Qualified Name": {
-            "variable_name": "qualified_name",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "DataStructure::a data field",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
-            "qualified_name_pattern": "local_qualifier::namespace::DataStructure:display_name::version_id",
-            "generated": true,
-            "style": "QN",
-            "user_specified": true,
-            "unique": true,
-            "input_required": false,
-            "position": 2,
-            "ReferenceURL": "",
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
