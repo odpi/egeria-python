@@ -47,23 +47,84 @@ TERM_RELATIONSHPS = ["Synonym", "Translation", "PreferredTerm", "TermISATYPEOFRe
                      "ISARelationship"]
 
 # List of supported md_commands
+
+GOV_COM_LIST = [ "Create Business Imperative", "Update Business Imperative",
+                "Create Regulation Article Definition", "Update Regulation Article Definition",
+                "Create Threat Definition", "Update Threat Definition",
+                "Create Governance Principle", "Update Governance Principle",
+                "Create Governance Obligation", "Update Governance Obligation",
+                "Create Governance Approach", "Update Governance Approach",
+                "Create Governance Strategy", "Update Governance Strategy",
+                "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
+                "Create Governance Control:", "Update Governance Control",
+                "Create Governance Rule:", "Update Governance Rule",
+                "Create Service Level Objective", "Update Service Level Objective",
+                "Create Governance Process", "Update Governance Process",
+                "Create Governance Responsibility", "Update Governance Responsibility",
+                "Create Governance Procedure", "Update Governance Procedure",
+                "Create Security Access Control", "Update Security Access Control",
+                "Create Security Group", "Update Security Group",
+                "Create Naming Standard Rule", "Update Naming Standard Rule",
+                "Create Certification Type", "Update Certification Type",
+                "Create License Type", "Update License Type",]
+
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
                 "List Glossary Categories", "Create Personal Project", "Update Personal Project", "Create Category",
-                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint", "View Solution Blueprints", "View Blueprints",
+                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
+                "View Solution Blueprints", "View Blueprints",
                 "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains", "View Supply Chain",
                 "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
                 "Create Information Supply Chain", "Update Information Supply Chain",
                 "Link Information Supply Chain Peers", "Link Supply Chains", "Link Information Supply Chains",
-                "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains"
-                "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
+                "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains",
+                "Create Solution Component", "Update Solution Component", "Link Solution Components", "Wire Solution Components",
+                "Detach Solution Components", "Unlink Solution Components", "Create Term-Term Relationship",
                 "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",
                 "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
                 "Update Data Dict", " View Data Dictionary", "View Data Dictionaries", "View Data Specifications",
                 "View Data Specs", "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
-                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",]
+                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",
+                "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
+                "Create Agreement", "Update Agreement",
+                "Link Digital Products", "Link Data Products", "Detach Digital Products", "Detach Data Products",
+                "Create Data Sharing Agreement", "Update Data Sharing Agreement",
+                "Create Digital Subscription", "Create Product Subscription", "Update Digital Subscription", "Update Product Subscription",
+                "Attach Agreement Items", "Detach Agreement Items",
+                "Attach Contract", "Detach Contract",
+                "Attach Subscriber", "Detach Subscriber",
+                "Link Collection to Resource", "Attach Collection to Resource",
+                "Unlink Collection From Resource", "Detach Collection From Resource",
+                "Add Member to Collection", "Add Member", "Member->Collection",
+                "Remove Member from Collection","Remove Member from Collection",
+                "View Digital Products", "View Data Products", "List Data Products", "List Digtal Products",
+                "View Agreements", "View Data Sharing Agreements", "List Agreements", "List Data Sharing Agreements",
+                "View Subscriptions", "List Subscriptions",
+                "Create Business Imperative", "Update Business Imperative",
+                "Create Regulation Article Definition", "Update Regulation Article Definition",
+                "Create Threat Definition", "Update Threat Definition",
+                "Create Governance Principle", "Update Governance Principle",
+                "Create Governance Obligation", "Update Governance Obligation",
+                "Create Governance Approach", "Update Governance Approach",
+                "Create Governance Strategy", "Update Governance Strategy",
+                "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
+                "Create Governance Control:", "Update Governance Control",
+                "Create Governance Rule:", "Update Governance Rule",
+                "Create Service Level Objective", "Update Service Level Objective",
+                "Create Governance Process", "Update Governance Process",
+                "Create Governance Responsibility", "Update Governance Responsibility",
+                "Create Governance Procedure", "Update Governance Procedure",
+                "Create Security Access Control", "Update Security Access Control",
+                "Create Security Group", "Update Security Group",
+                "Create Naming Standard Rule", "Update Naming Standard Rule",
+                "Create Certification Type", "Update Certification Type",
+                "Create License Type", "Update License Type",
+
+
+
+                ]
 
 
 pre_command = "\n---\n==> Processing object_action:"
@@ -89,6 +150,7 @@ def load_commands(filename: str) -> None:
 
 def get_command_spec(command: str) -> dict | None:
     global COMMAND_DEFINITIONS
+
     com = COMMAND_DEFINITIONS.get('Command Specifications', {}).get(command, None)
     if com:
         return com
@@ -100,6 +162,7 @@ def get_command_spec(command: str) -> dict | None:
 
 def find_alternate_names(command: str) -> str | None:
     global COMMAND_DEFINITIONS
+
     comm_spec = COMMAND_DEFINITIONS.get('Command Specifications', {})
     for key, value in comm_spec.items():
         if isinstance(value, dict):

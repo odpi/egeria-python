@@ -19,12 +19,15 @@ from rich.console import Console
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                            process_category_upsert_command, process_provenance_command, get_current_datetime_string,
                            process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
-                           process_solution_component_upsert_command, process_term_list_command,
+                           process_solution_component_upsert_command, process_component_link_unlink_command,
+                           process_term_list_command,
                            process_category_list_command, process_glossary_list_command, process_term_history_command,
                            process_glossary_structure_command, process_term_revision_history_command,
                            process_create_term_term_relationship_command, process_term_details_command,
                            process_information_supply_chain_upsert_command,
-                           process_information_supply_chain_link_unlink_command, process_sol_arch_list_command)
+                           process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
+                           process_digital_product_upsert_command, process_agreement_upsert_command,
+                           process_gov_definition_upsert_command, GOV_COM_LIST)
 from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_collection_list_command,
@@ -60,6 +63,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md", required=True,
               prompt=False)
+@click.option("--output-folder", help="Output folder.", default=".", required=False)
 @click.option("--directive", default="process", help="How to process the file",
               type=click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
@@ -67,7 +71,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @logger.catch
-def process_markdown_file(input_file: str, directive: str, server: str, url: str, userid: str,
+def process_markdown_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
                           user_pass: str, ) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
@@ -148,6 +152,9 @@ def process_markdown_file(input_file: str, directive: str, server: str, url: str
                 result = process_sol_arch_list_command(client, current_block, "Information Supply Chains", directive)
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
+            elif potential_command in ["Link Solution Components", "Link Solution Component Peers", "Wire Solution Components",
+                                       "Unlink Solution Components", "Detach Solution Components", "Detach Solution Component Peers"]:
+                result = process_component_link_unlink_command(client, current_block, directive)
             elif potential_command in ["Create Information Supply Chain", "Update Information Supply Chain"]:
                 result = process_information_supply_chain_upsert_command(client, current_block, directive)
 
@@ -177,6 +184,12 @@ def process_markdown_file(input_file: str, directive: str, server: str, url: str
                 result = process_data_field_list_command(client, current_block, directive)
             elif potential_command in ["View Data Classes", "View Data Class"]:
                 result = process_data_class_list_command(client, current_block, directive)
+            elif potential_command in ["Create Digital Product", "Create Data Product","Update Digital Product", "Update Data Product"]:
+                result = process_digital_product_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Agreement", "Update Agreement"]:
+                result = process_digital_product_upsert_command(client, current_block, directive)
+            elif potential_command in GOV_COM_LIST:
+                result = process_gov_definition_upsert_command(client, current_block, directive)
 
 
             else:
@@ -241,7 +254,11 @@ def process_markdown_file(input_file: str, directive: str, server: str, url: str
         if updated:
             path, filename = os.path.split(input_file)  # Get both parts
             new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
-            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
+            
+            if output_folder:
+                new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)
+            else:
+                new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 
             with open(new_file_path, 'w') as f2:

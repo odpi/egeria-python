@@ -13,9 +13,10 @@ from typing import Dict, List, Union
 
 from httpx import Response
 
-from pyegeria import validate_guid
+from pyegeria._validators import validate_guid
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.output_formatter import generate_output, extract_mermaid_only
 from pyegeria.utils import body_slimmer
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -76,14 +77,57 @@ class GovernanceOfficer(Client):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        Client.__init__(self,  platform_url, user_id=user_id, user_pwd=user_pwd, token=token )
+        Client.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
         self.url_marker = "governance-officer"
 
     #
     # Extract properties functions
     #
+    def generate_governance_definition_output(self, elements: list | dict, search_string: str,
+                                              output_format: str = 'MD') -> str | list:
+        """
+        Generate output for solution components in the specified format.
 
-    def _extract_supply_chain_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
+        Given a set of elements representing solution components (either as a list or a dictionary),
+        this function generates output in the specified format. The output includes various
+        attributes of the solution components, such as their names, descriptions, types, and
+        related information like blueprints, parents, and extended properties.
+
+        Args:
+            elements: Dictionary or list of dictionaries containing solution component elements
+            search_string: The search string used to find the elements
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+
+        Returns:
+            Formatted output as string or list of dictionaries
+        """
+        # Handle MERMAID and DICT formats
+        if output_format == "MERMAID":
+            return extract_mermaid_only(elements)
+        elif output_format == "DICT":
+            return self._extract_gov_def_list(elements)  # return extract_basic_dict(elements)  # add more to the body
+        elif output_format == "HTML":
+            return generate_output(elements=elements, search_string=search_string, entity_type="Governance Definition",
+                output_format="HTML", extract_properties_func=self._extract_gov_def_properties)
+        # For other formats (MD, FORM, REPORT, LIST), use generate_output
+        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
+            # Define columns for LIST format
+            columns = [{'name': 'Governance Definition', 'key': 'title'}, {'name': 'Type Name', 'key': 'typeName'},
+                {'name': 'Scope', 'key': 'scope'}, {'name': 'Qualified Name', 'key': 'documentIdentifier'},
+                {'name': 'Summary', 'key': 'summary', 'format': True}, {'name': 'Importance', 'key': 'importance'}, ]
+
+            return generate_output(elements=elements, search_string=search_string, entity_type="Governance Definition",
+                output_format=output_format, extract_properties_func=self._extract_gov_def_properties,
+                columns=columns if output_format == 'LIST' else None)
+
+        # Default case
+        return None
+
+    #
+    #
+    #
+
+    def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
         """
         Normalize governance definition response for a list of dictionaries.
         Args:
@@ -94,16 +138,16 @@ class GovernanceOfficer(Client):
 
         """
         if isinstance(element, dict):
-            return [self._extract_info_supply_chain_properties(element)]
+            return [self._extract_gov_def_properties(element)]
         elif isinstance(element, list):
             comp_list = []
             for i in range(len(element)):
-                comp_list.append(self._extract_info_supply_chain_properties(element[i]))
+                comp_list.append(self._extract_gov_def_properties(element[i]))
             return comp_list
         else:
             return []
 
-    def _extract_info_supply_chain_properties(self, element: dict) -> dict:
+    def _extract_gov_def_properties(self, element: dict) -> dict:
         """
         Extract properties from an information governance definition element.
 
@@ -115,111 +159,27 @@ class GovernanceOfficer(Client):
         """
         guid = element['elementHeader'].get("guid", None)
         properties = element['properties']
-        qualified_name = properties.get("qualifiedName", None)
-        display_name = properties.get("displayName", None)
-        description = properties.get("description", None)
-        scope = properties.get("scope", None)
-        purposes = properties.get("purposes", [])
-        purpose_md = ""
-        if len(purposes) > 0:
-            for purpose in purposes:
-                purpose_md += f"{purpose},\n"
-        extended_properties = properties.get("extendedProperties", {})
-        additional_properties = properties.get("additionalProperties", {})
-        segments = element.get("segments", [])
-        segments_list = []
-        if len(segments) > 0:
-            for segment in segments:
-                segment_dict = {}
-                segment_guid = segment['elementHeader'].get("guid", "")
-                segment_props = segment['properties']
-                segment_qname = segment_props.get("qualifiedName", "")
-                segment_display_name = segment_props.get("displayName", "")
-                segment_description = segment_props.get("description", "")
-                segment_scope = segment_props.get("scope", "")
-                segment_integration_style = segment_props.get("integrationStyle", "")
-                segment_estimated_volumetrics = segment_props.get("estimatedVolumetrics", "")
-                segment_dict["segment_display_name"] = segment_display_name
-                segment_dict["segment_qname"] = segment_qname
-                segment_dict["segment_guid"] = segment_guid
-                segment_dict["segment_description"] = segment_description
-                segment_dict["segment_scope"] = segment_scope
-                segment_dict["segment_estimated_volumetrics"] = segment_estimated_volumetrics
-                segments_list.append(segment_dict)
+        properties['GUID'] = guid
+        del properties['class']
 
-        return {
-            'guid': guid, 'qualified_name': qualified_name, 'display_name': display_name, 'description': description,
-            'scope': scope, 'purposes': purpose_md, 'extended_properties': extended_properties,
-            'additional_properties': additional_properties, 'segments': segments_list
-            }
+        #
+        #
+        # qualified_name = properties.get("qualifiedName", None)
+        # display_name = properties.get("displayName", None)
+        # description = properties.get("description", None)
+        # scope = properties.get("scope", None)
+        # purposes = properties.get("purposes", [])
+        # purpose_md = ""
+        # if len(purposes) > 0:
+        #     for purpose in purposes:
+        #         purpose_md += f"{purpose},\n"
+        # extended_properties = properties.get("extendedProperties", {})
+        # additional_properties = properties.get("additionalProperties", {})
+        #
 
-    def _extract_solution_blueprint_properties(self, element: dict) -> dict:
-        """
-        Extract properties from a solution blueprint element.
+        return properties
 
-        Args:
-            element: Dictionary containing element data
-
-        Returns:
-            Dictionary with extracted properties
-        """
-        guid = element['elementHeader'].get("guid", None)
-        element_properties = element['properties']
-        display_name = element_properties.get("displayName", None)
-        description = element_properties.get("description", None)
-        version = element_properties.get("version", None)
-        qualified_name = element_properties.get("qualifiedName", None)
-
-        solution_components = element.get('solutionComponents', None)
-        solution_components_md = ""
-        if solution_components:
-            for solution_component in solution_components:
-                sol_comp_prop = solution_component['solutionComponent']['properties']
-                sol_comp_name = sol_comp_prop.get("displayName", None)
-                sol_comp_desc = sol_comp_prop.get("description", None)
-                solution_components_md += '{' + f" {sol_comp_name}:\t {sol_comp_desc}" + " },\n"
-
-        return {
-            'guid': guid, 'qualified_name': qualified_name, 'display_name': display_name, 'description': description,
-            'version': version, 'solution_components': solution_components_md
-            }
-
-    def _extract_solution_roles_properties(self, element: dict) -> dict:
-        """
-        Extract properties from a solution role element.
-
-        Args:
-            element: Dictionary containing element data
-
-        Returns:
-            Dictionary with extracted properties
-        """
-        guid = element['elementHeader'].get("guid", None)
-        element_properties = element['properties']
-        display_name = element_properties.get("title", None)
-        role_id = element_properties.get("roleId", None)
-        scope = element_properties.get("scope", None)
-        description = element_properties.get("description", None)
-        domain_identifier = element_properties.get("domainIdentifier", None)
-        qualified_name = element_properties.get("qualifiedName", None)
-
-        solution_components = element.get('solutionComponents', None)
-        solution_components_md = ""
-        if solution_components:
-            for solution_component in solution_components:
-                sol_comp_prop = solution_component.get('relationshipProperties', None)
-                if sol_comp_prop:
-                    sol_comp_name = sol_comp_prop.get("role", None)
-                    sol_comp_desc = sol_comp_prop.get("description", None)
-                    solution_components_md += "{" + f" {sol_comp_name}:\t {sol_comp_desc}" + " },\n"
-
-        return {
-            'guid': guid, 'qualified_name': qualified_name, 'display_name': display_name, 'description': description,
-            'role_id': role_id, 'scope': scope, 'domain_identifier': domain_identifier,
-            'solution_components': solution_components_md
-            }
-
-    def _extract_component_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
+    def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
         """
         Normalize for a list of dictionaries.
         Args:
@@ -232,10 +192,10 @@ class GovernanceOfficer(Client):
         if isinstance(element, dict):
             return [self._extract_solution_components_properties(element)]
         elif isinstance(element, list):
-            comp_list = []
+            def_list = []
             for i in range(len(element)):
-                comp_list.append(self._extract_solution_components_properties(element[i]))
-            return comp_list
+                def_list.append(self._extract_gov_def_properties(element[i]))
+            return def_list
         else:
             return []
 
@@ -364,7 +324,7 @@ class GovernanceOfficer(Client):
         which structure is used for the body.
 
         Many kinds of governance definition have additional properties added. Details are described in the UML diagrams
-        on the web site and summarized in the table below which shows the property class name and which types
+        on the website and summarized in the table below which shows the property class name and which types
         of governance definitions use it. The test_governance_officer module offers some usage examples.
 
         Property Class Name     |       Definition Types
@@ -377,11 +337,13 @@ class GovernanceOfficer(Client):
         SecurityGroupProperties        | SecurityGroup
         NamingStandardRuleProperties   | NamingStandardRule
         CertificationTypeProperties    | CertificationType
-        LicenseTyoeProperties          | LicenseTyoe
+        LicenseTyoeProperties          | LicenseType
+        GovernanceApproachProperties   | GovernanceApproach
 
 
         Generic simple governance body structure:
         {
+          "class": "NewElementRequestBody",
           "properties": {
             "class" : "GovernanceDefinitionProperties",
             "typeName" : "enter the type of the governance definition",
@@ -450,14 +412,15 @@ class GovernanceOfficer(Client):
         }
 
        """
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance_definitions"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"{self.url_marker}/governance-definitions")
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
 
         return response.json().get("guid", "Governance Definition not created")
 
     def create_governance_definition(self, body: dict) -> str:
-        """ Create a  governance definition. It may be of type:
+        """ Create a governance definition. It may be of type:
             * BusinessImperative
             * RegulationArticle
             * Threat
@@ -489,11 +452,29 @@ class GovernanceOfficer(Client):
 
         Notes
         ----
-        Governance definitions can be simple or anchored to a parent element - depending on
-        which structure is used in the body. Both are shown below.
+       Governance definitions can be simple or anchored to a parent element -  Both are shown below. depending on
+        which structure is used for the body.
+
+        Many kinds of governance definition have additional properties added. Details are described in the UML diagrams
+        on the website and summarized in the table below which shows the property class name and which types
+        of governance definitions use it. The test_governance_officer module offers some usage examples.
+
+        Property Class Name     |       Definition Types
+        ===================================================================================
+        GovernanceDefinitionProperties | BusinessImperative, RegulationArticle, Threat, GovernanceProcessingPurpose,
+                                       | GovernancePrinciple, GovernanceObligation, GovernanceApproach
+        GovernanceStrategyProperties   | GovernanceStrategy
+        RegulationProperties           | Regulation
+        GovernanceControlProperties    | GovernanceControl
+        SecurityGroupProperties        | SecurityGroup
+        NamingStandardRuleProperties   | NamingStandardRule
+        CertificationTypeProperties    | CertificationType
+        LicenseTyoeProperties          | LicenseType
+        GovernanceApproachProperties   | GovernanceApproach
 
         Simple body structure:
         {
+          "class": "NewElementRequestBody",
           "properties": {
             "class" : "GovernanceDefinitionProperties",
             "typeName" : "enter the type of the governance definition",
@@ -565,9 +546,8 @@ class GovernanceOfficer(Client):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_governance_definition( body))
+        response = loop.run_until_complete(self._async_create_governance_definition(body))
         return response
-
 
     async def _async_create_governance_definition_from_template(self, body: dict) -> str:
         """ Create a new metadata element to represent a governance definition using an existing metadata element
@@ -641,12 +621,11 @@ class GovernanceOfficer(Client):
 
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"{self.url_marker}/governance_definitions/from-template")
+               f"{self.url_marker}/governance-definitions/from-template")
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
 
         return response.json().get("guid", "Governance definition not created")
-
 
     def create_governance_definition_from_template(self, body: dict) -> str:
         """ Create a new metadata element to represent a governance definition using an existing metadata element
@@ -721,11 +700,11 @@ class GovernanceOfficer(Client):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_governance_definition_from_template( body))
+        response = loop.run_until_complete(self._async_create_governance_definition_from_template(body))
         return response
 
     async def _async_update_governance_definition(self, guid: str, body: dict,
-                                                         replace_all_properties: bool = False) -> None:
+                                                  replace_all_properties: bool = False) -> None:
         """ Update the properties of a governance definition. Async Version.
 
         Parameters
@@ -785,13 +764,15 @@ class GovernanceOfficer(Client):
         """
         validate_guid(guid)
         replace_all_properties_s = str(replace_all_properties).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-defnitions/"
-               f"{guid}/update?replaceAllProperties={replace_all_properties_s}")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
+            f"{guid}/update?replaceAllProperties={replace_all_properties_s}")
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
 
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_governance_definition(self, guid: str, body: dict,
-                                            replace_all_properties: bool = False) -> None:
+    def update_governance_definition(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
         """ Update the properties of a governance definition.
 
         Parameters
@@ -850,8 +831,7 @@ class GovernanceOfficer(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_governance_definition(guid,  body, replace_all_properties))
+        loop.run_until_complete(self._async_update_governance_definition(guid, body, replace_all_properties))
 
     async def _async_update_governance_definition_status(self, guid: str, body: dict,
                                                          replace_all_properties: bool = False) -> None:
@@ -897,13 +877,13 @@ class GovernanceOfficer(Client):
         """
         validate_guid(guid)
         replace_all_properties_s = str(replace_all_properties).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-defnitions/"
-               f"{guid}/update-status?replaceAllProperties={replace_all_properties_s}")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-defnitions/"
+            f"{guid}/update-status?replaceAllProperties={replace_all_properties_s}")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def update_governance_definition_status(self, guid: str, body: dict,
-                                            replace_all_properties: bool = False) -> None:
+    def update_governance_definition_status(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
         """ Update the status of a governance definition.
 
             Parameters
@@ -944,11 +924,10 @@ class GovernanceOfficer(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_update_governance_definition_status(guid,  body, replace_all_properties))
+        loop.run_until_complete(self._async_update_governance_definition_status(guid, body, replace_all_properties))
 
-    async def _async_link_peer_definitions(self, definition_guid1: str, relationship_type: str,
-                                           definition_guid2: str, body: dict = None) -> None:
+    async def _async_link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                           body: dict = None) -> None:
         """ Attach two peer governance definitions. Request body is optional. Async Version.
 
         Parameters
@@ -977,6 +956,10 @@ class GovernanceOfficer(Client):
 
         Notes
         ----
+        The relationshipTypeNme can be:
+        * GovernanceDriverLink between governance drivers (GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat).
+        * GovernancePolicyLink between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
+        * GovernanceControlLink between governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
 
         Body structure:
         {
@@ -997,13 +980,15 @@ class GovernanceOfficer(Client):
         validate_guid(definition_guid1)
         validate_guid(definition_guid2)
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/goverance-officer/governance-definitions/"
-               f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/attach")
+        url = (
+            f"{self.platform_url}/s"
+            f"ervers/{self.view_server}/api/open-metadata/goverance-officer/governance-definitions/"
+            f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/attach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_peer_definitions(self, definition_guid1: str, relationship_type: str,
-                              definition_guid2: str, body: dict = None) -> None:
+    def link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                              body: dict = None) -> None:
         """ Attach two peer governance definitions. Async Version.
 
         Parameters
@@ -1032,6 +1017,10 @@ class GovernanceOfficer(Client):
 
         Notes
         ----
+        The relationshipTypeNme can be:
+        * GovernanceDriverLink between governance drivers (GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat).
+        * GovernancePolicyLink between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
+        * GovernanceControlLink between governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
 
         Body structure:
         {
@@ -1051,10 +1040,10 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_link_peer_definitions( definition_guid1, relationship_type, definition_guid2, body))
+            self._async_link_peer_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
-    async def _async_detach_peer_definitions(self, definition_guid1: str, relationship_type: str,
-                                             definition_guid2: str, body: dict = None) -> None:
+    async def _async_detach_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                             body: dict = None) -> None:
         """ Detach two peer governance definitions. Request body is optional. Async Version.
 
         Parameters
@@ -1098,13 +1087,15 @@ class GovernanceOfficer(Client):
         validate_guid(definition_guid1)
         validate_guid(definition_guid2)
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
-               f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/detach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_peer_definitions(self, definition_guid1: str, relationship_type: str,
-                                definition_guid2: str, body: dict = None) -> None:
+    def detach_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                body: dict = None) -> None:
         """ Detach two peer governance definitions. Request body is optional.
 
         Parameters
@@ -1147,15 +1138,18 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_peer_definitions( definition_guid1, relationship_type, definition_guid2,
-                                                body))
+            self._async_detach_peer_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     async def _async_attach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
-                                                 definition_guid2: str, body: dict = None) -> None:
+                                                   definition_guid2: str, body: dict = None) -> None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
-            * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat) and governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
-            * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+            * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
+            RegulationArticle, Threat) and governance policies (GovernancePrinciple, GovernanceObligation,
+            GovernanceApproach).
+            * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation,
+            GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility,
+            GovernanceProcedure, SecurityAccessControl, SecurityGroup).
 
         Async Version.
 
@@ -1205,17 +1199,23 @@ class GovernanceOfficer(Client):
         validate_guid(definition_guid1)
         validate_guid(definition_guid2)
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
-               f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/attach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/attach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def attach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
-                                    definition_guid2: str, body: dict = None) -> None:
+    def attach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                      body: dict = None) -> None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
-            * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat) and governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach).
-            * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation, GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+            * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
+            RegulationArticle, Threat) and governance policies (GovernancePrinciple, GovernanceObligation,
+            GovernanceApproach).
+            * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation,
+            GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility,
+            GovernanceProcedure, SecurityAccessControl, SecurityGroup).
 
         Parameters
         ----------
@@ -1262,11 +1262,9 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_attach_supporting_definitions( definition_guid1, relationship_type, definition_guid2,
-                                                    body))
+            self._async_attach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
-    async def _async_detach_supporting_definitions(self, definition_guid1: str,
-                                                   relationship_type: str,
+    async def _async_detach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
                                                    definition_guid2: str, body: dict = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional. Async Version.
@@ -1311,13 +1309,15 @@ class GovernanceOfficer(Client):
         validate_guid(definition_guid1)
         validate_guid(definition_guid2)
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
-               f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/detach")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/detach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
-                                      definition_guid2: str, body: dict = None) -> None:
+    def detach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                      body: dict = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
 
@@ -1360,9 +1360,7 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_supporting_definitions( definition_guid1, relationship_type,
-                                                      definition_guid2,
-                                                      body))
+            self._async_detach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
     async def _async_delete_governance_definition(self, guid: str, body: dict = None) -> str:
         """ Delete an information supply. Async version.
@@ -1405,12 +1403,11 @@ class GovernanceOfficer(Client):
 
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"{self.url_marker}/governance_definitions/{guid}/delete")
+               f"{self.url_marker}/governance-definitions/{guid}/delete")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-
-    def create_delete_governance_definition(self, guid: str, body: dict = None) -> str:
+    def delete_governance_definition(self, guid: str, body: dict = None) -> str:
         """ Delete an information supply. Request body is optional. Async version.
 
         Parameters
@@ -1452,14 +1449,11 @@ class GovernanceOfficer(Client):
        """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_governance_definition(guid,  body))
+        loop.run_until_complete(self._async_delete_governance_definition(guid, body))
 
-
-
-    async def _async_find_governance_definitions(self, search_filter: str = "*",
-                                                 starts_with: bool = True, ends_with: bool = False,
-                                                 ignore_case: bool = False, start_from: int = 0,
-                                                 page_size: int = 0, body: dict = None,
+    async def _async_find_governance_definitions(self, search_filter: str = "*", starts_with: bool = True,
+                                                 ends_with: bool = False, ignore_case: bool = False,
+                                                 start_from: int = 0, page_size: int = 0, body: dict = None,
                                                  output_format: str = 'JSON') -> list[dict] | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
             Async version.
@@ -1518,8 +1512,8 @@ class GovernanceOfficer(Client):
             """
 
         possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", str(starts_with).lower()), ("endsWith", str(ends_with).lower()),
-             ("ignoreCase", str(ignore_case).lower()), ])
+            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", str(starts_with).lower()),
+             ("endsWith", str(ends_with).lower()), ("ignoreCase", str(ignore_case).lower()), ])
 
         if search_filter == "*":
             search_filter = None
@@ -1529,8 +1523,10 @@ class GovernanceOfficer(Client):
                 "filter": search_filter,
                 }
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
-               f"by-search-string{possible_query_params}")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"by-search-string{possible_query_params}")
 
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -1540,7 +1536,69 @@ class GovernanceOfficer(Client):
             return self.generate_governance_definition_output(element, search_filter, output_format)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
+    def find_governance_definitions(self, search_filter: str = "*", starts_with: bool = True, ends_with: bool = False,
+                                    ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+                                    body: dict = None, output_format: str = 'JSON') -> list[dict] | str:
+        """ Retrieve the list of governance definition metadata elements that contain the search string.
 
+            Parameters
+            ----------
+            search_filter : str
+                - search_filter string to search for.
+            starts_with : bool, [default=False], optional
+                Starts with the supplied string.
+            ends_with : bool, [default=False], optional
+                Ends with the supplied string
+            ignore_case : bool, [default=False], optional
+                Ignore case when searching
+            body: dict, optional, default = None
+                - additional optional specifications for the search.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                    JSON - output standard json
+                    MD - output standard markdown with no preamble
+                    FORM - output markdown with a preamble for a form
+                    REPORT - output markdown with a preamble for a report
+                    Mermaid - output markdown with a mermaid graph
+
+            Returns
+            -------
+            list[dict] | str
+                A list of information governance definition structures or a string if there are no elements found.
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            If a body is provided it overrides the search_filter parameter.
+
+            Body structure:
+            {
+              "class": "FilterRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "limitResultsByStatus": ["ACTIVE"],
+              "sequencingOrder": "PROPERTY_ASCENDING",
+              "sequencingProperty": "qualifiedName",
+              "filter": "Add name here",
+              "templateFilter": "NO_TEMPLATES"
+            }
+            """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_governance_definitions(search_filter, starts_with, ends_with, ignore_case, start_from,
+                                                    page_size, body, output_format))
+        return response
 
     async def _async_get_governance_definitions_by_name(self, search_filter: str, body: dict = None,
                                                         start_from: int = 0, page_size: int = 0,
@@ -1600,8 +1658,10 @@ class GovernanceOfficer(Client):
                 "filter": search_filter,
                 }
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-definitions/"
-               f"by-name{possible_query_params}")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"by-name{possible_query_params}")
 
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
@@ -1611,9 +1671,8 @@ class GovernanceOfficer(Client):
             return self.generate_governance_definition_output(element, None, output_format)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def get_governance_definitions_by_name(self, search_filter: str, body: dict = None,
-                                           start_from: int = 0, page_size: int = 0,
-                                           output_format: str = "JSON") -> dict | str:
+    def get_governance_definitions_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
+                                           page_size: int = 0, output_format: str = "JSON") -> dict | str:
         """ Returns the list of information governance definitions with a particular name. Async Version.
 
             Parameters
@@ -1670,18 +1729,10 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_governance_definitions_by_name( search_filter, body, start_from, page_size,
-                                                           output_format))
+            self._async_get_governance_definitions_by_name(search_filter, body, start_from, page_size, output_format))
         return response
 
-
-
-   
-
-
-
-    async def _async_get_gov_def_by_guid(self, guid: str, body: dict= None, output_format: str = "JSON",
-                                         start_from: int = 0, page_size: int = 0) -> dict | str:
+    async def _async_get_governance_definition_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
 
         """ Get governance definition by guid.
             Async version.
@@ -1727,22 +1778,24 @@ class GovernanceOfficer(Client):
 
        """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance_definitions/"
-               f"{guid}/retrieve")
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
+            f"{guid}/retrieve")
 
         if body:
             response = await self._async_make_request("POST", url, body_slimmer(body))
         else:
             response = await self._async_make_request("POST", url)
 
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_governance_definition_output(element, guid, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_gov_def_by_guid(self, guid: str, body: dict= None, output_format: str= "JSON") -> dict | str:
+    def get_governance_definition_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
 
         """ Get governance definition by guid.
 
@@ -1787,13 +1840,11 @@ class GovernanceOfficer(Client):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_gov_def_by_guid(guid,  body, output_format))
+        response = loop.run_until_complete(self._async_get_governance_definition_by_guid(guid, body, output_format))
         return response
 
-
-
-    async def _async_link_design_to_implementation(self, design_desc_guid: str,
-                                                   implementation_guid: str, body: dict = None) -> None:
+    async def _async_link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
+                                                   body: dict = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional. Async Version.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -1849,10 +1900,12 @@ class GovernanceOfficer(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/designs/"
                f"{design_desc_guid}/implementations/{implementation_guid}/attach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
 
-    def link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str, body: dict = None)\
-            -> None:
+    def link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str, body: dict = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -1903,12 +1956,10 @@ class GovernanceOfficer(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_design_to_implementation( design_desc_guid, implementation_guid, body))
+        loop.run_until_complete(self._async_link_design_to_implementation(design_desc_guid, implementation_guid, body))
 
-
-    async def _async_detach_design_from_implementation(self, design_desc_guid: str,  implementation_guid: str,
-                                                      body: dict = None) -> None:
+    async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
+                                                       body: dict = None) -> None:
         """ Detach a governance definition from its implementation. Async Version.
 
         Parameters
@@ -1954,8 +2005,8 @@ class GovernanceOfficer(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_design_from_implementation(self, technical_control_guid: str,
-                                         implementation_guid: str, body: dict = None) -> None:
+    def detach_design_from_implementation(self, technical_control_guid: str, implementation_guid: str,
+                                          body: dict = None) -> None:
         """ Detach a governance definition from its implementation. Request body is optional.
 
         Parameters
@@ -1996,13 +2047,10 @@ class GovernanceOfficer(Client):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_design_from_implementation( technical_control_guid,
-                                                         implementation_guid, body))
+            self._async_detach_design_from_implementation(technical_control_guid, implementation_guid, body))
 
-
-
-    async def _async_link_implementation_resource(self, design_desc_guid: str,
-                                                   implementation_guid: str, body: dict = None) -> None:
+    async def _async_link_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
+                                                  body: dict = None) -> None:
         """ Attach a design object such as a solution component or governance definition to one of its implementation
             resource via the ImplementationResource relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2060,8 +2108,7 @@ class GovernanceOfficer(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_implementation_resource(self, design_desc_guid: str, implementation_guid: str, body: dict = None)\
-            -> None:
+    def link_implementation_resource(self, design_desc_guid: str, implementation_guid: str, body: dict = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2112,12 +2159,10 @@ class GovernanceOfficer(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_implementation_resource( design_desc_guid, implementation_guid, body))
+        loop.run_until_complete(self._async_link_implementation_resource(design_desc_guid, implementation_guid, body))
 
-
-    async def _async_detach_implementation_resource(self, design_desc_guid: str,  implementation_guid: str,
-                                                      body: dict = None) -> None:
+    async def _async_detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
+                                                    body: dict = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional. Async version.
 
@@ -2164,7 +2209,7 @@ class GovernanceOfficer(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_implmentation_resource(self, design_desc_guid: str, implementation_guid: str, body: dict = None) -> None:
+    def detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str, body: dict = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional.
 
@@ -2204,14 +2249,11 @@ class GovernanceOfficer(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_implementation_resource( design_desc_guid,
-                                                         implementation_guid, body))
+        loop.run_until_complete(self._async_detach_implementation_resource(design_desc_guid, implementation_guid, body))
 
-    
-    async def _async_get_gov_def_in_context(self, guid: str, body: dict, output_format: str,
-                                        start_from: int = 0, page_size: int = 0) -> list[dict] | str:
-        """ Get governance definition in context.
+    async def _async_get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON", start_from: int = 0,
+                                            page_size: int = 0) -> list[dict] | str:
+        """ Get governance definition in context. Brings back the graph.
             Async version.
 
             Parameters
@@ -2265,7 +2307,8 @@ class GovernanceOfficer(Client):
         possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
 
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance_definitions/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/"
             f"{guid}/in-context{possible_query_params}")
 
         if body:
@@ -2273,16 +2316,16 @@ class GovernanceOfficer(Client):
         else:
             response = await self._async_make_request("POST", url)
 
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_governance_definitions_output(element, guid, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+        return element
 
-    def get_gov_def_in_context(self, guid: str, body: dict, output_format: str, start_from: int = 0,
-                                   page_size: int = 0) -> list[dict] | str:
-        """ Get governance definition in context.
+    def get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON", start_from: int = 0,
+                               page_size: int = 0) -> list[dict] | str:
+        """ Get governance definition in context. Brings back the graph.
 
             Parameters
             ----------
@@ -2337,7 +2380,6 @@ class GovernanceOfficer(Client):
         response = loop.run_until_complete(
             self._async_get_gov_def_in_context(guid, body, output_format, start_from, page_size))
         return response
-
 
 
 if __name__ == "__main__":

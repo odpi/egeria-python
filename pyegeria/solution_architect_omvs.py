@@ -13,8 +13,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from httpx import Response
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
-    extract_basic_dict, MD_SEPARATOR, generate_entity_dict
+    extract_basic_dict, MD_SEPARATOR
 from pyegeria import validate_guid
+from pyegeria.governance_officer_omvs import GovernanceOfficer
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.utils import body_slimmer
@@ -82,7 +83,7 @@ class SolutionArchitect(Client):
         self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
                                                      f"/api/open-metadata/solution-architect")
         Client.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
-
+        self.url_marker = "solution-architect"
     #
     # Extract properties functions
     #
@@ -456,20 +457,23 @@ class SolutionArchitect(Client):
                 sub_component_qnames.append(sub_component['properties'].get("qualifiedName", ""))
                 sub_component_names.append(sub_component['properties'].get('displayName', ""))
 
-        context = el_struct.get("context", {})[0]
-        parents = context.get("parentComponents", [])
-        if parents:
-            for parent in parents:
-                parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
-                parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
-                parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
+        context = el_struct.get("context", None)
+        if context:
+            for c in context:
 
-        owning_isc = context.get("owningInformationSupplyChains", {})
-        if owning_isc:
-            for isc in owning_isc:
-                owning_info_supply_chain_guids.append(isc['relatedElement']['elementHeader']["guid"])
-                owning_info_supply_chain_names.append(isc['relatedElement']['properties'].get("displayName", ""))
-                owning_info_supply_chain_qnames.append(isc['relatedElement']['properties'].get("qualifiedName", ""))
+                parents = c.get("parentComponents", None) if context else None
+                if parents:
+                    for parent in parents:
+                        parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
+                        parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
+                        parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
+
+                owning_isc = c.get("owningInformationSupplyChains", None) if context else None
+                if owning_isc:
+                    for isc in owning_isc:
+                        owning_info_supply_chain_guids.append(isc['relatedElement']['elementHeader']["guid"])
+                        owning_info_supply_chain_names.append(isc['relatedElement']['properties'].get("displayName", ""))
+                        owning_info_supply_chain_qnames.append(isc['relatedElement']['properties'].get("qualifiedName", ""))
 
 
 
@@ -4199,15 +4203,15 @@ class SolutionArchitect(Client):
           "class": "RelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "properties" : {
-             "class" : "SolutionLinkingWireProperties",
-             "label" : "",
-             "description" : "",
-             "informationSupplyChainSegmentGUIDs" : []
+          "properties": {
+             "class": "SolutionLinkingWireProperties",
+             "label": "",
+             "description": "",
+             "informationSupplyChainSegmentGUIDs": []
           },
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
         }
         """
         validate_guid(component1_guid)
@@ -4249,18 +4253,18 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class" : "RelationshipRequestBody",
+                  "class": "RelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
-                  "properties" : {
-                     "class" : "SolutionLinkingWireProperties",
-                     "label" : "",
-                     "description" : "",
-                     "informationSupplyChainSegmentGUIDs" : []
+                  "properties": {
+                     "class": "SolutionLinkingWireProperties",
+                     "label": "",
+                     "description": "",
+                     "informationSupplyChainSegmentGUIDs": []
                   },
-                  "effectiveTime" : "{{$isoTimestamp}}",
-                  "forLineage" : false,
-                  "forDuplicateProcessing" : false
+                  "effectiveTime": "{{$isoTimestamp}}",
+                  "forLineage": false,
+                  "forDuplicateProcessing": false
                 }
                 """
         loop = asyncio.get_event_loop()
@@ -4845,6 +4849,8 @@ class SolutionArchitect(Client):
         sub_component_guids = []
         actor_guids = []
         blueprint_guids = []
+        supply_chain_guids = []
+        parent_component_guids = []
 
         sub_components = response.get("subComponents",{})
         for sub_component in sub_components:
@@ -4858,8 +4864,24 @@ class SolutionArchitect(Client):
         for blueprint in blueprints:
             blueprint_guids.append(blueprint["relatedElement"]['elementHeader']["guid"])
 
+        context = response.get("context",[])
+        for c in context:
+            supply_chains = c.get("owningInformationSupplyChains", [])
+            if supply_chains:
+                for chain in supply_chains:
+                    supply_chain_guids.append(chain['relatedElement']["elementHeader"]["guid"])
+
+            parent_components = c.get("parentComponents",[])
+            if parent_components:
+                for parent_component in parent_components:
+                    parent_component_guids.append(parent_component["elementHeader"]["guid"])
+
         return {
-            "sub_component_guids": sub_component_guids, "actor_guids": actor_guids, "blueprint_guids": blueprint_guids
+            "sub_component_guids": sub_component_guids,
+            "actor_guids": actor_guids,
+            "blueprint_guids": blueprint_guids,
+            "supply_chain_guids": supply_chain_guids,
+            "parent_component_guids": parent_component_guids,
             }
 
 
@@ -5410,7 +5432,7 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_solution_role(guid, body, replace_all_properties))
 
-    async def _async_link_soln_component_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
+    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution role. Async Version.
 
         Parameters
@@ -5462,7 +5484,7 @@ class SolutionArchitect(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_soln_component_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
+    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution role.
 
             Parameters
@@ -5509,9 +5531,9 @@ class SolutionArchitect(Client):
 
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_soln_component_actor(role_guid, component_guid, body))
+        loop.run_until_complete(self._async_link_component_to_actor(role_guid, component_guid, body))
 
-    async def _async_detach_soln_component_actor(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict = None) -> None:
         """ Detach a solution role from a solution component.
             Async Version.
 
@@ -5558,7 +5580,7 @@ class SolutionArchitect(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_soln_component_actore(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict = None) -> None:
         """ Detach a solution role from a solution component.
 
         Parameters
@@ -5597,7 +5619,7 @@ class SolutionArchitect(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_soln_component_actor(role_guid, component_guid, body))
+        loop.run_until_complete(self._async_detach_component_actor(role_guid, component_guid, body))
 
 
     async def _async_delete_solution_role(self, guid: str,  body: dict = None, cascade_delete: bool = False,) -> None:

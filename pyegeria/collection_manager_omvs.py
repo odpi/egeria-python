@@ -5384,7 +5384,7 @@ class CollectionManager(Client):
     #
     #
 
-    async def _async_attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+    async def _async_attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None, make_anchor: bool = False):
         """ Connect an existing collection to an element using the ResourceList relationship (0019).
             Async version.
 
@@ -5396,6 +5396,8 @@ class CollectionManager(Client):
             The identifier of the collection being attached.
         body: dict, optional, default = None
             A dict representing the details of the relationship.
+        make_anchor: bool, optional, default = False
+            Indicates if the collection should be anchored to the element.
 
         Returns
         -------
@@ -5436,13 +5438,13 @@ class CollectionManager(Client):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
-               f"{parent_guid}/collections/{collection_guid}/attach")
+               f"{parent_guid}/collections/{collection_guid}/attach?makeAchor={make_anchor}")
         if body:
             await self._async_make_request("POST", url, body)
         else:
             await self._async_make_request("POST", url)
 
-    def attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
+    def attach_collection(self, parent_guid: str, collection_guid: str, body: dict = None, make_anchor: bool = False):
         """ Connect an existing collection to an element using the ResourceList relationship (0019).
 
             Parameters
@@ -5453,6 +5455,8 @@ class CollectionManager(Client):
                 The identifier of the collection being attached.
             body: dict, optional, default = None
                 A dict representing the details of the relationship.
+            make_anchor: bool, optional, default = False
+                Indicates if the collection should be anchored to the element.
 
             Returns
             -------
@@ -5491,7 +5495,7 @@ class CollectionManager(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_attach_collection(parent_guid, collection_guid, body))
+        loop.run_until_complete(self._async_attach_collection(parent_guid, collection_guid, body, make_anchor))
 
     async def _async_detach_collection(self, parent_guid: str, collection_guid: str, body: dict = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element, it is delete.
@@ -5505,6 +5509,7 @@ class CollectionManager(Client):
                 The identifier of the collection being detached.
         body: dict, optional, default = None
             A dict representing the details of the relationship.
+
 
         Returns
         -------

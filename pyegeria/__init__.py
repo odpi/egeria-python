@@ -43,6 +43,7 @@ from .feedback_manager_omvs import FeedbackManager
 from .full_omag_server_config import FullServerConfig
 from .glossary_browser_omvs import GlossaryBrowser
 from .glossary_manager_omvs import GlossaryManager
+from .governance_officer_omvs import GovernanceOfficer
 from .mermaid_utilities import (construct_mermaid_web, construct_mermaid_jup, generate_process_graph, load_mermaid,
                                 parse_mermaid_code, render_mermaid, save_mermaid_graph, save_mermaid_html, )
 from .metadata_explorer_omvs import MetadataExplorer

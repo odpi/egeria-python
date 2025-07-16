@@ -837,7 +837,7 @@ class TestDataDesigner:
             # search_string = "DataClass::ISO-Date"
             search_string = "*"
             start_time = time.perf_counter()
-            response = m_client.find_data_classes(search_string,output_format="REPORT")
+            response = m_client.find_data_classes(search_string,output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

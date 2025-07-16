@@ -58,7 +58,7 @@ class TestSolutionArchitect:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            display_name = "my_first_supply_chain"
+            display_name = "puddys_supply_chain"
             q_name = s_client.__create_qualified_name__("InformationSupplyChain",display_name)
             # body = {
             #     "class": "NewElementRequestBody",
@@ -86,12 +86,12 @@ class TestSolutionArchitect:
                     'class': 'InformationSupplyChainProperties',
                     'additionalProperties': None,
                     'description': 'My own personal supply chain',
-                    'displayName': 'my supply chain',
+                    'displayName': display_name,
                     'effectiveFrom': None,
                     'effectiveTo': None,
                     'extendedProperties': None,
                     'purposes': ['hegemony', 'betterment of mankind', 'pranks'],
-                    'qualifiedName': 'SupplyChain::my supply chain',
+                    'qualifiedName': q_name,
                     'scope': 'universal',
                     'version': None
                     }
@@ -226,7 +226,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_information_supply_chain_by_guid(self):
-        guid = "39a035f0-3b2b-45fe-adb8-ee8a19581f6a"
+        guid = "9fff0cfc-874b-4b01-b80f-75770c66b876"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -575,16 +575,18 @@ class TestSolutionArchitect:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            display_name = "my_first_blueprint"
+            display_name = "my_second_blueprint"
             q_name = s_client.__create_qualified_name__("Blueprint",display_name)
             body = {
-                "class": "NewSolutionBlueprintRequestBody",
+                "class": "NewSolutionElementRequestBody",
+                "isOwnAnchor": True,
                 "properties": {
                     "class": "SolutionBlueprintProperties",
                     "displayName": display_name,
                     "qualifiedName": q_name,
                     "description": "some description",
-                    }
+                    },
+                "initialStatus": "ACTIVE"
                 }
             start_time = time.perf_counter()
             response = s_client.create_solution_blueprint(body)
@@ -1072,11 +1074,11 @@ class TestSolutionArchitect:
             s_client.create_egeria_bearer_token()
 
             body = {
-              "class": "NewSolutionComponentRequestBody",
+              "class": "NewElementRequestBody",
               "parentAtEnd1": True,
               "properties": {
                 "class": "SolutionComponentProperties",
-                "qualifiedName": "SolnComponent::Lab Process::1",
+                "qualifiedName": "SolnComponent::Lab Process::2",
                 "displayName": "Lab Processes",
                 "description": "a description",
                 "solutionComponentType": "dan-test",
@@ -1151,7 +1153,7 @@ class TestSolutionArchitect:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            guid = "2414a0af-0597-48d6-9a40-3967e5b99fdc"
+            guid = "9e0ed1ce-00da-45ab-8bb2-a9f47d9598a3"
 
             start_time = time.perf_counter()
             s_client.delete_solution_component(guid)
@@ -1172,8 +1174,75 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
+    def test_link_solution_component_to_blueprint(self):
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+                )
+            s_client.create_egeria_bearer_token()
+            blueprint = "8a222c5d-b206-454f-b861-2b803cfe3cbd"
+            comp = "d026fbd6-709b-45d4-beec-f7a08764b5e2"
+
+
+            start_time = time.perf_counter()
+            guid = "0f8fea0d-d6e7-46e4-a32f-486899868bc0"
+            s_client.link_solution_component_to_blueprint(blueprint,comp,None)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+                )
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
+    def test_link_solution_components(self):
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+                )
+            s_client.create_egeria_bearer_token()
+            comp1 = "d026fbd6-709b-45d4-beec-f7a08764b5e2"
+            comp2 = "060dfadd-bab3-43de-b70c-4eee51038226"
+            body = {
+                "class": "RelationshipRequestBody",
+                "properties": {
+                    "class": "SolutionLinkingWireProperties",
+                    "label": "wire 1",
+                    "description": "some wiring"
+                    },
+                }
+
+            start_time = time.perf_counter()
+
+            s_client.link_solution_linking_wire(comp1,comp2,None)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+                )
+
+            assert True
+        except (
+                InvalidParameterException,
+                PropertyServerException,
+                UserNotAuthorizedException,
+                ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_get_solution_component_by_guid(self):
-        guid = "7f5dca65-50b4-4103-9ac7-3a406a09047a"
+        guid = "d026fbd6-709b-45d4-beec-f7a08764b5e2"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1181,7 +1250,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_solution_component_by_guid(guid, output_format='DICT')
+            response = s_client.get_solution_component_by_guid(guid, output_format='REPORT')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
@@ -1270,7 +1339,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "Hospital Processes"
+        filter = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1278,7 +1347,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_components(filter, output_format='JSON')
+            response = s_client.find_solution_components(filter, output_format='DICT')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

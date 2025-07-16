@@ -412,7 +412,7 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
                 return q_name, guid, unique, exists
 
     # Haven't seen this element before
-    property_names = ['qualifiedName', 'name', 'displayName']
+    property_names = ['qualifiedName', 'name', 'displayName', 'title']
     open_metadata_type_name = None
     details = egeria_client.get_elements_by_property_value(element_name, property_names, open_metadata_type_name)
     if isinstance(details, str):

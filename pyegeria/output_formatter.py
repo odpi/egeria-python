@@ -196,20 +196,26 @@ def generate_entity_md(elements: List[Dict],
         if get_additional_props_func:
             additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
+        display_name = props.get('displayName', None)
+        if display_name is None:
+            display_name = props.get('title', None)
+            if display_name is None:
+                display_name = "NO DISPLAY NAME"
 
         # Format header based on output format
         if output_format in ['FORM', 'MD']:
             elements_md += f"# {elements_action}\n\n"
-            elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
+            elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f'<a id="{props["GUID"]}"></a>\n\n# {entity_type} Name: {props["display_name"]}\n\n'
+            elements_md += f'<a id="{props["GUID"]}"></a>\n\n# {entity_type} Name: {display_name}\n\n'
         else:
-            elements_md += f"## {entity_type} Name \n\n{props['display_name']}\n\n"
+            elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
 
         # Add common attributes
         for key, value in props.items():
             if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
                 continue
+
             if key not in [ 'properties', 'display_name']:
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 

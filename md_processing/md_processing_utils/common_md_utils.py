@@ -3,6 +3,7 @@ This file contains general utility functions for processing Egeria Markdown
 """
 import os
 import re
+import json
 from datetime import datetime
 from typing import Any
 from loguru import logger
@@ -16,6 +17,11 @@ from md_processing.md_processing_utils.message_constants import message_types
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
+GENERAL_GOVERNANCE_DEFINITIONS = ["Business Imperative", "Regulation Article", "Threat", "Governance Principle",
+                                  "Governance Obligation", "Governance Approach", "Governance Processing Purpose"]
+
+GOVERNANCE_CONTROLS = ["Governance Rule", "Service Level Objective", "Governance Process",
+                       "Governance Responsibility", "Governance Procedure", "Security Access Control"]
 
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
@@ -177,3 +183,101 @@ def find_key_with_value(value: str) -> str | None:
             return key
 
     return None  # If value not found
+
+
+def set_create_body(object_type: str, attributes: dict)->dict:
+    prop_name = object_type.replace(" ", "")
+    body = {
+        "class": "NewGovernanceDefinitionRequestBody",
+        "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
+        "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
+        "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+        "forLineage": attributes.get('For Lineage', {}).get('value', False),
+        "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
+        "anchorGUID": attributes.get('Anchor ID', {}).get('guid', None),
+        "isOwnAnchor": attributes.get('Is Own Anchor', {}).get('value', True),
+        "parentGUID": attributes.get('Parent ID', {}).get('guid', None),
+        "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None),
+        "parentRelationshipProperties": attributes.get('Parent Relationship Properties', {}).get('value', None),
+        "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
+        "properties": "",
+        "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE")
+        }
+
+    return body
+
+
+
+
+def set_update_body(object_type: str, attributes: dict)->dict:
+    return {
+      "class" : "UpdateElementRequestBody",
+      "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
+      "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
+      "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+      "forLineage": attributes.get('For Lineage', {}).get('value', False),
+      "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
+      "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
+      "properties": "",
+    }
+
+def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+
+    prop_name = object_type.replace(" ", "")
+
+    return {
+        "class": prop_name + "Properties",
+        "displayName": attributes['Display Name'].get('value', None),
+        "qualifiedName" : qualified_name,
+        "description": attributes['Description'].get('value', None),
+        "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
+        "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
+        "effectiveTo": attributes.get('Effective To', {}).get('value', None),
+        "additionalProperties": attributes.get('Additional Properties', {}).get('value', None),
+        "extendedProperties": attributes.get('Extended Properties', {}).get('value', None)
+        }
+
+def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    prop_name = object_type.replace(" ", "")
+    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod["domainIdentifier"] = attributes.get('Domain Identifier', {}).get('value', None)
+    # prop_bod["documentIdentifier"] =  attributes.get('Document Identifier', {}).get('value', None)
+    prop_bod["title"]= attributes.get('Display Name', {}).get('value', None)
+    prop_bod['documentIdentifier'] = qualified_name
+    prop_bod["versionIdentifier"] = attributes.get('Version Identifier', {}).get('value', None)
+    prop_bod["summary"] = attributes.get('Summary', {}).get('value', None)
+    prop_bod["scope"] = attributes.get('Scope', {}).get('value', None)
+    prop_bod["importance"] = attributes.get('Importance', {}).get('value', None)
+    prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
+    prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
+    prop_bod["results"] = attributes.get('Results', {}).get('value', [])
+
+    body = update_body_for_type(object_type, prop_bod, attributes)
+    return body
+    
+
+def update_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
+    gov_def_name = object_type.replace(" ", "")
+    if object_type in GENERAL_GOVERNANCE_DEFINITIONS:
+        return body
+    elif object_type == "Governance Strategy":
+        body['businessImperatives'] = attributes.get('Business Imperatives', {}).get('value', [])
+        return body
+
+    elif object_type == "Regulation":
+        body['source'] = attributes.get('Source', {}).get('value', None)
+        body['regulators'] = attributes.get('Regulators', {}).get('value', [])
+        return body
+
+    elif object_type in GOVERNANCE_CONTROLS:
+        body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
+        return body
+    elif object_type == "Security Group":
+        body['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
+        return body
+    elif object_type == "Naming Standard Rule":
+        body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
+        return body
+    elif object_type in ["Certification Type", "License Type"]:
+        body['details'] = attributes.get('Details', {}).get('value', None)
+        return body

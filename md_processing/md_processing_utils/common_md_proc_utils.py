@@ -163,7 +163,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
             elif style == 'Ordered Int':
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
             elif style == 'Simple Int':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "int")
             elif style == 'Simple List':
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
                 name_list = parsed_attributes[key]['value']
@@ -187,7 +187,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
             else:
-                msg = f"Unknown attribute style: {style}"
+                msg = f"Unknown attribute style: {style} for key `{key}`"
                 logger.error(msg)
                 sys.exit(1)
                 parsed_attributes[key]['valid'] = False
@@ -362,7 +362,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
             elif style == 'Ordered Int':
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
             elif style == 'Simple Int':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "int")
             elif style == 'Simple List':
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
                 name_list = parsed_attributes[key]['value']
@@ -410,7 +410,8 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
 
 @logger.catch
-def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = INFO, default_value=None) -> dict:
+def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = INFO, default_value=None,
+                          simp_type: str = None) -> dict:
     """Process a simple attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and store it in a dictionary along with valid.
        If it doesn`t exist, mark the dictionary entry as invalid and print an error message with severity of if_missing.
@@ -434,10 +435,13 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     attribute = extract_attribute(txt, labels)
-
     if default_value == "":
         default_value = None
-    attribute = default_value if attribute is None else attribute.replace('\n','')
+    if simp_type == "int":
+        attribute = int(attribute)
+    else:
+        attribute = default_value if attribute is None else attribute.replace('\n','')
+
 
     if attribute is None:
 
