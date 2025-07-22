@@ -4,12 +4,13 @@ This file contains project-related object_action functions for processing Egeria
 
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, is_valid_iso_date)
+from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, is_valid_iso_date, setup_log)
 from md_processing.md_processing_utils.extraction_utils import (extract_command, process_simple_attribute)
 from md_processing.md_processing_utils.md_processing_constants import ALWAYS, ERROR, INFO, pre_command
 from pyegeria._globals import NO_PROJECTS_FOUND
 from pyegeria.project_manager_omvs import ProjectManager
 
+setup_log()
 
 def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, directive: str = "display") -> str | None:
     """
@@ -24,6 +25,8 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
     from md_processing.md_processing_utils.common_md_utils import set_debug_level
 
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
+
     object = command.split()
     object_type = f"{object[1]} {object[2]}"
     object_action = object[0]
@@ -32,7 +35,7 @@ def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, dir
     project_name = process_simple_attribute(txt, ['Project Name'])
     description = process_simple_attribute(txt, ['Description'])
     project_identifier = process_simple_attribute(txt, ['Project Identifier'])
-    project_status = process_simple_attribute(txt, ['Project Status'])
+    project_status = process_simple_attribute(txt, ['Status'])
     project_phase = process_simple_attribute(txt, ['Project Phase'])
     project_health = process_simple_attribute(txt, ['Project Health'])
     start_date = process_simple_attribute(txt, ['Start Date'])

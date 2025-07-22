@@ -339,7 +339,7 @@ class TestGovernanceOfficer:
                 "filter": filter
                 }
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(filter, output_format="JSON")
+            response = s_client.find_governance_definitions(filter, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -371,7 +371,7 @@ class TestGovernanceOfficer:
             filter = "*"
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(filter, output_format='LIST')
+            response = s_client.find_governance_definitions(filter, output_format='DICT')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -395,7 +395,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "e0b6721f-80dc-4342-ab83-ea556d4beff8"
+        guid = "df38d7cc-f6f8-4879-a092-d735be27bc3d"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -463,7 +463,7 @@ class TestGovernanceOfficer:
 
 
     def test_get_gov_def_in_context(self):
-        guid = "e0b6721f-80dc-4342-ab83-ea556d4beff8"
+        guid = "667c6480-a90a-4fd4-9022-8da646e203d2"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -471,7 +471,7 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_gov_def_in_context(guid, output_format='JSON')
+            response = s_client.get_gov_def_in_context(guid, output_format='REPORT')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

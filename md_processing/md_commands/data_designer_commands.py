@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer
@@ -41,15 +41,7 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
-
-log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
-logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
-# logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-#            colorize=True)
-logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-           colorize=True)
+setup_log()
 
 
 #
@@ -669,6 +661,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
     set_debug_level(directive)
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -866,6 +859,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     set_debug_level(directive)
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
     attributes = parsed_output['attributes']
@@ -1140,6 +1134,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     """
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1392,6 +1387,7 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
     if object_type in ["Data Dictionary", "Data Dictionaries", "DataDict", "DataDictionary"]:
         col_type = "DataDictionary"
     elif object_type in ["Data Specification", "Data Specifications", "Data Specs"]:
@@ -1478,6 +1474,7 @@ def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, dir
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1539,6 +1536,7 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1615,6 +1613,7 @@ def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directi
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 

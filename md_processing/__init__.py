@@ -1,11 +1,17 @@
 """
 This package contains functions to parse and process Egeria Markdown (Freddie)
 """
-from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command)
+from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
+                                                                   process_gov_def_link_detach_command,
+                                                                   process_gov_definition_list_command,
+                                                                   process_gov_def_context_command)
 
 
 from md_processing.md_commands.product_manager_commands import (process_digital_product_upsert_command,
-                                                                process_agreement_upsert_command)
+                                                                process_agreement_upsert_command,
+                                                                process_collection_list_command,
+                                                                process_collection_upsert_command,
+                                                                process_link_agreement_item_command)
 
 from md_processing.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
                                                                    process_solution_component_upsert_command,
@@ -39,7 +45,12 @@ from md_processing.md_processing_utils.common_md_utils import (render_markdown, 
                                                                console, debug_level, get_element_dictionary,
                                                                update_element_dictionary, clear_element_dictionary,
                                                                is_present, find_key_with_value,
-                                                               process_provenance_command)
+                                                               process_provenance_command, set_metadata_source_request_body,
+                                                               set_rel_request_body, set_filter_request_body,
+                                                               set_update_body, set_peer_gov_def_request_body,
+                                                                set_gov_prop_body, set_prop_body, set_create_body,
+
+                                                               )
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
                                                                 extract_attribute, process_simple_attribute,
                                                                 process_name_list, process_element_identifiers,
@@ -54,7 +65,8 @@ from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, E
                                                                        SOLUTION_LINKING_ROLE_LABELS, OUTPUT_LABELS,
                                                                        SEARCH_LABELS, GUID_LABELS,
                                                                        ELEMENT_OUTPUT_FORMATS, TERM_RELATIONSHPS,
-                                                                       command_list, COMMAND_DEFINITIONS, GOV_COM_LIST)
+                                                                       command_list, COMMAND_DEFINITIONS, GOV_COM_LIST,
+                                                                       GOV_LINK_LIST, COLLECTIONS_LIST, SIMPLE_COLLECTIONS,)
 # Import functions from md_processing_constants
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, get_command_spec, get_attribute,
                                                                        get_attribute_labels, get_alternate_names)

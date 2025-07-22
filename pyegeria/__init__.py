@@ -14,7 +14,9 @@ the server platform and servers.
 from ._globals import (INTEGRATION_GUIDS, TEMPLATE_GUIDS, default_time_out, disable_ssl_warnings, enable_ssl_check,
                        is_debug, max_paging_size, NO_ELEMENTS_FOUND, NO_ASSETS_FOUND, NO_SERVERS_FOUND,
                        NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,
-                       NO_PROJECTS_FOUND, DEBUG_LEVEL,)
+                       NO_PROJECTS_FOUND, DEBUG_LEVEL, NO_COLLECTION_FOUND, NO_GUID_RETURNED)
+
+from ._output_formats import select_column_set
 
 if disable_ssl_warnings:
     from urllib3 import disable_warnings
@@ -54,7 +56,7 @@ from .registered_info import RegisteredInfo
 from .runtime_manager_omvs import RuntimeManager
 from .server_operations import ServerOps
 from .solution_architect_omvs import SolutionArchitect
-from .utils import body_slimmer, print_response
+from .utils import body_slimmer, print_response, to_pascal_case, to_camel_case, camel_to_title_case
 from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager

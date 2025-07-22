@@ -1,7 +1,7 @@
 from datetime import datetime
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
+from pyegeria.utils import (camel_to_title_case)
 from markdown_it import MarkdownIt
 from rich.console import Console
 
@@ -126,7 +126,8 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
         if attribute_name.upper() == "GUID":
             attribute_title = attribute_name.upper()
         else:
-            attribute_title = attribute_name.title()
+            # attribute_title = attribute_name.title()
+            attribute_title = camel_to_title_case(attribute_name)
     else:
         attribute_title = ""
 
@@ -169,7 +170,8 @@ def generate_entity_md(elements: List[Dict],
                       output_format: str, 
                       entity_type: str,
                       extract_properties_func: Callable, 
-                      get_additional_props_func: Optional[Callable] = None) -> str:
+                      get_additional_props_func: Optional[Callable] = None,
+                       columns_struct: [dict] = None) -> str:
     """
     Generic method to generate markdown for entities.
 
@@ -180,11 +182,13 @@ def generate_entity_md(elements: List[Dict],
         entity_type (str): Type of entity (Glossary, Term, Category, etc.)
         extract_properties_func: Function to extract properties from an element
         get_additional_props_func: Optional function to get additional properties
+        columns (list): List of column name structures
 
     Returns:
         str: Markdown representation
     """
     elements_md = ""
+    columns = columns_struct['columns'] if columns_struct else None
 
     for element in elements:
         if element is None:
@@ -196,7 +200,7 @@ def generate_entity_md(elements: List[Dict],
         if get_additional_props_func:
             additional_props = get_additional_props_func(element,props['GUID'], output_format)
 
-        display_name = props.get('displayName', None)
+        display_name = props.get('display_name', None)
         if display_name is None:
             display_name = props.get('title', None)
             if display_name is None:
@@ -207,25 +211,44 @@ def generate_entity_md(elements: List[Dict],
             elements_md += f"# {elements_action}\n\n"
             elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f'<a id="{props["GUID"]}"></a>\n\n# {entity_type} Name: {display_name}\n\n'
+            elements_md += f'<a id="{props.get("GUID","No GUID")}"></a>\n# {entity_type} Name: {display_name}\n\n'
         else:
             elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
 
-        # Add common attributes
-        for key, value in props.items():
-            if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
-                continue
+       # Add attributes based on column spec if available, otherwise, add all
+        if columns:
+            for column in columns:
+                key = column['key']
+                value = ""
 
-            if key not in [ 'properties', 'display_name']:
+                # Check if the key is in props or additional_props
+                if key in props:
+                    value = props[key]
+                elif key in additional_props:
+                    value = additional_props[key]
+                # Format the value if needed
+                if 'format' in column and column['format']:
+                    value = format_for_markdown_table(value, props['GUID'])
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
-        # Add additional properties
-        for key, value in additional_props.items():
-            elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+        else:
+
+            for key, value in props.items():
+                if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
+                    continue
+                if key not in [ 'properties', 'display_name']:
+                    if key == "mermaid" and value == '':
+                        continue
+                    elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+            # Add additional properties
+            for key, value in additional_props.items():
+                elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
         # # Add GUID
         # elements_md += make_md_attribute("GUID",props['GUID'], output_format)
 
+        if wk := columns_struct.get("annotations", {}).get("wikilinks", None):
+            elements_md += ", ".join(wk)
         # Add separator if not the last element
         if element != elements[-1]:
             elements_md += MD_SEPARATOR
@@ -236,7 +259,7 @@ def generate_entity_md_table(elements: List[Dict],
                             search_string: str, 
                             entity_type: str, 
                             extract_properties_func: Callable,
-                            columns: List[Dict], 
+                            columns_struct: dict,
                             get_additional_props_func: Optional[Callable] = None, 
                             output_format: str = 'LIST') -> str:
     """
@@ -256,6 +279,7 @@ def generate_entity_md_table(elements: List[Dict],
     """
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
+    columns = columns_struct.get('columns', [])
 
     elements_md = ""
     if output_format == "LIST":
@@ -303,14 +327,16 @@ def generate_entity_md_table(elements: List[Dict],
             row += f"{value} | "
 
         elements_md += row + "\n"
-
+        if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
+            elements_md += ", ".join(wk)
     return elements_md
 
 def generate_entity_dict(elements: List[Dict], 
                         extract_properties_func: Callable, 
                         get_additional_props_func: Optional[Callable] = None,
                         include_keys: Optional[List[str]] = None, 
-                        exclude_keys: Optional[List[str]] = None, 
+                        exclude_keys: Optional[List[str]] = None,
+                        columns_struct: dict = None,
                         output_format: str = 'DICT') -> List[Dict]:
     """
     Generic method to generate a dictionary representation of entities.
@@ -321,6 +347,7 @@ def generate_entity_dict(elements: List[Dict],
         get_additional_props_func: Optional function to get additional properties
         include_keys: Optional list of keys to include in the result (if None, include all)
         exclude_keys: Optional list of keys to exclude from the result (if None, exclude none)
+        columns_struct: Optional dict of columns to include (if None, include all)
         output_format (str): Output format (FORM, REPORT, DICT, etc.)
 
     Returns:
@@ -328,11 +355,12 @@ def generate_entity_dict(elements: List[Dict],
     """
     result = []
 
+#####
+    # Add attributes based on column spec if available, otherwise, add all
     for element in elements:
         if element is None:
             continue
         props = extract_properties_func(element)
-
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
@@ -341,19 +369,64 @@ def generate_entity_dict(elements: List[Dict],
         # Create entity dictionary
         entity_dict = {}
 
-        # Add properties based on include/exclude lists
-        for key, value in props.items():
-            if key not in [ 'properties', 'mermaid']:  # Skip the raw properties object
-                if (include_keys is None or key in include_keys) and (
-                        exclude_keys is None or key not in exclude_keys):
-                    entity_dict[key] = value
+        columns = columns_struct.get('columns', None) if columns_struct else None
+        if columns:
 
-        # Add additional properties
-        for key, value in additional_props.items():
-            if (include_keys is None or key in include_keys) and (exclude_keys is None or key not in exclude_keys):
+            for column in columns:
+                key = column['key']
+                value = ""
+
+                # Check if the key is in props or additional_props
+                if key in props:
+                    value = props[key]
+                elif key in additional_props:
+                    value = additional_props[key]
+                # Format the value if needed
+                if  column.get('format', None):
+                    value = format_for_markdown_table(value, props['GUID'])
                 entity_dict[key] = value
 
+        else:
+            # Add properties based on include/exclude lists
+            for key, value in props.items():
+                if key not in ['properties', 'mermaid']:  # Skip the raw properties object
+                    if (include_keys is None or key in include_keys) and (
+                            exclude_keys is None or key not in exclude_keys):
+                        entity_dict[key] = value
+
+            # Add additional properties
+            for key, value in additional_props.items():
+                if (include_keys is None or key in include_keys) and (exclude_keys is None or key not in exclude_keys):
+                    entity_dict[key] = value
+
         result.append(entity_dict)
+    #####
+    # for element in elements:
+    #     if element is None:
+    #         continue
+    #     props = extract_properties_func(element)
+    #
+    #     # Get additional properties if function is provided
+    #     additional_props = {}
+    #     if get_additional_props_func:
+    #         additional_props = get_additional_props_func(element,props['GUID'], output_format)
+    #
+    #     # Create entity dictionary
+    #     entity_dict = {}
+    #
+    #     # Add properties based on include/exclude lists
+    #     for key, value in props.items():
+    #         if key not in [ 'properties', 'mermaid']:  # Skip the raw properties object
+    #             if (include_keys is None or key in include_keys) and (
+    #                     exclude_keys is None or key not in exclude_keys):
+    #                 entity_dict[key] = value
+    #
+    #     # Add additional properties
+    #     for key, value in additional_props.items():
+    #         if (include_keys is None or key in include_keys) and (exclude_keys is None or key not in exclude_keys):
+    #             entity_dict[key] = value
+    #
+    #     result.append(entity_dict)
 
     return result
 
@@ -429,7 +502,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
                    output_format: str,
                    extract_properties_func: Callable,
                    get_additional_props_func: Optional[Callable] = None,
-                   columns: Optional[List[Dict]] = None) -> Union[str, List[Dict]]:
+                   columns_struct: dict = None) -> Union[str, list[dict]]:
     """
     Generate output in the specified format for the given elements.
 
@@ -445,6 +518,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
     Returns:
         Formatted output as string or list of dictionaries
     """
+    columns = columns_struct['columns'] if columns_struct else None
     # Ensure elements is a list
     if isinstance(elements, dict):
         elements = [elements]
@@ -465,7 +539,8 @@ def generate_output(elements: Union[Dict, List[Dict]],
             entity_type=entity_type,
             output_format="REPORT",
             extract_properties_func=extract_properties_func,
-            get_additional_props_func=get_additional_props_func
+            get_additional_props_func=get_additional_props_func,
+            columns_struct=columns_struct
         )
 
         # Convert the markdown to HTML
@@ -477,6 +552,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
             extract_properties_func=extract_properties_func,
             get_additional_props_func=get_additional_props_func,
             exclude_keys=['properties'],
+            columns_struct=columns_struct,
             output_format=output_format
         )
 
@@ -489,7 +565,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
             search_string=search_string,
             entity_type=entity_type,
             extract_properties_func=extract_properties_func,
-            columns=columns,
+            columns_struct=columns_struct,
             get_additional_props_func=get_additional_props_func,
             output_format=output_format
         )
@@ -507,7 +583,8 @@ def generate_output(elements: Union[Dict, List[Dict]],
             output_format=output_format,
             entity_type=entity_type,
             extract_properties_func=extract_properties_func,
-            get_additional_props_func=get_additional_props_func
+            get_additional_props_func=get_additional_props_func,
+            columns_struct = columns_struct
         )
 
         return elements_md

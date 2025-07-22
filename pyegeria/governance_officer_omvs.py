@@ -127,25 +127,6 @@ class GovernanceOfficer(Client):
     #
     #
 
-    def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
-        """
-        Normalize governance definition response for a list of dictionaries.
-        Args:
-            element: Dict or List
-
-        Returns:
-            list of Dict
-
-        """
-        if isinstance(element, dict):
-            return [self._extract_gov_def_properties(element)]
-        elif isinstance(element, list):
-            comp_list = []
-            for i in range(len(element)):
-                comp_list.append(self._extract_gov_def_properties(element[i]))
-            return comp_list
-        else:
-            return []
 
     def _extract_gov_def_properties(self, element: dict) -> dict:
         """
@@ -160,6 +141,8 @@ class GovernanceOfficer(Client):
         guid = element['elementHeader'].get("guid", None)
         properties = element['properties']
         properties['GUID'] = guid
+        mermaid = element.get('mermaidGraph', "") or ""
+        properties['Mermaid'] = mermaid
         del properties['class']
 
         #
@@ -190,7 +173,7 @@ class GovernanceOfficer(Client):
 
         """
         if isinstance(element, dict):
-            return [self._extract_solution_components_properties(element)]
+            return [self._extract_gov_def_properties(element)]
         elif isinstance(element, list):
             def_list = []
             for i in range(len(element)):
@@ -982,7 +965,7 @@ class GovernanceOfficer(Client):
 
         url = (
             f"{self.platform_url}/s"
-            f"ervers/{self.view_server}/api/open-metadata/goverance-officer/governance-definitions/"
+            f"ervers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/"
             f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/attach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
@@ -2317,11 +2300,9 @@ class GovernanceOfficer(Client):
             response = await self._async_make_request("POST", url)
 
         element = response.json().get("element", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_governance_definitions_output(element, guid, output_format)
-        return element
+            return self.generate_governance_definition_output(element, "", output_format)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON", start_from: int = 0,
                                page_size: int = 0) -> list[dict] | str:

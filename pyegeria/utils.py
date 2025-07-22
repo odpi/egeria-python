@@ -205,6 +205,85 @@ def body_slimmer(body: dict) -> dict:
                 slimmed[key] = value
     return slimmed
 
+import re
+
+def camel_to_title_case(input_string):
+    # Add a space before uppercase letters and capitalize each word
+    result = re.sub(r'([a-z])([A-Z])', r'\1 \2', input_string).title()
+    return result
+
+
+def to_camel_case(input_string):
+    """Convert an input string to camelCase, singularizing if plural.
+    
+    This function takes an input string, converts it to singular form if it's plural,
+    and then transforms it to camelCase format (first word lowercase, subsequent words
+    capitalized with no spaces).
+    
+    Parameters
+    ----------
+    input_string : str
+        The string to convert to camelCase
+        
+    Returns
+    -------
+    str:
+        The input string converted to camelCase, after singularization if needed
+        
+    Examples
+    --------
+    >>> to_camel_case("data categories")
+    'dataCategory'
+    >>> to_camel_case("business terms")
+    'businessTerm'
+    >>> to_camel_case("glossary categories")
+    'glossaryCategory'
+    """
+    if not input_string:
+        return ""
+    
+    # Convert to lowercase for consistent processing
+    lowercase_input = input_string.lower()
+    
+    # First, convert to singular if plural
+    singular = lowercase_input
+    
+    # Handle common plural endings
+    if singular.endswith('ies'):
+        singular = singular[:-3] + 'y'
+    elif singular.endswith('es'):
+        # Special cases like 'classes' -> 'class'
+        if singular.endswith('sses') or singular.endswith('ches') or singular.endswith('shes') or singular.endswith('xes'):
+            singular = singular[:-2]
+        else:
+            singular = singular[:-1]
+    elif singular.endswith('s') and not singular.endswith('ss'):
+        singular = singular[:-1]
+    
+    # Split the string into words and convert to camelCase
+    words = singular.split()
+    if not words:
+        return ""
+    
+    # First word is lowercase, rest are capitalized
+    result = words[0]
+    for word in words[1:]:
+        result += word.capitalize()
+    
+    return result
+
+def to_pascal_case(input_string)->str:
+    """
+        Convert input string to PascalCase, singularizing if plural.
+    Args:
+        input_string ():
+
+    Returns:
+        transformed string
+    """
+    result = to_camel_case(input_string)
+    output_string = result[0].upper() + result[1:]
+    return output_string
 
 if __name__ == "__main__":
     print("Main-Utils")

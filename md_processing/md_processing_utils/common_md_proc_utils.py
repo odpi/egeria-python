@@ -1,6 +1,7 @@
 """
 This file contains general utility functions for processing Egeria Markdown
 """
+import json
 import os
 import sys
 from typing import List
@@ -175,6 +176,9 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
             elif style == 'Bool':
                 parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == "Dictionary List":
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                parsed_attributes[key]['list'] = json.loads(parsed_attributes[key]['value'])
 
 
             elif style == 'Reference Name List':
@@ -264,7 +268,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
     parsed_output['exists'] = False
 
     labels = {}
-    if object_action == "Unlink":
+    if object_action in ["Unlink","Detach"]:
         command_spec = get_command_spec(f"Link {object_type}")
     else:
         command_spec = get_command_spec(f"{object_action} {object_type}")
@@ -374,6 +378,9 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
             elif style == 'Bool':
                 parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == "Dictionary List":
+                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                # parsed_attributes[key]['list'] = json.loads(parsed_attributes[key]['value'])
 
             elif style == 'Reference Name List':
                 parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
@@ -434,17 +441,14 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         logger.error(msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
-    attribute = extract_attribute(txt, labels)
     if default_value == "":
         default_value = None
-    if simp_type == "int":
-        attribute = int(attribute)
-    else:
-        attribute = default_value if attribute is None else attribute.replace('\n','')
 
+    attribute = extract_attribute(txt, labels)
+
+    attribute = default_value if attribute is None else attribute.replace('\n', '')
 
     if attribute is None:
-
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
             valid = True
@@ -454,6 +458,10 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
             valid = False
             logger.error(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
+
+    if attribute and simp_type == "int" :
+        attribute = int(attribute)
+
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
 
@@ -489,6 +497,8 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
     if isinstance(valid_values, str):
         # v_values = [item.strip() for item in re.split(r'[;,\n]+', valid_values)]
         v_values = split_tb_string(valid_values)
+    if isinstance(valid_values, list):
+        v_values = valid_values
     if not isinstance(v_values, list):
         msg = "Valid values list is not a list"
         logger.error(msg)
@@ -641,7 +651,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
         logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
 
-    elif action == "Update" and exists:
+    elif action in ["Update", "View"] and exists:
         msg = f"Element {element_name} exists"
         logger.info(msg)
         identifier_output = {

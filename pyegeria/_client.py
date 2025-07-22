@@ -776,7 +776,8 @@ class Client:
            If present, the local qualifier will be prepended to the qualified name."""
         EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
         # display_name = re.sub(r'\s','-',display_name.strip()) # This changes spaces between words to -; removing
-
+        if display_name is None:
+            raise InvalidParameterException("display_name is required")
         q_name = f"{type}::{display_name.strip()}"
         if EGERIA_LOCAL_QUALIFIER:
             q_name = f"{EGERIA_LOCAL_QUALIFIER}::{q_name}"

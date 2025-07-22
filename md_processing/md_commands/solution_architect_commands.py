@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import body_slimmer, EgeriaTech
@@ -20,12 +20,8 @@ from pyegeria import body_slimmer, EgeriaTech
 load_commands('commands.json')
 
 console = Console(width=int(200))
+setup_log()
 
-log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
-logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-logger.add("solution_architect_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE",
-           format=log_format, colorize=True)
 
 @logger.catch
 def sync_chain_related_elements(egeria_client: EgeriaTech, guid:str, in_supply_chain_guids:list, display_name:str,
@@ -264,7 +260,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
-
+    print(Markdown(f"# {command}\n"))
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
     valid = parsed_output['valid']
@@ -432,6 +428,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -452,7 +449,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     version_identifier = attributes.get('Version Identifier', {}).get('value', None)
     solution_component_type = attributes.get('Solution Component Type', {}).get('value', None)
     planned_deployed_impl_type = attributes.get('Planned Deployed Implementation Type', {}).get('value', None)
-    initial_status = attributes.get('Initial Status', {}).get('value', None)
+    initial_status = attributes.get('Status', {}).get('value', None)
     user_defined_status = attributes.get('User Defined Status', {}).get('value', None)
     if initial_status != "OTHER":
         user_defined_status = None
@@ -656,6 +653,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -782,6 +780,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -956,6 +955,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1078,6 +1078,7 @@ def process_sol_arch_list_command(egeria_client: EgeriaTech, txt: str, kind:str,
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 

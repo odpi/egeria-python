@@ -15,6 +15,7 @@ logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="z
 import click
 from rich import print
 from rich.console import Console
+from md_processing.md_processing_utils.common_md_utils import setup_log
 
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                            process_category_upsert_command, process_provenance_command, get_current_datetime_string,
@@ -27,7 +28,10 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_information_supply_chain_upsert_command,
                            process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
                            process_digital_product_upsert_command, process_agreement_upsert_command,
-                           process_gov_definition_upsert_command, GOV_COM_LIST)
+                           process_collection_list_command, process_collection_upsert_command, process_link_agreement_item_command,
+                           process_gov_definition_upsert_command, GOV_COM_LIST, GOV_LINK_LIST,
+                           process_gov_def_link_detach_command, process_gov_definition_list_command,
+                           process_gov_def_context_command, COLLECTIONS_LIST, SIMPLE_COLLECTIONS)
 from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_collection_list_command,
@@ -37,7 +41,6 @@ from md_processing.md_commands.data_designer_commands import (process_data_spec_
                                                               process_data_field_upsert_command,
                                                               process_data_structure_upsert_command,
                                                               process_data_class_upsert_command)
-
 from pyegeria import EgeriaTech
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -59,7 +62,7 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
-
+setup_log()
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md", required=True,
               prompt=False)
@@ -186,15 +189,24 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
                 result = process_data_class_list_command(client, current_block, directive)
             elif potential_command in ["Create Digital Product", "Create Data Product","Update Digital Product", "Update Data Product"]:
                 result = process_digital_product_upsert_command(client, current_block, directive)
-            elif potential_command in ["Create Agreement", "Update Agreement"]:
-                result = process_digital_product_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create Agreement", "Create Data Sharing Agreement", "Update Agreement", "Update Data Sharing Agreement"]:
+                result = process_agreement_upsert_command(client, current_block, directive)
+            elif potential_command in SIMPLE_COLLECTIONS:
+                result = process_collection_upsert_command(client, current_block, directive)
             elif potential_command in GOV_COM_LIST:
                 result = process_gov_definition_upsert_command(client, current_block, directive)
+            elif potential_command in ['View Governance Definitions', 'List Governance Definitions',
+                                       'View Gov Definitions', 'List Gov Definitions']:
+                result = process_gov_definition_list_command(client, current_block, directive)
+            elif potential_command in COLLECTIONS_LIST:
+                result = process_collection_list_command(client, current_block, directive)
+
 
 
             else:
                 # If object_action is not recognized, keep the block as-is
                 result = None
+                print(f"\n===> Unknown command: {potential_command}")
             # print(json.dumps(dr_egeria_state.get_element_dictionary(), indent=4))
             if result:
                 if directive == "process":
@@ -269,6 +281,7 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
         else:
             if directive != 'display':
                 click.echo("\nNo updates detected. New File not created.")
+                logger.error("===> Unknown Command? <===")
 
     except (Exception):
         console.print_exception(show_locals=True)
