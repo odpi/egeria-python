@@ -225,7 +225,22 @@ class TestDataDesigner:
 
 
     def test_find_all_data_structures(self):
-
+        columns_struct = {
+            "heading": "data structs",
+            "description": "structs generic to all Agreements.",
+            "aliases": [],
+            "columns": [
+                {'name': 'Name', 'key': 'display_name'},
+                {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                {'name': 'Super Category', 'key': 'category'},
+                {'name': 'My Description', 'key': 'description', 'format': True},
+                {'name': "Classifications", 'key': 'classifications'},
+                {'name': 'Members', 'key': 'members', 'format': True},
+                {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                ],
+            "formats": ["ALL"],
+            "annotations": {"wikilinks": ["[[Egeria]]"]}
+            }
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -261,7 +276,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = "TBDF-Incoming Weekly Measurement Data"
-            response = m_client.find_data_structures(search_string, output_format="REPORT")
+            response = m_client.find_data_structures(search_string, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

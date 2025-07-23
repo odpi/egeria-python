@@ -7,12 +7,14 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+from typing import Dict, Union, List, Optional
 
-from pyegeria import select_column_set
+from pyegeria import select_output_format_set
 from pyegeria._client import Client
-from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED, NO_COLLECTION_FOUND
+from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria._validators import validate_guid, validate_search_string
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output)
+from pyegeria.output_formatter import (generate_output,
+                                       _extract_referenceable_properties)
 from pyegeria.utils import body_slimmer
 
 
@@ -71,8 +73,8 @@ class CollectionManager(Client):
     #       Retrieving Collections - https://egeria-project.org/concepts/collection
     #
     async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0,
-                                              body: dict = None, output_format: str = "JSON", columns: list[dict]
-                                              = None) -> list | str:
+                                              body: dict = None, output_format: str = "JSON",
+                                              output_format_set: str | dict = None) -> list | str:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
 
@@ -89,7 +91,7 @@ class CollectionManager(Client):
             If supplied, adds addition request details - for instance, to filter the results on collectionType
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict = None), optional, default = None
             The desired output columns/fields to include.
 
         Returns
@@ -136,11 +138,12 @@ class CollectionManager(Client):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_collection_output(elements, None, None, output_format, columns=columns)
+            return self.generate_collection_output(elements, None, None, output_format,
+                                                   output_format_set=output_format_set)
         return elements
 
     def get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0, body: dict = None,
-                                 output_format: str = "JSON", columns: list[dict] = None) -> list:
+                                 output_format: str = "JSON", output_format_set: str | dict = None) -> list:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
 
@@ -157,7 +160,7 @@ class CollectionManager(Client):
             If supplied, adds addition request details - for instance, to filter the results on collectionType
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict = None), optional, default = None
                 The desired output columns/fields to include.
 
 
@@ -195,12 +198,13 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_attached_collections(parent_guid, start_from, page_size,
-                                                 body, output_format, columns))
+                                                 body, output_format, output_format_set))
 
     async def _async_find_collections_w_body(self, body: dict, classification_name: str = None,
                                              starts_with: bool = True, ends_with: bool = False,
                                              ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON', columns: list[dict] = None) -> list | str:
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
             body allows complete control including status, asOfTime and effectiveTime.
@@ -226,8 +230,8 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
-                The desired output columns/fields to include.
+         output_format_set: str | dict , optional, default = None
+            - The desired output columns/field options.
         Returns
         -------
         List | str
@@ -283,13 +287,13 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, None, classification_name,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def find_collections_w_body(self, body: dict, classification_name: str = None, starts_with: bool = True,
                                 ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
                                 page_size: int = 0, output_format: str = 'JSON',
-                                columns: list[dict] = None) -> list | str:
+                                output_format_set: str | dict = None) -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
             body allows complete control including status, asOfTime and effectiveTime.
@@ -315,7 +319,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns.
         Returns
         -------
@@ -350,12 +354,12 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
-                                                start_from, page_size, output_format, columns))
+                                                start_from, page_size, output_format, output_format_set))
 
     async def _async_find_collections(self, search_string: str = '*', classification_name: str = None,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                      columns: list[dict] = None) -> list | str:
+                                      output_format_set: str | dict = None) -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
             body allows complete control including status, asOfTime and effectiveTime.
@@ -382,7 +386,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
             - The desired output columns/fields to include.
         Returns
         -------
@@ -407,13 +411,13 @@ class CollectionManager(Client):
             }
 
         resp = await self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
-                                                         start_from, page_size, output_format, columns)
+                                                         start_from, page_size, output_format, output_format_set)
         return resp
 
     def find_collections(self, search_string: str = '*', classification_name: str = None, starts_with: bool = True,
                          ends_with: bool = False, ignore_case: bool = False,
-                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON', columns: list[dict]
-                         = None) -> list | str:
+                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                         output_format_set: str | dict = None) -> list | str:
         """ Returns the list of collections matching the search string filtered by the optional classification.
             The search string is located in the request body and is interpreted as a plain string. The full
             body allows complete control including status, asOfTime and effectiveTime.
@@ -439,7 +443,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
             - The desired output columns/fields to include.
         Returns
         -------
@@ -460,11 +464,12 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_find_collections(search_string, classification_name, starts_with, ends_with, ignore_case,
-                                         start_from, page_size, output_format, columns))
+                                         start_from, page_size, output_format, output_format_set))
 
     async def _async_get_collections_by_name(self, name: str, classification_name: str = None, body: dict = None,
                                              start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON', columns: list[dict] = None) -> list | str:
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list | str:
         """ Returns the list of collections with a particular name.
 
             Parameters
@@ -482,7 +487,7 @@ class CollectionManager(Client):
                 the class instance.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            columns: list[dict], optional, default = None
+         output_format_set: dict , optional, default = None 
                 The desired output columns/fields to include.
 
             Returns
@@ -520,12 +525,12 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, filter, classification_name,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collections_by_name(self, name: str, classification_name: str = None, body: dict = None,
                                 start_from: int = 0, page_size: int = None, output_format: str = 'JSON',
-                                columns: list[dict] = None) -> list | str:
+                                output_format_set: str | dict = None) -> list | str:
         """Returns the list of collections matching the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -545,7 +550,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -570,12 +575,12 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_collections_by_name(name, classification_name, body, start_from, page_size,
-                                                output_format, columns))
+                                                output_format, output_format_set))
 
     async def _async_get_collections_by_type(self, collection_type: str, classification_name: str = None,
                                              body: dict = None, start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON', columns: list[dict]
-                                             = None) -> list | str:
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
@@ -595,7 +600,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -653,12 +658,12 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, filter, collection_type,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collections_by_type(self, collection_type: str, classification_name: str = None, body: dict = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                columns: list[dict] = None) -> list | str:
+                                output_format_set: str | dict = None) -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
             collection element.
 
@@ -678,7 +683,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -717,10 +722,11 @@ class CollectionManager(Client):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_collections_by_type(collection_type, classification_name, body, start_from, page_size,
-                                                output_format, columns))
+                                                output_format, output_format_set))
 
     async def _async_get_collection_by_guid(self, collection_guid: str, collection_type: str = None, body: dict = None,
-                                            output_format: str = 'JSON', columns: list[dict] = None) -> dict | str:
+                                            output_format: str = 'JSON',
+                                            output_format_set: str | dict = None) -> dict | str:
         """Return the properties of a specific collection. Async version.
 
         Parameters
@@ -733,7 +739,7 @@ class CollectionManager(Client):
             full request body.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -778,11 +784,11 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, None, collection_type,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collection_by_guid(self, collection_guid: str, collection_type: str = None, body: dict = None,
-                               output_format: str = 'JSON', columns: list[dict] = None) -> dict | str:
+                               output_format: str = 'JSON', output_format_set: str | dict = None) -> dict | str:
         """ Return the properties of a specific collection. Async version.
 
             Parameters
@@ -795,7 +801,7 @@ class CollectionManager(Client):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            columns: list[dict], optional, default = None
+         output_format_set: dict , optional, default = None 
                 The desired output columns/fields to include.
 
 
@@ -828,12 +834,12 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_by_guid(collection_guid, collection_type, body,
-                                               output_format, columns))
+                                               output_format, output_format_set))
 
     async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
                                             collection_qname: str = None, body: dict = None, start_from: int = 0,
                                             page_size: int = 0, output_format: str = "JSON",
-                                            columns: list[dict] = None) -> list | str:
+                                            output_format_set: str | dict = None) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
 
         Parameters
@@ -856,7 +862,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -907,13 +913,13 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, None, None,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
                                collection_qname: str = None, body: dict = None, start_from: int = 0,
                                page_size: int = 0,
-                               output_format: str = "JSON", columns: list[dict] = None)-> list | str:
+                               output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Return a list of elements that are a member of a collection.
         Parameters
         ----------
@@ -935,7 +941,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -970,13 +976,13 @@ class CollectionManager(Client):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_collection_members(collection_guid, collection_name, collection_qname, body, start_from,
-                                               page_size, output_format, columns))
+                                               page_size, output_format, output_format_set))
 
         return resp
 
     async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0,
-                                        page_size: int = 0, output_format: str = "JSON",
-                                          columns: list[dict] = None)-> list | str:
+                                          page_size: int = 0, output_format: str = "JSON",
+                                          output_format_set: str | dict = None) -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
                 with elements immediately connected to the starting collection.  The result
                 includes a mermaid graph of the returned elements. Async version.
@@ -995,7 +1001,7 @@ class CollectionManager(Client):
                 the class instance.
             output_format: str, default = "JSON"
                 - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-            columns: list[dict], optional, default = None
+         output_format_set: dict , optional, default = None 
                 The desired output columns/fields to include.
 
             Returns
@@ -1041,11 +1047,12 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, None, None,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0,
-                            page_size: int = 0, output_format: str = "JSON", columns: list[dict] = None) -> list | str:
+                             page_size: int = 0, output_format: str = "JSON",
+                             output_format_set: str | dict = None) -> list | str:
 
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
@@ -1065,7 +1072,7 @@ class CollectionManager(Client):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        columns: list[dict], optional, default = None
+         output_format_set: str | dict , optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -1098,11 +1105,11 @@ class CollectionManager(Client):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_graph(collection_guid, body, start_from, page_size,
-                                             output_format, columns))
+                                             output_format, output_format_set))
 
     async def _async_get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
-                                                     page_size: int = None, output_format: str = "JSON",
-                                                     columns: list[dict] = None)-> list | str:
+                                                 page_size: int = None, output_format: str = "JSON",
+                                                 output_format_set: str | dict = None) -> list | str:
 
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
@@ -1121,8 +1128,7 @@ class CollectionManager(Client):
                 the class instance.
             output_format: str, default = "JSON"
                 - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-            columns: list[dict], optional, default = None
-                The desired output columns/fields to include.
+output_format_set: dict , optional, default = None
 
             Returns
             -------
@@ -1165,12 +1171,12 @@ class CollectionManager(Client):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_collection_output(elements, None, None,
-                                                   output_format, columns)
+                                                   output_format, output_format_set)
         return elements
 
     def get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
-                                    page_size: int = None, output_format: str = "JSON", columns: list[dict]= None)\
-            -> list | str:
+                                    page_size: int = None, output_format: str = "JSON",
+                                    output_format_set: str | dict = None) -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
             with elements immediately connected to the starting collection.  The result
             includes a mermaid graph of the returned elements.
@@ -1188,7 +1194,7 @@ class CollectionManager(Client):
                the class instance.
             output_format: str, default = "JSON"
                - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-            columns: list[dict], optional, default = None
+             output_format_set: str | dict  , optional, default = None
                 The desired output columns/fields to include.
 
             Returns
@@ -1221,7 +1227,7 @@ class CollectionManager(Client):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_collection_graph_w_body(collection_guid, body, start_from,
-                                                    page_size, output_format, columns))
+                                                    page_size, output_format, output_format_set))
 
         #
         #   Create collection methods
@@ -2375,7 +2381,6 @@ class CollectionManager(Client):
                                      is_own_anchor: bool = True, anchor_guid: str = None, parent_guid: str = None,
                                      parent_relationship_type_name: str = None, parent_at_end1: bool = True,
                                      collection_type: str = None, anchor_scope_guid: str = None,
-
                                      additional_properties: dict = None, extended_properties: dict = None) -> str:
         """ Create a new collection with the Namespace classification.  This is used to group elements that
         belong to
@@ -6219,121 +6224,71 @@ class CollectionManager(Client):
         Returns:
             dict: Dictionary of extracted properties
         """
-        guid = element['elementHeader'].get("guid", None)
-        properties = element['properties']
-        display_name = properties.get("name", "") or ""
-        description = properties.get("description", "") or ""
-        qualified_name = properties.get("qualifiedName", "") or ""
-        collection_type = properties.get("collectionType", "") or ""
-        additional_properties = properties.get("additionalProperties", {}) or {}
-        extended_properties = properties.get("extendedProperties", {}) or {}
+
+        props = _extract_referenceable_properties(element)
         classification_names = ""
-        classifications = element['elementHeader'].get("classifications", [])
-        for classification in classifications:
+        # classifications = element['elementHeader'].get("classifications", [])
+        for classification in props['classifications']:
             classification_names += f"{classification['classificationName']}, "
-        classification_names = classification_names[:-2]
-        mermaid = element.get('mermaidGraph', "") or ""
+        props["classifications"] = classification_names[:-2]  # why?
+
+        props['mermaid'] = element.get('mermaidGraph', "") or ""
 
         member_names = ""
-        members = self.get_member_list(collection_guid=guid)
+        members = self.get_member_list(collection_guid=props["GUID"])
         if isinstance(members, list):
             for member in members:
                 member_names += f"{member['qualifiedName']}, "
-            member_names = member_names[:-2]
+            props['members'] = member_names[:-2]
 
-        return {
-            'GUID': guid, 'display_name': display_name, 'qualified_name': qualified_name,
-            'description': description,
-            'classifications': classification_names, 'collection_type': collection_type, 'members': member_names,
-            'properties': properties, 'additional_properties': additional_properties,
-            'extended_properties': extended_properties, 'mermaid': mermaid
-            }
+        return props
 
-    def generate_basic_structured_output(self, elements, filter, output_format: str = 'DICT',
-                                         collection_type: str = None) -> str | list:
-        """
-        Generate output in the specified format for the given elements.
+    def generate_collection_output(self, elements: Union[Dict, List[Dict]], filter: Optional[str],
+                                   classification_name: Optional[str], output_format: str = "DICT",
+                                   output_format_set: Optional[dict] | str = None) -> Union[str, List[Dict]]:
 
-        Args:
-            elements: Dictionary or list of dictionaries containing element data
-            filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+        """ Generate output for collections in the specified format.
 
-        Returns:
-            Formatted output as string or list of dictionaries
-        """
-        # Handle MERMAID and DICT formats using existing methods
-        if output_format == "MERMAID":
-            return extract_mermaid_only(elements)
-        elif output_format == "DICT":
-            return extract_basic_dict(elements)
-        elif output_format == "HTML":
-            if collection_type is None:
-                entity_type = "Collection"
-            else:
-                entity_type = collection_type
+            Args:
+                elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
+                filter (Optional[str]): The search string used to find the elements
+                classification_name (Optional[str]): The type of collection
+                output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+                output_format_set (Optional[dict], optional): List of dictionaries containing column data. Defaults
+                to None.
 
-            return generate_output(
-                elements=elements,
-                search_string=filter,
-                entity_type=entity_type,
-                output_format="HTML",
-                extract_properties_func=self._extract_collection_properties
-                )
-
-        # For other formats (MD, FORM, REPORT, LIST), use generate_output
-        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
-            # Define columns for LIST format
-            columns = [{'name': 'Collection Name', 'key': 'display_name'},
-                       {'name': 'Qualified Name', 'key': 'qualified_name'},
-                       {'name': 'Collection Type', 'key': 'collection_type'},
-                       {'name': 'Classifications', 'key': 'classifications'},
-                       {'name': 'Description', 'key': 'description', 'format': True}]
-            if collection_type is None:
-                entity_type = "Collection"
-            else:
-                entity_type = collection_type
-
-            return generate_output(elements=elements, search_string=filter, entity_type=entity_type,
-                                   output_format=output_format,
-                                   extract_properties_func=self._extract_collection_properties,
-                                   columns=columns if output_format == 'LIST' else None)
-
-    def generate_collection_output(self, elements, filter, classification_name, output_format,
-                                   columns: list[dict] = None) -> str | list:
-        """
-        Generate output for collections in the specified format.
-
-        Args:
-            elements: Dictionary or list of dictionaries containing data field elements
-            classification_name: str
-                The type of collection.
-            filter: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            columns: List of dictionaries containing column data
-
-        Returns:
-            Formatted output as a string or list of dictionaries
+            Returns:
+                Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
         if classification_name is None:
             entity_type = "Collections"
         else:
             entity_type = classification_name
+        # First see if the user has specified an output_format_set - either a label or a dict
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(entity_type, output_format)
+            if isinstance(output_format_set, dict):
+                output_formats = output_format_set
 
-        if columns is None:
-            columns_struct = select_column_set(entity_type, output_format)
+        # If no output_format was set, then use the classification_name to lookup the output format
+        elif classification_name:
+            output_formats = select_output_format_set(classification_name, output_format)
         else:
-            columns_struct:dict  = {entity_type: {"columns": columns}}
+            output_formats = None
 
         return generate_output(
-            elements=elements,
-            search_string=filter,
-            entity_type=entity_type,
-            columns_struct=columns_struct,
-            output_format=output_format,
-            extract_properties_func=self._extract_collection_properties
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_collection_properties,
+            None,
+            output_formats,
             )
 
+
+from typing import Union, Dict, List, Optional
 
 if __name__ == "__main__":
     print("Main-Collection Manager")

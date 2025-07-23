@@ -11,6 +11,60 @@ console = Console(width= 250)
 # Constants
 MD_SEPARATOR = "\n---\n\n"
 
+
+def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
+    # Get general header attributes
+    guid = element['elementHeader'].get("guid", None)
+    metadata_collection_id = element['elementHeader']['origin'].get("homeMetadataCollectionId", None)
+    metadata_collection_name = element['elementHeader']['origin'].get("homeMetadataCollectionName", None)
+    origin_category = element['elementHeader'].get("origin_category", None)
+    created_by = element['elementHeader']["versions"].get("createdBy", None)
+    create_time = element['elementHeader']["versions"].get("createTime", None)
+    updated_by = element['elementHeader']["versions"].get("updatedBy", None)
+    version = element['elementHeader']["versions"].get("version", None)
+    type_name = element['elementHeader']["type"].get("typeName", None)
+    classifications = element['elementHeader'].get("classifications", [])
+
+    # Get attributes from properties
+    properties = element['properties']
+    display_name = properties.get("name", "") or ""
+    description = properties.get("description", "") or ""
+    qualified_name = properties.get("qualifiedName", "") or ""
+    category = properties.get("category", "") or ""
+    version_identifier = properties.get("versionIdentifier", "") or ""
+    additional_properties = properties.get("additionalProperties", {}) or {}
+    extended_properties = properties.get("extendedProperties", {}) or {}
+    effective_from = element['elementHeader'].get("effectiveFrom", None)
+    effective_to = element['elementHeader'].get("effectiveTo", None)
+
+    return {
+        "GUID": guid,
+        "metadata_collection_id": metadata_collection_id,
+        "metadata_collection_name": metadata_collection_name,
+        "origin_category": origin_category,
+        "created_by": created_by,
+        "create_time": create_time,
+        "updated_by": updated_by,
+        "version": version,
+        "type_name": type_name,
+        "classifications": classifications,
+
+        "display_name": display_name,
+        "description": description,
+        "qualified_name": qualified_name,
+        "category": category,
+        "version_identifier": version_identifier,
+        "additional_properties": additional_properties,
+        "extended_properties": extended_properties,
+        "effective_from": effective_from,
+        "effective_to": effective_to,
+        }
+
+
+
+
+
+
 def markdown_to_html(markdown_text: str) -> str:
     """
     Convert markdown text to HTML, with special handling for mermaid code blocks.
@@ -120,7 +174,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
     output = ""
     if isinstance(attribute_value,str):
         attribute_value = attribute_value.strip() if attribute_value else ""
-    elif isinstance(attribute_value,list):
+    elif isinstance(attribute_value,list) and len(attribute_value) > 0:
         attribute_value = ",\n".join(attribute_value)
     if attribute_name:
         if attribute_name.upper() == "GUID":
@@ -188,7 +242,7 @@ def generate_entity_md(elements: List[Dict],
         str: Markdown representation
     """
     elements_md = ""
-    columns = columns_struct['columns'] if columns_struct else None
+    columns = columns_struct['formats'].get('columns') if columns_struct else None
 
     for element in elements:
         if element is None:
@@ -219,6 +273,7 @@ def generate_entity_md(elements: List[Dict],
         if columns:
             for column in columns:
                 key = column['key']
+                name = column['name']
                 value = ""
 
                 # Check if the key is in props or additional_props
@@ -229,10 +284,10 @@ def generate_entity_md(elements: List[Dict],
                 # Format the value if needed
                 if 'format' in column and column['format']:
                     value = format_for_markdown_table(value, props['GUID'])
-                elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+                # elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+                elements_md += make_md_attribute(name, value, output_format)
 
         else:
-
             for key, value in props.items():
                 if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
                     continue
@@ -279,7 +334,7 @@ def generate_entity_md_table(elements: List[Dict],
     """
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
-    columns = columns_struct.get('columns', [])
+    columns = columns_struct['formats'].get('columns', [])
 
     elements_md = ""
     if output_format == "LIST":
@@ -369,11 +424,11 @@ def generate_entity_dict(elements: List[Dict],
         # Create entity dictionary
         entity_dict = {}
 
-        columns = columns_struct.get('columns', None) if columns_struct else None
+        columns = columns_struct['formats'].get('columns', None) if columns_struct else None
         if columns:
-
             for column in columns:
                 key = column['key']
+                name = column['name']
                 value = ""
 
                 # Check if the key is in props or additional_props
@@ -384,7 +439,7 @@ def generate_entity_dict(elements: List[Dict],
                 # Format the value if needed
                 if  column.get('format', None):
                     value = format_for_markdown_table(value, props['GUID'])
-                entity_dict[key] = value
+                entity_dict[name] = value
 
         else:
             # Add properties based on include/exclude lists
@@ -518,7 +573,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
     Returns:
         Formatted output as string or list of dictionaries
     """
-    columns = columns_struct['columns'] if columns_struct else None
+    columns = columns_struct['formats'].get('columns',None) if columns_struct else None
     # Ensure elements is a list
     if isinstance(elements, dict):
         elements = [elements]

@@ -72,7 +72,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = "*"
 
-            response = c_client.find_collections(search_string, output_format="DICT")
+            response = c_client.find_collections(search_string, output_format="DICT", output_format_set="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -95,15 +95,26 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            classification_name = "DataSharingAgreement"
+            # classification_name = "DataSharingAgreement"
             # classification_name = "ConnectorTypeDirectory"
-            # classification_name = None
-            columns = [{'name': 'Name', 'key': 'display_name'},
-                           {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
-                           # {'name': 'Collection Type', 'key': 'collection_type'},
-                           {'name': 'Description', 'key': 'description', 'format': True},
-                           {'name': "Classifications", 'key': 'classifications'},
-                           {'name': 'Members', 'key': 'members', 'format': True}, ]
+            classification_name = None
+            out_struct = {
+                    "heading": "General Agreement Information",
+                    "description": "Attributes generic to all Agreements.",
+                    "aliases": [],
+                    "formats": {"columns": [
+                        {'name': 'Name', 'key': 'display_name'},
+                        {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                        {'name': 'Super Category', 'key': 'category'},
+                        {'name': 'My Description', 'key': 'description', 'format': True},
+                        {'name': "Classifications", 'key': 'classifications'},
+                        {'name': 'Members', 'key': 'members', 'format': True},
+                        {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                        ],
+                        "formats": ["ALL"]
+                        },
+                    "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
+                }
             body = {
                 "class": "FilterRequestBody",
                 "asOfTime": None,
@@ -116,7 +127,7 @@ class TestCollectionManager:
                 "filter": None
                 }
 
-            response = c_client.find_collections_w_body(body, classification_name, output_format="REPORT", columns=None)
+            response = c_client.find_collections_w_body(body,classification_name , output_format="DICT", output_format_set=out_struct)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
