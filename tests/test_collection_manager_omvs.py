@@ -147,12 +147,12 @@ class TestCollectionManager:
 
     def test_get_collection_by_name(self):
         try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, output_format_set="Collections")
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "Dans Artifacts"
+            collection_name = "Leak to fox"
 
-            response = c_client.get_collections_by_name(collection_name, output_format="DICT")
+            response = c_client.get_collections_by_name(collection_name, output_format="DICT", )
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
