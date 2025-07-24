@@ -4,12 +4,16 @@ This file contains display-related constants and formatting functions for Egeria
 import importlib.resources
 import json
 import os
+import inflect
 
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.message_constants import ERROR
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types, ALWAYS, ERROR, INFO, WARNING
+
+inflect_engine = inflect.engine()
+
 
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox")
@@ -47,23 +51,128 @@ TERM_RELATIONSHPS = ["Synonym", "Translation", "PreferredTerm", "TermISATYPEOFRe
                      "ISARelationship"]
 
 # List of supported md_commands
+GOV_LINK_LIST = [ "Link Governance Drivers", "Detach Governance Drivers",
+                "Link Governance Policies", "Detach Governance Policies",
+                "Link Governance Controls", "Detach Governance Controls",]
+
+GOV_COM_LIST = [ "Create Business Imperative", "Update Business Imperative",
+                "Create Regulation Article Definition", "Update Regulation Article Definition",
+                "Create Threat Definition", "Update Threat Definition",
+                "Create Governance Principle", "Update Governance Principle",
+                "Create Governance Obligation", "Update Governance Obligation",
+                "Create Governance Approach", "Update Governance Approach",
+                "Create Governance Strategy", "Update Governance Strategy",
+                "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
+                "Create Governance Control:", "Update Governance Control",
+                "Create Governance Rule:", "Update Governance Rule",
+                "Create Service Level Objective", "Update Service Level Objective",
+                "Create Governance Process", "Update Governance Process",
+                "Create Governance Responsibility", "Update Governance Responsibility",
+                "Create Governance Procedure", "Update Governance Procedure",
+                "Create Security Access Control", "Update Security Access Control",
+                "Create Security Group", "Update Security Group",
+                "Create Naming Standard Rule", "Update Naming Standard Rule",
+                "Create Certification Type", "Update Certification Type",
+                "Create License Type", "Update License Type",]
+
+SIMPLE_BASE_COLLECTIONS: set = { "Collection", "Home Collection", "Digital Product", "Result Set" , "Recent Access",
+                       "Reference List", "Work Item List", "Data Sharing Agreement", "Namespace", "Agreement",
+                       "Digital Subscription", "Data Product", "Subscription",
+                      "Root Collection",  "Folders",  "Context Event Collection",  "Name Space Collection",
+                    # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",
+                    # "Data Dictionaries", "Data Dictionaries",
+                     "Event Set Collection", "Naming Standard Ruleset",
+                    }
+SIMPLE_COLLECTIONS: set = set()
+for element in SIMPLE_BASE_COLLECTIONS:
+    SIMPLE_COLLECTIONS.add(f"Create {element}")
+    SIMPLE_COLLECTIONS.add(f"Update {element}")
+    plural = inflect_engine.plural_noun(element)
+    SIMPLE_COLLECTIONS.add(f"Create {plural}")
+    SIMPLE_COLLECTIONS.add(f"Update {plural}")
+
+
+
+COLLECTIONS_LIST = ["List Collections", "View Collections", "List Digital Products", "View Digital Products",
+                    "List Data Products", "View Data Products",
+                    "List Data Sharing Agreements", "View Data Sharing Agreements",
+                    "List Agreements", "View Agreements",
+                    "List Digital Subscriptions", "View Digital Subscriptions",
+                    "List Subscriptions", "View Subscriptions",
+                    "List Root Collections", "View Root Collections",
+                    "List Data Specifications", "View Data Specifications", "List Data Specs", "View Data Specs",
+                    "List Data Dictionaries", "View Data Dictionaries",
+                    "List Folders", "View Folders",
+                    "List Context Event Collections", "View Context Event Collections",
+                    "List Name Space Collections", "View Name Space Collections",
+                    "List Event Set Collections", "View Event Set Collections",
+                    "List Naming Standard Rulesets", "View Naming Standard Rulesets",
+                    ]
+
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
                 "List Glossary Categories", "Create Personal Project", "Update Personal Project", "Create Category",
-                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint", "View Solution Blueprints", "View Blueprints",
+                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
+                "View Solution Blueprints", "View Blueprints",
                 "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains", "View Supply Chain",
                 "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
                 "Create Information Supply Chain", "Update Information Supply Chain",
-                "Create Information Supply Chain Segment", "Update Information Supply Chain Segment", "Link Segments", "Detach Segments",
-                "Create Solution Component", "Update Solution Component", "Create Term-Term Relationship",
+                "Link Information Supply Chain Peers", "Link Supply Chains", "Link Information Supply Chains",
+                "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains",
+                "Create Solution Component", "Update Solution Component", "Link Solution Components", "Wire Solution Components",
+                "Detach Solution Components", "Unlink Solution Components", "Create Term-Term Relationship",
                 "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",
                 "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
-                "Update Data Dict", " View Data Dictionary", "View Data Dictionaries", "View Data Specifications",
-                "View Data Specs", "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
-                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",]
+                "Update Data Dict",
+                "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
+                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",
+                "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
+                "Create Agreement", "Update Agreement",
+                "Link Digital Products", "Link Data Products", "Detach Digital Products", "Detach Data Products",
+                # "Create Data Sharing Agreement", "Update Data Sharing Agreement",
+                "Create Digital Subscription", "Create Product Subscription", "Update Digital Subscription", "Update Product Subscription",
+                "Attach Agreement Items", "Detach Agreement Items",
+                "Attach Contract", "Detach Contract",
+                "Attach Subscriber", "Detach Subscriber",
+                "Link Collection to Resource", "Attach Collection to Resource",
+                "Unlink Collection From Resource", "Detach Collection From Resource",
+                "Add Member to Collection", "Add Member", "Member->Collection",
+                "Remove Member from Collection","Remove Member from Collection",
+                 "View Governance Definitions", "View Gov Definitions",
+                 "List Governance Definitions", "List Gov Definitions",
+                "View Governance Definition Context","List Governance Definition Context",
+                "View Governance Def Context", "List Governance Def Context",
+                # "Create Business Imperative", "Update Business Imperative",
+                # "Create Regulation Article Definition", "Update Regulation Article Definition",
+                # "Create Threat Definition", "Update Threat Definition",
+                # "Create Governance Principle", "Update Governance Principle",
+                # "Create Governance Obligation", "Update Governance Obligation",
+                # "Create Governance Approach", "Update Governance Approach",
+                # "Create Governance Strategy", "Update Governance Strategy",
+                # "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
+                # "Create Governance Control:", "Update Governance Control",
+                # "Create Governance Rule:", "Update Governance Rule",
+                # "Create Service Level Objective", "Update Service Level Objective",
+                # "Create Governance Process", "Update Governance Process",
+                # "Create Governance Responsibility", "Update Governance Responsibility",
+                # "Create Governance Procedure", "Update Governance Procedure",
+                # "Create Security Access Control", "Update Security Access Control",
+                # "Create Security Group", "Update Security Group",
+                # "Create Naming Standard Rule", "Update Naming Standard Rule",
+                # "Create Certification Type", "Update Certification Type",
+                # "Create License Type", "Update License Type",
+                # "Link Governance Drivers", "Detach Governance Drivers",
+                # "Link Governance Policies", "Detach Governance Policies",
+                # "Link Governance Controls", "Detach Governance Controls",
 
+                ]
+
+command_list.extend(GOV_COM_LIST)
+command_list.extend(GOV_LINK_LIST)
+command_list.extend(COLLECTIONS_LIST)
+command_list.extend(SIMPLE_COLLECTIONS)
 
 pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
@@ -88,6 +197,7 @@ def load_commands(filename: str) -> None:
 
 def get_command_spec(command: str) -> dict | None:
     global COMMAND_DEFINITIONS
+
     com = COMMAND_DEFINITIONS.get('Command Specifications', {}).get(command, None)
     if com:
         return com
@@ -99,6 +209,7 @@ def get_command_spec(command: str) -> dict | None:
 
 def find_alternate_names(command: str) -> str | None:
     global COMMAND_DEFINITIONS
+
     comm_spec = COMMAND_DEFINITIONS.get('Command Specifications', {})
     for key, value in comm_spec.items():
         if isinstance(value, dict):

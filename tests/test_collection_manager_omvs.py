@@ -70,9 +70,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "dw"
+            search_string = "*"
 
-            response = c_client.find_collections(search_string, output_format="DICT")
+            response = c_client.find_collections(search_string, output_format="DICT", output_format_set="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -95,14 +95,39 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            classification_name = "Folder"
+            # classification_name = "DataSharingAgreement"
+            # classification_name = "ConnectorTypeDirectory"
+            classification_name = None
+            out_struct = {
+                    "heading": "General Agreement Information",
+                    "description": "Attributes generic to all Agreements.",
+                    "aliases": [],
+                    "formats": {"columns": [
+                        {'name': 'Name', 'key': 'display_name'},
+                        {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                        {'name': 'Super Category', 'key': 'category'},
+                        {'name': 'My Description', 'key': 'description', 'format': True},
+                        {'name': "Classifications", 'key': 'classifications'},
+                        {'name': 'Members', 'key': 'members', 'format': True},
+                        {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                        ],
+                        "formats": ["ALL"]
+                        },
+                    "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
+                }
             body = {
-                "class": "FilterRequestBody", "asOfTime": "2025-06-27T09:00:00", "effectiveTime": None,
-                "forLineage": False, "forDuplicateProcessing": False, "limitResultsByStatus": ["ACTIVE"],
-                "sequencingOrder": "PROPERTY_ASCENDING", "sequencingProperty": "qualifiedName", "filter": None
+                "class": "FilterRequestBody",
+                "asOfTime": None,
+                "effectiveTime": None,
+                "forLineage": False,
+                "forDuplicateProcessing": False,
+                "limitResultsByStatus": [],
+                "sequencingOrder": "PROPERTY_ASCENDING",
+                "sequencingProperty": "qualifiedName",
+                "filter": None
                 }
 
-            response = c_client.find_collections_w_body(body, classification_name, output_format="DICT")
+            response = c_client.find_collections_w_body(body,classification_name , output_format="DICT", output_format_set=out_struct)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -122,12 +147,12 @@ class TestCollectionManager:
 
     def test_get_collection_by_name(self):
         try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, output_format_set="Collections")
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "Dans Artifacts"
+            collection_name = "Leak to fox"
 
-            response = c_client.get_collections_by_name(collection_name, output_format="DICT")
+            response = c_client.get_collections_by_name(collection_name, output_format="DICT", )
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -151,9 +176,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_type = "DataSpec"
+            collection_type = "*"
+            classification_name = "DataSpec"
 
-            response = c_client.get_collections_by_type('Test Data Specification', 'DataSpec', output_format="DICT")
+            response = c_client.get_collections_by_type(collection_type, classification_name, output_format="LIST")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds")
@@ -178,7 +204,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "8a1ac963-3589-4a5a-ba3f-7479e96a32f6"
+            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
 
             response = c_client.get_collection_by_guid(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
@@ -208,9 +234,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "d4adc047-9005-471f-b2a1-e86201961e0b"
+            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
 
-            response = c_client.get_collection_graph(collection_guid, output_format="DICT")
+            response = c_client.get_collection_graph(collection_guid, output_format="REPORT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -283,7 +309,7 @@ class TestCollectionManager:
             collection_type = "Hobby Collection"
             is_own_anchor = True
 
-            response = c_client.create_collection(display_name, description, is_own_anchor, None, None, parent_guid,
+            response = c_client.create_collection(display_name, description, is_own_anchor, None, None, None,
                 parent_relationship_type_name, parent_at_end1, collection_type, None, )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -1053,7 +1079,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "6d46f831-9955-46c3-87e9-af4eb18372cb"
+            collection_guid = "e9b42536-a898-4141-9d41-1df73ea009ae"
             response = c_client.delete_collection(collection_guid, cascade=True)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")

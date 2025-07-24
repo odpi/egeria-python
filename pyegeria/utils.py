@@ -14,66 +14,8 @@ from rich.console import Console
 
 console = Console(width=200)
 
-# def wrap_text(df: pd.DataFrame, wrap_len: int = 30) -> pd.DataFrame:
-#     """ Wrap the text in a dataframe
-#     Parameters
-#     ----------
-#     df : pandas.DataFrame
-#         The DataFrame to wrap the text in.
-#     wrap_len : int, optional
-#         The maximum length of each cell's contents to wrap. Defaults to 30.
-#
-#     Returns
-#     -------
-#     pandas.DataFrame
-#         A new DataFrame with the wrapped text.
-#
-#     """
-#
-#     # Helper function to wrap text in a particular cell
-#     def wrap_cell_contents(cell_contents: str, wrap: int = 30) -> str:
-#         """ Wrap the text in a cell
-#         Parameters
-#         ----------
-#         cell_contents : str or any
-#             The contents of a cell in a dataframe.
-#         wrap : int, optional
-#             The maximum width at which to wrap the cell contents. Default is 30.
-#
-#         Returns
-#         -------
-#         str or any
-#             If the cell_contents is a string and its length is greater than wrap_len,
-#             the contents are wrapped at wrap_len width using textwrap.
-#             Otherwise, the original cell_contents are returned as is.
-#         """
-#         if isinstance(cell_contents, str) and len(cell_contents) > wrap:
-#             return textwrap.fill(cell_contents, width=wrap)
-#         else:
-#             return cell_contents
-#
-#     # Apply the helper function to each element in the DataFrame
-#     return df.map(lambda x: wrap_cell_contents(x, wrap_len))
-#
-#
-# def print_nice_table(df, wrap_len: int = 20, tablefmt: str = "grid") -> None:
-#     """ Print a nice table from the data frame"""
-#     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
-#
-#
-# def get_json_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> str:
-#     """ return the input json as a table"""
-#     data = json.loads(json.dumps(input_json))
-#     df = pd.json_normalize(data)
-#     return tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt)
-#
-#
-# def print_json_list_as_table(input_json, wrap_len: int = 30, tablefmt: str = "grid") -> None:
-#     """ print a json list as a table"""
-#     data = json.loads(json.dumps(input_json))
-#     df = pd.json_normalize(data)
-#     print(tabulate(wrap_text(df, wrap_len), headers="keys", tablefmt=tablefmt))
-
+def init_log():
+    pass
 
 def print_rest_request_body(body):
     """
@@ -205,6 +147,85 @@ def body_slimmer(body: dict) -> dict:
                 slimmed[key] = value
     return slimmed
 
+import re
+
+def camel_to_title_case(input_string):
+    # Add a space before uppercase letters and capitalize each word
+    result = re.sub(r'([a-z])([A-Z])', r'\1 \2', input_string).title()
+    return result
+
+
+def to_camel_case(input_string):
+    """Convert an input string to camelCase, singularizing if plural.
+    
+    This function takes an input string, converts it to singular form if it's plural,
+    and then transforms it to camelCase format (first word lowercase, subsequent words
+    capitalized with no spaces).
+    
+    Parameters
+    ----------
+    input_string : str
+        The string to convert to camelCase
+        
+    Returns
+    -------
+    str:
+        The input string converted to camelCase, after singularization if needed
+        
+    Examples
+    --------
+    >>> to_camel_case("data categories")
+    'dataCategory'
+    >>> to_camel_case("business terms")
+    'businessTerm'
+    >>> to_camel_case("glossary categories")
+    'glossaryCategory'
+    """
+    if not input_string:
+        return ""
+    
+    # Convert to lowercase for consistent processing
+    lowercase_input = input_string.lower()
+    
+    # First, convert to singular if plural
+    singular = lowercase_input
+    
+    # Handle common plural endings
+    if singular.endswith('ies'):
+        singular = singular[:-3] + 'y'
+    elif singular.endswith('es'):
+        # Special cases like 'classes' -> 'class'
+        if singular.endswith('sses') or singular.endswith('ches') or singular.endswith('shes') or singular.endswith('xes'):
+            singular = singular[:-2]
+        else:
+            singular = singular[:-1]
+    elif singular.endswith('s') and not singular.endswith('ss'):
+        singular = singular[:-1]
+    
+    # Split the string into words and convert to camelCase
+    words = singular.split()
+    if not words:
+        return ""
+    
+    # First word is lowercase, rest are capitalized
+    result = words[0]
+    for word in words[1:]:
+        result += word.capitalize()
+    
+    return result
+
+def to_pascal_case(input_string)->str:
+    """
+        Convert input string to PascalCase, singularizing if plural.
+    Args:
+        input_string ():
+
+    Returns:
+        transformed string
+    """
+    result = to_camel_case(input_string)
+    output_string = result[0].upper() + result[1:]
+    return output_string
 
 if __name__ == "__main__":
     print("Main-Utils")

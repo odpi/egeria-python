@@ -13,11 +13,13 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from httpx import Response
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
-    extract_basic_dict, MD_SEPARATOR, generate_entity_dict
+    extract_basic_dict, MD_SEPARATOR
 from pyegeria import validate_guid
+from pyegeria.governance_officer_omvs import GovernanceOfficer
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.utils import body_slimmer
+from pyegeria._exceptions import (InvalidParameterException)
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -53,7 +55,7 @@ def base_path(client, view_server: str):
 
 class SolutionArchitect(Client):
     """SolutionArchitect is a class that extends the Client class. The Solution Architect OMVS provides APIs for
-      searching for architectural elements such as information supply chains, solution blueprints, solution components
+      searching for architectural elements such as information supply chains, solution blueprints, solution components,
       and component implementations.
 
     Attributes:
@@ -81,11 +83,123 @@ class SolutionArchitect(Client):
         self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
                                                      f"/api/open-metadata/solution-architect")
         Client.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
-
+        self.url_marker = "solution-architect"
     #
     # Extract properties functions
     #
 
+    def _get_supply_chain_rel_elements(self, guid:str)-> dict | str:
+        elements = self.get_info_supply_chain_by_guid(guid)
+        return self._get_supply_chain_rel_elements_dict(elements)
+
+
+    def _get_supply_chain_rel_elements_dict(self, el_struct: dict)-> dict | str:
+        """return the lists of objects related to a data field"""
+
+        parent_guids = []
+        parent_names = []
+        parent_qnames = []
+
+        implemented_by_guids = []
+        implemented_by_names = []
+        implemented_by_qnames = []
+
+        external_references_guids = []
+        external_references_names = []
+        external_references_qnames = []
+
+        other_related_elements_guids = []
+        other_related_elements_names = []
+        other_related_elements_qnames = []
+
+
+        nested_supply_chains_guids = []
+        nested_supply_chains_names = []
+        nested_supply_chains_qnames = []
+
+        peer_supply_chains_guids = []
+        peer_supply_chains_names = []
+        peer_supply_chains_qnames = []
+        peer_supply_chain_linl_label = []
+
+
+
+        # # extract existing related data structure and data field elements
+        # other_related_elements = el_struct.get("otherRelatedElements",None)
+        # if other_related_elements:
+        #     for rel in other_related_elements:
+        #         related_element = rel["relatedElement"]
+        #         type = related_element["elementHeader"]["type"]["typeName"]
+        #         guid = related_element["elementHeader"]["guid"]
+        #         qualified_name = related_element["properties"].get("qualifiedName","") or ""
+        #         display_name = related_element["properties"].get("displayName","") or ""
+        #         if type == "DataStructure":
+        #             implementation_guids.append(guid)
+        #             implementation_names.append(display_name)
+        #             implementation_qnames.append(qualified_name)
+        #
+        #         elif type == "DataField":
+        #             parent_guids.append(guid)
+        #             parent_names.append(display_name)
+        #             parent_qnames.append(qualified_name)
+
+        parents = el_struct.get("parents", {})
+        if parents:
+            for parent in parents:
+                parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
+                parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
+                parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
+
+        peer_supply_chains = el_struct.get("links", {})
+        if peer_supply_chains:
+            for peer in peer_supply_chains:
+                peer_supply_chains_guids.append(peer['relatedElement']['elementHeader']['guid'])
+                peer_supply_chains_names.append(peer['relatedElement']['properties'].get("displayName",""))
+                peer_supply_chains_qnames.append(peer['relatedElement']['properties'].get("qualifiedName",""))
+                peer_supply_chain_linl_label.append(peer['relationshipProperties'].get('label',""))
+
+        implemented_by = el_struct.get("implementedByList", {})
+        if implemented_by:
+            for peer in peer_supply_chains:
+                implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
+                implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
+                implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
+
+
+
+        # nested_supply_chains = el_struct.get("nestedDataClasses", {})
+        # for nested_data_class in nested_supply_chains:
+        #     nested_supply_chains_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
+        #     nested_supply_chains_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
+        #     nested_supply_chains_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+
+
+        mermaid = el_struct.get("mermaidGraph", {})
+
+        return {"parent_guids": parent_guids,
+                "parent_names": parent_names,
+                "parent_qnames": parent_qnames,
+
+                "implemented_by_guids": implemented_by_guids,
+                "implemented_by_names": implemented_by_names,
+                "implemented_by_qnames": implemented_by_qnames,
+
+                "peer_supply_chains_guids": peer_supply_chains_guids,
+                "peer_supply_chains_names": peer_supply_chains_names,
+                "peer_supply_chains_qnames": peer_supply_chains_qnames,
+
+                "nested_data_class_guids": nested_supply_chains_guids,
+                "nested_data_class_names": nested_supply_chains_names,
+                "nested_data_class_qnames": nested_supply_chains_qnames,
+
+                "external_references_guids": external_references_guids,
+                "external_references_names": external_references_names,
+                "external_references_qnames": external_references_qnames,
+
+                "mermaid" : mermaid,
+            }
+
+    
     def _extract_supply_chain_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
         """
         Normalize supply chain response for a list of dictionaries.
@@ -124,33 +238,38 @@ class SolutionArchitect(Client):
         scope = properties.get("scope", None)
         purposes = properties.get("purposes", [])
         purpose_md = ""
-        if len(purposes) > 0:
+        if purposes:
             for purpose in purposes:
                 purpose_md += f"{purpose},\n"
         extended_properties = properties.get("extendedProperties", {})
         additional_properties = properties.get("additionalProperties", {})
-        mer = f"```mermaid\n\n{element.get('mermaidGraph', None)}\n\n```"
+        mer = element.get('mermaidGraph', None)
 
-        segments = element.get("segments", [])
-        segments_list = []
-        if len(segments) > 0:
-            for segment in segments:
-                segment_dict = {}
-                segment_guid = segment['elementHeader'].get("guid", "")
-                segment_props = segment['properties']
-                segment_qname = segment_props.get("qualifiedName", "")
-                segment_display_name = segment_props.get("displayName", "")
-                segment_description = segment_props.get("description", "")
-                segment_scope = segment_props.get("scope", "")
-                segment_integration_style = segment_props.get("integrationStyle", "")
-                segment_estimated_volumetrics = segment_props.get("estimatedVolumetrics", "")
-                segment_dict["segment_display_name"] = segment_display_name
-                segment_dict["segment_qname"] = segment_qname
-                segment_dict["segment_guid"] = segment_guid
-                segment_dict["segment_description"] =  segment_description
-                segment_dict["segment_scope"] = segment_scope
-                segment_dict["segment_estimated_volumetrics"] = segment_estimated_volumetrics
-                segments_list.append(segment_dict)
+
+        parents = element.get("parents", [])
+        parents_list = []
+        if parents:
+            for sub in parents:
+                sub_rel_label = sub.get('relationshipProperties',{}).get("label", None)
+                sub_qn = sub['relatedElement']['properties']['qualifiedName']
+                sub_lab = f"--> <{sub_rel_label}> -->" if sub_rel_label else ""
+                sub_info = f"{sub_lab} {sub_qn}"
+                parents_list.append(sub_info)
+
+        peer_supply_chains = element.get("links", {})
+        peer_supply_chains_list = []
+        if peer_supply_chains:
+            for peer in peer_supply_chains:
+                peer_supply_chain_qnames = peer['relatedElement']['properties'].get("qualifiedName", "")
+                peer_supply_chain_label = peer['relationshipProperties'].get('label', None)
+                peer_lab = f"==> <{peer_supply_chain_label}> ==>" if peer_supply_chain_label else ""
+                peer_supply_chains_list.append(f"{peer_lab} {peer_supply_chain_qnames}")
+
+        implemented_by = element.get("implementedByList", {})
+        implemented_by_qnames = []
+        if implemented_by:
+            for peer in peer_supply_chains:
+                implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
 
         return {
             'GUID': guid,
@@ -161,7 +280,9 @@ class SolutionArchitect(Client):
             'purposes': purpose_md,
             'extended_properties': extended_properties,
             'additional_properties': additional_properties,
-            'segments': segments_list,
+            'parents_list': parents_list,
+            'links': peer_supply_chains_list,
+            'implemented_by': implemented_by_qnames,
             'mermaid': mer
         }
 
@@ -242,6 +363,171 @@ class SolutionArchitect(Client):
             'solution_components': solution_components_md
         }
 
+
+
+
+
+    def _get_component_rel_elements(self, guid:str)-> dict | str:
+        elements = self.get_info_supply_chain_by_guid(guid)
+        return self._get_supply_chain_rel_elements_dict(elements)
+
+
+    def _get_component_rel_elements_dict(self, el_struct: dict)-> dict | str:
+        """return the lists of objects related to a data field"""
+
+        actor_guids = []
+        actor_name_roles = []
+        actor_qnames = []
+        
+        parent_guids = []
+        parent_names = []
+        parent_qnames = []
+
+        sub_component_guids = []
+        sub_component_names = []
+        sub_component_qnames = []
+
+        implemented_by_guids = []
+        implemented_by_names = []
+        implemented_by_qnames = []
+
+        blueprint_guids = []
+        blueprint_names = []
+        blueprint_qnames = []
+
+
+        external_references_guids = []
+        external_references_names = []
+        external_references_qnames = []
+
+        other_related_elements_guids = []
+        other_related_elements_names = []
+        other_related_elements_qnames = []
+        
+        owning_info_supply_chain_guids = []
+        owning_info_supply_chain_qnames = []
+        owning_info_supply_chain_names = []
+
+        wired_to_guids = []
+        wired_to_names = []
+        wired_to_link_labels = []
+        wired_to_qnames = []
+        
+        wired_from_guids = []
+        wired_from_names = []
+        wired_from_link_labels = []
+        wired_from_qnames = []
+
+        actors = el_struct.get("actors", {})
+        if actors:
+            for actor in actors:
+                actor_guids.append(actor['relatedElement']['elementHeader'].get("guid", None))
+                actor_role = actor['relationshipProperties'].get('role',"")      
+                actor_name = actor['relatedElement']['properties'].get("displayName", "")
+                actor_name_roles.append(f"`{actor_name}` in role `{actor_role}`")
+                actor_qnames.append(actor['relatedElement']['properties'].get("qualifiedName", ""))
+
+        wired_to = el_struct.get("wiredToLinks", {})
+        if wired_to:
+            for wire in wired_to:
+                wired_to_link_labels.append(wire['properties'].get("label", ""))
+                wired_to_guids.append(wire['linkedElement']['elementHeader']['guid'])
+                wired_to_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
+                wired_to_names.append(wire['linkedElement']['properties'].get('displayName', ""))
+                
+        wired_from = el_struct.get("wiredFromLinks", {})
+        if wired_from:
+            for wire in wired_from:
+                wired_from_link_labels.append(wire['properties'].get("label", ""))
+                wired_from_guids.append(wire['linkedElement']['elementHeader']['guid'])
+                wired_from_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
+                wired_from_names.append(wire['linkedElement']['properties'].get('displayName', ""))
+
+        blueprints = el_struct.get("blueprints", {})
+        if blueprints:
+            for bp in blueprints:
+                blueprint_guids.append(bp['relatedElement']['elementHeader']['guid'])
+                blueprint_qnames.append(bp['relatedElement']['properties'].get("qualifiedName", ""))
+                blueprint_names.append(bp['relatedElement']['properties'].get('displayName', ""))
+
+        sub_components = el_struct.get("subComponents", {})
+        if sub_components:
+            for sub_component in sub_components:
+                sub_component_guids.append(sub_component['elementHeader']['guid'])
+                sub_component_qnames.append(sub_component['properties'].get("qualifiedName", ""))
+                sub_component_names.append(sub_component['properties'].get('displayName', ""))
+
+        context = el_struct.get("context", None)
+        if context:
+            for c in context:
+
+                parents = c.get("parentComponents", None) if context else None
+                if parents:
+                    for parent in parents:
+                        parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
+                        parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
+                        parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
+
+                owning_isc = c.get("owningInformationSupplyChains", None) if context else None
+                if owning_isc:
+                    for isc in owning_isc:
+                        owning_info_supply_chain_guids.append(isc['relatedElement']['elementHeader']["guid"])
+                        owning_info_supply_chain_names.append(isc['relatedElement']['properties'].get("displayName", ""))
+                        owning_info_supply_chain_qnames.append(isc['relatedElement']['properties'].get("qualifiedName", ""))
+
+
+
+        # implemented_by = el_struct.get("implementedByList", {})
+        # if len(implemented_by) > 0:
+        #     for peer in peer_supply_chains:
+        #         implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
+        #         implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
+        #         implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
+
+
+        mermaid = el_struct.get("mermaidGraph", {})
+
+        return {"parent_guids": parent_guids,
+                "parent_names": parent_names,
+                "parent_qnames": parent_qnames,
+
+                "actor_guids": actor_guids,
+                "actor_name_roles": actor_name_roles,
+                "actor_qnames": actor_qnames,
+
+                "sub_component_guids": sub_component_guids,
+                "sub_component_names": sub_component_names,
+                "sub_component_qnames": sub_component_qnames,
+
+                "blueprint_guids": blueprint_guids,
+                "blueprint_names": blueprint_names,
+                "blueprint_qnames": blueprint_qnames,
+
+                "owning_info_supply_chain_guids": owning_info_supply_chain_guids,
+                "owning_info_supply_chain_names": owning_info_supply_chain_names,
+                "owning_info_supply_chain_qnames": owning_info_supply_chain_qnames,
+
+                "implemented_by_guids": implemented_by_guids,
+                "implemented_by_names": implemented_by_names,
+                "implemented_by_qnames": implemented_by_qnames,
+
+                "wired_from_guids": wired_from_guids,
+                "wired_from_names": wired_from_names,
+                "wired_from_qnames": wired_from_qnames,
+                "wired_from_link_labels": wired_from_link_labels,
+
+                "wired_to_guids": wired_to_guids,
+                "wired_to_names": wired_to_names,
+                "wired_to_qnames": wired_to_qnames,
+                "wired_to_link_labels": wired_to_link_labels,
+
+                "external_references_guids": external_references_guids,
+                "external_references_names": external_references_names,
+                "external_references_qnames": external_references_qnames,
+
+                "mermaid" : mermaid,
+            }
+
     def _extract_component_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
         """
         Normalize for a list of dictionaries.
@@ -295,41 +581,25 @@ class SolutionArchitect(Client):
             for key in additional_props.keys():
                 additional_props_md += "{" + f" {key}: {additional_props[key]}" + " }, "
 
-        # Extract blueprints
-        blueprints_md = ""
-        blueprints = element.get('blueprints', None)
-        if blueprints:
-            for blueprint in blueprints:
-                if 'relatedElement' in blueprint:
-                    bp_q_name = blueprint["relatedElement"]['properties']['qualifiedName']
-                    blueprints_md +=  f" {bp_q_name}, \n"
-                elif 'blueprint' in blueprint:
-                    bp_prop = blueprint['blueprint']['properties']
-                    bp_name = bp_prop.get("displayName", None)
-                    bp_desc = bp_prop.get("description", None)
-                    blueprints_md += "{" + f" {bp_name}:\t {bp_desc}" + " },\n"
+        rel_elements = self._get_component_rel_elements_dict(element)
+
+        # actors
+        actors_md = ", ".join(rel_elements.get("actor.qnames", []) )
+
+        # Extract blueprints & supply chains
+        blueprints_md = ", ".join(rel_elements.get("blueprint_qnames",[]))
+        owning_supply_chains_md = ", ".join(rel_elements.get("owning_info_supply_chain_qnames",[]))
 
         # Extract parent components
-        parent_comp_md = ""
-        context = element.get("context", None)
-        if context:
-            parent_components = element.get('parentComponents', None)
-            if parent_components:
-                for parent_component in parent_components:
-                    parent_comp_prop = parent_component['parentComponent']['properties']
-                    parent_comp_name = parent_comp_prop.get("name", None)
-                    parent_comp_desc = parent_comp_prop.get("description", None)
-                    parent_comp_md += f" {parent_comp_name}"
+        parent_comp_md = ", ".join(rel_elements.get("parent_qnames",[]))
 
-        # Extract sub components
-        sub_comp_md = ""
-        sub_components = element.get('subComponents', None)
-        if sub_components:
-            for sub_component in sub_components:
-                sub_comp_prop = sub_component['properties']
-                sub_comp_name = sub_comp_prop.get("displayName", None)
-                sub_comp_desc = sub_comp_prop.get("description", None)
-                sub_comp_md +=  f" {sub_comp_name}"
+        # Extract sub-components
+        sub_comp_md = ", ".join(rel_elements.get("sub_component_qnames",[]))
+
+        # wired from and to
+        wired_from_md = ", ".join(rel_elements.get("wired_from_qnames",[]))
+        wired_to_md = ", ".join(rel_elements.get("wired_to_qnames",[]))
+
 
         comp_graph = element.get('mermaidGraph', None)
 
@@ -341,8 +611,12 @@ class SolutionArchitect(Client):
             'component_type': component_type,
             'version': version,
             'blueprints': blueprints_md,
+            'owning_supply_chains': owning_supply_chains_md,
+            'actors': actors_md,
             'parent_components': parent_comp_md,
             'sub_components': sub_comp_md,
+            'wired_from_components': wired_from_md,
+            'wired_to_components': wired_to_md,
             'additional_properties': additional_props_md,
             'extended_properties': extended_props_md,
             'mermaid_graph': comp_graph
@@ -359,7 +633,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing information supply chain elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -370,6 +644,14 @@ class SolutionArchitect(Client):
         elif output_format == "DICT":
             # return extract_basic_dict(elements)
             return self._extract_supply_chain_list(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Information Supply Chain",
+                output_format="HTML",
+                extract_properties_func=self._extract_info_supply_chain_properties
+            )
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
@@ -377,7 +659,9 @@ class SolutionArchitect(Client):
                 {'name': 'Name', 'key': 'display_name'}, 
                 {'name': 'Qualified Name', 'key': 'qualified_name'},
                 {'name': 'Scope', 'key': 'scope'},
-                {'name': 'Description', 'key': 'description', 'format': True}
+                {'name': 'Description', 'key': 'description', 'format': True},
+                {'name': 'Purposes', 'key': 'purposes', 'format': True},
+                {'name': 'Peer Links', 'key': 'links', 'format': True},
             ]
 
             return generate_output(
@@ -400,7 +684,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution blueprint elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -410,6 +694,14 @@ class SolutionArchitect(Client):
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Blueprint",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_blueprint_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -440,7 +732,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution role elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -450,6 +742,14 @@ class SolutionArchitect(Client):
             return extract_mermaid_only(elements)
         elif output_format == "DICT":
             return extract_basic_dict(elements)
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Role",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_roles_properties
+            )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
@@ -487,7 +787,7 @@ class SolutionArchitect(Client):
         Args:
             elements: Dictionary or list of dictionaries containing solution component elements
             search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID)
+            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
@@ -499,6 +799,14 @@ class SolutionArchitect(Client):
             return self._extract_component_list(elements)
             # return extract_basic_dict(elements)
             # add more to the body
+        elif output_format == "HTML":
+            return generate_output(
+                elements=elements, 
+                search_string=search_string, 
+                entity_type="Solution Component",
+                output_format="HTML",
+                extract_properties_func=self._extract_solution_components_properties
+            )
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
@@ -551,7 +859,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewInformationSupplyChainRequestBody",
+          "class": "NewElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -573,6 +881,7 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+           " class" : "InformationSupplyChainProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -624,7 +933,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewInformationSupplyChainRequestBody",
+          "class": "NewElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -646,6 +955,7 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+           " class" : "InformationSupplyChainProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -659,7 +969,6 @@ class SolutionArchitect(Client):
             "effectiveTo": {{isotime}}
           }
         }
-
        """
 
         loop = asyncio.get_event_loop()
@@ -853,12 +1162,12 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "UpdateInformationSupplyChainRequestBody",
+          "class" : "UpdateElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
           "properties": {
             "class" : "InformationSupplyChainProperties",
             "qualifiedName": "add unique name here",
@@ -867,12 +1176,12 @@ class SolutionArchitect(Client):
             "scope": "add scope of this information supply chain's applicability.",
             "purposes": ["purpose1", "purpose2"],
             "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
             },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
         }
         """
         validate_guid(guid)
@@ -915,12 +1224,12 @@ class SolutionArchitect(Client):
 
             Body structure:
             {
-              "class": "UpdateInformationSupplyChainRequestBody",
+              "class" : "UpdateElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
               "properties": {
                 "class" : "InformationSupplyChainProperties",
                 "qualifiedName": "add unique name here",
@@ -929,160 +1238,31 @@ class SolutionArchitect(Client):
                 "scope": "add scope of this information supply chain's applicability.",
                 "purposes": ["purpose1", "purpose2"],
                 "additionalProperties": {
-                  "property1": "propertyValue1",
-                  "property2": "propertyValue2"
+                  "property1" : "propertyValue1",
+                  "property2" : "propertyValue2"
                 },
-                "effectiveFrom": {{isotime}},
-                "effectiveTo": {{isotime}}
-               }
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              }
             }
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_info_supply_chain(guid, body, replace_all_properties))
 
-    async def _async_create_info_supply_chain_segment(self, guid: str, body: dict) -> str:
-        """Create an information supply chain segment and link it to its owning information supply chain.
-         Async version.
+
+    async def _async_link_peer_info_supply_chain(self, peer1_guid: str, peer2_guid: str, body: dict = None) -> None:
+        """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
+        allow significant data stores to be included in the definition of the information supply chain.
+        Request body is optional. Async Version.
 
         Parameters
         ----------
-        guid: str
-            guid of the owning information supply chain.
-        body: dict
-            A dictionary containing the definition of the supply chain to create.
-
-        Returns
-        -------
-
-        str - guid of the supply chain segment created.
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "InformationSupplyChainSegmentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class" : "InformationSupplyChainSegmentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "scope": "add scope of this information supply chain's applicability.",
-            "integrationStyle": "style",
-            "estimatedVolumetrics": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
-        }
-
-       """
-        validate_guid(guid)
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/segments")
-
-        response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        return response.json().get("guid", "Supply Chain segment not created")
-
-    def create_info_supply_chain_segment(self, guid: str, body: dict) -> str:
-        """Create an information supply chain segment and link it to its owning information supply chain.
-
-        Parameters
-        ----------
-        guid: str
-            The guid of the information supply chain you are adding a segment to.
-        body: dict
-            A dictionary containing the definition of the supply chain to create.
-
-        Returns
-        -------
-
-        str - guid of the supply chain segment created.
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "InformationSupplyChainSegmentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class" : "InformationSupplyChainSegmentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "scope": "add scope of this information supply chain's applicability.",
-            "integrationStyle": "style",
-            "estimatedVolumetrics": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
-        }
-
-       """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_info_supply_chain_segment(guid, body))
-        return response
-
-    async def _async_update_info_supply_chain_segment(self, guid: str, body: dict,
-                                                      replace_all_properties: bool = False) -> None:
-        """ Update the properties of an information supply chain segment. Async Version.
-
-        Parameters
-        ----------
-        guid: str
-            guid of the information supply chain segment to update.
-        body: dict
-            A dictionary containing the updates to the supply chain segment.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
+        peer1_guid: str
+            guid of the first information supply chain  to link.
+        peer2_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
+            The body describing the link between the two chains.
 
         Returns
         -------
@@ -1102,233 +1282,93 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "InformationSupplyChainSegmentRequestBody",
+          "class" : "RelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
           "properties": {
-            "class" : "InformationSupplyChainSegmentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
+            "class": "InformationSupplyChainLinkProperties",
+            "label": "add label here",
             "description": "add description here",
-            "scope": "add scope of this information supply chain's applicability.",
-            "integrationStyle": "style",
-            "estimatedVolumetrics": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
           }
         }
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+        validate_guid(peer1_guid)
+        validate_guid(peer2_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/segments/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/attach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
 
-    def update_info_supply_chain_segment(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
-        """ Update the properties of an information supply chain segment. Async Version.
+    def link_peer_info_supply_chain(self, peer1_guid: str, peer2_guid: str, body: dict) -> None:
+        """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
+        allow significant data stores to be included in the definition of the information supply chain.
+        Request body is optional.
 
-            Parameters
-            ----------
-            guid: str
-                guid of the information supply chain segment to update.
-            body: dict
-                A dictionary containing the updates to the supply chain segment .
-            replace_all_properties: bool, optional
-                Whether to replace all properties with those provided in the body or to merge with existing properties.
+        Parameters
+        ----------
+        peer1_guid: str
+            guid of the first information supply chain  to link.
+        peer2_guid: str
+            guid of the second information supply chain to link.
+        body: dict
+            The body describing the link between the two chains.
 
-            Returns
-            -------
+        Returns
+        -------
+        None
 
-            None
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
 
-            Raises
-            ------
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
+        Notes
+        ----
 
-            Notes
-            ----
-
-            Body structure:
-            {
-              "class": "InformationSupplyChainSegmentRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "properties": {
-                "class" : "InformationSupplyChainSegmentProperties",
-                "qualifiedName": "add unique name here",
-                "displayName": "add short name here",
-                "description": "add description here",
-                "scope": "add scope of this information supply chain's applicability.",
-                "integrationStyle": "style",
-                "estimatedVolumetrics": {
-                  "property1": "propertyValue1",
-                  "property2": "propertyValue2"
-                },
-                "additionalProperties": {
-                  "property1": "propertyValue1",
-                  "property2": "propertyValue2"
-                },
-                "effectiveFrom": {{isotime}},
-                "effectiveTo": {{isotime}}
-              }
+        Body structure:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "InformationSupplyChainLinkProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
             }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_info_supply_chain_segment(guid, body, replace_all_properties))
-
-    def get_info_supply_chain_segment_by_guid(self, segment_guid: str, supply_chain_guid: str) -> str:
-        """ Get information supply chain segment by GUID and return a MD for Dr.Egeria use."""
-        info_supply_chain = self.get_info_supply_chain_by_guid(supply_chain_guid)
-        segments = info_supply_chain["segments"]
-        segment_md = "\n\n# Update Information Supply Chain Segment\n\n"
-        for segment in segments:
-            if segment["elementHeader"]["guid"] == segment_guid:
-                segment_props = segment["properties"]
-                segment_md += f"## Display Name\n\n{segment_props.get("displayName","")}\n\n"
-                segment_md += f"## Information Supply Chain\n\n{info_supply_chain['properties']['qualifiedName']}\n\n"
-                segment_md += f"## Description\n\n{segment_props.get("description","")}\n\n"
-                segment_md += f"## Scope\n\n{segment_props.get('scope',"")}\n\n"
-                segment_md += f"## Integration Style\n\n{segment_props.get('integrationStyle','')}\n\n"
-                segment_md += f"## Estimated Volumetrics\n\n{segment_props.get('estimatedVolumetrics',{})}\n\n"
-                segment_md += f"## Extended Properties\n\n{segment_props.get('extendedProperties',{})}\n\n"
-                segment_md += f"## Additional Properties\n\n{segment_props.get('additionalProperties',{})}\n\n"
-        return segment_md
-
-
-
-
-    async def _async_link_info_supply_chain_segments(self, segment_guid1: str, segment_guid2: str, body: dict) -> None:
-        """ Connect the information supply chain segments. Async Version.
-
-        Parameters
-        ----------
-        segment_guid1: str
-            guid of the first information supply chain segment to link.
-        segment_guid2: str
-            guid of the second information supply chain segment to link.
-        body: dict
-            The body describing the link between the two segments.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "InformationSupplyChainLinkRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class": "InformationSupplyChainLinkProperties",
-            "label": "add label here",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
-        }
-        """
-        validate_guid(segment_guid1)
-        validate_guid(segment_guid2)
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/segments/{segment_guid1}/link-to/{segment_guid2}/attach")
-
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def link_info_supply_chain_segments(self, segment_guid1: str, segment_guid2: str, body: dict) -> None:
-        """ Connect the information supply chain segments.
-
-        Parameters
-        ----------
-        segment_guid1: str
-            guid of the first information supply chain segment to link.
-        segment_guid2: str
-            guid of the second information supply chain segment to link.
-        body: dict
-            The body describing the link between the two segments.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "InformationSupplyChainLinkRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class": "InformationSupplyChainLinkProperties",
-            "label": "add label here",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_info_supply_chain_segments(segment_guid1, segment_guid2, body))
+        loop.run_until_complete(self._async_link_peer_info_supply_chain(peer1_guid, peer2_guid, body))
 
-    async def _async_detach_info_supply_chain_segments(self, segment_guid1: str, segment_guid2: str,
+    async def _async_unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
                                                        body: dict = None) -> None:
-        """ Detach two information supply chain segments from one another. Request body is optional.
-            Async Version.
+        """ Detach two peers in an information supply chain from one another.  The linked elements are of type
+           'Referenceable' to allow significant data stores to be included in the definition of the information
+           supply chain. Request body is optional. Async Version.
 
         Parameters
         ----------
-        segment_guid1: str
-            guid of the first information supply chain segment to link.
-        segment_guid2: str
-            guid of the second information supply chain segment to link.
+        peer1_guid: str
+            guid of the first information supply chain to link.
+        peer2_guid: str
+            guid of the second information supply chain to link.
         body: dict, optional
             The body describing the link between the two segments.
 
@@ -1359,23 +1399,28 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(segment_guid1)
-        validate_guid(segment_guid2)
+        validate_guid(peer1_guid)
+        validate_guid(peer2_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/segments/{segment_guid1}/link-to{segment_guid2}/detach")
+               f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/detach")
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
 
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def detach_info_supply_chain_segments(self, segment_guid1: str, segment_guid2: str, body: dict = None) -> None:
-        """  Detach two information supply chain segments from one another. Request body is optional.
+    def unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
+                                                       body: dict = None) -> None:
+        """ Detach two peers in an information supply chain from one another.  The linked elements are of type
+           'Referenceable' to allow significant data stores to be included in the definition of the information
+           supply chain. Request body is optional.
 
         Parameters
         ----------
-        segment_guid1: str
-            guid of the first information supply chain segment to link.
-        segment_guid2: str
-            guid of the second information supply chain segment to link.
-        body: dict
+        peer1_guid: str
+            guid of the first information supply chain to link.
+        peer2_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
             The body describing the link between the two segments.
 
         Returns
@@ -1396,110 +1441,212 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "InformationSupplyChainLinkRequestBody",
+          "class": "MetadataSourceRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
           "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "label": "add label here",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+          "forDuplicateProcessing": false
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_info_supply_chain_segments(segment_guid1, segment_guid2, body))
+        loop.run_until_complete(self._async_unlink_peer_info_supply_chains(peer1_guid,peer2_guid, body))
 
-    async def _async_delete_info_supply_chain_segment(self, guid: str, body: dict = None) -> None:
-        """Delete an information supply chain segment. Async Version.
+    async def _async_compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict = None) -> None:
+        """ Connect a nested information supply chain to its parent. Request body is optional.
+            Async Version.
 
-           Parameters
-           ----------
-           guid: str
-               guid of the information supply chain segment to delete.
-           body: dict, optional
-               A dictionary containing parameters of the deletion.
+        Parameters
+        ----------
+        chain_guid: str
+            guid of the first information supply chain  to link.
+        nested_chain_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
+            The body describing the link between the two chains.
 
-           Returns
-           -------
-           None
+        Returns
+        -------
+        None
 
-           Raises
-           ------
-           Raises
-           ------
-           InvalidParameterException
-               one of the parameters is null or invalid or
-           PropertyServerException
-               There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
-               the requesting user is not authorized to issue this request.
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
 
-           Notes
-           ----
+        Notes
+        ----
 
-           Body structure:
-            {
-              "class": "MetadataSourceRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-           """
-        validate_guid(guid)
-
+        Body structure:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "InformationSupplyChainLinkProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+        """
+        validate_guid(chain_guid)
+        validate_guid(nested_chain_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/segments/{guid}/delete")
+               f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/attach")
+        if body:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        else:
+            await self._async_make_request("POST", url)
+
+    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict = None) -> None:
+        """ Connect a nested information supply chain to its parent. Request body is optional.
+
+        Parameters
+        ----------
+        chain_guid: str
+            guid of the first information supply chain  to link.
+        nested_chain_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
+            The body describing the link between the two chains.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "RelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "InformationSupplyChainLinkProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+            }
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_compose_info_supply_chains(chain_guid, nested_chain_guid, body))
+
+    async def _async_decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
+                                                       body: dict = None) -> None:
+        """ Detach two peers in an information supply chain from one another.  Request body is optional. Async Version.
+
+        Parameters
+        ----------
+        chain_guid: str
+            guid of the first information supply chain to link.
+        nested_chain_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
+            The body describing the link between the two segments.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+        validate_guid(chain_guid)
+        validate_guid(nested_chain_guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/detach")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_info_supply_chain_segment(self, guid: str, body: dict = None) -> None:
-        """ Delete an information supply chain segment. Async Version.
+    def decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
+                                                       body: dict = None) -> None:
+        """ Detach two peers in an information supply chain from one another.  Request body is optional.
 
-            Parameters
-            ----------
-            guid: str
-                guid of the information supply chain segment to delete.
-            body: dict, optional
-                A dictionary containing parameters of the deletion.
+        Parameters
+        ----------
+        chain_guid: str
+            guid of the first information supply chain to link.
+        nested_chain_guid: str
+            guid of the second information supply chain to link.
+        body: dict, optional
+            The body describing the link between the two segments.
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
 
-            Raises
-            ------
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
 
-            Notes
-            ----
+        Notes
+        ----
 
-            Body structure:
-            {
-              "class": "MetadataSourceRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-            """
+        Body structure:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_info_supply_chain_segment(guid, body))
+        loop.run_until_complete(self._async_decompose_info_supply_chains(chain_guid,
+                                                                         nested_chain_guid, body))
 
-    async def _async_delete_info_supply_chain(self, guid: str, body: dict = None) -> None:
+
+    async def _async_delete_info_supply_chain(self, guid: str, body: dict = None, cascade_delete: bool = False) -> None:
         """Delete an information supply chain. Async Version.
 
            Parameters
@@ -1508,6 +1655,8 @@ class SolutionArchitect(Client):
                guid of the information supply chain to delete.
            body: dict, optional
                A dictionary containing parameters of the deletion.
+           cascade_delete: bool, optional
+               If true, the child objects will also be deleted.
 
            Returns
            -------
@@ -1538,13 +1687,17 @@ class SolutionArchitect(Client):
             }
            """
         validate_guid(guid)
+        cascaded_s = str(cascade_delete).lower()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/delete")
+               f"information-supply-chains/{guid}/delete?cascadedDelete={cascaded_s}")
+        try:
+            await self._async_make_request("POST", url, body_slimmer(body))
+        except (InvalidParameterException) as e:
+            if e.exception_error_message_id == 'OMAG-REPOSITORY-HANDLER-404-007':
+                print("The GUID does not exist")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def delete_info_supply_chain(self, guid: str, body: dict = None) -> None:
+    def delete_info_supply_chain(self, guid: str, body: dict = None, cascade_delete: bool = False) -> None:
         """ Delete an information supply chain.
 
             Parameters
@@ -1553,7 +1706,8 @@ class SolutionArchitect(Client):
                 guid of the information supply chain to delete.
             body: dict, optional
                 A dictionary containing parameters of the deletion.
-
+           cascade_delete: bool, optional
+               If true, the child objects will also be deleted.
             Returns
             -------
             None
@@ -1581,15 +1735,57 @@ class SolutionArchitect(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_info_supply_chain(guid, body))
+        loop.run_until_complete(self._async_delete_info_supply_chain(guid, body, cascade_delete))
 
-    def find_all_information_supply_chains(self, start_from: int = 0, page_size: int = max_paging_size,
+    def find_all_information_supply_chains(self, body: dict = None, start_from: int = 0, page_size: int = max_paging_size,
                                            output_format: str = "JSON") -> (list[dict] | str):
-        """Retrieve a list of all information supply chains
-        https://egeria-project.org/concepts/information-supply-chain
+        """ Retrieve a list of all information supply chains
+             Parameters
+                ----------
+                body: dict, optional, default = None
+                    - additional optional specifications for the search.
+                start_from: int, optional, default = 0
+                    page to start from.
+                page_size: int, optional, default = max_paging_size
+                    number of elements to return.
+                output_format: str, default = 'JSON'
+                    Type of output to produce:
+                        JSON - output standard json
+                        MD - output standard markdown with no preamble
+                        FORM - output markdown with a preamble for a form
+                        REPORT - output markdown with a preamble for a report
+                        Mermaid - output markdown with a mermaid graph
+
+                Returns
+                -------
+                list[dict] | str
+                    A list of information supply chain structures or a string if there are no elements found.
+
+                Raises
+                ------
+                InvalidParameterException
+                    one of the parameters is null or invalid or
+                PropertyServerException
+                    There is a problem adding the element properties to the metadata repository or
+                UserNotAuthorizedException
+                    the requesting user is not authorized to issue this request.
+
+                Notes
+                -----
+
+                {
+                  "class" : "FilterRequestBody",
+                  "asOfTime" : "{{$isoTimestamp}}",
+                  "effectiveTime" : "{{$isoTimestamp}}",
+                  "forLineage" : false,
+                  "forDuplicateProcessing" : false,
+                  "limitResultsByStatus" : ["ACTIVE"],
+                  "sequencingOrder" : "PROPERTY_ASCENDING",
+                  "sequencingProperty" : "qualifiedName"
+                }
         """
 
-        return self.find_information_supply_chains("*", start_from=start_from, page_size=page_size,
+        return self.find_information_supply_chains("*", body = body, start_from=start_from, page_size=page_size,
                                                    output_format=output_format)
 
     async def _async_find_information_supply_chains(self, search_filter: str = "*", add_implementation: bool = True,
@@ -1652,10 +1848,13 @@ class SolutionArchitect(Client):
             }
 
             """
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
 
         possible_query_params = query_string(
             [("addImplementation", add_implementation), ("startFrom", start_from), ("pageSize", page_size),
-             ("startsWith", starts_with), ("endsWith", ends_with), ("ignoreCase", ignore_case), ])
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
 
         if search_filter is None or search_filter == "*":
             search_filter = None
@@ -1808,8 +2007,6 @@ class SolutionArchitect(Client):
             body = {
                 "filter": search_filter,
                 }
-        else:
-            body["filter"] = search_filter
 
         url = (f"{self.solution_architect_command_root}/information-supply-chains/by-name"
                f"{possible_query_params}")
@@ -1999,69 +2196,113 @@ class SolutionArchitect(Client):
     #
 
     async def _async_create_solution_blueprint(self, body: dict) -> str:
-        """Create a solution blueprint. Async version.
+        """ Create a solution blueprint. To set a lifecycle status
+            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
+            NewElementRequestBody sets the status to ACTIVE.
+            Async version.
 
-        Parameters
-        ----------
-        body: dict
-            A dictionary containing the definition of the blueprint to create.
+            Parameters
+            ----------
+            body: dict
+                A dictionary containing the definition of the blueprint to create.
 
-        Returns
-        -------
+            Returns
+            -------
+            str - guid of the supply chain created.
 
-        str - guid of the supply chain created.
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
 
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+            Notes
+            ----
 
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "NewSolutionBlueprintRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "anchorGUID": "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap": {
-              "description": {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue": "New description"
+            Body structure:
+            {
+              "class": "NewElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "anchorGUID": "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap": {
+                  "description": {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue": "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBlueprintProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version here",
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
               }
             }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "SolutionBlueprintProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "version": "add version here",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
-        }
+
+            To set a lifecycle use:
+
+            Set initialStatus which can be DRAFT, PREPARED, PROPPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
+            OTHER.  If other is used, set userDefinedStatus.
+
+            {
+              "class" : "NewSolutionElementRequestBody",
+              "anchorGUID" : "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap" : {
+                  "description" : {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue" : "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBlueprintProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version for this blueprint",
+                "userDefinedStatus" : "add status here if initialStatus=OTHER",
+                "additionalProperties": {
+                  "property1" : "propertyValue1",
+                  "property2" : "propertyValue2"
+                },
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              },
+              "initialStatus" : "DRAFT",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
 
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
@@ -2072,69 +2313,112 @@ class SolutionArchitect(Client):
         return response.json().get("guid", "Blueprint not created")
 
     def create_solution_blueprint(self, body: dict) -> str:
-        """Create an information supply.
+        """ Create a solution blueprint. To set a lifecycle status
+            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
+            NewElementRequestBody sets the status to ACTIVE.
 
-        Parameters
-        ----------
-        body: dict
-            A dictionary containing the definition of the supply chain to create.
+            Parameters
+            ----------
+            body: dict
+                A dictionary containing the definition of the blueprint to create.
 
-        Returns
-        -------
+            Returns
+            -------
+            str - guid of the supply chain created.
 
-        str - guid of the supply chain created.
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
 
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+            Notes
+            ----
 
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "NewSolutionBlueprintRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "anchorGUID": "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap": {
-              "description": {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue": "New description"
+            Body structure:
+            {
+              "class": "NewElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "anchorGUID": "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap": {
+                  "description": {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue": "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBlueprintProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version here",
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
               }
             }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "SolutionBlueprintProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "version": "add version here",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
-        }
+
+            To set a lifecycle use:
+
+            Set initialStatus which can be DRAFT, PREPARED, PROPPOSED, APPROVED, REJECTED, ACTIVE, DISABLED, DEPRECATED,
+            OTHER.  If other is used, set userDefinedStatus.
+
+            {
+              "class" : "NewSolutionElementRequestBody",
+              "anchorGUID" : "add guid here",
+              "isOwnAnchor": false,
+              "parentGUID": "add guid here",
+              "parentRelationshipTypeName": "add type name here",
+              "parentRelationshipProperties": {
+                "class": "ElementProperties",
+                "propertyValueMap" : {
+                  "description" : {
+                    "class": "PrimitiveTypePropertyValue",
+                    "typeName": "string",
+                    "primitiveValue" : "New description"
+                  }
+                }
+              },
+              "parentAtEnd1": false,
+              "properties": {
+                "class" : "SolutionBlueprintProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version for this blueprint",
+                "userDefinedStatus" : "add status here if initialStatus=OTHER",
+                "additionalProperties": {
+                  "property1" : "propertyValue1",
+                  "property2" : "propertyValue2"
+                },
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              },
+              "initialStatus" : "DRAFT",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
 
        """
 
@@ -2294,6 +2578,214 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_blueprint_from_template(body))
         return response
 
+    async def _async_update_solution_blueprint(self, guid: str, body: dict,
+                                               replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution blueprint. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the information supply chain to update.
+        body: dict
+            A dictionary containing the updates to the supply chain.
+        replace_all_properties: bool, optional
+            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "UpdateElementRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": {{isotime}},
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "properties": {
+            "class" : "SolutionBlueprintProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "versionIdentifier": "add version identifier here",
+            "additionalProperties": {
+              "property1": "propertyValue1",
+              "property2": "propertyValue2"
+            },
+            "effectiveFrom": {{isotime}},
+            "effectiveTo": {{isotime}}
+           }
+        }
+        """
+        validate_guid(guid)
+        replace_all_properties_s = str(replace_all_properties).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-blueprints/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+    def update_solution_blueprint(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution blueprint. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the information supply chain to update.
+            body: dict
+                A dictionary containing the updates to the supply chain.
+            replace_all_properties: bool, optional
+                Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+            Returns
+            -------
+
+            None
+
+            Raises
+            ------
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "UpdateSElementRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "properties": {
+                "class" : "SolutionBlueprintProperties",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "versionIdentifier": "add version identifier here",
+                "purposes": ["purpose1", "purpose2"],
+                "additionalProperties": {
+                  "property1": "propertyValue1",
+                  "property2": "propertyValue2"
+                },
+                "effectiveFrom": {{isotime}},
+                "effectiveTo": {{isotime}}
+               }
+            }
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_blueprint(guid, body, replace_all_properties))
+
+    async def _async_update_solution_element_status(self, guid: str, body: dict,
+                                               replace_all_properties: bool = False) -> None:
+        """ Update the properties of a blueprint, solution component, or solution port. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the information supply chain to update.
+        body: dict
+            A dictionary containing the updates to the supply chain.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+             {
+              "class" : "SolutionElementStatusRequestBody",
+              "status" : "APPROVED",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+        """
+        validate_guid(guid)
+        replace_all_properties_s = str(replace_all_properties).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-blueprints/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+    def update_solution_element_status(self, guid: str, body: dict) -> None:
+        """ Update the status of a blueprint, solution component, or solution port.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the information supply chain to update.
+            body: dict
+                A dictionary containing the updates to the supply chain.
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class" : "SolutionElementStatusRequestBody",
+              "status" : "APPROVED",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
+            }
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_element_status(guid, body))
+
+
+
     async def _async_link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str,
                                                           body: dict) -> None:
         """ Connect a solution component to a blueprint. Async Version.
@@ -2325,20 +2817,21 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "SolutionComponentLinkRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
+          "class" : "RelationshipRequestBody",
           "properties": {
             "class": "SolutionBlueprintCompositionProperties",
-            "role": "add role here",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "role": "Add role that the component plays in the solution blueprint here",
+            "description": "Add description of the solution component in the context of the solution blueprint.",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
+
         """
         validate_guid(blueprint_guid)
         validate_guid(component_guid)
@@ -2376,20 +2869,20 @@ class SolutionArchitect(Client):
         ----
 
         Body structure:
-        {
-          "class": "SolutionComponentLinkRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
+         {
+          "class" : "RelationshipRequestBody",
           "properties": {
             "class": "SolutionBlueprintCompositionProperties",
-            "role": "add role here",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "role": "Add role that the component plays in the solution blueprint here",
+            "description": "Add description of the solution component in the context of the solution blueprint.",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
         """
         loop = asyncio.get_event_loop()
@@ -2529,9 +3022,9 @@ class SolutionArchitect(Client):
             }
            """
         validate_guid(blueprint_guid)
-
+        cascaded_s = str(cascade_delete).lower()
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{blueprint_guid}/delete")
+               f"solution-blueprints/{blueprint_guid}/delete?cascadeDelete={cascaded_s}")
         if body:
             await self._async_make_request("POST", url, body_slimmer(body))
         else:
@@ -2576,6 +3069,166 @@ class SolutionArchitect(Client):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_blueprint(blueprint_guid, cascade_delete, body))
+
+
+    async def _async_find_solution_blueprints(self, search_filter: str = "*", starts_with: bool = True,
+                                              ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                              page_size: int = max_paging_size, body: dict = None,
+                                              output_format: str = "JSON") -> list[dict] | str:
+        """Retrieve the solution blueprint elements that contain the search string.
+           https://egeria-project.org/concepts/solution-blueprint
+           Async version.
+
+        Parameters
+        ----------
+        search_filter: str
+            - search_filterstring to search for.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+        output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+        Returns
+        -------
+        list[dict] | str
+            A list of solution blueprint structures or a string if there are no elements found.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
+        """
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
+        possible_query_params = query_string(
+            [("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
+
+        if search_filter is None or search_filter == "*":
+            search_filter = None
+
+        if body is None:
+            body = {
+                "filter": search_filter,
+                }
+        else:
+            body["filter"] = search_filter
+
+        url = (f"{self.solution_architect_command_root}/solution-blueprints/by-search-string"
+               f"{possible_query_params}")
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_blueprint_output(element, search_filter, output_format)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
+
+    def find_solution_blueprints(self, filter: str = "*", starts_with: bool = True, ends_with: bool = False,
+                                 ignore_case: bool = False, start_from: int = 0, page_size: int = max_paging_size,
+                                 body: dict = None, output_format: str = 'JSON') -> list[dict] | str:
+        """Retrieve the list of solution blueprint elements that contain the search string.
+           https://egeria-project.org/concepts/solution-blueprint
+
+        Parameters
+        ----------
+        filter: str
+            - search_filterstring to search for.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=max_paging_size], optional
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+        output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+        Returns
+        -------
+        list[dict] | str
+            A list of information supply chain structures or a string if there are no elements found.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "add name",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_solution_blueprints(filter, starts_with, ends_with, ignore_case, start_from, page_size,
+                                                 body, output_format))
+        return response
+
+    def find_all_solution_blueprints(self, start_from: int = 0, page_size: int = max_paging_size,
+                                     output_format: str = "JSON") -> list[dict] | str:
+        """Retrieve a list of all solution blueprint elements
+        https://egeria-project.org/concepts/solution-blueprint
+        """
+        return self.find_solution_blueprints("*", start_from=start_from, page_size=page_size,
+                                             output_format=output_format)
+
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str, body: dict = None,
                                                     output_format: str = "JSON") -> dict | str:
@@ -2808,287 +3461,17 @@ class SolutionArchitect(Client):
             self._async_get_solution_blueprints_by_name(search_filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_update_solution_blueprint(self, guid: str, body: dict,
-                                               replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution blueprint. Async Version.
 
-        Parameters
-        ----------
-        guid: str
-            guid of the information supply chain to update.
-        body: dict
-            A dictionary containing the updates to the supply chain.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateSolutionBlueprintRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class" : "SolutionBlueprintProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "versionIdentifier": "add version identifier here",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
-        }
-        """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{guid}/update?replaceAllProperties={replace_all_properties_s}")
-
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_solution_blueprint(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution blueprint. Async Version.
-
-            Parameters
-            ----------
-            guid: str
-                guid of the information supply chain to update.
-            body: dict
-                A dictionary containing the updates to the supply chain.
-            replace_all_properties: bool, optional
-                Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-            Returns
-            -------
-
-            None
-
-            Raises
-            ------
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            ----
-
-            Body structure:
-            {
-              "class": "UpdateSolutionBlueprintRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "properties": {
-                "class" : "SolutionBlueprintProperties",
-                "qualifiedName": "add unique name here",
-                "displayName": "add short name here",
-                "description": "add description here",
-                "versionIdentifier": "add version identifier here",
-                "purposes": ["purpose1", "purpose2"],
-                "additionalProperties": {
-                  "property1": "propertyValue1",
-                  "property2": "propertyValue2"
-                },
-                "effectiveFrom": {{isotime}},
-                "effectiveTo": {{isotime}}
-               }
-            }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_blueprint(guid, body, replace_all_properties))
-
-    async def _async_find_solution_blueprints(self, search_filter: str = "*", starts_with: bool = True,
-                                              ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                              page_size: int = max_paging_size, body: dict = None,
-                                              output_format: str = "JSON") -> list[dict] | str:
-        """Retrieve the solution blueprint elements that contain the search string.
-           https://egeria-project.org/concepts/solution-blueprint
-           Async version.
-
-        Parameters
-        ----------
-        search_filter: str
-            - search_filterstring to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-        Returns
-        -------
-        list[dict] | str
-            A list of solution blueprint structures or a string if there are no elements found.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "add name",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
-
-        """
-
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
-
-        if search_filter is None or search_filter == "*":
-            search_filter = None
-
-        if body is None:
-            body = {
-                "filter": search_filter,
-                }
-        else:
-            body["filter"] = search_filter
-
-        url = (f"{self.solution_architect_command_root}/solution-blueprints/by-search-string"
-               f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_blueprint_output(element, search_filter, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
-
-    def find_solution_blueprints(self, filter: str = "*", starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = False, start_from: int = 0, page_size: int = max_paging_size,
-                                 body: dict = None, output_format: str = 'JSON') -> list[dict] | str:
-        """Retrieve the list of solution blueprint elements that contain the search string.
-           https://egeria-project.org/concepts/solution-blueprint
-
-        Parameters
-        ----------
-        filter: str
-            - search_filterstring to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=max_paging_size], optional
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-        Returns
-        -------
-        list[dict] | str
-            A list of information supply chain structures or a string if there are no elements found.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-        {
-          "class" : "FilterRequestBody",
-          "filter" : "add name",
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_solution_blueprints(filter, starts_with, ends_with, ignore_case, start_from, page_size,
-                                                 body, output_format))
-        return response
-
-    def find_all_solution_blueprints(self, start_from: int = 0, page_size: int = max_paging_size,
-                                     output_format: str = "JSON") -> list[dict] | str:
-        """Retrieve a list of all solution blueprint elements
-        https://egeria-project.org/concepts/solution-blueprint
-        """
-        return self.find_solution_blueprints("*", start_from=start_from, page_size=page_size,
-                                             output_format=output_format)
 
     #
     #   Components
     #
 
     async def _async_create_solution_component(self, body: dict) -> str:
-        """Create a solution component. Async version.
+        """Create a solution component. To set a lifecycle status
+            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
+            NewElementRequestBody sets the status to ACTIVE.
+            Async version.
 
         Parameters
         ----------
@@ -3113,6 +3496,7 @@ class SolutionArchitect(Client):
 
         Notes
         ----
+        With lifecycle:
 
         Body structure:
         {
@@ -3138,21 +3522,68 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "SolutionComponentProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "version": "add version here",
-            "solutionComponentType": "type name here",
-            "plannedDeployedImplementationType": "type name here",
+            "solutionComponentType": "add optional type for this component",
+            "versionIdentifier": "add version for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "userDefinedStatus" : "Add own status here if initialStatus=OTHER",
             "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
             },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "initialStatus" : "DRAFT",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
+        Without lifecycle:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "SolutionComponentProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "solutionComponentType": "add optional type for this component",
+            "versionIdentifier": "add version for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components")
@@ -3162,7 +3593,9 @@ class SolutionArchitect(Client):
         return response.json().get("guid", "Solution component not created")
 
     def create_solution_component(self, body: dict) -> str:
-        """Create a solution component. Async version.
+        """Create a solution component. To set a lifecycle status
+            use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
+            NewElementRequestBody sets the status to ACTIVE.
 
         Parameters
         ----------
@@ -3187,6 +3620,7 @@ class SolutionArchitect(Client):
 
         Notes
         ----
+        With lifecycle:
 
         Body structure:
         {
@@ -3212,21 +3646,68 @@ class SolutionArchitect(Client):
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "SolutionComponentProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "version": "add version here",
-            "solutionComponentType": "type name here",
-            "plannedDeployedImplementationType": "type name here",
+            "solutionComponentType": "add optional type for this component",
+            "versionIdentifier": "add version for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "userDefinedStatus" : "Add own status here if initialStatus=OTHER",
             "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
             },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "initialStatus" : "DRAFT",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
+        Without lifecycle:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "SolutionComponentProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "solutionComponentType": "add optional type for this component",
+            "versionIdentifier": "add version for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
        """
 
         loop = asyncio.get_event_loop()
@@ -3384,6 +3865,131 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_component_from_template(body))
         return response
 
+    async def _async_update_solution_component(self, guid: str, body: dict,
+                                               replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution component. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the solution component to update.
+        body: dict
+            A dictionary containing the updates to the component.
+        replace_all_properties: bool, optional
+            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "SolutionComponentProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "solutionComponentType": "add namespace for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "versionIdentifier": "add version for this component",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        validate_guid(guid)
+        replace_all_properties_s = str(replace_all_properties).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+    def update_solution_component(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution component. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the solution component to update.
+        body: dict
+            A dictionary containing the updates to the component.
+        replace_all_properties: bool, optional
+            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "SolutionComponentProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "solutionComponentType": "add namespace for this component",
+            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
+            "versionIdentifier": "add version for this component",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_component(guid, body, replace_all_properties))
+
     async def _async_link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution component. Async Version.
 
@@ -3414,18 +4020,12 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "SolutionComponentLinkRequestBody",
+          "class" : "RelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "typeName": "string",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
         """
         validate_guid(component_guid)
@@ -3468,18 +4068,12 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class": "SolutionComponentLinkRequestBody",
+                  "class" : "RelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
-                  "effectiveTime": {{isotime}},
-                  "forLineage": false,
-                  "forDuplicateProcessing": false,
-                  "properties": {
-                    "typeName": "string",
-                    "description": "add description here",
-                    "effectiveFrom": {{isotime}},
-                    "effectiveTo": {{isotime}}
-                  }
+                  "effectiveTime" : "{{$isoTimestamp}}",
+                  "forLineage" : false,
+                  "forDuplicateProcessing" : false
                 }
                 """
         loop = asyncio.get_event_loop()
@@ -3576,7 +4170,6 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
-
     async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
@@ -3610,15 +4203,15 @@ class SolutionArchitect(Client):
           "class": "RelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "properties" : {
-             "class" : "SolutionLinkingWireProperties",
-             "label" : "",
-             "description" : "",
-             "informationSupplyChainSegmentGUIDs" : []
+          "properties": {
+             "class": "SolutionLinkingWireProperties",
+             "label": "",
+             "description": "",
+             "informationSupplyChainSegmentGUIDs": []
           },
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
         }
         """
         validate_guid(component1_guid)
@@ -3629,7 +4222,6 @@ class SolutionArchitect(Client):
             await self._async_make_request("POST", url, body_slimmer(body))
         else:
             await self._async_make_request("POST", url)
-
 
     def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution component as a peer in a solution.
@@ -3661,25 +4253,25 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class" : "RelationshipRequestBody",
+                  "class": "RelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
-                  "properties" : {
-                     "class" : "SolutionLinkingWireProperties",
-                     "label" : "",
-                     "description" : "",
-                     "informationSupplyChainSegmentGUIDs" : []
+                  "properties": {
+                     "class": "SolutionLinkingWireProperties",
+                     "label": "",
+                     "description": "",
+                     "informationSupplyChainSegmentGUIDs": []
                   },
-                  "effectiveTime" : "{{$isoTimestamp}}",
-                  "forLineage" : false,
-                  "forDuplicateProcessing" : false
+                  "effectiveTime": "{{$isoTimestamp}}",
+                  "forLineage": false,
+                  "forDuplicateProcessing": false
                 }
                 """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
-                                          body: dict = None) -> None:
+                                                  body: dict = None) -> None:
         """ Detach a solution component from a peer solution component.
             Async Version.
 
@@ -3770,129 +4362,6 @@ class SolutionArchitect(Client):
         loop.run_until_complete(self._async_detach_solution_linking_wire(component1_guid, component2_guid, body))
 
 
-
-    async def _async_update_solution_component(self, guid: str, body: dict,
-                                               replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution component. Async Version.
-
-        Parameters
-        ----------
-        guid: str
-            guid of the solution component to update.
-        body: dict
-            A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateSolutionComponentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "version": "add version identifier here",
-            "solutionComponentType": "string",
-            "plannedDeployedImplementationType": "string",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
-        }
-        """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{guid}/update?replaceAllProperties={replace_all_properties_s}")
-
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_solution_component(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution component. Async Version.
-
-        Parameters
-        ----------
-        guid: str
-            guid of the solution component to update.
-        body: dict
-            A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateSolutionComponentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "class": "SolutionComponentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "version": "add version identifier here",
-            "solutionComponentType": "string",
-            "plannedDeployedImplementationType": "string",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
-        }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_component(guid, body, replace_all_properties))
-
     async def _async_delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
                                                body: dict = None) -> None:
         """Delete a solution component. Async Version.
@@ -3933,7 +4402,7 @@ class SolutionArchitect(Client):
             }
            """
         validate_guid(solution_component_guid)
-
+        cascaded_s = str(cascade_delete).lower()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{solution_component_guid}/delete?cascadeDelete={cascade_delete}")
@@ -3983,7 +4452,392 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_component(solution_component_guid, cascade_delete, body))
 
-    ##### get solution component implementations
+    async def _async_find_solution_components(self, search_filter: str = "*", starts_with: bool = True,
+                                              ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                              page_size: int = 0, body: dict = None,
+                                              output_format: str = "JSON") -> list[dict] | str:
+        """ Retrieve the solution component elements that contain the search string. The solutions components returned
+            include information about consumers, actors, and other solution components that are associated with them.
+            https://egeria-project.org/concepts/solution-components
+            Async version.
+
+        Parameters
+        ----------
+        search_filter: str
+            - search_filter string to search for.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        body: dict, optional, default = None
+            - additional optional specifications for the search - supersedes search filter,
+        output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+        Returns
+        -------
+        list[dict] | str
+            A list of solution components or a string if there are no elements found.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+        Body structure:
+        {
+          "class": "FilterRequestBody",
+         "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
+        }
+        """
+
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
+        possible_query_params = query_string(
+            [ ("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
+
+        if search_filter is None or search_filter == "*":
+            search_filter = None
+
+        if body is None:
+            body = {
+                "filter": search_filter,
+                }
+
+        url = (f"{self.solution_architect_command_root}/solution-components/by-search-string"
+               f"{possible_query_params}")
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_components_output(element, filter, output_format)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
+
+    def find_solution_components(self, search_filter: str = "*", starts_with: bool = True, ends_with: bool = False,
+                                 ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
+                                 body: dict = None, output_format: str = "JSON") -> list[dict] | str:
+        """ Retrieve the solution component elements that contain the search string. The solutions components returned
+            include information about consumers, actors, and other solution components that are associated with them.
+            https://egeria-project.org/concepts/solution-components
+
+        Parameters
+        ----------
+        search_filter: str
+            - search_filter string to search for.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        body: dict, optional, default = None
+            - additional optional specifications for the search.- supersedes search filter,
+        output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+        Returns
+        -------
+        list[dict] | str
+            A list of solution components or a string if there are no elements found.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+        Body structure:
+        {
+          "class": "FilterRequestBody",
+         "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_solution_components(search_filter, starts_with, ends_with, ignore_case, start_from,
+                                                 page_size, body, output_format))
+        return response
+
+    def find_all_solution_components(self, body: dict = None, start_from: int = 0, page_size: int = max_paging_size,
+                                     output_format: str = "JSON") -> list[dict] | str:
+        """Retrieve a list of all solution component elements
+        https://egeria-project.org/concepts/solution-components
+        """
+        return self.find_solution_components("*", body = body, start_from=start_from, page_size=page_size,
+                                             output_format=output_format)
+
+    async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
+                                                     page_size: int = 0, output_format: str = "JSON") -> dict | str:
+        """ Returns the list of solution components with a particular name. Async Version.
+
+            Parameters
+            ----------
+            search_filter: str
+                name of the information supply chain to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval. Filter parameter in body over-rides search-filter.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of solution components matching the name.
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "FilterRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "limitResultsByStatus": ["ACTIVE"],
+              "sequencingOrder": "PROPERTY_ASCENDING",
+              "sequencingProperty": "qualifiedName",
+              "filter": "Add name here"
+            }
+
+        """
+
+        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
+
+        if body is None:
+            body = {
+                "filter": search_filter,
+                }
+
+        url = (f"{self.solution_architect_command_root}/solution-components/by-name"
+               f"{possible_query_params}")
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_components_output(element, search_filter, output_format)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
+
+    def get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
+                                        page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+        """ Returns the list of solution components with a particular name.
+
+            Parameters
+            ----------
+            search_filter: str
+                name of the solution component to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval. Filter parameter in body over-rides search-filter.
+            start_from: int, [default=0], optional
+                When multiple pages of results are available, the page number to start from.
+            page_size: int, [default=max_paging_size], optional
+                The number of items to return in a single page. If not specified, the default will be taken from
+                the class instance.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of solution components matching the name.
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "FilterRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false,
+              "limitResultsByStatus": ["ACTIVE"],
+              "sequencingOrder": "PROPERTY_ASCENDING",
+              "sequencingProperty": "qualifiedName",
+              "filter": "Add name here"
+            }
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format))
+        return response
+
+    async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
+                                                    output_format: str = "JSON") -> dict | str:
+        """ Return the properties of a specific solution component. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution component to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            dict - details of the solution component
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
+        """
+        validate_guid(guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-components/{guid}/retrieve")
+
+        if body is None:
+            response = await self._async_make_request("POST", url)
+        else:
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self.generate_solution_components_output(element, None, output_format)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
+
+    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+        """ Return the properties of a specific solution component.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution component to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            dict - details of the solution component
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format))
+        return response
+
+
 
     def get_component_related_elements(self, guid: str) -> dict:
         """ Get related elements about the component"""
@@ -3995,6 +4849,8 @@ class SolutionArchitect(Client):
         sub_component_guids = []
         actor_guids = []
         blueprint_guids = []
+        supply_chain_guids = []
+        parent_component_guids = []
 
         sub_components = response.get("subComponents",{})
         for sub_component in sub_components:
@@ -4008,13 +4864,29 @@ class SolutionArchitect(Client):
         for blueprint in blueprints:
             blueprint_guids.append(blueprint["relatedElement"]['elementHeader']["guid"])
 
+        context = response.get("context",[])
+        for c in context:
+            supply_chains = c.get("owningInformationSupplyChains", [])
+            if supply_chains:
+                for chain in supply_chains:
+                    supply_chain_guids.append(chain['relatedElement']["elementHeader"]["guid"])
+
+            parent_components = c.get("parentComponents",[])
+            if parent_components:
+                for parent_component in parent_components:
+                    parent_component_guids.append(parent_component["elementHeader"]["guid"])
+
         return {
-            "sub_component_guids": sub_component_guids, "actor_guids": actor_guids, "blueprint_guids": blueprint_guids
+            "sub_component_guids": sub_component_guids,
+            "actor_guids": actor_guids,
+            "blueprint_guids": blueprint_guids,
+            "supply_chain_guids": supply_chain_guids,
+            "parent_component_guids": parent_component_guids,
             }
 
 
     async def _async_get_solution_component_implementations(self, solution_component_guid: str, body: dict = None,
-                                                            start_from: int = 0, page_size: int = max_paging_size,
+                                                            start_from: int = 0, page_size: int = 0,
                                                             output_format: str = "JSON") -> dict | str:
         """ Retrieve the list of metadata elements that are associated with the solution component via the
             ImplementedBy relationship. Async Version.
@@ -4141,360 +5013,7 @@ class SolutionArchitect(Client):
                                                                output_format))
         return response
 
-    async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
-                                                    output_format: str = "JSON") -> dict | str:
-        """ Return the properties of a specific solution component. Async Version.
 
-            Parameters
-            ----------
-            guid: str
-                guid of the solution component to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-            Returns
-            -------
-            dict - details of the solution component
-
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "AnyTimeRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing : false
-            }
-
-        """
-        validate_guid(guid)
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{guid}/retrieve")
-
-        if body is None:
-            response = await self._async_make_request("POST", url)
-        else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("element", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, None, output_format)
-        return response.json().get("element", NO_ELEMENTS_FOUND)
-
-    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
-        """ Return the properties of a specific solution component.
-
-            Parameters
-            ----------
-            guid: str
-                guid of the solution component to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-            Returns
-            -------
-            dict - details of the solution component
-
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "AnyTimeRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing : false
-            }
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format))
-        return response
-
-    async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                                     page_size: int = max_paging_size,
-                                                     output_format: str = "JSON") -> dict | str:
-        """ Returns the list of solution components with a particular name. Async Version.
-
-            Parameters
-            ----------
-            search_filter: str
-                name of the information supply chain to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-            Returns
-            -------
-            [dict] | str
-                A list of solution components matching the name.
-
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": "Add name here"
-            }
-
-        """
-
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
-
-        if body is None:
-            body = {
-                "filter": search_filter,
-                }
-        else:
-            body["filter"] = search_filter
-
-        url = (f"{self.solution_architect_command_root}/solution-components/by-name"
-               f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, search_filter, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
-
-    def get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
-        """ Returns the list of solution components with a particular name.
-
-            Parameters
-            ----------
-            search_filter: str
-                name of the solution component to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            start_from: int, [default=0], optional
-                When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=max_paging_size], optional
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-            Returns
-            -------
-            [dict] | str
-                A list of solution components matching the name.
-
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": "Add name here"
-            }
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format))
-        return response
-
-    async def _async_find_solution_components(self, search_filter: str = "*", starts_with: bool = True,
-                                              ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                              page_size: int = max_paging_size, body: dict = None,
-                                              output_format: str = "JSON") -> list[dict] | str:
-        """ Retrieve the solution component elements that contain the search string. The solutions components returned
-            include information about consumers, actors, and other solution components that are associated with them.
-            https://egeria-project.org/concepts/solution-components
-            Async version.
-
-        Parameters
-        ----------
-        search_filter: str
-            - search_filter string to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-        Returns
-        -------
-        list[dict] | str
-            A list of solution components or a string if there are no elements found.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-        """
-
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
-
-        if search_filter is None or search_filter == "*":
-            search_filter = None
-
-        if body is None:
-            body = {
-                "filter": search_filter,
-                }
-        else:
-            body["filter"] = search_filter
-
-        url = (f"{self.solution_architect_command_root}/solution-components/by-search-string"
-               f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, filter, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
-
-    def find_solution_components(self, search_filter: str = "*", starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = False, start_from: int = 0, page_size: int = max_paging_size,
-                                 body: dict = None, output_format: str = "JSON") -> list[dict] | str:
-        """ Retrieve the solution component elements that contain the search string. The solutions components returned
-            include information about consumers, actors, and other solution components that are associated with them.
-            https://egeria-project.org/concepts/solution-components
-
-        Parameters
-        ----------
-        search_filter: str
-            - search_filter string to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-                Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                MERMAID - output mermaid markdown
-
-        Returns
-        -------
-        list[dict] | str
-            A list of solution components or a string if there are no elements found.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_solution_components(search_filter, starts_with, ends_with, ignore_case, start_from,
-                                                 page_size, body, output_format))
-        return response
-
-    def find_all_solution_components(self, start_from: int = 0, page_size: int = max_paging_size,
-                                     output_format: str = "JSON") -> list[dict] | str:
-        """Retrieve a list of all solution component elements
-        https://egeria-project.org/concepts/solution-components
-        """
-        return self.find_solution_components("*", start_from=start_from, page_size=page_size,
-                                             output_format=output_format)
 
     #
     #   Roles
@@ -4529,46 +5048,41 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewActorRoleRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "anchorGUID": "add guid here",
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
             "class": "ElementProperties",
-            "propertyValueMap": {
-              "description": {
+            "propertyValueMap" : {
+              "description" : {
                 "class": "PrimitiveTypePropertyValue",
                 "typeName": "string",
-                "primitiveValue": "New description"
+                "primitiveValue" : "New description"
               }
             }
           },
           "parentAtEnd1": false,
           "properties": {
-            "class" : "ActorRoleProperties",
+            "class" : "SolutionRoleProperties",
             "qualifiedName": "add unique name here",
             "name": "add short name here",
             "description": "add description here",
-           ######## is this right?
-            "roleID": "string",
-            "scope": "string",
-            "title": "string",
-            "domainIdentifier": "string",
+            "scope": "add scope of role here",
             "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
             },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
-
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles")
@@ -4606,43 +5120,40 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewActorRoleRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "anchorGUID": "add guid here",
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
           "parentRelationshipTypeName": "add type name here",
           "parentRelationshipProperties": {
             "class": "ElementProperties",
-            "propertyValueMap": {
-              "description": {
+            "propertyValueMap" : {
+              "description" : {
                 "class": "PrimitiveTypePropertyValue",
                 "typeName": "string",
-                "primitiveValue": "New description"
+                "primitiveValue" : "New description"
               }
             }
           },
           "parentAtEnd1": false,
           "properties": {
+            "class" : "SolutionRoleProperties",
             "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
+            "name": "add short name here",
             "description": "add description here",
-            "version": "add version here",
-            "roleID": "string",
-            "scope": "string",
-            "title": "string",
-            "domainIdentifier": "string",
+            "scope": "add scope of role here",
             "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
             },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
        """
@@ -4802,7 +5313,126 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_role_from_template(body))
         return response
 
-    async def _async_link_component_to_role(self, role_guid: str, component_guid: str, body: dict) -> None:
+    async def _async_update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution role. Async Version.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the solution role to update.
+        body: dict
+            A dictionary containing the updates to the component.
+        replace_all_properties: bool, optional, default is False
+            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+         {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "SolutionRoleProperties",
+            "qualifiedName": "add unique name here",
+            "name": "add short name here",
+            "description": "add description here",
+            "scope": "add scope of role here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        validate_guid(guid)
+        replace_all_properties_s = str(replace_all_properties).lower()
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-roles/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+
+        await self._async_make_request("POST", url, body_slimmer(body))
+
+    def update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+        """ Update the properties of a solution role.
+
+        Parameters
+        ----------
+        guid: str
+            guid of the solution role to update.
+        body: dict
+            A dictionary containing the updates to the component.
+        replace_all_properties: bool, optional, default is False
+            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
+        Returns
+        -------
+
+        None
+
+        Raises
+        ------
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "SolutionRoleProperties",
+            "qualifiedName": "add unique name here",
+            "name": "add short name here",
+            "description": "add description here",
+            "scope": "add scope of role here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_solution_role(guid, body, replace_all_properties))
+
+    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution role. Async Version.
 
         Parameters
@@ -4832,19 +5462,19 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "SolutionComponentLinkRequestBody",
+          "class" : "RelationshipRequestBody",
+          "properties": {
+            "class": "SolutionComponentActorProperties",
+            "role": "Add role here",
+            "description": "Add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "typeName": "string",
-            "role": "string",
-            "description": "add description here",
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-          }
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
         """
         validate_guid(component_guid)
@@ -4854,7 +5484,7 @@ class SolutionArchitect(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def link_component_to_role(self, role_guid: str, component_guid: str, body: dict) -> None:
+    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
         """ Attach a solution component to a solution role.
 
             Parameters
@@ -4884,25 +5514,26 @@ class SolutionArchitect(Client):
 
             Body structure:
             {
-              "class": "SolutionComponentLinkRequestBody",
+              "class" : "RelationshipRequestBody",
+              "properties": {
+                "class": "SolutionComponentActorProperties",
+                "role": "Add role here",
+                "description": "Add description here",
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              },
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "properties": {
-                "typeName": "string",
-                "role": "string",
-                "description": "add description here",
-                "effectiveFrom": {{isotime}},
-                "effectiveTo": {{isotime}}
-              }
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false
             }
+
                 """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_component_to_role(role_guid, component_guid, body))
+        loop.run_until_complete(self._async_link_component_to_actor(role_guid, component_guid, body))
 
-    async def _async_detach_component_from_role(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict = None) -> None:
         """ Detach a solution role from a solution component.
             Async Version.
 
@@ -4949,7 +5580,7 @@ class SolutionArchitect(Client):
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def detach_component_from_role(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict = None) -> None:
         """ Detach a solution role from a solution component.
 
         Parameters
@@ -4988,141 +5619,21 @@ class SolutionArchitect(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_component_from_role(role_guid, component_guid, body))
+        loop.run_until_complete(self._async_detach_component_actor(role_guid, component_guid, body))
 
-    async def _async_update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution role. Async Version.
 
-        Parameters
-        ----------
-        guid: str
-            guid of the solution role to update.
-        body: dict
-            A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional, default is False
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateSolutionComponentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "qualifiedName": "add unique name here",
-            "roleId": "string",
-            "title": "string",
-            "description": "add description here",
-            "domainIdentifier": Int,
-            "solutionComponentType": "string",
-            "plannedDeployedImplementationType": "string",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
-        }
-        """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{guid}/update?replaceAllProperties={replace_all_properties_s}")
-
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution role.
-
-        Parameters
-        ----------
-        guid: str
-            guid of the solution role to update.
-        body: dict
-            A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional, default is False
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateSolutionComponentRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "properties": {
-            "qualifiedName": "add unique name here",
-            "roleId": "string",
-            "title": "string",
-            "description": "add description here",
-            "domainIdentifier": Int,
-            "solutionComponentType": "string",
-            "plannedDeployedImplementationType": "string",
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "effectiveFrom": {{isotime}},
-            "effectiveTo": {{isotime}}
-           }
-        }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_role(guid, body, replace_all_properties))
-
-    async def _async_delete_solution_role(self, guid: str, cascade_delete: bool = False, body: dict = None) -> None:
+    async def _async_delete_solution_role(self, guid: str,  body: dict = None, cascade_delete: bool = False,) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
+            body: dict, optional
+               A dictionary containing parameters for the deletion.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
-           body: dict, optional
-               A dictionary containing parameters for the deletion.
+
 
            Returns
            -------
@@ -5151,23 +5662,24 @@ class SolutionArchitect(Client):
             }
            """
         validate_guid(guid)
+        cascaded_s = str(cascade_delete).lower()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{guid}/delete")
+               f"solution-roles/{guid}/delete?cascadedDelete={cascaded_s}")
 
         await self._async_make_request("POST", url, body_slimmer(body))
 
-    def delete_solution_role(self, guid: str, cascade_delete: bool = False, body: dict = None) -> None:
+    def delete_solution_role(self, guid: str, body: dict = None,cascade_delete: bool = False) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
-           cascade_delete: bool, optional, default: False
-               Cascade the delete to dependent objects?
            body: dict, optional
                A dictionary containing parameters for the deletion.
+           cascade_delete: bool, optional, default: False
+               Cascade the delete to dependent objects?
 
            Returns
            -------
@@ -5198,108 +5710,167 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
 
-    async def _async_get_solution_role_by_guid(self, guid: str, body: dict = None,
-                                               output_format: str = "JSON") -> dict | str:
-        """ Return the properties of a specific solution role. Async Version.
+    async def _async_find_solution_roles(self, search_filter: str = "*", body: dict = None, starts_with: bool = True,
+                                         ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
+                                         page_size: int = 0,
+                                         output_format: str = "JSON", ) -> list[dict] | str:
+        """Retrieve the solution role elements that contain the search string.
+           https://egeria-project.org/concepts/actor
+           Async version.
 
-            Parameters
-            ----------
-            guid: str
-                guid of the solution role to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
+        Parameters
+        ----------
+        search_filter: str
+            - search_filter string to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search. Body details, if provided, override search-filter.
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+
+        output_format: str, default = 'JSON'
+            Type of output to produce:
                 JSON - output standard json
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
 
-            Returns
-            -------
-            dict - details of the solution role
+        Returns
+        -------
+        list[dict] | str
+            A list of solution role structures or a string if there are no elements found.
 
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
 
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "AnyTimeRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing : false
-            }
-
+        Notes
+        -----
+        Sample body:
+        
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
+        }
         """
-        validate_guid(guid)
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{guid}/retrieve")
+        starts_with_s = str(starts_with).lower()
+        ends_with_s = str(ends_with).lower()
+        ignore_case_s = str(ignore_case).lower()
+
+        possible_query_params = query_string(
+            [ ("startFrom", start_from), ("pageSize", page_size),
+             ("startsWith", starts_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
+        if search_filter is None or search_filter == "*":
+            search_filter = None
 
         if body is None:
-            response = await self._async_make_request("POST", url)
-        else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("element", NO_ELEMENTS_FOUND)
+            body = {
+                "filter": search_filter,
+                }
+
+        url = (f"{self.solution_architect_command_root}/solution-roles/by-search-string"
+               f"{possible_query_params}")
+        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, None, output_format)
-        return response.json().get("element", NO_ELEMENTS_FOUND)
+            return self.generate_solution_roles_output(element, filter, output_format)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
 
-    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
-        """ Return the properties of a specific solution role.
+    def find_solution_roles(self, search_filter: str = "*", body: dict = None, starts_with: bool = True, ends_with: bool = False,
+                            ignore_case: bool = False, start_from: int = 0, page_size: int = max_paging_size,
+                            output_format: str = "JSON", ) -> list[dict] | str:
+        """Retrieve the list of solution role elements that contain the search string.
+           https://egeria-project.org/concepts/actor
 
-            Parameters
-            ----------
-            guid: str
-                guid of the solution role to retrieve.
-            body: dict, optional
-                A dictionary containing parameters of the retrieval.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
+        Parameters
+        ----------
+        search_filter: str
+            - search_filter string to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.  Body details, if provided, override search-filter.
+
+        starts_with : bool, [default=False], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=max_paging_size], optional
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.  Body details, if provided, override search-filter.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
                 JSON - output standard json
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            Returns
-            -------
-            dict - details of the solution role
 
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
+        Returns
+        -------
+        list[dict] | str
+            A list of information supply chain structures or a string if there are no elements found.
 
-            Notes
-            -----
-            Body structure:
-            {
-              "class": "AnyTimeRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing : false
-            }
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
 
+        Notes
+        -----
+        Sample body:
+        {
+          "class": "FilterRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "limitResultsByStatus": ["ACTIVE"],
+          "sequencingOrder": "PROPERTY_ASCENDING",
+          "sequencingProperty": "qualifiedName",
+          "filter": "Add name here"
+        }
         """
+
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_role_by_guid(guid, body, output_format))
+        response = loop.run_until_complete(
+            self._async_find_solution_roles(search_filter, body, starts_with, ends_with, ignore_case, start_from, page_size,
+                                             output_format=output_format, ))
         return response
+
+    def find_all_solution_roles(self, body: dict = None, start_from: int = 0, page_size: int = max_paging_size,
+                                output_format: str = "JSON") -> list[dict] | str:
+        """Retrieve a list of all solution blueprint elements
+        https://egeria-project.org/concepts/actor
+        """
+        return self.find_solution_roles("*", body,  start_from=start_from, page_size=page_size, output_format=output_format)
+
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                 page_size: int = max_paging_size,
@@ -5428,131 +5999,110 @@ class SolutionArchitect(Client):
             self._async_get_solution_roles_by_name(search_filter, body, start_from, page_size, output_format))
         return response
 
-    async def _async_find_solution_roles(self, search_filter: str = "*", starts_with: bool = True,
-                                         ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                         page_size: int = max_paging_size, body: dict = None,
-                                         output_format: str = "JSON", ) -> list[dict] | str:
-        """Retrieve the solution role elements that contain the search string.
-           https://egeria-project.org/concepts/actor
-           Async version.
 
-        Parameters
-        ----------
-        search_filter: str
-            - search_filter string to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
+    async def _async_get_solution_role_by_guid(self, guid: str, body: dict = None,
+                                               output_format: str = "JSON") -> dict | str:
+        """ Return the properties of a specific solution role. Async Version.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the solution role to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
                 JSON - output standard json
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
 
-        Returns
-        -------
-        list[dict] | str
-            A list of solution role structures or a string if there are no elements found.
+            Returns
+            -------
+            dict - details of the solution role
 
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
         """
-
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with), ("endsWith", ends_with),
-             ("ignoreCase", ignore_case), ])
-
-        if search_filter is None or search_filter == "*":
-            search_filter = None
+        validate_guid(guid)
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-roles/{guid}/retrieve")
 
         if body is None:
-            body = {
-                "filter": search_filter,
-                }
+            response = await self._async_make_request("POST", url)
         else:
-            body["filter"] = search_filter
-
-        url = (f"{self.solution_architect_command_root}/solution-roles/by-search-string"
-               f"{possible_query_params}")
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, filter, output_format)
-        return response.json().get("elements", NO_ELEMENTS_FOUND)
+            return self.generate_solution_roles_output(element, None, output_format)
+        return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def find_solution_roles(self, search_filter: str = "*", starts_with: bool = True, ends_with: bool = False,
-                            ignore_case: bool = False, start_from: int = 0, page_size: int = max_paging_size,
-                            body: dict = None, output_format: str = "JSON", ) -> list[dict] | str:
-        """Retrieve the list of solution role elements that contain the search string.
-           https://egeria-project.org/concepts/actor
+    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+        """ Return the properties of a specific solution role.
 
-        Parameters
-        ----------
-        search_filter: str
-            - search_filter string to search for.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=max_paging_size], optional
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
+            Parameters
+            ----------
+            guid: str
+                guid of the solution role to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce:
                 JSON - output standard json
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            Returns
+            -------
+            dict - details of the solution role
 
-        Returns
-        -------
-        list[dict] | str
-            A list of information supply chain structures or a string if there are no elements found.
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
 
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+            Notes
+            -----
+            Body structure:
+            {
+              "class": "AnyTimeRequestBody",
+              "asOfTime": {{isotime}},
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing : false
+            }
+
         """
-
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_solution_roles(search_filter, starts_with, ends_with, ignore_case, start_from, page_size,
-                                            body, output_format=output_format, ))
+        response = loop.run_until_complete(self._async_get_solution_role_by_guid(guid, body, output_format))
         return response
 
-    def find_all_solution_roles(self, start_from: int = 0, page_size: int = max_paging_size,
-                                output_format: str = "JSON") -> list[dict] | str:
-        """Retrieve a list of all solution blueprint elements
-        https://egeria-project.org/concepts/actor
-        """
-        return self.find_solution_roles("*", start_from=start_from, page_size=page_size, output_format=output_format)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,8 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, set_debug_level,
-                                                               get_element_dictionary, update_element_dictionary)
+                                                               get_element_dictionary, update_element_dictionary,
+                                                               setup_log)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
                                                                 process_simple_attribute, process_element_identifiers,
                                                                 update_a_command, extract_attribute,
@@ -29,7 +30,7 @@ from pyegeria.egeria_tech_client import EgeriaTech
 
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 console = Console(width=EGERIA_WIDTH)
-
+setup_log()
 
 def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
                            categories_list: List[str]) -> None:
@@ -107,6 +108,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
     """
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
     set_debug_level(directive)
 
     glossary_name = process_simple_attribute(txt, GLOSSARY_NAME_LABELS, ERROR)
@@ -239,6 +241,7 @@ def process_category_upsert_command(egeria_client: EgeriaTech, txt: str, directi
     set_debug_level(directive)
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     category_name = process_simple_attribute(txt, ['Category Name', 'category_name', 'Cat'])
     print(Markdown(f"{pre_command} `{command}` for category: `\'{category_name}\'` with directive: `{directive}` "))
@@ -484,6 +487,8 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     set_debug_level(directive)
     known_q_name = None
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
+
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
 
@@ -527,7 +532,9 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     else:
         known_glossary_q_name, known_glossary_guid, glossary_valid, glossary_exists = process_element_identifiers(
             egeria_client, "Glossary", GLOSSARY_NAME_LABELS, txt, EXISTS_REQUIRED, None)
-# Todo - add logic to fail if no valid glossary provided.
+        if not glossary_exists or known_glossary_guid is None:
+            glossary_valid = False
+            valid = False
 
     # process categories, if present
     categories = process_simple_attribute(txt, ['Glossary Categories', 'Glossary Category', 'Category', 'Categories'])
@@ -676,6 +683,8 @@ Optional[str]:
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
+
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
     term1_guid = None
@@ -733,6 +742,7 @@ def process_term_list_command(egeria_client: EgeriaTech, txt: str, directive: st
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
 
     search_string = process_simple_attribute(txt, SEARCH_LABELS)
     if search_string is None:
@@ -800,6 +810,7 @@ def process_category_list_command(egeria_client: EgeriaTech, txt: str, directive
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
 
     search_string = process_simple_attribute(txt, SEARCH_LABELS, "INFO")
     if search_string is None:
@@ -852,6 +863,7 @@ def process_glossary_structure_command(egeria_client: EgeriaTech, txt: str, dire
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
 
     known_glossary_guid = ""
 
@@ -907,6 +919,7 @@ def process_glossary_list_command(egeria_client: EgeriaTech, txt: str, directive
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
 
     search_string = process_simple_attribute(txt, SEARCH_LABELS, "INFO")
     if search_string is None:
@@ -959,6 +972,7 @@ def process_term_details_command(egeria_client: EgeriaTech, txt: str, directive:
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
 
@@ -1009,6 +1023,7 @@ def process_term_history_command(egeria_client: EgeriaTech, txt: str, directive:
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
 
@@ -1066,6 +1081,7 @@ def process_term_revision_history_command(egeria_client: EgeriaTech, txt: str, d
     set_debug_level(directive)
     valid = True
     command = extract_command(txt)
+    print(Markdown(f"# {command}\n"))
     object_type = command.split(' ')[1].strip()
     object_action = command.split(' ')[0].strip()
     known_q_name = None

@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer
@@ -41,15 +41,7 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
-
-log_format = "D {time} | {level} | {function} | {line} | {message} | {extra}"
-logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
-# logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-#            colorize=True)
-logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-           colorize=True)
+setup_log()
 
 
 #
@@ -454,8 +446,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         is_own_anchor = True
 
     collection_type = attributes.get('Collection Type', {}).get('value', None)
-    collection_ordering = attributes.get('Collection Ordering', {}).get('value', None)
-    order_property_name = attributes.get('Order Property Name', {}).get('value', None)
+
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
@@ -493,7 +484,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, additional_properties,
+                                                 additional_properties,
                                                 extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -519,7 +510,6 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                                                      is_own_anchor, anchor_guid, parent_guid,
                                                                      parent_relationship_type_name, parent_at_end1,
                                                                      collection_type, anchor_scope_guid,
-                                                                     collection_ordering, order_property_name,
                                                                      additional_properties, extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
@@ -581,8 +571,6 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     if parent_guid is None:
         is_own_anchor = True
     collection_type = attributes.get('Collection Type', {}).get('value', None)
-    collection_ordering = attributes.get('Collection Ordering', {}).get('value', None)
-    order_property_name = attributes.get('Order Property Name', {}).get('value', None)
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
@@ -616,7 +604,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes."))
 
                 egeria_client.update_collection(guid, qualified_name, display_name, description, collection_type,
-                                                collection_ordering, order_property_name, additional_properties,
+                                                 additional_properties,
                                                 extended_properties, replace_all_props)
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -634,8 +622,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                                                                            is_own_anchor, anchor_guid, parent_guid,
                                                                            parent_relationship_type_name,
                                                                            parent_at_end1, collection_type,
-                                                                           anchor_scope_guid, collection_ordering,
-                                                                           order_property_name, additional_properties,
+                                                                           anchor_scope_guid, additional_properties,
                                                                            extended_properties)
                     if guid:
                         update_element_dictionary(qualified_name, {
@@ -674,6 +661,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
     set_debug_level(directive)
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -871,6 +859,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     set_debug_level(directive)
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
     attributes = parsed_output['attributes']
@@ -1145,6 +1134,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     """
 
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1397,6 +1387,7 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
     if object_type in ["Data Dictionary", "Data Dictionaries", "DataDict", "DataDictionary"]:
         col_type = "DataDictionary"
     elif object_type in ["Data Specification", "Data Specifications", "Data Specs"]:
@@ -1406,11 +1397,23 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    attributes = parsed_output['attributes']
+
 
     valid = parsed_output['valid']
     print(Markdown(f"Performing {command}"))
     print(Markdown(parsed_output['display']))
+
+    attr = parsed_output.get('attributes',{})
+    effective_time = attr.get('effectiveTime', {}).get('value', None)
+    as_of_time = attr.get('asOfTime', {}).get('value', None)
+    for_duplicate_processing = attr.get('forDuplicateProcessing', {}).get('value', False)
+    for_lineage = attr.get('forLineage',{}).get('value', False)
+    limit_result_by_status = attr.get('limitResultsByStatus',{}).get('value', ['ACTIVE'])
+    sequencing_property = attr.get('sequencingProperty',{}).get('value',"qualifiedName" )
+    sequencing_order = attr.get('sequencingOrder',{}).get('value', "PROPERTY_ASCENDING")
+    search_string = attr.get('Search String', {}).get('value', '*')
+    output_format = attr.get('Output Format', {}).get('value', 'LIST')
+    detailed = attr.get('Detailed', {}).get('value', False)
 
     if directive == "display":
         return None
@@ -1423,11 +1426,6 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
         return valid
 
     elif directive == "process":
-        attributes = parsed_output['attributes']
-        search_string = attributes.get('Search String', {}).get('value', '*')
-        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
-        detailed = attributes.get('Detailed', {}).get('value', False)
-
         try:
             if not valid:  # First validate the command before we process it
                 msg = f"Validation failed for {object_action} `{object_type}`\n"
@@ -1435,11 +1433,19 @@ def process_data_collection_list_command(egeria_client: EgeriaTech, txt: str, di
                 return None
 
             list_md = f"\n# `{col_type}` with filter: `{search_string}`\n\n"
-            if search_string == "*":
-                struct = egeria_client.get_classified_collections(col_type, output_format=output_format)
-            else:
-                struct = egeria_client.find_collections(search_string, output_format=output_format)
+            body = {
+                    "class": "FilterRequestBody",
+                    "asOfTime": as_of_time,
+                    "effectiveTime": effective_time,
+                    "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing,
+                    "limitResultsByStatus": limit_result_by_status,
+                    "sequencingOrder": sequencing_order,
+                    "sequencingProperty": sequencing_property,
+                    "filter": search_string,
+                }
 
+            struct = egeria_client.find_collections_w_body(body, col_type, output_format=output_format)
             if output_format == "DICT":
                 list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
             else:
@@ -1468,6 +1474,7 @@ def process_data_structure_list_command(egeria_client: EgeriaTech, txt: str, dir
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1529,6 +1536,7 @@ def process_data_field_list_command(egeria_client: EgeriaTech, txt: str, directi
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
@@ -1605,6 +1613,7 @@ def process_data_class_list_command(egeria_client: EgeriaTech, txt: str, directi
     :return: A string summarizing the outcome of the processing.
     """
     command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 

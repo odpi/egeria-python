@@ -4,6 +4,7 @@ This file contains general utility functions for processing Egeria Markdown
 import json
 import os
 import sys
+from datetime import datetime
 from typing import List
 
 from loguru import logger
@@ -45,6 +46,10 @@ full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designe
 #            colorize=True)
 logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
+def get_iso8601_datetime():
+    """Returns the current date and time in ISO 8601 format."""
+    return datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+
 def yes_no(input: str)->str:
     if type(input) is bool:
         if input:
@@ -116,7 +121,10 @@ def create_help_terms():
 
     term_entry = """# Generating glossary entries for the documented commands\n\n
             This file contains generated Dr.Egeria commands to generate glossary term entries describing
-            each command represented in the `commands.json` file.\n"""
+            each Dr.Egeria command. 
+
+> Usage: Before executing this file, make sure you have a glossary named `Egeria-Markdown`
+> already created. If you Need to create one, you can use the \n"""
 
     for command, values in commands.items():
         if command == "exported":
@@ -127,7 +135,7 @@ def create_help_terms():
         command_verb = commands[command].get("verb","")
 
         term_entry+= "# Create Term\n"
-        term_entry+= f"## Term Name\n\n{command_verb} {command}\n\n"
+        term_entry+= f"## Term Name\n\n{command}\n\n"
         term_entry+= f"## Description\n\n{command_description}\n\n"
         term_entry+= f"## Owning Glossary\n\n{glossary_name}\n\n"
         term_entry+= f"## Categories\n\nWriting Dr.Egeria Markdown\n\n"
@@ -138,9 +146,16 @@ def create_help_terms():
 
         term_entry+= f"## Usage\n\n{output}\n\n___\n\n"
     print(term_entry)
-    file_path =  os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "generated_help_terms.md")
-    with open(file_path, 'a', encoding="utf-8") as f:
+    # Generate filename with current date and time in ISO 8601 format
+    current_datetime = get_iso8601_datetime()
+    filename = f"dr-egeria-help-{current_datetime}.md"
+    file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, filename)
+
+    # Write the content to the file
+    with open(file_path, 'w', encoding="utf-8") as f:
         f.write(term_entry)
+
+    logger.info(f"Help documentation saved to {file_path}")
 
 def main():
     create_help_terms()
