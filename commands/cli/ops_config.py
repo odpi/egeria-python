@@ -12,8 +12,6 @@ class Config(object):
         integration_daemon_url: str,
         engine_host: str,
         engine_host_url: str,
-        admin_user: str,
-        admin_user_password: str,
         userid: str,
         password: str,
         timeout: int,
@@ -33,8 +31,7 @@ class Config(object):
         self.integration_daemon_url = integration_daemon_url
         self.engine_host = engine_host
         self.engine_host_url = engine_host_url
-        self.admin_user = admin_user
-        self.admin_user_password = admin_user_password
+
         self.userid = userid
         self.password = password
         self.timeout = timeout

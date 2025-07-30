@@ -26,7 +26,8 @@ if disable_ssl_warnings:
     disable_warnings(InsecureRequestWarning)
 
 from ._client import Client
-from ._deprecated_gov_engine import GovEng
+from ._client_new import Client2
+
 from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                           print_exception_response, )
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,

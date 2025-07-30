@@ -14,7 +14,11 @@ import sys
 
 import click
 from trogon import tui
+from loguru import logger
 
+from pyegeria import config_logging, get_app_config
+
+from commands.cat.list_format_set import execute_format_set_action
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
@@ -131,68 +135,66 @@ from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
 from commands.tech.generic_actions import delete_element
 
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+app_settings = get_app_config()
+app_config = app_settings["Environment"]
+# config_logging()
+
+
 @tui()
 # @tui('menu', 'menu', 'A textual object_action line interface')
-@click.version_option("0.5.2 ", prog_name="hey_egeria")
+@click.version_option("5.4 ", prog_name="hey_egeria")
 @click.group()
 @click.option(
     "--server",
-    default=os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store"),
+    default=app_config['Egeria Metadata Store'],
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
+    default=app_config["Egeria Platform URL"],
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
     "--integration_daemon",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "qs-integration-daemon"),
+    default=app_config["Egeria Integration Daemon"],
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
+    default=app_config['Egeria Integration Daemon URL'],
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default=os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server"),
+    default=app_config['Egeria View Server'],
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default=os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
+    default=app_config['Egeria View Server URL'],
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default=os.environ.get("EGERIA_ENGINE_HOST", "qs-engine-host"),
+    default=app_config['Egeria Engine Host'],
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default=os.environ.get("EGERIA_ENGINE_HOST_URL", "https://localhost:9443"),
+    default=app_config['Egeria Engine Host URL'],
     help="URL of Egeria engine host platform to connect to",
 )
-@click.option(
-    "--admin_user",
-    default=os.environ.get("EGERIA_ADMIN_USER", "garygeeke"),
-    help="Egeria admin user",
-)
-@click.option(
-    "--admin_user_password",
-    default=os.environ.get("EGERIA_ADMIN_PASSWORD", "secret"),
-    help="Egeria admin password",
-)
+
 @click.option(
     "--userid",
-    default=os.environ.get("EGERIA_USER", "erinoverview"),
+    default=EGERIA_USER,
     help="Egeria user",
 )
 @click.option(
     "--password",
-    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+    default=EGERIA_USER_PASSWORD,
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
@@ -200,40 +202,40 @@ from commands.tech.generic_actions import delete_element
     "--jupyter",
     is_flag=True,
     type=bool,
-    default=os.environ.get("EGERIA_JUPYTER", False),
+    default=app_config['Egeria Jupyter'],
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=os.environ.get("EGERIA_WIDTH", 200),
+    default=app_config['Console Width'],
     type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
     "--home_glossary_guid",
-    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
-    help="Glossary guid to use as the home glossary",
+    default=app_settings['User Profile']['Egeria Home Glossary Name'],
+    help="Glossary name to use as the home glossary",
 )
 @click.option(
     "--glossary_path",
-    default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
+    default=app_config['Egeria Glossary Path'],
     help="Path to glossary import/export files",
 )
 
 @click.option(
     "--root_path",
-    default=os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan"),
+    default=app_config['Pyegeria Root'],
     help="Root path to use for file operations",
 )
 
 @click.option(
     "--inbox_path",
-    default=os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox"),
-    help="Path to outbox files",
+    default=app_config['Dr.Egeria Inbox'],
+    help="Path to inbox files",
 )
 @click.option(
     "--outbox_path",
-    default=os.environ.get("EGERIA_OUTBOX_PATH", "distribution-hub/dr_egeria_outbox"),
+    default=app_config['Dr.Egeria Outbox'],
     help="Path to outbox files",
 )
 
@@ -248,8 +250,6 @@ def cli(
     integration_daemon_url,
     engine_host,
     engine_host_url,
-    admin_user,
-    admin_user_password,
     userid,
     password,
     timeout,
@@ -271,8 +271,6 @@ def cli(
         integration_daemon_url,
         engine_host,
         engine_host_url,
-        admin_user,
-        admin_user_password,
         userid,
         password,
         timeout,
@@ -1042,6 +1040,20 @@ def show_cat(ctx):
 def show_cat_info(ctx):
     """Group of md_commands to show information about various Egeria objects"""
     pass
+
+@show_cat_info.command("list-output-set")
+@click.option("--format-set", help="Format set to output")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_format_set(ctx, format_set, output_format, search_string):
+    """Dynamically generate output based on a format set"""
+    c = ctx.obj
+
+    execute_format_set_action(
+        format_set, c.view_server, c.view_server_url,
+        c.userid, c.password, output_format, search_string = search_string
+    )
 
 
 @show_cat_info.command("tech-types")

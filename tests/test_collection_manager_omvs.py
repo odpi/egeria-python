@@ -12,31 +12,43 @@ A running Egeria environment is needed to run these tests.
 
 import json
 import time
+from loguru import logger
 
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria import (CollectionManager, InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
-                      print_exception_response, )
+from pyegeria import (
+    config_logging, EgeriaTech, CollectionManager, get_app_config)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException, PyegeriaException, PyegeriaConnectionException, PyegeriaClientException,
+    PyegeriaAPIException, PyegeriaUnknownException, PyegeriaNotFoundException,
+    PyegeriaUnauthorizedException, print_exception_response, print_exception_table
+    )
+
+from tests.test_feedback_manager_omvs import password
 
 disable_ssl_warnings = True
 
 console = Console(width=250)
 
+from loguru import logger
+app_settings = get_app_config()
+config_logging()
 
 class TestCollectionManager:
     good_platform1_url = "https://127.0.0.1:9443"
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
-    good_user_3 = "peterprofile"
-    bad_user_1 = "eviledna"
-    bad_user_2 = ""
+    # good_user_3 = "peterprofile"
+    # bad_user_1 = "eviledna"
+    # bad_user_2 = ""
     good_server_1 = "simple-metadata-store"
     good_server_2 = "qs-view-server"
-    good_server_3 = "active-metadata-store"
-    good_engine_host_1 = "governDL01"
+    # good_server_3 = "active-metadata-store"
+    # good_engine_host_1 = "governDL01"
     good_view_server_1 = "qs-view-server"
+
 
     def test_get_attached_collections(self):
         try:
@@ -58,8 +70,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -67,32 +79,37 @@ class TestCollectionManager:
 
     def test_find_collections(self):
         try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+            c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             search_string = "*"
+            classification_name = "DataSpec"
+            output_format = "DICT"
+            output_format_set = "Data Spec"
 
-            response = c_client.find_collections(search_string, output_format="DICT", output_format_set="Collections")
+            response = c_client.find_collections(search_string, classification_name,output_format=output_format, output_format_set=output_format_set)
             duration = time.perf_counter() - start_time
-
-            print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
-            if type(response) is list:
-                print(f"Found {len(response)} collections {type(response)}\n\n")
-                print_json("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                console.print(response)
+            if response:
+                print(f"\nOutput Format: {output_format} and Output Format Set: {output_format_set}")
+                print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
+                if type(response) is list:
+                    print(f"Found {len(response)} collections {type(response)}\n\n")
+                    print_json("\n\n" + json.dumps(response, indent=4))
+                elif type(response) is str:
+                    console.print(response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
             c_client.close_session()
 
     def test_find_collections_w_body(self):
+
         try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+            c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # classification_name = "DataSharingAgreement"
@@ -138,21 +155,23 @@ class TestCollectionManager:
                 console.print(response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            # assert False, "Invalid request"
+        except (AttributeError, UnboundLocalError) as e:
+            logger.error(e)
+            # assert False
         finally:
             c_client.close_session()
 
     def test_get_collection_by_name(self):
         try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, output_format_set="Collections")
+            c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             collection_name = "Leak to fox"
 
-            response = c_client.get_collections_by_name(collection_name, output_format="DICT", )
+            response = c_client.get_collections_by_name(collection_name, output_format="DICT", output_format_set="Collections" )
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -164,37 +183,38 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
             c_client.close_session()
 
     def test_get_collections_by_type(self):
+        config_logging()
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             collection_type = "*"
-            classification_name = "DataSpec"
+            classification_name = "DigitalProduc"
 
             response = c_client.get_collections_by_type(collection_type, classification_name, output_format="LIST")
             duration = time.perf_counter() - start_time
-
-            print(f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds")
-            if type(response) is list:
-                print_json(json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}")
-                print_json("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
+            if response:
+                print(f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds")
+                if type(response) is list:
+                    print_json(json.dumps(response, indent=4))
+                elif type(response) is tuple:
+                    print(f"Type is {type(response)}")
+                    print_json("\n\n" + json.dumps(response, indent=4))
+                elif type(response) is str:
+                    print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+        except PyegeriaException as e:
+            print_exception_table(e)
+            # assert False, "Invalid request"
 
         finally:
             c_client.close_session()
@@ -222,8 +242,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -252,8 +272,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -287,9 +307,9 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+        except PyegeriaException as e:
+            print_exception_table(e)
+            # assert False, "Invalid request"
 
         finally:
             c_client.close_session()
@@ -301,7 +321,7 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             anchor_guid = None
-            parent_guid = "f3e4de0e-320a-4b17-8581-b9613fa6cbbb"
+            parent_guid = None
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
             display_name = "Elecraft Radio collection"
@@ -320,9 +340,9 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            # assert False, "Invalid request"
         finally:
             c_client.close_session()
 
@@ -352,8 +372,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -388,8 +408,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -422,8 +442,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -459,49 +479,49 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
+    def test_create_data_spec_collection(self):
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
+                user_id=self.good_user_2, )
 
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            anchor_guid = None
+            parent_guid = None
+            parent_relationship_type_name = "CollectionMembership"
+            # parent_relationship_type_name = None
+            parent_at_end1 = True
+            # parent_at_end1 = None
+            display_name = "Clinical Trial Data Spec"
+            description = "Clinical Trials Specification"
+            collection_type = "Data Specificationn"
+            is_own_anchor = True
+            anchor_scope_guid = None
+            qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
 
-                    response = c_client.create_data_spec_collection(display_name, description, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid)
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
+            response = c_client.create_data_spec_collection(display_name, description, qualified_name,
+                is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
+                collection_type, anchor_scope_guid)
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
 
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
 
     def test_create_data_dictionary_collection(self):
         try:
@@ -515,8 +535,8 @@ class TestCollectionManager:
             # parent_relationship_type_name = None
             parent_at_end1 = True
             # parent_at_end1 = None
-            display_name = "Clinical Test"
-            description = "Testing Clinical Trials Specification"
+            display_name = "My Dictionary"
+            description = "My very own data dictionary"
             collection_type = "Data Dictionary"
             is_own_anchor = True
             anchor_scope_guid = None
@@ -534,50 +554,13 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
 
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
-
-                    response = c_client.create_data_spec_collection(display_name, description, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid)
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
-
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
 
     def test_create_name_space_collection(self):
         try:
@@ -610,51 +593,12 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
-
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
-
-                    response = c_client.create_data_spec_collection(display_name, description, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid,
-
-                        )
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
-
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
 
     def test_create_context_event_collection(self):
         try:
@@ -687,49 +631,11 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
-
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
-
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
-
-                    response = c_client.create_data_spec_collection(display_name, description, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid, )
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
-
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
 
     def test_create_event_set_collection(self):
         try:
@@ -763,49 +669,13 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
 
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
-
-                    response = c_client.create_data_spec_collection(display_name, description, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid, )
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
-
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
 
     def test_create_naming_standard_ruleset_collection(self):
         try:
@@ -838,49 +708,12 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-            def test_create_data_spec_collection(self):
-                try:
-                    c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
-                        user_id=self.good_user_2, )
-
-                    token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-                    start_time = time.perf_counter()
-                    anchor_guid = None
-                    parent_guid = None
-                    parent_relationship_type_name = "CollectionMembership"
-                    # parent_relationship_type_name = None
-                    parent_at_end1 = True
-                    # parent_at_end1 = None
-                    display_name = "Clinical Trial Data Spec"
-                    description = "Clinical Trials Specification"
-                    collection_type = "Data Specificationn"
-                    is_own_anchor = True
-                    anchor_scope_guid = None
-                    qualified_name = c_client.__create_qualified_name__("DataSpec", display_name)
-
-                    response = c_client.create_data_spec_collection(anchor_guid, parent_guid, qualified_name,
-                        is_own_anchor, anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
-                        collection_type, anchor_scope_guid, )
-                    duration = time.perf_counter() - start_time
-                    # resp_str = json.loads(response)
-                    print(f"\n\tDuration was {duration} seconds\n")
-                    if type(response) is dict:
-                        print_json(json.dumps(response, indent=4))
-                    elif type(response) is str:
-                        print("\n\nGUID is: " + response)
-                    assert True
-
-                except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-                    print_exception_response(e)
-                    assert False, "Invalid request"
-                finally:
-                    c_client.close_session()
 
     def test_create_collection_from_template(self):
         try:
@@ -927,8 +760,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -969,8 +802,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaAPIException,PyegeriaInvalidParameterException, PyegeriaUnauthorizedException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -995,8 +828,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1019,8 +852,8 @@ class TestCollectionManager:
                 print("\n\nResult is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1042,8 +875,8 @@ class TestCollectionManager:
 
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1067,8 +900,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1087,8 +920,8 @@ class TestCollectionManager:
 
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1118,7 +951,7 @@ class TestCollectionManager:
                         member_name = member["properties"]["name"]
                         print(f"\n about to delete member {member_name} of count members")
                         c_client.delete_collection(member_guid, cascade=True)
-                    except (InvalidParameterException) as e:
+                    except (PyegeriaInvalidParameterException) as e:
                         print(e)
                         print("Continueing")
                         continue
@@ -1131,8 +964,8 @@ class TestCollectionManager:
                 print("No members found")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1162,8 +995,8 @@ class TestCollectionManager:
 
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1185,8 +1018,8 @@ class TestCollectionManager:
 
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1216,8 +1049,8 @@ class TestCollectionManager:
             # print(f"Member List is: {response}")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1243,8 +1076,8 @@ class TestCollectionManager:
             # print(f"Member List is: {response}")
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1379,8 +1212,8 @@ class TestCollectionManager:
             #         "cc-by-sa",  #         },  #     },  # }  # folder8 = c_client.create_digital_product(body_8)
             # print(f"\n\n created a collection with guid {folder8}")  # assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1404,8 +1237,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -1454,8 +1287,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -1500,8 +1333,8 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()

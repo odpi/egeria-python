@@ -4,12 +4,19 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from pyegeria.utils import (camel_to_title_case)
 from markdown_it import MarkdownIt
 from rich.console import Console
+from loguru import logger
 
 from pyegeria.mermaid_utilities import construct_mermaid_web
+from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR
+
+"""
+Note on select_output_format_set function:
+
+This function and related data structures have been moved back to _output_formats.py.
+Please import select_output_format_set from pyegeria._output_formats instead of from this module.
+"""
 
 console = Console(width= 250)
-# Constants
-MD_SEPARATOR = "\n---\n\n"
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:

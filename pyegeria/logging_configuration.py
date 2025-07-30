@@ -133,6 +133,17 @@ import os, sys
 from loguru import logger
 from pyegeria.load_config import get_app_config
 
+# Load configuration parameters
+app_settings = get_app_config()
+
+def console_log_filter(record):
+    return (record["module"] in app_settings["Logging"]["console_logging_enabled"]
+            and
+            record["level"].name in app_settings["Logging"]["console_filter_levels"]
+            )
+
+
+
 def config_logging():
     """
     Configures logging for the application using Loguru.
@@ -146,16 +157,19 @@ def config_logging():
         OSError: If the log directory cannot be created.
 
     """
-    # Load configuration parameters
-    app_settings = get_app_config()
+
 
     # Get the directory for log files from the environment variable
-    log_directory = app_settings.get("log_directory","/tmp")
-    console_logging_level = app_settings.get("console_logging_level","INFO")
-    logging_console_format = app_settings.get("console_format","{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line} - {message}")
-    file_logging_level = app_settings.get("file_logging_level", "INFO")
-    logging_file_format = app_settings.get("file_format", "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line} - {message}")
-
+    log_app_settings = app_settings["Logging"]
+    log_directory = log_app_settings.get("log_directory","/Users/dwolfson/localGit/egeria-v-3/egeria-python/logs")
+    console_logging_level = log_app_settings.get("console_logging_level","SUCCESS")
+    logging_console_format = log_app_settings.get("console_format","{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line}"
+                                                               " - {message} - {extra}")
+    file_logging_level = log_app_settings.get("file_logging_level", "INFO")
+    logging_file_format = log_app_settings.get("file_format", "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line}"
+                                                          " - {message} - {extra}")
+    console_logging_enabled = log_app_settings.get("console_logging_enabled", "tests")
+    enable_logging = log_app_settings.get("enable_logging", True)
 
     # Ensure the directory exists
     os.makedirs(log_directory, exist_ok=True)
@@ -163,24 +177,26 @@ def config_logging():
     # Define the log file path
     log_file_path = os.path.join(log_directory, "pyegeria.log")
     # Remove Loguru's default stderr handler (id=0) if you want full control
-    logger.remove(0)
+    logger.remove()
 
     # Add your desired handlers for the application (and thus the library)
-    logger.add("pyegeria.log",
+    logger.add(log_file_path,
                level=file_logging_level,
                format=logging_file_format,
-               # filter = "pyegeria",
+               filter = "",
                retention="7 days",  # Keep logs for 7 days
                rotation="10 MB", # rotate logs once they are 10mb
                compression="zip")
     logger.add(
-        "sys.stderr",
+        sys.stderr,
         level=console_logging_level,
         format=logging_console_format,
-        # filter="pyegeria", # Only show logs from 'my_library' in this specific handler
+        filter=console_log_filter,
         colorize=True
     )
 
+    if enable_logging:
+        logger.enable("")
     logger.info("Application started with Loguru configured.")
 
 

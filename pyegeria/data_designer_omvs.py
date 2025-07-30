@@ -11,9 +11,10 @@ import asyncio
 from os import terminal_size
 
 from httpx import Response
+from loguru import logger
 from prompt_toolkit import data_structures
 
-from pyegeria import select_output_format_set
+from pyegeria._output_formats import select_output_format_set
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output,
@@ -1328,15 +1329,15 @@ r       replace_all_properties: bool, default = False
                                                     output_format, columns_struct))
         return response
 
-    async def _async_find_data_structures(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                          output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
@@ -1350,7 +1351,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: dict|str, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -1367,10 +1368,10 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
-        if filter == "*":
-            filter = None
+        if search_string == "*":
+            search_string = None
 
-        body = {"filter": filter}
+        body = {"filter": search_string}
         starts_with_s = str(starts_with).lower()
         ends_with_s = str(ends_with).lower()
         ignore_case_s = str(ignore_case).lower()
@@ -1378,8 +1379,6 @@ r       replace_all_properties: bool, default = False
         possible_query_params = query_string(
             [("startFrom", start_from), ("pageSize", page_size), ("startsWith", ends_with_s), ("endsWith", ends_with_s),
              ("ignoreCase", ignore_case_s),])
-
-
 
         url = (f"{base_path(self, self.view_server)}/data-structures/by-search-string"
                f"{possible_query_params}")
@@ -1391,17 +1390,17 @@ r       replace_all_properties: bool, default = False
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self._generate_data_structure_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
         return elements
 
-    def find_data_structures(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                              starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                             output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                             output_format: str = 'JSON',  output_format_set:str| dict = None) -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string filter.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
@@ -1416,7 +1415,7 @@ r       replace_all_properties: bool, default = False
         output_format: str, default = "DICT"
             output_format: str, default = "DICT"
             -  one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: dict|str, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1438,8 +1437,8 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_structures(filter, start_from, page_size, starts_with, ends_with, ignore_case,
-                                             output_format, columns_struct))
+            self._async_find_data_structures(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
+                                             output_format, output_format_set))
         return response
 
     async def _async_get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
@@ -5381,7 +5380,7 @@ r       replace_all_properties: bool, default = False
                                    )
 
 
-    def _generate_data_structure_output(self, elements, filter, output_format, columns_struct)  -> str | list:
+    def _generate_data_structure_output(self, elements, filter, output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
         """
         Generate output for data structures in the specified format.
 
@@ -5394,17 +5393,24 @@ r       replace_all_properties: bool, default = False
             Formatted output as string or list of dictionaries
         """
         entity_type = "Data Structure"
-        if columns_struct is None:
-            columns_struct = select_output_format_set(entity_type, output_format)
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
 
-
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            if isinstance(output_format_set, dict):
+                output_formats = output_format_set
+        else:
+            output_formats = None
+        logger.trace(f"Executing generate_data_structure_output for {entity_type}: {output_formats}")
         return generate_output(elements,
                                filter,
                                entity_type,
                                output_format,
                                self._extract_data_structure_properties,
                                None,
-                               columns_struct,
+                               output_formats,
                                )
 
     def _generate_data_class_output(self, elements: dict, filter: str, output_format: str, columns_struct: dict = None)  -> str | list:
