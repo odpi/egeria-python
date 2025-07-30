@@ -1,0 +1,47 @@
+{
+  "Debug": {
+    "debug_mode": false,
+    "enable_logger_catch": false,
+    "timeout_seconds": 30
+  },
+  "Environment": {
+    "Console Width": 150,
+    "Dr.Egeria Inbox": "md_processing/dr-egeria-inbox",
+    "Dr.Egeria Outbox": "md_processing/dr-egeria-outbox",
+    "Egeria Engine Host": "qs-engine-host",
+    "Egeria Engine Host URL": "",
+    "Egeria Glossary Path": "glossary",
+    "Egeria Integration Daemon": "qs-integration-daemon",
+    "Egeria Integration Daemon URL": "https://localhost:9443",
+    "Egeria Jupyter": true,
+    "Egeria Kafka Endpoint": "localhost:9192",
+    "Egeria Mermaid Folder": "mermaid_graphs",
+    "Egeria Metadata Store": "qs-metadata-store",
+    "Egeria Platform URL": "https://localhost:9443",
+    "Egeria View Server": "qs-view-server2",
+    "Egeria View Server URL": "https://localhost:9443",
+    "Pyegeria Root": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python"
+  },
+  "feature_x_enabled": false,
+  "Logging": {
+    "console_filter_levels": [
+      "ERROR", "INFO", "WARNING"
+    ],
+    "console_logging_enabled": [
+      "tests", "Commands",
+      "_client_new",
+      "_exceptions_new"
+    ],
+    "console_logging_level": "INFO",
+    "enable_logging": true,
+    "file_logging_level": "INFO",
+    "log_directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/logs",
+    "logging_console_format": " <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level> -{extra}",
+    "logging_file_format": " {time:YYYY-MM-DD HH:mm:ss} | {level} | {function}:{line} - {message }-{extra}"
+  },
+  "User Profile": {
+    "Egeria Home Collection": "MyHome",
+    "Egeria Home Glossary Name": "Egeria-Markdown",
+    "Egeria Local Qualifier": "mylocal"
+  }
+}

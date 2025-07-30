@@ -10,6 +10,7 @@ from json import JSONDecodeError
 import validators
 
 from pyegeria._exceptions import InvalidParameterException, OMAGCommonErrorCode
+from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 
 """
 This package contains internally used validators.
@@ -27,41 +28,22 @@ def validate_user_id(user_id: str) -> bool:
 
     Returns
     -------
-    bool: True if valid, If invalid an InvalidParameterException is raised.
+    bool: True if valid, If invalid input, a PyegeriaAuthenticationException is raised.
 
     Raises
     ------
-    InvalidParameterException
+    PyegeriaAuthenticationException
         If the provided user id is null or empty
     """
     if (user_id is None) or len(user_id) == 0:
-        msg = str(OMAGCommonErrorCode.NULL_USER_ID.value["message_template"]).format(
-            "user_id"
-        )
-        calling_frame = inspect.currentframe().f_back
-        caller_method = inspect.getframeinfo(calling_frame).function
-
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": user_id,
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"user_id": user_id},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid user name - its empty",
+            "userid": user_id,
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 
@@ -78,35 +60,21 @@ def validate_server_name(server_name: str) -> bool:
     -------
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
+    Raises
+    ------
+    PyegeriaInvalidParameterException
+        If the provided server name is null or empty
+
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
 
     if (server_name is None) or (len(server_name) == 0):
-        msg = str(
-            OMAGCommonErrorCode.SERVER_NAME_NOT_SPECIFIED.value["message_template"]
-        )
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": server_name,
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"view_server": server_name},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid server name - its empty", "input_parameters": f"server_name={server_name}",
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None, context, additional_info)
     else:
         return True
 
@@ -123,33 +91,19 @@ def validate_guid(guid: str) -> bool:
     -------
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
+    Raises
+    ------
+    PyegeriaInvalidParameterException
+        If the provided guid is null or empty
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
-
     if (guid is None) or (len(guid) == 0) or (type(guid) is not str):
-        msg = str(OMAGCommonErrorCode.NULL_GUID.value["message_template"])
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": guid,
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"guid": guid},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid GUID", "input_parameters": f"guid = {guid}"
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 
@@ -166,33 +120,20 @@ def validate_name(name: str) -> bool:
     -------
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
+    Raises
+    ------
+    PyegeriaInvalidParameterException
+        If the provided name is null or empty
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
 
     if (name is None) or (len(name) == 0):
-        msg = str(OMAGCommonErrorCode.NULL_NAME.value["message_template"])
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": name,
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"name": name},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid `name`", "input_parameters": f"name = {name}"
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 
@@ -209,37 +150,20 @@ def validate_search_string(search_string: str) -> bool:
     -------
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
+    Raises
+    ------
+    PyegeriaInvalidParameterException
+        If the provided search string is null or empty
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
 
     if (search_string is None) or (len(search_string) == 0):
-        msg = str(
-            OMAGCommonErrorCode.NULL_SEARCH_STRING.value["message_template"].format(
-                "search_string", caller_method
-            )
-        )
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": [search_string, caller_method],
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"search_string": search_string},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid `name`", "input_parameters": f"search_string={search_string}"
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 
@@ -256,33 +180,20 @@ def validate_public(is_public: bool) -> bool:
     -------
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
+    Raises
+    ------
+    PyegeriaInvalidParameterException
+        If the provided public flag is null or empty
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
 
     if is_public is None:
-        msg = str(OMAGCommonErrorCode.NULL_OBJECT.value["message_template"])
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": is_public,
-                "exceptionSystemAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.NULL_USER_ID.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"is_public": is_public},
+        context: dict = {}
+        context['calling_frame'] = inspect.currentframe().f_back
+        context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
+        additional_info = {
+            "reason": "Invalid `name`", "input_parameters": f"is_public={is_public}"
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 
@@ -301,34 +212,15 @@ def validate_url(url: str) -> bool:
     bool - True if valid, If invalid an InvalidParameterException is raised.
 
     """
-    calling_frame = inspect.currentframe().f_back
-    caller_method = inspect.getframeinfo(calling_frame).function
+    context: dict = {}
+    context['calling_frame'] = inspect.currentframe().f_back
+    context['caller_method'] = inspect.currentframe().f_back.f_code.co_name
 
     if (url is None) or (len(url) == 0):
-        msg = str(
-            OMAGCommonErrorCode.SERVER_URL_NOT_SPECIFIED.value["message_template"]
-        )
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": url,
-                "exceptionSystemAction": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"url": url},
-            }
-        )
-        raise InvalidParameterException(exc_msg)
+
+        additional_info = {"reason": "The provided URL is invalid - it is empty",
+                           "input_parameters": f"URL: {url}"}
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
 
     # The following hack allows localhost to be used as a hostname - which is disallowed by the
     # validations package
@@ -337,30 +229,11 @@ def validate_url(url: str) -> bool:
 
     result = validators.url(url)
     if result is not True:
-        msg = OMAGCommonErrorCode.SERVER_URL_MALFORMED.value["message_template"].format(
-            url
-        )
-        exc_msg = json.dumps(
-            {
-                "class": "VoidResponse",
-                "relatedHTTPCode": 400,
-                "exceptionClassName": "InvalidParameterException",
-                "actionDescription": caller_method,
-                "exceptionErrorMessage": msg,
-                "exceptionErrorMessageId": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "message_id"
-                ],
-                "exceptionErrorMessageParameters": url,
-                "exceptionSystemAction": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "system_action"
-                ],
-                "exceptionUserAction": OMAGCommonErrorCode.SERVER_URL_MALFORMED.value[
-                    "user_action"
-                ],
-                "exceptionProperties": {"url": url},
+        additional_info = {
+            "reason": "The provided URL is invalid",
+            "input_parameters": f"URL: {url}"
             }
-        )
-        raise InvalidParameterException(exc_msg)
+        raise PyegeriaInvalidParameterException(None,context, additional_info)
     else:
         return True
 

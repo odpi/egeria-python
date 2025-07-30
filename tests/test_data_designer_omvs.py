@@ -276,7 +276,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = "TBDF-Incoming Weekly Measurement Data"
-            response = m_client.find_data_structures(search_string, output_format="DICT")
+            response = m_client.find_data_structures(search_string, output_format="DICT", output_format_set="Mandy-DataStruct")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

@@ -1,0 +1,48 @@
+{
+        "Environment": {
+                "Pyegeria Root": "~/localGit/egeria-v5-3/egeria-python",
+                "Egeria Kafka Endpoint": "host.docker.internal:9192",
+                "Egeria Jupyter": true,
+                "Dr.Egeria Outbox": "distribution-hub/dr-egeria-outbox",
+                "Dr.Egeria Inbox": "loading-bay/dr-egeria-inbox",
+                "Egeria Integration Daemon": "qs-integration-daemon",
+                "Egeria Integration Daemon URL": "https://host.docker.internal:9443",
+                "Egeria View Server": "qs-view-server",
+                "Egeria View Server URL": "https://host.docker.internal:9443",
+                "Egeria Metadata Store": "qs-metadata-store",
+                "Egeria Platform URL": "https://host.docker.internal:9443",
+                "Egeria Engine Host": "qs-engine-host",
+                "Egeria Engine Host URL": "https://host.docker.internal:9443",
+                "Egeria Glossary Path": "/home/jovyan/loading-bay/glossary",
+                "Egeria Mermaid Folder": "/home/jovyan/work/mermaid_graphs",
+                "console_width": 150
+        },
+        "Logging": {
+                "enable_logging": true,
+                "log_directory": "./logs",
+                "console_logging_level": "INFO",
+                "console_filter_levels": [
+                        "ERROR"
+                ],
+                "console_logging_enabled": [
+                        "tests",
+                        "_client_new",
+                        "_exceptions_new",
+                        "collections_manager_omvs"
+                ],
+                "logging_console_format": " <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level> -{extra}",
+                "file_logging_level": "INFO",
+                "logging_file_format": " {time:YYYY-MM-DD HH:mm:ss} | {level} | {function}:{line} - {message }-{extra}"
+        },
+        "Debug": {
+                "timeout_seconds": 30,
+                "debug_mode": false,
+                "enable_logger_catch": false,
+                "feature_x_enabled": false
+        },
+        "User Profile": {
+                "Egeria Home Glossary Name": "Egeria-Markdown",
+                "Egeria Local Qualifier": "PDR",
+                "Egeria Home Collection": "MyHome"
+        }
+}

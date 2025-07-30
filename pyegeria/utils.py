@@ -8,9 +8,12 @@ General utility functions in support of the Egeria Python Client package.
 
 import json
 from datetime import datetime
-
+from loguru import logger
 from rich import print, print_json
 from rich.console import Console
+from pyegeria.load_config import get_app_config
+
+app_settings = get_app_config()
 
 console = Console(width=200)
 
@@ -226,6 +229,27 @@ def to_pascal_case(input_string)->str:
     result = to_camel_case(input_string)
     output_string = result[0].upper() + result[1:]
     return output_string
+
+def flatten_dict_to_string(d: dict) -> str:
+    """Flatten a dictionary into a string and replace quotes with backticks."""
+    try:
+        flat_string = ", ".join(
+            # Change replace(\"'\", '`') to replace("'", '`')
+            f"{key}=`{str(value).replace('\"', '`').replace("'", '`')}`"
+            for key, value in d.items()
+        )
+        return flat_string
+    except Exception as e:
+        # Corrected syntax for exception chaining
+        raise Exception("Error flattening dictionary") from e
+# The decorator logic, which applies @logger.catch dynamically
+
+
+def dynamic_catch(func):
+    if app_settings.get("enable_logger_catchh", False):
+        return logger.catch(func)  # Apply the logger.catch decorator
+    else:
+        return func  # Return the function unwrapped
 
 if __name__ == "__main__":
     print("Main-Utils")
