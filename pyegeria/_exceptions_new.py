@@ -360,3 +360,32 @@ def print_exception_table(e: PyegeriaException):
         console.print(table)
     else:
         print(f"\n\n\t  Not an Pyegeria exception {e}")
+
+def print_basic_exception(e: PyegeriaException):
+    """Prints the exception response"""
+    related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
+    related_response = e.response.json()
+    table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
+    table.caption = e.pyegeria_code
+    table.add_column("Facet", justify="center")
+    table.add_column("Item", justify="left", width=80)
+
+    if isinstance(e, PyegeriaException):
+        table.add_row("HTTP Code", str(e.response_code))
+        table.add_row("Egeria Code", str(related_code))
+        table.add_row("Caller Method", e.context.get("caller method", "---"))
+        table.add_row("Request URL", str(e.response_url))
+        table.add_row("Egeria Message",
+                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
+        table.add_row("Egeria User Action",
+                      format_dict_to_string(related_response.get('exceptionUserAction',"")))
+
+        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+        table.add_row("Pyegeria Exception", exception_msg_id)
+        table.add_row("Pyegeria Message",
+                      f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+
+
+        console.print(table)
+    else:
+        print(f"\n\n\t  Not an Pyegeria exception {e}")

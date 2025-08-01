@@ -16,52 +16,44 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-
+from loguru import logger
 from pyegeria import (
-    # EgeriaTech,
-    # InvalidParameterException,
-    # PropertyServerException,
-    # UserNotAuthorizedException,
     CollectionManager,
-     NO_ELEMENTS_FOUND,config_logging, get_app_config
+     NO_ELEMENTS_FOUND,config_logging, get_app_config, init_logging
     )
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
-
-
-# disable_ssl_warnings = True
-
-# EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-# EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-# EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-# EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-# EGERIA_VIEW_SERVER_URL = os.environ.get(
-#     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-# )
-# EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-# EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-# EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-# EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-# EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-# EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-# EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
-# EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
-# EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
-app_settings = get_app_config()
-app_config = app_settings["Environment"]
+PYEGERIA_ROOT_PATH= os.environ.get("PYEGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
+app_settings = get_app_config(PYEGERIA_ROOT_PATH+"/.env")
+app_config = app_settings.Environment
 config_logging()
 
+out_struct = {
+            "formats": {
+                "types": ["ALL"],
+                "columns": [
+                    {'name': 'display_name', 'key': 'display_name'},
+                    {'name': 'qualified_name', 'key': 'qualified_name', 'format': True},
+                    {'name': 'description', 'key': 'description', 'format': True},
+                    {'name': "classifications", 'key': 'classifications'},
+                    {'name': 'members', 'key': 'members', 'format': True},
+                    {'name': 'collection_type', 'key': 'collection_type', 'format': True},
+                    {'name': 'GUID', 'key': 'GUID'},
+                ],
+            },
+
+        }
 
 def display_collections(
     search_string: str = "*",
-    view_server: str = app_config['Egeria View Server'],
-    view_url: str = app_config['Egeria View Server URL'],
-    user: str = EGERIA_USER,
-    user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = app_config['Egeria Jupyter'],
-    width: int = app_config['Console Width'],
+    view_server: str = app_config.egeria_view_server,
+    view_url: str = app_config.egeria_view_server_url,
+    user: str = app_settings.User_Profile.user_name,
+    user_pass: str = app_settings.User_Profile.user_pwd,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
     output_format: str = "TABLE"
 ):
     """Display either a specified glossary or all collections if the search_string is '*'.
@@ -144,9 +136,10 @@ def display_collections(
 
         collections = m_client.find_collections(
             search_string.strip(), None, True, False, ignore_case=True,
-            output_format = "DICT"
+            output_format = "DICT", output_format_set=out_struct
         )
         if type(collections) is list:
+
             sorted_collection_list = sorted(
                 collections, key=lambda k: k["display_name"]
             )
@@ -203,13 +196,13 @@ def main():
     parser.add_argument("--password", help="User Password")
 
     args = parser.parse_args()
-    app_settings = get_app_config()
-    app_config = app_settings["Environment"]
+    # app_settings = get_app_config(PYEGERIA_ROOT_PATH + "/.env")
+    # app_config = app_settings.Environment
 
-    server = args.server if args.server is not None else app_config['Egeria View Server']
-    url = args.url if args.url is not None else app_config['Egeria View Server URL']
-    userid = args.userid if args.userid is not None else EGERIA_USER
-    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
+    userid = args.userid if args.userid is not None else app_settings.User_Profile.user_name
+    user_pass = args.password if args.password is not None else app_settings.User_Profile.user_pwd
 
     try:
         search_string = Prompt.ask(
@@ -227,4 +220,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+    # EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+    # PYEGERIA_ROOT_PATH = os.environ.get("PYEGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
     main()

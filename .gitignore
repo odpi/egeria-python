@@ -171,3 +171,5 @@ dmypy.json
 /dependency_graph.py
 /_orig.toml
 /md_processing/dr_egeria_outbox/
+/md_processing/family_docs/
+/debug_log

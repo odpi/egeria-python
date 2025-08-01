@@ -96,7 +96,7 @@ output_format_sets = {
         "aliases": ["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection",
                     "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
         "annotations": COMMON_ANNOTATIONS,
-        "formats": [COMMON_FORMATS_ALL, COLLECTION_DICT, COLLECTION_TABLE], # Reusing common formats
+        "formats": [ COLLECTION_DICT, COLLECTION_TABLE,COMMON_FORMATS_ALL], # Reusing common formats
         "action": [{"function": "CollectionManager.find_collections",
                    "user_params": [ "search_string"],
                    "spec_params": {    },
@@ -155,7 +155,7 @@ output_format_sets = {
         "description": "Attributes useful to Data Specification.",
         "aliases": ["Data Spec", "DataSpec", "DataSpecification"],
         "annotations": {"wikilinks": ["[[Data Specification]]"]},
-        "formats": [{"types": ["TABLE"], "columns": COMMON_COLUMNS,}],  # Reusing common formats and columns
+        "formats": [{"types": ["DICT"], "columns": COMMON_COLUMNS,}],  # Reusing common formats and columns
         "action": [{"function": "CollectionManager.find_collections",
                    "user_params": [ "search_string"],
                    "spec_params": { "classification_name": "DataSpec" },
@@ -168,6 +168,17 @@ output_format_sets = {
         "annotations": {"wikilinks": ["[[Data Structure]]"]},
         "formats": [{"types": ["ALL"], "columns" : COMMON_COLUMNS}],  # Reusing common formats and columns
         "action": [{"function": "DataDesigner.find_data_structures",
+                   "user_params": ["search_string" ],
+                   "spec_params": {  },
+            }]
+    },
+"DataField": {
+        "heading": "Data Structure Information",
+        "description": "Attributes useful to Data Structures.",
+        "aliases": ["Data Field", "Data Fields", "DataFields"],
+        "annotations": {"wikilinks": ["[[Data Field]]"]},
+        "formats": [{"types": ["ALL"], "columns" : COMMON_COLUMNS}],  # Reusing common formats and columns
+        "action": [{"function": "DataDesigner.find_data_fields",
                    "user_params": ["search_string" ],
                    "spec_params": {  },
             }]
@@ -254,7 +265,22 @@ def select_output_format_set(kind: str, output_type: str) -> dict | None:
 def output_format_set_list()->list[str]:
     return list(output_format_sets.keys())
 
-def get_output_format_set_heading(format_set: str) -> str:
+def get_output_format_set_heading(format_set: dict) -> str:
     return output_format_sets[format_set].get("heading")
-def get_output_format_set_description(format_set: str) -> str:
+def get_output_format_set_description(format_set: dict) -> str:
     return output_format_sets[format_set].get("description")
+
+def get_output_format_type_match(format_set: dict, output_format: str) -> dict:
+    if isinstance(format_set, list):
+        for format in format_set.get("formats", []):
+            if output_format in format.get("types", []):
+                format_set["formats"] = format
+                return format_set
+
+        # Step 5: Handle the fallback case of "ALL"
+        for format in format_set.get("formats", []):
+            if "ALL" in format.get("types", []):
+                format_set["formats"] = format
+                return format_set
+    else:
+        return format_set

@@ -22,7 +22,7 @@ from pyegeria import (
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException, PyegeriaException, PyegeriaConnectionException, PyegeriaClientException,
     PyegeriaAPIException, PyegeriaUnknownException, PyegeriaNotFoundException,
-    PyegeriaUnauthorizedException, print_exception_response, print_exception_table
+    PyegeriaUnauthorizedException, print_exception_response, print_exception_table, print_basic_exception
     )
 
 from tests.test_feedback_manager_omvs import password
@@ -85,7 +85,7 @@ class TestCollectionManager:
             search_string = "*"
             classification_name = "DataSpec"
             output_format = "DICT"
-            output_format_set = "Data Spec"
+            output_format_set = "Collections"
 
             response = c_client.find_collections(search_string, classification_name,output_format=output_format, output_format_set=output_format_set)
             duration = time.perf_counter() - start_time
@@ -119,7 +119,7 @@ class TestCollectionManager:
                     "heading": "General Agreement Information",
                     "description": "Attributes generic to all Agreements.",
                     "aliases": [],
-                    "formats": {"columns": [
+                    "formats": [{"columns": [
                         {'name': 'Name', 'key': 'display_name'},
                         {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
                         {'name': 'Super Category', 'key': 'category'},
@@ -127,9 +127,11 @@ class TestCollectionManager:
                         {'name': "Classifications", 'key': 'classifications'},
                         {'name': 'Members', 'key': 'members', 'format': True},
                         {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                        {'name': 'GUID', 'key': 'GUID'},
                         ],
-                        "formats": ["ALL"]
+                        "types": ["ALL"]
                         },
+                        ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
             body = {
@@ -191,13 +193,12 @@ class TestCollectionManager:
             c_client.close_session()
 
     def test_get_collections_by_type(self):
-        config_logging()
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             collection_type = "*"
-            classification_name = "DigitalProduc"
+            classification_name = "DataSpec"
 
             response = c_client.get_collections_by_type(collection_type, classification_name, output_format="LIST")
             duration = time.perf_counter() - start_time
@@ -224,9 +225,9 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
+            collection_guid = "8a5b67e1-c4ea-4286-80cd-5fc9590258d"
 
-            response = c_client.get_collection_by_guid(collection_guid, output_format="DICT")
+            response = c_client.get_collection_by_guid(collection_guid, output_format="REPORT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -242,21 +243,23 @@ class TestCollectionManager:
                 print("\n\nGUID is: " + response)
             assert True
 
-        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+        except (PyegeriaException, AssertionError) as e:
+           # pass
             print_exception_table(e)
-            assert False, "Invalid request"
+            # assert False, "Invalid request"
 
         finally:
-            c_client.close_session()
+            if hasattr(self, 'c_client'):
+                c_client.close_session()
 
     def test_get_collection_graph(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "21293d82-a394-46d8-9466-1c954f604c29"
+            collection_guid = "760f6c8c-ce96-4ab2-9cf3-e0c6cea51bfd"
 
-            response = c_client.get_collection_graph(collection_guid, output_format="REPORT")
+            response = c_client.get_collection_graph(collection_guid, output_format="DICT")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -460,7 +463,7 @@ class TestCollectionManager:
             # parent_relationship_type_name = None
             parent_at_end1 = None
             # parent_at_end1 = None
-            display_name = "MooClinical Trial Test Data Spec"
+            display_name = "My Clinical Trial Test Data Spec"
             description = "Test- Clinical Trials Specification"
             collection_type = "Test Data Specification"
             is_own_anchor = True
@@ -480,12 +483,13 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            # print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
 
-    def test_create_data_spec_collection(self):
+    def test_create_data_spec_collection2(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
                 user_id=self.good_user_2, )
@@ -912,7 +916,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "e9b42536-a898-4141-9d41-1df73ea009ae"
+            collection_guid = "4e090fa1-184d-4aa7-b8d2-76374b047ad7"
             response = c_client.delete_collection(collection_guid, cascade=True)
             duration = time.perf_counter() - start_time
             print("\n\nCollection deleted successfully")

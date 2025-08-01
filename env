@@ -1,0 +1,7 @@
+#
+# This file contains default Environment variable settings
+
+PYEGERIA_ROOT_PATH=
+PYEGERIA_CONSOLE_WIDTH=
+EGERIA_USER_NAME=
+EGERIA_USER_PASSWORD=

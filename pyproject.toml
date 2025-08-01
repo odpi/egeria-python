@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.4.0.3"
+version = "5.4.0.14"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -50,6 +50,8 @@ loguru = "^0.7.3"
 poetry-core = "^2.1.3"
 inflect = "^7.5.0"
 pydantic = "^2.11.7"
+pydantic-settings = "^2.10.1"
+pydevd-pycharm = "^252.23892.364"
 
 
 

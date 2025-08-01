@@ -14,7 +14,8 @@ from httpx import Response
 from loguru import logger
 from prompt_toolkit import data_structures
 
-from pyegeria._output_formats import select_output_format_set
+from pyegeria import Client2
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output,
@@ -46,7 +47,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/data-designer"
 
 
-class DataDesigner(Client):
+class DataDesigner(Client2):
     """DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
       building specifications for data. This includes common data fields in a data dictionary, data specifications
       for a project and data classes for data quality validation.
@@ -1116,7 +1117,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade))
 
     async def _async_find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
-                                              output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
@@ -1127,7 +1128,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: dict, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -1158,11 +1159,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
-                                 output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                 output_format: str = 'JSON',  output_format_set: dict = None) -> list | str:
         """ Returns a list of all known data structures.
 
         Parameters
@@ -1193,13 +1194,13 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_structures(start_from, page_size, output_format, columns_struct))
+        response = loop.run_until_complete(self._async_find_all_data_structures(start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_find_data_structures_w_body(self, body: dict, start_from: int = 0,
                                                  page_size: int = max_paging_size, starts_with: bool = True,
                                                  ends_with: bool = False, ignore_case: bool = True,
-                                                 output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -1219,7 +1220,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", 'REPORT', 'FORM', "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1267,12 +1268,12 @@ r       replace_all_properties: bool, default = False
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_data_structures_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                     starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                    output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                    output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Retrieve the list of data structure metadata elements that contain the search string.
 
         Parameters
@@ -1291,7 +1292,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -1326,7 +1327,7 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_structures_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                    output_format, columns_struct))
+                                                    output_format, output_format_set))
         return response
 
     async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
@@ -1443,7 +1444,7 @@ r       replace_all_properties: bool, default = False
 
     async def _async_get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
                                                  page_size: int = max_paging_size,
-                                                 output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -1459,7 +1460,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1504,11 +1505,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
         return elements
 
     def get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                    page_size: int = max_paging_size, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                    page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1523,7 +1524,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1545,11 +1546,11 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format, columns_struct))
+            self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_get_data_structure_by_guid(self, guid: str, body: dict = None,
-                                                 output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1561,7 +1562,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1602,10 +1603,10 @@ r       replace_all_properties: bool, default = False
         if type(element) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(element, filter, output_format, columns_struct)
+            return self._generate_data_structure_output(element, filter, output_format, output_format_set)
         return element
 
-    def get_data_structure_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+    def get_data_structure_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1616,7 +1617,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        columns_struct: dict, optional, default = None
+        output_format_set: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1648,7 +1649,7 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_structure_by_guid(guid, body, output_format, columns_struct))
+        response = loop.run_until_complete(self._async_get_data_structure_by_guid(guid, body, output_format, output_format_set))
         return response
 
     #
@@ -2478,7 +2479,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade))
 
     async def _async_find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
-                                          output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
@@ -2489,7 +2490,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2521,11 +2522,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
-                             output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                             output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
@@ -2536,7 +2537,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2556,12 +2557,12 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_fields(start_from, page_size, output_format,columns_struct))
+        response = loop.run_until_complete(self._async_find_all_data_fields(start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                              starts_with: bool = True, ends_with: bool = False,
-                                             ignore_case: bool = True, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                             ignore_case: bool = True, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
             Async version.
 
@@ -2581,7 +2582,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -2632,12 +2633,12 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                 starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -2656,7 +2657,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -2693,12 +2694,12 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_fields_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                output_format,columns_struct))
+                                                output_format,output_format_set))
         return response
 
     async def _async_find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                      output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                      output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -2718,7 +2719,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2755,12 +2756,12 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                         output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                         output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2779,7 +2780,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2802,12 +2803,12 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_fields(filter, start_from, page_size, starts_with, ends_with, ignore_case,
-                                         output_format, columns_struct))
+                                         output_format, output_format_set))
         return response
 
     async def _async_get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
                                              page_size: int = max_paging_size,
-                                             output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                             output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -2823,7 +2824,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2868,11 +2869,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
         return elements
 
     def get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                page_size: int = max_paging_size, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -2887,7 +2888,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2923,11 +2924,11 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(filter, body, start_from, page_size, output_format, columns_struct))
+            self._async_get_data_fields_by_name(filter, body, start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_get_data_field_by_guid(self, guid: str, body: dict = None,
-                                            output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                            output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -2939,7 +2940,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2981,10 +2982,10 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, None, output_format, columns_struct)
+            return self._generate_data_field_output(elements, None, output_format, output_format_set)
         return elements
 
-    def get_data_field_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+    def get_data_field_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -2995,7 +2996,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -3027,7 +3028,7 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, body, output_format, columns_struct))
+        response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, body, output_format, output_format_set))
         return response
 
     ###
@@ -4060,7 +4061,7 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade))
 
     async def _async_find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size,
-                                           output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                           output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Returns a list of all data classes. Async version.
 
         Parameters
@@ -4071,7 +4072,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4104,11 +4105,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size,
-                              output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Returns a list of all data classes.
 
         Parameters
@@ -4119,7 +4120,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4139,12 +4140,12 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size, output_format, columns_struct))
+        response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                               starts_with: bool = True, ends_with: bool = False,
-                                              ignore_case: bool = True, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                              ignore_case: bool = True, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
             Async version.
 
@@ -4164,7 +4165,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4214,12 +4215,12 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                 output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                 output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data class metadata elements that contain the search string.
 
         Parameters
@@ -4238,7 +4239,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4275,12 +4276,12 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_classes_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                 output_format, columns_struct))
+                                                 output_format, output_format_set))
         return response
 
     async def _async_find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
                                        starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                       output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                       output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -4300,7 +4301,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4340,12 +4341,12 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
         return elements
 
     def find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                          output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -4364,7 +4365,7 @@ r       replace_all_properties: bool, default = False
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4388,12 +4389,12 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_classes(filter, start_from, page_size, starts_with, ends_with, ignore_case,
-                                          output_format, columns_struct))
+                                          output_format, output_format_set))
         return response
 
     async def _async_get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
                                               page_size: int = max_paging_size,
-                                              output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -4409,7 +4410,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4454,11 +4455,11 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
         return elements
 
     def get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                 page_size: int = max_paging_size, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                 page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -4473,7 +4474,7 @@ r       replace_all_properties: bool, default = False
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4505,16 +4506,15 @@ r       replace_all_properties: bool, default = False
           "filter": "Add name here"
         }
 
-
     """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_classes_by_name(filter, body, start_from, page_size, output_format, columns_struct))
+            self._async_get_data_classes_by_name(filter, body, start_from, page_size, output_format, output_format_set))
         return response
 
     async def _async_get_data_class_by_guid(self, guid: str, body: dict = None,
-                                            output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+                                            output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -4526,7 +4526,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4567,10 +4567,10 @@ r       replace_all_properties: bool, default = False
         if type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, columns_struct)
+            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
         return elements
 
-    def get_data_class_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  columns_struct: dict = None) -> list | str:
+    def get_data_class_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -4581,7 +4581,7 @@ r       replace_all_properties: bool, default = False
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
+        output_format_set: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4613,7 +4613,7 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_class_by_guid(guid, body, output_format, columns_struct))
+        response = loop.run_until_complete(self._async_get_data_class_by_guid(guid, body, output_format, output_format_set))
         return response
 
     ###
@@ -5380,7 +5380,8 @@ r       replace_all_properties: bool, default = False
                                    )
 
 
-    def _generate_data_structure_output(self, elements, filter, output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
+    def _generate_data_structure_output(self, elements: dict|list[dict], filter:str = None,
+                                        output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
         """
         Generate output for data structures in the specified format.
 
@@ -5400,10 +5401,10 @@ r       replace_all_properties: bool, default = False
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
             if isinstance(output_format_set, dict):
-                output_formats = output_format_set
+                output_formats = get_output_format_type_match(output_format_set, output_format)
         else:
             output_formats = None
-        logger.trace(f"Executing generate_data_structure_output for {entity_type}: {output_formats}")
+        logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
         return generate_output(elements,
                                filter,
                                entity_type,
@@ -5413,7 +5414,7 @@ r       replace_all_properties: bool, default = False
                                output_formats,
                                )
 
-    def _generate_data_class_output(self, elements: dict, filter: str, output_format: str, columns_struct: dict = None)  -> str | list:
+    def _generate_data_class_output(self, elements: dict|list[dict], filter: str = None, output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
         """
         Generate output for data classes in the specified format.
 
@@ -5421,26 +5422,34 @@ r       replace_all_properties: bool, default = False
             elements: Dictionary or list of dictionaries containing data class elements
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            columns_struct: Optional columns structure
+            output_format_set: Optional output format set
                 - Option column/attribute selection and definition.
         Returns:
             Formatted output as either a string or list of dictionaries
         """
         entity_type = "Data Class"
-        if columns_struct is None:
-            columns_struct = select_output_format_set(entity_type, output_format)
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
 
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            if isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            output_formats = None
+        logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
         return generate_output(elements,
                                filter,
                                entity_type,
                                output_format,
                                self._extract_data_class_properties,
                                None,
-                               columns_struct,
+                               output_formats,
                                )
 
-    def _generate_data_field_output(self, elements: dict, filter: str, output_format: str,
-                                    columns_struct: dict = None)  -> str | list:
+    def _generate_data_field_output(self, elements: dict|list[dict], filter: str = None, output_format: str = "DICT",
+                                    output_format_set: str|dict = None)  -> str | list:
         """
         Generate output for data fields in the specified format.
 
@@ -5448,24 +5457,32 @@ r       replace_all_properties: bool, default = False
             elements: Dictionary or list of dictionaries containing data field elements
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            columns_struct: dict, Optional, default = None
+            output_format_set: str|dict, Optional, default = None
             - Option column/attribute selection and definition.
 
         Returns:
             Formatted output as a string or list of dictionaries
         """
         entity_type = "Data Field"
-        if columns_struct is None:
-            columns_struct = select_output_format_set(entity_type, output_format)
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
 
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            if isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            output_formats = None
+        logger.trace(f"Executing _generate_data_field_output for {entity_type}: {output_formats}")
         return generate_output(elements,
-                                   filter,
-                                   entity_type,
-                                   output_format,
-                                   self._extract_data_field_properties,
-                                   None,
-                                   columns_struct,
-                                   )
+                               filter,
+                               entity_type,
+                               output_format,
+                               self._extract_data_field_properties,
+                               None,
+                               output_formats,
+                               )
 
 
 

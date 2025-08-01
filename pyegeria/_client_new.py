@@ -375,8 +375,11 @@ class Client2:
         """Make a request to the Egeria API."""
         try:
             loop = asyncio.get_running_loop()
-            coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
-            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+            if loop.is_running():
+                coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
+                return asyncio.run_coroutine_threadsafe(coro, loop).result()
+            else:
+                return loop.run_until_complete(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
         except RuntimeError:
             # No running loop exists; run the coroutine
             return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json))

@@ -46,6 +46,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
+import pydevd_pycharm
 
 from pyegeria import (
     EgeriaTech,
@@ -58,24 +59,34 @@ from pyegeria._output_formats import select_output_format_set, get_output_format
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 from pyegeria.egeria_tech_client import EgeriaTech
 
+# pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
+#                              port=5678,               # Port to communicate with PyCharm
+#                              stdoutToServer=True,     # Forward stdout to PyCharm
+#                              stderrToServer=True,     # Forward stderr to PyCharm
+#                              suspend=True)            # Suspend execution until the debugger is connected
+#
+
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+
 app_settings = get_app_config()
-app_config = app_settings["Environment"]
+app_config = app_settings.Environment
 config_logging()
 
+print(f"Console width is {app_config.console_width}")
 console = Console(
     style="bold bright_white on black",
-    width=app_config["Console Width"],
-    force_terminal=not app_config["Egeria Jupyter"],
+    width=app_config.console_width,
+    force_terminal=not app_config.egeria_jupyter,
     )
 
 def execute_format_set_action(
     format_set_name: str,
-    view_server: str = app_config['Egeria View Server'],
-    view_url: str = app_config['Egeria View Server URL'],
-    user: str = EGERIA_USER,
-    user_pass: str = EGERIA_USER_PASSWORD,
+    view_server: str = app_config.egeria_view_server,
+    view_url: str = app_config.egeria_view_server_url,
+    user: str = app_settings.User_Profile.user_name,
+    user_pass: str = app_settings.User_Profile.user_pwd,
     output_format: str = "TABLE",
     **kwargs
 ):
@@ -186,9 +197,13 @@ def execute_format_set_action(
     try:
         # Invoke the function with the parameters
         if output_format != "TABLE":
-            file_path = os.path.join(app_config['Pyegeria Root'], app_config['Dr.Egeria Outbox'])
+            file_path = os.path.join(app_config.pyegeria_root, app_config.dr_egeria_outbox)
             if output_format == "HTML":
                 file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.html"
+            elif output_format == "JSON":
+                file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.json"
+            elif output_format == "DICT":
+                file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.py"
             else:
                 file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.md"
             full_file_path = os.path.join(file_path, file_name)
@@ -222,6 +237,8 @@ def execute_format_set_action(
             with open(full_file_path, 'w') as f:
                 f.write(output)
             print(f"\n==> Output written to {full_file_path}")
+            if output_format == "HTML":
+                print(f"\n==> Web link: [{file_name}]({app_config.pyegeria_publishing_root}/{file_name}")
             return
 
         # For TABLE output, add output_format to params
@@ -314,6 +331,7 @@ def execute_format_set_action(
 
 def main():
     # First, parse just the format-set argument to determine which other arguments to add
+    logger.enable("pyegeria")
     initial_parser = argparse.ArgumentParser(add_help=False)
     initial_parser.add_argument("--format-set", help="Name of the output format set", required=True)
     initial_args, _ = initial_parser.parse_known_args()
@@ -357,15 +375,17 @@ def main():
     
     args = parser.parse_args()
     app_settings = get_app_config()
-    app_config = app_settings["Environment"]
+    app_config = app_settings.Environment
 
-    server = args.server if args.server is not None else app_config['Egeria View Server']
-    url = args.url if args.url is not None else app_config['Egeria View Server URL']
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
+    print(f"root path: {app_config.pyegeria_root}, config_file: {app_config.pyegeria_config_file}")
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     format_set_name = args.format_set
     output_format = args.output_format
-    
+
+    logger.info(f"view server @ {url}")
     # Collect all user parameters from args
     kwargs = {}
     for param in user_params:

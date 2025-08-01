@@ -138,8 +138,8 @@ from commands.tech.generic_actions import delete_element
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 app_settings = get_app_config()
-app_config = app_settings["Environment"]
-# config_logging()
+app_config = app_settings.Environment
+config_logging()
 
 
 @tui()
@@ -148,42 +148,42 @@ app_config = app_settings["Environment"]
 @click.group()
 @click.option(
     "--server",
-    default=app_config['Egeria Metadata Store'],
+    default=app_config.egeria_metadata_store,
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default=app_config["Egeria Platform URL"],
+    default=app_config.egeria_platform_url,
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
     "--integration_daemon",
-    default=app_config["Egeria Integration Daemon"],
+    default=app_config.egeria_integration_daemon,
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default=app_config['Egeria Integration Daemon URL'],
+    default=app_config.egeria_integration_daemon_url,
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default=app_config['Egeria View Server'],
+    default=app_config.egeria_view_server,
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default=app_config['Egeria View Server URL'],
+    default=app_config.egeria_view_server_url,
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default=app_config['Egeria Engine Host'],
+    default=app_config.egeria_engine_host,
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default=app_config['Egeria Engine Host URL'],
+    default=app_config.egeria_engine_host_url,
     help="URL of Egeria engine host platform to connect to",
 )
 
@@ -202,40 +202,40 @@ app_config = app_settings["Environment"]
     "--jupyter",
     is_flag=True,
     type=bool,
-    default=app_config['Egeria Jupyter'],
+    default=app_config.egeria_jupyter,
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=app_config['Console Width'],
+    default=app_config.console_width,
     type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
-    "--home_glossary_guid",
-    default=app_settings['User Profile']['Egeria Home Glossary Name'],
+    "--home_glossary_name",
+    default=app_settings.User_Profile.egeria_home_glossary_name,
     help="Glossary name to use as the home glossary",
 )
 @click.option(
     "--glossary_path",
-    default=app_config['Egeria Glossary Path'],
+    default=app_config.egeria_glossary_path,
     help="Path to glossary import/export files",
 )
 
 @click.option(
     "--root_path",
-    default=app_config['Pyegeria Root'],
+    default=app_config.pyegeria_root,
     help="Root path to use for file operations",
 )
 
 @click.option(
     "--inbox_path",
-    default=app_config['Dr.Egeria Inbox'],
+    default=app_config.dr_egeria_inbox,
     help="Path to inbox files",
 )
 @click.option(
     "--outbox_path",
-    default=app_config['Dr.Egeria Outbox'],
+    default=app_config.dr_egeria_outbox,
     help="Path to outbox files",
 )
 
@@ -255,7 +255,7 @@ def cli(
     timeout,
     jupyter,
     width,
-    home_glossary_guid,
+    home_glossary_name,
     glossary_path,
     root_path,
     inbox_path,
@@ -276,7 +276,7 @@ def cli(
         timeout,
         jupyter,
         width,
-        home_glossary_guid,
+        home_glossary_name,
         glossary_path,
         root_path,
         inbox_path,
@@ -1049,7 +1049,7 @@ def show_cat_info(ctx):
 def show_format_set(ctx, format_set, output_format, search_string):
     """Dynamically generate output based on a format set"""
     c = ctx.obj
-
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
     execute_format_set_action(
         format_set, c.view_server, c.view_server_url,
         c.userid, c.password, output_format, search_string = search_string
