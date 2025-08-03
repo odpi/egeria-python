@@ -153,7 +153,7 @@ def test_precedence_order():
                 reset_config()
                 
                 # Rename the config file to the expected name instead of copying it
-                os.rename(config_file, "../config.json")
+                os.rename(config_file, "../config/config.json")
                 
                 # Load the configuration
                 config = load_app_config()

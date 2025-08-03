@@ -38,7 +38,7 @@ import argparse
 import json
 import os
 import time
-from typing import Any, Dict, List
+
 from loguru import logger
 from rich import box
 from rich.console import Console
@@ -204,6 +204,8 @@ def execute_format_set_action(
                 file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.json"
             elif output_format == "DICT":
                 file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.py"
+            elif output_format == "MERMAID":
+                file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.md"
             else:
                 file_name = f"{format_set_name}-{time.strftime('%Y-%m-%d-%H-%M-%S')}.md"
             full_file_path = os.path.join(file_path, file_name)
@@ -231,8 +233,10 @@ def execute_format_set_action(
                 return
             elif isinstance(output, (str, list)) and output_format == "DICT":
                 output = json.dumps(output, indent=4)
-            elif isinstance(output, (str, list)) and output_format == "REPORT":
+            elif isinstance(output, (str, list)) and output_format in[ "REPORT" ]:
                 output = preamble + output
+            elif isinstance(output, (str, list)) and output_format == "HTML":
+                pass
 
             with open(full_file_path, 'w') as f:
                 f.write(output)
@@ -357,7 +361,7 @@ def main():
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     parser.add_argument("--output-format", help="Output format (TABLE, DICT, FORM, REPORT, HTML, LIST)", 
-                        choices=["TABLE", "DICT", "FORM", "REPORT", "HTML", "LIST"], default="TABLE")
+                        choices=["TABLE", "DICT", "FORM", "REPORT", "HTML", "LIST", "MERMAID"], default="TABLE")
 
 
 

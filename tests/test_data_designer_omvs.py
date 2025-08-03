@@ -239,7 +239,7 @@ class TestDataDesigner:
                     {'name': 'My Description', 'key': 'description', 'format': True},
                     {'name': "Classifications", 'key': 'classifications'},
                     {'name': 'Members', 'key': 'members', 'format': True},
-                    {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                    {'name': 'Mermaid', 'key': 'mermaid'},
                     ],
                          }
                         ],
@@ -250,7 +250,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="DICT", output_format_set = columns_struct)
+            response = m_client.find_all_data_structures(output_format="MERMAID", output_format_set = columns_struct)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

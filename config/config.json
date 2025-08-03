@@ -5,7 +5,7 @@
     "timeout_seconds": 30
   },
   "Environment": {
-    "Console Width": 155,
+    "Console Width": 170,
     "Dr.Egeria Inbox": "md_processing/dr-egeria-inbox",
     "Dr.Egeria Outbox": "md_processing/dr-egeria-outbox",
     "Egeria Engine Host": "qs-engine-host",
@@ -21,7 +21,9 @@
     "Egeria View Server": "qs-view-server2",
     "Egeria View Server URL": "https://localhost:9443",
     "Pyegeria Root": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python",
-    "Pyegeria Publishing Root": "http://localhost:8085/dr-egeria-outbox"
+    "Pyegeria Config Directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/config",
+    "Pyegeria Publishing Root": "http://localhost:8085/dr-egeria-outbox",
+    "Pyegeria User Format Sets Dir": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python"
   },
   "feature_x_enabled": "foo",
   "Logging": {

@@ -46,10 +46,12 @@ class PyegeriaSettings(BaseSettings):
     """
     # Core settings needed to locate the config file
     pyegeria_root_path: str = ""
+    pyegeria_config_directory: str = ""
     pyegeria_config_file: str = "config.json"
     
     # Additional settings that can be loaded from .env
     pyegeria_console_width: int = 200
+    pyegeria_user_format_sets_dir: str = "~/.pyegeria/format_sets"
     egeria_user_name: str = ""
     egeria_user_password: str = ""
     
@@ -104,8 +106,10 @@ class EnvironmentConfig(BaseModel):
     egeria_view_server_url: str = Field(default="https://localhost:9443", alias="Egeria View Server URL")
     egeria_view_server: str = Field(default="qs-view-server", alias="Egeria View Server")
     pyegeria_root: str = Field(default="/Users/dwolfson/localGit/egeria-v5-3/egeria-python", alias="Pyegeria Root")
+    pyegeria_config_directory: str = Field(default="", alias="Pyegeria Config Directory")
     pyegeria_config_file: str = Field(default="config.json", alias="Egeria Config File")
     pyegeria_publishing_root: str = Field(default="/dr-egeria-outbox", alias="Pyegeria Publishing Root")
+    pyegeria_user_format_sets_dir: str = Field(default="~/.pyegeria/format_sets", alias="Pyegeria User Format Sets Dir")
     
     class Config:
         populate_by_name = True
@@ -254,10 +258,12 @@ def load_app_config(env_file: str = None):
     # Initialize env_settings with default values
     env_settings = PyegeriaSettings()
     
-    # First check if OS environment variables are set for PYEGERIA_ROOT_PATH and PYEGERIA_CONFIG_FILE
+    # First check if OS environment variables are set for PYEGERIA_CONFIG_DIRECTORY, PYEGERIA_ROOT_PATH and PYEGERIA_CONFIG_FILE
+    config_directory = os.getenv("PYEGERIA_CONFIG_DIRECTORY")
     root_path = os.getenv("PYEGERIA_ROOT_PATH")
     config_file = os.getenv("PYEGERIA_CONFIG_FILE")
     
+    logger.info(f"DEBUG: Initial config_directory from OS env: {config_directory}")
     logger.info(f"DEBUG: Initial root_path from OS env: {root_path}")
     logger.info(f"DEBUG: Initial config_file from OS env: {config_file}")
     logger.info(f"DEBUG: env_file parameter: {env_file}")
@@ -268,21 +274,25 @@ def load_app_config(env_file: str = None):
         env_settings = PyegeriaSettings.with_env_file(env_file)
 
         # If env_file is specified, always use its values, regardless of OS environment variables
+        config_directory = env_settings.pyegeria_config_directory
         root_path = env_settings.pyegeria_root_path
         config_file = env_settings.pyegeria_config_file
-    # If config_file is set but root_path is not, we'll try to load the config file first
-    # and only check the .env file if we still don't have a root_path after loading the config file
-    elif config_file is not None and root_path is None:
+    # If config_file is set but config_directory and root_path are not, we'll try to load the config file first
+    # and only check the .env file if we still don't have a config_directory or root_path after loading the config file
+    elif config_file is not None and config_directory is None and root_path is None:
         # We'll check for a .env file later if needed
         pass
-    # If neither config_file nor root_path is set, check for a .env file in the current directory
-    elif (root_path is None or config_file is None):
+    # If any of config_directory, root_path, or config_file is not set, check for a .env file in the current directory
+    elif (config_directory is None or root_path is None or config_file is None):
         if os.path.exists(".env"):
             logger.info("Found .env file")
             logger.debug(f"DEBUG: Loading environment variables from .env in current directory")
             env_settings = PyegeriaSettings()
+            logger.debug(f"DEBUG: env_settings.pyegeria_config_directory: {env_settings.pyegeria_config_directory}")
             logger.debug(f"DEBUG: env_settings.pyegeria_root_path: {env_settings.pyegeria_root_path}")
             logger.debug(f"DEBUG: env_settings.pyegeria_config_file: {env_settings.pyegeria_config_file}")
+            if config_directory is None:
+                config_directory = env_settings.pyegeria_config_directory
             if root_path is None:
                 root_path = env_settings.pyegeria_root_path
             if config_file is None:
@@ -292,13 +302,18 @@ def load_app_config(env_file: str = None):
     else:
         logger.error(f"The .env file at {env_file} wasn't found-outer")
     # Use default values if still not set
+    if config_directory is None:
+        config_directory = ""
     if root_path is None:
         root_path = ""
     if config_file is None:
         config_file = "config.json"
     
-    # Construct the config file path
-    config_file_path = os.path.join(root_path, config_file)
+    # Construct the config file path - prefer config_directory over root_path
+    if config_directory:
+        config_file_path = os.path.join(config_directory, config_file)
+    else:
+        config_file_path = os.path.join(root_path, config_file)
     
     if os.path.exists(config_file_path):
         logger.info("Found config file at {}".format(config_file_path))
@@ -307,9 +322,14 @@ def load_app_config(env_file: str = None):
                 file_config = json.load(f)
                 config_dict.update(file_config)  # Merge/override defaults
                 
-                # If root_path is not set from environment variables or .env file,
+                # If config_directory is not set from environment variables or .env file,
                 # set it from the config file if available
-                if not root_path and "Environment" in file_config and "Pyegeria Root" in file_config["Environment"]:
+                if not config_directory and "Environment" in file_config and "Pyegeria Config Directory" in file_config["Environment"]:
+                    config_directory = file_config["Environment"]["Pyegeria Config Directory"]
+                    logger.debug(f"DEBUG: Setting config_directory from config file: {config_directory}")
+                # If config_directory is still not set and root_path is not set from environment variables or .env file,
+                # set root_path from the config file if available
+                if not config_directory and not root_path and "Environment" in file_config and "Pyegeria Root" in file_config["Environment"]:
                     root_path = file_config["Environment"]["Pyegeria Root"]
                     logger.debug(f"DEBUG: Setting root_path from config file: {root_path}")
         except json.JSONDecodeError:
@@ -353,6 +373,9 @@ def load_app_config(env_file: str = None):
     env["Egeria View Server"] = os.getenv("EGERIA_VIEW_SERVER", env.get("Egeria View Server", "qs-view-server"))
     env["Egeria View Server URL"] = os.getenv("EGERIA_VIEW_SERVER_URL", env.get("Egeria View Server URL", "https://localhost:9443"))
     env['Pyegeria Publishing Root'] = os.getenv("PYEGERIA_PUBLISHING_ROOT", env.get("Pyegeria Publishing Root", "/dr-egeria-outbox"))
+    env['Pyegeria User Format Sets Dir'] = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", env.get("Pyegeria User Format Sets Dir", "~/.pyegeria/format_sets"))
+    # Set Pyegeria Config Directory to the config_directory value we've already determined with the correct precedence order
+    env["Pyegeria Config Directory"] = config_directory
     # Set Pyegeria Root to the root_path value we've already determined with the correct precedence order
     env["Pyegeria Root"] = root_path
 
