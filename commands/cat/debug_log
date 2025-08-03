@@ -1,0 +1,540 @@
+D [32m 2025-08-01T11:34:04.015703-0500 [0m | INFO | process_markdown_file | 90 | 
+
+====================================================
+
+ | {}
+D [32m 2025-08-01T11:34:04.015921-0500 [0m | INFO | process_markdown_file | 91 | Processing Markdown File: ../../md_processing/dr_egeria_inbox/gov_def.md | {}
+D [32m 2025-08-01T11:34:04.018008-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Create on a Regulation Definition  
+ | {}
+D [32m 2025-08-01T11:34:04.018302-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Published Version', 'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.100900-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found regulation `Regulation` with qualified name `Egeria:ValidMetadataValue::typeName-(Regulation)` | {}
+D [32m 2025-08-01T11:34:04.101001-0500 [0m | ERROR | proc_el_id | 664 | Element Regulation already exists | {}
+D [32m 2025-08-01T11:34:04.101444-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Doc Id', 'Document Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.101495-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.101691-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Source'}` missing | {}
+D [32m 2025-08-01T11:34:04.101779-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Regulators'}` missing | {}
+D [32m 2025-08-01T11:34:04.102139-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'User Defined Status'}` missing | {}
+D [32m 2025-08-01T11:34:04.102185-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`regulation` missing | {}
+D [32m 2025-08-01T11:34:04.102350-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'GUID', 'guid'}` missing | {}
+D [32m 2025-08-01T11:34:04.102392-0500 [0m | ERROR | parse_upsert_command | 247 | Element `Regulation` cannot be created since it already exists
+ | {}
+D [32m 2025-08-01T11:34:04.105422-0500 [0m | ERROR | process_gov_definition_upsert_command | 154 |   Data Specification `Regulation` already exists and result document updated changing `Create` to `Update` in processed output
+
+___ | {}
+D [32m 2025-08-01T11:34:04.106197-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Create on a Governance Process  
+ | {}
+D [32m 2025-08-01T11:34:04.106264-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Published Version', 'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.166778-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->governance_process `Gov Process` not found in Egeria | {}
+D [32m 2025-08-01T11:34:04.166865-0500 [0m | INFO | proc_el_id | 672 | governance_process `Gov Process` does not exist | {}
+D [32m 2025-08-01T11:34:04.166958-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Doc Id', 'Document Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.166993-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.167179-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Implementation', 'Implementation Description'}` missing | {}
+D [32m 2025-08-01T11:34:04.167415-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'User Defined Status'}` missing | {}
+D [32m 2025-08-01T11:34:04.167454-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`governance_process` missing | {}
+D [32m 2025-08-01T11:34:04.167486-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'GUID', 'guid'}` missing | {}
+D [32m 2025-08-01T11:34:04.167517-0500 [0m | INFO | parse_upsert_command | 251 | Element `Gov Process` does not exist so it can be created
+ | {}
+D [32m 2025-08-01T11:34:04.227753-0500 [0m | SUCCESS | process_gov_definition_upsert_command | 174 | Created Element `Gov Process` with GUID af8ea933-f7cb-46fa-a758-7e19ef463425
+
+___ | {}
+D [32m 2025-08-01T11:34:04.265862-0500 [0m | ERROR | process_gov_definition_upsert_command | 182 | Error performing Create Governance Process: generate_output() got an unexpected keyword argument 'columns' | {}
+D [32m 2025-08-01T11:34:04.267586-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Create on a Governance Responsibility  
+ | {}
+D [32m 2025-08-01T11:34:04.267656-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Published Version', 'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.320751-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->governance_responsibility `Responsibility` not found in Egeria | {}
+D [32m 2025-08-01T11:34:04.320849-0500 [0m | INFO | proc_el_id | 672 | governance_responsibility `Responsibility` does not exist | {}
+D [32m 2025-08-01T11:34:04.320950-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Doc Id', 'Document Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.320983-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.321028-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Implementation', 'Implementation Description'}` missing | {}
+D [32m 2025-08-01T11:34:04.321104-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'User Defined Status'}` missing | {}
+D [32m 2025-08-01T11:34:04.321138-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`governance_responsibility` missing | {}
+D [32m 2025-08-01T11:34:04.321166-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'GUID', 'guid'}` missing | {}
+D [32m 2025-08-01T11:34:04.321198-0500 [0m | INFO | parse_upsert_command | 251 | Element `Responsibility` does not exist so it can be created
+ | {}
+D [32m 2025-08-01T11:34:04.364428-0500 [0m | SUCCESS | process_gov_definition_upsert_command | 174 | Created Element `Responsibility` with GUID 44f12cc8-39b1-4b5b-baa4-d18ac2d7777c
+
+___ | {}
+D [32m 2025-08-01T11:34:04.394247-0500 [0m | ERROR | process_gov_definition_upsert_command | 182 | Error performing Create Governance Responsibility: generate_output() got an unexpected keyword argument 'columns' | {}
+D [32m 2025-08-01T11:34:04.395217-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Create on a Governance Procedure  
+ | {}
+D [32m 2025-08-01T11:34:04.395293-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Published Version', 'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.442908-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->governance_procedure `Gov procedure` not found in Egeria | {}
+D [32m 2025-08-01T11:34:04.442989-0500 [0m | INFO | proc_el_id | 672 | governance_procedure `Gov procedure` does not exist | {}
+D [32m 2025-08-01T11:34:04.443082-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Doc Id', 'Document Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.443114-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.443157-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Implementation', 'Implementation Description'}` missing | {}
+D [32m 2025-08-01T11:34:04.443232-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'User Defined Status'}` missing | {}
+D [32m 2025-08-01T11:34:04.443264-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`governance_procedure` missing | {}
+D [32m 2025-08-01T11:34:04.443293-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'GUID', 'guid'}` missing | {}
+D [32m 2025-08-01T11:34:04.443323-0500 [0m | INFO | parse_upsert_command | 251 | Element `Gov procedure` does not exist so it can be created
+ | {}
+D [32m 2025-08-01T11:34:04.487990-0500 [0m | SUCCESS | process_gov_definition_upsert_command | 174 | Created Element `Gov procedure` with GUID e1206836-6356-4006-857b-52e215ef37fe
+
+___ | {}
+D [32m 2025-08-01T11:34:04.514497-0500 [0m | ERROR | process_gov_definition_upsert_command | 182 | Error performing Create Governance Procedure: generate_output() got an unexpected keyword argument 'columns' | {}
+D [32m 2025-08-01T11:34:04.515383-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Create on a Security Access Control  
+ | {}
+D [32m 2025-08-01T11:34:04.515453-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Published Version', 'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.571703-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->security_access_control `sec access` not found in Egeria | {}
+D [32m 2025-08-01T11:34:04.571815-0500 [0m | INFO | proc_el_id | 672 | security_access_control `sec access` does not exist | {}
+D [32m 2025-08-01T11:34:04.571923-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Doc Id', 'Document Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.571965-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:34:04.572013-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Implementation', 'Implementation Description'}` missing | {}
+D [32m 2025-08-01T11:34:04.572076-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'User Defined Status'}` missing | {}
+D [32m 2025-08-01T11:34:04.572114-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`security_access_control` missing | {}
+D [32m 2025-08-01T11:34:04.572147-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'GUID', 'guid'}` missing | {}
+D [32m 2025-08-01T11:34:04.572184-0500 [0m | INFO | parse_upsert_command | 251 | Element `sec access` does not exist so it can be created
+ | {}
+D [32m 2025-08-01T11:34:04.616101-0500 [0m | SUCCESS | process_gov_definition_upsert_command | 174 | Created Element `sec access` with GUID df7dbea8-b33a-44f4-b730-1bc4438e6504
+
+___ | {}
+D [32m 2025-08-01T11:34:04.643081-0500 [0m | ERROR | process_gov_definition_upsert_command | 182 | Error performing Create Security Access Control: generate_output() got an unexpected keyword argument 'columns' | {}
+D [32m 2025-08-01T11:55:47.644747-0500 [0m | INFO | process_markdown_file | 90 | 
+
+====================================================
+
+ | {}
+D [32m 2025-08-01T11:55:47.645222-0500 [0m | INFO | process_markdown_file | 91 | Processing Markdown File: ../../md_processing/dr_egeria_inbox/data_test3.md | {}
+D [32m 2025-08-01T11:55:47.648014-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Language']` missing | {}
+D [32m 2025-08-01T11:55:47.648168-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Usage']` missing | {}
+D [32m 2025-08-01T11:55:47.648249-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Qualified Name']` missing | {}
+D [32m 2025-08-01T11:55:47.707494-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Glossary `Test Glossary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.707577-0500 [0m | INFO | print_msg | 131 | DEBUG-ERROR->Element Test Glossary does not exist | {}
+D [32m 2025-08-01T11:55:47.707783-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['GUID', 'guid', 'Guid']` missing | {}
+D [32m 2025-08-01T11:55:47.707812-0500 [0m | ERROR | print_msg | 125 | ERROR->Glossary can't be updated; `Test Glossary` not found | {}
+D [32m 2025-08-01T11:55:47.710245-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Summary']` missing | {}
+D [32m 2025-08-01T11:55:47.710360-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Abbreviation']` missing | {}
+D [32m 2025-08-01T11:55:47.710451-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Examples']` missing | {}
+D [32m 2025-08-01T11:55:47.710521-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Usage']` missing | {}
+D [32m 2025-08-01T11:55:47.710598-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Status']` missing | {}
+D [32m 2025-08-01T11:55:47.710764-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Version', 'Version Identifier', 'Published Version']` missing | {}
+D [32m 2025-08-01T11:55:47.710795-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Qualified Name']` missing | {}
+D [32m 2025-08-01T11:55:47.710915-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Aliases', 'Alias']` missing | {}
+D [32m 2025-08-01T11:55:47.757481-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Term `Hospital Identifier` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.757565-0500 [0m | INFO | print_msg | 131 | DEBUG-ERROR->Element Hospital Identifier does not exist | {}
+D [32m 2025-08-01T11:55:47.801051-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Glossary `Test Glossary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.801135-0500 [0m | INFO | print_msg | 131 | DEBUG-ERROR->Required Glossary `Test Glossary` does not exist | {}
+D [32m 2025-08-01T11:55:47.801400-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Glossary Categories', 'Glossary Category', 'Category', 'Categories']` missing | {}
+D [32m 2025-08-01T11:55:47.801432-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['GUID', 'guid']` missing | {}
+D [32m 2025-08-01T11:55:47.801509-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Update Description']` missing | {}
+D [32m 2025-08-01T11:55:47.801534-0500 [0m | ERROR | print_msg | 125 | ERROR->Update request invalid, Term Hospital Identifier does not exist
+ | {}
+D [32m 2025-08-01T11:55:47.801979-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Dictionary  
+ | {}
+D [32m 2025-08-01T11:55:47.802041-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:47.848495-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Dictionary `Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.848567-0500 [0m | ERROR | proc_el_id | 651 | Element Clinical Trial Data Dictionary does not exist | {}
+D [32m 2025-08-01T11:55:47.848678-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`Data Dictionary` missing | {}
+D [32m 2025-08-01T11:55:47.848738-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:47.848791-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Clinical Trial Data Dictionary` does not exist
+ | {}
+D [32m 2025-08-01T11:55:47.848839-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Dictionary` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:47.850321-0500 [0m | ERROR | process_data_dict_upsert_command | 596 | Element `Clinical Trial Data Dictionary` does not exist! Updating result document with Create object_action
+
+___ | {}
+D [32m 2025-08-01T11:55:47.850434-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Dictionary  
+ | {}
+D [32m 2025-08-01T11:55:47.850471-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:47.896059-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Dictionary `Pharma Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.896143-0500 [0m | ERROR | proc_el_id | 651 | Element Pharma Data Dictionary does not exist | {}
+D [32m 2025-08-01T11:55:47.896235-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`Data Dictionary` missing | {}
+D [32m 2025-08-01T11:55:47.896299-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:47.896337-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Pharma Data Dictionary` does not exist
+ | {}
+D [32m 2025-08-01T11:55:47.896375-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Dictionary` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:47.897535-0500 [0m | ERROR | process_data_dict_upsert_command | 596 | Element `Pharma Data Dictionary` does not exist! Updating result document with Create object_action
+
+___ | {}
+D [32m 2025-08-01T11:55:47.897658-0500 [0m | ERROR | process_data_spec_upsert_command | 422 | An error has been caught in function 'process_data_spec_upsert_command', process 'MainProcess' (82216), thread 'MainThread' (8711298816): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m319[0m, in [35m<module>[0m
+    [1mprocess_markdown_file[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<Command process_markdown_file>[0m
+
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1442, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function Command.main at 0x106274fe0>
+           └ <Command process_markdown_file>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1363, in main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x10a7aea50>
+         │    └ <function Command.invoke at 0x106274cc0>
+         └ <Command process_markdown_file>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1226, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'input_file': 'data_test3.md', 'output_folder': 'friday', 'directive': 'process', 'server': 'qs-view-server', 'url': 'https:...
+           │   │      │    │           └ <click.core.Context object at 0x10a7aea50>
+           │   │      │    └ <function process_markdown_file at 0x10ae682c0>
+           │   │      └ <Command process_markdown_file>
+           │   └ <function Context.invoke at 0x10626fec0>
+           └ <click.core.Context object at 0x10a7aea50>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 794, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'input_file': 'data_test3.md', 'output_folder': 'friday', 'directive': 'process', 'server': 'qs-view-server', 'url': 'https:...
+           │         └ ()
+           └ <function process_markdown_file at 0x10ae682c0>
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m246[0m, in [35mprocess_markdown_file[0m
+    [1mprocess_current_block[0m[1m([0m[1mcurrent_block[0m[1m)[0m
+    [36m│                     └ [0m[36m[1m'#    Update Data Spec\n\n## Data Specification\n\nData Specification for the Teddy Bear Drop Clinical Trial\n\n## Descriptio...[0m
+    [36m└ [0m[36m[1m<function process_markdown_file.<locals>.process_current_block at 0x10aa85760>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m171[0m, in [35mprocess_current_block[0m
+    [1mresult[0m [35m[1m=[0m [1mprocess_data_spec_upsert_command[0m[1m([0m[1mclient[0m[1m,[0m [1mcurrent_block[0m[1m,[0m [1mdirective[0m[1m)[0m
+    [36m         │                                │       │              └ [0m[36m[1m'process'[0m
+    [36m         │                                │       └ [0m[36m[1m'#    Update Data Spec\n\n## Data Specification\n\nData Specification for the Teddy Bear Drop Clinical Trial\n\n## Descriptio...[0m
+    [36m         │                                └ [0m[36m[1m<pyegeria.egeria_tech_client.EgeriaTech object at 0x10a7aeba0>[0m
+    [36m         └ [0m[36m[1m<function process_data_spec_upsert_command at 0x10aade3e0>[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/md_processing/md_commands/[0m[32m[1mdata_designer_commands.py[0m", line [33m422[0m, in [35mprocess_data_spec_upsert_command[0m
+    [1mparsed_output[0m [35m[1m=[0m [1mparse_upsert_command[0m[1m([0m[1megeria_client[0m[1m,[0m [1mobject_type[0m[1m,[0m [1mobject_action[0m[1m,[0m [1mtxt[0m[1m,[0m [1mdirective[0m[1m)[0m
+    [36m                │                    │              │            │              │    └ [0m[36m[1m'process'[0m
+    [36m                │                    │              │            │              └ [0m[36m[1m'#    Update Data Spec\n\n## Data Specification\n\nData Specification for the Teddy Bear Drop Clinical Trial\n\n## Descriptio...[0m
+    [36m                │                    │              │            └ [0m[36m[1m'Update'[0m
+    [36m                │                    │              └ [0m[36m[1m'Data Spec'[0m
+    [36m                │                    └ [0m[36m[1m<pyegeria.egeria_tech_client.EgeriaTech object at 0x10a7aeba0>[0m
+    [36m                └ [0m[36m[1m<function parse_upsert_command at 0x10aefe020>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/md_processing/md_processing_utils/[0m[32m[1mcommon_md_proc_utils.py[0m", line [33m67[0m, in [35mparse_upsert_command[0m
+    [1mattributes[0m [35m[1m=[0m [1mcommand_spec[0m[35m[1m.[0m[1mget[0m[1m([0m[36m'Attributes'[0m[1m,[0m [1m[[0m[1m][0m[1m)[0m
+    [36m             └ [0m[36m[1mNone[0m
+
+[31m[1mAttributeError[0m:[1m 'NoneType' object has no attribute 'get'[0m
+D [32m 2025-08-01T11:55:47.901620-0500 [0m | ERROR | process_current_block | 171 | An error has been caught in function 'process_current_block', process 'MainProcess' (82216), thread 'MainThread' (8711298816): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m319[0m, in [35m<module>[0m
+    [1mprocess_markdown_file[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<Command process_markdown_file>[0m
+
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1442, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {}
+           │    │     └ ()
+           │    └ <function Command.main at 0x106274fe0>
+           └ <Command process_markdown_file>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1363, in main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x10a7aea50>
+         │    └ <function Command.invoke at 0x106274cc0>
+         └ <Command process_markdown_file>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 1226, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'input_file': 'data_test3.md', 'output_folder': 'friday', 'directive': 'process', 'server': 'qs-view-server', 'url': 'https:...
+           │   │      │    │           └ <click.core.Context object at 0x10a7aea50>
+           │   │      │    └ <function process_markdown_file at 0x10ae682c0>
+           │   │      └ <Command process_markdown_file>
+           │   └ <function Context.invoke at 0x10626fec0>
+           └ <click.core.Context object at 0x10a7aea50>
+  File "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/.venv/lib/python3.13/site-packages/click/core.py", line 794, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'input_file': 'data_test3.md', 'output_folder': 'friday', 'directive': 'process', 'server': 'qs-view-server', 'url': 'https:...
+           │         └ ()
+           └ <function process_markdown_file at 0x10ae682c0>
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m246[0m, in [35mprocess_markdown_file[0m
+    [1mprocess_current_block[0m[1m([0m[1mcurrent_block[0m[1m)[0m
+    [36m│                     └ [0m[36m[1m'#    Update Data Spec\n\n## Data Specification\n\nData Specification for the Teddy Bear Drop Clinical Trial\n\n## Descriptio...[0m
+    [36m└ [0m[36m[1m<function process_markdown_file.<locals>.process_current_block at 0x10aa85760>[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/commands/cat/[0m[32m[1mdr_egeria_md.py[0m", line [33m171[0m, in [35mprocess_current_block[0m
+    [1mresult[0m [35m[1m=[0m [1mprocess_data_spec_upsert_command[0m[1m([0m[1mclient[0m[1m,[0m [1mcurrent_block[0m[1m,[0m [1mdirective[0m[1m)[0m
+    [36m         │                                │       │              └ [0m[36m[1m'process'[0m
+    [36m         │                                │       └ [0m[36m[1m'#    Update Data Spec\n\n## Data Specification\n\nData Specification for the Teddy Bear Drop Clinical Trial\n\n## Descriptio...[0m
+    [36m         │                                └ [0m[36m[1m<pyegeria.egeria_tech_client.EgeriaTech object at 0x10a7aeba0>[0m
+    [36m         └ [0m[36m[1m<function process_data_spec_upsert_command at 0x10aade3e0>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-v5-3/egeria-python/md_processing/md_commands/[0m[32m[1mdata_designer_commands.py[0m", line [33m424[0m, in [35mprocess_data_spec_upsert_command[0m
+    [1mvalid[0m [35m[1m=[0m [1mparsed_output[0m[1m[[0m[36m'valid'[0m[1m][0m
+    [36m        └ [0m[36m[1mNone[0m
+
+[31m[1mTypeError[0m:[1m 'NoneType' object is not subscriptable[0m
+D [32m 2025-08-01T11:55:47.902962-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Specification  
+ | {}
+D [32m 2025-08-01T11:55:47.903027-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:47.949899-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Specification `Test Spec2` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.949979-0500 [0m | ERROR | proc_el_id | 651 | Element Test Spec2 does not exist | {}
+D [32m 2025-08-01T11:55:47.950156-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Collection Type'}` missing | {}
+D [32m 2025-08-01T11:55:47.950204-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`Data Specification` missing | {}
+D [32m 2025-08-01T11:55:47.950244-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:47.950285-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Test Spec2` does not exist
+ | {}
+D [32m 2025-08-01T11:55:47.950316-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Specification` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:47.951109-0500 [0m | ERROR | process_data_spec_upsert_command | 478 |  Element `Test Spec2` does not exist! Updating result document with Create object_action
+ | {}
+D [32m 2025-08-01T11:55:47.951207-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Dictionary  
+ | {}
+D [32m 2025-08-01T11:55:47.951251-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:47.996989-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Dictionary `DataDict::dw` not found in Egeria | {}
+D [32m 2025-08-01T11:55:47.997074-0500 [0m | ERROR | proc_el_id | 651 | Element dw does not exist | {}
+D [32m 2025-08-01T11:55:48.042320-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Dictionary `DataDict::dw` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.042392-0500 [0m | ERROR | proc_el_id | 651 | Element DataDict::dw does not exist | {}
+D [32m 2025-08-01T11:55:48.042469-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:48.042507-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `dw` does not exist
+ | {}
+D [32m 2025-08-01T11:55:48.042549-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Dictionary` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:48.043440-0500 [0m | ERROR | process_data_dict_upsert_command | 596 | Element `dw` does not exist! Updating result document with Create object_action
+
+___ | {}
+D [32m 2025-08-01T11:55:48.044150-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Structure  
+ | {}
+D [32m 2025-08-01T11:55:48.044221-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:48.092918-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Data Structure `TBDF-Incoming Weekly Measurement Data` with qualified name `DataStruct::TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:48.093012-0500 [0m | INFO | proc_el_id | 656 | Element TBDF-Incoming Weekly Measurement Data exists | {}
+D [32m 2025-08-01T11:55:48.137593-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Specification `Data Specification for the Teddy Bear Drop Clinical Trial` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.137703-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.137807-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Data Structure qualified name and guid in element_dictionary for `DataStruct::TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:48.137839-0500 [0m | INFO | proc_el_id | 656 | Element DataStruct::TBDF-Incoming Weekly Measurement Data exists | {}
+D [32m 2025-08-01T11:55:48.137895-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:48.137940-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Structure` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:48.140270-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Structure  
+ | {}
+D [32m 2025-08-01T11:55:48.140335-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:48.183704-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.183776-0500 [0m | ERROR | proc_el_id | 651 | Element WWT-Incoming Weekly Measurement Data does not exist | {}
+D [32m 2025-08-01T11:55:48.230531-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Specification `Test Spec2` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.230626-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.274860-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.274951-0500 [0m | ERROR | proc_el_id | 651 | Element DataStruct::WWT-Incoming Weekly Measurement Data does not exist | {}
+D [32m 2025-08-01T11:55:48.275052-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:48.275090-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `WWT-Incoming Weekly Measurement Data` does not exist
+ | {}
+D [32m 2025-08-01T11:55:48.275126-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Structure` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:48.277250-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Field  
+ | {}
+D [32m 2025-08-01T11:55:48.277347-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:48.323875-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::PatientId` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.323961-0500 [0m | ERROR | proc_el_id | 651 | Element PatientId does not exist | {}
+D [32m 2025-08-01T11:55:48.324177-0500 [0m | WARNING | proc_valid_value | 529 | Invalid value for attribute `{'Data Type'}` | {}
+D [32m 2025-08-01T11:55:48.324291-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Position'}` missing | {}
+D [32m 2025-08-01T11:55:48.324908-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found In Data Structure qualified name and guid in element_dictionary for `TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:48.367469-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.367544-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `['DataStruct::TBDF-Incoming Weekly Measurement Data']` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.367724-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Data Class` missing | {}
+D [32m 2025-08-01T11:55:48.416627-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Glossary Term `Patient Identifier` with qualified name `GlossaryTerm::ClinicalTrialTerminology::PatientId` | {}
+D [32m 2025-08-01T11:55:48.416774-0500 [0m | INFO | proc_ids | 769 | Element Glossary Term `GlossaryTerm::ClinicalTrialTerminology::PatientId` exists | {}
+D [32m 2025-08-01T11:55:48.417129-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Minimum Length', 'Min Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.417210-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.417284-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Precision'}` missing | {}
+D [32m 2025-08-01T11:55:48.417361-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'Ordered Values'}` missing | {}
+D [32m 2025-08-01T11:55:48.417482-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Units', 'gradians'}` missing | {}
+D [32m 2025-08-01T11:55:48.417602-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:48.417631-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:55:48.459833-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.504711-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `Pharma Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.505001-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.548634-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::PatientId` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.548870-0500 [0m | ERROR | proc_el_id | 651 | Element DataField::PatientId does not exist | {}
+D [32m 2025-08-01T11:55:48.549073-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:48.549181-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `PatientId` does not exist
+ | {}
+D [32m 2025-08-01T11:55:48.549283-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Field` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:48.554751-0500 [0m | ERROR | process_data_field_upsert_command | 966 | Invalid specification - please review
+
+___ | {}
+D [32m 2025-08-01T11:55:48.556435-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Field  
+ | {}
+D [32m 2025-08-01T11:55:48.556615-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:48.605063-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Data Field `HospitalId` with qualified name `DataField::HospitalId` | {}
+D [32m 2025-08-01T11:55:48.605147-0500 [0m | INFO | proc_el_id | 656 | Element HospitalId exists | {}
+D [32m 2025-08-01T11:55:48.605238-0500 [0m | WARNING | proc_valid_value | 529 | Invalid value for attribute `{'Data Type'}` | {}
+D [32m 2025-08-01T11:55:48.605334-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found In Data Structure qualified name and guid in element_dictionary for `DataStruct::TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:48.653340-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.653434-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `['DataStruct::TBDF-Incoming Weekly Measurement Data']` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.653512-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Data Class` missing | {}
+D [32m 2025-08-01T11:55:48.699180-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Glossary Term `Term::Hospital Identifier` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.699251-0500 [0m | ERROR | proc_ids | 763 | Optional attribute with label`Glossary Term` specified but doesn't exist | {}
+D [32m 2025-08-01T11:55:48.699342-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Minimum Length', 'Min Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.699380-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.699423-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Precision'}` missing | {}
+D [32m 2025-08-01T11:55:48.699462-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'Ordered Values'}` missing | {}
+D [32m 2025-08-01T11:55:48.699501-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Units', 'gradians'}` missing | {}
+D [32m 2025-08-01T11:55:48.699547-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:48.699581-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:55:48.743340-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.743415-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.785858-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Parent Data Field `DataField::PatientId` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.785932-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.786019-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Data Field qualified name and guid in element_dictionary for `DataField::HospitalId` | {}
+D [32m 2025-08-01T11:55:48.786042-0500 [0m | INFO | proc_el_id | 656 | Element DataField::HospitalId exists | {}
+D [32m 2025-08-01T11:55:48.786086-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:48.786123-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Field` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:48.787970-0500 [0m | ERROR | process_data_field_upsert_command | 966 | Invalid specification - please review
+
+___ | {}
+D [32m 2025-08-01T11:55:48.788847-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Field  
+ | {}
+D [32m 2025-08-01T11:55:48.788922-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:48.831294-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::PatientSN` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.831367-0500 [0m | ERROR | proc_el_id | 651 | Element PatientSN does not exist | {}
+D [32m 2025-08-01T11:55:48.831469-0500 [0m | WARNING | proc_valid_value | 529 | Invalid value for attribute `{'Data Type'}` | {}
+D [32m 2025-08-01T11:55:48.831561-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found In Data Structure qualified name and guid in element_dictionary for `DataStruct::TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:48.873448-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.873537-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `['DataStruct::TBDF-Incoming Weekly Measurement Data']` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.873610-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Data Class` missing | {}
+D [32m 2025-08-01T11:55:48.873673-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Glossary Term` missing | {}
+D [32m 2025-08-01T11:55:48.873759-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Minimum Length', 'Min Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.873809-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Length'}` missing | {}
+D [32m 2025-08-01T11:55:48.873849-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Precision'}` missing | {}
+D [32m 2025-08-01T11:55:48.873887-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'Ordered Values'}` missing | {}
+D [32m 2025-08-01T11:55:48.873914-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Units', 'gradians'}` missing | {}
+D [32m 2025-08-01T11:55:48.873940-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:48.873961-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:55:48.919255-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.919339-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:48.964051-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Parent Data Field `DataField::PatientId` not found in Egeria | {}
+D [32m 2025-08-01T11:55:48.964246-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.011483-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::PatientSN` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.011754-0500 [0m | ERROR | proc_el_id | 651 | Element DataField::PatientSN does not exist | {}
+D [32m 2025-08-01T11:55:49.012051-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.012225-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `PatientSN` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.012316-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Field` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:49.016408-0500 [0m | ERROR | process_data_field_upsert_command | 966 | Invalid specification - please review
+
+___ | {}
+D [32m 2025-08-01T11:55:49.018143-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Class  
+ | {}
+D [32m 2025-08-01T11:55:49.018281-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:49.065200-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `DataClass::Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.065282-0500 [0m | ERROR | proc_el_id | 651 | Element Date does not exist | {}
+D [32m 2025-08-01T11:55:49.065465-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Namespace'}` missing | {}
+D [32m 2025-08-01T11:55:49.065622-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Match Threshold'}` missing | {}
+D [32m 2025-08-01T11:55:49.065901-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'isCaseSensitive', 'Case Sensitive'}` missing | {}
+D [32m 2025-08-01T11:55:49.065936-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:49.066069-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Average Value', 'Average'}` missing | {}
+D [32m 2025-08-01T11:55:49.066155-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Value List'}` missing | {}
+D [32m 2025-08-01T11:55:49.066286-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range From', 'Value Range From'}` missing | {}
+D [32m 2025-08-01T11:55:49.066410-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range To', 'Value Range To'}` missing | {}
+D [32m 2025-08-01T11:55:49.066531-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Sample Values', 'Samples'}` missing | {}
+D [32m 2025-08-01T11:55:49.066605-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Data Patterns'}` missing | {}
+D [32m 2025-08-01T11:55:49.112349-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.112459-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.112941-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Specializes Data Class` missing | {}
+D [32m 2025-08-01T11:55:49.156366-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `DataClass::Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.156439-0500 [0m | ERROR | proc_el_id | 651 | Element DataClass::Date does not exist | {}
+D [32m 2025-08-01T11:55:49.156522-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.156562-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Date` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.156604-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Class` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:49.158916-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Class  
+ | {}
+D [32m 2025-08-01T11:55:49.158994-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:49.206639-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `DataClass::ISO-Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.206822-0500 [0m | ERROR | proc_el_id | 651 | Element ISO-Date does not exist | {}
+D [32m 2025-08-01T11:55:49.207042-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Namespace'}` missing | {}
+D [32m 2025-08-01T11:55:49.207147-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Match Threshold'}` missing | {}
+D [32m 2025-08-01T11:55:49.207342-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'isCaseSensitive', 'Case Sensitive'}` missing | {}
+D [32m 2025-08-01T11:55:49.207418-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:49.207488-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Average Value', 'Average'}` missing | {}
+D [32m 2025-08-01T11:55:49.207550-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Value List'}` missing | {}
+D [32m 2025-08-01T11:55:49.207621-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range From', 'Value Range From'}` missing | {}
+D [32m 2025-08-01T11:55:49.207691-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range To', 'Value Range To'}` missing | {}
+D [32m 2025-08-01T11:55:49.207758-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Sample Values', 'Samples'}` missing | {}
+D [32m 2025-08-01T11:55:49.207817-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Data Patterns'}` missing | {}
+D [32m 2025-08-01T11:55:49.251485-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.251666-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.296420-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Specializes Data Class `DataClass::Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.296624-0500 [0m | ERROR | proc_ids | 763 | Optional attribute with label`Specializes Data Class` specified but doesn't exist | {}
+D [32m 2025-08-01T11:55:49.340610-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `DataClass::ISO-Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.340818-0500 [0m | ERROR | proc_el_id | 651 | Element DataClass::ISO-Date does not exist | {}
+D [32m 2025-08-01T11:55:49.341058-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.341195-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `ISO-Date` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.341317-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Class` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:49.347435-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Field  
+ | {}
+D [32m 2025-08-01T11:55:49.347621-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:49.394636-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.394810-0500 [0m | ERROR | proc_el_id | 651 | Element Date does not exist | {}
+D [32m 2025-08-01T11:55:49.395254-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found In Data Structure qualified name and guid in element_dictionary for `TBDF-Incoming Weekly Measurement Data` | {}
+D [32m 2025-08-01T11:55:49.440595-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Structure `DataStruct::WWT-Incoming Weekly Measurement Data` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.440780-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `['DataStruct::TBDF-Incoming Weekly Measurement Data']` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.487407-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `DataClass::ISO-Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.487584-0500 [0m | ERROR | proc_ids | 763 | Optional attribute with label`Data Class` specified but doesn't exist | {}
+D [32m 2025-08-01T11:55:49.487747-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Glossary Term` missing | {}
+D [32m 2025-08-01T11:55:49.487885-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Minimum Length', 'Min Length'}` missing | {}
+D [32m 2025-08-01T11:55:49.487965-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Length'}` missing | {}
+D [32m 2025-08-01T11:55:49.488034-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Precision'}` missing | {}
+D [32m 2025-08-01T11:55:49.488098-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'Ordered Values'}` missing | {}
+D [32m 2025-08-01T11:55:49.488170-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Units', 'gradians'}` missing | {}
+D [32m 2025-08-01T11:55:49.488250-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:49.488313-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Version Identifier'}` missing | {}
+D [32m 2025-08-01T11:55:49.531698-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.531878-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.577006-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Field `DataField::Date` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.577191-0500 [0m | ERROR | proc_el_id | 651 | Element DataField::Date does not exist | {}
+D [32m 2025-08-01T11:55:49.577384-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.577609-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Date` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.577708-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Field` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:49.582022-0500 [0m | ERROR | process_data_field_upsert_command | 966 | Invalid specification - please review
+
+___ | {}
+D [32m 2025-08-01T11:55:49.583843-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Class  
+ | {}
+D [32m 2025-08-01T11:55:49.583993-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:49.630657-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `Address` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.630734-0500 [0m | ERROR | proc_el_id | 651 | Element Address does not exist | {}
+D [32m 2025-08-01T11:55:49.630832-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Namespace'}` missing | {}
+D [32m 2025-08-01T11:55:49.630872-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Match Threshold'}` missing | {}
+D [32m 2025-08-01T11:55:49.630923-0500 [0m | WARNING | proc_valid_value | 529 | Invalid value for attribute `{'Data Type'}` | {}
+D [32m 2025-08-01T11:55:49.630996-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'isCaseSensitive', 'Case Sensitive'}` missing | {}
+D [32m 2025-08-01T11:55:49.631032-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:49.631061-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Average Value', 'Average'}` missing | {}
+D [32m 2025-08-01T11:55:49.631085-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Value List'}` missing | {}
+D [32m 2025-08-01T11:55:49.631111-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range From', 'Value Range From'}` missing | {}
+D [32m 2025-08-01T11:55:49.631137-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range To', 'Value Range To'}` missing | {}
+D [32m 2025-08-01T11:55:49.631161-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Sample Values', 'Samples'}` missing | {}
+D [32m 2025-08-01T11:55:49.631182-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Data Patterns'}` missing | {}
+D [32m 2025-08-01T11:55:49.678567-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.678650-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.678742-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Specializes Data Class` missing | {}
+D [32m 2025-08-01T11:55:49.678781-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`Data Class` missing | {}
+D [32m 2025-08-01T11:55:49.678822-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.678859-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Address` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.678892-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Class` is not valid - see previous messages
+ | {}
+D [32m 2025-08-01T11:55:49.681162-0500 [0m | INFO | parse_upsert_command | 79 | 	Processing Update on a Data Class  
+ | {}
+D [32m 2025-08-01T11:55:49.681234-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `{'Version', 'Version Identifier', 'Published Version'}` missing | {}
+D [32m 2025-08-01T11:55:49.727269-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Data Class `Street Address` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.727337-0500 [0m | ERROR | proc_el_id | 651 | Element Street Address does not exist | {}
+D [32m 2025-08-01T11:55:49.727441-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Namespace'}` missing | {}
+D [32m 2025-08-01T11:55:49.727480-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Match Threshold'}` missing | {}
+D [32m 2025-08-01T11:55:49.727531-0500 [0m | WARNING | proc_valid_value | 529 | Invalid value for attribute `{'Data Type'}` | {}
+D [32m 2025-08-01T11:55:49.727593-0500 [0m | INFO | proc_bool_attribute | 569 | Optional attribute with labels: `{'isCaseSensitive', 'Case Sensitive'}` missing | {}
+D [32m 2025-08-01T11:55:49.727624-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Default Value', 'Default'}` missing | {}
+D [32m 2025-08-01T11:55:49.727655-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Average Value', 'Average'}` missing | {}
+D [32m 2025-08-01T11:55:49.727677-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Value List'}` missing | {}
+D [32m 2025-08-01T11:55:49.727703-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range From', 'Value Range From'}` missing | {}
+D [32m 2025-08-01T11:55:49.727741-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Range To', 'Value Range To'}` missing | {}
+D [32m 2025-08-01T11:55:49.727765-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Sample Values', 'Samples'}` missing | {}
+D [32m 2025-08-01T11:55:49.727786-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Data Patterns'}` missing | {}
+D [32m 2025-08-01T11:55:49.774040-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->In Data Dictionary `DataDict::Clinical Trial Data Dictionary` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.774207-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.817435-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Containing Data Class `DataClass::Address` not found in Egeria | {}
+D [32m 2025-08-01T11:55:49.817594-0500 [0m | ERROR | parse_upsert_command | 190 | A Reference Name in `[]` is specified but does not exist | {}
+D [32m 2025-08-01T11:55:49.817717-0500 [0m | INFO | proc_ids | 758 | Optional attribute with label`Specializes Data Class` missing | {}
+D [32m 2025-08-01T11:55:49.817793-0500 [0m | INFO | proc_el_id | 631 | Optional attribute with label`Data Class` missing | {}
+D [32m 2025-08-01T11:55:49.817870-0500 [0m | INFO | proc_simple_attribute | 455 | Optional attribute with labels: `{'Guid', 'guid', 'GUID'}` missing | {}
+D [32m 2025-08-01T11:55:49.817943-0500 [0m | ERROR | parse_upsert_command | 236 | Update request invalid, element `Street Address` does not exist
+ | {}
+D [32m 2025-08-01T11:55:49.818011-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Class` is not valid - see previous messages
+ | {}

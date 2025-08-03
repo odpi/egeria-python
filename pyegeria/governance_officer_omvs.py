@@ -1437,7 +1437,7 @@ class GovernanceOfficer(Client):
     async def _async_find_governance_definitions(self, search_filter: str = "*", starts_with: bool = True,
                                                  ends_with: bool = False, ignore_case: bool = False,
                                                  start_from: int = 0, page_size: int = 0, body: dict = None,
-                                                 output_format: str = 'JSON') -> list[dict] | str:
+                                                 output_format: str = 'JSON', output_format_set: dict = None) -> list[dict] | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
             Async version.
 
@@ -1516,7 +1516,7 @@ class GovernanceOfficer(Client):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_governance_definition_output(element, search_filter, output_format)
+            return self.generate_governance_definition_output(element, search_filter, output_format, output_format_set)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def find_governance_definitions(self, search_filter: str = "*", starts_with: bool = True, ends_with: bool = False,

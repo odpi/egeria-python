@@ -80,37 +80,37 @@ app_config = app_settings["Environment"]
 )
 @click.option(
     "--url",
-    default=app_config["Egeria Platform URL"],
+    default=app_config.egeria_platform_url,
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
     "--integration_daemon",
-    default=app_config["Egeria Integration Daemon"],
+    default=app_config.egeria_integration_daemon,
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default=app_config['Egeria Integration Daemon URL'],
+    default=app_config.egeria_integration_daemon_url,
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default=app_config['Egeria View Server'],
+    default=app_config.egeria_view_server,
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default=app_config['Egeria View Server URL'],
+    default=app_config.egeria_view_server_url,
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default=app_config['Egeria Engine Host'],
+    default=app_config.egeria_engine_host,
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default=app_config['Egeria Engine Host URL'],
+    default=app_config.egeria_engine_host_url,
     help="URL of Egeria engine host platform to connect to",
 )
 
@@ -129,40 +129,40 @@ app_config = app_settings["Environment"]
     "--jupyter",
     is_flag=True,
     type=bool,
-    default=app_config['Egeria Jupyter'],
+    default=app_config.egeria_jupyter,
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=app_config['Console Width'],
+    default=app_config.console__width,
     type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
     "--home_glossary_guid",
-    default=app_settings['User Profile']['Egeria Home Glossary Name'],
+    default=app_settings.User_Profile.home_glossary_guid,
     help="Glossary name to use as the home glossary",
 )
 @click.option(
     "--glossary_path",
-    default=app_config['Egeria Glossary Path'],
+    default=app_config.egeria_platform_glossary_path,
     help="Path to glossary import/export files",
 )
 
 @click.option(
     "--root_path",
-    default=app_config['Pyegeria Root'],
+    default=app_config.pyegeria_root,
     help="Root path to use for file operations",
 )
 
 @click.option(
     "--inbox_path",
-    default=app_config['Dr.Egeria Inbox'],
+    default=app_config.dr_egeria_inbox,
     help="Path to inbox files",
 )
 @click.option(
     "--outbox_path",
-    default=app_config['Dr.Egeria Outbox'],
+    default=app_config.dr_egeria_outbox,
     help="Path to outbox files",
 )
 

@@ -11,7 +11,7 @@ from typing import Dict, Union, List, Optional
 
 from loguru import logger
 
-from pyegeria._output_formats import select_output_format_set
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED, NO_MEMBERS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
@@ -150,8 +150,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, None, output_format,
-                                                   output_format_set=output_format_set)
+            return self._generate_collection_output(elements, None, None, output_format,
+                                                    output_format_set=output_format_set)
         return elements
 
 
@@ -302,9 +302,9 @@ class CollectionManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, classification_name,
-                                                   output_format, output_format_set)
+            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_collection_output(elements, None, classification_name,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -549,8 +549,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, filter, classification_name,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, filter, classification_name,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -687,8 +687,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, filter, collection_type,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, filter, collection_type,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -818,8 +818,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, collection_type,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, None, collection_type,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -952,8 +952,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.debug(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, None,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, None, None,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -1091,8 +1091,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, None,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, None, None,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -1218,8 +1218,8 @@ class CollectionManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self.generate_collection_output(elements, None, None,
-                                                   output_format, output_format_set)
+            return self._generate_collection_output(elements, None, None,
+                                                    output_format, output_format_set)
         return elements
 
 
@@ -6461,9 +6461,9 @@ class CollectionManager(Client2):
         return props
 
 
-    def generate_collection_output(self, elements: Union[Dict, List[Dict]], filter: Optional[str],
-                                   classification_name: Optional[str], output_format: str = "DICT",
-                                   output_format_set: Optional[dict] | str = None) -> Union[str, List[Dict]]:
+    def _generate_collection_output(self, elements: dict|list[dict], filter: Optional[str],
+                                    classification_name: Optional[str], output_format: str = "DICT",
+                                    output_format_set: dict | str = None) -> str| list[dict]:
         """ Generate output for collections in the specified format.
 
             Args:
@@ -6484,15 +6484,16 @@ class CollectionManager(Client2):
         # First see if the user has specified an output_format_set - either a label or a dict
         if output_format_set:
             if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(entity_type, output_format)
+                output_formats = select_output_format_set(output_format_set, output_format)
             if isinstance(output_format_set, dict):
-                output_formats = output_format_set
-
+                output_formats = get_output_format_type_match(output_format_set, output_format)
         # If no output_format was set, then use the classification_name to lookup the output format
         elif classification_name:
             output_formats = select_output_format_set(classification_name, output_format)
         else:
-            output_formats = None
+            # fallback to collections or entity type
+            output_formats = select_output_format_set(entity_type,output_format)
+
         logger.trace(f"Executing generate_collection_output for {entity_type}: {output_formats}")
         return generate_output(
             elements,

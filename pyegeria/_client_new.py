@@ -375,8 +375,11 @@ class Client2:
         """Make a request to the Egeria API."""
         try:
             loop = asyncio.get_running_loop()
-            coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
-            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+            if loop.is_running():
+                coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
+                return asyncio.run_coroutine_threadsafe(coro, loop).result()
+            else:
+                return loop.run_until_complete(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
         except RuntimeError:
             # No running loop exists; run the coroutine
             return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
@@ -410,8 +413,38 @@ class Client2:
         response: Response
 
         try:
+            if request_type == "GET":
+                response = await self.session.get(
+                    endpoint, params=payload, headers=self.headers, timeout=time_out
+                )
 
-            response = await self.session.request(request_type, endpoint, headers=self.headers, json=payload, timeout=time_out)
+            elif request_type == "POST":
+                if payload is None:
+                    response = await self.session.post(
+                        endpoint, headers=self.headers, timeout=time_out
+                    )
+                elif type(payload) is str:
+                    response = await self.session.post(
+                        endpoint,
+                        headers=self.text_headers,
+                        data=payload,
+                        timeout=time_out,
+                    )
+                else:
+                    response = await self.session.post(
+                        endpoint, headers=self.headers, json=payload, timeout=time_out
+                    )
+
+            elif request_type == "POST-DATA":
+                if True:
+                    response = await self.session.post(
+                        endpoint, headers=self.headers, data=payload, timeout=time_out
+                    )
+            elif request_type == "DELETE":
+                if True:
+                    response = await self.session.delete(
+                        endpoint, headers=self.headers, timeout=time_out
+                    )
             response.raise_for_status()
             
 

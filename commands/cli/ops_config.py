@@ -17,7 +17,7 @@ class Config(object):
         timeout: int,
         jupyter: bool,
         width: int,
-        home_glossary_guid: str,
+        home_glossary_name: str,
         glossary_path: str,
         root_path: str,
         inbox_path: str,
@@ -39,7 +39,7 @@ class Config(object):
         self.width = width
         self.server = server
         self.url = url
-        self.home_glossary_guid = home_glossary_guid
+        self.home_glossary_name = home_glossary_name
         self.glossary_path = glossary_path
         self.root_path = root_path
         self.inbox_path = inbox_path

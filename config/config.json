@@ -5,7 +5,7 @@
     "timeout_seconds": 30
   },
   "Environment": {
-    "Console Width": 150,
+    "Console Width": 170,
     "Dr.Egeria Inbox": "md_processing/dr-egeria-inbox",
     "Dr.Egeria Outbox": "md_processing/dr-egeria-outbox",
     "Egeria Engine Host": "qs-engine-host",
@@ -20,24 +20,25 @@
     "Egeria Platform URL": "https://localhost:9443",
     "Egeria View Server": "qs-view-server2",
     "Egeria View Server URL": "https://localhost:9443",
-    "Pyegeria Root": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python"
+    "Pyegeria Root": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python",
+    "Pyegeria Config Directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/config",
+    "Pyegeria Publishing Root": "http://localhost:8085/dr-egeria-outbox",
+    "Pyegeria User Format Sets Dir": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python"
   },
-  "feature_x_enabled": false,
+  "feature_x_enabled": "foo",
   "Logging": {
     "console_filter_levels": [
-      "ERROR", "INFO", "WARNING"
+      "ERROR",  "WARNING", "INFO"
     ],
     "console_logging_enabled": [
-      "tests", "Commands",
-      "_client_new",
-      "_exceptions_new"
+
     ],
     "console_logging_level": "INFO",
     "enable_logging": true,
     "file_logging_level": "INFO",
     "log_directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/logs",
-    "logging_console_format": " <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level> -{extra}",
-    "logging_file_format": " {time:YYYY-MM-DD HH:mm:ss} | {level} | {function}:{line} - {message }-{extra}"
+    "logging_console_format": "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    "logging_file_format": "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}-{function}:{line}-{message}-{extra}"
   },
   "User Profile": {
     "Egeria Home Collection": "MyHome",

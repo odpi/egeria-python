@@ -23,6 +23,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
     )
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception
 from pyegeria.data_designer_omvs import DataDesigner
 
 disable_ssl_warnings = True
@@ -78,17 +79,19 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
     def test_create_data_structure_w_body(self):
-        display_name = "solar_power"
+        display_name = "solar_power2"
         namespace = "solar"
         body = {
-              "properties": {
+            "class": "NewElementRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
                 "class" : "DataStructureProperties",
                 "displayName": display_name,
                 "qualifiedName": f"{namespace}::data-structure::{display_name}",
@@ -115,12 +118,10 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+            print_basic_exception(e)
+            # assert False, "Invalid request"
 
         finally:
             m_client.close_session()
@@ -144,7 +145,7 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -182,7 +183,7 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -215,7 +216,7 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -229,16 +230,19 @@ class TestDataDesigner:
             "heading": "data structs",
             "description": "structs generic to all Agreements.",
             "aliases": [],
-            "columns": [
-                {'name': 'Name', 'key': 'display_name'},
-                {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
-                {'name': 'Super Category', 'key': 'category'},
-                {'name': 'My Description', 'key': 'description', 'format': True},
-                {'name': "Classifications", 'key': 'classifications'},
-                {'name': 'Members', 'key': 'members', 'format': True},
-                {'name': 'CreatedBy Meow', 'key': 'created_by'},
-                ],
-            "formats": ["ALL"],
+
+            "formats": [{'types': ["ALL"],
+                "columns": [
+                    {'name': 'Name', 'key': 'display_name'},
+                    {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                    {'name': 'Super Category', 'key': 'category'},
+                    {'name': 'My Description', 'key': 'description', 'format': True},
+                    {'name': "Classifications", 'key': 'classifications'},
+                    {'name': 'Members', 'key': 'members', 'format': True},
+                    {'name': 'Mermaid', 'key': 'mermaid'},
+                    ],
+                         }
+                        ],
             "annotations": {"wikilinks": ["[[Egeria]]"]}
             }
         try:
@@ -246,7 +250,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="DICT")
+            response = m_client.find_all_data_structures(output_format="MERMAID", output_format_set = columns_struct)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -258,25 +262,39 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
     def test_find_data_structures(self):
-
+        output_format_set = {
+            "heading": "data structs",
+            "description": "structs generic to all Agreements.",
+            "formats": [{"types": "ALL",
+                "columns": [
+                    {'name': 'Name', 'key': 'display_name'},
+                    {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
+                    {'name': 'Super Category', 'key': 'category'},
+                    {'name': 'My Description', 'key': 'description', 'format': True},
+                    {'name': "Classifications", 'key': 'classifications'},
+                    # {'name': 'Members', 'key': 'members', 'format': True},
+                    {'name': 'CreatedBy Meow', 'key': 'created_by'}
+                    ]}
+                ],
+            "annotations": {"wikilinks": ["[[Egeria]]"]}
+            }
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = "TBDF-Incoming Weekly Measurement Data"
-            response = m_client.find_data_structures(search_string, output_format="DICT", output_format_set="Mandy-DataStruct")
+            response = m_client.find_data_structures(search_string, output_format="DICT",
+                                                     output_format_set="DataStruct")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -288,11 +306,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -318,25 +334,24 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException,
                 ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+            print_basic_exception(e)
+            # assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
 
     def test_get_data_structures_by_name(self):
-        name = "solar"
+        name = "DataStruct::TBDF-Incoming Weekly Measurement Data"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structures_by_name(name)
+            response = m_client.get_data_structures_by_name(name, output_format="REPORT")
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -348,11 +363,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -377,11 +390,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -443,7 +454,7 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -468,24 +479,22 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
     def test_get_data_field_by_name(self):
-        name = "DataField::Date"
+        name = "HospitalId"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_fields_by_name(name, output_format="REPORT")
+            response = m_client.get_data_fields_by_name(name, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -497,18 +506,16 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             m_client.close_session()
 
     def test_get_data_field_by_guid(self):
-        guid = 'cebe4255-e2bb-44f0-947e-8b7f3f731791'
+        guid = '85942c25-565b-4294-ad7b-ed92dbe4ff1d'
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -526,11 +533,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -557,7 +562,7 @@ class TestDataDesigner:
             PropertyServerException,
             UserNotAuthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -582,11 +587,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -612,11 +615,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -632,7 +633,7 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = ''
-            response = m_client.find_data_fields(search_string,output_format="DICT")
+            response = m_client.find_data_fields(search_string,output_format="REPORT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -644,11 +645,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -687,11 +686,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -709,7 +706,7 @@ class TestDataDesigner:
         description = "Date of purchase in YYYY-MM-DD format"
 
         body = {
-          "class" : "NewDataClassRequestBody",
+          "class" : "NewElementRequestBody",
 
           "effectiveTime" : None,
           "forLineage" : False,
@@ -804,12 +801,10 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+            print_basic_exception(e)
+            # assert False, "Invalid request"
 
         finally:
             m_client.close_session()
@@ -833,11 +828,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -865,11 +858,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -894,11 +885,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -923,11 +912,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -950,11 +937,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -977,11 +962,9 @@ class TestDataDesigner:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

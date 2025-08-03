@@ -137,14 +137,22 @@ from pyegeria.load_config import get_app_config
 app_settings = get_app_config()
 
 def console_log_filter(record):
-    return (record["module"] in app_settings["Logging"]["console_logging_enabled"]
+    if len(record["module"]) > 0:
+        module_ok = True
+    else:
+        module_ok = record["module"] in app_settings.logging.console_logging_enabled
+
+
+    return (module_ok
             and
-            record["level"].name in app_settings["Logging"]["console_filter_levels"]
+            record["level"].name in app_settings.Logging.console_filter_levels
             )
 
+def init_logging(log_init:bool= False):
+    if not log_init:
+       logger.disable("pyegeria")
 
-
-def config_logging():
+def config_logging(verbose: bool=False):
     """
     Configures logging for the application using Loguru.
 
@@ -160,16 +168,14 @@ def config_logging():
 
 
     # Get the directory for log files from the environment variable
-    log_app_settings = app_settings["Logging"]
-    log_directory = log_app_settings.get("log_directory","/Users/dwolfson/localGit/egeria-v-3/egeria-python/logs")
-    console_logging_level = log_app_settings.get("console_logging_level","SUCCESS")
-    logging_console_format = log_app_settings.get("console_format","{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line}"
-                                                               " - {message} - {extra}")
-    file_logging_level = log_app_settings.get("file_logging_level", "INFO")
-    logging_file_format = log_app_settings.get("file_format", "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{line}"
-                                                          " - {message} - {extra}")
-    console_logging_enabled = log_app_settings.get("console_logging_enabled", "tests")
-    enable_logging = log_app_settings.get("enable_logging", True)
+    log_app_settings = app_settings.Logging
+    log_directory = log_app_settings.log_directory
+    console_logging_level = log_app_settings.console_logging_level
+    logging_console_format = log_app_settings.logging_console_format
+    file_logging_level = log_app_settings.file_logging_level
+    logging_file_format = log_app_settings.logging_file_format
+    console_logging_enabled = log_app_settings.console_logging_enabled
+    enable_logging = log_app_settings.enable_logging
 
     # Ensure the directory exists
     os.makedirs(log_directory, exist_ok=True)
@@ -183,7 +189,7 @@ def config_logging():
     logger.add(log_file_path,
                level=file_logging_level,
                format=logging_file_format,
-               filter = "",
+               # filter = "",
                retention="7 days",  # Keep logs for 7 days
                rotation="10 MB", # rotate logs once they are 10mb
                compression="zip")
@@ -196,8 +202,8 @@ def config_logging():
     )
 
     if enable_logging:
-        logger.enable("")
-    logger.info("Application started with Loguru configured.")
+        logger.enable("pyegeria")
+    logger.trace("Application started with Loguru configured.")
 
 
 

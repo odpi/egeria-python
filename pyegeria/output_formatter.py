@@ -35,6 +35,8 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
     # Get attributes from properties
     properties = element['properties']
     display_name = properties.get("name", "") or ""
+    if display_name == "":
+        display_name = properties.get("displayName","")
     description = properties.get("description", "") or ""
     qualified_name = properties.get("qualifiedName", "") or ""
     category = properties.get("category", "") or ""
