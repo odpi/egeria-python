@@ -10,12 +10,12 @@ import asyncio
 
 from requests import Response
 from pyegeria.utils import body_slimmer
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria import TEMPLATE_GUIDS, max_paging_size,default_time_out
-from pyegeria._exceptions import InvalidParameterException
+from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class RuntimeManager(Client):
+class RuntimeManager(Client2):
     """
     Client to issue Runtime status requests.
 
@@ -48,7 +48,7 @@ class RuntimeManager(Client):
     ):
         self.view_server = view_server
         self.time_out = time_out
-        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.runtime_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
         # self.platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"  # this is platform @ 9443 from the core content archive
         self.platform_guid = None
@@ -87,7 +87,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -128,7 +128,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -164,7 +164,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -202,7 +202,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -238,7 +238,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -275,7 +275,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -323,13 +323,13 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
         """
         server_guid = self.__get_guid__(
-            server_guid, display_name, "name", qualified_name, tech_type="Engine Host"
+            server_guid, display_name, "displayName", qualified_name, tech_type="Engine Host"
         )
         if gov_engine_name is None:
             url = (
@@ -377,7 +377,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -422,7 +422,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -469,7 +469,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -520,7 +520,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -582,7 +582,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -633,7 +633,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -686,7 +686,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -732,7 +732,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -785,7 +785,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -827,7 +827,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -880,7 +880,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -924,7 +924,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -975,7 +975,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1020,7 +1020,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1028,7 +1028,7 @@ class RuntimeManager(Client):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "name",
+            "displayName",
             qualified_name,
         )
         url = (
@@ -1068,7 +1068,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1112,7 +1112,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1165,7 +1165,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1213,7 +1213,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1265,7 +1265,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1304,7 +1304,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1337,7 +1337,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1376,13 +1376,13 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
         """
         server_guid = self.__get_guid__(
-            server_guid, display_name, "name", qualified_name
+            server_guid, display_name, "displayName", qualified_name
         )
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
@@ -1416,7 +1416,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1448,7 +1448,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1481,7 +1481,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1520,7 +1520,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
         """
@@ -1561,7 +1561,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1612,7 +1612,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1627,9 +1627,10 @@ class RuntimeManager(Client):
         )
 
         if effective_time is not None:
-            body = {"filter": filter, "effectiveTime": effective_time}
+            body = {
+                "searchString": filter, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"searchString": filter}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")
@@ -1663,7 +1664,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1706,7 +1707,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1757,7 +1758,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1789,12 +1790,12 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
         """
-        platform_guid = self.__get_guid__(platform_guid, platform_name, "name")
+        platform_guid = self.__get_guid__(platform_guid, platform_name, "displayName")
         url = f"{self.runtime_command_root}/platforms/{platform_guid}/report"
 
         response = await self._async_make_request("GET", url)
@@ -1819,7 +1820,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1884,7 +1885,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1916,7 +1917,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1954,7 +1955,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -1993,7 +1994,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2005,9 +2006,11 @@ class RuntimeManager(Client):
         )
 
         if effective_time is None:
-            body = {"filter": filter}
+            body = {"filter": filter, "limitResultsByStatus": ["PROPOSED"]}
         else:
-            body = {"filter": filter, "effective_time": effective_time}
+            body = {"filter": filter,
+                    "effective_time": effective_time,
+                    "limitResultsByStatus": []}
         response = await self._async_make_request("POST", url, body)
 
         return response.json().get("elements", "No servers found")
@@ -2032,7 +2035,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2073,7 +2076,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2123,7 +2126,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2166,7 +2169,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2216,7 +2219,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
@@ -2248,13 +2251,13 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "name", tech_type="Integration Daemon"
+            server_guid, server_name, "displayName", tech_type="Integration Daemon"
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
@@ -2281,7 +2284,7 @@ class RuntimeManager(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
         PropertyServerException
         UserNotAuthorizedException
 

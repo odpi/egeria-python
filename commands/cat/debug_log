@@ -538,3 +538,13 @@ D [32m 2025-08-01T11:55:49.817943-0500 [0m | ERROR | parse_upsert_command | 23
  | {}
 D [32m 2025-08-01T11:55:49.818011-0500 [0m | ERROR | parse_upsert_command | 240 | Request is invalid, `Update Data Class` is not valid - see previous messages
  | {}
+D [32m 2025-08-03T16:05:33.497921-0500 [0m | INFO | process_markdown_file | 90 | 
+
+====================================================
+
+ | {}
+D [32m 2025-08-03T16:05:33.498408-0500 [0m | INFO | process_markdown_file | 91 | Processing Markdown File: ../../md_processing/dr_egeria_inbox/glossary_list.md | {}
+D [32m 2025-08-03T16:05:33.500280-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Search String', 'Filter']` missing | {}
+D [32m 2025-08-03T16:05:33.548949-0500 [0m | INFO | print_msg | 131 | DEBUG-INFO->Found Glossary `Egeria-Markdown` with qualified name `Glossary::Egeria-Markdown` | {}
+D [32m 2025-08-03T16:05:33.549047-0500 [0m | INFO | print_msg | 131 | INFO-Found glossary `Egeria-Markdown` with GUID 962c8c82-1148-49ec-b004-403900de31b5 | {}
+D [32m 2025-08-03T16:05:33.549216-0500 [0m | INFO | print_msg | 131 | INFO-Optional attribute with labels `['Output', 'Output Format']` missing | {}

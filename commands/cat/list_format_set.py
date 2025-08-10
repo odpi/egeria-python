@@ -51,9 +51,11 @@ import pydevd_pycharm
 from pyegeria import (
     EgeriaTech,
     NO_ELEMENTS_FOUND,
-    config_logging,
-    get_app_config
+    # config_logging,
+    # get_app_config
 )
+from pyegeria.load_config import get_app_config
+from pyegeria.logging_configuration import config_logging
 from pyegeria._output_formats import select_output_format_set, get_output_format_set_heading, \
     get_output_format_set_description
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response

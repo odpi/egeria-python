@@ -12,7 +12,7 @@ import json
 
 import httpx
 
-from pyegeria._client import Client, enable_ssl_check
+from pyegeria._client_new import Client2, enable_ssl_check
 from pyegeria._exceptions import (
     InvalidParameterException,
     OMAGCommonErrorCode,
@@ -23,7 +23,7 @@ from pyegeria._exceptions import (
 from pyegeria._validators import validate_user_id
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class Platform(Client):
+class Platform(Client2):
     """
     Client to operate Egeria Platforms - inherits from Server Ops
 
@@ -49,7 +49,7 @@ class Platform(Client):
             user_id
         )  # add this check since we aren't using bearer tokens in this class
 
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        Client2.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.admin_command_root = (
             self.platform_url
             + "/open-metadata/platform-services/users/"

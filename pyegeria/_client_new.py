@@ -12,29 +12,31 @@ import inspect
 import json
 import os
 import re
-from datetime import datetime
+from collections.abc import Callable
+from typing import Any
 
 import httpcore
 import httpx
+from httpx import AsyncClient, Response, HTTPStatusError
 # from venv import logger
 from loguru import logger
+from pydantic import TypeAdapter
 
-from httpx import AsyncClient, Response, HTTPStatusError
-
-from pyegeria.utils import body_slimmer
 from pyegeria._exceptions_new import (
-    PyegeriaException, PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
-    PyegeriaNotFoundException, PyegeriaUnknownException, PyegeriaErrorCode,
-    PyegeriaUnauthorizedException, PyegeriaClientException
+    PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
+    PyegeriaUnknownException, PyegeriaClientException
     )
 from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria._validators import (
-    is_json,
     validate_name,
     validate_server_name,
     validate_url,
     validate_user_id,
-)
+    )
+from pyegeria.models import SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody, \
+    TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody, \
+    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody
+from pyegeria.utils import body_slimmer
 
 ...
 
@@ -80,16 +82,16 @@ class Client2:
     json_header = {"Content-Type": "application/json"}
 
     def __init__(
-        self,
-        server_name: str,
-        platform_url: str,
-        user_id: str = None,
-        user_pwd: str = None,
-        token: str = None,
-        token_src: str = None,
-        api_key: str = None,
-        page_size: int = max_paging_size,
-    ):
+            self,
+            server_name: str,
+            platform_url: str,
+            user_id: str = None,
+            user_pwd: str = None,
+            token: str = None,
+            token_src: str = None,
+            api_key: str = None,
+            page_size: int = max_paging_size,
+            ):
         self.server_name = validate_server_name(server_name)
         self.platform_url = validate_url(platform_url)
         self.user_id = user_id
@@ -117,10 +119,10 @@ class Client2:
 
         self.headers = {
             "Content-Type": "application/json",
-        }
+            }
         self.text_headers = {
             "Content-Type": "text/plain",
-        }
+            }
         if self.api_key is not None:
             self.headers["X-Api-Key"] = self.api_key
             self.text_headers["X-Api-Key"] = self.api_key
@@ -137,8 +139,16 @@ class Client2:
                 self.server_name = server_name
             self.session = AsyncClient(verify=enable_ssl_check)
 
-
-
+        self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
+        self._filter_request_adapter = TypeAdapter(FilterRequestBody)
+        self._get_request_adapter = TypeAdapter(GetRequestBody)
+        self._new_element_request_adapter = TypeAdapter(NewElementRequestBody)
+        self._update_element_request_adapter = TypeAdapter(UpdateElementRequestBody)
+        self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
+        self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
+        self._delete_request_adapter = TypeAdapter(DeleteRequestBody)
+        self._template_request_adapter = TypeAdapter(TemplateRequestBody)
+        self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
 
     def __enter__(self):
         return self
@@ -167,8 +177,8 @@ class Client2:
         return
 
     async def _async_create_egeria_bearer_token(
-        self, user_id: str = None, password: str = None
-    ) -> str:
+            self, user_id: str = None, password: str = None
+            ) -> str:
         """Create and set an Egeria Bearer Token for the user. Async version
         Parameters
         ----------
@@ -224,8 +234,8 @@ class Client2:
             raise PyegeriaInvalidParameterException(None, None, additional_info)
 
     def create_egeria_bearer_token(
-        self, user_id: str = None, password: str = None
-    ) -> str:
+            self, user_id: str = None, password: str = None
+            ) -> str:
         """Create and set an Egeria Bearer Token for the user
         Parameters
         ----------
@@ -257,7 +267,7 @@ class Client2:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_egeria_bearer_token(user_id, password)
-        )
+            )
         return response
 
     async def _async_refresh_egeria_bearer_token(self) -> str:
@@ -278,18 +288,17 @@ class Client2:
             InvalidParameterException: If the token source is invalid.
         """
         if (
-            (self.token_src == "Egeria")
-            and validate_user_id(self.user_id)
-            and validate_name(self.user_pwd)
+                (self.token_src == "Egeria")
+                and validate_user_id(self.user_id)
+                and validate_name(self.user_pwd)
         ):
             token = await self._async_create_egeria_bearer_token(
                 self.user_id, self.user_pwd
-            )
+                )
             return token
         else:
             additional_info = {"reason": "Invalid token source"}
             raise PyegeriaInvalidParameterException(None, None, additional_info)
-
 
     def refresh_egeria_bearer_token(self) -> None:
         """
@@ -362,16 +371,15 @@ class Client2:
         else:
             logger.info(f"Got response from {origin_url}\n status_code: {response.status_code}")
 
-
     # @logger.catch
     def make_request(
-        self,
-        request_type: str,
-        endpoint: str,
-        payload: str | dict = None,
-        time_out: int = 30,
-        is_json: bool = True,
-        ) -> Response | str:
+            self,
+            request_type: str,
+            endpoint: str,
+            payload: str | dict = None,
+            time_out: int = 30,
+            is_json: bool = True,
+            ) -> Response | str:
         """Make a request to the Egeria API."""
         try:
             loop = asyncio.get_running_loop()
@@ -379,19 +387,20 @@ class Client2:
                 coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             else:
-                return loop.run_until_complete(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
+                return loop.run_until_complete(
+                    self._async_make_request(request_type, endpoint, payload, time_out, is_json))
         except RuntimeError:
             # No running loop exists; run the coroutine
             return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
 
     async def _async_make_request(
-        self,
-        request_type: str,
-        endpoint: str,
-        payload: str | dict = None,
-        time_out: int = 30,
-        is_json: bool = True,
-    ) -> Response | str:
+            self,
+            request_type: str,
+            endpoint: str,
+            payload: str | dict = None,
+            time_out: int = 30,
+            is_json: bool = True,
+            ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
         is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
@@ -416,37 +425,46 @@ class Client2:
             if request_type == "GET":
                 response = await self.session.get(
                     endpoint, params=payload, headers=self.headers, timeout=time_out
-                )
+                    )
 
             elif request_type == "POST":
                 if payload is None:
                     response = await self.session.post(
                         endpoint, headers=self.headers, timeout=time_out
-                    )
+                        )
+                elif type(payload) is dict:
+                    response = await self.session.post(
+                        endpoint, json=payload, headers=self.headers, timeout=time_out
+                        )
                 elif type(payload) is str:
+                    # if is_json:
+                    #     response = await self.session.post(
+                    #         endpoint, json=payload, headers=self.headers, timeout=time_out
+                    #         )
+                    # else:
                     response = await self.session.post(
                         endpoint,
-                        headers=self.text_headers,
-                        data=payload,
+                        headers=self.headers,
+                        content=payload,
                         timeout=time_out,
-                    )
+                        )
                 else:
-                    response = await self.session.post(
-                        endpoint, headers=self.headers, json=payload, timeout=time_out
-                    )
+                    # response = await self.session.post(
+                    #     endpoint, headers=self.headers, json=payload, timeout=time_out)
+                    raise TypeError(f"Invalid payload type {type(payload)}")
+
 
             elif request_type == "POST-DATA":
                 if True:
                     response = await self.session.post(
                         endpoint, headers=self.headers, data=payload, timeout=time_out
-                    )
+                        )
             elif request_type == "DELETE":
                 if True:
                     response = await self.session.delete(
                         endpoint, headers=self.headers, timeout=time_out
-                    )
+                        )
             response.raise_for_status()
-            
 
             status_code = response.status_code
 
@@ -496,10 +514,8 @@ class Client2:
                              exc_info=True)
                 context['caught_exception'] = e
                 raise PyegeriaInvalidParameterException(
-                    response, context,e = e
+                    response, context, e=e
                     )
-
-
 
     def build_global_guid_lists(self) -> None:
         global template_guids, integration_guids
@@ -520,7 +536,8 @@ class Client2:
                 # get tech type details
                 display_name = tech_type["name"]
 
-                url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/automated-curation/technology-types/by-name"
+                url = (f"{self.platform_url}/servers/"
+                       f"{self.server_name}/api/open-metadata/automated-curation/technology-types/by-name")
                 body = {"filter": display_name}
                 response = self.make_request("POST", url, body)
                 details = response.json().get("element", "no type found")
@@ -547,16 +564,17 @@ class Client2:
                         resource_type = resource["relatedElement"]["type"]["typeName"]
                         if resource_type == "IntegrationConnector":
                             integration_guids[display_name] = resource_guid
-                            # print(f"Added {display_name} integration connector with GUID {integration_guids[display_name]}")
+                            # print(f"Added {display_name} integration connector with GUID {integration_guids[
+                            # display_name]}")
 
     async def __async_get_guid__(
-        self,
-        guid: str = None,
-        display_name: str = None,
-        property_name: str = "qualifiedName",
-        qualified_name: str = None,
-        tech_type: str = None,
-    ) -> str:
+            self,
+            guid: str = None,
+            display_name: str = None,
+            property_name: str = "qualifiedName",
+            qualified_name: str = None,
+            tech_type: str = None,
+            ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
         values, server_guid will be used first, followed by qualified_name.  If the tech_type is supplied and the
@@ -579,7 +597,7 @@ class Client2:
                 "forLineage": False,
                 "forDuplicateProcessing": False,
                 "effectiveTime": None,
-            }
+                }
             url = (
                 f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
                 f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -598,12 +616,12 @@ class Client2:
                 name = f"{tech_type}::{display_name}"
                 body = {
                     "class": "NameRequestBody",
-                    "name": name,
+                    "displayName": name,
                     "namePropertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
-                }
+                    }
                 url = (
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -619,7 +637,7 @@ class Client2:
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
-                }
+                    }
                 url = (
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -628,20 +646,21 @@ class Client2:
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
         else:
-            additional_info = {"reason": "Neither server_guid nor server_name were provided - please provide.",
-                                "parameters": (f"GUID={guid}, display_name={display_name}, property_name={property_name},"
-                                              f"qualified_name={qualified_name}, tech_type={tech_type}")
-                              }
+            additional_info = {
+                "reason": "Neither server_guid nor server_name were provided - please provide.",
+                "parameters": (f"GUID={guid}, display_name={display_name}, property_name={property_name},"
+                               f"qualified_name={qualified_name}, tech_type={tech_type}")
+                }
             raise PyegeriaInvalidParameterException(None, None, additional_info)
 
     def __get_guid__(
-        self,
-        guid: str = None,
-        display_name: str = None,
-        property_name: str = "qualifiedName",
-        qualified_name: str = None,
-        tech_type: str = None,
-    ) -> str:
+            self,
+            guid: str = None,
+            display_name: str = None,
+            property_name: str = "qualifiedName",
+            qualified_name: str = None,
+            tech_type: str = None,
+            ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
         values, server_guid will be used first, followed by qualified_name.  If the tech_type is supplied and the
@@ -656,8 +675,8 @@ class Client2:
         result = loop.run_until_complete(
             self.__async_get_guid__(
                 guid, display_name, property_name, qualified_name, tech_type
+                )
             )
-        )
         return result
 
     def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
@@ -665,17 +684,16 @@ class Client2:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""
         EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
-        # display_name = re.sub(r'\s','-',display_name.strip()) # This changes spaces between words to -; removing
+        display_name = re.sub(r'\s', '-', display_name.strip())  # This changes spaces between words to -; removing
         if display_name is None:
-            additional_info = {"reason": "Display name is missing - please provide.",}
+            additional_info = {"reason": "Display name is missing - please provide.", }
             raise PyegeriaInvalidParameterException(additional_info=additional_info)
-        q_name = f"{type}::{display_name.strip()}"
+        q_name = f"{type}::{display_name}"
         if EGERIA_LOCAL_QUALIFIER:
             q_name = f"{EGERIA_LOCAL_QUALIFIER}::{q_name}"
         if version_identifier:
             q_name = f"{q_name}::{version_identifier}"
         return q_name
-
 
     async def _async_get_element_by_guid_(self, element_guid: str) -> dict | str:
         """
@@ -705,7 +723,7 @@ class Client2:
         body = {
             "class": "EffectiveTimeQueryRequestBody",
             "effectiveTime": None,
-        }
+            }
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/elements/"
                f"{element_guid}?forLineage=false&forDuplicateProcessing=false")
@@ -714,6 +732,258 @@ class Client2:
 
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
 
+        return elements
+
+    def validate_new_element_request(self, body: dict | NewElementRequestBody,
+                                     prop: str) -> NewElementRequestBody | None:
+        if isinstance(body, NewElementRequestBody):
+            if body.properties.class_ == prop:
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._new_element_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+        else:
+            return None
+        return validated_body
+
+    def validate_new_relationship_request(self, body: dict | NewRelationshipRequestBody,
+                                          prop: str = None) -> NewRelationshipRequestBody | None:
+        if isinstance(body, NewElementRequestBody):
+            if (prop and body.properties.class_ == prop) or (prop is None):
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._new_relationship_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        else:
+            raise TypeError("Invalid parameter type")
+
+        return validated_body
+
+    def validate_delete_request(self, body: dict | DeleteRequestBody) -> DeleteRequestBody | None:
+        if isinstance(body, DeleteRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._delete_request_adapter.validate_python(body)
+        else:
+            validated_body = None
+        return validated_body
+
+    def validate_update_element_request(self, body: dict | UpdateElementRequestBody,
+                                        prop: str) -> UpdateElementRequestBody | None:
+        if isinstance(body, UpdateElementRequestBody):
+            if body.properties.class_ == prop:
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._update_element_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+        else:
+            validated_body = None
+        return validated_body
+
+    def validate_update_element_status_request(self, status: str = None, body: dict | UpdateStatusRequestBody = None,
+                                               prop: str = None) -> UpdateStatusRequestBody | None:
+        if isinstance(body, UpdateStatusRequestBody):
+            if body.properties.class_ == prop:
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._update_element_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+        elif status:
+            body = {
+                "class": "UpdateStatusRequestBody",
+                "status": status
+                }
+            validated_body = UpdateStatusRequestBody.validate_python(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "invalid parameters"})
+
+        return validated_body
+
+    def validate_update_relationship_request(self, body: dict | UpdateRelationshipRequestBody,
+                                             prop: str) -> UpdateElementRequestBody | None:
+        if isinstance(body, UpdateRelationshipRequestBody):
+            if body.properties.class_ == prop:
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._update_relationship_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+        else:
+            validated_body = None
+        return validated_body
+
+    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                  search_string: str = '*', classification_names: [str] = None,
+                                  starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
+                                  start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                  output_format_set: str | dict = None,
+                                  body: dict | SearchStringRequestBody = None) -> Any:
+
+        if isinstance(body, SearchStringRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._search_string_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string is "*" else search_string
+            body = {
+                "class": "SearchStringRequestBody",
+                "search_string": search_string,
+                "starts_with": starts_with,
+                "ends_with": ends_with,
+                "ignore_case": ignore_case,
+                "start_from": start_from,
+                "page_size": page_size,
+                "include_only_classified_elements": classification_names,
+                }
+            validated_body = SearchStringRequestBody.model_validate(body)
+
+        classification_names = validated_body.include_only_classified_elements
+        classification_name = classification_names[0] if classification_names else _type
+
+        json_body = validated_body.model_dump_json(indent=2)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return _gen_output(elements, search_string, classification_name,
+                               output_format, output_format_set)
+        return elements
+
+    async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                      filter_string: str, classification_names: [str] = None,
+                                      start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                      output_format_set: str | dict = None,
+                                      body: dict | FilterRequestBody = None) -> Any:
+
+        if isinstance(body, FilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._filter_request_adapter.validate_python(body)
+        else:
+            filter_string = None if filter_string is "*" else filter_string
+            body = {
+                "class": "FilterRequestBody",
+                "filter": filter_string,
+                "start_from": start_from,
+                "page_size": page_size,
+                "include_only_classified_elements": classification_names,
+                }
+            validated_body = FilterRequestBody.model_validate(body)
+
+        classification_names = validated_body.include_only_classified_elements
+        classification_name = classification_names[0] if classification_names else _type
+
+        json_body = validated_body.model_dump_json(indent=2)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return _gen_output(elements, filter_string, classification_name,
+                               output_format, output_format_set)
+        return elements
+
+    async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                      output_format: str = 'JSON', output_format_set: str | dict = None,
+                                      body: dict | GetRequestBody = None) -> Any:
+
+        if isinstance(body, GetRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._filter_request_adapter.validate_python(body)
+        else:
+            body = {
+                "class": "GetRequestBody",
+
+                }
+            validated_body = GetRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return _gen_output(elements, "GUID", _type, output_format, output_format_set)
+        return elements
+
+
+    async def _async_get_results_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                              start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                              output_format_set: str | dict = None,
+                                              body: dict | ResultsRequestBody = None) -> Any:
+        if isinstance(body, ResultsRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._results_request_adapter.validate_python(body)
+        else:
+            body = {
+                "class": "ResultsRequestBody",
+                "start_from": start_from,
+                "page_size": page_size,
+                }
+            validated_body = ResultsRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return _gen_output(elements, "Members", _type,
+                               output_format, output_format_set)
         return elements
 
 

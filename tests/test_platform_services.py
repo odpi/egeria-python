@@ -30,16 +30,16 @@ import pytest
 
 disable_ssl_warnings = True
 
-from rich import inspect
-from rich.console import Console
+
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+from pyegeria._exceptions_new import (
+    PyegeriaException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_exception_response,
+    print_basic_exception
 )
 from pyegeria.platform_services import Platform
 from pyegeria.server_operations import ServerOps
@@ -61,7 +61,7 @@ class TestPlatform:
     bad_user_2 = ""
 
     good_server_1 = "active-metadata-store"
-    good_server_2 = "simple-metadata-store"
+    good_server_2 = "qs-metadata-store"
     good_server_3 = "view-server"
     good_server_4 = "engine-host"
     bad_server_1 = "coco"
@@ -74,8 +74,8 @@ class TestPlatform:
             #         "meow",
             #         "https://google.com",
             #         "garygeeke",
-            #         "InvalidParameterException",
-            #         pytest.raises(InvalidParameterException),
+            #         "PyegeriaException",
+            #         pytest.raises(PyegeriaException),
             # ),
             (
                 "active-metadata-server",
@@ -95,17 +95,17 @@ class TestPlatform:
             #         "cocoMDS2",
             #         "https://127.0.0.1:9443",
             #         None,
-            #         "InvalidParameterException",
-            #         pytest.raises(InvalidParameterException),
+            #         "PyegeriaException",
+            #         pytest.raises(PyegeriaException),
             # ),
             # (
             #         "cocoMDS2",
             #         "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
             #         "meow",
-            #         "InvalidParameterException",
-            #         pytest.raises(InvalidParameterException),
+            #         "PyegeriaException",
+            #         pytest.raises(PyegeriaException),
             # ),
-            # ("", "", "", "InvalidParameterException", pytest.raises(InvalidParameterException)),
+            # ("", "", "", "PyegeriaException", pytest.raises(PyegeriaException)),
         ],
     )
     def test_get_platform_origin(self, server, url, user_id, exc_type, expectation):
@@ -127,11 +127,11 @@ class TestPlatform:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code is not "200", "Invalid parameters"
         finally:
             p_client.close_session()
@@ -150,9 +150,9 @@ class TestPlatform:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
@@ -168,9 +168,9 @@ class TestPlatform:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert e.related_http_code == 404, "Invalid parameters"
@@ -185,9 +185,9 @@ class TestPlatform:
             assert len(response) > 0, "Empty server list"
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
@@ -203,7 +203,7 @@ class TestPlatform:
             )
             assert True
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
@@ -216,28 +216,28 @@ class TestPlatform:
                 "meow",
                 "https://google.com",
                 "garygeeke",
-                "InvalidParameterException",
-                pytest.raises(InvalidParameterException),
+                "PyegeriaException",
+                pytest.raises(PyegeriaException),
             ),
             (
                 "cocoMDS2",
                 "https://localhost:9448",
                 "garygeeke",
-                "InvalidParameterException",
-                pytest.raises(InvalidParameterException),
+                "PyegeriaException",
+                pytest.raises(PyegeriaException),
             ),
             (
                 "cocoMDS1",
                 "https://127.0.0.1:30081",
                 "garygeeke",
-                "InvalidParameterException",
-                pytest.raises(InvalidParameterException),
+                "PyegeriaException",
+                pytest.raises(PyegeriaException),
             ),
             (
                 "cocoMDS9",
                 "https://127.0.0.1:9443",
                 "garygeeke",
-                "InvalidParameterException",
+                "PyegeriaException",
                 does_not_raise(),
             ),
             (
@@ -251,8 +251,8 @@ class TestPlatform:
                 "cocoMDS2",
                 "https://127.0.0.1:9443/open-metadata/admin-services/users/garygeeke/servers/active-metadata-store",
                 "meow",
-                "UserNotAuthorizedException",
-                pytest.raises(UserNotAuthorizedException),
+                "PyegeriaUnauthorizedException",
+                pytest.raises(PyegeriaUnauthorizedException),
             ),
         ],
     )
@@ -587,14 +587,14 @@ class TestPlatform:
             p_client.activate_server_supplied_config(config_body, server)
             print(f"\n\n\tServer {server_name} now configured and activated")
             assert True
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
         finally:
             p_client.close_session()
 
-    def test_get_active_server_instance_status(self, server: str = good_server_1):
+    def test_get_active_server_instance_status(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.get_active_server_instance_status()
@@ -604,7 +604,7 @@ class TestPlatform:
                 print(f"\n\n\tActive server status: {json.dumps(response, indent=4)}")
             assert True
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
@@ -618,7 +618,7 @@ class TestPlatform:
             print(f"\n\n\tis_server_known() for server {server} reports {response}")
             assert (response is True) or (response is False), "Exception happened?"
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
 
@@ -634,24 +634,11 @@ class TestPlatform:
             )
             assert (response is True) or (response is False), "Exception happened?"
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
             p_client.close_session()
-
-    # todo: does this exist?
-    # def test_get_active_service_list_for_server(self, server: str = good_server_2):
-    #     try:
-    #         p_client = Platform(server, self.good_platform1_url, self.good_user_1, )
-    #
-    #         response = p_client.get_active_service_list_for_server(server)
-    #         print(f"\n\n\tActive Service list for server {server} is {json.dumps(response, indent=4)}")
-    #         assert len(response) >= 0, "Exception?"
-    #
-    #     except (InvalidParameterException, PropertyServerException) as e:
-    #         print_exception_response(e)
-    #         assert e.related_http_code != "200", "Invalid parameters"
 
     def test_get_active_server_list(self, server: str = good_server_2):
         try:
@@ -660,7 +647,7 @@ class TestPlatform:
             print(f"\n\n\tThe active servers are: {response}")
             assert len(response) > 0, "Exception?"
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
@@ -675,22 +662,22 @@ class TestPlatform:
             print(f"\n\n\tAll servers have been shutdown")
             assert True
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
             p_client.close_session()
 
-    def test_check_server_active(self, server: str = good_server_3):
+    def test_check_server_active(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
             response = p_client.check_server_active(server)
             print(f"\n\nserver {server} active state is {str(response)}")
             assert response in (True, False), "Bad Response"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
@@ -706,9 +693,9 @@ class TestPlatform:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
@@ -743,14 +730,14 @@ class TestPlatform:
             print(f"\n\n\tPlatform laz activated")
             assert True
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
             p_client.close_session()
 
-    def test_display_status(self, server: str = good_server_1):
+    def test_display_status(self, server: str = good_server_2):
         server_name = server
 
         table = Table(
@@ -777,7 +764,7 @@ class TestPlatform:
                             status = "Active"
                         else:
                             status = "Inactive"
-                        services = p_client.get_server_status(server)["serverStatus"][
+                        services = p_client.get_active_server_status(server)["serverStatus"][
                             "services"
                         ]
                         for service in services:
@@ -788,9 +775,9 @@ class TestPlatform:
                     sleep(2)
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"

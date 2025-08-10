@@ -81,7 +81,7 @@ def sync_gov_rel_elements(egeria_client: EgeriaTech, object_action:str, object_t
 def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a data specification create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.

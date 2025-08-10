@@ -425,9 +425,9 @@ class CollectionManager(Client2):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
+        search_string = search_string if search_string != "*" else None
         body = {
-            "class": "FilterRequestBody", "filter": search_string
+            "class": "SearchStringRequestBody", "searchString": search_string
             }
 
         resp = await self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
@@ -615,11 +615,11 @@ class CollectionManager(Client2):
         Parameters
         ----------
         collection_type: str
-            collection_type to use to find matching collections.
+            category to use to find matching collections.
         classification_name: str, optional
             An optional filter on the search,  e.g., DataSpec
         body: dict, optional, default = None
-            Provides, a full request body. If specified, the body filter parameter supercedes the collection_type
+            Provides, a full request body. If specified, the body filter parameter supercedes the category
             parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -701,11 +701,11 @@ class CollectionManager(Client2):
         Parameters
         ----------
         collection_type: str
-            collection_type to use to find matching collections.
+            category to use to find matching collections.
         classification_name: str, optional
             An optional filter on the search, e.g., DataSpec
         body: dict, optional, default = None
-            Provides, a full request body. If specified, the body filter parameter supersedes the collection_type
+            Provides, a full request body. If specified, the body filter parameter supersedes the category
             parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.

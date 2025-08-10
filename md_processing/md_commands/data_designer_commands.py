@@ -409,7 +409,7 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
 def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a data specification create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.
@@ -535,7 +535,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a data dictionary create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.
@@ -649,7 +649,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
     str]:
     """
     Processes a data structure create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.
@@ -847,7 +847,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str, d
 def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a data field create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.
@@ -1125,7 +1125,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """
     Processes a data class create or update object_action by extracting key attributes such as
-    spec name, parent_guid, parent_relationship_type, parent_at_end_1, collection_type
+    spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.

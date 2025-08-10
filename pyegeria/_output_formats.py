@@ -175,6 +175,29 @@ output_format_sets = FormatSetDict({
             )
         ],
     ),
+    "Basic-Terms": FormatSet(
+        heading="Basic Glossary Term Attributes",
+        description="Attributes that apply to all Basic Glossary Terms.",
+        annotations={},
+        formats=[
+            Format(
+                types=["ALL"],
+                columns=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name='Version Identifier', key='version_identifier'),
+                    Column(name="Summary", key='summary'),
+                    Column(name="Additional Properties", key='additional_properties'),
+                    Column(name="Example", key='example'),
+                    Column(name="Usage", key='usage'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Effective From", key='effective_from'),
+                    Column(name="Effective To", key='effective_to'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                ],
+            )
+            ]
+        ),
 
     "Collections": FormatSet(
         heading="Common Collection Information",

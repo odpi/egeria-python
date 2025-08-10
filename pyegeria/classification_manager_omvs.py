@@ -857,7 +857,7 @@ class ClassificationManager(Client):
 
         body = {
             "class": "NameRequestBody",
-            "name": name,
+            "displayName": name,
             "namePropertyName": property_name,
             "forLineage": for_lineage,
             "forDuplicateProcessing": for_duplicate_processing,

@@ -16,6 +16,7 @@ from pyegeria._exceptions import InvalidParameterException, PropertyServerExcept
 from pyegeria._globals import NO_CATEGORIES_FOUND, NO_TERMS_FOUND
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 from pyegeria.utils import body_slimmer
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria.output_formatter import (
     make_preamble, 
     make_md_attribute, 
@@ -255,7 +256,7 @@ class GlossaryBrowser(Client):
         return self._extract_glossary_properties(element, self._current_output_format)
 
     def generate_glossaries_md(self, elements: list | dict, search_string: str,
-                               output_format: str = 'MD') -> str | list:
+                               output_format: str = 'MD', output_format_set: str | dict = None) -> str | list:
         """
         Generate markdown or dictionary representation of glossaries.
 
@@ -263,6 +264,7 @@ class GlossaryBrowser(Client):
             elements (list | dict): List or dictionary of glossary elements
             search_string (str): The search string used
             output_format (str): Output format (MD, FORM, REPORT, LIST, DICT)
+            output_format_set (str | dict, optional): Output format set name or dictionary. Defaults to None.
 
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
@@ -270,8 +272,8 @@ class GlossaryBrowser(Client):
         # Store the current output format for use by _extract_glossary_properties_with_format
         self._current_output_format = output_format
 
-        # Define columns for LIST format
-        columns = [
+        # Define default columns for LIST format
+        default_columns = [
             {'name': 'Glossary Name', 'key': 'display_name'},
             {'name': 'Qualified Name', 'key': 'qualified_name'},
             {'name': 'Language', 'key': 'language', 'format': True},
@@ -280,13 +282,27 @@ class GlossaryBrowser(Client):
             {'name': 'Categories', 'key': 'categories_names', 'format': True},
         ]
 
+        # Determine the output format set
+        output_formats = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            # Use default entity type to lookup the output format
+            output_formats = select_output_format_set("Glossary", output_format)
+            # If no format set is found, create one with default columns
+            if not output_formats and output_format == 'LIST':
+                output_formats = {"formats": {"columns": default_columns}}
+
         return generate_output(
             elements=elements,
             search_string=search_string,
             entity_type="Glossary",
             output_format=output_format,
             extract_properties_func=self._extract_glossary_properties_with_format,
-            columns=columns if output_format == 'LIST' else None
+            columns_struct=output_formats
         )
 
     def _extract_term_properties(self, element: dict) -> dict:
@@ -488,7 +504,7 @@ class GlossaryBrowser(Client):
                                         entity_type="Term", extract_properties_func=self._extract_term_properties,
                                         get_additional_props_func=self._get_term_additional_properties)
 
-    def generate_terms_md(self, elements: list | dict, search_string: str, output_format: str = 'MD') -> str | list:
+    def generate_terms_md(self, elements: list | dict, search_string: str, output_format: str = 'MD', output_format_set: str | dict = None) -> str | list:
         """
         Generate markdown or dictionary representation of terms.
 
@@ -496,12 +512,13 @@ class GlossaryBrowser(Client):
             elements (list | dict): List or dictionary of term elements
             search_string (str): The search string used
             output_format (str): Output format (MD, MD-TABLE, DICT, FORM, REPORT)
+            output_format_set (str | dict, optional): Output format set name or dictionary. Defaults to None.
 
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
         """
-        # Define columns for LIST format
-        columns = [
+        # Define default columns for LIST format
+        default_columns = [
             {'name': 'Term Name', 'key': 'display_name'},
             {'name': 'Qualified Name', 'key': 'qualified_name'},
             {'name': 'Summary', 'key': 'summary', 'format': True},
@@ -511,6 +528,20 @@ class GlossaryBrowser(Client):
             {'name': 'Glossary', 'key': 'glossary_name'},
         ]
 
+        # Determine the output format set
+        output_formats = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            # Use default entity type to lookup the output format
+            output_formats = select_output_format_set("Term", output_format)
+            # If no format set is found, create one with default columns
+            if not output_formats and output_format == 'LIST':
+                output_formats = {"formats": {"columns": default_columns}}
+
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -518,7 +549,7 @@ class GlossaryBrowser(Client):
             output_format=output_format,
             extract_properties_func=self._extract_term_properties,
             get_additional_props_func=self._get_term_additional_properties,
-            columns=columns if output_format == 'LIST' else None
+            columns_struct=output_formats
         )
 
     def _get_parent_category_name(self, category_guid: str, output_format: str = None) -> str:
@@ -778,7 +809,7 @@ class GlossaryBrowser(Client):
                                         get_additional_props_func=get_additional_props_with_format)
 
     def generate_categories_md(self, elements: list | dict, search_string: str,
-                               output_format: str = 'MD') -> str | list:
+                               output_format: str = 'MD', output_format_set: str | dict = None) -> str | list:
         """
         Generate markdown or dictionary representation of categories.
 
@@ -786,12 +817,13 @@ class GlossaryBrowser(Client):
             elements (list | dict): List or dictionary of category elements
             search_string (str): The search string used
             output_format (str): Output format (MD, LIST, DICT, FORM, REPORT)
+            output_format_set (str | dict, optional): Output format set name or dictionary. Defaults to None.
 
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
         """
-        # Define columns for LIST format
-        columns = [
+        # Define default columns for LIST format
+        default_columns = [
             {'name': 'Category Name', 'key': 'display_name'},
             {'name': 'Qualified Name', 'key': 'qualified_name'},
             {'name': 'Description', 'key': 'description', 'format': True},
@@ -799,6 +831,20 @@ class GlossaryBrowser(Client):
             {'name': 'Subcategories', 'key': 'subcategories', 'format': True},
             {'name': 'Glossary', 'key': 'glossary_name'},
         ]
+
+        # Determine the output format set
+        output_formats = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            # Use default entity type to lookup the output format
+            output_formats = select_output_format_set("Category", output_format)
+            # If no format set is found, create one with default columns
+            if not output_formats and output_format == 'LIST':
+                output_formats = {"formats": {"columns": default_columns}}
 
         # Create a wrapper function to pass output_format to _get_category_additional_properties
         def get_additional_props_with_format(element, category_guid, output_format_param=None):
@@ -811,7 +857,7 @@ class GlossaryBrowser(Client):
             output_format=output_format,
             extract_properties_func=self._extract_category_properties,
             get_additional_props_func=get_additional_props_with_format,
-            columns=columns if output_format == 'LIST' else None
+            columns_struct=output_formats
         )
 
     #
@@ -977,7 +1023,7 @@ class GlossaryBrowser(Client):
     async def _async_find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                                      ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
                                      for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
-                                     page_size: int = None, output_format: str = 'JSON') -> list | str:
+                                     page_size: int = None, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1015,6 +1061,8 @@ class GlossaryBrowser(Client):
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1068,13 +1116,13 @@ class GlossaryBrowser(Client):
                 return None
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_glossaries_md(element, search_string, output_format)
+            return self.generate_glossaries_md(element, search_string, output_format, output_format_set)
         return response.json().get("elementList", NO_GLOSSARIES_FOUND)
 
     def find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                         ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
                         for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
-                        page_size: int = None, output_format: str = "JSON") -> list | str:
+                        page_size: int = None, output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string.
                 The search string is located in the request body and is interpreted as a plain string.
                 The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1116,6 +1164,8 @@ class GlossaryBrowser(Client):
                 LIST - output a markdown table with columns for Glossary Name, Qualified Name, Language, Description,
                 Usage
                 DICT - output a dictionary structure containing all attributes
+         output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
         Returns
         -------
         List | str
@@ -1136,12 +1186,12 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossaries(search_string, effective_time, starts_with, ends_with, ignore_case, for_lineage,
-                                        for_duplicate_processing, type_name, start_from, page_size, output_format))
+                                        for_duplicate_processing, type_name, start_from, page_size, output_format, output_format_set))
 
         return response
 
     async def _async_get_glossary_by_guid(self, glossary_guid: str, effective_time: str = None,
-                                          output_format: str = "JSON") -> dict | str:
+                                          output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
         """Retrieves information about a glossary
         Parameters
         ----------
@@ -1159,6 +1209,8 @@ class GlossaryBrowser(Client):
                 LIST - output a markdown table with columns for Glossary Name, Qualified Name, Language, Description,
                 Usage
                 DICT - output a dictionary structure containing all attributes
+            output_format_set: str | dict, optional
+                Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1189,10 +1241,10 @@ class GlossaryBrowser(Client):
         if element == NO_GLOSSARIES_FOUND:
             return NO_GLOSSARIES_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_glossaries_md(element, "GUID", output_format)
+            return self.generate_glossaries_md(element, "GUID", output_format, output_format_set)
         return response.json().get("element", NO_GLOSSARIES_FOUND)
 
-    def get_glossary_by_guid(self, glossary_guid: str, effective_time: str = None, output_format: str = "JSON") -> dict:
+    def get_glossary_by_guid(self, glossary_guid: str, effective_time: str = None, output_format: str = "JSON", output_format_set: str | dict = None) -> dict:
         """Retrieves information about a glossary
         Parameters
         ----------
@@ -1210,6 +1262,8 @@ class GlossaryBrowser(Client):
                 LIST - output a markdown table with columns for Glossary Name, Qualified Name, Language, Description,
                 Usage
                 DICT - output a dictionary structure containing all attributes
+            output_format_set: str | dict, optional
+                Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1229,7 +1283,7 @@ class GlossaryBrowser(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, effective_time, output_format))
+            self._async_get_glossary_by_guid(glossary_guid, effective_time, output_format, output_format_set))
         return response
 
     async def _async_get_glossaries_by_name(self, glossary_name: str, effective_time: str = None, start_from: int = 0,
@@ -1516,7 +1570,7 @@ class GlossaryBrowser(Client):
     async def _async_find_glossary_categories(self, search_string: str, effective_time: str = None,
                                               starts_with: bool = False, ends_with: bool = False,
                                               ignore_case: bool = False, start_from: int = 0, page_size: int = None,
-                                              output_format: str = "JSON") -> list | str:
+                                              output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1549,6 +1603,8 @@ class GlossaryBrowser(Client):
             MD - output standard markdown with no preamble
             FORM - output markdown with a preamble for a form
             REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1596,12 +1652,12 @@ class GlossaryBrowser(Client):
             elif output_format == 'DICT':
                 return None
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_categories_md(element, search_string, output_format)
+            return self.generate_categories_md(element, search_string, output_format, output_format_set)
         return response.json().get("elementList", NO_CATEGORIES_FOUND)
 
     def find_glossary_categories(self, search_string: str, effective_time: str = None, starts_with: bool = False,
                                  ends_with: bool = False, ignore_case: bool = False, start_from: int = 0,
-                                 page_size: int = None, output_format: str = "JSON") -> list | str:
+                                 page_size: int = None, output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary category metadata elements that contain the search string.
          The search string is located in the request body and is interpreted as a plain string.
          The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1624,16 +1680,18 @@ class GlossaryBrowser(Client):
         ignore_case : bool, [default=False], optional
             Ignore case when searching
         start_from: int, [default=0], optional
-             When multiple pages of results are available, the page number to start from.
-     page_size: int, [default=None]
-             The number of items to return in a single page. If not specified, the default will be taken from
-             the class instance.
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
         output_format: str, default = 'JSON'
             Type of output to produce:
             JSON - output standard json
             MD - output standard markdown with no preamble
             FORM - output markdown with a preamble for a form
             REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1655,7 +1713,7 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossary_categories(search_string, effective_time, starts_with, ends_with, ignore_case,
-                                                 start_from, page_size, output_format))
+                                                 start_from, page_size, output_format, output_format_set))
 
         return response
 
@@ -1912,7 +1970,7 @@ class GlossaryBrowser(Client):
         return response
 
     async def _async_get_category_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-                                          output_format: str = 'JSON', ) -> list | str:
+                                          output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
@@ -1932,6 +1990,8 @@ class GlossaryBrowser(Client):
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -1964,11 +2024,11 @@ class GlossaryBrowser(Client):
         if element == NO_CATEGORIES_FOUND:
             return NO_CATEGORIES_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_categories_md(element, "GUID", output_format)
+            return self.generate_categories_md(element, "GUID", output_format, output_format_set)
         return response.json().get("element", NO_CATEGORIES_FOUND)
 
     def get_category_by_guid(self, glossary_category_guid: str, effective_time: str = None,
-                             output_format: str = 'JSON', ) -> list | str:
+                             output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """Retrieve the requested glossary category metadata element.  The optional request body contain an effective
         time for the query..
 
@@ -1986,6 +2046,8 @@ class GlossaryBrowser(Client):
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2093,7 +2155,7 @@ class GlossaryBrowser(Client):
         response = loop.run_until_complete(self._async_get_category_parent(glossary_category_guid, effective_time))
         return response
 
-    def get_glossary_category_structure(self, glossary_guid: str, output_format: str = "DICT") -> dict | str:
+    def get_glossary_category_structure(self, glossary_guid: str, output_format: str = "DICT", output_format_set: str | dict = None) -> dict | str:
         """Derive the category structure of an Egeria glossary.
 
         This method builds a hierarchical representation of the categories in a glossary,
@@ -2108,6 +2170,8 @@ class GlossaryBrowser(Client):
             - DICT: Returns a Python dictionary structure
             - LIST: Returns a markdown table
             - MD: Returns a markdown outline with bullets and indentations
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2529,7 +2593,7 @@ class GlossaryBrowser(Client):
 
         return response
 
-    def generate_related_terms_md(self, term_elements: list, term_guid: str, output_format: str = 'MD') -> str | list:
+    def generate_related_terms_md(self, term_elements: list, term_guid: str, output_format: str = 'MD', output_format_set: str | dict = None) -> str | list:
         """
         Generate a simplified representation of related terms.
 
@@ -2537,6 +2601,7 @@ class GlossaryBrowser(Client):
             term_elements (list): List of term elements with relationship information
             term_guid (str): GUID of the term for which to generate related terms
             output_format (str): Output format (MD, LIST, DICT, etc.)
+            output_format_set (str | dict, optional): Output format set name or dictionary. Defaults to None.
 
         Returns:
             str | list: Markdown string or list of dictionaries depending on output_format
@@ -2572,6 +2637,26 @@ class GlossaryBrowser(Client):
 
             related_terms.append(related_term)
 
+        # Define default columns for LIST format
+        default_columns = [
+            {'name': 'First Term', 'key': 'first_term_display_name'},
+            {'name': 'First Term Qualified Name', 'key': 'first_term_qualified_name'},
+            {'name': 'Related Term', 'key': 'related_term_display_name'},
+            {'name': 'Related Term Qualified Name', 'key': 'related_term_qualified_name'},
+            {'name': 'Relationship Type', 'key': 'relationship_type'},
+        ]
+
+        # Determine the output format set
+        output_formats = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            # Use default entity type to lookup the output format
+            output_formats = select_output_format_set("RelatedTerms", output_format)
+
         # Return based on output format
         if output_format == 'DICT':
             return related_terms
@@ -2580,29 +2665,41 @@ class GlossaryBrowser(Client):
         md_output = f"# Related Terms for {term_name}\n\n"
 
         if output_format == 'LIST':
-            # Create a table
-            md_output += ("| First Term | First Term Qualified Name | Related Term | Related Term Qualified Name | "
-                          "Relationship Type |\n")
-            md_output += \
-                "|------------|---------------------------|--------------|------------------------------|-------------------|\n"
+            # If we have an output format set with columns, use those
+            columns = default_columns
+            if output_formats and 'formats' in output_formats and 'columns' in output_formats['formats']:
+                columns = output_formats['formats']['columns']
+            
+            # Create a table header
+            header_row = "| "
+            separator_row = "|"
+            for column in columns:
+                header_row += f"{column['name']} | "
+                separator_row += "------------|"
+            
+            md_output += header_row + "\n"
+            md_output += separator_row + "\n"
 
+            # Add data rows
             for term in related_terms:
-                md_output += f"| {term['first_term_display_name']} | {term['first_term_qualified_name']} | "
-                md_output += f"{term['related_term_display_name']} | {term['related_term_qualified_name']} | "
-                md_output += f"{term['relationship_type']} |\n"
+                row = "| "
+                for column in columns:
+                    key = column['key']
+                    value = term.get(key, '')
+                    row += f"{value} | "
+                md_output += row + "\n"
         else:
             # For other formats, create a more detailed representation
             for term in related_terms:
                 md_output += f"## {term['relationship_type']} Relationship\n\n"
                 md_output += (f"**First Term:** {term['first_term_display_name']} ("
                               f"{term['first_term_qualified_name']})\n\n")
-                md_output += f"**Related Term:** {term[('related_term_dis'
-                                                        'play_name')]} ({term['related_term_qualified_name']})\n\n"
+                md_output += f"**Related Term:** {term['related_term_display_name']} ({term['related_term_qualified_name']})\n\n"
                 md_output += "---\n\n"
 
         return md_output
 
-    def get_term_details(self, term_name: str, effective_time: str = None, output_format: str = 'DICT') -> dict | str:
+    def get_term_details(self, term_name: str, effective_time: str = None, output_format: str = 'DICT', output_format_set: str | dict = None) -> dict | str:
         """Retrieve detailed information about a term, combining basic term details and related terms.
 
         This method combines the term details retrieved from get_term_by_guid and the related terms
@@ -2618,6 +2715,8 @@ class GlossaryBrowser(Client):
             Type of output to produce:
                 DICT - output a dictionary with combined term details and related terms
                 REPORT - output a markdown report with combined term details and related terms
+        output_format_set : str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2804,7 +2903,7 @@ class GlossaryBrowser(Client):
     async def _async_get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
                                        effective_time: str = None, for_lineage: bool = False,
                                        for_duplicate_processing: bool = False, start_from: int = 0,
-                                       page_size: int = None, output_format="JSON") -> list:
+                                       page_size: int = None, output_format="JSON", output_format_set: str | dict = None) -> list:
         """Retrieve glossary terms by display name or qualified name. Async Version.
 
         Parameters
@@ -2834,6 +2933,8 @@ class GlossaryBrowser(Client):
             FORM - output markdown with a preamble for a form
             REPORT - output markdown with a preamble for a report
             DICT - output a simplified DICT structure
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2879,12 +2980,12 @@ class GlossaryBrowser(Client):
             elif output_format == 'DICT':
                 return None
         if output_format != "JSON":  # return a simplified markdown representation
-            return self.generate_terms_md(term_elements, term, output_format)
+            return self.generate_terms_md(term_elements, term, output_format, output_format_set)
         return response.json().get("elementList", NO_TERMS_FOUND)
 
     def get_terms_by_name(self, term: str, glossary_guid: str = None, status_filter: list = [],
                           effective_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-                          start_from: int = 0, page_size: int = None, output_format="JSON") -> list:
+                          start_from: int = 0, page_size: int = None, output_format="JSON", output_format_set: str | dict = None) -> list:
         """Retrieve glossary terms by display name or qualified name.
 
         Parameters
@@ -2914,6 +3015,8 @@ class GlossaryBrowser(Client):
             FORM - output markdown with a preamble for a form
             REPORT - output markdown with a preamble for a report
             DICT - output a simplified DICT structure
+         output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2933,10 +3036,10 @@ class GlossaryBrowser(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_by_name(term, glossary_guid, status_filter, effective_time, for_lineage,
-                                          for_duplicate_processing, start_from, page_size, output_format))
+                                          for_duplicate_processing, start_from, page_size, output_format, output_format_set))
         return response
 
-    async def _async_get_term_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:
+    async def _async_get_term_by_guid(self, term_guid: str, output_format: str = 'JSON', output_format_set: str | dict = None) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
@@ -2948,6 +3051,8 @@ class GlossaryBrowser(Client):
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -2974,21 +3079,23 @@ class GlossaryBrowser(Client):
         if term_element == NO_TERMS_FOUND:
             return NO_TERMS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_terms_md(term_element, "GUID", output_format)
+            return self.generate_terms_md(term_element, "GUID", output_format, output_format_set)
         return response.json().get("element", NO_TERMS_FOUND)
 
-    def get_term_by_guid(self, term_guid: str, output_format: str = 'JSON') -> dict | str:
+    def get_term_by_guid(self, term_guid: str, output_format: str = 'JSON', output_format_set: str | dict = None) -> dict | str:
         """Retrieve a term using its unique id. Async version.
         Parameters
         ----------
         term_guid : str
             The GUID of the glossary term to retrieve.
         output_format: str, default = 'JSON'
-            Type of output to produce:
+                Type of output to produce:
                 JSON - output standard json
                 MD - output standard markdown with no preamble
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
         Returns
         -------
         dict | str
@@ -3005,7 +3112,7 @@ class GlossaryBrowser(Client):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, output_format))
+        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, output_format, output_format_set))
 
         return response
 
@@ -3258,7 +3365,7 @@ class GlossaryBrowser(Client):
 
         return response
 
-    def list_term_revision_history(self, term_guid: str, output_format: str = "DICT") -> list | str:
+    def list_term_revision_history(self, term_guid: str, output_format: str = "DICT", output_format_set: str | dict = None) -> list | str:
         """
         Retrieve the revision history for a term.
 
@@ -3272,6 +3379,8 @@ class GlossaryBrowser(Client):
         output_format : str, optional
             The format in which to return the results. Can be "DICT", "MD", or "LIST".
             Defaults to "DICT".
+        output_format_set : str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -3360,7 +3469,7 @@ class GlossaryBrowser(Client):
             # Default to DICT format
             return sorted_entries
 
-    def list_full_term_history(self, term_guid: str, output_type: str = "DICT") -> list | str:
+    def list_full_term_history(self, term_guid: str, output_format: str = "DICT", output_format_set: str | dict = None) -> list | str:
         """
         Retrieves and formats the entire version history of a specific term in the repository.
         The version history is either returned as a list of dictionaries or in a Markdown table
@@ -3374,15 +3483,17 @@ class GlossaryBrowser(Client):
         ---------
         term_guid: The unique identifier of the glossary term for which the version
             history needs to be retrieved.
-        output_type: The format in which the history should be returned. It can be
+        output_format: The format in which the history should be returned. It can be
             either "DICT" (a list of dictionaries) or "LIST" (a Markdown table).
             Defaults to "DICT".
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
         list | str: A list of dictionaries representing the version history
-            (if output_type is "DICT"), or a Markdown table of the version details
-            (if output_type is "LIST"). If no history is found, returns a string
+            (if output_format is "DICT"), or a Markdown table of the version details
+            (if output_format is "LIST"). If no history is found, returns a string
             message "No History Found".
         """
         history = self.get_term_versions(term_guid)
@@ -3411,9 +3522,9 @@ class GlossaryBrowser(Client):
                 "versionIdentifier": version_identifier,
                 })
         sorted_history = sorted(version_history, key=lambda i: i['version'], reverse=True)
-        if output_type == "DICT":
+        if output_format == "DICT":
             return sorted_history
-        elif output_type == "LIST":
+        elif output_format == "LIST":
             # Get the headers from the keys of the first dictionary
             headers = sorted_history[0].keys()
 
@@ -3437,7 +3548,7 @@ class GlossaryBrowser(Client):
                                          effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
                                          ignore_case: bool = False, for_lineage: bool = False,
                                          for_duplicate_processing: bool = False, start_from: int = 0,
-                                         page_size: int = None, output_format: str = "JSON", ) -> list | str:
+                                         page_size: int = None, output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters
@@ -3532,14 +3643,14 @@ class GlossaryBrowser(Client):
             elif output_format == 'DICT':
                 return None
         if output_format != "JSON":  # return a simplified markdown representation
-            return self.generate_terms_md(term_elements, search_string, output_format)
+            return self.generate_terms_md(term_elements, search_string, output_format, output_format_set)
         return response.json().get("elementList", NO_TERMS_FOUND)
 
     def find_glossary_terms(self, search_string: str, glossary_guid: str = None, status_filter: list = [],
                             effective_time: str = None, starts_with: bool = False, ends_with: bool = False,
                             ignore_case: bool = False, for_lineage: bool = False,
                             for_duplicate_processing: bool = False, start_from: int = 0, page_size: int = None,
-                            output_format: str = "JSON", ) -> list | str:
+                            output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
         """Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters
@@ -3577,6 +3688,8 @@ class GlossaryBrowser(Client):
             MD - output standard markdown with no preamble
             FORM - output markdown with a preamble for a form
             REPORT - output markdown with a preamble for a report
+        output_format_set: str | dict, optional
+            Output format set name or dictionary. Defaults to None.
 
         Returns
         -------
@@ -3605,7 +3718,7 @@ class GlossaryBrowser(Client):
         response = loop.run_until_complete(
             self._async_find_glossary_terms(search_string, glossary_guid, status_filter, effective_time, starts_with,
                                             ends_with, ignore_case, for_lineage, for_duplicate_processing, start_from,
-                                            page_size, output_format))
+                                            page_size, output_format, output_format_set))
 
         return response
 

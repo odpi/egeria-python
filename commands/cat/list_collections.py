@@ -19,9 +19,9 @@ from rich.text import Text
 from loguru import logger
 from pyegeria import (
     CollectionManager,
-     NO_ELEMENTS_FOUND,config_logging, get_app_config, init_logging
-    )
-from pyegeria._exceptions_new import PyegeriaException, print_exception_response
+    NO_ELEMENTS_FOUND, config_logging, load_app_config, get_app_config, init_logging, config_logging, PyegeriaException,
+    print_basic_exception,PyegeriaException, )
+# from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -39,7 +39,7 @@ out_struct = {
                     {'name': 'description', 'key': 'description', 'format': True},
                     {'name': "classifications", 'key': 'classifications'},
                     {'name': 'members', 'key': 'members', 'format': True},
-                    {'name': 'collection_type', 'key': 'collection_type', 'format': True},
+                    {'name': 'category', 'key': 'category', 'format': True},
                     {'name': 'GUID', 'key': 'GUID'},
                 ],
             },
@@ -183,7 +183,7 @@ def display_collections(
     except (
         PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -216,7 +216,7 @@ def main():
         pass
 
     except PyegeriaException as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
 
 if __name__ == "__main__":
