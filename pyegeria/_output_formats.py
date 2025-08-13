@@ -70,8 +70,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 from loguru import logger
 
-from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict, save_format_sets_to_json, load_format_sets_from_json
+from pyegeria._output_format_models import (Column, Format, ActionParameter, FormatSet, FormatSetDict,
+                                            save_format_sets_to_json, load_format_sets_from_json)
 from pyegeria.load_config import get_app_config
+
 
 # Get the configured value for the user format sets directory
 app_config = get_app_config()
@@ -90,6 +92,7 @@ COMMON_COLUMNS = [
 
 COMMON_METADATA_COLUMNS = [
     Column(name='GUID', key='guid', format=True),
+    Column(name='Type Name', key='type_name'),
     Column(name='Metadata Collection ID', key='metadata_collection_id', format=True),
     Column(name='Metadata Collection Name', key='metadata_collection_name', format=True),
 ]
@@ -120,6 +123,8 @@ COMMON_FORMATS_ALL = Format(
 
 
 COLLECTIONS_COLUMNS = COMMON_COLUMNS + [
+    Column(name='Type Name', key='type_name'),
+    Column(name='Classifications', key='classifications'),
     Column(name="Created By", key='created_by'),
     Column(name="Create Time", key='create_time'),
     Column(name="Updated By", key='updated_by'),
@@ -127,17 +132,28 @@ COLLECTIONS_COLUMNS = COMMON_COLUMNS + [
 ]
 
 COLLECTIONS_MEMBERS_COLUMNS = COLLECTIONS_COLUMNS + [
-    Column(name="Members", key='members'),
+    Column(name="Containing Members", key='collection_members'),
+    Column(name="Member Of", key='member_of_collections')
     ]
 
 COLLECTION_DICT = Format(
     types=["DICT"],
-    columns=COLLECTIONS_COLUMNS,
+    columns=COLLECTIONS_MEMBERS_COLUMNS + [
+        Column(name="GUID", key='GUID'),
+        ],
+)
+
+COLLECTION_REPORT = Format(
+    types=["REPORT"],
+    columns=COLLECTIONS_MEMBERS_COLUMNS + [
+        Column(name="GUID", key='GUID'),
+        Column(name="Mermaid", key='mermaid'),
+        ],
 )
 
 COLLECTION_TABLE = Format(
     types=["TABLE"],
-    columns=COMMON_COLUMNS,
+    columns=COLLECTIONS_MEMBERS_COLUMNS,
 )
 
 GOVERNANCE_DEFINITIONS_COLUMNS = COMMON_COLUMNS + [
@@ -152,6 +168,29 @@ COMMON_ANNOTATIONS = {
 
 # Modularized output_format_sets
 output_format_sets = FormatSetDict({
+    "Default": FormatSet(
+        heading="Default Base Attributes",
+        description="Was a valid combination of output_format_set and output_format provided?",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                columns=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name='Version Identifier', key='version_identifier'),
+                    Column(name="Classifications", key='classifications'),
+                    Column(name="Additional Properties", key='additional_properties'),
+                    Column(name="Created By", key='created_by'),
+                    Column(name="Create Time", key='create_time'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Effective From", key='effective_from'),
+                    Column(name="Effective To", key='effective_to'),
+                    Column(name="Version", key='version'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                ],
+            )
+        ],
+    ),
     "Referenceable": FormatSet(
         heading="Common Attributes",
         description="Attributes that apply to all Referenceables.",
@@ -205,12 +244,12 @@ output_format_sets = FormatSetDict({
         aliases=["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection",
                 "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
         annotations=COMMON_ANNOTATIONS,
-        formats=[COLLECTION_DICT, COLLECTION_TABLE, COMMON_FORMATS_ALL],  # Reusing common formats
-        action=[ActionParameter(
+        formats=[COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],  # Reusing common formats
+        action=ActionParameter(
             function="CollectionManager.find_collections",
             user_params=["search_string"],
             spec_params={},
-        )]
+        )
     ),
 
     "CollectionMembers": FormatSet(
@@ -219,11 +258,11 @@ output_format_sets = FormatSetDict({
         aliases=["CollectionMember", "Member", "Members"],
         annotations= {"wikilinks": ["[[CollectionMembers]]"]},
         formats = [COLLECTION_DICT, COLLECTION_TABLE],
-        action=[ActionParameter(
+        action=ActionParameter(
             function="CollectionManager.get_collection_members",
             user_params=["collection_guid"],
             spec_params={"output_format": "DICT"},
-            )]
+            )
         ),
     "DigitalProducts": FormatSet(
         heading="Digital Product Information",
@@ -232,7 +271,7 @@ output_format_sets = FormatSetDict({
         annotations={},
         formats=[
             Format(
-                types=["REPORT"],
+                types=["REPORT", "DICT", "TABLE"],
                 columns=COMMON_COLUMNS + [
                     Column(name="Status", key='status'),
                     Column(name='Product Name', key='product_name'),
@@ -242,23 +281,53 @@ output_format_sets = FormatSetDict({
                     Column(name='Next Version', key='next_version'),
                     Column(name='Withdraw Date', key='withdraw_date'),
                     Column(name='Members', key='members', format=True),
+                    Column(name='Uses Products', key='uses_digital_products'),
+                    Column(name='Used by Products', key='used_by_digital_products'),
                 ],
             )
         ],
-        action=[ActionParameter(
+        action=ActionParameter(
             function="CollectionManager.find_collections",
             user_params=["search_string"],
-            spec_params={"classification_name": "DigitalProducts"},
-        )]
+            spec_params={},
+        ),
+        get_additional_props=ActionParameter(
+            function="CollectionManager._extract_digital_product_properties",
+            user_params = [],
+            spec_params={},
+            )
     ),
 
     "Agreements": FormatSet(
         heading="General Agreement Information",
         description="Attributes generic to all Agreements.",
-        aliases=["DataSharingAgreement"],
+        aliases=["DataSharingAgreement", "Agreement"],
         annotations={"wikilinks": ["[[Agreements]]", "[[Egeria]]"]},
-        formats=[COMMON_FORMATS_ALL]  # Reusing common formats and columns
+        formats=[
+            Format(
+                types=["REPORT", "DICT", "TABLE"],
+                columns=COMMON_COLUMNS + COMMON_HEADER_COLUMNS + [
+                    Column(name='Identifier', key='identifier'),
+                    Column(name='Support Level', key='support_level'),
+                    Column(name='service Levels', key='service_levels'),
+                    Column(name='Agreement Items', key='agreement_items', format=True),
+                    Column(name='Members', key='members', format=True),
+                    ]
+                )
+            ],
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            user_params=["search_string"],
+            spec_params={"metadata_element_types": ["Agreement"]},
+            # spec_params={},
+            ),
+        get_additional_props=ActionParameter(
+            function="CollectionManager._extract_agreement_properties",
+            user_params=[],
+            spec_params={},
+            ),
     ),
+
 
     "DataDictionary": FormatSet(
         heading="Data Dictionary Information",
@@ -266,11 +335,11 @@ output_format_sets = FormatSetDict({
         aliases=["Data Dict", "Data Dictionary"],
         annotations={"wikilinks": ["[[Data Dictionary]]"]},
         formats=[COMMON_FORMATS_ALL],  # Reusing common formats and columns
-        action=[ActionParameter(
+        action=ActionParameter(
             function="CollectionManager.find_collections",
             user_params=["search_string"],
-            spec_params={"classification_name": "DataDictionary"},
-        )]
+            spec_params={"initial_classifications": "DataDictionary"},
+        )
     ),
 
     "Data Specification": FormatSet(
@@ -285,11 +354,11 @@ output_format_sets = FormatSetDict({
                 Column(name="Mermaid", key='mermaid'),
                 ]),
             Format(types=["ALL"], columns=COMMON_COLUMNS)],  # Reusing common formats and columns
-        action=[ActionParameter(
+        action=ActionParameter(
             function="CollectionManager.find_collections",
             user_params=["search_string"],
-            spec_params={"classification_name": "DataSpec"},
-        )]
+            spec_params={"initial_classifications": "DataSpec"},
+        )
     ),
 
     "DataStruct": FormatSet(
@@ -298,11 +367,11 @@ output_format_sets = FormatSetDict({
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
         formats=[Format(types=["ALL"], columns=COMMON_COLUMNS)],  # Reusing common formats and columns
-        action=[ActionParameter(
+        action=ActionParameter(
             function="DataDesigner.find_data_structures",
             user_params=["search_string"],
             spec_params={},
-        )]
+        )
     ),
 
     "DataField": FormatSet(
@@ -311,11 +380,11 @@ output_format_sets = FormatSetDict({
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
         formats=[Format(types=["ALL"], columns=COMMON_COLUMNS)],  # Reusing common formats and columns
-        action=[ActionParameter(
+        action=ActionParameter(
             function="DataDesigner.find_data_fields",
             user_params=["search_string"],
             spec_params={},
-        )]
+        )
     ),
 
     "Mandy-DataStruct": FormatSet(
@@ -329,11 +398,11 @@ output_format_sets = FormatSetDict({
             Format(types=["REPORT","MERMAID", "HTML"], columns=[Column(name='Display Name', key='display_name'),
                                                Column(name='Mermaid', key='mermaid'),]),
         ],
-        action=[ActionParameter(
+        action=ActionParameter(
             function="DataDesigner.find_data_structures",
             user_params=["search_string"],
             spec_params={"output_format":"DICT"},
-        )]
+        )
     ),
 
     "Governance Definitions": FormatSet(
@@ -342,11 +411,11 @@ output_format_sets = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         formats=[Format(types=["ALL"], columns=GOVERNANCE_DEFINITIONS_COLUMNS)],
-        action=[ActionParameter(
+        action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             user_params=["search_filter"],
             spec_params={"output_format":"DICT"},
-            )]
+            )
     ),
     })
 
@@ -390,7 +459,9 @@ def select_output_format_set(kind: str, output_type: str) -> dict | None:
         output_struct["annotations"] = element.annotations
         if element.action:
             # Convert ActionParameter to dictionary for backward compatibility
-            output_struct["action"] = [action.dict() for action in element.action]
+            output_struct["action"] = element.action.dict()
+        if element.get_additional_props:
+            output_struct["get_additional_props"] = element.get_additional_props.dict()
 
     # If this was just a validation that the format set could be found then the output type is ANY - so just return.
     if output_type == "ANY":

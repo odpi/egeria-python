@@ -16,6 +16,7 @@ from pyegeria.solution_architect_omvs import SolutionArchitect
 from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.governance_officer_omvs import GovernanceOfficer
+from pyegeria.collection_manager import CollectionManager
 
 
 class EgeriaTech(
@@ -31,6 +32,7 @@ class EgeriaTech(
     DataDesigner,
     TemplateManager,
     GovernanceOfficer,
+    CollectionManager
 ):
     """
     Client for technical Egeria users.
@@ -92,6 +94,9 @@ class EgeriaTech(
             self, view_server, platform_url, user_id, user_pwd, token
             )
         GovernanceOfficer.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
+        CollectionManager.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
             )
 

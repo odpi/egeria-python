@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 import inspect
 from datetime import datetime
-from typing import Optional, Annotated, Literal
+from typing import Optional, Annotated, Literal, Union
 
 from loguru import logger
 from pydantic import ValidationError, Field, HttpUrl
@@ -21,17 +21,22 @@ from pyegeria.load_config import get_app_config
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody)
+                             DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody,
+                             get_defined_field_values, PyegeriaModel)
 from pyegeria.output_formatter import (generate_output,
-                                       _extract_referenceable_properties)
+                                       _extract_referenceable_properties, populate_columns_from_properties,
+                                       get_required_relationships)
 from pyegeria.utils import body_slimmer, dynamic_catch
+
 
 app_settings = get_app_config()
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
-COLLECTION_PROPERTIES_LIST = ["CollectionPropertie", "DataDictionaryProperties",
+COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
                               "AgreementProperties"]
+
+AGREEMENT_PROPERTIES_LIST = ["AgreementProperties", "DigitalSubscriptionProperties",]
 
 
 def query_seperator(current_string):
@@ -58,28 +63,39 @@ class CollectionProperties(ReferenceableProperties):
     class_: Annotated[Literal["CollectionProperties"], Field(alias="class")]
 
 
-class DataSpecProperties(ReferenceableProperties):
+class DataSpecProperties(CollectionProperties):
     class_: Annotated[Literal["DataSpecProperties"], Field(alias="class")]
 
 
-class DataDictionaryProperties(ReferenceableProperties):
+class DataDictionaryProperties(CollectionProperties):
     class_: Annotated[Literal["DataDictionaryProperties"], Field(alias="class")]
 
 
-class AgreementProperties(ReferenceableProperties):
+class AgreementProperties(CollectionProperties):
     class_: Annotated[Literal["AgreementProperties"], Field(alias="class")]
     identifier: str | None = None
     user_defined_status: str | None = None
 
+class DigitalSubscriptionProperties(AgreementProperties):
+    class_: Annotated[Literal["DigitalSubscriptionProperties"], Field(alias="class")]
+    support_level: str | None = None
+    service_levels: dict | None = None
 
-class DigitalProductProperties(ReferenceableProperties):
+
+class DigitalProductProperties(CollectionProperties):
+    class_: Annotated[Literal["DigitalProductProperties"], Field(alias="class")]
+    user_defined_status: str | None = None
     product_name: str | None = None
+    identifier: str | None = None
+    introduction_date: datetime | None = None
     maturity: str | None = None
     service_life: str | None = None
-    introduction_date: datetime | None = None
     next_version_date: datetime | None = None
     withdrawal_date: datetime | None = None
-    current_version: str | None = None
+
+class Collections(PyegeriaModel):
+    collection: Union[CollectionProperties, DigitalSubscriptionProperties, DigitalProductProperties, AgreementProperties,
+                      DataSpecProperties, DataDictionaryProperties] = Field(desciminator="class_")
 
 
 class CollectionManager(Client2):
@@ -124,7 +140,8 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0,
-                                              body: dict = None, output_format: str = "JSON",
+                                              category: str = None, classification_names: list[str]= None,
+                                              body: dict | FilterRequestBody = None, output_format: str = "JSON",
                                               output_format_set: str | dict = None) -> list | str:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
@@ -177,12 +194,10 @@ class CollectionManager(Client2):
         }
 
         """
-        if body is None:
-            body = {}
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
-               f"metadata-elements/{parent_guid}/collections?startFrom={start_from}&pageSize={page_size}")
-
+               f"metadata-elements/{parent_guid}/collections")
+        return await self._async_get_name_request(url, body, output_format, output_format_set)
         response = await self._async_make_request("POST", url, body_slimmer(body))
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
@@ -256,7 +271,8 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_find_collections(self, search_string: str = '*', classification_names: [str] = None,
+    async def _async_find_collections(self, search_string: str = "*", classification_names: list[str] = None,
+                                      metadata_element_types: list[str] = None,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       output_format_set: str | dict = None,
@@ -270,9 +286,11 @@ class CollectionManager(Client2):
         search_string: str
             Search string to match against - None or '*' indicate match against all collections (may be filtered by
             classification).
-        classification_name: [str], optional, default=None
+        classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
+        metadata_element_types: list[str], optional, default=None
+            A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -312,6 +330,7 @@ class CollectionManager(Client2):
         response = await self._async_find_request(url, _type="Collection",
                                                   _gen_output=self._generate_collection_output,
                                                   search_string = search_string, classification_names = classification_names,
+                                                  metadata_element_types = metadata_element_types,
                                                   starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
                                                   start_from = start_from, page_size = page_size,
                                                   output_format=output_format, output_format_set=output_format_set,
@@ -320,7 +339,8 @@ class CollectionManager(Client2):
         return response
 
     @dynamic_catch
-    def find_collections(self, search_string: str = '*', classification_names: str = None, starts_with: bool = True,
+    def find_collections(self, search_string: str = '*', classification_names: str = None,
+                         metadata_element_types: list[str] = None, starts_with: bool = True,
                          ends_with: bool = False, ignore_case: bool = False,
                          start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                          output_format_set: str | dict = None,
@@ -334,9 +354,12 @@ class CollectionManager(Client2):
         search_string: str
             Search string to match against - None or '*' indicate match against all collections (may be filtered by
             classification).
-        classification_name: [str], optional, default=None
+        classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
+        metadata_element_types: list[str], optional, default=None
+            A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
+            then all metadata element types are returned.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
@@ -371,14 +394,20 @@ class CollectionManager(Client2):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
+        Args:
+            classification_names ():
+            metadata_element_types ():
+
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_collections(search_string, classification_names, starts_with, ends_with, ignore_case,
-                                         start_from, page_size, output_format, output_format_set, body))
+            self._async_find_collections(search_string, classification_names, metadata_element_types,
+                                         starts_with, ends_with, ignore_case,
+                                         start_from, page_size, output_format,
+                                         output_format_set, body))
 
 
     @dynamic_catch
-    async def _async_get_collections_by_name(self, filter_string: str = None, classification_names: [str] = None,
+    async def _async_get_collections_by_name(self, filter_string: str = None, classification_names: list[str] = None,
                                              body: dict | FilterRequestBody = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
@@ -389,7 +418,7 @@ class CollectionManager(Client2):
             ----------
             name: str,
                 name to use to find matching collections.
-            classification_names: [str], optional, default = None
+            classification_names: list[str], optional, default = None
                 type of collection to filter by - e.g., DataDict, Folder, Root
             body: dict, optional, default = None
                 Provides, a full request body. If specified, the body supercedes the name parameter.
@@ -430,7 +459,7 @@ class CollectionManager(Client2):
         return response
 
 
-    def get_collections_by_name(self, name: str = None, classification_names: [str] = None,
+    def get_collections_by_name(self, name: str = None, classification_names: list[str] = None,
                                 body: dict | FilterRequestBody = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 output_format_set: str | dict = None) -> list | str:
@@ -442,7 +471,7 @@ class CollectionManager(Client2):
         ----------
         name: str,
             name to use to find matching collections.
-        classification_names: [str], optional, default = None
+        classification_names: list[str], optional, default = None
             type of collection to filter by - e.g., DataDict, Folder, Root
         body: dict, optional, default = None
             Provides, a full request body. If specified, the body supercedes the name parameter.
@@ -473,7 +502,7 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_get_collections_by_category(self, category: str, classification_names: [str] = None,
+    async def _async_get_collections_by_category(self, category: str, classification_names: list[str] = None,
                                              body: dict | FilterRequestBody = None, start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              output_format_set: str | dict = None) -> list | str:
@@ -538,7 +567,7 @@ class CollectionManager(Client2):
 
 
 
-    def get_collections_by_category(self, category: str, classification_names: [str] = None,
+    def get_collections_by_category(self, category: str, classification_names: list[str] = None,
                                 body: dict | FilterRequestBody = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 output_format_set: str | dict = None) -> list | str:
@@ -549,7 +578,7 @@ class CollectionManager(Client2):
         ----------
         category: str
             category to use to find matching collections.
-        classification_names: [str], optional
+        classification_names: list[str], optional
             An optional filter on the search, e.g., DataSpec
         body: dict, optional, default = None
             Provides, a full request body. If specified, the body filter parameter supersedes the category
@@ -855,19 +884,17 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_get_collection_graph(self, collection_guid: str, body: dict = None, start_from: int = 0,
+    async def _async_get_collection_hierarchy(self, collection_guid: str, body: dict | ResultsRequestBody = None, start_from: int = 0,
                                           page_size: int = 0, output_format: str = "JSON",
                                           output_format_set: str | dict = None) -> list | str:
-        """ Return a graph of elements that are the nested members of a collection along
-                with elements immediately connected to the starting collection.  The result
-                includes a mermaid graph of the returned elements. Async version.
+        """ Return a hierarchy of nested collections. Request body is optional Async version.
 
             Parameters
             ----------
             collection_guid: str,
                 identity of the collection to return members for. If none, collection_name or
                 collection_qname are used.
-            body: dict, optional, default = None
+            body: dict | ResultsRequestBody, optional, default = None
                 Providing the body allows full control of the request and replaces filter parameters.
             start_from: int, [default=0], optional
                         When multiple pages of results are available, the page number to start from.
@@ -876,14 +903,14 @@ class CollectionManager(Client2):
                 the class instance.
             output_format: str, default = "JSON"
                 - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-         output_format_set: dict , optional, default = None
+             output_format_set: dict , optional, default = None
                 The desired output columns/fields to include.
 
             Returns
             -------
             List | str
 
-            A graph anchored in the collection.
+           Results based on the output format.
 
             Raises
             ------
@@ -898,37 +925,29 @@ class CollectionManager(Client2):
             Notes:
             -----
                 Body sample:
-                {
-                  "class": "ResultsRequestBody",
-                  "effectiveTime": "{{$isoTimestamp}}",
-                  "limitResultsByStatus": ["ACTIVE"],
-                  "asOfTime": "{{$isoTimestamp}}",
-                  "sequencingOrder": "CREATION_DATE_RECENT",
-                  "sequencingProperty": ""
-                }
+            {
+              "class": "ResultsRequestBody",
+              "startFrom": 0,
+              "pageSize": 0,
+              "effectiveTime": "{{$isoTimestamp}}",
+              "limitResultsByStatus": ["ACTIVE"],
+              "asOfTime": "{{$isoTimestamp}}",
+              "sequencingOrder": "CREATION_DATE_RECENT",
+              "sequencingProperty": ""
+            }
             """
 
-        url = (f"{self.collection_command_root}/{collection_guid}/"
-               f"graph?startFrom={start_from}&pageSize={page_size}")
+        url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/hierarchy"))
+        response = await self._async_get_results_body_request(url, _type="Collection",
+                                                              _gen_output=self._generate_collection_output,
+                                                              start_from=start_from, page_size=page_size,
+                                                              output_format=output_format,
+                                                              output_format_set=output_format_set,
+                                                              body=body)
 
-        if body:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            response = await self._async_make_request("POST", url)
+        return response
 
-        elements = response.json().get("graph", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self._generate_collection_output(elements, None, None,
-                                                    output_format, output_format_set)
-        return elements
-
-
-    def get_collection_graph(self, collection_guid: str = None, body: dict = None, start_from: int = 0,
+    def get_collection_hierarchy(self, collection_guid: str = None, body: dict| ResultsRequestBody = None, start_from: int = 0,
                              page_size: int = 0, output_format: str = "JSON",
                              output_format_set: str | dict = None) -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
@@ -981,168 +1000,14 @@ class CollectionManager(Client2):
             }
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_collection_graph(collection_guid, body, start_from, page_size,
+            self._async_get_collection_hierarchy(collection_guid, body, start_from, page_size,
                                              output_format, output_format_set))
 
 
     @dynamic_catch
-    async def _async_get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
-                                                 page_size: int = None, output_format: str = "JSON",
-                                                 output_format_set: str | dict = None) -> list | str:
-        """ Return a graph of elements that are the nested members of a collection along
-            with elements immediately connected to the starting collection.  The result
-            includes a mermaid graph of the returned elements. Async version.
-
-            Parameters
-            ----------
-            collection_guid: str,
-                identity of the collection to return members for.
-            body: dict
-                A dictionary containing the body of the request. See Note.
-            start_from: int, [default=0], optional
-                        When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-                The number of items to return in a single page. If not specified, the default will be taken from
-                the class instance.
-            output_format: str, default = "JSON"
-                - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-    output_format_set: dict , optional, default = None
-
-            Returns
-            -------
-            List | str
-
-            A list of collection members in the collection.
-
-            Raises
-            ------
-            InvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Note
-            ____
-            {
-              "class": "ResultsRequestBody",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "limitResultsByStatus": ["ACTIVE"],
-              "asOfTime": "{{$isoTimestamp}}",
-              "sequencingOrder": "CREATION_DATE_RECENT",
-              "sequencingProperty": ""
-            }
-
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        url = (f"{self.collection_command_root}/{collection_guid}/"
-               f"graph?startFrom={start_from}&pageSize={page_size}")
-
-        response = await self._async_make_request("GET", url, body_slimmer(body))
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format}, output_format_set: {output_format_set}")
-            return self._generate_collection_output(elements, None, None,
-                                                    output_format, output_format_set)
-        return elements
-
-
-    def get_collection_graph_w_body(self, collection_guid: str, body: dict = None, start_from: int = 0,
-                                    page_size: int = None, output_format: str = "JSON",
-                                    output_format_set: str | dict = None) -> list | str:
-        """ Return a graph of elements that are the nested members of a collection along
-            with elements immediately connected to the starting collection.  The result
-            includes a mermaid graph of the returned elements.
-
-            Parameters
-            ----------
-            collection_guid: str,
-               identity of the collection to return members for.
-            body: dict
-               A dictionary containing the body of the request. See Note.
-            start_from: int, [default=0], optional
-                       When multiple pages of results are available, the page number to start from.
-            page_size: int, [default=None]
-               The number of items to return in a single page. If not specified, the default will be taken from
-               the class instance.
-            output_format: str, default = "JSON"
-               - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-             output_format_set: str | dict  , optional, default = None
-                The desired output columns/fields to include.
-
-            Returns
-            -------
-            List | str
-
-            A list of collection members in the collection.
-
-            Raises
-            ------
-            InvalidParameterException
-               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
-               Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Note
-            ____
-            {
-              "class": "ResultsRequestBody",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "limitResultsByStatus": ["ACTIVE"],
-              "asOfTime": "{{$isoTimestamp}}",
-              "sequencingOrder": "CREATION_DATE_RECENT",
-              "sequencingProperty": ""
-            }
-
-       """
-
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_get_collection_graph_w_body(collection_guid, body, start_from,
-                                                    page_size, output_format, output_format_set))
-
-        #
-        #   Create collection methods
-        #
-
-        ###
-        # =====================================================================================================================
-        # Create Collections: https://egeria-project.org/concepts/collection
-        # These requests use the following parameters:
-        #
-        # anchorGUID - the unique identifier of the element that should be the anchor for the new element. Set to
-        # null if
-        # no anchor,
-        # or if this collection is to be its own anchor.
-        #
-        # isOwnAnchor -this element should be classified as its own anchor or not.  The default is false.
-        #
-        # parentGUID - the optional unique identifier for an element that should be connected to the newly
-        # created element.
-        # If this property is specified, parentRelationshipTypeName must also be specified
-        #
-        # parentRelationshipTypeName - the name of the relationship, if any, that should be established between
-        # the new
-        # element and the parent element.
-        # Examples could be "ResourceList" or "DigitalServiceProduct".
-        #
-        # parentAtEnd1 -identifies which end any parent entity sits on the relationship.
-        #
-
-
-    @dynamic_catch
     async def _async_create_collection(self, display_name: str = None, description: str = None,
-                                              category: str = None, classification_name: str = None,
-                                              body: dict | NewElementRequestBody = None) -> str:
+                                       category: str = None, initial_classifications: list[str] = None,
+                                       body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -1157,8 +1022,8 @@ class CollectionManager(Client2):
             The description of the collection.
         category: str, optional
             An optional user-assigned category for the collection.
-        classification: str, optional
-            An initial classification for the collection. This can be used to distinguish, for instance, Folders
+        initial_classifications: list[str], optional
+            An initial list of classifications for the collection. This can be used to distinguish, for instance, Folders
             from Root Collections.
 
         body: dict | NewElementRequestBody, optional
@@ -1245,30 +1110,19 @@ class CollectionManager(Client2):
         }
 
         """
-
-
-        if isinstance(body, NewElementRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            try:
-                validated_body = self._new_element_request_adapter.validate_python(body)
-            except ValidationError as e:
-                logger.error(f"Validation error: {e}")
-                raise ValidationError(e)
-        elif display_name is not None:
-            pre = classification_name if classification_name is not None else "Collection   "
+        if body:
+            validated_body = self.validate_new_element_request(body,"CollectionProperties")
+        elif (body is None) and (display_name is not None):
+            pre = initial_classifications[0] if initial_classifications is not None else "Collection"
             qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
-            print(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
-            if classification_name:
-                initial_classifications_data = {"class": "ClassificationProperties"}
-                initial_classification_dict = {
-                    classification_name: InitialClassifications.model_validate(initial_classifications_data)
-                    }
+            if initial_classifications:
+                initial_classifications_dict = {}
+                for c in initial_classifications:
+                    initial_classifications_dict = initial_classifications_dict | {c : {"class": "ClassificationProperties"}}
+
             else:
-                initial_classification_dict = None
-            initial_classification_dict = {
-                classification_name: InitialClassifications.model_validate(initial_classifications_data)
-                }
+                initial_classifications_dict = None
+
             collection_properties = CollectionProperties( class_ = "CollectionProperties",
                                                              qualified_name = qualified_name,
                                                              display_name = display_name,
@@ -1278,7 +1132,7 @@ class CollectionManager(Client2):
             body = {
                 "class" :"NewElementRequestBody",
                 "isOwnAnchor": True,
-                "initialClassifications": initial_classification_dict,
+                "initialClassifications": initial_classifications_dict,
                 "properties": collection_properties.model_dump()
                 }
             validated_body = NewElementRequestBody.model_validate(body)
@@ -1294,7 +1148,7 @@ class CollectionManager(Client2):
 
 
     def create_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, classification_name: str = None,
+                                category: str = None, initial_classifications: list[str] = None,
                                 body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
@@ -1309,7 +1163,7 @@ class CollectionManager(Client2):
             The description of the collection.
         category: str, optional
             An optional user-assigned category for the collection.
-        classification: str, optional
+        initial_classifications: str, optional
             An initial classification for the collection. This can be used to distinguish, for instance, Folders
             from Root Collections.
 
@@ -1401,7 +1255,7 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description,category,
-                                                 classification_name,    body))
+                                                 initial_classifications,    body))
 
 
     @dynamic_catch
@@ -1440,11 +1294,9 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, category,
-                                          "RootCollection", body))
+                                          ["RootCollection"], body))
 
-#######
 
-        return resp
     @dynamic_catch
     def create_folder_collection(self, display_name: str = None, description: str = None,
                                       category: str = None, body: dict | NewElementRequestBody = None) -> str:
@@ -1481,7 +1333,7 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, category,
-                                          "Folder", body))
+                                          ["Folder"], body))
 
 
 
@@ -1522,7 +1374,7 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, category,
-                                          "ReferenceList", body))
+                                          ["ReferenceList"], body))
 
     @dynamic_catch
     def create_context_event_collection(self, display_name: str = None, description: str = None,
@@ -1560,7 +1412,7 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description, category,
-                                          "ContextEvent", body))
+                                          ["ContextEvent"], body))
 
     @dynamic_catch
     async def _async_create_data_spec_collection(self, display_name: str = None, description: str = None,
@@ -2216,7 +2068,7 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_update_collection(self, collection_guid: str,  body: dict | NewElementRequestBody) -> None:
+    async def _async_update_collection(self, collection_guid: str,  body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a collection. Use the correct properties object (CollectionProperties,
             DigitalProductProperties, AgreementProperties, etc), that is appropriate for your element.
             Collections: https://egeria-project.org/concepts/collection
@@ -2227,7 +2079,7 @@ class CollectionManager(Client2):
         collection_guid: str
             The guid of the collection to update.
 
-        body: dict | NewElementRequestBody, optional
+        body: dict | UpdateElementRequestBody, optional
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
             validated before being used.
@@ -2269,34 +2121,12 @@ class CollectionManager(Client2):
         }
         """
 
-        try:
-            if isinstance(body, NewElementRequestBody):
-                if body.properties.class_ in COLLECTION_PROPERTIES_LIST:
-                    validated_body = body
-                else:
-                    raise PyegeriaInvalidParameterException(additional_info =
-                                                           {"reason" : "unexpected property class name"})
-
-            elif isinstance(body, dict):
-                if body.get("properties", {}).get("class", "") in COLLECTION_PROPERTIES_LIST:
-                    validated_body = self._new_element_request_adapter.validate_python(body)
-                else:
-                    raise PyegeriaInvalidParameterException(additional_info =
-                                                            {"reason" : "unexpected property class name"})
-            else:
-                raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
-
-        except ValidationError as e:
-            logger.error(f"Validation error: {e}")
-            raise ValidationError(e)
+        # try:
 
         url = (f"{self.collection_command_root}/{collection_guid}/update")
+        await self._async_update_element_body_request(url, COLLECTION_PROPERTIES_LIST,body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
-        await self._async_make_request("POST", url, json_body)
-
-        logger.info(f"Successfully updated {collection_guid} with {json_body}")
 
 
 
@@ -2426,14 +2256,9 @@ class CollectionManager(Client2):
         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
         default to ACTIVE.
         """
-        validated_body = self.validate_new_element_request(body, "DigitalProductProperties")
-
         url = f"{self.collection_command_root}"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
-        return resp.json().get("guid", NO_GUID_RETURNED)
+        return await self._async_create_element_body_request(url, "DigitalProductProperties", body)
+
 
     @dynamic_catch
     def create_digital_product(self, body: dict | NewElementRequestBody = None) -> str:
@@ -2572,34 +2397,8 @@ class CollectionManager(Client2):
         }
         """
 
-        try:
-            if isinstance(body, NewElementRequestBody):
-                if body.properties.class_ == "DigitalProductProperties":
-                    validated_body = body
-                else:
-                    raise PyegeriaInvalidParameterException(additional_info =
-                                                           {"reason" : "unexpected property class name"})
-
-            elif isinstance(body, dict):
-                if body.get("properties", {}).get("class", "") == "DigitalProductProperties":
-                    validated_body = self._update_element_request_adapter.validate_python(body)
-                else:
-                    raise PyegeriaInvalidParameterException(additional_info =
-                                                            {"reason" : "unexpected property class name"})
-            else:
-                raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
-
-        except ValidationError as e:
-            logger.error(f"Validation error: {e}")
-            raise ValidationError(e)
-
         url = (f"{self.collection_command_root}/{collection_guid}/update")
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-
-        await self._async_make_request("POST", url, json_body)
-
-        logger.info(f"Successfully updated {collection_guid} with {json_body}")
+        await self._async_update_element_request_body(url, "DigitalProductProperties", body )
 
 
     @dynamic_catch
@@ -2672,15 +2471,19 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_update_collection_status(self, collection_guid: str, body: dict | UpdateStatusRequestBody):
+    async def _async_update_collection_status(self, collection_guid: str, status: str = None,
+                                              body: dict | UpdateStatusRequestBody = None):
         """Update the status of a collection. Async version.
 
         Parameters
         ----------
         collection_guid: str
             The guid of the collection to update.
-        body: dict | UpdateStatusRequestBody
-            A structure representing the details of the collection to create.
+        status: str, optional
+            The new lifecycle status for the collection. Ignored, if the body is provided.
+        body: dict | UpdateStatusRequestBody, optional
+            A structure representing the details of the collection to create. If supplied, these details
+            supersede the status parameter provided.
 
         Returns
         -------
@@ -2708,31 +2511,24 @@ class CollectionManager(Client2):
           "forDuplicateProcessing": false
         }
         """
-        try:
-            if isinstance(body, UpdateStatusRequestBody):
-               validated_body = body
-            elif isinstance(body, dict):
-                validated_body = self._update_status_request_adapter.validate_python(body)
-
-        except ValidationError as e:
-            logger.error(f"Validation error: {e}")
-            raise ValidationError(e)
 
         url = f"{self.collection_command_root}/{collection_guid}/update-status"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        await self._async_make_request("POST", url, json_body)
-        logger.info(f"Successfully updated {collection_guid} with {json_body}")
+        await self._async_update_status_request(url, status, body)
 
     @dynamic_catch
-    def update_collection_status(self, collection_guid: str, body: dict | UpdateStatusRequestBody):
+    def update_collection_status(self, collection_guid: str, status: str = None,
+                                 body: dict | UpdateStatusRequestBody = None):
         """Update the status of a DigitalProduct collection.
 
         Parameters
         ----------
         collection_guid: str
             The guid of the collection to update.
-        body: dict | UpdateStatusRequestBody
-            A structure representing the details of the collection to create.
+        status: str, optional
+            The new lifecycle status for the digital product. Ignored, if the body is provided.
+        body: dict | UpdateStatusRequestBody, optional
+            A structure representing the details of the collection to create. If supplied, these details
+            supersede the status parameter provided.
 
         Returns
         -------
@@ -2761,19 +2557,23 @@ class CollectionManager(Client2):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(collection_guid, body))
+        loop.run_until_complete(self._async_update_collection_status(collection_guid, status, body))
 
 
     @dynamic_catch
-    def update_digital_product_status(self, digital_product_guid: str, body: dict | UpdateStatusRequestBody):
+    def update_digital_product_status(self, digital_product_guid: str, status: str = None,
+                                      body: dict | UpdateStatusRequestBody = None):
         """Update the status of a DigitalProduct collection.
 
         Parameters
         ----------
         digital_product_guid: str
-            The guid of the digital product collection to update.
-        body: dict | UpdateStatusRequestBody
-            A structure representing the details of the collection to create.
+            The guid of the collection to update.
+        status: str, optional
+            The new lifecycle status for the digital product. Ignored, if the body is provided.
+        body: dict | UpdateStatusRequestBody, optional
+            A structure representing the details of the collection to create. If supplied, these details
+            supersede the status parameter provided.
 
         Returns
         -------
@@ -2802,7 +2602,7 @@ class CollectionManager(Client2):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(digital_product_guid, body))
+        loop.run_until_complete(self._async_update_collection_status(digital_product_guid, status, body))
 
 
     @dynamic_catch
@@ -2853,18 +2653,11 @@ class CollectionManager(Client2):
           }
         }
         """
-
-        validated_body = self.validate_new_relationship_request(body)
-
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/attach")
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "InformationSupplyChainLinkProperties", body)
         logger.info(f"Linked {upstream_digital_prod_guid} -> {downstream_digital_prod_guid}")
 
 
@@ -2963,18 +2756,12 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
 
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/detach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
         logger.info(f"Detached digital product dependency {upstream_digital_prod_guid} -> {downstream_digital_prod_guid}")
 
 
@@ -3071,19 +2858,12 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_new_relationship_request(body)
-
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital"
             f"-products/"
             f"{digital_prod_guid}/product-managers/{digital_prod_manager_guid}/attach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "AssignmentScopeProperties",body)
         logger.info(f"Attached digital product manager {digital_prod_guid} -> {digital_prod_manager_guid}")
 
 
@@ -3177,19 +2957,12 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
-
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{digital_prod_guid}/product-dependencies/{digital_prod_manager_guid}/detach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
-        logger.info(f"Detched digital product manager {digital_prod_guid} -> {digital_prod_manager_guid}")
+        await self._async_delete_request(url, body)
+        logger.info(f"Detached digital product manager {digital_prod_guid} -> {digital_prod_manager_guid}")
 
     @dynamic_catch
     def detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
@@ -3300,13 +3073,8 @@ class CollectionManager(Client2):
         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
         default to ACTIVE.
         """
-        validated_body = self.validate_new_element_request(body, "AgreementProperties")
         url = f"{self.collection_command_root}"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
-        return resp.json().get("guid", NO_GUID_RETURNED)
+        return await self._async_create_element_body_request(url, "AgreementProperties", body)
 
     @dynamic_catch
     def create_agreement(self, body: dict | NewElementRequestBody = None) -> str:
@@ -3371,148 +3139,143 @@ class CollectionManager(Client2):
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_agreement(body))
 
-
-    @dynamic_catch
-    async def _async_create_data_sharing_agreement(self, body: dict | NewElementRequestBody) -> str:
-        """ Create a new collection that represents a data sharing agreement.
-            Async version.
-
-        Parameters
-        ----------
-        body: dict | NewElementRequestBody
-            A structure representing the details of the data sharing agreement to create.
-
-        Returns
-        -------
-        str - the guid of the created collection
-
-        Raises
-        ------
-        PyegeriaException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        ValidationError
-          Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
-        be valid dates if specified, otherwise you will get a 400 error response.
-
-        JSON Structure looks like:
-        {
-          "class" : "NewElementRequestBody",
-          "isOwnAnchor" : true,
-          "anchorScopeGUID" : "optional GUID of search scope",
-          "parentGUID" : "xxx",
-          "parentRelationshipTypeName" : "CollectionMembership",
-          "parentAtEnd1": true,
-          "properties": {
-            "class" : "AgreementProperties",
-            "qualifiedName": "Agreement::Add agreement name here",
-            "name" : "display name",
-            "description" : "Add description of the agreement here",
-            "userDefinedStatus" : "NEW",
-            "identifier" : "Add agreement identifier here",
-            "additionalProperties": {
-              "property1Name" : "property1Value",
-              "property2Name" : "property2Value"
-            }
-          },
-          "initialStatus" : "ACTIVE",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-        default to ACTIVE.
-        """
-        validated_body = self.validate_new_element_request(body, "AgreementProperties")
-
-        url = f"{self.collection_command_root}/data-sharing-agreement"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
-        return resp.json().get("guid", NO_GUID_RETURNED)
-
-    @dynamic_catch
-    def create_data_sharing_agreement(self, body: dict | NewElementRequestBody = None) -> str:
-        """ Create a new collection that represents a digital product.
-
-            Parameters
-            ----------
-            body: dict | NewElementRequestBody
-                A structure representing the details of the digital product to create.
-
-            Returns
-            -------
-            str - the guid of the created collection
-
-            Raises
-            ------
-            PyegeriaException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            ValidationError
-              Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
-            be valid dates if specified, otherwise you will get a 400 error response.
-
-            JSON Structure looks like:
-            {
-              "class" : "NewElementRequestBody",
-              "isOwnAnchor" : true,
-              "anchorScopeGUID" : "optional GUID of search scope",
-              "parentGUID" : "xxx",
-              "parentRelationshipTypeName" : "CollectionMembership",
-              "parentAtEnd1": true,
-              "properties": {
-                "class" : "DigitalProductProperties",
-                "qualifiedName": "DigitalProduct::Add product name here",
-                "name" : "Product contents",
-                "description" : "Add description of product and its expected usage here",
-                "identifier" : "Add product identifier here",
-                "productName" : "Add product name here",
-                "category" : "Periodic Delta",
-                "maturity" : "Add valid value here",
-                "serviceLife" : "Add the estimated lifetime of the product",
-                "introductionDate" : "date",
-                "nextVersionDate": "date",
-                "withdrawDate": "date",
-                "currentVersion": "V0.1",
-                "additionalProperties": {
-                  "property1Name" : "property1Value",
-                  "property2Name" : "property2Value"
-                }
-              },
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "initialStatus" : "ACTIVE"
-            }
-
-            The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
-            UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
-            OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
-            default to ACTIVE.
-            """
-
-        return asyncio.get_event_loop().run_until_complete(
-            self._async_create_data_sharing_agreement(body))
-
+    #
+    # @dynamic_catch
+    # async def _async_create_data_sharing_agreement(self, body: dict | NewElementRequestBody) -> str:
+    #     """ Create a new collection that represents a data sharing agreement.
+    #         Async version.
+    #
+    #     Parameters
+    #     ----------
+    #     body: dict | NewElementRequestBody
+    #         A structure representing the details of the data sharing agreement to create.
+    #
+    #     Returns
+    #     -------
+    #     str - the guid of the created collection
+    #
+    #     Raises
+    #     ------
+    #     PyegeriaException
+    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #     ValidationError
+    #       Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
+    #     NotAuthorizedException
+    #       The principle specified by the user_id does not have authorization for the requested action
+    #
+    #     Notes
+    #     -----
+    #     Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+    #     be valid dates if specified, otherwise you will get a 400 error response.
+    #
+    #     JSON Structure looks like:
+    #     {
+    #       "class" : "NewElementRequestBody",
+    #       "isOwnAnchor" : true,
+    #       "anchorScopeGUID" : "optional GUID of search scope",
+    #       "parentGUID" : "xxx",
+    #       "parentRelationshipTypeName" : "CollectionMembership",
+    #       "parentAtEnd1": true,
+    #       "properties": {
+    #         "class" : "AgreementProperties",
+    #         "qualifiedName": "Agreement::Add agreement name here",
+    #         "name" : "display name",
+    #         "description" : "Add description of the agreement here",
+    #         "userDefinedStatus" : "NEW",
+    #         "identifier" : "Add agreement identifier here",
+    #         "additionalProperties": {
+    #           "property1Name" : "property1Value",
+    #           "property2Name" : "property2Value"
+    #         }
+    #       },
+    #       "initialStatus" : "ACTIVE",
+    #       "externalSourceGUID": "add guid here",
+    #       "externalSourceName": "add qualified name here",
+    #       "effectiveTime" : "{{$isoTimestamp}}",
+    #       "forLineage" : false,
+    #       "forDuplicateProcessing" : false
+    #     }
+    #
+    #     The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+    #     UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+    #     OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
+    #     default to ACTIVE.
+    #     """
+    #
+    #     url = f"{self.collection_command_root}/data-sharing-agreement"
+    #     return await self._async_create_element_body_request(url, "AgreementProperties", body)
+    #
+    # @dynamic_catch
+    # def create_data_sharing_agreement(self, body: dict | NewElementRequestBody = None) -> str:
+    #     """ Create a new collection that represents a digital product.
+    #
+    #         Parameters
+    #         ----------
+    #         body: dict | NewElementRequestBody
+    #             A structure representing the details of the digital product to create.
+    #
+    #         Returns
+    #         -------
+    #         str - the guid of the created collection
+    #
+    #         Raises
+    #         ------
+    #         PyegeriaException
+    #           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+    #         ValidationError
+    #           Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
+    #         NotAuthorizedException
+    #           The principle specified by the user_id does not have authorization for the requested action
+    #
+    #         Notes
+    #         -----
+    #         Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+    #         be valid dates if specified, otherwise you will get a 400 error response.
+    #
+    #         JSON Structure looks like:
+    #         {
+    #           "class" : "NewElementRequestBody",
+    #           "isOwnAnchor" : true,
+    #           "anchorScopeGUID" : "optional GUID of search scope",
+    #           "parentGUID" : "xxx",
+    #           "parentRelationshipTypeName" : "CollectionMembership",
+    #           "parentAtEnd1": true,
+    #           "properties": {
+    #             "class" : "DigitalProductProperties",
+    #             "qualifiedName": "DigitalProduct::Add product name here",
+    #             "name" : "Product contents",
+    #             "description" : "Add description of product and its expected usage here",
+    #             "identifier" : "Add product identifier here",
+    #             "productName" : "Add product name here",
+    #             "category" : "Periodic Delta",
+    #             "maturity" : "Add valid value here",
+    #             "serviceLife" : "Add the estimated lifetime of the product",
+    #             "introductionDate" : "date",
+    #             "nextVersionDate": "date",
+    #             "withdrawDate": "date",
+    #             "currentVersion": "V0.1",
+    #             "additionalProperties": {
+    #               "property1Name" : "property1Value",
+    #               "property2Name" : "property2Value"
+    #             }
+    #           },
+    #           "externalSourceGUID": "add guid here",
+    #           "externalSourceName": "add qualified name here",
+    #           "effectiveTime" : "{{$isoTimestamp}}",
+    #           "forLineage" : false,
+    #           "forDuplicateProcessing" : false,
+    #           "initialStatus" : "ACTIVE"
+    #         }
+    #
+    #         The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+    #         UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+    #         OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
+    #         default to ACTIVE.
+    #         """
+    #
+    #     return asyncio.get_event_loop().run_until_complete(
+    #         self._async_create_data_sharing_agreement(body))
+    #
 
     @dynamic_catch
     async def _async_update_agreement(self, agreement_guid: str,  body: dict | UpdateElementRequestBody) -> None:
@@ -3568,17 +3331,8 @@ class CollectionManager(Client2):
           "forDuplicateProcessing" : false
         }
         """
-
-        validated_body = self.validate_update_element_request(body, "AgreementProperties")
-
         url = (f"{self.collection_command_root}/{agreement_guid}/update")
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-
-        await self._async_make_request("POST", url, json_body)
-
-        logger.info(f"Successfully updated {agreement_guid} with {json_body}")
-
+        await self._async_update_element_body_request(url, AGREEMENT_PROPERTIES_LIST,body)
 
     @dynamic_catch
     def update_agreement(self, agreement_guid: str,  body: dict | UpdateElementRequestBody) -> None:
@@ -3640,12 +3394,15 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    def update_agreement_status(self, agreement_guid: str, body: dict | UpdateStatusRequestBody):
+    def update_agreement_status(self, agreement_guid: str, status: str = None,
+                                body: dict | UpdateStatusRequestBody = None):
         """Update the status of an agreement.
         Parameters
         ----------
         agreement_guid: str
             The guid of the collection to update.
+        status: str, optional
+            The new lifecycle status for the collection. Ignored, if the body is provided.
         body: dict | UpdateStatusRequestBody
             A structure representing the details of the collection to create.
 
@@ -3676,7 +3433,7 @@ class CollectionManager(Client2):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(agreement_guid, body))
+        loop.run_until_complete(self._async_update_collection_status(agreement_guid, status,body))
 
 
 
@@ -3729,19 +3486,11 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self._new_relationship_request_adapter.validate_python(body, "AgreementActorProperties")
-
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
             f"{agreement_guid}/agreement-actors/{actor_guid}/attach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "AgreementActorProperties",body)
         logger.info(f"Attached digital product manager {agreement_guid} -> {actor_guid}")
 
 
@@ -3840,18 +3589,11 @@ class CollectionManager(Client2):
 
         """
 
-        validated_body = self.validate_delete_request(body)
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
             f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        self._async_delete_request(url, body)
         logger.info(f"Detached digital product manager {agreement_guid} -> {actor_guid}")
 
 
@@ -3968,18 +3710,10 @@ class CollectionManager(Client2):
         }
 
             """
-        validated_body = self.validate_new_relationship_request(body, "AgreementItemProperties")
-
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"agreements/{agreement_guid}/agreement-items/{agreement_item_guid}/attach")
 
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "AgreementItemProperties", body)
         logger.info(f"Attached agreement item {agreement_item_guid} to {agreement_guid}")
 
 
@@ -4085,21 +3819,11 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements"
             f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
         logger.info(f"Detached agreement item {agreement_item_guid} from {agreement_guid}")
 
 
@@ -4195,18 +3919,9 @@ class CollectionManager(Client2):
         }
 
         """
-
-        validated_body = self.validate_new_relationship_request(body, "ContractLinkProperties")
-        
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"agreements/{agreement_guid}/contract-links/{external_ref_guid}/attach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "ContractLinkProperties", body)
         logger.info(f"Attached agreement {agreement_guid} to contract {external_ref_guid}")
 
     @dynamic_catch
@@ -4301,17 +4016,11 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
+
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements/{agreement_guid}/contract-links/{external_ref_guid}/detach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
         logger.info(f"Detached contract: {external_ref_guid} from {agreement_guid}")
 
     @dynamic_catch
@@ -4459,16 +4168,8 @@ class CollectionManager(Client2):
            "forDuplicateProcessing" : false
         }
         """
-
-        validated_body = self.validate_new_element_request(body, "DigitalSubscriptionProperties")
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, body_slimmer(body))
-        guid = resp.json().get('guid', NO_GUID_RETURNED)
-        logger.info(f"Create collection with GUID: {guid}")
-        return guid
+        return await self._async_create_element_body_request(url, "DigitalSubscriptionProperties", body)
 
 
     def create_digital_subscription(self, body: dict) -> str:
@@ -4597,14 +4298,9 @@ class CollectionManager(Client2):
           "forDuplicateProcessing" : false
         }
         """
-        validated_body = self.validate_update_element_request(body, "DigitalSubscriptionProperties")
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections/"
                f"{digital_subscription_guid}/update")
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-
-        await self._async_make_request("POST", url, json_body)
+        await self._async_update_element_body_request(url,["DigitalSubscriptionProperties"], body )
         logger.info(f"Updated digital subscription {digital_subscription_guid}")
 
     @dynamic_catch
@@ -4704,14 +4400,11 @@ class CollectionManager(Client2):
           "forDuplicateProcessing": false
         }
         """
-        validated_body = self.validate_update_element_status_request(status, body)
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements/"
             f"{digital_subscription_guid}/update-status")
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        await self._async_make_request("POST", url, json_body)
+        await self._async_update_status_request(url, status, body)
         logger.info(f"Updated status for DigitalProduct {digital_subscription_guid}")
 
     @dynamic_catch
@@ -4805,18 +4498,11 @@ class CollectionManager(Client2):
           }
         }
         """
-        validated_body = self.validate_new_relationship_request(body, "DigitalSubscriberProperties")
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/subscribers/"
             f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
-
-        if body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "DigitalSubscriberProperties", body)
         logger.info(f"Linking subscriber {subscriber_guid} to subscription {subscription_guid}")
 
     @dynamic_catch
@@ -4910,17 +4596,11 @@ class CollectionManager(Client2):
           "forDuplicateProcessing": false
         }
         """
-        validated_body = self.validate_delete_request(body)
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements/"
             f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
-        if body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
         logger.info(f"Detached subscriber {subscriber_guid} from subscription {subscription_guid}")
 
 
@@ -5021,17 +4701,12 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_new_relationship_request(body, "ResourceListProperties")
+
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{parent_guid}/collections/{collection_guid}/attach")
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, "ResourceListProperties", body)
         logger.info(f"Attached {collection_guid} to {parent_guid}")
 
     @dynamic_catch
@@ -5133,17 +4808,11 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
         url = (
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{parent_guid}/collections/{collection_guid}/detach")
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
         logger.info(f"Detached collection {collection_guid} from {parent_guid}")
 
 
@@ -5200,7 +4869,7 @@ class CollectionManager(Client2):
         Parameters
         ----------
         collection_guid: str
-            The guid of the collection to update.
+            The guid of the collection to delete.
 
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
@@ -5235,29 +4904,20 @@ class CollectionManager(Client2):
 
 
         """
-        validated_body = self.validate_delete_request(body)
-
-        cascade_s = str(cascade).lower()
-        url = f"{self.collection_command_root}/{collection_guid}/delete?cascadedDelete={cascade_s}"
-        if validated_body is None:
-            body = {"class": "NullRequestBody"}
-        else:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-
+        url = f"{self.collection_command_root}/{collection_guid}/delete"
+        await self._async_delete_request(url, body, cascade)
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")
 
 
     def delete_collection(self, collection_guid: str, body: dict | DeleteRequestBody = None,
                           cascade: bool = False) -> None:
-        """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
+        """Delete a collection.  It is deleted from all parent elements.  If members are anchored to the collection
         then they are also deleted.
 
         Parameters
         ----------
         collection_guid: str
-            The guid of the collection to update.
+            The guid of the collection to delete.
 
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
@@ -5320,7 +4980,7 @@ class CollectionManager(Client2):
         Notes
         -----
         Example body:
-        { "class": "RelationshipRequestBody",
+        { "class": "NewRelationshipRequestBody",
            "properties" : {
               "class" : "CollectionMembershipProperties",
               "membershipRationale": "xxx",
@@ -5344,17 +5004,10 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_new_relationship_request(body, "CollectionMembershipProperties")
+
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/attach")
-
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
-
+        await self._async_new_relationship_request(url, "CollectionMembershipProperties", body)
         logger.info(f"Added {element_guid} to {collection_guid}")
 
 
@@ -5420,7 +5073,7 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_update_collection_membership(self, collection_guid: str, element_guid: str, body: dict = None,
+    async def _async_update_collection_membership_prop(self, collection_guid: str, element_guid: str, body: dict = None,
                                                    ) -> None:
         """Update an element's membership to a collection. Async version.
 
@@ -5478,21 +5131,14 @@ class CollectionManager(Client2):
           "forDuplicateProcessing" : false
         }
         """
-        validated_body = self.validate_update_relationship_request(body, "CollectionMembershipProperties")
 
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/update")
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
-        else:
-            await self._async_make_request("POST", url)
-
+        await self._async_update_relationship_request(url, "CollectionMembershipProperties", body )
         logger.info(f"Updated membership for collection {collection_guid}")
 
 
-    def update_collection_membership(self, collection_guid: str, element_guid: str,
+    def update_collection_membership_prop(self, collection_guid: str, element_guid: str,
                                      body: dict | UpdateRelationshipRequestBody= None,
                                       ) -> None:
         """Update an element's membership to a collection.
@@ -5596,16 +5242,10 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_delete_request(body)
+
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/detach")
-
-        if validated_body is None:
-            json_body = {"class": "NullRequestBody"}
-        else:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        await self._async_make_request("POST", url, json_body)
+        await self._async_delete_collection(url, body)
         logger.info(f"Removed member {element_guid} from collection {collection_guid}")
 
 
@@ -5738,46 +5378,113 @@ class CollectionManager(Client2):
             self._async_get_member_list(collection_guid, collection_name, collection_qname))
         return resp
 
+    def _extract_digital_product_properties(self, element: dict, guid: str, output_format: str) -> dict:
+        props = element["properties"]
+        digital_prod = DigitalProductProperties.model_validate(props)
+        added_props = get_defined_field_values(digital_prod)
 
-    def _extract_collection_properties(self, element: dict) -> dict:
+        used_by_digital_products = element.get("usedByDigitalProducts", "")
+        if isinstance(used_by_digital_products, (list | dict)):
+            used_by_digital_products_list = ""
+            for prod in used_by_digital_products:
+                used_by_digital_products_list += f"{prod["relatedElement"]["properties"]["qualifiedName"]}, "
+            added_props["used_by_digital_products"] = used_by_digital_products_list[:-2]
+
+        uses_digital_products = element.get("usesDigitalProducts", "")
+        if isinstance(uses_digital_products, (list | dict)):
+            uses_digital_products_list = ""
+            for prod in uses_digital_products:
+                uses_digital_products_list += f"{prod["relatedElement"]["properties"]["qualifiedName"]}, "
+            added_props["uses_digital_products"] = uses_digital_products_list[:-2]
+
+        return added_props
+
+    def _extract_agreement_properties(self, element: dict, guid: str, output_format: str) -> dict:
+        props = element["properties"]
+        # agreement = Collections.model_validate(props)
+        # added_props = get_defined_field_values(agreement)
+
+        added_props = {}
+        agreement_items = element.get("agreementItems", "")
+        if isinstance(agreement_items, (list | dict)):
+            agreement_items_list = ""
+            for item in agreement_items:
+                agreement_items_list += f"{item["relatedElement"]["properties"]["qualifiedName"]}, "
+            added_props["agreementItems"] = agreement_items_list[:-2]
+
+        return added_props
+
+    def _extract_collection_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract common properties from a collection element.
+        Extract common properties from a collection element and populate into the provided columns_struct.
 
         Args:
             element (dict): The collection element
+            columns_struct (dict): The columns structure to populate
 
         Returns:
-            dict: Dictionary of extracted properties
+            dict: columns_struct with column 'value' fields populated
         """
+        # First, populate from element.properties using the utility
+        col_data = populate_columns_from_properties(element, columns_struct)
 
-        props = _extract_referenceable_properties(element)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+
+        # Populate header-derived values
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
+
+        # Derived/computed fields
+        # collectionCategories are classifications
         classification_names = ""
-        # classifications = element['elementHeader'].get("classifications", [])
-        for classification in props['classifications']:
+        classifications = element.get('elementHeader', {}).get("collectionCategories", [])
+        for classification in classifications:
             classification_names += f"{classification['classificationName']}, "
-        props["classifications"] = classification_names[:-2]  # why?
+        if classification_names:
+            for column in columns_list:
+                if column.get('key') == 'classifications':
+                    column['value'] = classification_names[:-2]
+                    break
 
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
+        # Populate requested relationship-based columns generically from top-level keys
+        col_data = get_required_relationships(element, col_data)
 
-        member_names = ""
-        members = self.get_member_list(collection_guid=props["GUID"])
-        if isinstance(members, list):
-            for member in members:
-                member_names += f"{member['qualifiedName']}, "
-            props['members'] = member_names[:-2]
-        logger.trace(f"Extracted properties: {props}")
-        return props
+        # Subject area classification
+        subject_area = element.get('elementHeader', {}).get("subjectArea", "") or ""
+        subj_val = ""
+        if isinstance(subject_area, dict):
+            subj_val = subject_area.get("classificationProperties", {}).get("subjectAreaName", "")
+        for column in columns_list:
+            if column.get('key') == 'subject_area':
+                column['value'] = subj_val
+                break
+
+        # Mermaid graph
+        mermaid_val = element.get('mermaidGraph', "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = mermaid_val
+                break
+
+        logger.trace(f"Extracted/Populated columns: {col_data}")
+
+        return col_data
 
 
     def _generate_collection_output(self, elements: dict|list[dict], filter: Optional[str],
-                                    classification_name: Optional[str], output_format: str = "DICT",
+                                    element_type_name: Optional[str], output_format: str = "DICT",
                                     output_format_set: dict | str = None) -> str| list[dict]:
         """ Generate output for collections in the specified format.
 
             Args:
                 elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
                 filter (Optional[str]): The search string used to find the elements
-                classification_name (Optional[str]): The type of collection
+                element_type_name (Optional[str]): The type of collection
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
                 output_format_set (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
@@ -5785,22 +5492,33 @@ class CollectionManager(Client2):
             Returns:
                 Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
-        if classification_name is None:
+        if element_type_name is None:
             entity_type = "Collections"
         else:
-            entity_type = classification_name
+            entity_type = element_type_name
         # First see if the user has specified an output_format_set - either a label or a dict
+        get_additional_props_func  = None
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
+            elif isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
-        # If no output_format was set, then use the classification_name to lookup the output format
-        elif classification_name:
-            output_formats = select_output_format_set(classification_name, output_format)
+
+        # If no output_format was set, then use the element_type_name to lookup the output format
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
         else:
             # fallback to collections or entity type
             output_formats = select_output_format_set(entity_type,output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+
+        if output_formats:
+            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
+            if isinstance(get_additional_props_name, str):
+                class_name, method_name = get_additional_props_name.split(".")
+                if hasattr(self, method_name):
+                    get_additional_props_func = getattr(self, method_name)
 
         logger.trace(f"Executing generate_collection_output for {entity_type}: {output_formats}")
         return generate_output(
@@ -5809,7 +5527,7 @@ class CollectionManager(Client2):
             entity_type,
             output_format,
             self._extract_collection_properties,
-            None,
+            get_additional_props_func,
             output_formats,
             )
 

@@ -746,20 +746,21 @@ class TestRuntimeManager:
     def test_add_archive_file(self):
         try:
             r_client = EgeriaTech(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
             # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"
-            server_guid = r_client.get_guid_for_name("active-metadata-store")
+            server_guid = r_client.get_guid_for_name("qs-metadata-store")
+            print("server_guid", server_guid)
             archive_file = "content-packs/CocoComboArchive.omarchive"
-            server_name = "active-metadata-store"
+            server_name = "qs-metadata-store"
             # archive_file = "content-packs/CoreContentPack.omarchive"
 
             start_time = time.perf_counter()
-            r_client.add_archive_file(archive_file, None, server_name)
+            r_client.add_archive_file(archive_file, server_guid, server_name)
 
             duration = time.perf_counter() - start_time
 

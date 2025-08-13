@@ -215,7 +215,7 @@ class NewRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["NewRelationshipRequestBody"], Field(alias="class")]
     make_anchor: bool | None = False
     anchor_scope_guid: str | None = None
-    properties: RelationshipBeanProperties
+    properties: dict | RelationshipBeanProperties | None = None
 
 
 class DeleteRequestBody(RequestBody):
@@ -254,7 +254,7 @@ class NewElementRequestBody(RequestBody):
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
     parent_at_end_1: bool | None = True
-    properties: ReferenceableProperties
+    properties: dict | None = None
 
 
 class NewClassificationRequestBody(RequestBody):
@@ -291,8 +291,9 @@ class TemplateRequestBody(PyegeriaModel):
 class UpdateElementRequestBody(PyegeriaModel):
     class_: Annotated[Literal["UpdateElementRequestBody"], Field(alias="class")]
     properties: dict[str, Any] = {}
-    external_source_guid: dict[str, Any] = {}
-    external_source_name: dict[str, Any] = {}
+    merge_update: bool | None = True
+    external_source_guid: str | None = None
+    external_source_name: str | None = None
     effective_time: datetime | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
@@ -310,7 +311,7 @@ class UpdateStatusRequestBody(PyegeriaModel):
 
 class GetRequestBody(PyegeriaModel):
     class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
-    metadata_element_type_name: str | None = None
+    # metadata_element_type_name: list[str] | None = None
     metadata_element_subtype_names: list[str] | None = None
     skip_relationships: list[str] | None = None
     include_only_relationships: list[str] | None = None
@@ -348,7 +349,23 @@ class SearchStringRequestBody(ResultsRequestBody):
 
 
 #######
+# This gets only the fields in the most specific model
+def get_defined_fields(model):
+    return {
+        field_name: field
+        for field_name, field in model.__fields__.items()
+        if field_name in model.__annotations__  # Only fields defined in the current model
+    }
 
+def get_defined_field_values(model_instance):
+    # Extract the subset of the model's fields
+    defined_fields = get_defined_fields(model_instance.__class__).keys()
+    # Return only the defined fields with their values
+    return {field: getattr(model_instance, field) for field in defined_fields}
+
+
+
+#######
 
 # --- Custom Base Model for JSON Key Conversion ---
 

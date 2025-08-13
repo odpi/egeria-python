@@ -40,7 +40,7 @@ from ._validators import (is_json, validate_guid, validate_name, validate_public
 from .asset_catalog_omvs import AssetCatalog
 from .automated_curation_omvs import AutomatedCuration
 from .classification_manager_omvs import ClassificationManager
-from .collection_manager_omvs import CollectionManager
+from .collection_manager import CollectionManager
 from .core_omag_server_config import CoreServerConfig
 from .create_tech_guid_lists import build_global_guid_lists
 from .egeria_cat_client import EgeriaCat

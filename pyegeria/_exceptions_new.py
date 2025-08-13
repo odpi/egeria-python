@@ -114,12 +114,15 @@ def print_bullet_list(items)->Text:
 def flatten_dict_to_string(d: dict) -> str:
     """Flatten a dictionary into a string and replace quotes with backticks."""
     try:
-        flat_string = "\n\t".join(
-            # Change replace(\"'\", '`') to replace("'", '`')
-            f"\t* {key}=`{str(value).replace('\"', '`').replace("'", '`')}`"
-            for key, value in d.items()
-        )
-        return flat_string
+        if d:
+            flat_string = "\n\t".join(
+                # Change replace(\"'\", '`') to replace("'", '`')
+                f"\t* {key}=`{str(value).replace('\"', '`').replace("'", '`')}`"
+                for key, value in d.items()
+            )
+            return flat_string
+        else:
+            return ""
     except Exception as e:
         # Corrected syntax for exception chaining
         raise Exception("Error flattening dictionary") from e
@@ -380,17 +383,17 @@ def print_basic_exception(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         table.add_row("HTTP Code", str(e.response_code))
         table.add_row("Egeria Code", str(related_code))
-        table.add_row("Caller Method", e.context.get("caller method", "---"))
+        table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
         table.add_row("Request URL", str(e.response_url))
         table.add_row("Egeria Message",
-                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
+                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")) if isinstance(related_response,dict) else related_response)
         table.add_row("Egeria User Action",
-                      format_dict_to_string(related_response.get('exceptionUserAction',"")))
+                      format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
 
-        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+        exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
         table.add_row("Pyegeria Exception", exception_msg_id)
-        table.add_row("Pyegeria Message",
-                      f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+        table.add_row("Pyegeria Message", e.message)
+        console.print(table)
 
 
         console.print(table)

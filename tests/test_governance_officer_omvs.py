@@ -61,8 +61,8 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            title = "generic-gov-def-3"
-            q_name = s_client.__create_qualified_name__("GovernanceDefinition",title)
+            display_name = "generic-gov-def-3"
+            q_name = s_client.__create_qualified_name__("GovernanceDefinition",display_name)
 
             body ={
                     "class": "NewElementRequestBody",
@@ -70,8 +70,8 @@ class TestGovernanceOfficer:
                         "class": "GovernanceDefinitionProperties",
                         "typeName": "GovernanceDefinition",
                         "domainIdentifier": 0,
-                        "documentIdentifier": q_name,
-                        "title": title,
+                        "qualifiedName": q_name,
+                        "displayName": display_name,
                         "summary": "a third threat",
                         "description": "a third threat - but a bit longer",
                         "scope": "UK",
@@ -80,7 +80,6 @@ class TestGovernanceOfficer:
                         "outcomes": [],
                         "results": []
                         },
-                    "initialStatus": "DRAFT"
                 }
 
             start_time = time.perf_counter()

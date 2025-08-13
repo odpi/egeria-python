@@ -10,6 +10,7 @@ import json
 import os
 import time
 
+from jsonschema import ValidationError
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -21,6 +22,8 @@ from pyegeria import (
     CollectionManager,
     NO_ELEMENTS_FOUND, config_logging, load_app_config, get_app_config, init_logging, config_logging, PyegeriaException,
     print_basic_exception,PyegeriaException, )
+from pyegeria._exceptions_new import print_validation_error
+
 # from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -135,7 +138,7 @@ def display_collections(
         table.add_column("Members")
 
         collections = m_client.find_collections(
-            search_string.strip(), None, True, False, ignore_case=True,
+            search_string.strip(), None, ["Collection"],True, False, ignore_case=True,
             output_format = "DICT", output_format_set=out_struct
         )
         if type(collections) is list:
@@ -153,7 +156,7 @@ def display_collections(
                 collection_type = collection.get("collectionType", "---")
                 classifications = collection.get("classifications", "---")
 
-                classifications_md = Markdown(classifications)
+                classifications_md = Markdown(classifications) if classifications else ""
                 members_struct = m_client.get_member_list(collection_guid=guid)
                 member_list = ""
                 if isinstance(members_struct, list):
@@ -161,7 +164,7 @@ def display_collections(
                         member_list = member_list + f"- {member.get('qualifiedName','---')}\n"
 
                 # members = "\n* ".join(collection.get("members", []))
-                members_md = Markdown(member_list)
+                members_md = Markdown(member_list) if member_list else ""
 
                 table.add_row(
                     display_name,
@@ -180,10 +183,12 @@ def display_collections(
         else:
             print("==> No collections with that name found")
 
-    except (
-        PyegeriaException
-    ) as e:
+    except (PyegeriaException) as e:
         print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
     finally:
         m_client.close_session()
 
@@ -217,6 +222,10 @@ def main():
 
     except PyegeriaException as e:
         print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 if __name__ == "__main__":
