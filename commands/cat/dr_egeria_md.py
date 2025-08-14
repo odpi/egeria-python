@@ -66,7 +66,7 @@ setup_log()
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md", required=True,
               prompt=False)
-@click.option("--output-folder", help="Output folder.", default=".", required=False)
+@click.option("--output-folder", help="Output folder.", default="", required=False)
 @click.option("--directive", default="process", help="How to process the file",
               type=click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")

@@ -15,6 +15,7 @@ for all use cases..using the more role based clients is often appropriate:
 from pyegeria.asset_catalog_omvs import AssetCatalog
 from pyegeria.collection_manager_omvs import CollectionManager
 from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.project_manager_omvs import ProjectManager
 from pyegeria.automated_curation_omvs import AutomatedCuration
 from pyegeria.classification_manager_omvs import ClassificationManager
@@ -30,6 +31,7 @@ from pyegeria.registered_info import RegisteredInfo
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.egeria_config_client import EgeriaConfig
 from pyegeria.data_designer_omvs import DataDesigner
+from pyegeria.governance_officer import GovernanceOfficer
 # from pyegeria.md_processing_utils import render_markdown
 
 
@@ -55,6 +57,7 @@ class Egeria(
     SolutionArchitect,
     EgeriaConfig,
     DataDesigner,
+    GovernanceOfficer
 ):
     """
     Client to issue Runtime status requests.
@@ -127,6 +130,9 @@ class Egeria(
             self, view_server, platform_url, user_id, user_pwd, token
         )
         DataDesigner.__init__(
+            self, view_server, platform_url, user_id, user_pwd, token
+            )
+        GovernanceOfficer.__init__(
             self, view_server, platform_url, user_id, user_pwd, token
             )
 print(Egeria.mro())

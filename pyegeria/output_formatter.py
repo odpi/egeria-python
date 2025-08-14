@@ -8,6 +8,7 @@ from loguru import logger
 
 from pyegeria.mermaid_utilities import construct_mermaid_web
 from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR
+from pyegeria.models import to_camel_case
 
 """
 Note on select_output_format_set function:
@@ -31,21 +32,21 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
     version = element['elementHeader']["versions"].get("version", None)
     type_name = element['elementHeader']["type"].get("typeName", None)
     classifications = element['elementHeader'].get("classifications", [])
-
-    # Get attributes from properties
-    properties = element['properties']
-    display_name = properties.get("name", "") or ""
-    if display_name == "":
-        display_name = properties.get("displayName","")
-    description = properties.get("description", "") or ""
-    qualified_name = properties.get("qualifiedName", "") or ""
-    category = properties.get("category", "") or ""
-    version_identifier = properties.get("versionIdentifier", "") or ""
-    additional_properties = properties.get("additionalProperties", {}) or {}
-    extended_properties = properties.get("extendedProperties", {}) or {}
     effective_from = element['elementHeader'].get("effectiveFrom", None)
     effective_to = element['elementHeader'].get("effectiveTo", None)
 
+    # Get attributes from properties
+    # properties = element['properties']
+    # display_name = properties.get("name", "") or ""
+    # if display_name == "":
+    #     display_name = properties.get("displayName","")
+    # description = properties.get("description", "") or ""
+    # qualified_name = properties.get("qualifiedName", "") or ""
+    # category = properties.get("category", "") or ""
+    # version_identifier = properties.get("versionIdentifier", "") or ""
+    # additional_properties = properties.get("additionalProperties", {}) or {}
+    # extended_properties = properties.get("extendedProperties", {}) or {}
+    #
     return {
         "GUID": guid,
         "metadata_collection_id": metadata_collection_id,
@@ -58,13 +59,13 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
         "type_name": type_name,
         "classifications": classifications,
 
-        "display_name": display_name,
-        "description": description,
-        "qualified_name": qualified_name,
-        "category": category,
-        "version_identifier": version_identifier,
-        "additional_properties": additional_properties,
-        "extended_properties": extended_properties,
+        # "display_name": display_name,
+        # "description": description,
+        # "qualified_name": qualified_name,
+        # "category": category,
+        # "version_identifier": version_identifier,
+        # "additional_properties": additional_properties,
+        # "extended_properties": extended_properties,
         "effective_from": effective_from,
         "effective_to": effective_to,
         }
@@ -228,7 +229,154 @@ def format_for_markdown_table(text: str, guid: str = None) -> str:
     return t
 
 
-def generate_entity_md(elements: List[Dict],
+def populate_columns_from_properties(element: dict, columns_struct: dict) -> dict:
+    """
+    Populate a columns_struct with values from the element's properties.
+
+    The element dict is expected to have a nested 'properties' dict whose keys are in camelCase.
+    The columns_struct is expected to follow the format returned by select_output_format_set, where
+    columns are located at columns_struct['formats']['columns'] and each column is a dict containing
+    at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
+    to a key in the element properties (after converting to camelCase), this function adds a 'value'
+    entry to the column with the matching property's value.
+
+    Args:
+        element: The element containing a 'properties' dict with camelCase keys.
+        columns_struct: The columns structure whose columns have snake_case 'key' fields.
+
+    Returns:
+        The updated columns_struct (the input structure is modified in place and also returned).
+    """
+    if not isinstance(columns_struct, dict):
+        return columns_struct
+
+    props = (element or {}).get('properties') or {}
+    # If properties is not a dict, do nothing
+    if not isinstance(props, dict):
+        return columns_struct
+
+    # Get the columns list if present
+    formats = columns_struct.get('formats') or {}
+    columns = formats.get('columns') if isinstance(formats, dict) else None
+    if not isinstance(columns, list):
+        return columns_struct
+
+    for col in columns:
+        try:
+            key_snake = col.get('key') if isinstance(col, dict) else None
+            if not key_snake:
+                continue
+            # Convert the snake_case key to camelCase to look up in properties
+            key_camel = to_camel_case(key_snake)
+            if key_camel in props:
+                col['value'] = props.get(key_camel)
+        except Exception as e:
+            # Be resilient; log and continue
+            logger.debug(f"populate_columns_from_properties: skipping column due to error: {e}")
+            continue
+
+    return columns_struct
+
+
+def get_required_relationships(element: dict, columns_struct: dict) -> dict:
+    """
+    Populate relationship-derived column values in columns_struct based on top-level keys in the element.
+
+    This function inspects the requested columns in columns_struct, converts each column key from
+    snake_case to camelCase, and if a matching top-level key exists in the element, parses that value
+    (typically lists of relationship beans) into a human-readable value (e.g., a comma-separated list
+    of qualified names) and stores it under the column's 'value'. Columns not specified in the
+    columns_struct are ignored. Existing non-empty 'value's are left as-is.
+
+    Example: if a column with key 'member_of_collections' is present, this function will look for the
+    top-level key 'memberOfCollections' in the element and derive a value if found.
+
+    Args:
+        element: The element dictionary containing top-level relationship lists (e.g., associatedGlossaries,
+                 memberOfCollections, collectionMembers).
+        columns_struct: The columns structure to augment with derived 'value's.
+
+    Returns:
+        The updated columns_struct (modified in place and returned).
+    """
+    if not isinstance(columns_struct, dict):
+        return columns_struct
+
+    formats = columns_struct.get('formats') or {}
+    columns = formats.get('columns') if isinstance(formats, dict) else None
+    if not isinstance(columns, list):
+        return columns_struct
+
+    def _extract_name_from_item(item: Any) -> Optional[str]:
+        """Best-effort extraction of a display/qualified name from a relationship item."""
+        try:
+            if isinstance(item, dict):
+                # Common pattern: item['relatedElement']['properties']['qualifiedName']
+                related = item.get('relatedElement') or item.get('related_element')
+                if isinstance(related, dict):
+                    props = related.get('properties') or {}
+                    name = (
+                        props.get('qualifiedName')
+                        or props.get('displayName')
+                        or props.get('name')
+                    )
+                    if name:
+                        return name
+                # Sometimes the properties may be at the top level of the item
+                name = (
+                    item.get('qualifiedName')
+                    or item.get('displayName')
+                    or item.get('name')
+                )
+                if name:
+                    return name
+            elif isinstance(item, str):
+                return item
+        except Exception as e:
+            logger.debug(f"get_required_relationships: error extracting name from item: {e}")
+        return None
+
+    for col in columns:
+        try:
+            if not isinstance(col, dict):
+                continue
+            key_snake = col.get('key')
+            if not key_snake:
+                continue
+            # If already has a non-empty value, don't overwrite
+            if col.get('value') not in (None, ""):
+                continue
+
+            # Convert the snake_case key to camelCase to look up in top-level element
+            key_camel = to_camel_case(key_snake)
+            if key_camel not in element:
+                continue
+
+            top_val = element.get(key_camel)
+            derived_value: str = ""
+            if isinstance(top_val, list):
+                names: List[str] = []
+                for item in top_val:
+                    nm = _extract_name_from_item(item)
+                    if nm:
+                        names.append(nm)
+                derived_value = ", ".join(names)
+            elif isinstance(top_val, dict):
+                nm = _extract_name_from_item(top_val)
+                derived_value = nm or ""
+            else:
+                # Primitive or unexpected type; coerce to string if not None
+                derived_value = str(top_val) if top_val is not None else ""
+
+            col['value'] = derived_value
+        except Exception as e:
+            logger.debug(f"get_required_relationships: skipping column due to error: {e}")
+            continue
+
+    return columns_struct
+
+
+def generate_entity_md(elements: List[Dict], 
                       elements_action: str, 
                       output_format: str, 
                       entity_type: str,
@@ -250,70 +398,105 @@ def generate_entity_md(elements: List[Dict],
     Returns:
         str: Markdown representation
     """
-    elements_md = ""
-    columns = columns_struct['formats'].get('columns') if columns_struct else None
+    heading = columns_struct.get("heading")
+    if heading == "Default Base Attributes":
+        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of output_format_set and output_format?\n\n"
+    else:
+        elements_md = ""
+    base_columns = columns_struct['formats'].get('columns') if columns_struct else None
 
     for element in elements:
         if element is None:
-            continue
-        props = extract_properties_func(element)
+                continue
+        guid = element.get('elementHeader', {}).get('guid')
+
+        # Prefer new behavior: extractor returns an updated columns_struct with values
+        returned_struct = None
+        if columns_struct is not None:
+            try:
+                returned_struct = extract_properties_func(element, columns_struct)
+            except TypeError:
+                # Fallback for legacy extractors without columns_struct parameter
+                returned_struct = None
+        
+        # Legacy fallback: get props dict if no columns_struct provided/returned
+        props = {}
+        if returned_struct is None:
+            props = extract_properties_func(element) if callable(extract_properties_func) else {}
 
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element,props['GUID'], output_format)
+            # Use guid if available, else try to get from props
+            guid_for_fmt = guid or props.get('GUID')
+            additional_props = get_additional_props_func(element, guid_for_fmt, output_format)
 
-        display_name = props.get('display_name', None)
+        # Determine display name
+        display_name = None
+        if returned_struct is not None:
+            cols = returned_struct.get('formats', {}).get('columns', [])
+            # Find value from 'display_name' or 'title'
+            for col in cols:
+                if col.get('key') in ('display_name', 'title'):
+                    display_name = col.get('value')
+                    if display_name:
+                        break
+        else:
+            display_name = props.get('display_name') or props.get('title')
+
         if display_name is None:
-            display_name = props.get('title', None)
-            if display_name is None:
-                display_name = "NO DISPLAY NAME"
+            display_name = "NO DISPLAY NAME"
 
         # Format header based on output format
         if output_format in ['FORM', 'MD']:
             elements_md += f"# {elements_action}\n\n"
             elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f'<a id="{props.get("GUID","No GUID")}"></a>\n# {entity_type} Name: {display_name}\n\n'
+            elements_md += f'<a id="{(guid or props.get("GUID") or "No GUID" )}"></a>\n# {entity_type} Name: {display_name}\n\n'
         else:
             elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
 
-       # Add attributes based on column spec if available, otherwise, add all
-        if columns:
-            for column in columns:
+        # Add attributes based on column spec if available, otherwise, add all (legacy)
+        if returned_struct is not None:
+            cols = returned_struct.get('formats', {}).get('columns', [])
+            for column in cols:
+                name = column.get('name')
+                key = column.get('key')
+                value = column.get('value')
+                if value in (None, "") and key in additional_props:
+                    value = additional_props[key]
+                if column.get('format'):
+                    value = format_for_markdown_table(value, guid)
+                elements_md += make_md_attribute(name, value, output_format)
+            if wk := returned_struct.get("annotations", {}).get("wikilinks"):
+                elements_md += ", ".join(wk)
+        elif base_columns:
+            # If we have columns but extractor didn't return struct, use legacy props lookup
+            for column in base_columns:
                 key = column['key']
                 name = column['name']
                 value = ""
-
-                # Check if the key is in props or additional_props
                 if key in props:
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
-                # Format the value if needed
-                if 'format' in column and column['format']:
-                    value = format_for_markdown_table(value, props['GUID'])
-                # elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
+                if column.get('format'):
+                    value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elements_md += make_md_attribute(name, value, output_format)
-
+            if wk := columns_struct.get("annotations", {}).get("wikilinks", None):
+                elements_md += ", ".join(wk)
         else:
+            # Legacy path without columns: dump all props
             for key, value in props.items():
                 if output_format in ['FORM', 'MD', 'DICT'] and key == 'mermaid':
                     continue
-                if key not in [ 'properties', 'display_name']:
-                    if key == "mermaid" and value == '':
+                if key not in ['properties', 'display_name']:
+                    if key == 'mermaid' and value == '':
                         continue
                     elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
-            # Add additional properties
             for key, value in additional_props.items():
                 elements_md += make_md_attribute(key.replace('_', ' '), value, output_format)
 
-        # # Add GUID
-        # elements_md += make_md_attribute("GUID",props['GUID'], output_format)
-
-        if wk := columns_struct.get("annotations", {}).get("wikilinks", None):
-            elements_md += ", ".join(wk)
-        # Add separator if not the last element
         if element != elements[-1]:
             elements_md += MD_SEPARATOR
 
@@ -344,8 +527,12 @@ def generate_entity_md_table(elements: List[Dict],
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
     columns = columns_struct['formats'].get('columns', [])
+    heading = columns_struct.get("heading")
+    if heading == "Default Base Attributes":
+        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of output_format_set and output_format?\n\n"
+    else:
+        elements_md = ""
 
-    elements_md = ""
     if output_format == "LIST":
         elements_md = f"# {entity_type_plural} Table\n\n"
         elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
@@ -362,33 +549,47 @@ def generate_entity_md_table(elements: List[Dict],
 
     # Add rows
     for element in elements:
-        if output_format == "help":
-            props = element
-        else:
-            props = extract_properties_func(element)
+        guid = element.get('elementHeader', {}).get('guid')
 
-        # Get additional properties if function is provided
+        # Extractor returns columns_struct with values when possible
+        try:
+            returned_struct = extract_properties_func(element, columns_struct)
+        except TypeError:
+            returned_struct = None
+
+        # For help mode, bypass extraction
+        if output_format == "help":
+            returned_struct = {"formats": {"columns": columns}}
+
+        # Additional props (if any)
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element,props['GUID'], output_format)
+            additional_props = get_additional_props_func(element, guid, output_format)
 
         # Build row
         row = "| "
-        for column in columns:
-            key = column['key']
-            value = ""
-
-            # Check if the key is in props or additional_props
-            if key in props:
-                value = props[key]
-            elif key in additional_props:
-                value = additional_props[key]
-
-            # Format the value if needed
-            if 'format' in column and column['format']:
-                value = format_for_markdown_table(value, props['GUID'])
-
-            row += f"{value} | "
+        if returned_struct is not None:
+            for column in returned_struct.get('formats', {}).get('columns', []):
+                key = column.get('key')
+                value = column.get('value')
+                if (value in (None, "")) and key in additional_props:
+                    value = additional_props[key]
+                if column.get('format'):
+                    value = format_for_markdown_table(value, guid)
+                row += f"{value} | "
+        else:
+            # Legacy fallback: read from props dict
+            props = extract_properties_func(element)
+            for column in columns:
+                key = column['key']
+                value = ""
+                if key in props:
+                    value = props[key]
+                elif key in additional_props:
+                    value = additional_props[key]
+                if column.get('format'):
+                    value = format_for_markdown_table(value, guid or props.get('GUID'))
+                row += f"{value} | "
 
         elements_md += row + "\n"
         if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
@@ -419,38 +620,55 @@ def generate_entity_dict(elements: List[Dict],
     """
     result = []
 
-#####
+    #####
     # Add attributes based on column spec if available, otherwise, add all
     for element in elements:
         if element is None:
             continue
-        props = extract_properties_func(element)
+
+        guid = element.get('elementHeader', {}).get('guid')
+
+        returned_struct = None
+        if columns_struct is not None:
+            try:
+                returned_struct = extract_properties_func(element, columns_struct)
+            except TypeError:
+                returned_struct = None
+
         # Get additional properties if function is provided
         additional_props = {}
         if get_additional_props_func:
-            additional_props = get_additional_props_func(element,props['GUID'], output_format)
+            additional_props = get_additional_props_func(element, guid, output_format)
 
         # Create entity dictionary
         entity_dict = {}
 
         columns = columns_struct['formats'].get('columns', None) if columns_struct else None
-        if columns:
+        if returned_struct is not None:
+            for column in returned_struct.get('formats', {}).get('columns', []):
+                key = column.get('key')
+                name = column.get('name')
+                value = column.get('value')
+                if (value in (None, "")) and key in additional_props:
+                    value = additional_props[key]
+                if column.get('format'):
+                    value = format_for_markdown_table(value, guid)
+                entity_dict[name] = value
+        elif columns:
             for column in columns:
                 key = column['key']
                 name = column['name']
                 value = ""
-
-                # Check if the key is in props or additional_props
+                props = extract_properties_func(element)
                 if key in props:
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
-                # Format the value if needed
                 if  column.get('format', None):
-                    value = format_for_markdown_table(value, props['GUID'])
+                    value = format_for_markdown_table(value, guid or props.get('GUID'))
                 entity_dict[name] = value
-
         else:
+            props = extract_properties_func(element)
             # Add properties based on include/exclude lists
             for key, value in props.items():
                 if key not in ['properties', 'mermaid']:  # Skip the raw properties object
@@ -583,6 +801,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         Formatted output as string or list of dictionaries
     """
     columns = columns_struct['formats'].get('columns',None) if columns_struct else None
+
     # Ensure elements is a list
     if isinstance(elements, dict):
         elements = [elements]

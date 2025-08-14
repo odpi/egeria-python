@@ -1,0 +1,910 @@
+{
+  "Referenceable": {
+    "heading": "Common Attributes",
+    "description": "Attributes that apply to all Referenceables.",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": true
+          },
+          {
+            "name": "Metadata Collection ID",
+            "key": "metadata_collection_id",
+            "format": true
+          },
+          {
+            "name": "Metadata Collection Name",
+            "key": "metadata_collection_name",
+            "format": true
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "format": false
+          },
+          {
+            "name": "Additional Properties",
+            "key": "additional_properties",
+            "format": false
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Create Time",
+            "key": "create_time",
+            "format": false
+          },
+          {
+            "name": "Updated By",
+            "key": "updated_by",
+            "format": false
+          },
+          {
+            "name": "Update Time",
+            "key": "update_time",
+            "format": false
+          },
+          {
+            "name": "Effective From",
+            "key": "effective_from",
+            "format": false
+          },
+          {
+            "name": "Effective To",
+            "key": "effective_to",
+            "format": false
+          },
+          {
+            "name": "Version",
+            "key": "version",
+            "format": false
+          },
+          {
+            "name": "Open Metadata Type Name",
+            "key": "type_name",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null
+  },
+  "Collections": {
+    "heading": "Common Collection Information",
+    "description": "Attributes generic to all Collections.",
+    "aliases": [
+      "Collection",
+      "RootCollection",
+      "Folder",
+      "ReferenceList",
+      "HomeCollection",
+      "ResultSet",
+      "RecentAccess",
+      "WorkItemList",
+      "Namespace"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Commons]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "DICT"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Create Time",
+            "key": "create_time",
+            "format": false
+          },
+          {
+            "name": "Updated By",
+            "key": "updated_by",
+            "format": false
+          },
+          {
+            "name": "Update Time",
+            "key": "update_time",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  },
+  "CollectionMembers": {
+    "heading": "Collection Membership Information",
+    "description": "Attributes about all CollectionMembers.",
+    "aliases": [
+      "CollectionMember",
+      "Member",
+      "Members"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[CollectionMembers]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "DICT"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Create Time",
+            "key": "create_time",
+            "format": false
+          },
+          {
+            "name": "Updated By",
+            "key": "updated_by",
+            "format": false
+          },
+          {
+            "name": "Update Time",
+            "key": "update_time",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.get_collection_members",
+        "user_params": [
+          "collection_guid"
+        ],
+        "spec_params": {
+          "output_format": "DICT"
+        }
+      }
+    ]
+  },
+  "DigitalProducts": {
+    "heading": "Digital Product Information",
+    "description": "Attributes useful to Digital Products.",
+    "aliases": [
+      "DigitalProduct",
+      "DataProducts"
+    ],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "REPORT"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "format": false
+          },
+          {
+            "name": "Product Name",
+            "key": "product_name",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Maturity",
+            "key": "maturity",
+            "format": false
+          },
+          {
+            "name": "Service Life",
+            "key": "service_life",
+            "format": false
+          },
+          {
+            "name": "Next Version",
+            "key": "next_version",
+            "format": false
+          },
+          {
+            "name": "Withdraw Date",
+            "key": "withdraw_date",
+            "format": false
+          },
+          {
+            "name": "Members",
+            "key": "members",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {
+          "classification_name": "DigitalProducts"
+        }
+      }
+    ]
+  },
+  "Agreements": {
+    "heading": "General Agreement Information",
+    "description": "Attributes generic to all Agreements.",
+    "aliases": [
+      "DataSharingAgreement"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Agreements]]",
+        "[[Egeria]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": null
+  },
+  "DataDictionary": {
+    "heading": "Data Dictionary Information",
+    "description": "Attributes useful to Data Dictionary.",
+    "aliases": [
+      "Data Dict",
+      "Data Dictionary"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Dictionary]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {
+          "classification_name": "DataDictionary"
+        }
+      }
+    ]
+  },
+  "Data Specification": {
+    "heading": "Data Specification Information",
+    "description": "Attributes useful to Data Specification.",
+    "aliases": [
+      "Data Spec",
+      "DataSpec",
+      "DataSpecification"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Specification]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "REPORT",
+          "HTML"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Mermaid",
+            "key": "mermaid",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "MERMAID"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Mermaid",
+            "key": "mermaid",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {
+          "classification_name": "DataSpec"
+        }
+      }
+    ]
+  },
+  "DataStruct": {
+    "heading": "Data Structure Information",
+    "description": "Attributes useful to Data Structures.",
+    "aliases": [
+      "Data Structure",
+      "DataStructures",
+      "Data Structures",
+      "Data Struct",
+      "DataStructure"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Structure]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "DataDesigner.find_data_structures",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  },
+  "DataField": {
+    "heading": "Data Structure Information",
+    "description": "Attributes useful to Data Structures.",
+    "aliases": [
+      "Data Field",
+      "Data Fields",
+      "DataFields"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Field]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "DataDesigner.find_data_fields",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  },
+  "Mandy-DataStruct": {
+    "heading": "Puddy Approves",
+    "description": "This is a tutorial on how to use a data struct description",
+    "aliases": [],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Structure]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "GUID",
+            "key": "GUID",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "DICT",
+          "LIST"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "GUID",
+            "key": "GUID",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "REPORT",
+          "MERMAID",
+          "HTML"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Mermaid",
+            "key": "mermaid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "DataDesigner.find_data_structures",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {
+          "output_format": "DICT"
+        }
+      }
+    ]
+  },
+  "Governance Definitions": {
+    "heading": "Governance-Definitions Information",
+    "description": "Attributes useful to Governance-Definitions.",
+    "aliases": [
+      "GovernanceDefinitions"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Governance]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Title",
+            "key": "title",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "GovernanceOfficer.find_governance_definitions",
+        "user_params": [
+          "search_filter"
+        ],
+        "spec_params": {
+          "output_format": "DICT"
+        }
+      }
+    ]
+  }
+}

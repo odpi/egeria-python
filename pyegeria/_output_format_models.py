@@ -175,14 +175,16 @@ class FormatSet(BaseModel):
         aliases: Alternative names that can be used to reference this format set
         annotations: Additional metadata, like wiki links
         formats: A list of format configurations
-        action: Optional actions associated with the format set
+        action: Optional action associated with the format set
+        get_additional_props: Optional action used to retrieve additional properties for a format set
     """
     heading: str
     description: str
     aliases: List[str] = Field(default_factory=list)
     annotations: Dict[str, List[str]] = Field(default_factory=dict)
     formats: List[Union[Format, Dict[str, Any]]]
-    action: Optional[List[Union[ActionParameter, Dict[str, Any]]]] = None
+    action: Optional[Union[ActionParameter, Dict[str, Any]]] = None
+    get_additional_props: Optional[Union[ActionParameter, Dict[str, Any]]] = None
     
     @validator('formats', pre=True)
     def validate_formats(cls, v):
@@ -195,18 +197,20 @@ class FormatSet(BaseModel):
                 result.append(item)
         return result
     
-    @validator('action', pre=True)
-    def validate_action(cls, v):
-        """Convert dictionary actions to ActionParameter objects."""
+    @validator('action', 'get_additional_props', pre=True)
+    def validate_action_like(cls, v):
+        """Convert dictionary action-like fields to ActionParameter objects. Accepts legacy list shape."""
         if v is None:
             return None
-        result = []
-        for item in v:
-            if isinstance(item, dict):
-                result.append(ActionParameter(**item))
-            else:
-                result.append(item)
-        return result
+        # Backward compatibility: if a list is provided, use the first element
+        if isinstance(v, list):
+            if not v:
+                return None
+            logger.warning("FormatSet.action/get_additional_props provided as a list; coercing first element to dict. This shape is deprecated.")
+            v = v[0]
+        if isinstance(v, dict):
+            return ActionParameter(**v)
+        return v
     
     def dict(self, *args, **kwargs):
         """Override dict method to convert nested objects back to dictionaries."""
@@ -215,11 +219,12 @@ class FormatSet(BaseModel):
             format if isinstance(format, dict) else format.dict()
             for format in self.formats
         ]
-        if self.action:
-            result['action'] = [
-                action if isinstance(action, dict) else action.dict()
-                for action in self.action
-            ]
+        if self.action is not None:
+            result['action'] = self.action if isinstance(self.action, dict) else self.action.dict()
+        if self.get_additional_props is not None:
+            result['get_additional_props'] = (
+                self.get_additional_props if isinstance(self.get_additional_props, dict) else self.get_additional_props.dict()
+            )
         return result
     
     def get(self, key, default=None):

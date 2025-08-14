@@ -1,0 +1,187 @@
+{
+  "Collections": {
+    "heading": "Common Collection Information",
+    "description": "Attributes generic to all Collections.",
+    "aliases": [
+      "Collection",
+      "RootCollection",
+      "Folder",
+      "ReferenceList",
+      "HomeCollection",
+      "ResultSet",
+      "RecentAccess",
+      "WorkItemList",
+      "Namespace"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Commons]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "DICT"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Create Time",
+            "key": "create_time",
+            "format": false
+          },
+          {
+            "name": "Updated By",
+            "key": "updated_by",
+            "format": false
+          },
+          {
+            "name": "Update Time",
+            "key": "update_time",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      },
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  },
+  "DataDictionary": {
+    "heading": "Data Dictionary Information",
+    "description": "Attributes useful to Data Dictionary.",
+    "aliases": [
+      "Data Dict",
+      "Data Dictionary"
+    ],
+    "annotations": {
+      "wikilinks": [
+        "[[Data Dictionary]]"
+      ]
+    },
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": true
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CollectionManager.find_collections",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {
+          "classification_name": "DataDictionary"
+        }
+      }
+    ]
+  }
+}

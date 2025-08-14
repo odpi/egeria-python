@@ -11,6 +11,7 @@ from enum import Enum
 
 from httpx import Response
 from loguru import logger
+from pydantic_core import ValidationError
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
@@ -34,7 +35,7 @@ class PyegeriaErrorCode(Enum):
         "http_code": 400,
         "egeria_code": "From Egeria",
         "message_id": "CLIENT_ERROR_400",
-        "message_template": "Client error occurred accessing `{0}` with status code `{1}`.",
+        "message_template": "Client error occurred with status code `{0}`.",
         "system_action": "The client is unable to connect to the Egeria platform.",
         "user_action": "Check the URL to ensure the valid platform url, server, user id are correct.",
     }
@@ -113,12 +114,15 @@ def print_bullet_list(items)->Text:
 def flatten_dict_to_string(d: dict) -> str:
     """Flatten a dictionary into a string and replace quotes with backticks."""
     try:
-        flat_string = "\n\t".join(
-            # Change replace(\"'\", '`') to replace("'", '`')
-            f"\t* {key}=`{str(value).replace('\"', '`').replace("'", '`')}`"
-            for key, value in d.items()
-        )
-        return flat_string
+        if d:
+            flat_string = "\n\t".join(
+                # Change replace(\"'\", '`') to replace("'", '`')
+                f"\t* {key}=`{str(value).replace('\"', '`').replace("'", '`')}`"
+                for key, value in d.items()
+            )
+            return flat_string
+        else:
+            return ""
     except Exception as e:
         # Corrected syntax for exception chaining
         raise Exception("Error flattening dictionary") from e
@@ -148,14 +152,20 @@ def format_dict_to_string(d: dict) -> str:
 class PyegeriaException(Exception):
     """Base exception for My REST Library errors."""
 
-    def __init__(self, response:Response, error_code: PyegeriaErrorCode,
+    def __init__(self, response:Response = None, error_code: PyegeriaErrorCode = None,
                  context: dict = None, additional_info:dict = None, e:Exception = None) -> None:
-        self.response = response
+        if response:
+            self.response = response
+            self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint",                                                                                             "")
+            self.response_code = getattr(response, "status_code", "unknown status code") if response else ""
+        else:
+            self.response = None
+            self.response_url = ""
+            self.response_code = ""
         self.error_code = error_code
         self.error_details = error_code.value
         self.pyegeria_code = self.error_details.get("message_id", "UNKNOWN_ERROR")
-        self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint","")
-        self.response_code = getattr(response, "status_code", "unknown status code") if response else ""
+
         self.message = self.error_details["message_template"].format(self.response_url, self.response_code)
         self.system_action = self.error_details.get("system_action", "")
         self.user_action = self.error_details.get("user_action", "")
@@ -199,7 +209,7 @@ class PyegeriaConnectionException(PyegeriaException):
 
 class PyegeriaInvalidParameterException(PyegeriaException):
     """Raised for invalid parameters - parameters that might be missing or incorrect."""
-    def __init__(self, response: Response,
+    def __init__(self, response: Response = None,
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
         super().__init__(response, PyegeriaErrorCode.VALIDATION_ERROR,
                          context, additional_info, e)
@@ -311,7 +321,7 @@ def print_exception_response(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         console.print(Markdown(f"\n---\n# Exception: {e.__class__.__name__}"))
         msg: Text = Text(e.__str__(), overflow="fold")
-        if hasattr(e, 'related_http_code') and e.related_http_code:
+        if e.response_code:
             related_response = e.response.json()
             exception_msg_id = related_response.get("exceptionErrorMessageId", None)
             if exception_msg_id:
@@ -340,7 +350,7 @@ def print_exception_table(e: PyegeriaException):
         table.add_row("Egeria Code", str(related_code))
         table.add_row("Caller Method", e.context.get("caller method", "---"))
         table.add_row("Request URL", str(e.response_url))
-        if e.related_http_code:
+        if e.response_code:
             item_table = Table(show_lines = True, header_style="bold")
             item_table.add_column("Item", justify="center")
             item_table.add_column("Detail", justify="left")
@@ -364,7 +374,7 @@ def print_exception_table(e: PyegeriaException):
 def print_basic_exception(e: PyegeriaException):
     """Prints the exception response"""
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
-    related_response = e.response.json()
+    related_response = e.response.json() if e.response else ""
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")
@@ -373,19 +383,37 @@ def print_basic_exception(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         table.add_row("HTTP Code", str(e.response_code))
         table.add_row("Egeria Code", str(related_code))
-        table.add_row("Caller Method", e.context.get("caller method", "---"))
+        table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
         table.add_row("Request URL", str(e.response_url))
         table.add_row("Egeria Message",
-                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
+                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")) if isinstance(related_response,dict) else related_response)
         table.add_row("Egeria User Action",
-                      format_dict_to_string(related_response.get('exceptionUserAction',"")))
+                      format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
 
-        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+        exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
         table.add_row("Pyegeria Exception", exception_msg_id)
-        table.add_row("Pyegeria Message",
-                      f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+        table.add_row("Pyegeria Message", e.message)
+        console.print(table)
 
 
         console.print(table)
     else:
         print(f"\n\n\t  Not an Pyegeria exception {e}")
+
+def print_validation_error(e: ValidationError):
+    """Prints the pydantic validation exception response"""
+
+    table = Table(title=f"Validation Error for {e.title}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
+    table.caption = "Pydantic Validation Error"
+    table.add_column("Type", justify="center")
+    table.add_column("Attribute", justify="center")
+    table.add_column("Message", justify="center")
+
+    for error in e.errors():
+        error_type = error["type"]
+        attribute = " ".join(str(part) for part in error["loc"])
+        message = error["msg"]
+        table.add_row(error_type, attribute, message)
+
+
+    console.print(table)

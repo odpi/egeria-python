@@ -50,14 +50,15 @@ import pydevd_pycharm
 
 from pyegeria import (
     EgeriaTech,
-    NO_ELEMENTS_FOUND,
-    config_logging,
-    get_app_config
-)
-from pyegeria._output_formats import select_output_format_set, get_output_format_set_heading, \
-    get_output_format_set_description
+    CollectionManager,
+    NO_ELEMENTS_FOUND, GovernanceOfficer,
+    # config_logging,
+    # get_app_config
+    )
+from pyegeria.load_config import get_app_config
+from pyegeria.logging_configuration import config_logging
+from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
-from pyegeria.egeria_tech_client import EgeriaTech
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
 #                              port=5678,               # Port to communicate with PyCharm
@@ -128,8 +129,8 @@ def execute_format_set_action(
         print(f"Error: Output format set '{format_set_name}' does not have an action property.")
         return
 
-    # Extract the function and parameters from the action property
-    action = format_set["action"][0]  # Assuming there's only one action
+    # Extract the function and parameters from the action property (now a dict)
+    action = format_set["action"]
     func = action.get("function")
     user_params = action.get("user_params", [])
     spec_params = action.get("spec_params", {})
@@ -139,6 +140,7 @@ def execute_format_set_action(
     for param in user_params:
         if param in kwargs and kwargs[param]:
             params[param] = kwargs[param]
+            # print(f"Found value '{kwargs[param]}' for parameter '{param}'.")
         elif param not in kwargs and param not in spec_params:
             print(f"Warning: Required parameter '{param}' not provided for format set '{format_set_name}'.")
     
@@ -155,10 +157,14 @@ def execute_format_set_action(
     # If function name is provided as a string, parse it to get class and method
     if isinstance(func, str) and "." in func:
         class_name, method_name = func.split(".")
-        # if class_name == "CollectionManager":
-        #     client_class = CollectionManager
-        # elif class_name == "EgeriaTech":
-        client_class = EgeriaTech
+        if class_name == "CollectionManager":
+            client_class = CollectionManager
+        elif class_name == "GovernanceOfficer":
+            client_class = GovernanceOfficer
+        else:
+            client_class = EgeriaTech
+
+
         # Add more client classes as needed
     
     # # If client_class is still None, determine based on format set name
@@ -215,6 +221,7 @@ def execute_format_set_action(
             params['output_format'] = output_format
             
             # Call the function with the parameters
+            print(f"\n==> Calling function: {func} with parameters:{params}")
             try:
                 if isinstance(func, type(client.find_collections)):  # It's a method of the client
                     # Call the function as an instance method of the client
@@ -244,88 +251,88 @@ def execute_format_set_action(
             if output_format == "HTML":
                 print(f"\n==> Web link: [{file_name}]({app_config.pyegeria_publishing_root}/{file_name}")
             return
+        else:
+            # For TABLE output, add output_format to params
+            params['output_format'] = "DICT"
+            print(f"\n==> Calling function: {func} with parameters:{params}")
+            # Call the function and create a table
+            try:
+                if hasattr(client, method_name):  # It's a method of the client
+                    # Call the function as an instance method of the client
+                    result = func(**params)
+                else:
+                    # For standalone functions, call with client as first argument
+                    result = func(client, **params)
+            except TypeError as e:
+                # Handle parameter mismatch errors
+                print(f"Error calling function: {e}")
+                print(f"Parameters provided: {params}")
+                return
 
-        # For TABLE output, add output_format to params
-        params['output_format'] = "DICT"
-        
-        # Call the function and create a table
-        try:
-            if isinstance(func, type(client.find_collections)):  # It's a method of the client
-                # Call the function as an instance method of the client
-                result = func(**params)
-            else:
-                # For standalone functions, call with client as first argument
-                result = func(client, **params)
-        except TypeError as e:
-            # Handle parameter mismatch errors
-            print(f"Error calling function: {e}")
-            print(f"Parameters provided: {params}")
-            return
-        
-        if not result or result == NO_ELEMENTS_FOUND:
-            print(f"\n==> No elements found for format set '{format_set_name}'")
-            return
-        
-
-        if heading and desc:
-            console.print(Markdown(preamble))
-
-        # Create a table for the results
-        table = Table(
-            title=f"{format_set_name} @ {time.asctime()}",
-            style="bright_white on black",
-            header_style="bright_white on dark_blue",
-            title_style="bold white on black",
-            caption_style="white on black",
-            show_lines=True,
-            box=box.ROUNDED,
-            caption=f"View Server '{view_server}' @ Platform - {view_url}",
-            expand=True,
-        )
-        
-        # Handle both list and dictionary results
-        if isinstance(result, list):
-            if not result:
+            if not result or result == NO_ELEMENTS_FOUND:
                 print(f"\n==> No elements found for format set '{format_set_name}'")
                 return
-                
-            # Sort the results by display_name if available
-            if "display_name" in result[0]:
-                sorted_results = sorted(result, key=lambda k: k.get("display_name", ""))
-            elif "Display Name" in result[0]:
-                sorted_results = sorted(result, key=lambda k: k.get("Display Name", ""))
+
+
+            if heading and desc:
+                console.print(Markdown(preamble))
+
+            # Create a table for the results
+            table = Table(
+                title=f"{format_set_name} @ {time.asctime()}",
+                style="bright_white on black",
+                header_style="bright_white on dark_blue",
+                title_style="bold white on black",
+                caption_style="white on black",
+                show_lines=True,
+                box=box.ROUNDED,
+                caption=f"View Server '{view_server}' @ Platform - {view_url}",
+                expand=True,
+            )
+
+            # Handle both list and dictionary results
+            if isinstance(result, list):
+                if not result:
+                    print(f"\n==> No elements found for format set '{format_set_name}'")
+                    return
+
+                # Sort the results by display_name if available
+                if "display_name" in result[0]:
+                    sorted_results = sorted(result, key=lambda k: k.get("display_name", ""))
+                elif "Display Name" in result[0]:
+                    sorted_results = sorted(result, key=lambda k: k.get("Display Name", ""))
+                else:
+                    sorted_results = result
+
+                # Add columns dynamically based on the first result
+                column_headings = list(sorted_results[0].keys())
+                for heading in column_headings:
+                    table.add_column(heading, justify="left", style="cyan")
+
+                # Add rows
+                for item in sorted_results:
+                    row_values = []
+                    for key in column_headings:
+                        value = item.get(key, "")
+                        row_values.append(str(value))
+
+                    table.add_row(*row_values)
             else:
-                sorted_results = result
-                
-            # Add columns dynamically based on the first result
-            column_headings = list(sorted_results[0].keys())
-            for heading in column_headings:
-                table.add_column(heading, justify="left", style="cyan")
-                
-            # Add rows
-            for item in sorted_results:
+                # Handle single dictionary result
+                column_headings = list(result.keys())
+                for heading in column_headings:
+                    table.add_column(heading, justify="left", style="cyan")
+
                 row_values = []
                 for key in column_headings:
-                    value = item.get(key, "")
+                    value = result.get(key, "")
                     row_values.append(str(value))
-                    
-                table.add_row(*row_values)
-        else:
-            # Handle single dictionary result
-            column_headings = list(result.keys())
-            for heading in column_headings:
-                table.add_column(heading, justify="left", style="cyan")
-                
-            row_values = []
-            for key in column_headings:
-                value = result.get(key, "")
-                row_values.append(str(value))
-                
-            table.add_row(*row_values)
-            
-        # Print the table
 
-        console.print(table)
+                table.add_row(*row_values)
+
+            # Print the table
+
+            console.print(table)
 
     except PyegeriaException as e:
         print_exception_response(e)
@@ -368,7 +375,7 @@ def main():
     # Add arguments based on the format set's user_params
     user_params = []
     if "action" in format_set:
-        action = format_set["action"][0]  # Assuming there's only one action
+        action = format_set["action"]
         user_params = action.get("user_params", [])
         
         for param in user_params:

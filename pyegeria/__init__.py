@@ -10,8 +10,8 @@ The first capabilities are around Egeria's platform services used to start and s
 the server platform and servers.
 
 """
-from .load_config import load_app_config, get_app_config
-from .logging_configuration import config_logging, init_logging
+# from .load_config import load_app_config, get_app_config
+# from .logging_configuration import config_logging, init_logging
 from ._globals import (INTEGRATION_GUIDS, TEMPLATE_GUIDS, default_time_out, disable_ssl_warnings, enable_ssl_check,
                        is_debug, max_paging_size, NO_ELEMENTS_FOUND, NO_ASSETS_FOUND, NO_SERVERS_FOUND,
                        NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,
@@ -27,7 +27,12 @@ if disable_ssl_warnings:
 
 from ._client import Client
 from ._client_new import Client2
-
+from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIException, PyegeriaException,
+                              PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
+                              PyegeriaConnectionException, PyegeriaNotFoundException,
+                              print_exception_table, print_basic_exception)
+from .load_config import load_app_config, get_app_config
+from .logging_configuration import config_logging, console_log_filter, init_logging
 from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                           print_exception_response, )
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
@@ -35,7 +40,7 @@ from ._validators import (is_json, validate_guid, validate_name, validate_public
 from .asset_catalog_omvs import AssetCatalog
 from .automated_curation_omvs import AutomatedCuration
 from .classification_manager_omvs import ClassificationManager
-from .collection_manager_omvs import CollectionManager
+from .collection_manager import CollectionManager
 from .core_omag_server_config import CoreServerConfig
 from .create_tech_guid_lists import build_global_guid_lists
 from .egeria_cat_client import EgeriaCat
@@ -47,7 +52,7 @@ from .feedback_manager_omvs import FeedbackManager
 from .full_omag_server_config import FullServerConfig
 from .glossary_browser_omvs import GlossaryBrowser
 from .glossary_manager_omvs import GlossaryManager
-from .governance_officer_omvs import GovernanceOfficer
+from .governance_officer import GovernanceOfficer
 from .mermaid_utilities import (construct_mermaid_web, construct_mermaid_jup, generate_process_graph, load_mermaid,
                                 parse_mermaid_code, render_mermaid, save_mermaid_graph, save_mermaid_html, )
 from .metadata_explorer_omvs import MetadataExplorer

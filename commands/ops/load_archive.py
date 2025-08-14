@@ -12,7 +12,9 @@ import os
 
 import click
 from loguru import logger
-from pyegeria import AutomatedCuration, EgeriaTech,  config_logging, get_app_config
+from pyegeria import AutomatedCuration, EgeriaTech
+from pyegeria.load_config import get_app_config
+from pyegeria.logging_configuration import config_logging
 from pyegeria._exceptions_new import (
 PyegeriaException, print_exception_response, print_basic_exception
 )
@@ -74,7 +76,7 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
             f"Perhaps there was a timeout? If so, the command will complete despite the exception\n"
             f"===> You can check by rerunning the command in a few minutes"
         )
-        print_exception_response(e)
+        print_basic_exception(e)
 
 
 if __name__ == "__main__":

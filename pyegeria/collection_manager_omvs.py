@@ -16,7 +16,7 @@ from pyegeria._client import Client
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED, NO_MEMBERS_FOUND
 from pyegeria._validators import validate_guid, validate_search_string
 from pyegeria.output_formatter import (generate_output,
-                                       _extract_referenceable_properties)
+                                       _extract_referenceable_properties, get_required_relationships)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 
@@ -425,9 +425,9 @@ class CollectionManager(Client2):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
+        search_string = search_string if search_string != "*" else None
         body = {
-            "class": "FilterRequestBody", "filter": search_string
+            "class": "SearchStringRequestBody", "searchString": search_string
             }
 
         resp = await self._async_find_collections_w_body(body, classification_name, starts_with, ends_with, ignore_case,
@@ -615,11 +615,11 @@ class CollectionManager(Client2):
         Parameters
         ----------
         collection_type: str
-            collection_type to use to find matching collections.
+            category to use to find matching collections.
         classification_name: str, optional
             An optional filter on the search,  e.g., DataSpec
         body: dict, optional, default = None
-            Provides, a full request body. If specified, the body filter parameter supercedes the collection_type
+            Provides, a full request body. If specified, the body filter parameter supercedes the category
             parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -701,11 +701,11 @@ class CollectionManager(Client2):
         Parameters
         ----------
         collection_type: str
-            collection_type to use to find matching collections.
+            category to use to find matching collections.
         classification_name: str, optional
             An optional filter on the search, e.g., DataSpec
         body: dict, optional, default = None
-            Provides, a full request body. If specified, the body filter parameter supersedes the collection_type
+            Provides, a full request body. If specified, the body filter parameter supersedes the category
             parameter.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -6431,34 +6431,63 @@ class CollectionManager(Client2):
         return resp
 
 
-    def _extract_collection_properties(self, element: dict) -> dict:
+    def _extract_collection_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract common properties from a collection element.
+        Extract common properties from a collection element and populate into the provided columns_struct.
 
         Args:
             element (dict): The collection element
+            columns_struct (dict): The columns structure to populate
 
         Returns:
-            dict: Dictionary of extracted properties
+            dict: columns_struct with column 'value' fields populated
         """
-
-        props = _extract_referenceable_properties(element)
-        classification_names = ""
-        # classifications = element['elementHeader'].get("classifications", [])
-        for classification in props['classifications']:
-            classification_names += f"{classification['classificationName']}, "
-        props["classifications"] = classification_names[:-2]  # why?
-
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
+        col_data = columns_struct
+        # Populate display/qualified/description etc. from properties via output formatter util not available here,
+        # so we do minimal direct mapping for OMVS variant.
+        props = element.get('properties', {}) or {}
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        
+        # Header props
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            # from element.properties (camelCase); keys here are snake_case or GUID
+            if isinstance(key, str):
+                if key.lower() == 'guid':
+                    column['value'] = header_props.get('GUID')
+                elif key in header_props:
+                    column['value'] = header_props.get(key)
+                else:
+                    # simple camelCase mapping inline to reduce imports here
+                    snake_parts = key.split('_')
+                    camel = snake_parts[0] + ''.join([p.capitalize() if p.lower() != 'guid' else 'GUID' for p in snake_parts[1:]])
+                    if camel in props:
+                        column['value'] = props.get(camel)
+        
+        # Mermaid graph
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        
+        # Members list (uses API call)
         member_names = ""
-        members = self.get_member_list(collection_guid=props["GUID"])
+        members = self.get_member_list(collection_guid=header_props.get('GUID'))
         if isinstance(members, list):
             for member in members:
                 member_names += f"{member['qualifiedName']}, "
-            props['members'] = member_names[:-2]
-        logger.trace(f"Extracted properties: {props}")
-        return props
+            member_names = member_names[:-2]
+        for column in columns_list:
+            if column.get('key') == 'members':
+                column['value'] = member_names
+                break
+        
+        # Populate any additional requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+        
+        logger.trace(f"Extracted/Populated columns: {col_data}")
+        return col_data
 
 
     def _generate_collection_output(self, elements: dict|list[dict], filter: Optional[str],
@@ -6487,7 +6516,7 @@ class CollectionManager(Client2):
                 output_formats = select_output_format_set(output_format_set, output_format)
             if isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
-        # If no output_format was set, then use the classification_name to lookup the output format
+        # If no output_format was set, then use the collection_type to lookup the output format
         elif classification_name:
             output_formats = select_output_format_set(classification_name, output_format)
         else:

@@ -174,7 +174,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = 'bda24e8a-4798-4cc0-b693-b09c688d5a6f'
+    element_guid = '28ca67d8-9cb4-4bb9-9af8-9dce83ce3e17'
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -236,7 +236,7 @@ def test_get_guid_for_name():
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
     # property_value = "Sustainability Glossary"
-    property_value = "SupplyChainSegment::first segment"
+    property_value = "qs-view-server"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -257,13 +257,13 @@ def test_get_element_guid_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
-    property_value = "SupplyChainSegment::first segment"
+    property_value = "qs-view-server"
 
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     start_time = time.perf_counter()
-    result = c_client.get_element_guid_by_unique_name(property_value, "")
+    result = c_client.get_element_guid_by_unique_name(property_value, "displayName")
     duration = time.perf_counter() - start_time
     print(f"\n\tDuration was {duration} seconds")
     if type(result) is list:

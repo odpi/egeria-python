@@ -20,6 +20,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria._exceptions_new import PyegeriaException
 from pyegeria.glossary_browser_omvs import GlossaryBrowser
 
 
@@ -310,9 +311,9 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "T1"
+            term_name = "Sustainability"
             glossary_guid = None
-            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="JSON")
+            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="DICT", output_format_set="Basic-Terms")
 
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -487,8 +488,8 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            term_guid = '5401a977-4d77-4360-b747-42d11f87ddd1'
-            response = g_client.list_full_term_history(term_guid, "LIST")
+            term_guid = '58933d73-7f04-4899-99ce-bbd25826041a'
+            response = g_client.list_full_term_history(term_guid, "DICT", output_format_set="Basic-Terms")
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -496,9 +497,7 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -607,6 +606,7 @@ class TestGlossaryBrowser:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
+            # term_id = "58933d73-7f04-4899-99ce-bbd25826041a"
             term_id = "Sustainability"
             # Test with invalid input to verify error handling
             print("\n\nTesting get_term_details:")
@@ -687,7 +687,8 @@ class TestGlossaryBrowser:
                 status_filter=[],
                 page_size=100,
                 effective_time=None,
-                output_format="DICT"
+                output_format="DICT",
+                output_format_set="Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             if type(response) is list:

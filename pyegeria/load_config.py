@@ -148,8 +148,8 @@ class UserProfileConfig(BaseModel):
     egeria_home_collection: str = Field(default="MyHome", alias="Egeria Home Collection")
     egeria_home_glossary_name: str = Field(default="Egeria-Markdown", alias="Egeria Home Glossary Name")
     egeria_local_qualifier: str = Field(default="PDR", alias="Egeria Local Qualifier")
-    user_name: str = ""
-    user_pwd: str = ""
+    user_name: Optional[str] = "erinoverview"
+    user_pwd: Optional[str] = "secret"
     
     @validator('user_name')
     def validate_user_name(cls, v):

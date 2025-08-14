@@ -22,12 +22,12 @@ from rich.console import Console
 from rich.traceback import Traceback, install
 
 from pyegeria import AutomatedCuration, EgeriaTech, RuntimeManager
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    print_exception_response, print_basic_exception,
+    )
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -170,9 +170,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -183,7 +183,7 @@ class TestRuntimeManager:
     def test_get_platforms_by_name(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -202,11 +202,11 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -215,8 +215,8 @@ class TestRuntimeManager:
     def test_get_platforms_by_type(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
-                self.good_platform2_url,
+                self.good_view_server_2,
+                self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
@@ -234,11 +234,11 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -247,7 +247,7 @@ class TestRuntimeManager:
     def test_get_platform_templates_by_type(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -266,9 +266,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -279,7 +279,7 @@ class TestRuntimeManager:
     def test_get_platform_by_guid(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -299,9 +299,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -312,7 +312,7 @@ class TestRuntimeManager:
     def test_get_platform_report(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -338,11 +338,11 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -351,7 +351,7 @@ class TestRuntimeManager:
     def test_get_servers_by_name(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
@@ -359,7 +359,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "engine"
+            filter = "qs-view-server"
             # filter = "simple-metadata-store"
 
             response = r_client.get_servers_by_name(filter)
@@ -378,11 +378,11 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -391,13 +391,13 @@ class TestRuntimeManager:
     def test_get_server_by_guid(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "da9844c2-4e1a-4712-9f41-462fa156df43"
+            server_guid = "61b8ba29-4312-43c8-b518-1695749c7c3c"
             start_time = time.perf_counter()
             response = r_client.get_server_by_guid(server_guid)
 
@@ -411,9 +411,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -446,9 +446,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -479,9 +479,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -512,9 +512,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -550,9 +550,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -598,9 +598,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -631,9 +631,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -665,9 +665,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -696,9 +696,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -733,9 +733,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -746,20 +746,21 @@ class TestRuntimeManager:
     def test_add_archive_file(self):
         try:
             r_client = EgeriaTech(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
             # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"
-            server_guid = r_client.get_guid_for_name("active-metadata-store")
+            server_guid = r_client.get_guid_for_name("qs-metadata-store")
+            print("server_guid", server_guid)
             archive_file = "content-packs/CocoComboArchive.omarchive"
-            server_name = "active-metadata-store"
+            server_name = "qs-metadata-store"
             # archive_file = "content-packs/CoreContentPack.omarchive"
 
             start_time = time.perf_counter()
-            r_client.add_archive_file(archive_file, None, server_name)
+            r_client.add_archive_file(archive_file, server_guid, server_name)
 
             duration = time.perf_counter() - start_time
 
@@ -768,9 +769,9 @@ class TestRuntimeManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

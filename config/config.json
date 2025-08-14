@@ -28,10 +28,10 @@
   "feature_x_enabled": "foo",
   "Logging": {
     "console_filter_levels": [
-      "ERROR",  "WARNING", "INFO"
+      "ERROR",  "WARNING", "INFO", "SUCCESS"
     ],
     "console_logging_enabled": [
-
+      "TestCollectionManager"
     ],
     "console_logging_level": "INFO",
     "enable_logging": true,
