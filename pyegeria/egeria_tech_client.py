@@ -15,7 +15,7 @@ from pyegeria.runtime_manager_omvs import RuntimeManager
 from pyegeria.solution_architect_omvs import SolutionArchitect
 from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
-from pyegeria.governance_officer_omvs import GovernanceOfficer
+from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
 
 

@@ -51,10 +51,10 @@ import pydevd_pycharm
 from pyegeria import (
     EgeriaTech,
     CollectionManager,
-    NO_ELEMENTS_FOUND,
+    NO_ELEMENTS_FOUND, GovernanceOfficer,
     # config_logging,
     # get_app_config
-)
+    )
 from pyegeria.load_config import get_app_config
 from pyegeria.logging_configuration import config_logging
 from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
@@ -159,8 +159,11 @@ def execute_format_set_action(
         class_name, method_name = func.split(".")
         if class_name == "CollectionManager":
             client_class = CollectionManager
-        elif class_name == "EgeriaTech":
+        elif class_name == "GovernanceOfficer":
+            client_class = GovernanceOfficer
+        else:
             client_class = EgeriaTech
+
 
         # Add more client classes as needed
     
@@ -254,7 +257,7 @@ def execute_format_set_action(
             print(f"\n==> Calling function: {func} with parameters:{params}")
             # Call the function and create a table
             try:
-                if isinstance(func, type(client.find_collections)):  # It's a method of the client
+                if hasattr(client, method_name):  # It's a method of the client
                     # Call the function as an instance method of the client
                     result = func(**params)
                 else:

@@ -736,20 +736,20 @@ class Client2:
         return elements
 
     def validate_new_element_request(self, body: dict | NewElementRequestBody,
-                                     prop: str) -> NewElementRequestBody | None:
+                                     prop: list[str]) -> NewElementRequestBody | None:
         if isinstance(body, NewElementRequestBody):
-            if body.properties.class_ == prop:
-                validated_body = body
-            else:
-                raise PyegeriaInvalidParameterException(additional_info=
-                                                        {"reason": "unexpected property class name"})
+            # if body.properties.class_ in prop:
+            validated_body = body
+            # else:
+            #     raise PyegeriaInvalidParameterException(additional_info=
+            #                                             {"reason": "unexpected property class name"})
 
         elif isinstance(body, dict):
-            if body.get("properties", {}).get("class", "") == prop:
-                validated_body = self._new_element_request_adapter.validate_python(body)
-            else:
-                raise PyegeriaInvalidParameterException(additional_info=
-                                                        {"reason": "unexpected property class name"})
+            # if body.get("properties", {}).get("class", "") == prop:
+            validated_body = self._new_element_request_adapter.validate_python(body)
+            # else:
+            #     raise PyegeriaInvalidParameterException(additional_info=
+            #                                             {"reason": "unexpected property class name"})
         else:
             return None
         return validated_body
@@ -798,17 +798,17 @@ class Client2:
                                                         {"reason": "unexpected property class name"})
 
         elif isinstance(body, dict):
-            if body.get("properties", {}).get("class", "") in prop:
-                validated_body = self._update_element_request_adapter.validate_python(body)
-            else:
-                raise PyegeriaInvalidParameterException(additional_info=
-                                                        {"reason": "unexpected property class name"})
+            # if body.get("properties", {}).get("class", "") in prop:
+            validated_body = self._update_element_request_adapter.validate_python(body)
+            # else:
+            #     raise PyegeriaInvalidParameterException(additional_info=
+            #                                             {"reason": "unexpected property class name"})
         else:
             validated_body = None
         return validated_body
 
     def validate_update_status_request(self, status: str = None, body: dict | UpdateStatusRequestBody = None,
-                                       prop: str = None) -> UpdateStatusRequestBody | None:
+                                       prop: list[str] = None) -> UpdateStatusRequestBody | None:
         if isinstance(body, UpdateStatusRequestBody):
             validated_body = body
 
@@ -827,20 +827,20 @@ class Client2:
         return validated_body
 
     def validate_update_relationship_request(self, body: dict | UpdateRelationshipRequestBody,
-                                             prop: str) -> UpdateRelationshipRequestBody | None:
+                                             prop: [str]) -> UpdateRelationshipRequestBody | None:
         if isinstance(body, UpdateRelationshipRequestBody):
-            if body.properties.class_ == prop:
-                validated_body = body
-            else:
-                raise PyegeriaInvalidParameterException(additional_info=
-                                                        {"reason": "unexpected property class name"})
+            # if body.properties.class_ == prop:
+            validated_body = body
+            # else:
+            #     raise PyegeriaInvalidParameterException(additional_info=
+            #                                             {"reason": "unexpected property class name"})
 
         elif isinstance(body, dict):
-            if body.get("properties", {}).get("class", "") == prop:
-                validated_body = self._update_relationship_request_adapter.validate_python(body)
-            else:
-                raise PyegeriaInvalidParameterException(additional_info=
-                                                        {"reason": "unexpected property class name"})
+            # if body.get("properties", {}).get("class", "") == prop:
+            validated_body = self._update_relationship_request_adapter.validate_python(body)
+            # else:
+            #     raise PyegeriaInvalidParameterException(additional_info=
+            #                                             {"reason": "unexpected property class name"})
         else:
             validated_body = None
         return validated_body
@@ -988,7 +988,7 @@ class Client2:
                                output_format, output_format_set)
         return elements
 
-    async def _async_create_element_body_request(self, url: str, prop: str,
+    async def _async_create_element_body_request(self, url: str, prop: list[str],
                                                  body: dict | NewElementRequestBody = None) -> str:
         validated_body = self.validate_new_element_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -1013,7 +1013,7 @@ class Client2:
         response = await self._async_make_request("POST", url, json_body)
         logger.info(response.json())
 
-    async def _async_new_relationship_request(self, url: str, prop: str,
+    async def _async_new_relationship_request(self, url: str, prop: list[str],
                                               body: dict | NewRelationshipRequestBody = None) -> None:
         validated_body = self.validate_new_relationship_request(body, prop)
         if validated_body:

@@ -14,19 +14,22 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 
+from pydantic import ValidationError
 from rich import print, print_json
 from rich.console import Console
 
+from pyegeria._exceptions_new import print_validation_error
+
 console = Console(width=200)
 
-from pyegeria import GovernanceOfficer
+from pyegeria import GovernanceOfficer, PyegeriaException, print_basic_exception
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.governance_officer_omvs import GovernanceOfficer
+from pyegeria.governance_officer import GovernanceOfficer
 
 disable_ssl_warnings = True
 
@@ -112,8 +115,8 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            title = "generic-gov-strategy-1"
-            q_name = s_client.__create_qualified_name__("GovernanceDefinition",title)
+            display_name = "generic-gov-strategy-2"
+            q_name = s_client.__create_qualified_name__("GovernanceDefinition",display_name)
 
             body ={
                 "class": "NewElementRequestBody",
@@ -132,19 +135,19 @@ class TestGovernanceOfficer:
                     "class": "BusinessImperativeProperties",
                     "displayName": "World Domination",
                     "title": "sir junk",
-                    "qualifiedName": "BusinessImperative::World Domination2",
+                    "qualifiedName": q_name,
                     # "description": "Have all the tech companies and governments beholden to me.",
                     # "versionIdentifier": "1.0",
                     # "effectiveFrom": None,
                     # "effectiveTo": None,
                     # "additionalProperties": None,
                     # "extendedProperties": None,
-                    "typeName": "BusinessImperative"
+                    "typeName": "BusinessImperative",
                 #     "domainIdentifier": 0,
                 #     "documentIdentifier": None,
-                #     "summary": "Hegemony",
-                #     "scope": "InterGalactic",
-                #     "importance": "Somewhat",
+                    "summary": "Hegemony",
+                    "scope": "InterGalactic",
+                    "importance": "Somewhat",
                 #     "implications": [],
                 #     "outcomes": [
                 #         "Happiness"
@@ -171,13 +174,12 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             s_client.close_session()
 
@@ -237,7 +239,7 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            guid = "794edf2a-f803-43d6-9292-6500b543cc85"
+            guid = "25a4591f-f95a-4b83-89fc-d5f2674337aa"
             # body = {
             #     "class": "MetadataSourceRequestBody",
             #     "externalSourceGUID": "add guid here",
@@ -321,7 +323,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "Approach"
+        filter = "*"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -329,16 +331,17 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             body = {
-                "class": "FilterRequestBody",
+                "class": "SearchStringRequestBody",
                 # "effective_time": None,
                 # "limitResultsByStatus": ["ACTIVE"],
                 # "asOfTime": "2025-07-06T07:20:40.038+00:00",
+                "metadataElementTypeName": "BusinessImperative",
                 "sequencingOrder": None,
                 "sequencingProperty": None,
                 "filter": filter
                 }
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(filter, output_format="DICT")
+            response = s_client.find_governance_definitions(body=body, output_format="DICT", output_format_set="Governance Definitions")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -394,7 +397,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "df38d7cc-f6f8-4879-a092-d735be27bc3d"
+        guid = "d30e00d2-70ad-42cc-b511-c0347cb2de57"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -402,7 +405,7 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_governance_definition_by_guid(guid, output_format='JSON')
+            response = s_client.get_governance_definition_by_guid(guid, output_format='DICT')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

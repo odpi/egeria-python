@@ -157,9 +157,11 @@ COLLECTION_TABLE = Format(
 )
 
 GOVERNANCE_DEFINITIONS_COLUMNS = COMMON_COLUMNS + [
-    Column(name="Document Identifier", key='document_identifier'),
-    Column(name="Title", key='title'),
+    Column(name="Summary", key='summary'),
+    Column(name="Usage", key='usage'),
+    Column(name="Importance", key='importance'),
     Column(name="Scope", key='scope'),
+    Column(name="Type", key='type_name'),
     ]
 
 COMMON_ANNOTATIONS = {
@@ -413,8 +415,8 @@ output_format_sets = FormatSetDict({
         formats=[Format(types=["ALL"], columns=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
-            user_params=["search_filter"],
-            spec_params={"output_format":"DICT"},
+            user_params=["search_string"],
+            spec_params={},
             )
     ),
     })

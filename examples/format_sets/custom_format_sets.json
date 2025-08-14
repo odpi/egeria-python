@@ -1,0 +1,268 @@
+{
+  "Product": {
+    "heading": "Product Format Set",
+    "description": "A format set for product information",
+    "aliases": [
+      "Product",
+      "Products"
+    ],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      },
+      {
+        "types": [
+          "DETAIL",
+          "FORM"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Created Date",
+            "key": "created_date",
+            "format": false
+          },
+          {
+            "name": "Modified By",
+            "key": "modified_by",
+            "format": false
+          },
+          {
+            "name": "Modified Date",
+            "key": "modified_date",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "TECHNICAL",
+          "DICT"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Type",
+            "key": "type",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "format": false
+          },
+          {
+            "name": "Version",
+            "key": "version",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "ProductManager.find_products",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  },
+  "Customer": {
+    "heading": "Customer Format Set",
+    "description": "A format set for customer information",
+    "aliases": [
+      "Customer",
+      "Customers"
+    ],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "TABLE"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          }
+        ]
+      },
+      {
+        "types": [
+          "DETAIL",
+          "FORM"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Created Date",
+            "key": "created_date",
+            "format": false
+          },
+          {
+            "name": "Modified By",
+            "key": "modified_by",
+            "format": false
+          },
+          {
+            "name": "Modified Date",
+            "key": "modified_date",
+            "format": false
+          }
+        ]
+      },
+      {
+        "types": [
+          "FULL",
+          "REPORT"
+        ],
+        "columns": [
+          {
+            "name": "ID",
+            "key": "id",
+            "format": false
+          },
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": true
+          },
+          {
+            "name": "Created By",
+            "key": "created_by",
+            "format": false
+          },
+          {
+            "name": "Created Date",
+            "key": "created_date",
+            "format": false
+          },
+          {
+            "name": "Modified By",
+            "key": "modified_by",
+            "format": false
+          },
+          {
+            "name": "Modified Date",
+            "key": "modified_date",
+            "format": false
+          },
+          {
+            "name": "Type",
+            "key": "type",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "status",
+            "format": false
+          },
+          {
+            "name": "Version",
+            "key": "version",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": [
+      {
+        "function": "CustomerManager.find_customers",
+        "user_params": [
+          "search_string"
+        ],
+        "spec_params": {}
+      }
+    ]
+  }
+}

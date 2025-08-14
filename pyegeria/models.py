@@ -250,7 +250,7 @@ class NewElementRequestBody(RequestBody):
     is_own_anchor: bool | None = True
     anchor_scope_guid: str | None = None
     initial_classifications:  Dict[str, InitialClassifications] | None = None
-    initial_status: ValidStatusValues = ValidStatusValues.ACTIVE
+    initial_status: ValidStatusValues | str= ValidStatusValues.ACTIVE
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
     parent_at_end_1: bool | None = True

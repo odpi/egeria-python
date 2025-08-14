@@ -16,7 +16,14 @@ from loguru import logger
 from pydantic import Field
 
 from pyegeria._client_new import Client2
-from pyegeria.output_formatter import extract_mermaid_only
+from pyegeria.output_formatter import (
+    extract_mermaid_only,
+    generate_output,
+    _extract_referenceable_properties,
+    populate_columns_from_properties,
+    get_required_relationships,
+)
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
@@ -26,12 +33,13 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, NewElem
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
                              DeleteRequestBody)
-from pyegeria.output_formatter import (generate_output)
 from pyegeria.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
                            "GovernanceControlProperties", "SecurityGroupProperties", "NamingStandardRuleProperties",
-                           "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties"]
+                           "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
+                           "GovernanceStrategyProperties", "GovernanceProcessingPurposeProperties",
+                           "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",]
 
 GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "GovernancePrinciple", "GovernanceObligation",
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
@@ -96,85 +104,91 @@ class GovernanceOfficer(Client2):
     #
     # Extract properties functions
     #
-    def _generate_governance_definition_output(self, elements: list | dict, search_string: str,
-                                               output_format: str = 'MD') -> str | list:
+    def _generate_governance_definition_output(self, elements: list | dict, search_string: str, element_type_name: str = None,
+                                               output_format: str = 'DICT', output_format_set: dict | str = None
+                                               ) -> str | list:
         """
-        Generate output for solution components in the specified format.
-
-        Given a set of elements representing solution components (either as a list or a dictionary),
-        this function generates output in the specified format. The output includes various
-        attributes of the solution components, such as their names, descriptions, types, and
-        related information like blueprints, parents, and extended properties.
+        Generate output for governance definitions in the specified format, using output format sets.
 
         Args:
-            elements: Dictionary or list of dictionaries containing solution component elements
+            elements: Dictionary or list of dictionaries containing governance definition elements
             search_string: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+            output_format_set: Optional format set name or structure to control columns
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        # Handle MERMAID and DICT formats
+        # Ensure elements handled consistently for MERMAID
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
-        elif output_format == "DICT":
-            return self._extract_gov_def_list(elements)  # return extract_basic_dict(elements)  # add more to the body
-        elif output_format == "HTML":
-            return generate_output(elements=elements, search_string=search_string, entity_type="Governance Definition",
-                                   output_format="HTML", extract_properties_func=self._extract_gov_def_properties)
-        # For other formats (MD, FORM, REPORT, LIST), use generate_output
-        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
-            # Define columns for LIST format
-            columns = [{'name': 'Governance Definition', 'key': 'title'}, {'name': 'Type Name', 'key': 'typeName'},
-                       {'name': 'Scope', 'key': 'scope'}, {'name': 'Qualified Name', 'key': 'documentIdentifier'},
-                       {'name': 'Summary', 'key': 'summary', 'format': True},
-                       {'name': 'Importance', 'key': 'importance'}, ]
 
-            return generate_output(elements=elements, search_string=search_string, entity_type="Governance Definition",
-                                   output_format=output_format,
-                                   extract_properties_func=self._extract_gov_def_properties,
-                                   columns=columns if output_format == 'LIST' else None)
+        entity_type = element_type_name if element_type_name else "Governance Definition"
+        # Resolve columns_struct via output format sets
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+            else:
+                output_formats = None
+        else:
+            # Default to the Governance Definitions format set
+            output_formats = select_output_format_set("Governance Definitions", output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
 
-        # Default case
-        return None
+        logger.trace(f"Executing generate_governance_definition_output: {output_formats}")
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_gov_def_properties,
+            get_additional_props_func=None,
+            columns_struct=output_formats,
+        )
 
     #
     #
     #
 
-    def _extract_gov_def_properties(self, element: dict) -> dict:
+    def _extract_gov_def_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract properties from an information governance definition element.
+        Extract and populate governance definition properties into columns_struct.
+
+        This follows the columns_struct pattern: fill from element.properties (camelCase), overlay header
+        attributes, and derive any relationship-based columns that are explicitly requested.
 
         Args:
-            element: Dictionary containing element data
+            element: The governance definition element
+            columns_struct: The columns structure to populate
 
         Returns:
-            Dictionary with extracted properties
+            dict: columns_struct with populated 'value' fields
         """
-        guid = element['elementHeader'].get("guid", None)
-        properties = element['properties']
-        properties['GUID'] = guid
-        mermaid = element.get('mermaidGraph', "") or ""
-        properties['Mermaid'] = mermaid
-        del properties['class']
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
 
-        #
-        #
-        # qualified_name = properties.get("qualifiedName", None)
-        # display_name = properties.get("displayName", None)
-        # description = properties.get("description", None)
-        # scope = properties.get("scope", None)
-        # purposes = properties.get("purposes", [])
-        # purpose_md = ""
-        # if len(purposes) > 0:
-        #     for purpose in purposes:
-        #         purpose_md += f"{purpose},\n"
-        # extended_properties = properties.get("extendedProperties", {})
-        # additional_properties = properties.get("additionalProperties", {})
-        #
+        # Header-derived values (GUID, type_name, etc.)
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
 
-        return properties
+        # Populate requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+
+        # Mermaid graph if requested
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+
+        return col_data
 
     def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
         """
@@ -411,7 +425,7 @@ class GovernanceOfficer(Client2):
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"{self.url_marker}/governance-definitions")
-        return await self._async_create_element_body_request(url, "GovernanceDefinitionProperties", body)
+        return await self._async_create_element_body_request(url, GOV_DEF_PROPERTIES_LIST, body)
 
     @dynamic_catch
     def create_governance_definition(self, body: dict | NewElementRequestBody) -> str:
