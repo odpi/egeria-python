@@ -11,7 +11,7 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
-from pyegeria.utils import (camel_to_title_case)
+from pyegeria.utils import (camel_to_title_case, body_slimmer)
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
 
@@ -38,11 +38,22 @@ LOG_FORMAT = "D <green> {time} </green> | {level} | {function} | {line} | {messa
 CONSOLE_LOG_FORMAT = "<green>{time}</green> | {message}"
 
 console = Console(width=EGERIA_WIDTH)
-GENERAL_GOVERNANCE_DEFINITIONS = ["Business Imperative", "Regulation Article", "Threat", "Governance Principle",
-                                  "Governance Obligation", "Governance Approach", "Governance Processing Purpose"]
+GENERAL_GOVERNANCE_DEFINITIONS = ["Governance Definition", "Business Imperative", "Regulation Article", "Threat",
+                                  "Governance Policy", "Governance Principle", "Governance Obligation",
+                                  "Governance Approach",
+                                  "Governance Processing Purpose"]
+GOVERNANCE_DRIVERS = ["Governance Driver", "Governance Strategy", "Governance Imperative", "Regulation",
+                     "Regulation Article", "Threat"]
+GOVERNANCE_POLICIES = ["Governance Policy", "Governance Principle", "Governance Obligation", "Governance Approach"]
 
-GOVERNANCE_CONTROLS = ["Governance Rule", "Service Level Objective", "Governance Process",
-                       "Governance Responsibility", "Governance Procedure", "Security Access Control"]
+
+GOVERNANCE_CONTROLS = ["Governance Control", "Governance Rule", "Service Level Objective", "Governance Action",
+                        "Security Access Control", "Governance Procedure","Governance Responsibility",
+                       "Subject Area Definition", "Data Processing Purposes", "Methodology"]
+
+ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROLS + ["Governance Strategy", "Regulation",
+                                                "Security Group", "GovernanceMetric",
+                                                "Naming Standard Rule", "TermsAndConditions", "Certification Type", "License Type"]
 
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
@@ -216,13 +227,46 @@ def find_key_with_value(value: str) -> str | None:
     return None  # If value not found
 
 
+def set_find_body(object_type: str, attributes: dict)->dict:
+    prop_name = object_type.replace(" ", "")
+
+    start = attributes.get('Start From', {}).get('value', 0)
+    start_from = int(start) if start else 0
+    page = attributes.get('Page Size', {}).get('value', 0)
+    page_size = int(page) if page else 0
+    depth = attributes.get('Graph Query Depth', {}).get('value', 0)
+    depth = int(depth) if depth else 0
+
+
+
+    body = {
+        "class": "SearchStringRequestBody",
+        "searchString": attributes.get('Search String', {}).get('value', None),
+        "startsWith": attributes.get('Start With', {}).get('value', True),
+        "endWith": attributes.get('End With', {}).get('value', False),
+        "ignoreCase": attributes.get('Ignore Case', {}).get('value', False),
+        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', False),
+        "startFrom": int(attributes.get('Start From', {}).get('value', 0)),
+        "pageSize": int(attributes.get('Page Size', {}).get('value', 0)),
+        # "metadataElementSubtypeNames": attributes.get('Metadata Element Subtype Name', {}).get('value', None),
+        "metadataElementTypeName": attributes.get('Metadata Element Type Name', {}).get('value', None),
+        "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+        "governanceZoneFilter" : attributes.get('Governance Zone Filter', {}).get('value', None),
+        "graphQueryDepth": int(attributes.get('Graph Query Depth', {}).get('value', 0)),
+        "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
+        "initialClassifications": {}}
+
+    return body
+
+
 def set_create_body(object_type: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     body = {
-        "class": "NewGovernanceDefinitionRequestBody",
+        "class": "NewElementRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
         "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+        "governanceZoneFilter" : attributes.get('Governance Zone Filter', {}).get('value', None),
         "forLineage": attributes.get('For Lineage', {}).get('value', False),
         "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
         "anchorGUID": attributes.get('Anchor ID', {}).get('guid', None),
@@ -245,6 +289,7 @@ def set_update_body(object_type: str, attributes: dict)->dict:
       "class" : "UpdateElementRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
       "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
+      "governanceZoneFilter": attributes.get('Governance Zone Filter', {}).get('value', None),
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
       "forLineage": attributes.get('For Lineage', {}).get('value', False),
       "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
@@ -261,35 +306,66 @@ def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict
         "displayName": attributes['Display Name'].get('value', None),
         "qualifiedName" : qualified_name,
         "description": attributes['Description'].get('value', None),
-        "status": attributes.get('Status', {}).get('value', "ACTIVE"),
+        "category": attributes.get('Category', {}).get('value', None),
+        "identifier": attributes.get('Identifier', {}).get('value', None),
         "userDefinedStatus": attributes.get('User Defined Status', {}).get('value', None),
         "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
         "additionalProperties": attributes.get('Additional Properties', {}).get('value', None),
-        "extendedProperties": attributes.get('Extended Properties', {}).get('value', None)
+        "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
+        "supportLevel": attributes.get('Support Level', {}).get('value', None),
+        "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
         }
+
+def set_product_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
+    prop_bod["productName"] = attributes.get('Product Name', {}).get('value', None)
+    prop_bod["maturity"] = attributes.get('Maturity', {}).get('value', None)
+    prop_bod["serviceLife"] = attributes.get('Service Life', {}).get('value', None)
+    prop_bod["introductionDate"] = attributes.get('Introduction Date', {}).get('value', [])
+    prop_bod["withdrawalDate"] = attributes.get('Withdrawal Date', {}).get('value', [])
+    prop_bod["nextVersion"] = attributes.get('Next Version Date', {}).get('value', [])
+    return prop_bod
+
+
+
+def set_update_status_body(object_type: str, attributes: dict)->dict:
+    return {
+      "class" : "UpdateStatusRequestBody",
+      "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+      "forLineage": attributes.get('For Lineage', {}).get('value', False),
+      "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
+      "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
+    }
 
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     prop_bod = set_prop_body(object_type, qualified_name, attributes)
     prop_bod["domainIdentifier"] = attributes.get('Domain Identifier', {}).get('value', None)
-    # prop_bod["documentIdentifier"] =  attributes.get('Document Identifier', {}).get('value', None)
-    prop_bod["title"]= attributes.get('Display Name', {}).get('value', None)
-    prop_bod['documentIdentifier'] = qualified_name
+    prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
+    prop_bod['qualifiedName'] = qualified_name
     prop_bod["versionIdentifier"] = attributes.get('Version Identifier', {}).get('value', None)
     prop_bod["summary"] = attributes.get('Summary', {}).get('value', None)
+    prop_bod["description"] = attributes.get('Description', {}).get('value', None)
+
     prop_bod["scope"] = attributes.get('Scope', {}).get('value', None)
     prop_bod["importance"] = attributes.get('Importance', {}).get('value', None)
     prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
     prop_bod["results"] = attributes.get('Results', {}).get('value', [])
+    prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None),
+    prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None),
+    prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None),
+    prop_bod["extendedProperties"] = attributes.get('Extended Properties', {}).get('value', None)
 
-    body = update_body_for_type(object_type, prop_bod, attributes)
+
+    body = update_gov_body_for_type(object_type, prop_bod, attributes)
     return body
     
 
-def update_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
+def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> dict:
     gov_def_name = object_type.replace(" ", "")
     if object_type in GENERAL_GOVERNANCE_DEFINITIONS:
         return body
@@ -298,7 +374,7 @@ def update_body_for_type(object_type: str, body: dict, attributes: dict) -> dict
         return body
 
     elif object_type == "Regulation":
-        body['source'] = attributes.get('Source', {}).get('value', None)
+        body['regulationSource'] = attributes.get('Regulation Source', {}).get('value', None)
         body['regulators'] = attributes.get('Regulators', {}).get('value', [])
         return body
 
@@ -308,17 +384,24 @@ def update_body_for_type(object_type: str, body: dict, attributes: dict) -> dict
     elif object_type == "Security Group":
         body['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
         return body
+    elif object_type == "GovernanceMetric":
+        body['measurement'] = attributes.get('Measurement', {}).get('value', None)
+        body['target'] = attributes.get('Target', {}).get('value', None)
+        return body
     elif object_type == "Naming Standard Rule":
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
-    elif object_type in ["Certification Type", "License Type"]:
-        body['details'] = attributes.get('Details', {}).get('value', None)
+    elif object_type in ["TermsAndConditions", "Certification Type", "License Type"]:
+        body['entitlements'] = attributes.get('Entitlementss', {}).get('value', {})
+        body['restrictions'] = attributes.get('Restrictions', {}).get('value', {})
+        body['obligations'] = attributes.get('Obligations', {}).get('value', {})
+
         return body
 
 
 def set_rel_request_body(object_type: str, attributes: dict)->dict:
     return {
-      "class" : "RelationshipRequestBody",
+      "class" : "NewRelationshipRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
       "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
@@ -338,15 +421,17 @@ def set_peer_gov_def_request_body(object_type: str, attributes: dict)->dict:
         }
     return rel_body
 
-def set_metadata_source_request_body(object_type: str, attributes: dict)->dict:
+def set_delete_request_body(object_type: str, attributes: dict)->dict:
     return {
-        "class": "MetadataSourceRequestBody",
+        "class": "DeleteRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
         "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
         "forLineage": attributes.get('For Lineage', {}).get('value', False),
         "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False)
         }
+
+
 
 def set_filter_request_body(object_type: str, attributes: dict)->dict:
     return {
@@ -371,14 +456,27 @@ def set_element_status_request_body(object_type: str, attributes: dict)->dict:
         "forLineage": attributes.get('For Lineage', {}).get('value', False),
         "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False)
     }
-def set_collection_property_body(object_type: str, qualified_name:str, attributes: dict)->dict:
-    body = set_prop_body("Collection", qualified_name,attributes)
-    body["category"] = attributes.get('Category', {}).get('value', None)
+
+
+def set_classifications(object_type: str, attributes: dict)->dict:
+    classifications = attributes.get('Classifications', {}).get('name_list', None)
+    body = None
+    if classifications:
+        body = {classification: {} for classification in classifications} if cclassifications else {}
     return body
 
-def set_collection_classifications(object_type: str, attributes: dict)->dict:
-    collection_classifications = attributes.get('Collection Classifications', {}).get('name_list', None)
-    if collection_classifications is None:
-        collection_classifications = object_type
-    body = {classification: {} for classification in collection_classifications} if collection_classifications else {}
+def set_collection_classifications(object_type: str, attributes: dict, obj_types: list[str])->dict:
+    classifications = attributes.get('Classifications', {}).get('name_list', None)
+    obj = object_type.replace(" ", "")
+    if object_type in obj_types:
+        if classifications:
+            if object_type not in classifications:
+                classifications.append(obj)
+        else:
+            classifications = [obj]
+
+    body = {}
+    if classifications:
+        for classification in classifications:
+            body[classification] = {"class" : f"{classification}Properties"}
     return body

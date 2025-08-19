@@ -140,7 +140,7 @@ def body_slimmer(body: dict) -> dict:
 
     slimmed = {}
     for key, value in body.items():
-        if value:
+        if value and not isinstance(value, tuple):
             if isinstance(value, dict):
                 # Recursively slim embedded dictionaries
                 slimmed_value = body_slimmer(value)

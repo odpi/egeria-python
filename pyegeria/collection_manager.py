@@ -2398,12 +2398,11 @@ class CollectionManager(Client2):
         """
 
         url = (f"{self.collection_command_root}/{collection_guid}/update")
-        await self._async_update_element_request_body(url, "DigitalProductProperties", body )
+        await self._async_update_element_body_request(url, "DigitalProductProperties", body )
 
 
     @dynamic_catch
-    def update_digital_product(self, collection_guid: str,  body: dict | UpdateElementRequestBody,
-                                       merge_update: bool = True) -> None:
+    def update_digital_product(self, collection_guid: str,  body: dict | UpdateElementRequestBody,) -> None:
         """ Update the properties of a digital product..
             Collections: https://egeria-project.org/concepts/collection
 
@@ -2467,7 +2466,7 @@ class CollectionManager(Client2):
         """
 
         return asyncio.get_event_loop().run_until_complete(
-            self._async_update_digital_product(collection_guid, body, merge_update))
+            self._async_update_digital_product(collection_guid, body))
 
 
     @dynamic_catch
@@ -2512,7 +2511,7 @@ class CollectionManager(Client2):
         }
         """
 
-        url = f"{self.collection_command_root}/{collection_guid}/update-status"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/{collection_guid}/update-status"
         await self._async_update_status_request(url, status, body)
 
     @dynamic_catch

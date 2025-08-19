@@ -4,10 +4,11 @@ This file contains general utility functions for processing Egeria Markdown
 import json
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 from loguru import logger
 from rich import print
+from rich.markdown import Markdown
 from rich.console import Console
 
 from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
@@ -15,16 +16,20 @@ from md_processing.md_processing_utils.common_md_utils import (get_current_datet
                                                                split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
+from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_gov_prop_body, \
+                                                               set_update_body, set_create_body,
+                                                               set_peer_gov_def_request_body, set_rel_request_body,
+                                                               set_delete_request_body,set_rel_request_body,
+                                                               set_filter_request_body, setup_log,
+                                                               ALL_GOVERNANCE_DEFINITIONS, set_find_body)
+from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech
+from pyegeria import EgeriaTech, select_output_format_set
+
 from pyegeria._globals import DEBUG_LEVEL
 
-log_format = "P {time} | {level} | {function} | {line} | {message} | {extra}"
-logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-           colorize=True)
+
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Basic")
@@ -124,8 +129,12 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
             default_value = attr[key].get('default_value', None)
 
             style = attr[key]['style']
-            if style in ['Simple', 'Dictionary', 'Comment']:
+            if style in ['Simple', 'Comment']:
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == 'Dictionary':
+                parsed_attributes[key] = proc_dictionary_attribute(txt, object_action, labels, if_missing, default_value)
+                parsed_attributes[key]['name_list'] = json.dumps(parsed_attributes[key]['value'], indent=2)
+
             elif style == 'Valid Value':
                 parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
                                                           attr[key].get('valid_values', None), if_missing,
@@ -325,8 +334,12 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
             default_value = attr[key].get('default_value', None)
 
             style = attr[key]['style']
-            if style in ['Simple', 'Dictionary', 'Comment']:
+            if style in ['Simple', 'Comment']:
                 parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+            elif style == 'Dictionary':
+                parsed_attributes[key] = proc_dictionary_attribute(txt, object_action, labels, if_missing,
+                                                           default_value)
+                parsed_attributes[key]['name_list'] = json.dumps(parsed_attributes[key]['value'], indent=2)
             elif style == 'Valid Value':
                 parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
                                                           attr[key].get('valid_values', None), if_missing,
@@ -401,7 +414,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
             value = parsed_attributes[key].get('value', None)
 
             if value is not None:
-                # if the value is a dict, get the flattened name list
+                # if the value is a dict or list, get the stringifiedt
                 value = parsed_attributes[key].get('name_list', None) if isinstance(value, (dict, list)) else value
                 parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
 
@@ -464,6 +477,50 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
+@logger.catch
+def proc_dictionary_attribute(txt: str, action: str, labels: set, if_missing: str = INFO, default_value=None,
+                          simp_type: str = None) -> dict:
+    """Process a dictionary attribute based on the provided labels and if_missing value.
+       Extract the attribute value from the text and store it in a dictionary along with valid.
+       If it doesn`t exist, mark the dictionary entry as invalid and print an error message with severity of if_missing.
+
+       Parameters:
+       ----------
+       txt: str
+         The block of object_action text to extract attributes from.
+       labels: list
+         The possible attribute labels to search for. The first label will be used in messages.
+       if_missing: str, default is INFO
+         Can be one of "WARNING", "ERROR", "INFO". The severity of the missing attribute.
+       default_value: default is None
+        The default value to return if the attribute is missing.
+    """
+    valid = True
+
+    if if_missing not in ["WARNING", "ERROR", "INFO"]:
+        msg = "Invalid severity for missing attribute"
+        logger.error(msg)
+        return {"status": ERROR, "reason": msg, "value": None, "valid": False}
+
+    if default_value == "":
+        default_value = None
+
+    attr = extract_attribute(txt, labels)
+    attribute = json.loads(attr) if attr is not None else default_value
+
+
+    if attribute is None:
+        if if_missing == INFO or if_missing == WARNING:
+            msg = f"Optional attribute with labels: `{labels}` missing"
+            valid = True
+            logger.info(msg)
+        else:
+            msg = f"Missing attribute with labels `{labels}` "
+            valid = False
+            logger.error(msg)
+        return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
+
+    return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
 @logger.catch
 def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_missing: str = INFO,
@@ -524,8 +581,11 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
             logger.error(msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
     else:
+        # Todo: look at moving validation into pydantic or another style...
+        if "Status" in labels:
+            attribute = attribute.upper()
         if attribute not in v_values:
-            msg = f"Invalid value for attribute `{labels}`"
+            msg = f"Invalid value for attribute `{labels}` attribute is `{attribute}`"
             logger.warning(msg)
             return {"status": WARNING, "reason": msg, "value": attribute, "valid": False, "exists": True}
 
@@ -651,7 +711,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
         logger.error(msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
 
-    elif action in ["Update", "View"] and exists:
+    elif action in ["Update", "View", "Link", "Detach"] and exists:
         msg = f"Element {element_name} exists"
         logger.info(msg)
         identifier_output = {
@@ -923,3 +983,101 @@ def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories
 
 
 
+
+@logger.catch
+def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a generic output request by extracting attributes (including Output Format and
+    Output Format Set) and dynamically invoking the find function specified by the
+    output_format_set, following the approach used in commands/cat/list_format_set.
+
+    This is modeled on process_gov_definition_list_command but uses the dynamic
+    dispatch via the output format set rather than directly calling a specific
+    egeria_client method.
+
+    :param egeria_client: EgeriaTech composite client instance
+    :param txt: The command text (e.g., parsed from a markdown cell)
+    :param directive: display | validate | process
+    :return: Markdown string for processed output or None
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    valid = parsed_output['valid']
+    print(Markdown(f"Performing {command}"))
+    print(Markdown(parsed_output['display']))
+
+    attr = parsed_output.get('attributes', {})
+
+    search_string = attr.get('Search String', {}).get('value', '*')
+    output_format = attr.get('Output Format', {}).get('value', 'LIST')
+    output_format_set = attr.get('Output Format Set', {}).get('value', object_type)
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        # Validate that the format set exists and has an action
+        fmt = select_output_format_set(output_format_set, "ANY") if valid else None
+        if valid and fmt and fmt.get("action"):
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            return True
+        else:
+            msg = f"Validation failed for object_action `{command}`"
+            logger.error(msg)
+            return False
+
+    elif directive == "process":
+        try:
+            if not valid:
+                msg = f"Validation failed for {object_action} `{object_type}`"
+                logger.error(msg)
+                return None
+
+            # Resolve the find function from the output format set
+            fmt = select_output_format_set(output_format_set, output_format)
+            if not fmt:
+                logger.error(f"Output format set '{output_format_set}' not found or not compatible with '{output_format}'.")
+                return None
+            action = fmt.get("action", {})
+            func_spec = action.get("function")
+            if not func_spec or "." not in func_spec:
+                func_spec = f"EgeriaTech.find_{object_type.replace(' ', '_').lower()}"
+
+
+            # Extract method name and get it from the composite client
+            _, method_name = func_spec.split(".", 1)
+            if not hasattr(egeria_client, method_name):
+                logger.error(f"Method '{method_name}' not available on EgeriaTech client.")
+                return None
+            method = getattr(egeria_client, method_name)
+
+            # Build body and params
+            list_md = f"\n# `{object_type}` with filter: `{search_string}`\n\n"
+            body = set_find_body(object_type, attr)
+
+            params = {
+                'search_string': search_string,
+                'body': body,
+                'output_format': output_format,
+                'output_format_set': output_format_set,
+            }
+
+            # Call the resolved method
+            struct = method(**params)
+
+            if output_format.upper() == "DICT":
+                list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
+            else:
+                list_md += struct
+            logger.info(f"Wrote `{object_type}` for search string: `{search_string}` using format set '{output_format_set}'")
+
+            return list_md
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            console.print_exception(show_locals=True)
+            return None
+    else:
+        return None

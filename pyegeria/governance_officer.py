@@ -726,8 +726,6 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_update_governance_definition(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """ Update a governance definition."""
-
         """ Update the properties of a governance definition. Async Version.
 
         Parameters
@@ -793,7 +791,7 @@ class GovernanceOfficer(Client2):
         await self._async_update_element_body_request(url, GOV_DEF_PROPERTIES_LIST, body)
 
     @dynamic_catch
-    def _async_update_governance_definition(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+    async def _async_update_governance_definition(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update a governance definition. Async Version."""
 
     def update_governance_definition(self, guid: str, body: dict | UpdateStatusRequestBody) -> None:

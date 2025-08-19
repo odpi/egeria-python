@@ -93,10 +93,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "GeoSpatial"
+            search_string = "Subscription::GeoSpatial Products Subscription"
             classification_name = None
             element_type = ["Collection"]
-            output_format = "DICT"
+            output_format = "JSON"
             output_format_set = "Agreements"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
@@ -252,7 +252,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2)
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_name = "myLocal::RootCollection::GeoSpatial-Root"
+            collection_name = "Subscription::GeoSpatial-Products-Subscription"
 
             response = c_client.get_collections_by_name(collection_name, output_format="DICT", output_format_set="Collections" )
             duration = time.perf_counter() - start_time
@@ -341,10 +341,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5368a3f5-2903-40c9-8daa-8400e4e91978"
-            element_type = "DigitalSubscription"
+            collection_guid = "c7031a79-5ad8-439b-a102-7dafa0e2ad71"
+            element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
-                                                       output_format="DICT", output_format_set="Agreement")
+                                                       output_format="JSON", output_format_set="Agreement")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -1139,7 +1139,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "6d276dc4-0032-49ae-b8bf-144c6e98c94e"
+            collection_guid = "cd18fd27-e88b-4aed-96c5-5009dd8acfaa"
             body = {
                 "class": "DeleteRequestBody",
                 "cascadedDelete": True

@@ -30,7 +30,7 @@ from ._client_new import Client2
 from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIException, PyegeriaException,
                               PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
                               PyegeriaConnectionException, PyegeriaNotFoundException,
-                              print_exception_table, print_basic_exception)
+                              print_exception_table, print_basic_exception, print_validation_error)
 from .load_config import load_app_config, get_app_config
 from .logging_configuration import config_logging, console_log_filter, init_logging
 from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,

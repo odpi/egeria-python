@@ -91,7 +91,7 @@ def extract_attribute(text: str, labels: set) -> str | None:
     # Iterate over the list of labels
     for label in labels:
         # Construct pattern for the current label
-        # text = re.sub(r'\s+', ' ', text).strip()
+        # text = re.sub(r'\s+', ' ', text).strip() # just added
         text = re.sub(r'\n\n+', '\n\n', text).strip()
 
         label = label.strip()
@@ -395,7 +395,7 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
             return q_name, guid, unique, exists
 
         else:  # Missing guid from element_dictionary
-            guid = egeria_client.get_element_guid_by_unique_name(element_name)
+            guid = egeria_client.__get_guid__(qualified_name=q_name)
             if guid == NO_ELEMENTS_FOUND:
                 guid = None
                 exists = False

@@ -374,6 +374,11 @@ def print_exception_table(e: PyegeriaException):
 def print_basic_exception(e: PyegeriaException):
     """Prints the exception response"""
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
+    http_reason = e.response.text if e.response else ""
+    table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
+    table.caption = e.pyegeria_code
+    table.add_column("Facet", justify="center")
+    table.add_column("Item", justify="left", width=80)
     related_response = e.response.json() if e.response else ""
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
@@ -382,6 +387,7 @@ def print_basic_exception(e: PyegeriaException):
 
     if isinstance(e, PyegeriaException):
         table.add_row("HTTP Code", str(e.response_code))
+        table.add_row("HTTP Reason", str(http_reason))
         table.add_row("Egeria Code", str(related_code))
         table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
         table.add_row("Request URL", str(e.response_url))

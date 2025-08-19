@@ -3,15 +3,20 @@ This package contains functions to parse and process Egeria Markdown (Freddie)
 """
 from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
                                                                    process_gov_def_link_detach_command,
-                                                                   process_gov_definition_list_command,
-                                                                   process_gov_def_context_command)
+                                                                   process_supporting_gov_def_link_detach_command,
+                                                                   process_gov_def_context_command,
+                                                                   )
 
 
 from md_processing.md_commands.product_manager_commands import (process_digital_product_upsert_command,
                                                                 process_agreement_upsert_command,
-                                                                process_collection_list_command,
                                                                 process_collection_upsert_command,
-                                                                process_link_agreement_item_command)
+                                                                process_link_agreement_item_command,
+                                                                process_add_to_collection_command,
+                                                                process_product_dependency_command,
+                                                                process_attach_collection_command,
+                                                                process_attach_subscriber_command,
+                                                               )
 
 from md_processing.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
                                                                    process_solution_component_upsert_command,
@@ -45,11 +50,11 @@ from md_processing.md_processing_utils.common_md_utils import (render_markdown, 
                                                                console, debug_level, get_element_dictionary,
                                                                update_element_dictionary, clear_element_dictionary,
                                                                is_present, find_key_with_value,
-                                                               process_provenance_command, set_metadata_source_request_body,
+                                                               process_provenance_command, set_delete_request_body,
                                                                set_rel_request_body, set_filter_request_body,
                                                                set_update_body, set_peer_gov_def_request_body,
                                                                 set_gov_prop_body, set_prop_body, set_create_body,
-
+                                                                GOVERNANCE_POLICIES, GOVERNANCE_CONTROLS, GOVERNANCE_DRIVERS
                                                                )
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
                                                                 extract_attribute, process_simple_attribute,
@@ -73,3 +78,4 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
 # Import message constants
 from md_processing.md_processing_utils.message_constants import (message_types, ALWAYS, ERROR, INFO, WARNING)
 
+from md_processing.md_processing_utils.common_md_proc_utils import process_output_command

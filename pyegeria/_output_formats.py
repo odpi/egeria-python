@@ -143,6 +143,14 @@ COLLECTION_DICT = Format(
         ],
 )
 
+BASIC_COLLECTIONS_COLUMNS = [
+    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name='GUID', key='guid', format=True),
+    Column(name='Type Name', key='type_name'),
+    Column(name="Containing Members", key='collection_members'),
+    Column(name="Member Of", key='member_of_collections')
+]
+
 COLLECTION_REPORT = Format(
     types=["REPORT"],
     columns=COLLECTIONS_MEMBERS_COLUMNS + [
@@ -163,7 +171,11 @@ GOVERNANCE_DEFINITIONS_COLUMNS = COMMON_COLUMNS + [
     Column(name="Scope", key='scope'),
     Column(name="Type", key='type_name'),
     ]
-
+GOVERNANCE_DEFINITIONS_BASIC =  [
+    Column(name="Type", key='type_name'),
+    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name="GUID", key='guid', format=True),
+    ]
 COMMON_ANNOTATIONS = {
     "wikilinks": ["[[Commons]]"]
 }
@@ -253,6 +265,21 @@ output_format_sets = FormatSetDict({
             spec_params={},
         )
     ),
+    "BasicCollections": FormatSet(
+        heading="Common Collection Information",
+        description="Attributes generic to all Collections.",
+        aliases=[],
+        annotations=COMMON_ANNOTATIONS,
+        formats=[Format(
+            types=["ALL"],
+            columns=BASIC_COLLECTIONS_COLUMNS,
+            )],  # Reusing common formats
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            user_params=["search_string"],
+            spec_params={},
+            )
+        ),
 
     "CollectionMembers": FormatSet(
         heading="Collection Membership Information",
@@ -406,7 +433,18 @@ output_format_sets = FormatSetDict({
             spec_params={"output_format":"DICT"},
         )
     ),
-
+    "Governance Basics": FormatSet(
+        heading="Basic Governance-Definitions Information",
+        description="Core Attributes useful to Governance-Definitions.",
+        aliases=["BasicGovernance"],
+        annotations={"wikilinks": ["[[Governance]]"]},
+        formats=[Format(types=["ALL"], columns=GOVERNANCE_DEFINITIONS_BASIC)],
+        action=ActionParameter(
+            function="GovernanceOfficer.find_governance_definitions",
+            user_params=["search_string"],
+            spec_params={},
+            )
+    ),
     "Governance Definitions": FormatSet(
         heading="Governance-Definitions Information",
         description="Attributes useful to Governance-Definitions.",

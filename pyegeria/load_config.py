@@ -381,7 +381,7 @@ def load_app_config(env_file: str = None):
 
     # Logging section
     log = config_dict["Logging"]
-    log["console_filter_levels"] = _parse_list_env("PYEGERIA_CONSOLE_FILTER_LEVELS", log.get("console_filter_levels", ["ERROR"]))
+    log["console_filter_levels"] = _parse_list_env("PYEGERIA_CONSOLE_FILTER_LEVELS", log.get("console_filter_levels", ["ERROR","WARNING","INFO","SUCCESS"]))
     log["console_logging_enabled"] = _parse_list_env("PYEGERIA_CONSOLE_LOGGING_ENABLED", log.get("console_logging_enabled", ["pyegeria"]))
     log["console_logging_level"] = os.getenv("PYEGERIA_CONSOLE_LOG_LVL", log.get("console_logging_level", "INFO"))
     log["enable_logging"] = _parse_bool_env("PYEGERIA_ENABLE_LOGGING", log.get("enable_logging", False))
