@@ -19,6 +19,7 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria._exceptions_new import print_validation_error
+from pyegeria.models import SearchStringRequestBody
 
 console = Console(width=200)
 
@@ -195,8 +196,8 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            display_name = "generic-gov-def-3"
-            qualified_name = "GovernanceDefinition::generic-gov-def-3"
+            display_name = "Talmudic"
+            qualified_name = "GovPrinciple::Talmudic"
             body = {
                       "class" : "UpdateElementRequestBody",
                       # "externalSourceGUID": "add guid here",
@@ -204,18 +205,19 @@ class TestGovernanceOfficer:
                       # "effectiveTime" : "{{$isoTimestamp}}",
                       "forLineage" : False,
                       "forDuplicateProcessing" : False,
+                      "mergeUpdate" : True,
                       "properties": {
-                        "class" : "GovernanceDefinitionProperties",
-                        "typeName" : "GovernanceDefinition",
-                        "documentIdentifier": qualified_name,
-                        "title": display_name,
-                        "description": "updated description"
+                        "class" : "GovernancePrincipleProperties",
+                        "typeName" : "GovernancePrinciple",
+                        "qualifiedName": qualified_name,
+                        "displayName": display_name,
+                        "description": "Somewhat more chaotic"
                       }
                     }
 
             start_time = time.perf_counter()
-            guid = "5964f9fe-6564-495e-a353-0f238b6a9828"
-            s_client.update_governance_definition(guid,body, False)
+            guid = "fd95c9dc-c882-4c3f-8436-aa85e74276fb"
+            s_client.update_governance_definition(guid,body)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds"
@@ -323,7 +325,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "*"
+        filter = "Talmudic5"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -335,13 +337,21 @@ class TestGovernanceOfficer:
                 # "effective_time": None,
                 # "limitResultsByStatus": ["ACTIVE"],
                 # "asOfTime": "2025-07-06T07:20:40.038+00:00",
-                "metadataElementTypeName": "BusinessImperative",
+                # "metadataElementTypeName": ["BusinessImperative", "Regulation", "LicenseType", "GovernanceResponsibility",
+                #                             "GovernanceApproach", "Certification Type", "Governance Principle"],
+                "metadataElementSubtypeNames": ["GovernanceStrategy"],
                 "sequencingOrder": None,
                 "sequencingProperty": None,
-                "filter": filter
+                "searchString": filter
                 }
+            body2 = SearchStringRequestBody(
+                class_="SearchStringRequestBody",
+                metadata_element_subtype_names=["GovernanceStrategy"],
+                search_string="*",
+
+                )
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(body=body, output_format="DICT", output_format_set="Governance Definitions")
+            response = s_client.find_governance_definitions(body=body, output_format="JSON", output_format_set="Governance Definitions")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -397,7 +407,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "d30e00d2-70ad-42cc-b511-c0347cb2de57"
+        guid = "fd95c9dc-c882-4c3f-8436-aa85e74276fb"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -405,7 +415,7 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_governance_definition_by_guid(guid, output_format='DICT')
+            response = s_client.get_governance_definition_by_guid(guid, output_format='JSON')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

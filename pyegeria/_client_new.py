@@ -476,7 +476,8 @@ class Client2:
         except (HTTPStatusError, httpx.HTTPStatusError, httpx.RequestError) as e:
             # context["caught_exception"] = e
             # context['HTTPStatusCode'] = e.response.status_code
-            additional_info = {"userid": self.user_id}
+            additional_info = {"userid": self.user_id, "reason": response.text}
+
             raise PyegeriaClientException(response, context, additional_info, e)
         #
         # except json.JSONDecodeError as e:
@@ -818,9 +819,9 @@ class Client2:
         elif status:
             body = {
                 "class": "UpdateStatusRequestBody",
-                "status": status
+                "newStatus": status
                 }
-            validated_body = UpdateStatusRequestBody.validate_python(body)
+            validated_body = UpdateStatusRequestBody.model_validate(body)
         else:
             raise PyegeriaInvalidParameterException(additional_info={"reason": "invalid parameters"})
 
@@ -938,11 +939,11 @@ class Client2:
         else:
             body = {
                 "class": "GetRequestBody",
-
+                "metadataElementTypeName": _type
                 }
             validated_body = GetRequestBody.model_validate(body)
 
-        json_body = validated_body.model_dump_json(indent=2)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
@@ -971,7 +972,7 @@ class Client2:
                 }
             validated_body = ResultsRequestBody.model_validate(body)
 
-        json_body = validated_body.model_dump_json(indent=2)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("elements", None)

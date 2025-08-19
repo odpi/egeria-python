@@ -177,6 +177,33 @@ class OpenMetadataRootProperties(PyegeriaModel):
     type_name: str | None = None
     extended_properties: dict | None = None
 
+    @model_validator(mode='before')
+    @classmethod
+    def preprocess_data(cls, values):
+        """
+        This model validator performs pre-processing on the entire
+        input dictionary before field validation.
+        It converts any empty tuples to None and ensures a metadata key exists.
+
+        This is the modern equivalent of @root_validator(pre=True).
+        """
+        # Ensure the 'data' key exists before trying to access it.
+        if 'data' in values and isinstance(values['data'], dict):
+            # Convert empty tuples to None
+            processed_data = {}
+            for key, value in values['data'].items():
+                if isinstance(value, tuple) and not value:
+                    processed_data[key] = None
+                else:
+                    processed_data[key] = value
+            values['data'] = processed_data
+
+        # Ensure a 'metadata' key is always a dictionary.
+        if 'metadata' not in values:
+            values['metadata'] = {}
+
+        return values
+
 
 class RelationshipBeanProperties(PyegeriaModel):
     effective_from: datetime | None = None
@@ -311,7 +338,7 @@ class UpdateStatusRequestBody(PyegeriaModel):
 
 class GetRequestBody(PyegeriaModel):
     class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
-    # metadata_element_type_name: list[str] | None = None
+    metadata_element_type_name: str | None = None
     metadata_element_subtype_names: list[str] | None = None
     skip_relationships: list[str] | None = None
     include_only_relationships: list[str] | None = None

@@ -51,9 +51,10 @@ TERM_RELATIONSHPS = ["Synonym", "Translation", "PreferredTerm", "TermISATYPEOFRe
                      "ISARelationship"]
 
 # List of supported md_commands
-GOV_LINK_LIST = [ "Link Governance Drivers", "Detach Governance Drivers",
-                "Link Governance Policies", "Detach Governance Policies",
-                "Link Governance Controls", "Detach Governance Controls",]
+GOV_LINK_LIST = [ "Link Governance Drivers", "Link Drivers", "Detach Governance Drivers", "Detach Drivers",
+                "Link Governance Policies", "Link Policies", "Detach Governance Policies", "Detach Policies",
+                "Link Governance Controls", "Link Controls", "Detach Governance Controls", "Detach Controls",
+                ]
 
 GOV_COM_LIST = [ "Create Business Imperative", "Update Business Imperative",
                 "Create Regulation Article Definition", "Update Regulation Article Definition",
@@ -130,20 +131,21 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",
                 "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
                 "Create Agreement", "Update Agreement",
-                "Link Digital Products", "Link Data Products", "Detach Digital Products", "Detach Data Products",
-                # "Create Data Sharing Agreement", "Update Data Sharing Agreement",
+                "Link Digital Products", "Link Product-Product", "Detach Digital Products", "Detach Product-Product",
+                "Create Data Sharing Agreement", "Update Data Sharing Agreement",
                 "Create Digital Subscription", "Create Product Subscription", "Update Digital Subscription", "Update Product Subscription",
-                "Attach Agreement Items", "Detach Agreement Items",
+                "Link Agreement->Item", "Detach Agreement->Item",
                 "Attach Contract", "Detach Contract",
-                "Attach Subscriber", "Detach Subscriber",
-                "Link Collection to Resource", "Attach Collection to Resource",
-                "Unlink Collection From Resource", "Detach Collection From Resource",
+                "Link Subscriber->Subscription", "Detach Subscriber->Subscription",
+                "Link Collection->Resource", "Attach Collection->Resource",
+                "Unlink Collection->Resource", "Detach Collection->Resource",
                 "Add Member to Collection", "Add Member", "Member->Collection",
-                "Remove Member from Collection","Remove Member from Collection",
+                "Remove Member from Collection","Remove Member->Collection",
                  "View Governance Definitions", "View Gov Definitions",
                  "List Governance Definitions", "List Gov Definitions",
                 "View Governance Definition Context","List Governance Definition Context",
                 "View Governance Def Context", "List Governance Def Context",
+                "View Report",
                 # "Create Business Imperative", "Update Business Imperative",
                 # "Create Regulation Article Definition", "Update Regulation Article Definition",
                 # "Create Threat Definition", "Update Threat Definition",
@@ -173,6 +175,8 @@ command_list.extend(GOV_COM_LIST)
 command_list.extend(GOV_LINK_LIST)
 command_list.extend(COLLECTIONS_LIST)
 command_list.extend(SIMPLE_COLLECTIONS)
+command_list.extend(["Link Governance Response", "Detach Governance Response",
+                  "Link Governance Mechanism", "Detach Governance Mechanism"])
 
 pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
