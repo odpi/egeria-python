@@ -247,6 +247,8 @@ output_format_sets = FormatSetDict({
                     Column(name="Effective To", key='effective_to'),
                     Column(name="GUID", key='guid'),
                     Column(name="Open Metadata Type Name", key='type_name'),
+                    Column(name="Glossary", key='parent_glossary'),
+                    Column(name="Subject Aream", key='subject_area'),
                 ],
             )
             ]

@@ -589,6 +589,42 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
+    def test_create_glossary_category(self):
+        glossary_guid = "9bf9e61a-bc4f-4e52-ac2a-c5c46eda950e"
+        try:
+            c_client = CollectionManager('qs-view-server', self.good_platform1_url, user_id=self.good_user_2,
+                user_pwd="secret", )
+
+            # token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = c_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            anchor_guid = glossary_guid
+            parent_guid = glossary_guid
+            parent_relationship_type_name = CategoryHierarchy
+            parent_at_end1 = True
+            display_name = "Science"
+            description = "This catalog is for scientific termsg"
+            is_own_anchor = False
+            qualified_name = c_client.__create_qualified_name__("GlossaryCategory",display_name)
+
+            response = c_client.create_glossary_category(display_name, parent_guid, description )
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
     def test_create_root_collection(self):
         try:
             c_client = CollectionManager('qs-view-server', self.good_platform1_url, user_id=self.good_user_2,

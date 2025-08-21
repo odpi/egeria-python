@@ -11,7 +11,7 @@ import asyncio
 from datetime import datetime
 
 from pyegeria import NO_GLOSSARIES_FOUND, max_paging_size
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria._exceptions import InvalidParameterException, PropertyServerException, UserNotAuthorizedException
 from pyegeria._globals import NO_CATEGORIES_FOUND, NO_TERMS_FOUND
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
@@ -29,7 +29,7 @@ from pyegeria.output_formatter import (
 )
 
 
-class GlossaryBrowser(Client):
+class GlossaryBrowser(Client2):
     """
     GlossaryBrowser is a class that extends the Client class. It provides methods to search and retrieve glossaries,
     terms, and categories.
@@ -55,7 +55,7 @@ class GlossaryBrowser(Client):
         self.user_id = user_id
         self.g_browser_command_root: str
 
-        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
 
     def _extract_glossary_properties(self, element: dict, output_format: str = None) -> dict:
@@ -1020,10 +1020,11 @@ class GlossaryBrowser(Client):
     #       Glossaries
     #
 
-    async def _async_find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                                     ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-                                     for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
-                                     page_size: int = None, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+    async def _async_find_glossaries(self, search_string: str, starts_with: bool = False,
+                                     ends_with: bool = False, ignore_case: bool = False, type_name: str = None,
+                                     classification_names: list[str] = None, start_from: int = 0,
+                                     page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
         """Retrieve the list of glossary metadata elements that contain the search string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1032,21 +1033,14 @@ class GlossaryBrowser(Client):
         ----------
         search_string: str,
             Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
-
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-            If not provided, the server name associated with the instance is used.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
         ends_with : bool, [default=False], optional
             Ends with the supplied string
         ignore_case : bool, [default=False], optional
             Ignore case when searching
-        for_lineage : bool, [default=False], optional
-
-        for_duplicate_processing : bool, [default=False], optional
+        classification_names: list[str], [default=None], optional
+            An optional parameter indicating the classification names to filter by.
         type_name: str, [default=None], optional
             An optional parameter indicating the subtype of the glossary to filter by.
             Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
@@ -1063,6 +1057,9 @@ class GlossaryBrowser(Client):
                 REPORT - output markdown with a preamble for a report
         output_format_set: str | dict, optional
             Output format set name or dictionary. Defaults to None.
+        body: dict, optional
+            A dictionary containing the search string and other optional parameters. If specified, these values
+            will override the search_string, starts_with, ends_with, and ignore_case parameters.
 
         Returns
         -------
@@ -1081,108 +1078,84 @@ class GlossaryBrowser(Client):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
-        if page_size is None:
-            page_size = self.page_size
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        for_lineage_s = str(for_lineage).lower()
-        for_duplicate_processing_s = str(for_duplicate_processing).lower()
-
-        validate_search_string(search_string)
 
         if search_string == "*":
             search_string = None
 
-        body = {
-            "class": "SearchStringRequestBody", "searchString": search_string, "effectiveTime": effective_time,
-            "typeName": type_name,
-            }
+
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-browser/glossaries/"
-               f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-               f"endsWith={ends_with_s}&ignoreCase={ignore_case_s}&forLineage={for_lineage_s}&"
-               f"forDuplicateProcessing={for_duplicate_processing_s}")
+               f"by-search-string")
+        response = await self._async_find_request(url, _type="Collection",
+                                                  _gen_output=self._generate_glossary_output,
+                                                  search_string = search_string, classification_names = classification_names,
+                                                  metadata_element_types = "Glossary",
+                                                  starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
+                                                  start_from = start_from, page_size = page_size,
+                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  body=body)
+        return response
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("elementList", NO_GLOSSARIES_FOUND)
-        if element == NO_GLOSSARIES_FOUND:
-            if output_format == 'JSON':
-                return NO_GLOSSARIES_FOUND
-            elif output_format in ['MD', 'FORM', 'REPORT', 'LIST']:
-                return "\n# No glossaries found.\n"
-            elif output_format == 'DICT':
-                return None
 
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_glossaries_md(element, search_string, output_format, output_format_set)
-        return response.json().get("elementList", NO_GLOSSARIES_FOUND)
+    def find_glossaries(self, search_string: str, starts_with: bool = False,
+                        ends_with: bool = False, ignore_case: bool = False, type_name: str = None,
+                                     classification_names: list[str] = None, start_from: int = 0,
+                                     page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
 
-    def find_glossaries(self, search_string: str, effective_time: str = None, starts_with: bool = False,
-                        ends_with: bool = False, ignore_case: bool = False, for_lineage: bool = False,
-                        for_duplicate_processing: bool = False, type_name: str = None, start_from: int = 0,
-                        page_size: int = None, output_format: str = "JSON", output_format_set: str | dict = None) -> list | str:
-        """Retrieve the list of glossary metadata elements that contain the search string.
-                The search string is located in the request body and is interpreted as a plain string.
-                The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
+        """ Retrieve the list of glossary metadata elements that contain the search string.
+            The search string is located in the request body and is interpreted as a plain string.
+            The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
 
-        Parameters
-        ----------
-        search_string: str,
-            Search string to use to find matching glossaries. If the search string is '*',
-            then all glossaries returned.
-
-        effective_time: str, [default=None], optional
-            Effective time of the query. If not specified will default to any time. Time format is
-            "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-            If not provided, the server name associated with the instance is used.
-        starts_with : bool, [default=False], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        for_lineage : bool, [default=False], optional
-             Indicates the search is for lineage.
-        for_duplicate_processing : bool, [default=False], optional
-        type_name: str, [default=None], optional
-            An optional parameter indicating the subtype of the glossary to filter by.
-            Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
-         start_from : int, [default=0], optional
-             When multiple pages of results are available, the page number to start from.
+         Parameters
+         ----------
+         search_string: str,
+             Search string to use to find matching glossaries. If the search string is '*' then all glossaries returned.
+         starts_with : bool, [default=False], optional
+             Starts with the supplied string.
+         ends_with : bool, [default=False], optional
+             Ends with the supplied string
+         ignore_case : bool, [default=False], optional
+             Ignore case when searching
+         classification_names: list[str], [default=None], optional
+             An optional parameter indicating the classification names to filter by.
+         type_name: str, [default=None], optional
+             An optional parameter indicating the subtype of the glossary to filter by.
+             Values include 'ControlledGlossary', 'EditingGlossary', and 'StagingGlossary'
+         start_from: int, [default=0], optional
+                     When multiple pages of results are available, the page number to start from.
          page_size: int, [default=None]
              The number of items to return in a single page. If not specified, the default will be taken from
              the class instance.
          output_format: str, default = 'JSON'
-            Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-                LIST - output a markdown table with columns for Glossary Name, Qualified Name, Language, Description,
-                Usage
-                DICT - output a dictionary structure containing all attributes
+             Type of output to produce:
+                 JSON - output standard json
+                 MD - output standard markdown with no preamble
+                 FORM - output markdown with a preamble for a form
+                 REPORT - output markdown with a preamble for a report
          output_format_set: str | dict, optional
-            Output format set name or dictionary. Defaults to None.
-        Returns
-        -------
-        List | str
+             Output format set name or dictionary. Defaults to None.
+         body: dict, optional
+             A dictionary containing the search string and other optional parameters. If specified, these values
+             will override the search_string, starts_with, ends_with, and ignore_case parameters.
 
-        A list of glossary definitions active in the server.
+         Returns
+         -------
+         List | str
 
-        Raises
-        ------
+         A list of glossary definitions active in the server.
 
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+         Raises
+         ------
 
-        """
+         InvalidParameterException
+           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+         PropertyServerException
+           Raised by the server when an issue arises in processing a valid request
+         NotAuthorizedException
+           The principle specified by the user_id does not have authorization for the requested action
+
+         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossaries(search_string, effective_time, starts_with, ends_with, ignore_case, for_lineage,

@@ -672,7 +672,7 @@ class CollectionManager(Client2):
         ----
         Body sample:
         {
-          "class": "AnyTimeRequestBody",
+          "class": "GetRequestBody",
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
@@ -680,7 +680,7 @@ class CollectionManager(Client2):
         }
         """
 
-        url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}"))
+        url = str(HttpUrl(f"{self.collection_command_root}/{collection_guid}/retrieve"))
         type = element_type if element_type else "Collection"
 
         response = await self._async_get_guid_request(url, _type=type,
@@ -1415,6 +1415,26 @@ class CollectionManager(Client2):
                                           ["ContextEvent"], body))
 
     @dynamic_catch
+    def create_glossary_category(self, display_name: str, parent_guid: str, description: str = None ) -> str:
+        """Create a new glossary category."""
+        body = {
+            "class": "NewRelationshipRequestBody",
+            "parentGUID": parent_guid,
+            "parentRelationshipTypeName": "CategoryHierarchy",
+            "parentAtEnd1": True,
+            "is_own_anchor": False,
+            "anchor_guid": parent_guid,
+            "properties": {
+                "class": "GlossaryCategoryProperties",
+                "displayName": display_name,
+                "description": description,
+                "parentCategory": parent_guid,
+                },
+            }
+        response = self.create_collection(body=body)
+        return response
+
+    @dynamic_catch
     async def _async_create_data_spec_collection(self, display_name: str = None, description: str = None,
                                                 category: str = None, classification_name: str = None,
                                                  body: dict | NewElementRequestBody = None) -> str:
@@ -1520,15 +1540,16 @@ class CollectionManager(Client2):
         }
 
         """
-        validated_body = self.validate_new_element_request(body,"DataSpecProperties")
-
-        if validated_body is None and display_name is not None:
+        if body:
+            validated_body = self.validate_new_element_request(body,"DataSpecProperties")
+        elif display_name is not None:
             qualified_name = self.__create_qualified_name__("DataSpec", display_name, EGERIA_LOCAL_QUALIFIER)
-            print(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
-            initial_classifications_data = {"class" : "ClassificationProperties"}
+            logger.info(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
             if classification_name:
-                initial_classification_dict = {
-                    classification_name: InitialClassifications.model_validate(initial_classifications_data)
+                initial_classification_data = {
+                    classification_name: {
+                    "class" : "ClassificationProperties"
+                    }
                 }
             else:
                 initial_classification_dict = None
@@ -5070,6 +5091,12 @@ class CollectionManager(Client2):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
 
+    def add_term_to_category(self, category_guid: str, term_guid: str,
+                             body: dict | NewRelationshipRequestBody = None) -> None:
+        """Add a term to a category.  The request body is optional."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_add_to_collection(category_guid, term_guid, body))
+
 
     @dynamic_catch
     async def _async_update_collection_membership_prop(self, collection_guid: str, element_guid: str, body: dict = None,
@@ -5289,6 +5316,45 @@ class CollectionManager(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_remove_from_collection(collection_guid, element_guid, body))
+
+        #
+        #
+        #
+
+
+    def remove_term_from_category(self, category_guid: str, term_guid: str,
+                               body: dict | DeleteRequestBody= None) -> None:
+        """Remove a term from a category.
+
+        Parameters
+        ----------
+        category_guid: str
+            identity of the collection to return members for.
+        term_guid: str
+            Effective time of the query. If not specified will default to any time.
+        body: dict, optional, defaults to None
+            The body of the request to add to the collection. See notes.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_remove_from_collection(category_guid, term_guid, body))
 
         #
         #
