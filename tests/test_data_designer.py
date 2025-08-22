@@ -17,14 +17,15 @@ import time
 from rich import print, print_json
 from rich.console import Console
 
+from pyegeria import PyegeriaAPIException
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
     )
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception
-from pyegeria.data_designer_omvs import DataDesigner
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table
+from pyegeria.data_designer import DataDesigner
 
 disable_ssl_warnings = True
 
@@ -55,37 +56,9 @@ class TestDataDesigner:
     #
     ##
     #
+
+
     def test_create_data_structure(self):
-        name = "Test Data Structure"
-        description = "Test Data Structure Description"
-        try:
-            m_client = DataDesigner(self.view_server, self.platform_url)
-
-            m_client.create_egeria_bearer_token(self.user, self.password)
-            start_time = time.perf_counter()
-            response = m_client.create_data_structure(name, description)
-            duration = time.perf_counter() - start_time
-            print(
-                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
-            )
-            if type(response) is list:
-                print_json(data=response)
-            elif type(response) is str:
-                console.print("\n\n\t Response is: " + response)
-
-            assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Invalid request"
-
-        finally:
-            m_client.close_session()
-
-    def test_create_data_structure_w_body(self):
         display_name = "solar_power2"
         namespace = "solar"
         body = {
@@ -106,7 +79,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.create_data_structure_w_body(body)
+            response = m_client.create_data_structure(body)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -250,7 +223,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="MERMAID", output_format_set = columns_struct)
+            response = m_client.find_all_data_structures(output_format="DICT", output_format_set = columns_struct)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -292,8 +265,8 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            search_string = "TBDF-Incoming Weekly Measurement Data"
-            response = m_client.find_data_structures(search_string, output_format="DICT",
+            search_string = "solar_power"
+            response = m_client.find_data_structures(search_string, output_format="JSON",
                                                      output_format_set="DataStruct")
             duration = time.perf_counter() - start_time
             print(
@@ -372,7 +345,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_structures_by_guid(self):
-        guid = "f0618139-40d0-47b3-8dac-1053bf938ab4"
+        guid = "458a4e48-6d97-4ffc-bd12-85e49bca8829"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -467,7 +440,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="DICT")
+            response = m_client.find_all_data_fields(output_format="JSON")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

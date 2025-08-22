@@ -286,18 +286,18 @@ class NewElementRequestBody(RequestBody):
 
 class NewClassificationRequestBody(RequestBody):
     class_: Annotated[Literal["NewClassificationRequestBody"], Field(alias="class")]
-    properties: ClassificationBeanProperties
+    properties: dict | None = None
 
 
 class UpdateClassificationRequestBody(RequestBody):
     class_: Annotated[Literal["UpdateClassificationRequestBody"], Field(alias="class")]
-    properties: ClassificationBeanProperties
+    properties: dict | None = None
     merge_update: bool | None = True
 
 
 class UpdateRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["UpdateRelationshipRequestBody"], Field(alias="class")]
-    properties: RelationshipBeanProperties
+    properties: dict | None = None
     merge_update: bool | None = True
 
 
@@ -313,6 +313,11 @@ class TemplateRequestBody(PyegeriaModel):
     template_guid: str
     replacement_properties: dict[str, Any] = {}
     placeholder_properties: dict[str, Any] = {}
+    deep_copy: bool | None = False
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+    template_substitute: bool | None = False
+    allow_retrieve: bool | None = True
 
 
 class UpdateElementRequestBody(PyegeriaModel):
@@ -350,6 +355,7 @@ class GetRequestBody(PyegeriaModel):
     effective_time: datetime | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
+    relationship_page_size: int | None = None
 
 
 class ResultsRequestBody(GetRequestBody):

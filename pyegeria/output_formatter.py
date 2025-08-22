@@ -632,7 +632,8 @@ def generate_entity_dict(elements: List[Dict],
         if columns_struct is not None:
             try:
                 returned_struct = extract_properties_func(element, columns_struct)
-            except TypeError:
+            except TypeError as e:
+                logger.info(f"Error - didn't find extractor?: {e}")
                 returned_struct = None
 
         # Get additional properties if function is provided

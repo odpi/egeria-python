@@ -14,14 +14,11 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-)
-from pyegeria._exceptions_new import PyegeriaException
-from pyegeria.glossary_browser_omvs import GlossaryBrowser
+from pydantic import ValidationError
+
+
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria.glossary_browser import GlossaryBrowser
 
 
 class TestGlossaryBrowser:
@@ -59,11 +56,6 @@ class TestGlossaryBrowser:
             start_time = time.perf_counter()
             response = g_client.find_glossaries(
                 "*",
-                starts_with=False,
-                ends_with=False,
-                ignore_case=True,
-                page_size=0,
-                effective_time=None,
                 output_format = 'DICT',
             )
             duration = time.perf_counter() - start_time
@@ -80,11 +72,12 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -161,11 +154,9 @@ class TestGlossaryBrowser:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -179,9 +170,9 @@ class TestGlossaryBrowser:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_name = "Egeria-Markdown"
+            glossary_name = "Coco Pharmaceuticals Clinical Trial Terminology"
 
-            response = g_client.get_glossaries_by_name(glossary_name)
+            response = g_client.get_glossaries_by_name(glossary_name, output_format="JSON")
             print(f"type is {type(response)}")
             if type(response) is dict:
                 print("\n\n" + json.dumps(response, indent=4))
@@ -191,15 +182,115 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             g_client.close_session()
+
+    def test_find_glossary_terms(self):
+        try:
+            g_client = GlossaryBrowser(
+                self.good_view_server_2, self.good_platform1_url, self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
+            # glossary_guid = (
+            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
+            # )
+            glossary_guid = None
+            start_time = time.perf_counter()
+            response = g_client.find_glossary_terms(
+                "Sustainability",
+                # glossary_guid=glossary_guid,
+                starts_with=True,
+                ends_with=False,
+                ignore_case=False,
+                start_from=0,
+                page_size=0,
+                output_format="DICT",
+                output_format_set="Basic-Terms"
+            )
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+                # print_json_list_as_table(response)
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_terms_by_name(self, server: str = good_view_server_2):
+        server_name = server
+
+        try:
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_name = "Sustainability"
+            glossary_guid = None
+            response = g_client.get_terms_by_name(term_name,  [], output_format="JSON", output_format_set="Basic-Terms")
+
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_by_guid(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryBrowser(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = (
+            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
+            # )
+            term_guid = '92a5a610-78c3-404a-999f-c3352390b672'
+            response = g_client.get_terms_by_guid(term_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
 
     def test_get_terms_for_glossary(self, server: str = good_view_server_2):
         server_name = server
@@ -230,11 +321,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -260,11 +349,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -290,79 +377,15 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             g_client.close_session()
 
 
-
-    def test_get_terms_by_name(self, server: str = good_view_server_2):
-        server_name = server
-
-        try:
-            g_client = GlossaryBrowser(
-                server_name, self.good_platform1_url, user_id="erinoverview"
-            )
-
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Sustainability"
-            glossary_guid = None
-            response = g_client.get_terms_by_name(term_name, glossary_guid, [], output_format="DICT", output_format_set="Basic-Terms")
-
-            print(f"type is {type(response)}")
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            g_client.close_session()
-
-    def test_get_term_by_guid(self, server: str = good_view_server_2):
-        try:
-            server_name = server
-            g_client = GlossaryBrowser(
-                server_name, self.good_platform1_url, user_id=self.good_user_2
-            )
-
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
-            # glossary_guid = (
-            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
-            # )
-            term_guid = '92a5a610-78c3-404a-999f-c3352390b672'
-            response = g_client.get_terms_by_guid(term_guid)
-            print(f"type is {type(response)}")
-            if type(response) is dict:
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            g_client.close_session()
 
     def test_get_term_versions(self, server: str = good_view_server_2):
         try:
@@ -382,11 +405,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -410,11 +431,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -439,11 +458,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -468,11 +485,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -499,7 +514,7 @@ class TestGlossaryBrowser:
         except (
             PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -525,11 +540,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -553,11 +566,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -587,11 +598,9 @@ class TestGlossaryBrowser:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -652,64 +661,15 @@ class TestGlossaryBrowser:
             print("\n\nAll tests passed!")
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             g_client.close_session()
 
-    def test_find_glossary_terms(self):
-        try:
-            g_client = GlossaryBrowser(
-                self.good_view_server_2, self.good_platform1_url, self.good_user_2
-            )
 
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
-            # glossary_guid = (
-            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
-            # )
-            glossary_guid = None
-            start_time = time.perf_counter()
-            response = g_client.find_glossary_terms(
-                "Sustainability",
-                # glossary_guid=glossary_guid,
-                glossary_guid=glossary_guid,
-                starts_with=True,
-                ends_with=False,
-                ignore_case=False,
-                for_lineage=False,
-                for_duplicate_processing=True,
-                status_filter=[],
-                page_size=100,
-                effective_time=None,
-                output_format="DICT",
-                output_format_set="Basic-Terms"
-            )
-            print(f"Duration is {time.perf_counter() - start_time} seconds")
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
-                # print_json_list_as_table(response)
-                count = len(response)
-                print(f"Found {count} terms")
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            g_client.close_session()
 
     def test_find_categories(self):
         try:
@@ -745,11 +705,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -775,11 +733,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -806,11 +762,9 @@ class TestGlossaryBrowser:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -836,11 +790,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -865,11 +817,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -911,11 +861,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            
             assert False, "Invalid request"
 
         finally:
@@ -939,11 +887,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -966,11 +912,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -993,11 +937,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -1020,11 +962,9 @@ class TestGlossaryBrowser:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

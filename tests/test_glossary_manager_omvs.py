@@ -17,15 +17,18 @@ import time
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+from pydantic import ValidationError
 
-from pyegeria import GlossaryManager
+from pyegeria import PyegeriaException, print_exception_table, print_validation_error, PyegeriaInvalidParameterException
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria.models import NewElementRequestBody
 from tests.test_classification_manager_omvs import relationship_type
 from tests.test_feedback_manager_omvs import password
 
@@ -60,7 +63,7 @@ class TestGlossaryManager:
     def test_create_glossary(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
@@ -83,19 +86,19 @@ class TestGlossaryManager:
             print(f"\n\nNew glossary {display_name} created with GUID of {response}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             g_client.close_session()
 
     def test_update_glossary(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
@@ -104,30 +107,30 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(
                 self.good_user_2, self.good_user_2_pwd
             )
-            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
+            glossary_guid = "b336de33-ae66-4db9-b669-85c146c4b053"
             start_time = time.perf_counter()
             body = {
-                "class": "ReferenceableRequestBody",
-                "elementProperties": {
+                "class": "UpdateElementRequestBody",
+                "properties": {
                     "class": "GlossaryProperties",
                     "displayName": "puddys-universe",
                     "qualified_name": "Glossary:puddys-universe",
                 },
             }
 
-            g_client.update_glossary(glossary_guid, body, True)
+            g_client.update_glossary(glossary_guid, body)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n\nUpdated glossary {glossary_guid}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             g_client.close_session()
 
@@ -144,7 +147,7 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            glossary_guid = "81b618ae-cadc-4c23-ad6e-4b1113643ddb"
+            glossary_guid = "b336de33-ae66-4db9-b669-85c146c4b053"
             g_client.delete_glossary(glossary_guid, cascade = True)
             duration = time.perf_counter() - start_time
 
@@ -152,19 +155,16 @@ class TestGlossaryManager:
             print(f"\n\nDeleted glossary {glossary_guid}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
 
-    #
-    #       Catagories
-    #
-    def test_create_category(self):
+
+
+    def test_create_term(self):
         try:
             g_client = GlossaryManager(
                 self.good_view_server_2,
@@ -177,123 +177,72 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            display_name = "category1"
-            description = "A category used for test"
-            glossary_guid = "2acae812-5a0d-431f-806d-a874cd2da64d" # Egeria-Markdown
-            response = g_client.create_category(
-                glossary_guid,display_name, description,
-            )
+            glossary_guid ="65b43594-b105-49da-a59e-269e1fdb2f76"
+            qualified_name = "GlossaryTerm:dt2"
+            prop_body = GlossaryTermProperties(class_ = "GlossaryTermProperties",
+                                               display_name = "dt2",
+                                                description = "A test term",
+                                                qualified_name = qualified_name,
+                                                parent_guid = glossary_guid,
+                                               summary = "a quick summary"
+                                               )
+
+            body = NewElementRequestBody(class_ = "NewElementRequestBody",
+                                         parent_guid= glossary_guid,
+                                        is_own_anchor= True,
+                                        anchor_scope_guid= glossary_guid,
+                                        parent_relationship_type_name = "ParentGlossary",
+                                        parent_at_end_1 = True,
+                                        properties = prop_body.model_dump(exclude_none=True),
+                                         )
+
+            response = g_client.create_glossary_term(body)
+
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nNew category {display_name} created with GUID of {response}")
+
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             g_client.close_session()
 
-    def test_update_category(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd=self.good_user_2_pwd,
-            )
-
-            token = g_client.create_egeria_bearer_token(
-                self.good_user_2, self.good_user_2_pwd
-            )
-            category_guid = "264432d9-609f-4b88-a484-af482895c0a5"
-            display_name = "puddys-universe"
-            description = "A category used for testing"
-            update_description = "Updated description and display name"
-
-            start_time = time.perf_counter()
-
-
-            g_client.update_category(category_guid, display_name, description, update_description=update_description
-                                     )
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nUpdated glossary {display_name}, {category_guid}")
-            assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            g_client.close_session()
-
-    def test_delete_category(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd=self.good_user_2_pwd,
-            )
-
-            token = g_client.create_egeria_bearer_token(
-                self.good_user_2, self.good_user_2_pwd
-            )
-            start_time = time.perf_counter()
-            category_guid = "264432d9-609f-4b88-a484-af482895c0a5"
-            g_client.delete_category(category_guid)
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nDeleted category {category_guid}")
-            assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            g_client.close_session()
-
-    def test_set_parent_category(self):
+    def test_create_term_copy(self):
         try:
             g_client = GlossaryManager(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
-                )
+            )
 
             token = g_client.create_egeria_bearer_token(
                 self.good_user_2, self.good_user_2_pwd
-                )
-            parent_guid = "e14b80c6-346c-4e7c-89c6-b5ed92ddbd33"
-            child_guid = "e164ba97-f5eb-42f2-b52e-cd72f484d18d"
+            )
             start_time = time.perf_counter()
+            glossary_guid ="9bf9e61a-bc4f-4e52-ac2a-c5c46eda950e"
+            term_guid = "e6bfae8b-07ad-44be-a4a4-0a4310cb8964"
 
-            g_client.set_parent_category(parent_guid, child_guid)
+            response = g_client.create_term_copy(glossary_guid, term_guid, "new-test1")
+
             duration = time.perf_counter() - start_time
-
+            print(f"Response is: {response}")
             print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nLinked category {child_guid} to parent {parent_guid}")
+
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
-                ) as e:
-            print_exception_response(e)
+                    PyegeriaException
+        ) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             g_client.close_session()
 
@@ -320,11 +269,9 @@ class TestGlossaryManager:
             print(f"\n\nAdded term to category {category_guid}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -351,106 +298,42 @@ class TestGlossaryManager:
             print(f"\n\nAdded term to category {category_guid}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
 
-    def test_find_categories(self):
+    def test_add_is_abstract_concept(self):
         try:
             g_client = GlossaryManager(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
             )
 
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = g_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+
             start_time = time.perf_counter()
-            response = g_client.find_glossary_categories(
-                # "*",
-                "Dr.Egeria",
-                starts_with=False,
-                ends_with=False,
-                ignore_case=True,
-                page_size=0,
-                effective_time=None,
-                output_format="LIST"
-            )
+            category_guid = "6d848f56-0332-4c8f-a048-9209d912809b"
+            term_guid =  "a6247ae4-0606-4aa9-94e1-4f0b0713cc58"
+            g_client.add_is_abstract_concept(term_guid)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds")
-            if isinstance(response, list | dict):
-                # print("\n\n" + json.dumps(response, indent=4))
-                count = len(response)
-                print(f"Found {count} glossaries")
-                # for i in range(count):
-                #     print(
-                #         f"Found glossary: {response[i]['glossaryCategoryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
-                #     )
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+        except  (PyegeriaException, PyegeriaInvalidParameterException) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             g_client.close_session()
-
-    def test_get_glossary_category_structure(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            guid = "79f9784d-26d6-47f0-bb50-c193ede03441"
-            response = g_client.get_glossary_category_structure(
-                # "*",
-                guid,
-                output_format="LIST"
-            )
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds")
-            if isinstance(response, list | dict):
-                # print("\n\n" + json.dumps(response, indent=4))
-                count = len(response)
-                print(f"Found {count} categories")
-                # for i in range(count):
-                #     print(
-                #         f"Found glossary: {response[i]['glossaryCategoryProperties']['qualifiedName']} with id of {response[i]['elementHeader']['guid']}"
-                #     )
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            g_client.close_session()
-
-
-
-
 
 
     def test_find_glossaries(self):
@@ -487,11 +370,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -517,11 +398,9 @@ class TestGlossaryManager:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -547,11 +426,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -560,45 +437,43 @@ class TestGlossaryManager:
 
 
 
-    def test_get_terms_for_glossary(self, server: str = good_view_server_1):
-        server_name = server
-        try:
-            g_client = GlossaryManager(
-                server_name, self.good_platform1_url, user_id="erinoverview"
-            )
-
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
-            # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
-            # glossary_guid = (
-            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
-            # )
-            glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
-
-            start_time = time.perf_counter()
-            response = g_client.get_terms_for_glossary(
-                glossary_guid, page_size=500, effective_time=None
-            )
-            print(f"Duration is {time.perf_counter()-start_time} seconds")
-            print(f"type is {type(response)}")
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
-                count = len(response)
-                print(f"Found {count} terms")
-            elif type(response) is str:
-                print("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            g_client.close_session()
+    # def test_get_terms_for_glossary(self, server: str = good_view_server_1):
+    #     server_name = server
+    #     try:
+    #         g_client = GlossaryManager(
+    #             server_name, self.good_platform1_url, user_id="erinoverview"
+    #         )
+    #
+    #         token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+    #         # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+    #         # glossary_guid = "706ba88d-d0bb-42da-82d9-385b13516b34" # Teddy Bear Drop Foot
+    #         # glossary_guid = (
+    #         #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # larger sustainability glossary
+    #         # )
+    #         glossary_guid = "65b43594-b105-49da-a59e-269e1fdb2f76"
+    #
+    #         start_time = time.perf_counter()
+    #         response = g_client.get_terms_for_glossary(
+    #             glossary_guid
+    #         )
+    #         print(f"Duration is {time.perf_counter()-start_time} seconds")
+    #         print(f"type is {type(response)}")
+    #         if type(response) is list:
+    #             print("\n\n" + json.dumps(response, indent=4))
+    #             count = len(response)
+    #             print(f"Found {count} terms")
+    #         elif type(response) is str:
+    #             print("\n\n" + response)
+    #         assert True
+    #
+    #     except (
+    #                 PyegeriaException
+    #     ) as e:
+    #         print_exception_table(e)
+    #         assert False, "Invalid request"
+    #
+    #     finally:
+    #         g_client.close_session()
 
     def test_export_glossary_to_csv(self):
         try:
@@ -621,11 +496,9 @@ class TestGlossaryManager:
             print(f"\n\nExported {response} rows to {file_name}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -650,11 +523,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -681,11 +552,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -714,11 +583,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -738,17 +605,12 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "xt1",
-                glossary_guid=glossary_guid,
-                starts_with=True,
-                ends_with=False,
-                for_lineage=False,
-                ignore_case=True,
-                for_duplicate_processing=True,
-                status_filter=[],
-                page_size=10,
-                effective_time=None,
-                output_format="DICT"
+                "DT",
+                True,
+                False,
+                True,
+                output_format="JSON",
+                output_format_set = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             print(f"Number of terms is: {len(response)}")
@@ -762,11 +624,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -796,11 +656,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -822,11 +680,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -850,12 +706,10 @@ class TestGlossaryManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+             PyegeriaException,
             FileNotFoundError,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         except Exception as e:
             print(e)
@@ -884,11 +738,9 @@ class TestGlossaryManager:
             print(f"\n\nDeleted term {term_guid}")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                    PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -926,7 +778,7 @@ class TestGlossaryManager:
                 PropertyServerException,
                 UserNotAuthorizedException,
                 ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -963,7 +815,7 @@ class TestGlossaryManager:
                 PropertyServerException,
                 UserNotAuthorizedException,
                 ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -993,7 +845,7 @@ class TestGlossaryManager:
                 PropertyServerException,
                 UserNotAuthorizedException,
                 ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:

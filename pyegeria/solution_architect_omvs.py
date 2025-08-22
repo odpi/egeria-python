@@ -15,7 +15,7 @@ from httpx import Response
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR
 from pyegeria import validate_guid
-from pyegeria.governance_officer_omvs import GovernanceOfficer
+from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._client import Client, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.utils import body_slimmer

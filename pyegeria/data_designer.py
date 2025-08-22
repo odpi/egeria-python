@@ -8,20 +8,21 @@ This module provides access to the data-designer OMVS module.
 """
 
 import asyncio
-from os import terminal_size
 
-from httpx import Response
 from loguru import logger
-from prompt_toolkit import data_structures
 
 from pyegeria import Client2
+from pyegeria._client import max_paging_size
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
-from pyegeria._client import Client, max_paging_size
-from pyegeria._globals import NO_ELEMENTS_FOUND
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, generate_output,
+from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
+                             TemplateRequestBody,
+                             UpdateElementRequestBody, NewRelationshipRequestBody,
+                             DeleteRequestBody)
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict)
+from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties)
-from pyegeria.utils import body_slimmer
-
+from pyegeria.output_formatter import (populate_columns_from_properties, get_required_relationships)
+from pyegeria.utils import body_slimmer, dynamic_catch
 
 
 def query_seperator(current_string):
@@ -59,31 +60,22 @@ class DataDesigner(Client2):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        self.metadata_explorer_command_root: str = (
+        self.data_designer_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-designer")
-        Client.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        Client2.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
 
     #
     #    Data Structures
     #
-
-    async def _async_create_data_structure(self, name: str, description: str, qualified_name: str = None,
-                                           namespace: str = None, version_id: str = None) -> str:
+    @dynamic_catch
+    async def _async_create_data_structure(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data structure from a provided dict body. Async version.
 
         Parameters
         ----------
-        name : str
-            - unique name to search for
-        description : str
-            - description of the data structure
-        qualified_name : str, optional
-            - unique name of the data structure, if not provided, one will be generated from the name.
-        namespace : str
-            - a namespace for the data structure
-        version_id : str, optional
-            - a version identifier for the data structure
+        body : dict | NewElementRequestBody
+            - a dictionary or NewElementRequestBody object containing the data structure details
 
         Returns
         -------
@@ -98,43 +90,63 @@ class DataDesigner(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
-        """
-        if version_id is None:
-            qualified_name = qualified_name or f"DataStructure::{name}"
-        else:
-            qualified_name = qualified_name or f"DataStructure::{name}::{version_id}"
-        if namespace:
-            qualified_name = f"{namespace}::{qualified_name}"
 
-        body = {
-            "properties": {
-                "class": "DataStructureProperties", "qualifiedName": qualified_name, "displayName": name,
-                "description": description, "namespace": namespace, "versionIdentifier": version_id
-                }
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
             }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataStructureProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespace": "add namespace for this structure",
+            "versionIdentifier": "add version for this structure",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
 
         url = f"{base_path(self, self.view_server)}/data-structures"
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
+        return await self._async_create_element_body_request(url, "DataStructure", body)
 
-    def create_data_structure(self, name: str, description: str, qualified_name: str = None, namespace: str = None,
-                              version_id: str = None) -> str:
+    @dynamic_catch
+    def create_data_structure(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data structure from a provided dict body.
 
         Parameters
         ----------
-        name : str
-            - unique name to search for
-        description : str
-            - description of the data structure
-        qualified_name : str, optional
-            - unique name of the data structure, if not provided, one will be generated from the name.
-        namespace : str
-            - a namespace for the data structure
-        version_id : str, optional
-            - a version identifier for the data structure
+        body : dict | NewElementRequestBody
+            - a dictionary or NewElementRequestBody object containing the data structure details
 
         Returns
         -------
@@ -149,159 +161,57 @@ class DataDesigner(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataStructureProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespace": "add namespace for this structure",
+            "versionIdentifier": "add version for this structure",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_data_structure(name, description, qualified_name, namespace, version_id, ))
+            self._async_create_data_structure(body))
         return response
 
-    async def _async_create_data_structure_w_body(self, body: dict) -> str:
-        """
-        Create a new data structure with basic parameters. Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-            {
-              "class" : "NewDataStructureRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "anchorGUID" : "add guid here",
-              "isOwnAnchor": false,
-              "parentGUID": "add guid here",
-              "parentRelationshipTypeName": "add type name here",
-              "parentRelationshipProperties": {
-                "class": "ElementProperties",
-                "propertyValueMap" : {
-                  "description" : {
-                    "class": "PrimitiveTypePropertyValue",
-                    "typeName": "string",
-                    "primitiveValue" : "New description"
-                  }
-                }
-              },
-              "parentAtEnd1": false,
-              "properties": {
-                "class" : "DataStructureProperties",
-                "qualifiedName": "add unique name here",
-                "displayName": "add short name here",
-                "description": "add description here",
-                "namespace": "add namespace for this structure",
-                "versionIdentifier": "add version for this structure",
-                "additionalProperties": {
-                  "property1" : "propertyValue1",
-                  "property2" : "propertyValue2"
-                },
-                "effectiveFrom": "{{$isoTimestamp}}",
-                "effectiveTo": "{{$isoTimestamp}}"
-              }
-            }
-
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-structures"
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
-
-    def create_data_structure_w_body(self, body: dict) -> str:
-        """
-        Create a new data structure with basic parameters.
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-            {
-              "class" : "NewDataStructureRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "anchorGUID" : "add guid here",
-              "isOwnAnchor": false,
-              "parentGUID": "add guid here",
-              "parentRelationshipTypeName": "add type name here",
-              "parentRelationshipProperties": {
-                "class": "ElementProperties",
-                "propertyValueMap" : {
-                  "description" : {
-                    "class": "PrimitiveTypePropertyValue",
-                    "typeName": "string",
-                    "primitiveValue" : "New description"
-                  }
-                }
-              },
-              "parentAtEnd1": false,
-              "properties": {
-                "class" : "DataStructureProperties",
-                "qualifiedName": "add unique name here",
-                "displayName": "add short name here",
-                "description": "add description here",
-                "namespace": "add namespace for this structure",
-                "versionIdentifier": "add version for this structure",
-                "additionalProperties": {
-                  "property1" : "propertyValue1",
-                  "property2" : "propertyValue2"
-                },
-                "effectiveFrom": "{{$isoTimestamp}}",
-                "effectiveTo": "{{$isoTimestamp}}"
-              }
-            }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_structure_w_body(body, ))
-        return response
-
-    async def _async_create_data_structure_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_data_structure_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data structure using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -319,12 +229,10 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
+
+        ValidationError
+
 
         Note
         ----
@@ -371,13 +279,11 @@ class DataDesigner(Client2):
         }
 
         """
+        url = f"{self.data_designer_root}/data-structures/from-template"
+        return await self._async_create_element_from_template(url, body)
 
-        url = f"{base_path(self, self.view_server)}/data-structures/from-template"
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
-
-    def create_data_structure_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    def create_data_structure_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data structure using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -448,11 +354,11 @@ class DataDesigner(Client2):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_structure_from_template(body, ))
+        response = loop.run_until_complete(self._async_create_data_structure_from_template(body))
         return response
 
-    async def _async_update_data_structure_w_body(self, data_struct_guid: str, body: dict,
-                                                  replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data structure. Async version.
 
@@ -462,34 +368,23 @@ class DataDesigner(Client2):
             - the GUID of the data structure to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-        replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-             will be replaced.
+
         Returns
         -------
         None
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
+
+        ValidationError
 
         Note
         ----
-
         Full sample body:
-
         {
-          "class" : "UpdateDataStructureRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate": true,
           "properties": {
             "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
@@ -503,19 +398,22 @@ class DataDesigner(Client2):
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
-        replace_all_properties_s = str(replace_all_properties).lower()
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/update?"
-               f"replaceAllProperties={replace_all_properties_s}")
+        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/update"
+        await self._async_update_element_body_request(url, ["DataStructure"], body)
+        logger.info(f"Data structure {data_struct_guid} updated.")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_data_structure_w_body(self, data_struct_guid: str, body: dict.get,
-                                     replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data structure.
 
@@ -525,34 +423,23 @@ class DataDesigner(Client2):
             - the GUID of the data structure to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-r       replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-              will be replaced.
+
         Returns
         -------
         None
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
+
+        ValidationError
 
         Note
         ----
-
         Full sample body:
-
-                    {
-          "class" : "UpdateDataStructureRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate": true,
           "properties": {
             "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
@@ -566,249 +453,23 @@ r       replace_all_properties: bool, default = False
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_data_structure_w_body(data_struct_guid, body, replace_all_properties))
+            self._async_update_data_structure(data_struct_guid, body))
 
-    def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict | None:
-        data_structure_info = data_get_fcn(data_struct_guid, output_format="JSON")
-        if data_structure_info == "No elements found":
-            return None
-        collection_list = {"DictList": [], "SpecList": [], "CollectionDetails": []}
-        if isinstance(data_structure_info, (dict, list)):
-            member_of_collections = data_structure_info.get('memberOfCollections',"")
-            if isinstance(member_of_collections, list):
-                for member_rel in member_of_collections:
-                    props = member_rel["relatedElement"]["properties"]
-                    qname = props.get('qualifiedName', None)
-                    guid = member_rel['relatedElement']['elementHeader']['guid']
-                    description = props.get('description', None)
-                    collection_type = props.get('collectionType', None)
-                    if collection_type == "Data Dictionary":
-                        collection_list["DictList"].append(guid)
-                    elif collection_type == "Data Specification":
-                        collection_list["SpecList"].append(guid)
-                    collection_list["CollectionDetails"].append({"guid":guid, "description":description,
-                                                             "collectionType":collection_type, "qualifiedName":qname})
-            else:
-                return None
-            return collection_list
-        else:
-            return None
-
-    def get_data_memberships_with_dict(self, data_field_elements: dict) -> dict:
-        collection_list = {"DictList_guid": [], "DictList_qn": [], "SpecList_guid": [], "SpecList_qn": [], "CollectionDetails": []}
-        if isinstance(data_field_elements, (dict, list)):
-
-            for member_rel in data_field_elements:
-                type_name = ""
-                props = member_rel["relatedElement"]["properties"]
-                qname = props.get('qualifiedName', None)
-                guid = member_rel['relatedElement']['elementHeader']['guid']
-                description = props.get('description', None)
-                collection_type = props.get('collectionType', None)
-                classifications = member_rel["relatedElement"]["elementHeader"]["classifications"]
-                for classification in classifications:
-                    type_name = classification["type"]['typeName']
-                    if type_name == "DataDictionary":
-                        collection_list["DictList_guid"].append(guid)
-                        collection_list["DictList_qn"].append(qname)
-                    elif type_name == "DataSpec":
-                        collection_list["SpecList_guid"].append(guid)
-                        collection_list["SpecList_qn"].append(qname)
-                collection_list["CollectionDetails"].append({"typeName":type_name, "guid":guid, "description":description,
-                                                                "collectionType": collection_type,
-                                                                "qualifiedName": qname
-                                                                })
-        return collection_list
-
-
-    def get_data_rel_elements_dict(self, el_struct: dict)-> dict | str:
-        """return the lists of objects related to a data field"""
-
-        parent_guids = []
-        parent_names = []
-        parent_qnames = []
-
-        data_structure_guids = []
-        data_structure_names = []
-        data_structure_qnames = []
-
-        assigned_meanings_guids = []
-        assigned_meanings_names = []
-        assigned_meanings_qnames = []
-
-        data_class_guids = []
-        data_class_names = []
-        data_class_qnames = []
-
-        external_references_guids = []
-        external_references_names = []
-        external_references_qnames = []
-
-        member_of_data_dicts_guids = []
-        member_of_data_dicts_names = []
-        member_of_data_dicts_qnames = []
-
-        member_of_data_spec_guids = []
-        member_of_data_spec_names = []
-        member_of_data_spec_qnames = []
-
-        member_data_field_guids = []
-        member_data_field_names = []
-        member_data_field_qnames = []
-
-        nested_data_classes_guids = []
-        nested_data_classes_names = []
-        nested_data_classes_qnames = []
-
-        specialized_data_classes_guids = []
-        specialized_data_classes_names = []
-        specialized_data_classes_qnames = []
-
-
-
-        # terms
-        assigned_meanings = el_struct.get("assignedMeanings", {})
-        for meaning in assigned_meanings:
-            assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
-            assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
-            assigned_meanings_qnames.append(meaning['relatedElement']['properties']['qualifiedName'])
-
-
-        # extract existing related data structure and data field elements
-        other_related_elements = el_struct.get("otherRelatedElements",None)
-        if other_related_elements:
-            for rel in other_related_elements:
-                related_element = rel["relatedElement"]
-                type = related_element["elementHeader"]["type"]["typeName"]
-                guid = related_element["elementHeader"]["guid"]
-                qualified_name = related_element["properties"].get("qualifiedName","") or ""
-                display_name = related_element["properties"].get("displayName","") or ""
-                if type == "DataStructure":
-                    data_structure_guids.append(guid)
-                    data_structure_names.append(display_name)
-                    data_structure_qnames.append(qualified_name)
-
-                elif type == "DataField":
-                    parent_guids.append(guid)
-                    parent_names.append(display_name)
-                    parent_qnames.append(qualified_name)
-
-
-        member_of_collections = el_struct.get("memberOfCollections",{})
-        for collection in member_of_collections:
-            c_type = collection["relatedElement"]["properties"].get("collectionType","") or ""
-            guid = collection["relatedElement"]["elementHeader"]["guid"]
-            name = collection["relatedElement"]["properties"].get("name","") or ""
-            qualifiedName = collection['relatedElement']["properties"].get("qualifiedName","") or ""
-            classifications = collection["relatedElement"]["elementHeader"]["classifications"]
-            for classification in classifications:
-                type_name = classification["type"]['typeName']
-                if type_name == "DataDictionary":
-                    member_of_data_dicts_guids.append(guid)
-                    member_of_data_dicts_names.append(name)
-                    member_of_data_dicts_qnames.append(qualifiedName)
-                elif type_name == "DataSpec":
-                    member_of_data_spec_guids.append(guid)
-                    member_of_data_spec_names.append(name)
-                    member_of_data_spec_qnames.append(qualifiedName)
-
-        member_data_fields = el_struct.get("memberDataFields", {})
-        for data_field in member_data_fields:
-            member_data_field_guids.append(data_field["elementHeader"]["guid"])
-            member_data_field_names.append(data_field["properties"]["displayName"])
-            member_data_field_qnames.append(data_field["properties"]["qualifiedName"])
-
-        data_classes = el_struct.get("assignedDataClasses", {})
-        for data_class in data_classes:
-            data_class_guids.append(data_class['relatedElement']["elementHeader"]["guid"])
-            data_class_names.append(data_class['relatedElement']["properties"]["displayName"])
-            data_class_qnames.append(data_class['relatedElement']["properties"]["qualifiedName"])
-
-        nested_data_classes = el_struct.get("nestedDataClasses", {})
-        for nested_data_class in nested_data_classes:
-            nested_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
-            nested_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
-            nested_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
-
-        specialized_data_classes = el_struct.get("specializedDataClasses", {})
-        for nested_data_class in specialized_data_classes:
-            specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
-            specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
-            specialized_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
-
-        mermaid = el_struct.get("mermaidGraph", {})
-
-        return {"parent_guids": parent_guids,
-                "parent_names": parent_names,
-                "parent_qnames": parent_qnames,
-
-                "data_structure_guids": data_structure_guids,
-                "data_structure_names": data_structure_names,
-                "data_structure_qnames": data_structure_qnames,
-
-                "assigned_meanings_guids": assigned_meanings_guids,
-                "assigned_meanings_names": assigned_meanings_names,
-                "assigned_meanings_qnames": assigned_meanings_qnames,
-
-                "data_class_guids": data_class_guids,
-                "data_class_names": data_class_names,
-                "data_class_qnames": data_class_qnames,
-
-                "nested_data_class_guids": nested_data_classes_guids,
-                "nested_data_class_names": nested_data_classes_names,
-                "nested_data_class_qnames": nested_data_classes_qnames,
-
-                "specialized_data_class_guids": specialized_data_classes_guids,
-                "specialized_data_class_names": specialized_data_classes_names,
-                "specialized_data_class_qnames": specialized_data_classes_qnames,
-
-                "external_references_guids": external_references_guids,
-                "external_references_names": external_references_names,
-                "external_references_qnames": external_references_qnames,
-
-                "member_of_data_dicts_guids": member_of_data_dicts_guids,
-                "member_of_data_dicts_names": member_of_data_dicts_names,
-                "member_of_data_dicts_qnames": member_of_data_dicts_qnames,
-
-                "member_of_data_spec_guids": member_of_data_spec_guids,
-                "member_of_data_spec_names": member_of_data_spec_names,
-                "member_of_data_spec_qnames": member_of_data_spec_qnames,
-
-                "member_data_field_guids": member_data_field_guids,
-                "member_data_field_names": member_data_field_names,
-                "member_data_field_qnames": member_data_field_qnames,
-
-                "mermaid" : mermaid,
-            }
-
-
-    def get_data_field_rel_elements(self, guid:str)-> dict | str:
-        """return the lists of objects related to a data field"""
-
-        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
-        if isinstance(data_field_entry, str):
-            return None
-        return self.get_data_rel_elements_dict(data_field_entry)
-
-    def get_data_class_rel_elements(self, guid:str)-> dict | str:
-        """return the lists of objects related to a data class"""
-
-        data_class_entry = self.get_data_class_by_guid(guid, output_format="JSON")
-        if isinstance(data_class_entry, str):
-            return None
-        return self.get_data_rel_elements_dict(data_class_entry)
-
-
-
+    @dynamic_catch
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                            body: dict = None) -> None:
+                                            body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect a data structure to a data field. Async version.
 
@@ -838,14 +499,8 @@ r       replace_all_properties: bool, default = False
         ----
 
         Full sample body:
-
         {
-          "class" : "MemberDataFieldRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+          "class" : "NewRelationshipRequestBody",
           "properties": {
             "class": "MemberDataFieldProperties",
             "dataFieldPosition": 0,
@@ -853,32 +508,92 @@ r       replace_all_properties: bool, default = False
             "maxCardinality": 0,
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
 
         url = (f"{base_path(self, self.view_server)}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/attach")
+        await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
+        logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
-
+    @dynamic_catch
     def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                               body: dict = None) -> None:
+                               body: dict | NewRelationshipRequestBody = None) -> None:
         """
-        Connect a data structure to a data field.
+         Connect a data structure to a data field.
+
+         Parameters
+         ----------
+         parent_data_struct_guid: str
+             - the GUID of the parent data structure the data class will be connected to.
+         member_data_field_guid: str
+             - the GUID of the data class to be connected.
+         body: dict, optional
+             - a dictionary containing additional properties.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         InvalidParameterException
+             one of the parameters is null or invalid or
+         PropertyServerException
+             There is a problem adding the element properties to the metadata repository or
+         UserNotAuthorizedException
+             the requesting user is not authorized to issue this request.
+
+         Note
+         ----
+
+         Full sample body:
+         {
+           "class" : "NewRelationshipRequestBody",
+           "properties": {
+             "class": "MemberDataFieldProperties",
+             "dataFieldPosition": 0,
+             "minCardinality": 0,
+             "maxCardinality": 0,
+             "effectiveFrom": "{{$isoTimestamp}}",
+             "effectiveTo": "{{$isoTimestamp}}"
+           },
+           "externalSourceGUID": "add guid here",
+           "externalSourceName": "add qualified name here",
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "forLineage" : false,
+           "forDuplicateProcessing" : false
+         }
+
+         """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
+                                              body: dict | DeleteRequestBody = None,
+                                              cascade_delete: bool = False) -> None:
+        """
+        Detach a data class from a data structure. Request body is optional. Async version.
 
         Parameters
         ----------
         parent_data_struct_guid: str
-            - the GUID of the parent data structure the data class will be connected to.
+            - the GUID of the parent data structure the data class will be detached from..
         member_data_field_guid: str
-            - the GUID of the data class to be connected.
+            - the GUID of the data class to be disconnected.
         body: dict, optional
             - a dictionary containing additional properties.
+
 
         Returns
         -------
@@ -897,34 +612,31 @@ r       replace_all_properties: bool, default = False
         ----
 
         Full sample body:
-
         {
-          "class" : "MemberDataFieldRequestBody",
+          "class": "DeleteRequestBody",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class": "MemberDataFieldProperties",
-            "dataFieldPosition": 0,
-            "minCardinality": 0,
-            "maxCardinality": 0,
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
         }
 
+
         """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
+        url = (f"{self.data_designer_root}/data-structures/{parent_data_struct_guid}"
+               f"/member-data-fields/{member_data_field_guid}/detach")
 
-    async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                              body: dict = None) -> None:
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data field {member_data_field_guid} detached from data structure {parent_data_struct_guid}.")
+
+    @dynamic_catch
+    def detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
+                                 body: dict = None | DeleteRequestBody, cascade_delete: bool = False) -> None:
         """
-        Detach a data class from a data structure. Request body is optional. Async version.
+        Detach a data class from a data structure. Request body is optional.
 
         Parameters
         ----------
@@ -952,137 +664,38 @@ r       replace_all_properties: bool, default = False
         ----
 
         Full sample body:
-
-       {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-structures/{parent_data_struct_guid}"
-               f"/member-data-fields/{member_data_field_guid}/detach")
-
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
-
-    def detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                 body: dict = None) -> None:
-        """
-        Detach a data class from a data structure. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_struct_guid: str
-            - the GUID of the parent data structure the data class will be detached fromo.
-        member_data_field_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
           "forDuplicateProcessing": false
         }
+
 
         """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
+            self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body, cascade_delete))
 
-    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade: bool=False) -> None:
+    @dynamic_catch
+    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None,
+                                           cascade_delete: bool = False) -> None:
         """
         Delete a data structure. Request body is optional. Async version.
 
         Parameters
         ----------
-       data_struct_guid: str
+        data_struct_guid: str
             - the GUID of the parent data structure to delete.
         body: dict, optional
             - a dictionary containing additional properties.
-        cascade: bool, optional
+        cascade_delete: bool, optional
             - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-       {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-        cascaded_s = str(cascade).lower()
-        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/delete?cascadedDelete={cascaded_s}"
-
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
-
-    def delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade: bool = False) -> None:
-        """
-        Delete a data structure. Request body is optional.
-
-        Parameters
-        ----------
-        data_struct_guid: str
-            - the GUID of the data structure to delete.
-        body: dict, optional
-            - a dictionary containing additional properties.
-        cascade: bool, optional
-            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
-
 
         Returns
         -------
@@ -1103,7 +716,59 @@ r       replace_all_properties: bool, default = False
         Full sample body:
 
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+
+        url = f"{self.data_designer_root}/data-structures/{data_struct_guid}/delete"
+
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data structure {data_struct_guid} deleted.")
+
+    @dynamic_catch
+    def delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade_delete: bool = False) -> None:
+        """
+        Delete a data structure. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        data_struct_guid: str
+            - the GUID of the parent data structure to delete.
+        body: dict, optional
+            - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Full sample body:
+
+        {
+          "class": "DeleteRequestBody",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1114,18 +779,15 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade))
+        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade_delete))
 
-    async def _async_find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
-                                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def find_all_data_structures(self, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
         ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
+
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         output_format_set: dict, optional, default = None
@@ -1146,193 +808,15 @@ r       replace_all_properties: bool, default = False
 
         """
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", 'false'), ("endsWith", 'false'),
-             ("ignoreCase", 'true')])
+        return self.find_data_structures(search_string="*", output_format=output_format,
+                                         output_format_set=output_format_set)
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url)
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_all_data_structures(self, start_from: int = 0, page_size: int = max_paging_size,
-                                 output_format: str = 'JSON',  output_format_set: dict = None) -> list | str:
-        """ Returns a list of all known data structures.
-
-        Parameters
-        ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        columns_struct: dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  elements with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_structures(start_from, page_size, output_format, output_format_set))
-        return response
-
-    async def _async_find_data_structures_w_body(self, body: dict, start_from: int = 0,
-                                                 page_size: int = max_paging_size, starts_with: bool = True,
-                                                 ends_with: bool = False, ignore_case: bool = True,
-                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
-        """ Retrieve the list of data structure metadata elements that contain the search string.
-            Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", 'REPORT', 'FORM', "JSON", "MERMAID".
-        output_format_set: str | dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-        """
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s),
-             ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
-
-        url = (f"{base_path(self, self.view_server)}/data-structures/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_structures_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                    starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                    output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
-        """ Retrieve the list of data structure metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str | dict, optional, default = None
-            - The desired output columns/field options.
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing : false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-    """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_data_structures_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                    output_format, output_format_set))
-        return response
-
-    async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
                                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+                                          body: dict | SearchStringRequestBody = None,
+                                          output_format: str = 'JSON',
+                                          output_format_set: str | dict = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -1368,36 +852,41 @@ r       replace_all_properties: bool, default = False
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
 
+        Notes:
+        _____
+        Sample Body:
+        {
+          "class" : "SearchStringRequestBody",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+
         """
-        if search_string == "*":
-            search_string = None
 
-        body = {"filter": search_string}
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
+        url = f"{base_path(self, self.view_server)}/data-structures/by-search-string"
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", ends_with_s), ("endsWith", ends_with_s),
-             ("ignoreCase", ignore_case_s),])
+        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output,
+                                              search_string, start_from=start_from, page_size=page_size,
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              body=body, output_format=output_format,
+                                              output_format_set=output_format_set)
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
                              starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                             output_format: str = 'JSON',  output_format_set:str| dict = None) -> list | str:
-        """ Retrieve the list of data structure metadata elements that contain the search string filter.
+                             body: dict | SearchStringRequestBody = None,
+                             output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+        """ Find the list of data structure metadata elements that contain the search string.
 
         Parameters
         ----------
@@ -1414,11 +903,9 @@ r       replace_all_properties: bool, default = False
         ignore_case: bool, default = True
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
-            output_format: str, default = "DICT"
-            -  one of "DICT", "MERMAID" or "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
         output_format_set: dict|str, optional, default = None
             - The desired output columns/field options.
-
         Returns
         -------
         [dict] | str
@@ -1433,18 +920,39 @@ r       replace_all_properties: bool, default = False
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
 
+        Notes:
+        _____
+        Sample Body:
+        {
+          "class" : "SearchStringRequestBody",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
 
-    """
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_structures(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                             output_format, output_format_set))
+                                             body, output_format, output_format_set))
         return response
 
-    async def _async_get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                                 page_size: int = max_paging_size,
-                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_structures_by_name(self, filter_string: str, classification_names: list[str] = None,
+                                                 body: dict | FilterRequestBody = None, start_from: int = 0,
+                                                 page_size: int = 0,
+                                                 output_format: str = 'JSON',
+                                                 output_format_set: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -1491,25 +999,23 @@ r       replace_all_properties: bool, default = False
           "filter": "Add name here"
         }
         """
-        if body is None:
-            body = {"filter": filter}
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size), ])
+        url = f"{base_path(self, self.view_server)}/data-structures/by-name"
+        response = await self._async_get_name_request(url, _type="DataStructure",
+                                                      _gen_output=self._generate_data_structure_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-        url = (f"{base_path(self, self.view_server)}/data-structures/by-name"
-               f"{possible_query_params}")
+        return response
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def get_data_structures_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                    page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
+    @dynamic_catch
+    def get_data_structures_by_name(self, filter: str, classification_names: list[str] = None,
+                                    body: dict | FilterRequestBody = None, start_from: int = 0,
+                                    page_size: int = max_paging_size, output_format: str = 'JSON',
+                                    output_format_set: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1546,11 +1052,15 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structures_by_name(filter, body, start_from, page_size, output_format, output_format_set))
+            self._async_get_data_structures_by_name(filter, classification_names, body, start_from, page_size,
+                                                    output_format, output_format_set))
         return response
 
-    async def _async_get_data_structure_by_guid(self, guid: str, body: dict = None,
-                                                 output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_structure_by_guid(self, guid: str, element_type: str = None,
+                                                body: dict | GetRequestBody = None,
+                                                output_format: str = 'JSON',
+                                                output_format_set: str | dict = None) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1558,7 +1068,9 @@ r       replace_all_properties: bool, default = False
         ----------
         guid: str
             - unique identifier of the data structure metadata element.
-        body: dict, optional
+        element_type: str, optional
+            - optional element type.
+        body: dict | GetRequestBody, optional
             - optional request body.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
@@ -1584,35 +1096,37 @@ r       replace_all_properties: bool, default = False
 
         Optional request body:
         {
-          "class": "AnyTimeRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
+          "class" : "GetRequestBody",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
+
 
         """
 
         url = (f"{base_path(self, self.view_server)}/data-structures/{guid}/retrieve")
-        if body:
-            response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            response: Response = await self._async_make_request("POST", url)
+        type = element_type if element_type else "DataStructure"
 
-        element = response.json().get("element", NO_ELEMENTS_FOUND)
-        if type(element) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_structure_output(element, filter, output_format, output_format_set)
-        return element
+        response = await self._async_get_guid_request(url, _type=type,
+                                                      _gen_output=self._generate_data_structure_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-    def get_data_structure_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str | dict = None) -> list | str:
+        return response
+
+    @dynamic_catch
+    def get_data_structure_by_guid(self, guid: str, element_type: str = None, body: str = None,
+                                   output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
         ----------
         guid: str
             - unique identifier of the data structure metadata element.
+        element_type: str, optional
+            - optional element type.
         body: dict, optional
             - optional request body.
         output_format: str, default = "DICT"
@@ -1639,7 +1153,7 @@ r       replace_all_properties: bool, default = False
 
         Optional request body:
         {
-          "class": "AnyTimeRequestBody",
+          "class": "GetRequestBody",
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
@@ -1649,14 +1163,248 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_structure_by_guid(guid, body, output_format, output_format_set))
+        response = loop.run_until_complete(
+            self._async_get_data_structure_by_guid(guid, element_type, body, output_format, output_format_set))
         return response
+
+    def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict | None:
+        data_structure_info = data_get_fcn(data_struct_guid, output_format="JSON")
+        if data_structure_info == "No elements found":
+            return None
+        collection_list = {"DictList": [], "SpecList": [], "CollectionDetails": []}
+        if isinstance(data_structure_info, (dict, list)):
+            member_of_collections = data_structure_info.get('memberOfCollections', "")
+            if isinstance(member_of_collections, list):
+                for member_rel in member_of_collections:
+                    props = member_rel["relatedElement"]["properties"]
+                    qname = props.get('qualifiedName', None)
+                    guid = member_rel['relatedElement']['elementHeader']['guid']
+                    description = props.get('description', None)
+                    collection_type = props.get('collectionType', None)
+                    if collection_type == "Data Dictionary":
+                        collection_list["DictList"].append(guid)
+                    elif collection_type == "Data Specification":
+                        collection_list["SpecList"].append(guid)
+                    collection_list["CollectionDetails"].append({
+                        "guid": guid, "description": description,
+                        "collectionType": collection_type,
+                        "qualifiedName": qname
+                        })
+            else:
+                return None
+            return collection_list
+        else:
+            return None
+
+    def get_data_memberships_with_dict(self, data_field_elements: dict) -> dict:
+        collection_list = {
+            "DictList_guid": [], "DictList_qn": [], "SpecList_guid": [], "SpecList_qn": [], "CollectionDetails": []
+            }
+        if isinstance(data_field_elements, (dict, list)):
+
+            for member_rel in data_field_elements:
+                type_name = ""
+                props = member_rel["relatedElement"]["properties"]
+                qname = props.get('qualifiedName', None)
+                guid = member_rel['relatedElement']['elementHeader']['guid']
+                description = props.get('description', None)
+                collection_type = props.get('collectionType', None)
+                classifications = member_rel["relatedElement"]["elementHeader"]["classifications"]
+                for classification in classifications:
+                    type_name = classification["type"]['typeName']
+                    if type_name == "DataDictionary":
+                        collection_list["DictList_guid"].append(guid)
+                        collection_list["DictList_qn"].append(qname)
+                    elif type_name == "DataSpec":
+                        collection_list["SpecList_guid"].append(guid)
+                        collection_list["SpecList_qn"].append(qname)
+                collection_list["CollectionDetails"].append({
+                    "typeName": type_name, "guid": guid,
+                    "description": description,
+                    "collectionType": collection_type,
+                    "qualifiedName": qname
+                    })
+        return collection_list
+
+    def get_data_rel_elements_dict(self, el_struct: dict) -> dict | str:
+        """return the lists of objects related to a data field"""
+
+        parent_guids = []
+        parent_names = []
+        parent_qnames = []
+
+        data_structure_guids = []
+        data_structure_names = []
+        data_structure_qnames = []
+
+        assigned_meanings_guids = []
+        assigned_meanings_names = []
+        assigned_meanings_qnames = []
+
+        data_class_guids = []
+        data_class_names = []
+        data_class_qnames = []
+
+        external_references_guids = []
+        external_references_names = []
+        external_references_qnames = []
+
+        member_of_data_dicts_guids = []
+        member_of_data_dicts_names = []
+        member_of_data_dicts_qnames = []
+
+        member_of_data_spec_guids = []
+        member_of_data_spec_names = []
+        member_of_data_spec_qnames = []
+
+        member_data_field_guids = []
+        member_data_field_names = []
+        member_data_field_qnames = []
+
+        nested_data_classes_guids = []
+        nested_data_classes_names = []
+        nested_data_classes_qnames = []
+
+        specialized_data_classes_guids = []
+        specialized_data_classes_names = []
+        specialized_data_classes_qnames = []
+
+        # terms
+        assigned_meanings = el_struct.get("assignedMeanings", {})
+        for meaning in assigned_meanings:
+            assigned_meanings_guids.append(meaning['relatedElement']['elementHeader']['guid'])
+            assigned_meanings_names.append(meaning['relatedElement']['properties']['displayName'])
+            assigned_meanings_qnames.append(meaning['relatedElement']['properties']['qualifiedName'])
+
+        # extract existing related data structure and data field elements
+        other_related_elements = el_struct.get("otherRelatedElements", None)
+        if other_related_elements:
+            for rel in other_related_elements:
+                related_element = rel["relatedElement"]
+                type = related_element["elementHeader"]["type"]["typeName"]
+                guid = related_element["elementHeader"]["guid"]
+                qualified_name = related_element["properties"].get("qualifiedName", "") or ""
+                display_name = related_element["properties"].get("displayName", "") or ""
+                if type == "DataStructure":
+                    data_structure_guids.append(guid)
+                    data_structure_names.append(display_name)
+                    data_structure_qnames.append(qualified_name)
+
+                elif type == "DataField":
+                    parent_guids.append(guid)
+                    parent_names.append(display_name)
+                    parent_qnames.append(qualified_name)
+
+        member_of_collections = el_struct.get("memberOfCollections", {})
+        for collection in member_of_collections:
+            c_type = collection["relatedElement"]["properties"].get("collectionType", "") or ""
+            guid = collection["relatedElement"]["elementHeader"]["guid"]
+            name = collection["relatedElement"]["properties"].get("name", "") or ""
+            qualifiedName = collection['relatedElement']["properties"].get("qualifiedName", "") or ""
+            classifications = collection["relatedElement"]["elementHeader"]["classifications"]
+            for classification in classifications:
+                type_name = classification["type"]['typeName']
+                if type_name == "DataDictionary":
+                    member_of_data_dicts_guids.append(guid)
+                    member_of_data_dicts_names.append(name)
+                    member_of_data_dicts_qnames.append(qualifiedName)
+                elif type_name == "DataSpec":
+                    member_of_data_spec_guids.append(guid)
+                    member_of_data_spec_names.append(name)
+                    member_of_data_spec_qnames.append(qualifiedName)
+
+        member_data_fields = el_struct.get("memberDataFields", {})
+        for data_field in member_data_fields:
+            member_data_field_guids.append(data_field["elementHeader"]["guid"])
+            member_data_field_names.append(data_field["properties"]["displayName"])
+            member_data_field_qnames.append(data_field["properties"]["qualifiedName"])
+
+        data_classes = el_struct.get("assignedDataClasses", {})
+        for data_class in data_classes:
+            data_class_guids.append(data_class['relatedElement']["elementHeader"]["guid"])
+            data_class_names.append(data_class['relatedElement']["properties"]["displayName"])
+            data_class_qnames.append(data_class['relatedElement']["properties"]["qualifiedName"])
+
+        nested_data_classes = el_struct.get("nestedDataClasses", {})
+        for nested_data_class in nested_data_classes:
+            nested_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
+            nested_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
+            nested_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+
+        specialized_data_classes = el_struct.get("specializedDataClasses", {})
+        for nested_data_class in specialized_data_classes:
+            specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
+            specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
+            specialized_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+
+        mermaid = el_struct.get("mermaidGraph", {})
+
+        return {
+            "parent_guids": parent_guids,
+            "parent_names": parent_names,
+            "parent_qnames": parent_qnames,
+
+            "data_structure_guids": data_structure_guids,
+            "data_structure_names": data_structure_names,
+            "data_structure_qnames": data_structure_qnames,
+
+            "assigned_meanings_guids": assigned_meanings_guids,
+            "assigned_meanings_names": assigned_meanings_names,
+            "assigned_meanings_qnames": assigned_meanings_qnames,
+
+            "data_class_guids": data_class_guids,
+            "data_class_names": data_class_names,
+            "data_class_qnames": data_class_qnames,
+
+            "nested_data_class_guids": nested_data_classes_guids,
+            "nested_data_class_names": nested_data_classes_names,
+            "nested_data_class_qnames": nested_data_classes_qnames,
+
+            "specialized_data_class_guids": specialized_data_classes_guids,
+            "specialized_data_class_names": specialized_data_classes_names,
+            "specialized_data_class_qnames": specialized_data_classes_qnames,
+
+            "external_references_guids": external_references_guids,
+            "external_references_names": external_references_names,
+            "external_references_qnames": external_references_qnames,
+
+            "member_of_data_dicts_guids": member_of_data_dicts_guids,
+            "member_of_data_dicts_names": member_of_data_dicts_names,
+            "member_of_data_dicts_qnames": member_of_data_dicts_qnames,
+
+            "member_of_data_spec_guids": member_of_data_spec_guids,
+            "member_of_data_spec_names": member_of_data_spec_names,
+            "member_of_data_spec_qnames": member_of_data_spec_qnames,
+
+            "member_data_field_guids": member_data_field_guids,
+            "member_data_field_names": member_data_field_names,
+            "member_data_field_qnames": member_data_field_qnames,
+
+            "mermaid": mermaid,
+            }
+
+    def get_data_field_rel_elements(self, guid: str) -> dict | str:
+        """return the lists of objects related to a data field"""
+
+        data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
+        if isinstance(data_field_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(data_field_entry)
+
+    def get_data_class_rel_elements(self, guid: str) -> dict | str:
+        """return the lists of objects related to a data class"""
+
+        data_class_entry = self.get_data_class_by_guid(guid, output_format="JSON")
+        if isinstance(data_class_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(data_class_entry)
 
     #
     # Work with Data Fields
     # https://egeria-project.org/concepts/data-class
     #
-    async def _async_create_data_field(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_data_field(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data class with parameters defined in the body. Async version.
 
@@ -1684,7 +1432,7 @@ r       replace_all_properties: bool, default = False
         Sample bodies:
 
         {
-          "class" : "NewDataFieldRequestBody",
+          "class" : "NewElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1765,10 +1513,10 @@ r       replace_all_properties: bool, default = False
 
         url = f"{base_path(self, self.view_server)}/data-fields"
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
+        return await self._async_create_element_body_request(url, "DataField", body)
 
-    def create_data_field(self, body: dict) -> str:
+    @dynamic_catch
+    def create_data_field(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data class with parameters defined in the body..
 
@@ -1880,7 +1628,8 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_create_data_field(body))
         return response
 
-    async def _async_create_data_field_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data class using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -1950,10 +1699,10 @@ r       replace_all_properties: bool, default = False
 
         url = f"{base_path(self, self.view_server)}/data-fields/from-template"
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
+        return await self._async_create_element_from_template(url, body)
 
-    def create_data_field_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    def create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data class using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -2025,8 +1774,8 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_create_data_field_from_template(body))
         return response
 
-    async def _async_update_data_field(self, data_field_guid: str, body: dict,
-                                       replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data class. Async version.
 
@@ -2036,9 +1785,7 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-        replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-             will be replaced.
+
         Returns
         -------
         None
@@ -2092,14 +1839,14 @@ r       replace_all_properties: bool, default = False
         }
 
         """
-        replace_all_properties_s = str(replace_all_properties).lower()
 
-        url = (f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/update?"
-               f"replaceAllProperties={replace_all_properties_s}")
+        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/update"
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_element_body_request(url, ["DataField"], body)
+        logger.info(f"Data Field {data_field_guid} updated.")
 
-    def update_data_field(self, data_field_guid: str, body: dict.get, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data class.
 
@@ -2166,10 +1913,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_field(data_field_guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_data_field(data_field_guid, body))
 
+    @dynamic_catch
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                            body: dict = None) -> None:
+                                            body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect a nested data field to a data field. Request body is optional. Async version.
 
@@ -2222,13 +1970,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/attach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["NestedDataFieldProperties"], body)
+        logger.info(f"Data field {parent_data_field_guid} attached to Data structure {nested_data_field_guid}.")
 
+    @dynamic_catch
     def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                               body: dict = None) -> None:
+                               body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -2282,8 +2029,9 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
+    @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                              body: dict = None) -> None:
+                                              body: dict | DeleteRequestBody = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional. Async version.
 
@@ -2329,13 +2077,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
                f"/member-data-fields/{nested_data_field_guid}/detach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(f"Data field {parent_data_field_guid} detached from data structure {nested_data_field_guid}.")
 
+    @dynamic_catch
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                 body: dict = None) -> None:
+                                 body: dict | DeleteRequestBody = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional.
 
@@ -2381,7 +2128,9 @@ r       replace_all_properties: bool, default = False
         loop.run_until_complete(
             self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
-    async def _async_delete_data_field(self, data_field_guid: str, body: dict = None, cascade:bool = False) -> None:
+    @dynamic_catch
+    async def _async_delete_data_field(self, data_field_guid: str, body: dict | DeleteRequestBody = None,
+                                       cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
 
@@ -2424,15 +2173,15 @@ r       replace_all_properties: bool, default = False
 
 
         """
-        cascade_s = str(cascade).lower()
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete?cascadedDelete={cascade_s}"
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
 
-    def delete_data_field(self, data_field_guid: str, body: dict = None, cascade:bool = False) -> None:
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data Field {data_field_guid} deleted.")
+
+    @dynamic_catch
+    def delete_data_field(self, data_field_guid: str, body: dict | DeleteRequestBody = None,
+                          cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -2476,10 +2225,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade))
+        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade_delete))
 
-    async def _async_find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
-                                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_find_all_data_fields(self, output_format: str = 'JSON',
+                                          output_format_set: str | dict = None) -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
@@ -2509,24 +2259,11 @@ r       replace_all_properties: bool, default = False
 
         """
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", 'false'), ("endsWith", 'false'),
-             ("ignoreCase", 'true')])
+        return self.find_data_fields(search_string="*", output_format=output_format,
+                                     output_format_set=output_format_set)
 
-        url = (f"{base_path(self, self.view_server)}/data-fields/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url)
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_all_data_fields(self, start_from: int = 0, page_size: int = max_paging_size,
-                             output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def find_all_data_fields(self, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
@@ -2557,149 +2294,15 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_fields(start_from, page_size, output_format, output_format_set))
-        return response
-
-    async def _async_find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                             starts_with: bool = True, ends_with: bool = False,
-                                             ignore_case: bool = True, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
-        """ Retrieve the list of data class metadata elements that contain the search string.
-            Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing : false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-        """
-        if body['filter'] == "*":
-            body['filter'] = None
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s),
-             ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
-
-        url = (f"{base_path(self, self.view_server)}/data-fields/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_fields_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
-        """ Retrieve the list of data class metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing : false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-    """
-
-        loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                output_format,output_format_set))
+            self._async_find_all_data_fields(output_format, output_format_set))
         return response
 
-    async def _async_find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    async def _async_find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = 0,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                      output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+                                      body: dict | SearchStringRequestBody = None,
+                                      output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -2737,31 +2340,20 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
-        if filter == "*":
-            filter = None
-        body = {"filter": filter}
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith",ends_with_s), ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s) ])
+        url = f"{base_path(self, self.view_server)}/data-fields/by-search-string"
 
-        url = (f"{base_path(self, self.view_server)}/data-fields/by-search-string"
-               f"{possible_query_params}")
+        return await self._async_find_request(url, "DataField", self._generate_data_field_output,
+                                              search_string, start_from=start_from, page_size=page_size,
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              body=body, output_format=output_format,
+                                              output_format_set=output_format_set)
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_fields(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    def find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                         output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+                         body: dict | SearchStringRequestBody = None,
+                         output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2802,13 +2394,16 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields(filter, start_from, page_size, starts_with, ends_with, ignore_case,
-                                         output_format, output_format_set))
+            self._async_find_data_fields(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
+                                         body, output_format, output_format_set))
         return response
 
-    async def _async_get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                             page_size: int = max_paging_size,
-                                             output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_fields_by_name(self, filter_string: str, classification_names: list[str] = None,
+                                             body: dict = None | FilterRequestBody, start_from: int = 0,
+                                             page_size: int = 0,
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -2855,25 +2450,24 @@ r       replace_all_properties: bool, default = False
           "filter": "Add name here"
         }
         """
-        if body is None:
-            body = {"filter": filter}
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size), ])
+        url = f"{base_path(self, self.view_server)}/data-fields/by-name"
 
-        url = (f"{base_path(self, self.view_server)}/data-fields/by-name"
-               f"{possible_query_params}")
+        response = await self._async_get_name_request(url, _type="DataField",
+                                                      _gen_output=self._generate_data_field_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        return response
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def get_data_fields_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def get_data_fields_by_name(self, filter_string: str, classification_names: list[str] = None, body: dict = None,
+                                start_from: int = 0,
+                                page_size: int = max_paging_size, output_format: str = 'JSON',
+                                output_format_set: str | dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -2924,11 +2518,15 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(filter, body, start_from, page_size, output_format, output_format_set))
+            self._async_get_data_fields_by_name(filter, classification_names, body, start_from, page_size,
+                                                output_format, output_format_set))
         return response
 
-    async def _async_get_data_field_by_guid(self, guid: str, body: dict = None,
-                                            output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_field_by_guid(self, guid: str, element_type: str = None,
+                                            body: dict | GetRequestBody = None,
+                                            output_format: str = 'JSON',
+                                            output_format_set: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -2973,19 +2571,17 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-fields/{guid}/retrieve")
-        if body:
-            response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            response: Response = await self._async_make_request("POST", url)
+        type = element_type if element_type else "DataField"
+        response = await self._async_get_guid_request(url, _type=type,
+                                                      _gen_output=self._generate_data_field_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_field_output(elements, None, output_format, output_format_set)
-        return elements
+        return response
 
-    def get_data_field_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def get_data_field_by_guid(self, guid: str, element_type: str = None, body: str | GetRequestBody = None,
+                               output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -3028,7 +2624,8 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, body, output_format, output_format_set))
+        response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, element_type,
+                                                                              body, output_format, output_format_set))
         return response
 
     ###
@@ -3037,7 +2634,8 @@ r       replace_all_properties: bool, default = False
     # https://egeria-project.org/concepts/data-class
     #
     #
-    async def _async_create_data_class(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_data_class(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data class with parameters defined in the body. Async version.
 
@@ -3156,10 +2754,10 @@ r       replace_all_properties: bool, default = False
 
         url = f"{base_path(self, self.view_server)}/data-classes"
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
+        return await self._async_create_element_body_request(url, "DataClass", body)
 
-    def create_data_class(self, body: dict) -> str:
+    @dynamic_catch
+    def create_data_class(self, body: dict | NewElementRequestBody) -> str:
         """
         Create a new data class with parameters defined in the body..
 
@@ -3280,7 +2878,8 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_create_data_class(body))
         return response
 
-    async def _async_create_data_class_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data class using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -3349,11 +2948,10 @@ r       replace_all_properties: bool, default = False
         """
 
         url = f"{base_path(self, self.view_server)}/data-classes/from-template"
+        return await self._async_create_element_from_template(url, body)
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("guid", NO_ELEMENTS_FOUND)
-
-    def create_data_class_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    def create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data class using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new element.
@@ -3424,8 +3022,9 @@ r       replace_all_properties: bool, default = False
         response = loop.run_until_complete(self._async_create_data_class_from_template(body))
         return response
 
-    async def _async_update_data_class(self, data_class_guid: str, body: dict,
-                                       replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_data_class(self, data_class_guid: str, body: dict | UpdateElementRequestBody,
+                                       ) -> None:
         """
         Update the properties of a data class. Async version.
 
@@ -3435,9 +3034,7 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-        replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-             will be replaced.
+
         Returns
         -------
         None
@@ -3491,14 +3088,13 @@ r       replace_all_properties: bool, default = False
           }
         }
         """
-        replace_all_properties_s = str(replace_all_properties).lower()
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/update?"
-               f"replaceAllProperties={replace_all_properties_s}")
+        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/update"
+        await self._async_update_element_body_request(url, ["DataClass"], body)
+        logger.info(f"Data class {data_class_guid} updated.")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
-
-    def update_data_class(self, data_class_guid: str, body: dict.get, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_data_class(self, data_class_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
         Update the properties of a data class.
 
@@ -3508,9 +3104,7 @@ r       replace_all_properties: bool, default = False
             - the GUID of the data class to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-        replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-              will be replaced.
+
         Returns
         -------
         None
@@ -3566,10 +3160,11 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_class(data_class_guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_data_class(data_class_guid, body))
 
+    @dynamic_catch
     async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                            body: dict = None) -> None:
+                                            body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect two data classes to show that one is used by the other when it is validating (typically a complex
         data item). Request body is optional. Async version.
@@ -3615,13 +3210,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/attach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["MemberDataClassProperties"], body)
+        logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
 
+    @dynamic_catch
     def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                               body: dict = None) -> None:
+                               body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -3666,8 +3260,10 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
 
+    @dynamic_catch
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                              body: dict = None) -> None:
+                                              body: dict | DeleteRequestBody = None,
+                                              cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional. Async version.
 
@@ -3713,13 +3309,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/detach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data Class {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
 
+    @dynamic_catch
     def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                 body: dict = None) -> None:
+                                 body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional.
 
@@ -3763,10 +3358,11 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
+            self._async_detach_nested_data_class(parent_data_class_guid, child_data_class_guid, body, cascade_delete))
 
-    async def _async_link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                body: dict = None) -> None:
+    @dynamic_catch
+    async def _async_link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                                 body: dict | NewRelationshipRequestBody = None, ) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
         Async version.
@@ -3812,13 +3408,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/specialized-data-classes/{child_data_class_guid}/attach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["DataClassHierarchyProperties"], body)
+        logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
 
-    def link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                   body: dict = None) -> None:
+    @dynamic_catch
+    def link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                    body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
 
@@ -3862,10 +3457,12 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_link_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
+            self._async_link_specialized_data_class(parent_data_class_guid, child_data_class_guid, body))
 
-    async def _async_detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                  body: dict = None) -> None:
+    @dynamic_catch
+    async def _async_detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                                   body: dict | DeleteRequestBody = None,
+                                                   cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional. Async version.
 
@@ -3911,13 +3508,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/specialized-data-classes/{child_data_class_guid}/detach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data field {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
 
-    def detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                     body: dict = None) -> None:
+    @dynamic_catch
+    def detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                      body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional.
 
@@ -3961,9 +3557,12 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
+            self._async_detach_specialized_data_class(parent_data_class_guid, child_data_class_guid, body,
+                                                      cascade_delete))
 
-    async def _async_delete_data_class(self, data_class_guid: str, body: dict = None, cascade:bool= False) -> None:
+    @dynamic_catch
+    async def _async_delete_data_class(self, data_class_guid: str, body: dict | DeleteRequestBody = None,
+                                       cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
 
@@ -4006,15 +3605,17 @@ r       replace_all_properties: bool, default = False
 
 
         """
-        cascade_s = str(cascade).lower()
-        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete?cascadedDelete={cascade_s}"
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete"
 
-    def delete_data_class(self, data_class_guid: str, body: dict = None, cascade:bool= False) -> None:
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data structure {data_class_guid} deleted.")
+
+    @dynamic_catch
+    def delete_data_class(self,
+                          data_class_guid: str,
+                          body: dict | DeleteRequestBody = None,
+                          cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
 
@@ -4058,10 +3659,12 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade))
+        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade_delete))
 
-    async def _async_find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size,
-                                           output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_find_all_data_classes(self,
+                                           output_format: str = 'JSON',
+                                           output_format_set: str | dict = None) -> list | str:
         """ Returns a list of all data classes. Async version.
 
         Parameters
@@ -4092,24 +3695,14 @@ r       replace_all_properties: bool, default = False
 
         """
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", 'false'), ("endsWith", 'false'),
-             ("ignoreCase", 'true')])
+        url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
-               f"{possible_query_params}")
+        return self.find_data_classes(search_string="*", output_format=output_format,
+                                      output_format_set=output_format_set)
 
-        response: Response = await self._async_make_request("POST", url)
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_all_data_classes(self, start_from: int = 0, page_size: int = max_paging_size,
-                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def find_all_data_classes(self,
+                              output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
         """ Returns a list of all data classes.
 
         Parameters
@@ -4140,148 +3733,15 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_find_all_data_classes(start_from, page_size, output_format, output_format_set))
-        return response
-
-    async def _async_find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                              starts_with: bool = True, ends_with: bool = False,
-                                              ignore_case: bool = True, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
-        """ Retrieve the list of data class metadata elements that contain the search string.
-            Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing : false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-        """
-
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s),
-             ("endsWith", ends_with_s), ("ignoreCase", ignore_case_s), ])
-
-        url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_classes_w_body(self, body: dict, start_from: int = 0, page_size: int = max_paging_size,
-                                 starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                 output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
-        """ Retrieve the list of data class metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        body: dict
-            - A structure containing the search criteria. (example below)
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing : false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": ""
-            }
-
-    """
-
-        loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_classes_w_body(body, start_from, page_size, starts_with, ends_with, ignore_case,
-                                                 output_format, output_format_set))
+            self._async_find_all_data_classes(output_format, output_format_set))
         return response
 
-    async def _async_find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    async def _async_find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                                        starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                       output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+                                       output_format: str = 'JSON', output_format_set: str | dict = None,
+                                       body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -4320,33 +3780,19 @@ r       replace_all_properties: bool, default = False
             the requesting user is not authorized to issue this request.
 
         """
-        if filter == "*":
-            filter = None
-        body = {"filter": filter}
 
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
+        url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
+        return await self._async_find_request(url, "DataClass", self._generate_data_class_output,
+                                              search_string, start_from=start_from, page_size=page_size,
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              body=body, output_format=output_format,
+                                              output_format_set=output_format_set)
 
-        possible_query_params = query_string(
-            [("startFrom", start_from), ("pageSize", page_size), ("startsWith", starts_with_s), ("endsWith", ends_with_s),
-             ("ignoreCase", ignore_case_s)])
-
-        url = (f"{base_path(self, self.view_server)}/data-classes/by-search-string"
-               f"{possible_query_params}")
-
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def find_data_classes(self, filter: str, start_from: int = 0, page_size: int = max_paging_size,
+    @dynamic_catch
+    def find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                          output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+                          output_format: str = 'JSON', output_format_set: str | dict = None,
+                          body: dict | SearchStringRequestBody = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -4388,13 +3834,16 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_classes(filter, start_from, page_size, starts_with, ends_with, ignore_case,
-                                          output_format, output_format_set))
+            self._async_find_data_classes(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
+                                          output_format, output_format_set, body))
         return response
 
-    async def _async_get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                              page_size: int = max_paging_size,
-                                              output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_classes_by_name(self, filter_string: str, classification_names: list[str],
+                                              body: dict | FilterRequestBody = None, start_from: int = 0,
+                                              page_size: int = 0,
+                                              output_format: str = 'JSON',
+                                              output_format_set: str | dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -4441,25 +3890,24 @@ r       replace_all_properties: bool, default = False
           "filter": "Add name here"
         }
         """
-        if body is None:
-            body = {"filter": filter}
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size), ])
+        url = f"{base_path(self, self.view_server)}/data-classes/by-name"
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/by-name"
-               f"{possible_query_params}")
+        response = await self._async_get_name_request(url, _type="DataClass",
+                                                      _gen_output=self._generate_data_class_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-        response: Response = await self._async_make_request("POST", url, body_slimmer(body))
+        return response
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
-        return elements
-
-    def get_data_classes_by_name(self, filter: str, body: dict = None, start_from: int = 0,
-                                 page_size: int = max_paging_size, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def get_data_classes_by_name(self, filter_string: str, classification_names: list[str] = None,
+                                 body: dict | FilterRequestBody = None, start_from: int = 0,
+                                 page_size: int = max_paging_size, output_format: str = 'JSON',
+                                 output_format_set: str | dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -4510,11 +3958,16 @@ r       replace_all_properties: bool, default = False
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_classes_by_name(filter, body, start_from, page_size, output_format, output_format_set))
+            self._async_get_data_classes_by_name(filter_string, classification_names, body,
+                                                 start_from, page_size, output_format, output_format_set
+                                                 ))
         return response
 
-    async def _async_get_data_class_by_guid(self, guid: str, body: dict = None,
-                                            output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    async def _async_get_data_class_by_guid(self, guid: str, element_type: str = None,
+                                            body: dict | GetRequestBody = None,
+                                            output_format: str = 'JSON',
+                                            output_format_set: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -4558,19 +4011,18 @@ r       replace_all_properties: bool, default = False
         """
 
         url = (f"{base_path(self, self.view_server)}/data-classes/{guid}/retrieve")
-        if body:
-            response: Response = await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            response: Response = await self._async_make_request("POST", url)
+        type = element_type if element_type else "DataClass"
 
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return other representations
-            return self._generate_data_class_output(elements, filter, output_format, output_format_set)
-        return elements
+        response = await self._async_get_guid_request(url, _type=type,
+                                                      _gen_output=self._generate_data_class_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
+        return response
 
-    def get_data_class_by_guid(self, guid: str, body: str = None, output_format: str = 'JSON',  output_format_set: str|dict = None) -> list | str:
+    @dynamic_catch
+    def get_data_class_by_guid(self, guid: str, element_type: str = None, body: dict | FilterRequestBody = None,
+                               output_format: str = 'JSON',
+                               output_format_set: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -4613,7 +4065,8 @@ r       replace_all_properties: bool, default = False
     """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_class_by_guid(guid, body, output_format, output_format_set))
+        response = loop.run_until_complete(
+            self._async_get_data_class_by_guid(guid, element_type, body, output_format, output_format_set))
         return response
 
     ###
@@ -4621,8 +4074,9 @@ r       replace_all_properties: bool, default = False
     # Assembling a data specification
     # https://egeria-project.org/concepts/data-specification
     #
+    @dynamic_catch
     async def _async_link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                body: dict = None) -> None:
+                                                body: dict | NewRelationshipRequestBody = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4668,12 +4122,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/data-class-definition/{data_class_guid}/attach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["DataClassDefinitionProperties"], body)
+        logger.info(f"Data class {data_class_guid} attached to Data definition {data_definition_guid}.")
 
-    def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
+                                   body: dict | NewRelationshipRequestBody = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4719,8 +4173,10 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_data_class_definition(data_definition_guid, data_class_guid, body))
 
+    @dynamic_catch
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                  body: dict = None) -> None:
+                                                  body: dict | DeleteRequestBody = None,
+                                                  cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional. Async version.
 
@@ -4766,12 +4222,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/data-class-definition/{data_class_guid}/detach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data class {data_class_guid} detached from data definition {data_definition_guid}.")
 
-    def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
+                                     body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional.
 
@@ -4815,10 +4271,12 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_class_definition(data_definition_guid, data_class_guid, body))
+        loop.run_until_complete(
+            self._async_detach_data_class_definition(data_definition_guid, data_class_guid, body, cascade_delete))
 
+    @dynamic_catch
     async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                              body: dict = None) -> None:
+                                              body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4865,12 +4323,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/attach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["SemanticDefinitionProperties"], body)
+        logger.info(f"Data class {data_definition_guid} attached to term definition {glossary_term_guid}.")
 
-    def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
+                                 body: dict | NewRelationshipRequestBody = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4917,8 +4375,10 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_semantic_definition(data_definition_guid, glossary_term_guid, body))
 
+    @dynamic_catch
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                                body: dict = None) -> None:
+                                                body: dict | DeleteRequestBody = None,
+                                                cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional. Async version.
 
@@ -4963,13 +4423,12 @@ r       replace_all_properties: bool, default = False
 
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/detach")
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Data definition {data_definition_guid} detached from term {glossary_term_guid}.")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
-
-    def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
+                                   body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional.
 
@@ -5013,10 +4472,13 @@ r       replace_all_properties: bool, default = False
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_semantic_definition(data_definition_guid, glossary_term_guid, body))
+        loop.run_until_complete(
+            self._async_detach_semantic_definition(data_definition_guid, glossary_term_guid, body, cascade_delete))
+
+
 
     async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str,
-                                                               data_structure_guid: str, body: dict = None) -> None:
+                                                               data_structure_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
         """
          Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -5065,14 +4527,12 @@ r       replace_all_properties: bool, default = False
 
         url = (f"{base_path(self, self.view_server)}/certification-types/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/attach")
+        await self._async_new_relationship_request(url, ["CertificationTypeProperties"], body)
+        logger.info(f"Certification type {certification_type_guid} linked to {data_structure_guid}.")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
 
     def link_certification_type_to_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                  body: dict = None) -> None:
+                                                  body: dict |NewRelationshipRequestBody = None) -> None:
         """
         Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -5123,7 +4583,7 @@ r       replace_all_properties: bool, default = False
             self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
     async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
-                                                                   data_structure_guid: str, body: dict = None) -> None:
+                                                                   data_structure_guid: str, body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional. Async version.
 
@@ -5168,13 +4628,12 @@ r       replace_all_properties: bool, default = False
         url = (f"{base_path(self, self.view_server)}/certification-stypes/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/detach")
 
-        if body is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body, cascade_delete)
+        logger.info(f"Certification type {certification_type_guid} detached from data structure {data_structure_guid}.")
+
 
     def detach_certification_type_from_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                      body: dict = None) -> None:
+                                                      body: dict | DeleteRequestBody= None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional.
 
@@ -5219,125 +4678,144 @@ r       replace_all_properties: bool, default = False
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_detach_certification_type_from_data_structure(certification_type_guid, data_structure_guid,
-                                                                      body))
+                                                                      body, cascade_delete))
 
-    def _extract_data_structure_properties(self, element: dict) -> dict:
+
+
+
+    def _extract_data_structure_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract common properties from a data structure element.
+        Populate columns_struct values for a Data Structure element using a standardized approach.
 
-        Args:
-            element (dict): The data structure element
+        - Populate values from element.properties via populate_columns_from_properties
+        - Overlay header-derived values using _extract_referenceable_properties
+        - Derive classifications as a comma-separated list
+        - Populate relationship-based columns using get_required_relationships
+        - Populate mermaid graph if requested
 
-        Returns:
-            dict: Dictionary of extracted properties
+        Returns the updated columns_struct.
         """
-        props = _extract_referenceable_properties(element)
+        # Start with properties-based values
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
 
-        props['properties'] = element.get('properties', {})
+        # Header-derived values
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
 
-        props['namespace'] = props['properties'].get("namespace", "") or ""
+        # Classifications (names only)
+        cl_names = []
+        for c in element.get('elementHeader', {}).get('classifications', []) or []:
+            nm = c.get('classificationName')
+            if nm:
+                cl_names.append(nm)
+        if cl_names:
+            for column in columns_list:
+                if column.get('key') == 'classifications':
+                    column['value'] = ", ".join(cl_names)
+                    break
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        # Relationship-derived values (generic)
+        col_data = get_required_relationships(element, col_data)
 
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_specs'] = associated_elements.get("member_of_data_spec_qnames", [])
+        # Mermaid graph
+        mermaid_val = element.get('mermaidGraph', "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = mermaid_val
+                break
 
-        # data_structures = associated_elements.get("member_of_data_struct_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['member_data_fields'] = associated_elements.get("member_data_field_qnames", [])
+        return col_data
 
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _extract_data_class_properties(self, element: dict) -> dict:
+    def _extract_data_class_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract common properties from a data class element.
+        Populate columns_struct values for a Data Class element using the standardized approach.
 
-        Args:
-            element (dict): The data class element
-
-        Returns:
-            dict: Dictionary of extracted properties
+        Uses properties population, header overlay, classifications, generic relationships,
+        and mermaid graph assignment similar to collection_manager.
         """
-        props = _extract_referenceable_properties(element)
-        properties = element.get('properties', {})
-        props['properties'] = properties
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
 
-        props['namespace'] = props['properties'].get("namespace", "") or ""
+        # Classifications from header
+        cl_names = []
+        for c in element.get('elementHeader', {}).get('classifications', []) or []:
+            nm = c.get('classificationName')
+            if nm:
+                cl_names.append(nm)
+        if cl_names:
+            for column in columns_list:
+                if column.get('key') == 'classifications':
+                    column['value'] = ", ".join(cl_names)
+                    break
 
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['match_property_names'] = properties.get('matchPropertyNames', []) or []
-        props['match_threshold'] = properties.get('matchThreshold', 0)
-        props['allow_duplicate_values'] = properties.get('allowDuplicateValues', False)
-        props['is_case_sensitive'] = properties.get('isCaseSensitive', False)
-        props['is_nullable'] = properties.get('isNullable', False)
+        # Relationships and mermaid
+        col_data = get_required_relationships(element, col_data)
 
+        mermaid_val = element.get('mermaidGraph', "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = mermaid_val
+                break
 
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['nested_data_classes'] = associated_elements.get("nested_data_class_qnames", [])
-        props['specialized_data_classes'] = associated_elements.get("specialized_data_class_qnames", [])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
+        return col_data
 
-        return props
-
-    def _extract_data_field_properties(self, element: dict) -> dict:
+    def _extract_data_field_properties(self, element: dict, columns_struct: dict) -> dict:
         """
-        Extract common properties from a data field element.
+        Populate columns_struct values for a Data Field element using the standardized approach.
 
-        Args:
-            element (dict): The data field element
-
-        Returns:
-            dict: Dictionary of extracted properties
+        Populates from properties, overlays header values, derives classifications, uses
+        get_required_relationships for relationships, and adds mermaid graph.
         """
-        props = _extract_referenceable_properties(element)
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
 
-        props['properties'] = element.get('properties', {})
-        props['namespace'] = props['properties'].get("namespace", "") or ""
-        properties = element.get('properties', {})
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        # Classifications from header
+        cl_names = []
+        for c in element.get('elementHeader', {}).get('classifications', []) or []:
+            nm = c.get('classificationName')
+            if nm:
+                cl_names.append(nm)
+        if cl_names:
+            for column in columns_list:
+                if column.get('key') == 'classifications':
+                    column['value'] = ", ".join(cl_names)
+                    break
 
-        props['is_nullable'] = properties.get('isNullable', False)
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['minimum_length'] = properties.get('minimumLength', 0)
-        props['length'] = properties.get('length', 0)
-        props['precision'] = properties.get('precision', 0)
-        props['ordered_values'] = properties.get('orderedValues', False)
-        props['sort_order'] = properties.get('sortOrder', "") or ""
+        # Relationships and mermaid
+        col_data = get_required_relationships(element, col_data)
 
+        mermaid_val = element.get('mermaidGraph', "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = mermaid_val
+                break
 
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames",[])
-        props['data_structures'] = associated_elements.get("data_structure_qnames",[])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames",[])
-        props['parent_names'] = associated_elements.get("parent_qnames",[])
-        props['data_class'] = associated_elements.get("data_class_qnames",[])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
+        return col_data
 
     def _generate_basic_structured_output(self, elements: dict, filter: str, output_format: str,
-                                          columns_struct: dict = None)  -> str | list:
+                                          columns_struct: dict = None) -> str | list:
         """
         Generate output in the specified format for the given elements.
 
@@ -5357,18 +4835,17 @@ r       replace_all_properties: bool, default = False
             return extract_basic_dict(elements)
         elif output_format == "HTML":
             return generate_output(
-                elements=elements, 
-                search_string=filter, 
+                elements=elements,
+                search_string=filter,
                 entity_type="Data Element",
                 columns_struct=columns_struct,
                 output_format="HTML",
                 extract_properties_func=self._extract_data_structure_properties
-            )
+                )
 
         # For other formats (MD, FORM, REPORT, LIST), use generate_output
         elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
             # Define columns for LIST format
-
 
             return generate_output(elements,
                                    filter,
@@ -5379,83 +4856,102 @@ r       replace_all_properties: bool, default = False
                                    columns_struct,
                                    )
 
-
-    def _generate_data_structure_output(self, elements: dict|list[dict], filter:str = None,
-                                        output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
+    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None,
+                                        element_type_name: str | None = None,
+                                        output_format: str = "DICT",
+                                        output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data structures in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data structure elements
             filter: The search string used to find the elements
+            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        entity_type = "Data Structure"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
+        entity_type = element_type_name or "Data Structure"
 
+        # First see if the user has specified an output_format_set - either a label or a dict
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
+            elif isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
+        # If no output_format was set, then use the element_type_name to lookup the output format
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            output_formats = None
-        logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_structure_properties,
-                               None,
-                               output_formats,
-                               )
+            # fallback to entity type
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
 
-    def _generate_data_class_output(self, elements: dict|list[dict], filter: str = None, output_format: str = "DICT", output_format_set: str|dict = None)  -> str | list:
+        logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_data_structure_properties,
+            None,
+            output_formats,
+        )
+
+    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None,
+                                    element_type_name: str | None = None,
+                                    output_format: str = "DICT",
+                                    output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data class elements
             filter: The search string used to find the elements
+            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             output_format_set: Optional output format set
                 - Option column/attribute selection and definition.
         Returns:
             Formatted output as either a string or list of dictionaries
         """
-        entity_type = "Data Class"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
-
+        entity_type = element_type_name or "Data Class"
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
+            elif isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            output_formats = None
-        logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_class_properties,
-                               None,
-                               output_formats,
-                               )
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
 
-    def _generate_data_field_output(self, elements: dict|list[dict], filter: str = None, output_format: str = "DICT",
-                                    output_format_set: str|dict = None)  -> str | list:
+        logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_data_class_properties,
+            None,
+            output_formats,
+        )
+
+    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None,
+                                    element_type_name: str | None = None,
+                                    output_format: str = "DICT",
+                                    output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data field elements
             filter: The search string used to find the elements
+            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             output_format_set: str|dict, Optional, default = None
             - Option column/attribute selection and definition.
@@ -5463,29 +4959,29 @@ r       replace_all_properties: bool, default = False
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        entity_type = "Data Field"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
-
+        entity_type = element_type_name or "Data Field"
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
+            elif isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            output_formats = None
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+
         logger.trace(f"Executing _generate_data_field_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_field_properties,
-                               None,
-                               output_formats,
-                               )
-
-
-
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_data_field_properties,
+            None,
+            output_formats,
+        )
 
 
 if __name__ == "__main__":

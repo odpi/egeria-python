@@ -12,6 +12,9 @@ from loguru import logger
 from rich import print, print_json
 from rich.console import Console
 from pyegeria.load_config import get_app_config
+from typing import Callable, TypeVar
+
+T = TypeVar('T', bound=Callable)
 
 app_settings = get_app_config()
 
@@ -245,7 +248,7 @@ def flatten_dict_to_string(d: dict) -> str:
 # The decorator logic, which applies @logger.catch dynamically
 
 
-def dynamic_catch(func):
+def dynamic_catch(func: T) -> T:
     if app_settings.get("enable_logger_catchh", False):
         return logger.catch(func)  # Apply the logger.catch decorator
     else:

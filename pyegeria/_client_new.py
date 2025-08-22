@@ -35,7 +35,7 @@ from pyegeria._validators import (
     )
 from pyegeria.models import SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody, \
     TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody, \
-    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody
+    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody, NewClassificationRequestBody
 from pyegeria.utils import body_slimmer
 
 ...
@@ -146,6 +146,7 @@ class Client2:
         self._update_element_request_adapter = TypeAdapter(UpdateElementRequestBody)
         self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
         self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
+        self._new_classification_request_adapter = TypeAdapter(NewClassificationRequestBody)
         self._delete_request_adapter = TypeAdapter(DeleteRequestBody)
         self._template_request_adapter = TypeAdapter(TemplateRequestBody)
         self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
@@ -755,9 +756,21 @@ class Client2:
             return None
         return validated_body
 
+    def validate_new_element_from_template_request(self, body: dict | TemplateRequestBody
+                                     ) -> NewElementRequestBody | None:
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
+
+        elif isinstance(body, dict):
+            # if body.get("properties", {}).get("class", "") == prop:
+            validated_body = self._template_request_adapter.validate_python(body)
+        else:
+            return None
+        return validated_body
+
     def validate_new_relationship_request(self, body: dict | NewRelationshipRequestBody,
                                           prop: str = None) -> NewRelationshipRequestBody | None:
-        if isinstance(body, NewElementRequestBody):
+        if isinstance(body, NewRelationshipRequestBody):
             if (prop and body.properties.class_ == prop) or (prop is None):
                 validated_body = body
             else:
@@ -767,6 +780,26 @@ class Client2:
         elif isinstance(body, dict):
             if body.get("properties", {}).get("class", "") == prop:
                 validated_body = self._new_relationship_request_adapter.validate_python(body)
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+        else:
+            return None
+
+        return validated_body
+
+    def validate_new_classification_request(self, body: dict | NewClassificationRequestBody,
+                                          prop: str = None) -> NewClassificationRequestBody | None:
+        if isinstance(body, NewClassificationRequestBody):
+            if (prop and body.properties.class_ == prop) or (prop is None):
+                validated_body = body
+            else:
+                raise PyegeriaInvalidParameterException(additional_info=
+                                                        {"reason": "unexpected property class name"})
+
+        elif isinstance(body, dict):
+            if body.get("properties", {}).get("class", "") == prop:
+                validated_body = self._new_classification_request_adapter.validate_python(body)
             else:
                 raise PyegeriaInvalidParameterException(additional_info=
                                                         {"reason": "unexpected property class name"})
@@ -884,7 +917,7 @@ class Client2:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
             return _gen_output(elements, search_string, _type,
                                output_format, output_format_set)
@@ -996,7 +1029,15 @@ class Client2:
         logger.info(json_body)
         response = await self._async_make_request("POST", url, json_body)
         logger.info(response.json())
-        return response.json().get("guid")
+        return response.json().get("guid", "NO_GUID_RETURNED")
+
+    async def _async_create_element_from_template(self, url: str, body: dict | TemplateRequestBody = None) -> str:
+        validated_body = self.validate_new_element_from_template_request(body)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        response = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(response.json())
+        return response.json().get("guid", "NO_GUID_RETURNED")
 
     async def _async_update_element_body_request(self, url: str, prop: list[str],
                                                  body: dict | UpdateElementRequestBody = None) -> None:
@@ -1024,6 +1065,16 @@ class Client2:
         else:
             await self._async_make_request("POST", url)
 
+    async def _async_new_classification_request(self, url: str, prop: str,
+                                              body: dict | NewRelationshipRequestBody = None) -> None:
+        validated_body = self.validate_new_classification_request(body, prop)
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            logger.info(json_body)
+            await self._async_make_request("POST", url, json_body)
+        else:
+            await self._async_make_request("POST", url)
+
     async def _async_delete_request(self, url: str, body: dict | DeleteRequestBody = None,
                                     cascade_delete: bool = False) -> None:
         validated_body = self.validate_delete_request(body, cascade_delete)
@@ -1033,9 +1084,6 @@ class Client2:
             await self._async_make_request("POST", url, json_body)
         else:
             await self._async_make_request("POST", url)
-
-
-
 
 
     async def _async_update_relationship_request(self, url: str, prop: str,
