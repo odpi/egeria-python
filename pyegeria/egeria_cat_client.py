@@ -9,8 +9,8 @@ AssetCatalog, CollectionManager, GlossaryManager, and ProjectManager.
 from pyegeria.egeria_my_client import EgeriaMy
 from pyegeria.asset_catalog_omvs import AssetCatalog
 from pyegeria.collection_manager import CollectionManager
-from pyegeria.glossary_manager_omvs import GlossaryManager
-from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.glossary_manager import GlossaryManager
+from pyegeria.project_manager import ProjectManager
 
 
 class EgeriaCat(

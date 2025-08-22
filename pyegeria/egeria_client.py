@@ -13,10 +13,10 @@ for all use cases..using the more role based clients is often appropriate:
 """
 # from pyegeria.x_action_author_omvs import ActionAuthor
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.collection_manager_omvs import CollectionManager
-from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.collection_manager import CollectionManager
+from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.governance_officer import GovernanceOfficer
-from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.project_manager import ProjectManager
 from pyegeria.automated_curation_omvs import AutomatedCuration
 from pyegeria.classification_manager_omvs import ClassificationManager
 from pyegeria.template_manager_omvs import TemplateManager
@@ -30,7 +30,7 @@ from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.egeria_config_client import EgeriaConfig
-from pyegeria.data_designer_omvs import DataDesigner
+from pyegeria.data_designer import DataDesigner
 from pyegeria.governance_officer import GovernanceOfficer
 # from pyegeria.md_processing_utils import render_markdown
 

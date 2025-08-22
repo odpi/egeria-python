@@ -13,11 +13,13 @@ A running Egeria environment is needed to run these tests.
 
 import json
 import time
-
+from pydantic import ValidationError
+from pyegeria.project_manager import ProjectManager
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
+    print_validation_error, PyegeriaAPIException
 
 from pyegeria import (
     InvalidParameterException,
-    ProjectManager,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
@@ -146,7 +148,7 @@ class TestProjectManager:
             search_string = "Clinical Trials Management"
 
             response = p_client.find_projects(
-                search_string, None, True, ignore_case=True
+                search_string, output_format="DICT"
             )
             duration = time.perf_counter() - start_time
 
@@ -159,13 +161,12 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception()
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             p_client.close_session()
 
@@ -243,22 +244,21 @@ class TestProjectManager:
     def test_get_project_by_guid(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
-            project_guid = "4fe24e34-490a-43f0-a0d4-fe45ac45c663"  # it setup
+            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"
 
-            response = p_client.get_project_by_guid(project_guid)
+            response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Project")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Type of response is {type(response)}")
 
-            if type(response) is dict:
+            if type(response) is list:
                 print("dict:\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is tuple:
@@ -269,11 +269,9 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception()
             assert False, "Invalid request"
 
         finally:

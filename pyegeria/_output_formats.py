@@ -121,7 +121,14 @@ COMMON_FORMATS_ALL = Format(
     columns=COMMON_COLUMNS,
 )
 
+PROJECT_COLUMNS = COMMON_COLUMNS + [
+    Column(name='Priority', key='priority'),
+    Column(name='Project Status', key='project_status'),
+    Column(name='Start Date', key='start_date'),
+    Column(name='Assigned Actors', key='assigned_actors'),
+    Column(name='Resources', key='resource_list'),
 
+    ]
 COLLECTIONS_COLUMNS = COMMON_COLUMNS + [
     Column(name='Type Name', key='type_name'),
     Column(name='Classifications', key='classifications'),
@@ -228,6 +235,17 @@ output_format_sets = FormatSetDict({
             )
         ],
     ),
+    "Project": FormatSet(
+        heading="Project Attributes",
+        description="Attributes that apply to all Projects.",
+        annotations={},
+        formats=[
+            Format(
+                types=["ALL"],
+                columns=PROJECT_COLUMNS
+            )
+        ]
+        ),
     "Basic-Terms": FormatSet(
         heading="Basic Glossary Term Attributes",
         description="Attributes that apply to all Basic Glossary Terms.",
