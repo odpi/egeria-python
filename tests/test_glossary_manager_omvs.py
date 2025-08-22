@@ -183,8 +183,10 @@ class TestGlossaryManager:
                                                display_name = "dt2",
                                                 description = "A test term",
                                                 qualified_name = qualified_name,
-                                                parent_guid = glossary_guid,
-                                               summary = "a quick summary"
+                                               summary = "a quick summary",
+                                               abbreviation = "dt2",
+                                               examples="an example",
+                                               usage="an usage example",
                                                )
 
             body = NewElementRequestBody(class_ = "NewElementRequestBody",
@@ -246,64 +248,8 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
-    def test_add_term_to_category(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd=self.good_user_2_pwd,
-            )
 
-            token = g_client.create_egeria_bearer_token(
-                self.good_user_2, self.good_user_2_pwd
-            )
-            start_time = time.perf_counter()
-            category_guid = "6d848f56-0332-4c8f-a048-9209d912809b"
-            # term_guid = "16400f1d-657c-4949-91ff-cd018c429b8d" # Directive
-            term_guid = "367300ea-b11e-41bb-ba16-1de1aead75dd" # Command
-            g_client.add_term_to_category(term_guid, category_guid)
-            duration = time.perf_counter() - start_time
 
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nAdded term to category {category_guid}")
-            assert True
-        except (
-                    PyegeriaException
-        ) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-        finally:
-            g_client.close_session()
-
-    def test_remove_term_from_category(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd=self.good_user_2_pwd,
-            )
-
-            token = g_client.create_egeria_bearer_token(
-                self.good_user_2, self.good_user_2_pwd
-            )
-            start_time = time.perf_counter()
-            category_guid = "6d848f56-0332-4c8f-a048-9209d912809b"
-            term_guid = "16400f1d-657c-4949-91ff-cd018c429b8d"
-            g_client.remove_term_from_category(term_guid, category_guid)
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nAdded term to category {category_guid}")
-            assert True
-        except (
-                    PyegeriaException
-        ) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-        finally:
-            g_client.close_session()
 
     def test_add_is_abstract_concept(self):
         try:
@@ -347,14 +293,12 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             response = g_client.find_glossaries(
-                # "*",
                 "*",
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
                 page_size=0,
-                effective_time=None,
-                output_format="LIST"
+                output_format="DICT"
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -389,7 +333,7 @@ class TestGlossaryManager:
             # glossary_guid = (
             #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
             # )
-            glossary_guid = '805afd91-7ed2-4fb8-bc2e-c2d4def5b98f'
+            glossary_guid = '8f829009-376e-42ae-9f5d-32433755ff92'
             response = g_client.get_glossary_by_guid(glossary_guid)
             print(f"type is {type(response)}")
             if type(response) is dict:
@@ -406,7 +350,7 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
-    def test_get_glossaries_by_name(self, server: str = good_view_server_1):
+    def test_get_glossaries_by_name(self, server: str = good_view_server_2):
         try:
             server_name = server
             g_client = GlossaryManager(
@@ -414,7 +358,7 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            glossary_name = "puddys-universe"
+            glossary_name = "test"
 
             response = g_client.get_glossaries_by_name(glossary_name)
             print(f"type is {type(response)}")
@@ -605,11 +549,11 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "DT",
+                "*",
                 True,
                 False,
                 True,
-                output_format="JSON",
+                output_format="DICT",
                 output_format_set = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
@@ -664,29 +608,6 @@ class TestGlossaryManager:
         finally:
             g_client.close_session()
 
-    def test_undo_update_term(self):
-        try:
-            g_client = GlossaryManager(
-                self.good_view_server_1, self.good_platform1_url, self.good_user_2
-            )
-
-            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "a27b20a9-3c1a-4d80-b92f-9c877c193385"  # meow
-
-            start_time = time.perf_counter()
-            g_client.undo_term_update(term_guid)
-            print(f"Duration is {time.perf_counter() - start_time} seconds")
-
-            assert True
-
-        except (
-                    PyegeriaException
-        ) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-
-        finally:
-            g_client.close_session()
 
     def test_load_terms_from_csv(self):
         try:

@@ -21,12 +21,17 @@ from pyegeria._exceptions import InvalidParameterException
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria._validators import validate_guid
-from pyegeria.glossary_browser import GlossaryBrowser
+from pyegeria.collection_manager import CollectionManager
 from pyegeria.load_config import get_app_config
 from pyegeria.models import (NewElementRequestBody,
                              ReferenceableProperties, UpdateElementRequestBody, DeleteRequestBody, TemplateRequestBody,
-                             NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody)
-from pyegeria.utils import body_slimmer
+                             NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
+                             FilterRequestBody, GetRequestBody, SearchStringRequestBody)
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.output_formatter import (generate_output,
+                                       _extract_referenceable_properties, populate_columns_from_properties,
+                                       get_required_relationships)
+from pyegeria.utils import body_slimmer, dynamic_catch
 
 app_settings = get_app_config()
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -72,7 +77,7 @@ class GlossaryTermProperties(ReferenceableProperties):
     publishVersionIdentifier: str = None
 
 
-class GlossaryManager(GlossaryBrowser):
+class GlossaryManager(CollectionManager):
     """
     GlossaryManager is a class that extends the Client class. It provides methods to create and manage glossaries,
     terms and categories.
@@ -106,7 +111,7 @@ class GlossaryManager(GlossaryBrowser):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     #
     #       Get Valid Values for Enumerations
@@ -121,108 +126,37 @@ class GlossaryManager(GlossaryBrowser):
     #       Glossaries
     #
 
-    async def _async_create_glossary(
-            self,
-            display_name: str,
-            description: str,
-            language: str = "English",
-            usage: str = None,
-            initial_classifications: list = None,
-            body: dict | NewElementRequestBody = None,
-            ) -> str:
-        """Create a new glossary. Async version.
-
-        Parameters
-        ----------
-        display_name: str
-            The name of the new glossary. This will be used to produce a unique qualified name for the glossary.
-        description: str
-            A description of the glossary.
-        language: str, optional, default = "English"
-            The language the used for the glossary
-        usage: str, optional, default = None
-            How the glossary is intended to be used
 
 
-        Returns
-        -------
-        str
-            The GUID of the created glossary.
-
-        """
-
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries"
-        if body:
-            validated_body = self.validate_new_element_request(body, "GlossaryProperties")
-        elif (body is None) and (display_name is not None):
-            pre = initial_classifications[0] if initial_classifications is not None else "Glossary"
-            qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
-            if initial_classifications:
-                initial_classifications_dict = {}
-                for c in initial_classifications:
-                    initial_classifications_dict = initial_classifications_dict | {
-                        c: {"class": "ClassificationProperties"}
-                        }
-
-            else:
-                initial_classifications_dict = None
-
-            glossary_properties = GlossaryProperties(class_="GlossaryProperties",
-                                                     qualified_name=qualified_name,
-                                                     display_name=display_name,
-                                                     description=description,
-                                                     language=language,
-                                                     usage=usage
-                                                     )
+    @dynamic_catch
+    async def _async_create_glossary(self, display_name: str, description: str = None, language: str = "English", usage: str = None,
+                        category: str = None, body: dict | NewElementRequestBody = None) -> str:
+        """Create a new glossary with optional classification. """
+        if body is None:
+            qualified_name = self.__create_qualified_name__("Glossary", display_name, EGERIA_LOCAL_QUALIFIER)
             body = {
                 "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "initialClassifications": initial_classifications_dict,
-                "properties": glossary_properties.model_dump()
+                "is_own_anchor": True,
+                "properties": {
+                    "class": "GlossaryProperties",
+                    "displayName": display_name,
+                    "qualifiedName": qualified_name,
+                    "description": description,
+                    "language": language,
+                    "usage": usage,
+                    "category": category
+                    },
                 }
-            validated_body = NewElementRequestBody.model_validate(body)
-        else:
-            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+        response = await self._async_create_collection(body=body)
+        return response
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        logger.info(f"Create glossary with GUID: {resp.json().get('guid')}")
-        return resp.json().get("guid", NO_GUID_RETURNED)
-
-    def create_glossary(
-            self,
-            display_name: str,
-            description: str,
-            language: str = "English",
-            usage: str = None,
-            initial_classifications: list = None,
-            body: dict | NewElementRequestBody = None
-            ) -> str:
-        """Create a new glossary.
-
-        Parameters
-        ----------
-        display_name: str
-            The name of the new glossary. This will be used to produce a unique qualified name for the glossary.
-        description: str
-            A description of the glossary.
-        language: str, optional, default = "English"
-            The language the used for the glossary
-        usage: str, optional, default = None
-            How the glossary is intended to be used
-
-
-        Returns
-        -------
-        str
-            The GUID of the created glossary.
-
-        """
+    def create_glossary(self, display_name: str, description: str = None, language: str = "English",
+                               usage: str = None,
+                               category: str = None, body: dict | NewElementRequestBody = None) -> str:
+        """Create a new glossary with optional classification. """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_glossary(display_name, description, language, usage,
-                                        initial_classifications, body)
+            self._async_create_glossary(display_name, description, language, usage, category, body)
             )
         return response
 
@@ -243,13 +177,9 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"{glossary_guid}/delete"
-        )
+        await self._async_delete_collection(glossary_guid, body, cascade)
 
-        await self._async_delete_request(url, body, cascade)
-        logger.info(f"Deleted collection {glossary_guid} with cascade {cascade}")
+        logger.info(f"Deleted glossary {glossary_guid} with cascade {cascade}")
 
     def delete_glossary(self, glossary_guid: str, body: dict | DeleteRequestBody = None, cascade: bool = False) -> None:
         """Delete a new glossary.
@@ -273,7 +203,8 @@ class GlossaryManager(GlossaryBrowser):
     async def _async_update_glossary(
             self,
             glossary_guid: str,
-            body: dict | UpdateElementRequestBody
+            body: dict | UpdateElementRequestBody,
+            merge_update: bool = True,
             ) -> None:
         """Update Glossary.
 
@@ -297,18 +228,16 @@ class GlossaryManager(GlossaryBrowser):
 
         """
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
-            f"{glossary_guid}/update"
-        )
 
-        await self._async_update_element_body_request(url, ["GlossaryProperties"], body)
+
+        await self._async_update_collection(glossary_guid, body, is_merge_update=merge_update)
         logger.info(f"Updated digital subscription {glossary_guid}")
 
     def update_glossary(
             self,
             glossary_guid: str,
-            body: dict | UpdateElementRequestBody
+            body: dict | UpdateElementRequestBody,
+            merge_update: bool = True,
             ) -> None:
         """Update Glossary.
 
@@ -321,10 +250,6 @@ class GlossaryManager(GlossaryBrowser):
         is_merge_update: bool, optional, default = True
             If true, then only those properties specified in the body will be updated. If false, then all the
             properties of the glossary will be replaced with those of the body.
-        for_lineage: bool, optional, default = False
-            Normally false. Used when we want to retrieve elements that have been delete but have a Memento entry.
-        for_duplicate_processing: bool, optional, default = False
-            Normally false. Set true when Egeria is told to skip deduplication because another system will do it.
 
 
         Returns
@@ -342,7 +267,7 @@ class GlossaryManager(GlossaryBrowser):
         loop.run_until_complete(
             self._async_update_glossary(
                 glossary_guid,
-                body
+                body, merge_update
                 )
             )
 
@@ -1240,8 +1165,17 @@ class GlossaryManager(GlossaryBrowser):
 
 
     #
-    #   To work with categories, use the collection manager
+    #   Categories are just Folders in collection manager
     #
+
+
+    #
+    #   From glossary browser
+    #
+
+
+
+
 
     async def _async_add_is_abstract_concepts(
             self, term_guid: str, body: dict | NewClassificationRequestBody = None,
@@ -1306,7 +1240,6 @@ class GlossaryManager(GlossaryBrowser):
 
         await self._async_new_classification_request(url, "AbstractConceptProperties",body)
         logger.info(f"Added AbstractConcept classification to {term_guid}")
-
 
 
     def add_is_abstract_concept(
@@ -2516,6 +2449,356 @@ class GlossaryManager(GlossaryBrowser):
             self._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship_type,
                                                           body)
             )
+
+    #
+    # Integrated Glossary Browser methods
+    #
+
+    def _extract_glossary_properties(self, element: dict, columns_struct: dict) -> dict:
+        props = element.get('properties', {}) or {}
+        normalized = {
+            'properties': props,
+            'elementHeader': element.get('elementHeader', {}),
+        }
+        col_data = populate_columns_from_properties(normalized, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        header_props = _extract_referenceable_properties(element)
+        guid = header_props.get('GUID')
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
+        if guid:
+            categories = None
+            try:
+                categories = self.get_categories_for_glossary(guid)
+            except Exception:
+                categories = None
+            cat_display_list = []
+            cat_qn_list = []
+            if isinstance(categories, list):
+                for category in categories:
+                    gcp = category.get('glossaryCategoryProperties', {})
+                    dn = gcp.get('displayName', '') or ''
+                    qn = gcp.get('qualifiedName', '') or ''
+                    if dn:
+                        cat_display_list.append(dn)
+                    if qn:
+                        cat_qn_list.append(qn)
+            cat_names_md = (", \n".join(cat_display_list)).rstrip(',') if cat_display_list else ''
+            cat_qn_md = (", \n".join(cat_qn_list)).rstrip(',') if cat_qn_list else ''
+            for column in columns_list:
+                if column.get('key') == 'categories_names' and not column.get('value'):
+                    column['value'] = cat_names_md
+                if column.get('key') == 'categories_qualified_names' and not column.get('value'):
+                    column['value'] = cat_qn_md
+        for column in columns_list:
+            if column.get('key') == 'mermaid' and not column.get('value'):
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        return col_data
+
+    def _extract_term_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = header_props.get('GUID')
+        classification_names = ""
+        classifications = element.get('elementHeader', {}).get("collectionCategories", [])
+        for classification in classifications:
+            classification_names += f"{classification['classificationName']}, "
+        if classification_names:
+            for column in columns_list:
+                if column.get('key') == 'classifications':
+                    column['value'] = classification_names[:-2]
+                    break
+        col_data = get_required_relationships(element, col_data)
+        subject_area = element.get('elementHeader', {}).get("subjectArea", "") or ""
+        subj_val = ""
+        if isinstance(subject_area, dict):
+            subj_val = subject_area.get("classificationProperties", {}).get("subjectAreaName", "")
+        for column in columns_list:
+            if column.get('key') == 'subject_area':
+                column['value'] = subj_val
+                break
+        mermaid_val = element.get('mermaidGraph', "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid':
+                column['value'] = mermaid_val
+                break
+        return col_data
+
+    def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
+        additional: dict = {}
+        try:
+            classifications = element.get('elementHeader', {}).get('otherClassifications', [])
+            glossary_name = ''
+            if classifications:
+                cls_props = classifications[0].get('classificationProperties', {}) or {}
+                g_guid = cls_props.get('anchorScopeGUID')
+                if g_guid and hasattr(self, 'get_glossary_by_guid'):
+                    try:
+                        gl = self.get_glossary_by_guid(g_guid)
+                        if isinstance(gl, dict):
+                            if output_format == 'REPORT':
+                                glossary_name = gl.get('glossaryProperties', {}).get('displayName', '')
+                            else:
+                                glossary_name = gl.get('glossaryProperties', {}).get('qualifiedName', '')
+                    except Exception:
+                        pass
+            if glossary_name:
+                additional['in_glossary'] = glossary_name
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'get_categories_for_term') and term_guid:
+                cats = self.get_categories_for_term(term_guid)
+                names = []
+                if isinstance(cats, list):
+                    for c in cats:
+                        gcp = c.get('glossaryCategoryProperties', {})
+                        val = gcp.get('displayName') if output_format in ['REPORT', 'LIST'] else gcp.get('qualifiedName')
+                        if val:
+                            names.append(val)
+                if names:
+                    additional['categories'] = ", \n".join(names)
+        except Exception:
+            pass
+        return additional
+
+    def _generate_glossary_output(self, elements: dict | list[dict], search_string: str,
+                                  element_type_name: str | None,
+                                  output_format: str = 'DICT',
+                                  output_format_set: dict | str = None) -> str | list[dict]:
+        entity_type = 'Glossary'
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+            else:
+                output_formats = None
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set('Default', output_format)
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_glossary_properties,
+            get_additional_props_func=None,
+            columns_struct=output_formats,
+        )
+
+    def _generate_term_output(self, elements: dict | list[dict], search_string: str,
+                               element_type_name: str | None,
+                               output_format: str = 'DICT',
+                               output_format_set: dict | str = None) -> str | list[dict]:
+        entity_type = 'GlossaryTerm'
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+            else:
+                output_formats = None
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set('Default', output_format)
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_term_properties,
+            get_additional_props_func=self._get_term_additional_properties,
+            columns_struct=output_formats,
+        )
+
+    async def _async_get_glossary_term_statuses(self) -> [str]:
+        url = (f"{self.platform_url}/servers/{self.view_server}"
+               f"/api/open-metadata/glossary-manager/glossaries/terms/status-list")
+        response = await self._async_make_request("GET", url)
+        return response.json().get("statuses", [])
+
+    def get_glossary_term_statuses(self) -> [str]:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
+        return response
+
+    async def _async_get_glossary_term_rel_statuses(self) -> [str]:
+        url = (f"{self.platform_url}/servers/{self.view_server}"
+               f"/api/open-metadata/glossary-manager/glossaries/terms/relationships/status-list")
+        response = await self._async_make_request("GET", url)
+        return response.json().get("statuses", [])
+
+    def get_glossary_term_rel_statuses(self) -> [str]:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_glossary_term_rel_statuses())
+        return response
+
+    async def _async_get_glossary_term_activity_types(self) -> [str]:
+        url = (f"{self.platform_url}/servers/{self.view_server}"
+               f"/api/open-metadata/glossary-manager/glossaries/terms/activity-types")
+        response = await self._async_make_request("GET", url)
+        return response.json().get("types", [])
+
+    def get_glossary_term_activity_types(self) -> [str]:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
+        return response
+
+    async def _async_get_term_relationship_types(self) -> [str]:
+        url = (f"{self.platform_url}/servers/{self.view_server}"
+               f"/api/open-metadata/glossary-manager/glossaries/terms/relationships/type-names")
+        response = await self._async_make_request("GET", url)
+        return response.json().get("names", [])
+
+    def get_term_relationship_types(self) -> [str]:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_term_relationship_types())
+        return response
+
+    async def _async_find_glossaries(self, search_string: str = "*", classificaton_names: list[str] = None,
+                                     metadata_element_types: list[str] = ["Glossary"],
+                                     starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                                     start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict  = None,
+                                     body: dict | SearchStringRequestBody = None) -> list | str:
+
+        response = await self._async_find_collections(search_string, classificaton_names,
+                                                      metadata_element_types, starts_with, ends_with, ignore_case,
+                                                      start_from, page_size, output_format, output_format_set, body)
+        return response
+
+    def find_glossaries(self, search_string: str = "*", classificaton_names: list[str] = None,
+                                     metadata_element_types: list[str] = ["Glossary"],
+                                     starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
+                                     start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict  = None,
+                                     body: dict | SearchStringRequestBody = None) -> list | str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+                    self._async_find_glossaries(search_string,  classificaton_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body))
+        return response
+
+    async def _async_get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
+                                             body: dict | FilterRequestBody = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> dict | str:
+        return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, output_format_set)
+
+
+    def get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
+                                             body: dict | FilterRequestBody = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> dict | str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_glossaries_by_name(filter_string, classification_names, body,start_from, page_size,
+                                               output_format, output_format_set))
+        return response
+
+    async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict | GetRequestBody = None,
+                                          output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+
+        return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, output_format_set)
+
+
+
+    def get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict| GetRequestBody=None,
+                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_glossary_by_guid(glossary_guid, element_type, body,output_format, output_format_set))
+        return response
+
+
+
+    async def _async_get_terms_by_name(self, filter_string: str = None, classification_names: list[str] = None,
+                                             body: dict | FilterRequestBody = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list:
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
+               f"terms/by-name")
+        response = await self._async_get_name_request(url, _type="GlossaryTerm",
+                                                      _gen_output=self._generate_term_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
+        return response
+
+    def get_terms_by_name(self, filter_string: str = None, classification_names: list[str] = None,
+                                             body: dict | FilterRequestBody = None,
+                                             start_from: int = 0, page_size: int = 0,
+                                             output_format: str = 'JSON',
+                                             output_format_set: str | dict = None) -> list:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_terms_by_name(filter_string, classification_names, body,start_from, page_size,
+                                           output_format, output_format_set))
+        return response
+
+    async def _async_get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
+                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+               f"{term_guid}")
+        response = await self._async_get_guid_request(url, _type=element_type,
+                                                      _gen_output=self._generate_term_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
+        return response
+
+    def get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
+                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, element_type, body,  output_format, output_format_set))
+        return response
+
+    async def _async_find_glossary_terms(self, search_string: str, starts_with: bool = False,
+                                     ends_with: bool = False, ignore_case: bool = False, type_name: str = "GlossaryTerm",
+                                     classification_names: list[str] = None, start_from: int = 0,
+                                     page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+               f"by-search-string")
+        response = await self._async_find_request(url, _type= type_name,
+                                                  _gen_output=self._generate_term_output,
+                                                  search_string = search_string, classification_names = classification_names,
+                                                  metadata_element_types = ["GlossaryTerm"],
+                                                  starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
+                                                  start_from = start_from, page_size = page_size,
+                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  body=body)
+        return response
+
+    def find_glossary_terms(self, search_string: str, starts_with: bool = False,
+                                     ends_with: bool = False, ignore_case: bool = False, type_name: str = "GlossaryTerm",
+                                     classification_names: list[str] = None, start_from: int = 0,
+                                     page_size: int = 0, output_format: str = 'JSON',
+                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_glossary_terms(search_string, starts_with,
+                                            ends_with, ignore_case, type_name,classification_names,
+                                            start_from,
+                                            page_size, output_format, output_format_set, body))
+        return response
 
 
 if __name__ == "__main__":

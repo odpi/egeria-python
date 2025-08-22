@@ -8,14 +8,14 @@ AssetCatalog, CollectionManager, GlossaryManager, and ProjectManager.
 """
 from pyegeria.egeria_my_client import EgeriaMy
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.collection_manager import CollectionManager
+# from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager
 
 
 class EgeriaCat(
     AssetCatalog,
-    CollectionManager,
+    # CollectionManager,
     EgeriaMy,
     GlossaryManager,
     # GovernanceAuthor,
@@ -57,9 +57,9 @@ class EgeriaCat(
         self.user_pwd = user_pwd
 
         AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        CollectionManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+        # CollectionManager.__init__(
+        #     self, view_server, platform_url, user_id, user_pwd, token
+        # )
         EgeriaMy.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
         GlossaryManager.__init__(

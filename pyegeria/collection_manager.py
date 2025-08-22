@@ -1118,7 +1118,7 @@ class CollectionManager(Client2):
             if initial_classifications:
                 initial_classifications_dict = {}
                 for c in initial_classifications:
-                    initial_classifications_dict = initial_classifications_dict | {c : {"class": "ClassificationProperties"}}
+                    initial_classifications_dict = initial_classifications_dict | {c : {"class": f"{c}Properties"}}
 
             else:
                 initial_classifications_dict = None
@@ -1260,7 +1260,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     def create_root_collection(self, display_name: str = None, description: str = None,
-                                      category: str = None, body: dict | NewElementRequestBody = None) -> str:
+                                      category: str = None,  body: dict | NewElementRequestBody = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a
             collection hierarchy.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1293,8 +1293,8 @@ class CollectionManager(Client2):
         """
 
         return asyncio.get_event_loop().run_until_complete(
-            self._async_create_collection(display_name, description, category,
-                                          ["RootCollection"], body))
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                         initial_classifications = ["RootCollection"], body=body))
 
 
     @dynamic_catch
@@ -1414,25 +1414,28 @@ class CollectionManager(Client2):
             self._async_create_collection(display_name, description, category,
                                           ["ContextEvent"], body))
 
-    @dynamic_catch
-    def create_glossary_category(self, display_name: str, parent_guid: str, description: str = None ) -> str:
-        """Create a new glossary category."""
-        body = {
-            "class": "NewRelationshipRequestBody",
-            "parentGUID": parent_guid,
-            "parentRelationshipTypeName": "CategoryHierarchy",
-            "parentAtEnd1": True,
-            "is_own_anchor": False,
-            "anchor_guid": parent_guid,
-            "properties": {
-                "class": "GlossaryCategoryProperties",
-                "displayName": display_name,
-                "description": description,
-                "parentCategory": parent_guid,
-                },
-            }
-        response = self.create_collection(body=body)
-        return response
+    # @dynamic_catch
+    # def create_glossary(self, display_name: str, description: str = None, language: str = "English", usage: str = None,
+    #                     category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    #     """Create a new glossary with optional classification. """
+    #     if body is None:
+    #
+    #         qualified_name = self.__create_qualified_name__("Glossary", display_name, EGERIA_LOCAL_QUALIFIER)
+    #         body = {
+    #             "class": "NewElementRequestBody",
+    #             "is_own_anchor": True,
+    #             "properties": {
+    #                 "class": "GlossaryProperties",
+    #                 "displayName": display_name,
+    #                 "qualifiedName": qualified_name,
+    #                 "description": description,
+    #                 "language": language,
+    #                 "usage": usage,
+    #                 "category": category
+    #                 },
+    #             }
+    #     response = self.create_collection(body=body)
+    #     return response
 
     @dynamic_catch
     async def _async_create_data_spec_collection(self, display_name: str = None, description: str = None,
@@ -5091,7 +5094,7 @@ class CollectionManager(Client2):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
 
-    def add_term_to_category(self, category_guid: str, term_guid: str,
+    def add_term_to_folder(self, category_guid: str, term_guid: str,
                              body: dict | NewRelationshipRequestBody = None) -> None:
         """Add a term to a category.  The request body is optional."""
         loop = asyncio.get_event_loop()

@@ -93,11 +93,11 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Subscription::GeoSpatial Products Subscription"
+            search_string = "*"
             classification_name = None
             element_type = ["Collection"]
-            output_format = "JSON"
-            output_format_set = "Agreements"
+            output_format = "DICT"
+            output_format_set = "Collections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
                                                  ,metadata_element_types=element_type
@@ -341,7 +341,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "c7031a79-5ad8-439b-a102-7dafa0e2ad71"
+            collection_guid = "1944d8cb-b11e-4014-ac31-2ac3c0430b1d"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", output_format_set="Agreement")
@@ -437,6 +437,38 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
+    def test_create_glossary(self):
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            display_name = "Ham Glossary"
+            description = "Collection of Ham Terms"
+            language = "English"
+            usage = "Amateur Radio"
+            category = "Hobby"
+
+            response = c_client.create_glossary(display_name, description, language, usage, category)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            # assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            c_client.close_session()
+
     def test_create_collection(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
@@ -472,6 +504,7 @@ class TestCollectionManager:
             print_validation_error(e)
         finally:
             c_client.close_session()
+
 
     def test_create_collection_w_body(self):
         try:

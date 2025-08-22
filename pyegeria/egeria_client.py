@@ -13,9 +13,8 @@ for all use cases..using the more role based clients is often appropriate:
 """
 # from pyegeria.x_action_author_omvs import ActionAuthor
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.collection_manager import CollectionManager
+# from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
-from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.project_manager import ProjectManager
 from pyegeria.automated_curation_omvs import AutomatedCuration
 from pyegeria.classification_manager_omvs import ClassificationManager
@@ -37,7 +36,7 @@ from pyegeria.governance_officer import GovernanceOfficer
 
 class Egeria(
     AssetCatalog,
-    CollectionManager,
+    # CollectionManager,
     MyProfile,
     FeedbackManager,
     GlossaryManager,
@@ -89,9 +88,9 @@ class Egeria(
         token: str = None,
     ):
         AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        CollectionManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+        # CollectionManager.__init__(
+        #     self, view_server, platform_url, user_id, user_pwd, token
+        # )
 
         MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         FeedbackManager.__init__(

@@ -8,7 +8,7 @@ from md_processing.md_processing_utils.common_md_utils import (debug_level, prin
 from md_processing.md_processing_utils.extraction_utils import (extract_command, process_simple_attribute)
 from md_processing.md_processing_utils.md_processing_constants import ALWAYS, ERROR, INFO, pre_command
 from pyegeria._globals import NO_PROJECTS_FOUND
-from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.project_manager import ProjectManager
 
 setup_log()
 

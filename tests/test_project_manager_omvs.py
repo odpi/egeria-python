@@ -15,6 +15,7 @@ import json
 import time
 from pydantic import ValidationError
 from pyegeria.project_manager import ProjectManager
+from pyegeria.glossary_manager import GlossaryManager
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
     print_validation_error, PyegeriaAPIException
 
@@ -145,10 +146,10 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Clinical Trials Management"
+            search_string = "*"
 
             response = p_client.find_projects(
-                search_string, output_format="DICT"
+                search_string, output_format="DICT", output_format_set="Referenceable"
             )
             duration = time.perf_counter() - start_time
 
@@ -208,13 +209,13 @@ class TestProjectManager:
     def test_get_classified_projects(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_classification = "Campaign"
+            project_classification = "PersonalProject"
 
             response = p_client.get_classified_projects(project_classification)
             duration = time.perf_counter() - start_time
@@ -231,13 +232,12 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception( e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             p_client.close_session()
 
@@ -250,7 +250,7 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"
+            project_guid = "8a728d43-3f24-4ab6-8be2-f584fcba408b"
 
             response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Project")
             duration = time.perf_counter() - start_time
@@ -271,7 +271,7 @@ class TestProjectManager:
         except (
             PyegeriaException, PyegeriaAPIException,
         ) as e:
-            print_basic_exception()
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -326,80 +326,29 @@ class TestProjectManager:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            anchor_guid = None
-            parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7"
-            parent_relationship_type_name = "ProjectHierarchy"
-            parent_at_end1 = True
-            display_name = "another Child Project"
-            description = "A sub-project"
-            identifier = "Project 1a"
-            is_own_anchor = False
-            status = "Defined"
-            start_date = "2021-04-01"
-            planned_end_date = "2025-04-01"
             classification_name = "PersonalProject"
-
-            response = p_client.create_project(
-                parent_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                True,
-                display_name,
-                description,
-                classification_name,
-                identifier,
-                is_own_anchor,
-                status,
-                start_date,
-                planned_end_date,
-            )
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            p_client.close_session()
-
-    def test_create_project_w_body(self):
-        try:
-            p_client = ProjectManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            classification_name = "StudyProject"
             body = {
+                "class": "NewElementRequestBody",
                 "anchorGUID": None,
                 "isOwnAnchor": True,
-                "parentGUID": None,
-                "parentRelationshipTypeName": None,
-                "parentAtEnd1": False,
-                "projectProperties": {
+                "parentGUID": "72972949-6274-4cac-a5b9-d6387052b2d9",
+                "parentRelationshipTypeName": "ProjectHierarchy",
+                "properties":{
                     "class": "ProjectProperties",
                     "name": "My Study Project",
-                    "qualifiedName": f"{classification_name}-MyStudyProject-{time.asctime()}",
-                    "description": "my first study project",
+                    "qualifiedName": f"{classification_name}-MyPersonalProject-{time.asctime()}",
+                    "description": "my first personal project",
                     "projectStatus": "DEFINED",
                     "startDate": "2021-01-01",
                     "plannedEndDate": "2028-01-01",
+                    "initialClassifications" : {
+                        "PersonalProject" : {
+                          "class": "PersonalProjectProperties"
+                        }
+                    },
                 },
             }
-            response = p_client.create_project_w_body(body, classification_name)
+            response = p_client.create_project(body)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -410,12 +359,12 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             p_client.close_session()
 
@@ -837,3 +786,375 @@ class TestProjectManager:
             assert False, "Invalid request"
         finally:
             p_client.close_session()
+
+
+# Merged from tests/test_glossary_browser_omvs.py
+class TestGlossaryManager:
+    good_platform1_url = "https://127.0.0.1:9443"
+    good_platform2_url = "https://oak.local:9443"
+    bad_platform1_url = "https://localhost:9443"
+
+    good_user_1 = "garygeeke"
+    good_user_2 = "erinoverview"
+    good_user_3 = "peterprofile"
+    bad_user_1 = "eviledna"
+    bad_user_2 = ""
+    good_integ_1 = "fluffy_integration"
+    good_server_1 = "simple-metadata-store"
+    good_server_2 = "qs-view-server"
+    good_server_3 = "active-metadata-store"
+    good_server_4 = "integration-daemon"
+    good_server_5 = "fluffy_kv"
+    good_server_6 = "cocoVIew1"
+    good_engine_host_1 = "governDL01"
+    good_view_server_1 = "view-server"
+    good_view_server_2 = "qs-view-server"
+    bad_server_1 = "coco"
+    bad_server_2 = ""
+
+    def test_find_glossaries(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            response = g_client.find_glossaries(
+                "*",
+                output_format = 'DICT',
+            )
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                # print("\n\n" + json.dumps(response, indent=4))
+                count = len(response)
+                print(f"Found {count} glossaries")
+
+                print(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        finally:
+            g_client.close_session()
+
+    def test_get_glossary_by_guid(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryManager(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            # First, find available glossaries
+            glossaries = g_client.find_glossaries("Egeria-Markdown", output_format="DICT")
+
+            # Skip the test if no glossaries are found
+            if not glossaries or len(glossaries) == 0:
+                print("No glossaries found. Skipping test.")
+                return
+
+            # Use the first glossary found
+            glossary_guid = glossaries[0]['guid']
+            print(f"\nUsing glossary with GUID: {glossary_guid}")
+
+            try:
+                # Test with REPORT format - should include Categories Names and not Categories Qualified Names
+                print("\nTesting with REPORT format:")
+                response_report = g_client.get_glossary_by_guid(glossary_guid, None, output_format='REPORT')
+                print(f"REPORT response type is {type(response_report)}")
+                if isinstance(response_report, dict):
+                    print(json.dumps(response_report, indent=4))
+                elif isinstance(response_report, str):
+                    print(response_report)
+                    # Only verify if the response contains categories
+                    if "Category" in response_report:
+                        # Verify that Category Names is included
+                        assert "Category Names" in response_report
+
+                # Test with FORM format - should include Categories Qualified Names and not Categories Names
+                print("\nTesting with FORM format:")
+                response_form = g_client.get_glossary_by_guid(glossary_guid, None, output_format='FORM')
+                print(f"FORM response type is {type(response_form)}")
+                if isinstance(response_form, dict):
+                    print(json.dumps(response_form, indent=4))
+                elif isinstance(response_form, str):
+                    print(response_form)
+                    # Only verify if the response contains categories
+                    if "Category" in response_form:
+                        # Verify that Category Names is included
+                        assert "Category Names" in response_form
+            except Exception as e:
+                print(f"Error testing glossary with GUID {glossary_guid}: {str(e)}")
+                # Try another glossary if available
+                if len(glossaries) > 1:
+                    glossary_guid = glossaries[1]['guid']
+                    print(f"\nTrying another glossary with GUID: {glossary_guid}")
+
+                    # Test with REPORT format
+                    print("\nTesting with REPORT format:")
+                    response_report = g_client.get_glossary_by_guid(glossary_guid, None, output_format='REPORT')
+                    print(f"REPORT response type is {type(response_report)}")
+                    if isinstance(response_report, str):
+                        print(response_report)
+
+                    # Test with FORM format
+                    print("\nTesting with FORM format:")
+                    response_form = g_client.get_glossary_by_guid(glossary_guid, None, output_format='FORM')
+                    print(f"FORM response type is {type(response_form)}")
+                    if isinstance(response_form, str):
+                        print(response_form)
+                else:
+                    print("No other glossaries available for testing.")
+
+            assert True
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_glossaries_by_name(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryManager(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            glossary_name = "Coco Pharmaceuticals Clinical Trial Terminology"
+
+            response = g_client.get_glossaries_by_name(glossary_name, output_format="JSON")
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_find_glossary_terms(self):
+        try:
+            g_client = GlossaryManager(
+                self.good_view_server_2, self.good_platform1_url, self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "017dee20-b8ce-4d74-854b-f2a888a082cd" # small-email glossary
+            # glossary_guid = (
+            #     "c13e22d5-756a-4b54-b784-14037ee3dfc4"  # sustainability glossary
+            # )
+            glossary_guid = None
+            start_time = time.perf_counter()
+            response = g_client.find_glossary_terms(
+                "*",
+                # glossary_guid=glossary_guid,
+                starts_with=True,
+                ends_with=False,
+                ignore_case=False,
+                start_from=0,
+                page_size=0,
+                output_format="DICT",
+                output_format_set="Basic-Terms"
+            )
+            print(f"Duration is {time.perf_counter() - start_time} seconds")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+                # print_json_list_as_table(response)
+                count = len(response)
+                print(f"Found {count} terms")
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_terms_by_name(self, server: str = good_view_server_2):
+        server_name = server
+
+        try:
+            g_client = GlossaryManager(
+                server_name, self.good_platform1_url, user_id="erinoverview"
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            term_name = "GlossaryTerm::ClinicalTrialTerminology::MeasurementDate"
+            glossary_guid = None
+            response = g_client.get_terms_by_name(term_name,  [], output_format="JSON", output_format_set="Basic-Terms")
+
+            print(f"type is {type(response)}")
+            if isinstance(response, dict | list):
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_by_guid(self, server: str = good_view_server_2):
+        try:
+            server_name = server
+            g_client = GlossaryManager(
+                server_name, self.good_platform1_url, user_id=self.good_user_2
+            )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            # glossary_guid = "f9b78b26-6025-43fa-9299-a905cc6d1575"  # This is the sustainability glossary
+            # glossary_guid = (
+            #     "ab84bad2-67f0-4ec8-b0e3-76e638ec9f63"  # This is CIM glossary
+            # )
+            term_guid = 'f1725bf7-3704-4d6f-92a5-25612f140b1d'
+            response = g_client.get_term_by_guid(term_guid)
+            print(f"type is {type(response)}")
+            if type(response) is dict:
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_activity_types(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            response = g_client.get_glossary_term_activity_types()
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+                ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_rel_statuses(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            response = g_client.get_glossary_term_rel_statuses()
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+                ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_statuses(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            response = g_client.get_glossary_term_statuses()
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+                ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()
+
+    def test_get_term_relationship_types(self, server: str = good_view_server_2):
+        try:
+            g_client = GlossaryManager(
+                server, self.good_platform1_url, user_id=self.good_user_2
+                )
+
+            token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            response = g_client.get_term_relationship_types()
+            print(f"type is {type(response)}")
+            if type(response) is list:
+                print("\n\n" + json.dumps(response, indent=4))
+
+            elif type(response) is str:
+                print("\n\n" + response)
+            assert True
+
+        except (
+            PyegeriaException
+                ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            g_client.close_session()

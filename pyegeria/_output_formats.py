@@ -122,8 +122,10 @@ COMMON_FORMATS_ALL = Format(
 )
 
 PROJECT_COLUMNS = COMMON_COLUMNS + [
+    Column(name="Classifications", key='classifications'),
     Column(name='Priority', key='priority'),
     Column(name='Project Status', key='project_status'),
+    Column(name='Element Status', key='status'),
     Column(name='Start Date', key='start_date'),
     Column(name='Assigned Actors', key='assigned_actors'),
     Column(name='Resources', key='resource_list'),

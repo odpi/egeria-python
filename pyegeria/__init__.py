@@ -50,7 +50,6 @@ from .egeria_my_client import EgeriaMy
 from .egeria_tech_client import EgeriaTech
 from .feedback_manager_omvs import FeedbackManager
 from .full_omag_server_config import FullServerConfig
-from .glossary_browser import GlossaryBrowser
 from .glossary_manager import GlossaryManager
 from .governance_officer import GovernanceOfficer
 from .mermaid_utilities import (construct_mermaid_web, construct_mermaid_jup, generate_process_graph, load_mermaid,
