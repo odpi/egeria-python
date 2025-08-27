@@ -29,7 +29,7 @@ from pyegeria._exceptions_new import print_validation_error
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 PYEGERIA_ROOT_PATH= os.environ.get("PYEGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-app_settings = get_app_config(PYEGERIA_ROOT_PATH+"/.env")
+app_settings = get_app_config(PYEGERIA_ROOT_PATH+"./.env")
 app_config = app_settings.Environment
 config_logging()
 

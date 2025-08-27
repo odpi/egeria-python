@@ -89,7 +89,7 @@ def create_custom_format_set():
         action=[
             ActionParameter(
                 function="ExampleManager.find_examples",
-                user_params=["search_string"],
+                required_params=["search_string"],
                 spec_params={},
             )
         ],

@@ -160,10 +160,6 @@ def display_glossary_terms(
 
         terms = g_client.find_glossary_terms(
             search_string,
-            glossary_guid,
-            starts_with=False,
-            ends_with=False,
-            status_filter=[],
             page_size=500,
         )
 
@@ -171,14 +167,14 @@ def display_glossary_terms(
             print(f"No terms found! - {search_string} : {glossary_guid} ")
             sys.exit(0)
         sorted_terms = sorted(
-            terms, key=lambda k: k["glossaryTermProperties"].get("displayName","---")
+            terms, key=lambda k: k["properties"].get("displayName","---")
         )
         style = "bright_white on black"
         if type(terms) is str:
             return table
         glossary_info = {}
         for term in sorted_terms:
-            props = term.get("glossaryTermProperties", "None")
+            props = term.get("properties", "None")
             if props == "None":
                 return table
 
@@ -197,28 +193,19 @@ def display_glossary_terms(
             usage = props.get("usage", "---")
             ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
 
-            classifications = term["elementHeader"]["classifications"]
-            glossary_guid = None
-            for c in classifications:
-                if c["classificationName"] == "Anchors":
-                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
-
-            if glossary_guid and glossary_guid in glossary_info:
-                glossary_name = glossary_info[glossary_guid]
-            elif glossary_guid:
-                g = g_client.get_glossary_for_term(term_guid)
-                glossary_name = g["glossaryProperties"].get("displayName", "---")
-                glossary_info[glossary_guid] = glossary_name
-            else:
-                glossary_name = "---"
+            parents = term.get('memberOfCollections',[])
+            glossary_list_md = ""
             category_list_md = ""
-            category_list = g_client.get_categories_for_term(term_guid)
-            if type(category_list) is str and category_list == NO_CATEGORIES_FOUND:
-                category_list_md = '---'
-            elif isinstance(category_list, list) and len(category_list) > 0:
-                for category in category_list:
-                    category_name = category["glossaryCategoryProperties"].get("displayName",'---')
-                    category_list_md += f"* {category_name}\n"
+            for parent in parents:
+                parent_q_name = parent.get('relatedElement',{}).get('properties',{}).get('qualifiedName','---')
+                parent_type = parent.get('relatedElement',{}).get('elementHeader',{}).get('type',{}).get('typeName','---')
+                if parent_type == 'Glossary':
+                    glossary_list_md += f"* {parent_q_name}\n"
+                elif parent_type == 'GlossaryCategory':
+                    category_list_md += f"* {parent_q_name}\n"
+
+
+
             term_abb_ver_out = Markdown(f"{display_name}\n---\n{abbrev}\n---\n{version}")
             category_list_out = Markdown(category_list_md)
 
@@ -228,7 +215,7 @@ def display_glossary_terms(
                 q_name,
                 summary,
                 description,
-                glossary_name,
+                glossary_list_md,
                 term_status,
                 category_list_out,
                 ex_us_out,

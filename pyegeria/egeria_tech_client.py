@@ -17,43 +17,26 @@ from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
+from pyegeria._globals import NO_ELEMENTS_FOUND
 
-
-class EgeriaTech(
-    # ActionAuthor,
-    AutomatedCuration,
-    EgeriaCat,
-    ClassificationManager,
-    RegisteredInfo,
-    RuntimeManager,
-    ValidMetadataManager,
-    MetadataExplorer,
-    SolutionArchitect,
-    DataDesigner,
-    TemplateManager,
-    GovernanceOfficer,
-    CollectionManager
-):
+class EgeriaTech:
     """
-    Client for technical Egeria users.
+    Client for technical Egeria users using composition.
 
     Attributes:
-
         view_server: str
-                Name of the server to use.
+            Name of the view server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
-            The identity of the user calling the method - this sets a default optionally used by the methods
-            when the user doesn't pass the user_id on a method call.
+            The identity of the user calling the method.
         user_pwd: str
             The password associated with the user_id. Defaults to None
         token: str, optional
             Bearer token
 
     Methods:
-        Inherits methods from EgeriaCat, ActionAuthor, AutomatedCuration,
-        ClassificationManager, RegisteredInfo, ValidMetadataManager
+        Methods are provided by composed sub-clients via delegation.
     """
 
     def __init__(
@@ -64,41 +47,70 @@ class EgeriaTech(
         user_pwd: str = None,
         token: str = None,
     ):
-        # ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        AutomatedCuration.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        EgeriaCat.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        ClassificationManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        RegisteredInfo.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        RuntimeManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        ValidMetadataManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        MetadataExplorer.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        SolutionArchitect.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        DataDesigner.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
-        TemplateManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
-        GovernanceOfficer.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
-        CollectionManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+
+        # Compose sub-clients
+        self._auto_curate = AutomatedCuration(view_server, platform_url, user_id, user_pwd, token)
+        self._cat = EgeriaCat(view_server, platform_url, user_id, user_pwd, token)
+        self._class_mgr = ClassificationManager(view_server, platform_url, user_id, user_pwd, token)
+        self._reg_info = RegisteredInfo(view_server, platform_url, user_id, user_pwd, token)
+        self._runtime = RuntimeManager(view_server, platform_url, user_id, user_pwd, token)
+        self._valid = ValidMetadataManager(view_server, platform_url, user_id, user_pwd, token)
+        self._explorer = MetadataExplorer(view_server, platform_url, user_id, user_pwd, token)
+        self._sol_arch = SolutionArchitect(view_server, platform_url, user_id, user_pwd, token)
+        self._designer = DataDesigner(view_server, platform_url, user_id, user_pwd, token)
+        self._templates = TemplateManager(view_server, platform_url, user_id, user_pwd, token)
+        self._gov_officer = GovernanceOfficer(view_server, platform_url, user_id, user_pwd, token)
+        self._collections = CollectionManager(view_server, platform_url, user_id, user_pwd, token)
+
+        self._subclients = [
+            self._auto_curate,
+            self._cat,
+            self._class_mgr,
+            self._reg_info,
+            self._runtime,
+            self._valid,
+            self._explorer,
+            self._sol_arch,
+            self._designer,
+            self._templates,
+            self._gov_officer,
+            self._collections,
+        ]
+        self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND
+
+    def __getattr__(self, name):
+        for sub in self._subclients:
+            if hasattr(sub, name):
+                return getattr(sub, name)
+        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
+
+    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+        token_val = None
+        for sub in self._subclients:
+            token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        return token_val
+
+    def set_bearer_token(self, token: str) -> None:
+        for sub in self._subclients:
+            sub.set_bearer_token(token)
+
+    def get_token(self) -> str:
+        for sub in self._subclients:
+            if hasattr(sub, "get_token"):
+                return sub.get_token()
+        return None
+
+    def close_session(self) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "close_session"):
+                try:
+                    sub.close_session()
+                except Exception:
+                    pass
 
 if __name__ == "__main__":
     print("Main-Tech Client")

@@ -20,11 +20,7 @@ EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_i
 
 # Constants for element labels
 GLOSSARY_NAME_LABELS = ["Glossary Name", "Glossary", "Glossaries", "Owning Glossary", "In Glossary"]
-CATEGORY_NAME_LABELS = ["Glossary Category Name", "Glossary Category", "Glossary Categories", "Category Name",
-                        "Category", "Categories"]
-PARENT_CATEGORY_LABELS = ["Parent Category Name", "Parent Category", "parent category name", "parent category"]
-CHILD_CATEGORY_LABELS = ["Child Categories", "Child Category", "child category names", "child categories",
-                         "Child Category Names"]
+
 TERM_NAME_LABELS = ["Glossary Term Name", "Glossary Term", "Glossary Terms", "Term Name", "Term", "Terms", "Term Names"]
 PROJECT_NAME_LABELS = ["Project Name", "Project", "Project Names", "Projects"]
 BLUEPRINT_NAME_LABELS = ["Solution Blueprint Name", "Solution Blueprint", "Solution Blueprints", "Blueprint Name",
@@ -79,11 +75,31 @@ GOV_COM_LIST = [ "Create Business Imperative", "Update Business Imperative",
 SIMPLE_BASE_COLLECTIONS: set = { "Collection", "Home Collection", "Digital Product", "Result Set" , "Recent Access",
                        "Reference List", "Work Item List", "Data Sharing Agreement", "Namespace", "Agreement",
                        "Digital Subscription", "Data Product", "Subscription",
-                      "Root Collection",  "Folders",  "Context Event Collection",  "Name Space Collection",
+                      "Root Collection",  "Folder",  "Context Event Collection",  "Name Space Collection",
                     # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",
                     # "Data Dictionaries", "Data Dictionaries",
                      "Event Set Collection", "Naming Standard Ruleset",
                     }
+LIST_COMMANDS = {"List Collections", "View Collections", "List Agreements", "View Agreements",
+                 "List Digital Products", "View Digital Products", "List Products", "View Products",
+                 "List Subscriptions", "View Subscriptions", "List Folders", "View Folders",
+                 "List Data Specifications", "View Data Specifications", "List Data Specs", "View Data Specs",
+                 "List Data Dictionaries", "View Data Dictionaries",
+                 "List Governance Definitions", "View Governance Definitions", "List Governance Drivers", "View Governance Drivers",
+                 "List Governance Policies", "View Governance Policies", "List Governance Controls", "View Governance Controls",
+                 "List Governance Rules", "View Governance Rules", "List Governance Principles", "View Governance Principles",
+                 "List Governance Obligations", "View Governance Obligations", "List Governance Approaches", "View Governance Approaches",
+                 "List Governance Strategies", "View Governance Strategies", "List Regulations", "View Regulations", "List Regulation Definitions", "View Regulation Definitions",
+                 "List Naming Standard Rulesets", "View Naming Standard Rulesets", "List Governance Drivers",
+                 "List Governance Strategies", "List Business Imperatives" "List Regulations", "List Regulation Articles", "List Threats",
+                 "List Governance Metrics", "View Governance Metrics", "List Service Level Objectives", "View Service Level Objectives",
+                 "List Governance Rules", "View Governance Rules", "List Notification Types", "View Notification Types", "List Security Access Controls", "View Security Access Controls", "List Security Groups", "View Security Groups",
+                 "List Governance Procedures", "View Governance Procedures", "List Methodologies", "View Methodologies", "List Governance Responsibilities", "View Governance Responsibilities", "List Terms and Conditions", "View Terms and Conditions", "List License Types", "View License Types", "List Certification Types", "View Certification Types",
+                 "List Subject Area Definitions", "View Subject Area Definitions", "List Data Processing Purposes", "View Data Processing Purposes",
+                 "List Projects", "View Projects",
+
+                 }
+
 SIMPLE_COLLECTIONS: set = set()
 for element in SIMPLE_BASE_COLLECTIONS:
     SIMPLE_COLLECTIONS.add(f"Create {element}")
@@ -139,38 +155,38 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Link Subscriber->Subscription", "Detach Subscriber->Subscription",
                 "Link Collection->Resource", "Attach Collection->Resource",
                 "Unlink Collection->Resource", "Detach Collection->Resource",
-                "Add Member to Collection", "Add Member", "Member->Collection",
-                "Remove Member from Collection","Remove Member->Collection",
+                "Add Member to Collection", "Add Member", "Member->Collection", 'Add Member','Add to Folder',
+                "Remove Member from Collection","Remove Member->Collection",' Remove Member','Remove from Folder',
                  "View Governance Definitions", "View Gov Definitions",
                  "List Governance Definitions", "List Gov Definitions",
                 "View Governance Definition Context","List Governance Definition Context",
                 "View Governance Def Context", "List Governance Def Context",
                 "View Report",
-                # "Create Business Imperative", "Update Business Imperative",
-                # "Create Regulation Article Definition", "Update Regulation Article Definition",
-                # "Create Threat Definition", "Update Threat Definition",
-                # "Create Governance Principle", "Update Governance Principle",
-                # "Create Governance Obligation", "Update Governance Obligation",
-                # "Create Governance Approach", "Update Governance Approach",
-                # "Create Governance Strategy", "Update Governance Strategy",
-                # "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
-                # "Create Governance Control:", "Update Governance Control",
-                # "Create Governance Rule:", "Update Governance Rule",
-                # "Create Service Level Objective", "Update Service Level Objective",
-                # "Create Governance Process", "Update Governance Process",
-                # "Create Governance Responsibility", "Update Governance Responsibility",
-                # "Create Governance Procedure", "Update Governance Procedure",
-                # "Create Security Access Control", "Update Security Access Control",
-                # "Create Security Group", "Update Security Group",
-                # "Create Naming Standard Rule", "Update Naming Standard Rule",
-                # "Create Certification Type", "Update Certification Type",
-                # "Create License Type", "Update License Type",
-                # "Link Governance Drivers", "Detach Governance Drivers",
-                # "Link Governance Policies", "Detach Governance Policies",
-                # "Link Governance Controls", "Detach Governance Controls",
+                "Create Business Imperative", "Update Business Imperative",
+                "Create Regulation Article Definition", "Update Regulation Article Definition",
+                "Create Threat Definition", "Update Threat Definition",
+                "Create Governance Principle", "Update Governance Principle",
+                "Create Governance Obligation", "Update Governance Obligation",
+                "Create Governance Approach", "Update Governance Approach",
+                "Create Governance Strategy", "Update Governance Strategy",
+                "Create Regulation", "Create Regulation Definition", "Update Regulation", "Update Regulation Definition",
+                "Create Governance Control:", "Update Governance Control",
+                "Create Governance Rule:", "Update Governance Rule",
+                "Create Service Level Objective", "Update Service Level Objective",
+                "Create Governance Process", "Update Governance Process",
+                "Create Governance Responsibility", "Update Governance Responsibility",
+                "Create Governance Procedure", "Update Governance Procedure",
+                "Create Security Access Control", "Update Security Access Control",
+                "Create Security Group", "Update Security Group",
+                "Create Naming Standard Rule", "Update Naming Standard Rule",
+                "Create Certification Type", "Update Certification Type",
+                "Create License Type", "Update License Type",
+                "Link Governance Drivers", "Detach Governance Drivers",
+                "Link Governance Policies", "Detach Governance Policies",
+                "Link Governance Controls", "Detach Governance Controls",
 
                 ]
-
+command_list.extend(LIST_COMMANDS)
 command_list.extend(GOV_COM_LIST)
 command_list.extend(GOV_LINK_LIST)
 command_list.extend(COLLECTIONS_LIST)

@@ -380,7 +380,7 @@ class Client2:
             endpoint: str,
             payload: str | dict = None,
             time_out: int = 30,
-            is_json: bool = True,
+            is_json: bool = True
             ) -> Response | str:
         """Make a request to the Egeria API."""
         try:
@@ -401,7 +401,7 @@ class Client2:
             endpoint: str,
             payload: str | dict = None,
             time_out: int = 30,
-            is_json: bool = True,
+            is_json: bool = True
             ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
@@ -935,6 +935,7 @@ class Client2:
             validated_body = self._filter_request_adapter.validate_python(body)
         else:
             filter_string = None if filter_string is "*" else filter_string
+            classification_names = None if classification_names == [] else classification_names
             body = {
                 "class": "FilterRequestBody",
                 "filter": filter_string,
@@ -947,7 +948,7 @@ class Client2:
         # classification_names = validated_body.include_only_classified_elements
         # element_type_name = classification_names[0] if classification_names else _type
 
-        json_body = validated_body.model_dump_json(indent=2)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)

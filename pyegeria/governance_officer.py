@@ -28,7 +28,7 @@ from pyegeria._output_formats import select_output_format_set, get_output_format
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
@@ -45,7 +45,7 @@ GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "Governa
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
 
 
-app_settings = get_app_config()
+
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 DEFAULT_BODY_SKELETON = {
     "effective_time": None, "limitResultsByStatus": ["ACTIVE"], "asOfTime": None, "sequencingOrder": None,

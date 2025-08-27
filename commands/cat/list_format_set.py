@@ -12,7 +12,7 @@ and prompts for any required parameters that aren't provided on the command line
 
 Features:
 - Works with any format set that has an "action" property
-- Dynamically adds command-line arguments based on the format set's user_params
+- Dynamically adds command-line arguments based on the format set's required/optional parameters
 - Prompts for required parameters if not provided
 - Supports multiple output formats (TABLE, DICT, FORM, REPORT, HTML, LIST)
 - Handles both instance methods and standalone functions
@@ -51,11 +51,9 @@ import pydevd_pycharm
 from pyegeria import (
     EgeriaTech,
     CollectionManager,
-    NO_ELEMENTS_FOUND, GovernanceOfficer,
-    # config_logging,
-    # get_app_config
-    )
-from pyegeria.load_config import get_app_config
+    NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager,
+)
+from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
 from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
@@ -71,8 +69,8 @@ from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
-app_settings = get_app_config()
-app_config = app_settings.Environment
+
+app_config = settings.Environment
 config_logging()
 
 print(f"Console width is {app_config.console_width}")
@@ -86,8 +84,8 @@ def execute_format_set_action(
     format_set_name: str,
     view_server: str = app_config.egeria_view_server,
     view_url: str = app_config.egeria_view_server_url,
-    user: str = app_settings.User_Profile.user_name,
-    user_pass: str = app_settings.User_Profile.user_pwd,
+    user: str = settings.User_Profile.user_name,
+    user_pass: str = settings.User_Profile.user_pwd,
     output_format: str = "TABLE",
     **kwargs
 ):
@@ -132,17 +130,20 @@ def execute_format_set_action(
     # Extract the function and parameters from the action property (now a dict)
     action = format_set["action"]
     func = action.get("function")
-    user_params = action.get("user_params", [])
+    required_params = action.get("required_params", action.get("user_params", []))
+    optional_params = action.get("optional_params", [])
     spec_params = action.get("spec_params", {})
     
-    # Create a params dictionary from user_params and spec_params
+    # Create a params dictionary from required/optional and spec_params
     params = {}
-    for param in user_params:
+    for param in required_params:
         if param in kwargs and kwargs[param]:
             params[param] = kwargs[param]
-            # print(f"Found value '{kwargs[param]}' for parameter '{param}'.")
         elif param not in kwargs and param not in spec_params:
             print(f"Warning: Required parameter '{param}' not provided for format set '{format_set_name}'.")
+    for param in optional_params:
+        if param in kwargs and kwargs[param]:
+            params[param] = kwargs[param]
     
     # Add spec_params to params
     params.update(spec_params)
@@ -161,6 +162,8 @@ def execute_format_set_action(
             client_class = CollectionManager
         elif class_name == "GovernanceOfficer":
             client_class = GovernanceOfficer
+        elif class_name == "GlossaryManager":
+            client_class = GlossaryManager
         else:
             client_class = EgeriaTech
 
@@ -223,7 +226,7 @@ def execute_format_set_action(
             # Call the function with the parameters
             print(f"\n==> Calling function: {func} with parameters:{params}")
             try:
-                if isinstance(func, type(client.find_collections)):  # It's a method of the client
+                if callable(func):
                     # Call the function as an instance method of the client
                     output = func(**params)
                 else:
@@ -347,7 +350,7 @@ def main():
     initial_parser.add_argument("--format-set", help="Name of the output format set", required=True)
     initial_args, _ = initial_parser.parse_known_args()
 
-    # Get the format set to determine user_params
+    # Get the format set to determine parameters
     format_set_name = initial_args.format_set
     format_set = select_output_format_set(format_set_name, "ANY")
 
@@ -372,20 +375,22 @@ def main():
 
 
 
-    # Add arguments based on the format set's user_params
-    user_params = []
+    # Add arguments based on the format set's required/optional params
+    required_params = []
+    optional_params = []
     if "action" in format_set:
         action = format_set["action"]
-        user_params = action.get("user_params", [])
+        required_params = action.get("required_params", action.get("user_params", []))
+        optional_params = action.get("optional_params", [])
         
-        for param in user_params:
+        for param in sorted(set(required_params + optional_params)):
             parser.add_argument(f"--{param.replace('_', '-')}", help=f"{param.replace('_', ' ')} parameter")
     else:
         print(f"Error: Format set '{format_set_name}' does not have an action property.")
         return
     
     args = parser.parse_args()
-    app_settings = get_app_config()
+    app_settings = settings
     app_config = app_settings.Environment
 
     server = args.server if args.server is not None else app_config.egeria_view_server
@@ -397,9 +402,9 @@ def main():
     output_format = args.output_format
 
     logger.info(f"view server @ {url}")
-    # Collect all user parameters from args
+    # Collect all parameters from args
     kwargs = {}
-    for param in user_params:
+    for param in sorted(set(required_params + optional_params)):
         arg_name = param.replace('_', '-')
         if hasattr(args, arg_name) and getattr(args, arg_name) is not None:
             kwargs[param] = getattr(args, arg_name)
@@ -408,7 +413,7 @@ def main():
     
     try:
         # If a required parameter is not provided, prompt for it
-        for param in user_params:
+        for param in required_params:
             if param not in kwargs:
                 default_value = "*" if param == "search_string" else ""
                 prompt_text = f"Enter {param.replace('_', ' ')}:"

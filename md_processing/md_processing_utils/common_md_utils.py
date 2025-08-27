@@ -34,10 +34,7 @@ EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
-LOG_FORMAT = "D <green> {time} </green> | {level} | {function} | {line} | {message} | {extra}"
-CONSOLE_LOG_FORMAT = "<green>{time}</green> | {message}"
 
-console = Console(width=EGERIA_WIDTH)
 GENERAL_GOVERNANCE_DEFINITIONS = ["Governance Definition", "Business Imperative", "Regulation Article", "Threat",
                                   "Governance Policy", "Governance Principle", "Governance Obligation",
                                   "Governance Approach",
@@ -58,14 +55,14 @@ ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROL
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
-def setup_log():
-    logger.remove()
-    logger.add(sys.stderr, level="SUCCESS", format=CONSOLE_LOG_FORMAT, colorize=True)
-    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
-    # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-    #            colorize=True)
-    logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=LOG_FORMAT,
-               colorize=True)
+# def setup_log():
+#     logger.remove()
+#     logger.add(sys.stderr, level="SUCCESS", format=CONSOLE_LOG_FORMAT, colorize=True)
+#     full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
+#     # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+#     #            colorize=True)
+#     logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=LOG_FORMAT,
+#                colorize=True)
 
 
 def split_tb_string(input: str)-> [Any]:
@@ -300,10 +297,11 @@ def set_update_body(object_type: str, attributes: dict)->dict:
 def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
 
     prop_name = object_type.replace(" ", "")
+    display_name = attributes.get('Display Name', {}).get('value', None)
 
     return {
         "class": prop_name + "Properties",
-        "displayName": attributes['Display Name'].get('value', None),
+        "displayName": attributes.get('Display Name', {}).get('value', None),
         "qualifiedName" : qualified_name,
         "description": attributes['Description'].get('value', None),
         "category": attributes.get('Category', {}).get('value', None),

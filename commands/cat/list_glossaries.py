@@ -134,22 +134,22 @@ def display_glossaries(
         glossaries = m_client.find_glossaries(search_string)
         if type(glossaries) is list:
             sorted_glossary_list = sorted(
-                glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
+                glossaries, key=lambda k: k["properties"]["displayName"]
             )
             for glossary in sorted_glossary_list:
-                display_name = glossary["glossaryProperties"].get("displayName",'---')
-                qualified_name = glossary["glossaryProperties"]["qualifiedName"]
+                display_name = glossary["properties"].get("displayName",'---')
+                qualified_name = glossary["properties"]["qualifiedName"]
                 guid = glossary["elementHeader"]["guid"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                language = glossary["glossaryProperties"].get("language",'---')
-                description = glossary["glossaryProperties"].get("description",'---')
-                usage = glossary["glossaryProperties"].get("usage",'---')
+                language = glossary["properties"].get("language",'---')
+                description = glossary["properties"].get("description",'---')
+                usage = glossary["properties"].get("usage",'---')
 
-                categories = m_client.get_categories_for_glossary(guid)
+                members = glossary.get("collectionMembers", [])
                 cat_md = ''
-                if type(categories) is list:
-                    for category in categories:
-                        cat_md += f"* {category['glossaryCategoryProperties'][('displayName')]}\n"
+                if type(members) is list:
+                    for member in members:
+                        cat_md += f'* {member.get("relatedElement",{}).get("properties",{}).get("qualifiedName","")}\n'
                     cat_md = cat_md.strip()
 
                 table.add_row(display_name, q_name, language, description, usage, Markdown(cat_md))

@@ -10,7 +10,7 @@ for different types of data, supporting composition and reuse of formats.
 The module defines the following models:
 - Column: Represents a column in an output format with name, key, and format attributes.
 - Format: Represents a format configuration with types and columns.
-- ActionParameter: Represents a parameter for an action with function, user_params, and spec_params.
+- ActionParameter: Represents a parameter for an action with function, required_params, optional_params, and spec_params.
 - FormatSet: Represents a complete format set with heading, description, aliases, annotations, formats, and actions.
 - FormatSetDict: A dictionary of format sets with methods for backward compatibility.
 
@@ -57,7 +57,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, root_validator
 from loguru import logger
 
 def save_format_sets_to_json(format_sets: Dict[str, 'FormatSet'], file_path: str) -> None:
@@ -158,18 +158,29 @@ class ActionParameter(BaseModel):
     
     Attributes:
         function: The function to call
-        user_params: Parameters that can be provided by the user
+        required_params: Parameters that are required from the user
+        optional_params: Parameters that are optional from the user
         spec_params: Parameters that are fixed for this action
     """
     function: str
-    user_params: List[str] = Field(default_factory=list)
+    required_params: List[str] = Field(default_factory=list)
+    optional_params: Optional[List[str]] = Field(default_factory=list)
     spec_params: Dict[str, Any] = Field(default_factory=dict)
+
+    @root_validator(pre=True)
+    def _migrate_legacy_user_params(cls, values):
+        """Migrate legacy 'user_params' into 'required_params' when loading from older dict/json."""
+        if isinstance(values, dict):
+            if 'required_params' not in values and 'user_params' in values:
+                values['required_params'] = values.pop('user_params')
+        return values
 
 class FormatSet(BaseModel):
     """
-    Represents a complete format set with heading, description, aliases, annotations, formats, and actions.
+    Represents a complete format set with target_type, heading, description, aliases, annotations, formats, and actions.
     
     Attributes:
+        target_type: The related Open Metadata entity type this format set targets (e.g., Glossary, Term). Optional.
         heading: A title for the format set
         description: A description of what the format set is for
         aliases: Alternative names that can be used to reference this format set
@@ -178,6 +189,7 @@ class FormatSet(BaseModel):
         action: Optional action associated with the format set
         get_additional_props: Optional action used to retrieve additional properties for a format set
     """
+    target_type: Optional[str] = None
     heading: str
     description: str
     aliases: List[str] = Field(default_factory=list)
@@ -186,6 +198,14 @@ class FormatSet(BaseModel):
     action: Optional[Union[ActionParameter, Dict[str, Any]]] = None
     get_additional_props: Optional[Union[ActionParameter, Dict[str, Any]]] = None
     
+    @root_validator(pre=True)
+    def _migrate_legacy_fields(cls, values):
+        """Migrate legacy fields from older saved JSON (entity_type -> target_type)."""
+        if isinstance(values, dict):
+            if 'entity_type' in values and 'target_type' not in values:
+                values['target_type'] = values.pop('entity_type')
+        return values
+
     @validator('formats', pre=True)
     def validate_formats(cls, v):
         """Convert dictionary formats to Format objects."""

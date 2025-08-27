@@ -21,7 +21,6 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties)
-from pyegeria.output_formatter import (populate_columns_from_properties, get_required_relationships)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 
@@ -4683,136 +4682,118 @@ class DataDesigner(Client2):
 
 
 
-    def _extract_data_structure_properties(self, element: dict, columns_struct: dict) -> dict:
+    def _extract_data_structure_properties(self, element: dict) -> dict:
         """
-        Populate columns_struct values for a Data Structure element using a standardized approach.
+        Extract common properties from a data structure element.
 
-        - Populate values from element.properties via populate_columns_from_properties
-        - Overlay header-derived values using _extract_referenceable_properties
-        - Derive classifications as a comma-separated list
-        - Populate relationship-based columns using get_required_relationships
-        - Populate mermaid graph if requested
+        Args:
+            element (dict): The data structure element
 
-        Returns the updated columns_struct.
+        Returns:
+            dict: Dictionary of extracted properties
         """
-        # Start with properties-based values
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        props = _extract_referenceable_properties(element)
 
-        # Header-derived values
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
+        props['properties'] = element.get('properties', {})
 
-        # Classifications (names only)
-        cl_names = []
-        for c in element.get('elementHeader', {}).get('classifications', []) or []:
-            nm = c.get('classificationName')
-            if nm:
-                cl_names.append(nm)
-        if cl_names:
-            for column in columns_list:
-                if column.get('key') == 'classifications':
-                    column['value'] = ", ".join(cl_names)
-                    break
+        props['namespace'] = props['properties'].get("namespace", "") or ""
 
-        # Relationship-derived values (generic)
-        col_data = get_required_relationships(element, col_data)
+        classification_names = []
+        for c in props['classifications']:
+            classification_names.append(c.get("classificationName", None))
+        props['classifications'] = classification_names
 
-        # Mermaid graph
-        mermaid_val = element.get('mermaidGraph', "") or ""
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = mermaid_val
-                break
+        # Now lets get the related elements
+        associated_elements = self.get_data_rel_elements_dict(element)
+        props['data_specs'] = associated_elements.get("member_of_data_spec_qnames", [])
 
-        return col_data
+        # data_structures = associated_elements.get("member_of_data_struct_qnames", [])
+        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
+        props['parent_names'] = associated_elements.get("parent_qnames", [])
+        props['member_data_fields'] = associated_elements.get("member_data_field_qnames", [])
 
-    def _extract_data_class_properties(self, element: dict, columns_struct: dict) -> dict:
+        props['mermaid'] = element.get('mermaidGraph', "") or ""
+
+        return props
+
+    def _extract_data_class_properties(self, element: dict) -> dict:
         """
-        Populate columns_struct values for a Data Class element using the standardized approach.
+        Extract common properties from a data class element.
 
-        Uses properties population, header overlay, classifications, generic relationships,
-        and mermaid graph assignment similar to collection_manager.
+        Args:
+            element (dict): The data class element
+
+        Returns:
+            dict: Dictionary of extracted properties
         """
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        props = _extract_referenceable_properties(element)
+        properties = element.get('properties', {})
+        props['properties'] = properties
 
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
+        classification_names = []
+        for c in props['classifications']:
+            classification_names.append(c.get("classificationName", None))
+        props['classifications'] = classification_names
 
-        # Classifications from header
-        cl_names = []
-        for c in element.get('elementHeader', {}).get('classifications', []) or []:
-            nm = c.get('classificationName')
-            if nm:
-                cl_names.append(nm)
-        if cl_names:
-            for column in columns_list:
-                if column.get('key') == 'classifications':
-                    column['value'] = ", ".join(cl_names)
-                    break
+        props['namespace'] = props['properties'].get("namespace", "") or ""
 
-        # Relationships and mermaid
-        col_data = get_required_relationships(element, col_data)
+        props['data_type'] = properties.get('dataType', "") or ""
+        props['match_property_names'] = properties.get('matchPropertyNames', []) or []
+        props['match_threshold'] = properties.get('matchThreshold', 0)
+        props['allow_duplicate_values'] = properties.get('allowDuplicateValues', False)
+        props['is_case_sensitive'] = properties.get('isCaseSensitive', False)
+        props['is_nullable'] = properties.get('isNullable', False)
 
-        mermaid_val = element.get('mermaidGraph', "") or ""
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = mermaid_val
-                break
+        # Now lets get the related elements
+        associated_elements = self.get_data_rel_elements_dict(element)
+        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
+        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
+        props['parent_names'] = associated_elements.get("parent_qnames", [])
+        props['nested_data_classes'] = associated_elements.get("nested_data_class_qnames", [])
+        props['specialized_data_classes'] = associated_elements.get("specialized_data_class_qnames", [])
+        props['mermaid'] = element.get('mermaidGraph', "") or ""
 
-        return col_data
+        return props
 
-    def _extract_data_field_properties(self, element: dict, columns_struct: dict) -> dict:
+    def _extract_data_field_properties(self, element: dict) -> dict:
         """
-        Populate columns_struct values for a Data Field element using the standardized approach.
+        Extract common properties from a data field element.
 
-        Populates from properties, overlays header values, derives classifications, uses
-        get_required_relationships for relationships, and adds mermaid graph.
+        Args:
+            element (dict): The data field element
+
+        Returns:
+            dict: Dictionary of extracted properties
         """
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        props = _extract_referenceable_properties(element)
 
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
+        props['properties'] = element.get('properties', {})
+        props['namespace'] = props['properties'].get("namespace", "") or ""
+        properties = element.get('properties', {})
 
-        # Classifications from header
-        cl_names = []
-        for c in element.get('elementHeader', {}).get('classifications', []) or []:
-            nm = c.get('classificationName')
-            if nm:
-                cl_names.append(nm)
-        if cl_names:
-            for column in columns_list:
-                if column.get('key') == 'classifications':
-                    column['value'] = ", ".join(cl_names)
-                    break
+        classification_names = []
+        for c in props['classifications']:
+            classification_names.append(c.get("classificationName", None))
+        props['classifications'] = classification_names
 
-        # Relationships and mermaid
-        col_data = get_required_relationships(element, col_data)
+        props['is_nullable'] = properties.get('isNullable', False)
+        props['data_type'] = properties.get('dataType', "") or ""
+        props['minimum_length'] = properties.get('minimumLength', 0)
+        props['length'] = properties.get('length', 0)
+        props['precision'] = properties.get('precision', 0)
+        props['ordered_values'] = properties.get('orderedValues', False)
+        props['sort_order'] = properties.get('sortOrder', "") or ""
 
-        mermaid_val = element.get('mermaidGraph', "") or ""
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = mermaid_val
-                break
+        # Now lets get the related elements
+        associated_elements = self.get_data_rel_elements_dict(element)
+        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
+        props['data_structures'] = associated_elements.get("data_structure_qnames", [])
+        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
+        props['parent_names'] = associated_elements.get("parent_qnames", [])
+        props['data_class'] = associated_elements.get("data_class_qnames", [])
+        props['mermaid'] = element.get('mermaidGraph', "") or ""
 
-        return col_data
+        return props
 
     def _generate_basic_structured_output(self, elements: dict, filter: str, output_format: str,
                                           columns_struct: dict = None) -> str | list:
@@ -4857,7 +4838,6 @@ class DataDesigner(Client2):
                                    )
 
     def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None,
-                                        element_type_name: str | None = None,
                                         output_format: str = "DICT",
                                         output_format_set: str | dict = None) -> str | list:
         """
@@ -4866,43 +4846,33 @@ class DataDesigner(Client2):
         Args:
             elements: Dictionary or list of dictionaries containing data structure elements
             filter: The search string used to find the elements
-            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        entity_type = element_type_name or "Data Structure"
+        entity_type = "Data Structure"
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
 
-        # First see if the user has specified an output_format_set - either a label or a dict
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
+            if isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
-        # If no output_format was set, then use the element_type_name to lookup the output format
-        elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            # fallback to entity type
-            output_formats = select_output_format_set(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
-
+            output_formats = None
         logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_data_structure_properties,
-            None,
-            output_formats,
-        )
+        return generate_output(elements,
+                               filter,
+                               entity_type,
+                               output_format,
+                               self._extract_data_structure_properties,
+                               None,
+                               output_formats,
+                               )
 
-    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None,
-                                    element_type_name: str | None = None,
-                                    output_format: str = "DICT",
+    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
@@ -4910,40 +4880,34 @@ class DataDesigner(Client2):
         Args:
             elements: Dictionary or list of dictionaries containing data class elements
             filter: The search string used to find the elements
-            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             output_format_set: Optional output format set
                 - Option column/attribute selection and definition.
         Returns:
             Formatted output as either a string or list of dictionaries
         """
-        entity_type = element_type_name or "Data Class"
+        entity_type = "Data Class"
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
+
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
+            if isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
-        elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
-
+            output_formats = None
         logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_data_class_properties,
-            None,
-            output_formats,
-        )
+        return generate_output(elements,
+                               filter,
+                               entity_type,
+                               output_format,
+                               self._extract_data_class_properties,
+                               None,
+                               output_formats,
+                               )
 
-    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None,
-                                    element_type_name: str | None = None,
-                                    output_format: str = "DICT",
+    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.
@@ -4951,7 +4915,6 @@ class DataDesigner(Client2):
         Args:
             elements: Dictionary or list of dictionaries containing data field elements
             filter: The search string used to find the elements
-            element_type_name: Optional specific subtype name to drive output format selection
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             output_format_set: str|dict, Optional, default = None
             - Option column/attribute selection and definition.
@@ -4959,29 +4922,26 @@ class DataDesigner(Client2):
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        entity_type = element_type_name or "Data Field"
+        entity_type = "Data Field"
+        if output_format_set is None:
+            output_format_set = select_output_format_set(entity_type, output_format)
+
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
+            if isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
-        elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
-
+            output_formats = None
         logger.trace(f"Executing _generate_data_field_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_data_field_properties,
-            None,
-            output_formats,
-        )
+        return generate_output(elements,
+                               filter,
+                               entity_type,
+                               output_format,
+                               self._extract_data_field_properties,
+                               None,
+                               output_formats,
+                               )
 
 
 if __name__ == "__main__":

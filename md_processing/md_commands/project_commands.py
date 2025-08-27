@@ -4,13 +4,11 @@ This file contains project-related object_action functions for processing Egeria
 
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, is_valid_iso_date, setup_log)
+from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, is_valid_iso_date)
 from md_processing.md_processing_utils.extraction_utils import (extract_command, process_simple_attribute)
 from md_processing.md_processing_utils.md_processing_constants import ALWAYS, ERROR, INFO, pre_command
 from pyegeria._globals import NO_PROJECTS_FOUND
-from pyegeria.project_manager_omvs import ProjectManager
-
-setup_log()
+from pyegeria.project_manager import ProjectManager
 
 def process_per_proj_upsert_command(egeria_client: ProjectManager, txt: str, directive: str = "display") -> str | None:
     """

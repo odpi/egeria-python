@@ -333,7 +333,7 @@ class UpdateElementRequestBody(PyegeriaModel):
 
 class UpdateStatusRequestBody(PyegeriaModel):
     class_: Annotated[Literal["UpdateStatusRequestBody"], Field(alias="class")]
-    status: str
+    new_status: str
     external_source_guid: str | None = None
     external_source_name: str | None = None
     effective_time: datetime | None = None

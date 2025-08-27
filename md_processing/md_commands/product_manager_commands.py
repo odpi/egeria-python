@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log, set_update_body, \
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary,  set_update_body, \
     set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_collection_classifications, set_product_body
 
@@ -21,7 +21,7 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
 from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.egeria_tech_client import EgeriaTech
 
-GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
 EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
 EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
@@ -44,7 +44,6 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
-setup_log()
 
 
 #
@@ -142,270 +141,6 @@ def update_data_collection_memberships(egeria_client: EgeriaTech, entity_type: s
         add_member_to_collections(egeria_client, guid_list, display_name, guid)
 
 
-# @logger.catch
-
-
-# @logger.catch
-# def add_field_to_data_structures(egeria_client: EgeriaTech, display_name: str, struct_list: list, guid) -> None:
-#     """
-#         Add data field to data structures.
-#         """
-#
-#     try:
-#         for structure_guid in struct_list:
-#             egeria_client.link_member_data_field(structure_guid, guid, None)
-#             msg = f"Added `{display_name}` to structure `{structure_guid}`"
-#             logger.info(msg)
-#         return
-#
-#     except Exception as e:
-#         console.print_exception()
-#
-#
-# @logger.catch
-# def remove_field_from_data_structures(egeria_client: EgeriaTech, display_name: str, struct_list: list,
-#                                       guid: str) -> None:
-#     """Remove a data field from a list of data structures."""
-#     try:
-#         for structure_guid in struct_list:
-#             egeria_client.detach_member_data_field(structure_guid, guid, None)
-#             msg = f"Removed `{display_name}` from structure `{structure_guid}`"
-#             logger.info(msg)
-#         return
-#
-#     except Exception as e:
-#         console.print_exception()
-#
-
-# @logger.catch
-# def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list, parent_field_list: list, terms: list,
-#                                  data_class_guid: str, guid: str, display_name: str,
-#                                  replace_all_props: bool = True) -> None:
-#     """Sync a field's related elements.
-#
-#     TODO: Need to add data class support when ready and may need to revisit bodies.
-#
-#     """
-#     if terms:
-#         terms = [terms]
-#
-#     if replace_all_props:
-#         rel_el_list = egeria_client.get_data_field_rel_elements(guid)
-#         # should I throw an exception if empty?
-#         if rel_el_list is None:
-#             logger.warning("Unexpected -> the list was None - assigning empty list")
-#             rel_el_list = {}
-#
-#         as_is_data_structs = set(rel_el_list.get("data_structure_guids", []))
-#         as_is_parent_fields = set(rel_el_list.get("parent_guids", []))
-#         as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
-#         as_is_data_classes = set(rel_el_list.get("data_class_guids", []))
-#
-#         to_be_data_structs = set(structure_list) if structure_list is not None else set()
-#         to_be_parent_fields = set(parent_field_list) if parent_field_list is not None else set()
-#         to_be_assigned_meanings = set(terms) if terms is not None else set()
-#         to_be_data_classes = set([data_class_guid]) if data_class_guid is not None else set()
-#
-#         logger.trace(f"as_is_data_structs: {list(as_is_data_structs)} to_be_data_struct: {list(to_be_data_structs)}")
-#         logger.trace(
-#             f"as_is_parent_fields: {list(as_is_parent_fields)} to_be_parent_fields: {list(to_be_parent_fields)}")
-#         logger.trace(f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "
-#                      f"{list(to_be_assigned_meanings)}")
-#         logger.trace(f"as_is_data_classes: {list(as_is_data_classes)} to_be_assigned_data_classes: "
-#                      f"{list(to_be_data_classes)}")
-#
-#         data_struct_to_remove = as_is_data_structs - to_be_data_structs
-#         logger.trace(f"data_struct_to_remove: {list(data_struct_to_remove)}")
-#         if len(data_struct_to_remove) > 0:
-#             for ds in data_struct_to_remove:
-#                 egeria_client.detach_member_data_field(ds, guid, None)
-#                 msg = f"Removed `{display_name}` from structure `{ds}`"
-#                 logger.trace(msg)
-#         data_struct_to_add = to_be_data_structs - as_is_data_structs
-#         logger.trace(f"data_struct_to_add: {list(data_struct_to_add)}")
-#         if len(data_struct_to_add) > 0:
-#             for ds in data_struct_to_add:
-#                 egeria_client.link_member_data_field(ds, guid, None)
-#                 msg = f"Added `{display_name}` to structure `{ds}`"
-#                 logger.trace(msg)
-#
-#         parent_field_to_remove = to_be_parent_fields - as_is_parent_fields
-#         logger.trace(f"parent_field_to_remove: {list(parent_field_to_remove)}")
-#         if len(parent_field_to_remove) > 0:
-#             for field in parent_field_to_remove:
-#                 egeria_client.detach_nested_data_field(field, guid, None)
-#                 msg = f"Removed `{display_name}` from field `{field}`"
-#                 logger.trace(msg)
-#         parent_field_to_add = to_be_parent_fields - as_is_parent_fields
-#         logger.trace(f"parent_field_to_add: {list(parent_field_to_add)}")
-#         if len(parent_field_to_add) > 0:
-#             for field in parent_field_to_add:
-#                 egeria_client.link_nested_data_field(field, guid, None)
-#                 msg = f"Added `{display_name}` to field `{field}`"
-#                 logger.trace(msg)
-#
-#         terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
-#         logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
-#         if terms:
-#             for term in terms_to_remove:
-#                 egeria_client.detach_semantic_definition(guid, term, None)
-#                 msg = f"Removed `{term}` from `{display_name}`"
-#                 logger.trace(msg)
-#         terms_to_add = to_be_assigned_meanings - as_is_assigned_meanings
-#         logger.trace(f"terms_to_add: {list(terms_to_add)}")
-#         if len(terms_to_add) > 0:
-#             for term in terms_to_add:
-#                 egeria_client.link_semantic_definition(guid, term, None)
-#                 msg = f"Added `{term}` to`{display_name}`"
-#                 logger.trace(msg)
-#
-#         classes_to_remove = as_is_data_classes - to_be_data_classes
-#         logger.trace(f"classes_to_remove: {list(classes_to_remove)}")
-#         if len(terms_to_remove) > 0:
-#             for dc in classes_to_remove:
-#                 body = {
-#                     "class": "MetadataSourceRequestBody", "forLineage": False, "forDuplicateProcessing": False
-#                     }
-#                 egeria_client.detach_data_class_definition(guid, dc, body)
-#                 msg = f"Removed `{dc}` from `{display_name}`"
-#                 logger.trace(msg)
-#         classes_to_add = to_be_data_classes - as_is_data_classes
-#         logger.trace(f"classes_to_add: {list(classes_to_add)}")
-#         if len(terms_to_add) > 0:
-#             for dc in classes_to_add:
-#                 body = {
-#                     "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
-#                     }
-#                 egeria_client.link_data_class_definition(guid, dc, body)
-#                 msg = f"Added `{dc}` to`{display_name}`"
-#                 logger.trace(msg)
-#
-#
-#     else:  # merge - add field to related elements
-#         if structure_list:
-#             add_field_to_data_structures(egeria_client, display_name, structure_list, guid)
-#             msg = f"Added `{display_name}` to `{structure_list}`"
-#             logger.trace(msg)
-#
-#         if parent_field_list:
-#             for field in parent_field_list:
-#                 egeria_client.link_nested_data_field(field, guid, None)
-#                 msg = f"Added `{display_name}` to `{field}`"
-#                 logger.trace(msg)
-#         if terms:
-#             for term in terms:
-#                 egeria_client.link_semantic_definition(guid, term, None)
-#                 msg = f"Added `{term}` to `{display_name}`"
-#                 logger.trace(msg)
-#
-#         if data_class_guid:
-#             egeria_client.link_data_class_definition(guid, data_class_guid)
-#             msg = f"Added `{data_class_guid}` to `{display_name}`"
-#             logger.trace(msg)
-
-#
-# @logger.catch
-# def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_class_guids: list, terms: list,
-#                                  specializes_data_classes: list, guid: str, display_name: str,
-#                                  replace_all_props: bool = True) -> None:
-#     """Sync a data class' related elements.
-#
-#     """
-#     if terms:
-#         terms = [terms]
-#
-#     if replace_all_props:
-#         rel_el_list = egeria_client.get_data_class_rel_elements(guid)
-#         if rel_el_list is None:
-#             logger.warning("Unexpected -> the list was None - assigning empty list")
-#             rel_el_list = {}
-#         if terms:
-#             terms = [terms]
-#
-#         as_is_nested_classes = set(rel_el_list.get("nested_data_class_guids", []))
-#         as_is_assigned_meanings = set(rel_el_list.get("assigned_meanings_guids", []))
-#         as_is_specialized_classes = set(rel_el_list.get("specialized_data_class_guids", []))
-#
-#         to_be_nested_classes = set(containing_data_class_guids) if containing_data_class_guids is not None else set()
-#         to_be_assigned_meanings = set(terms) if terms is not None else set()
-#         to_be_specialized_classes = set([specializes_data_classes]) if specializes_data_classes is not None else set()
-#
-#         logger.trace(
-#             f"as_is_nested_classes: {list(as_is_nested_classes)} to_be_nested_classes: {list(to_be_nested_classes)}")
-#         logger.trace(f"as_is_assigned_meanings: {list(as_is_assigned_meanings)} to_be_assigned_meanings: "
-#                      f"{list(to_be_assigned_meanings)}")
-#         logger.trace(f"as_is_specialized_classes: {list(as_is_specialized_classes)} to_be_specizialized_data_classes: "
-#                      f"{list(to_be_specialized_classes)}")
-#
-#         nested_classes_to_remove = to_be_nested_classes - as_is_nested_classes
-#         logger.trace(f"nested_classes_to_remove: {list(nested_classes_to_remove)}")
-#         if len(nested_classes_to_remove) > 0:
-#             for field in nested_classes_to_remove:
-#                 egeria_client.detach_nested_data_class(field, guid, None)
-#                 msg = f"Removed `{display_name}` from field `{field}`"
-#                 logger.trace(msg)
-#         nested_classes_to_add = to_be_nested_classes - as_is_nested_classes
-#         logger.trace(f"nested_classes_to_add: {list(nested_classes_to_add)}")
-#         if len(nested_classes_to_add) > 0:
-#             for field in nested_classes_to_add:
-#                 egeria_client.link_nested_data_class(field, guid, None)
-#                 msg = f"Added `{display_name}` to field `{field}`"
-#                 logger.trace(msg)
-#
-#         terms_to_remove = as_is_assigned_meanings - to_be_assigned_meanings
-#         logger.trace(f"terms_to_remove: {list(terms_to_remove)}")
-#         if len(terms_to_remove) > 0:
-#             for term in terms_to_remove:
-#                 egeria_client.detach_semantic_definition(guid, term, None)
-#                 msg = f"Removed `{term}` from `{display_name}`"
-#                 logger.trace(msg)
-#         terms_to_add = to_be_assigned_meanings - as_is_assigned_meanings
-#         logger.trace(f"terms_to_add: {list(terms_to_add)}")
-#         if len(terms_to_add) > 0:
-#             for term in terms_to_add:
-#                 egeria_client.link_semantic_definition(guid, term, None)
-#                 msg = f"Added `{term}` to`{display_name}`"
-#                 logger.trace(msg)
-#
-#         specialized_classes_to_remove = as_is_specialized_classes - to_be_specialized_classes
-#         logger.trace(f"classes_to_remove: {list(specialized_classes_to_remove)}")
-#         if len(terms_to_remove) > 0:
-#             for dc in specialized_classes_to_remove:
-#                 body = {
-#                     "class": "MetadataSourceRequestBody", "forLineage": False, "forDuplicateProcessing": False
-#                     }
-#                 egeria_client.detach_specialist_data_class(guid, dc, body)
-#                 msg = f"Removed `{dc}` from `{display_name}`"
-#                 logger.trace(msg)
-#         specialized_classes_to_add = to_be_specialized_classes - as_is_specialized_classes
-#         logger.trace(f"classes_to_add: {list(specialized_classes_to_add)}")
-#         if len(specialized_classes_to_add) > 0:
-#             for dc in specialized_classes_to_add:
-#                 body = {
-#                     "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
-#                     }
-#                 egeria_client.link_specialist_data_class(guid, dc, body)
-#                 msg = f"Added `{dc}` to`{display_name}`"
-#                 logger.trace(msg)
-#
-#
-#     else:  # merge - add field to related elements
-#         if containing_data_class_guids:
-#             for field in containing_data_class_guids:
-#                 egeria_client.link_nested_data_class(field, guid, None)
-#                 msg = f"Added `{display_name}` to `{field}`"
-#                 logger.trace(msg)
-#
-#         if terms:
-#             for term in terms:
-#                 egeria_client.link_semantic_definition(guid, term, None)
-#                 msg = f"Added `{term}` to `{display_name}`"
-#                 logger.trace(msg)
-#         if specializes_data_classes:
-#             for el in specializes_data_classes:
-#                 egeria_client.link_specialist_data_class(guid, el)
-#             msg = f"Linked `{el}` to `{display_name}`"
-#             logger.trace(msg)
 #
 # Product Manager Commands
 #
@@ -465,14 +200,14 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
             if object_action == "Update":
                 if not exists:
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
-                           f"object_action\n")
+                           f"`{object_action}`\n")
                     logger.error(msg)
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 elif not valid:
                     return None
                 else:
                     print(Markdown(
-                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+                        f"==> Validation of `{command}` completed successfully! Proceeding to apply the changes.\n"))
                 prop_body = set_prop_body(obj,qualified_name,attributes)
 
                 body = set_update_body(obj, attributes)
@@ -503,7 +238,10 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
                     body["initialClassifications"] = set_collection_classifications(object_type, attributes, ["Folder", "Root Collection"])
                     body["properties"] = set_prop_body(obj, qualified_name,attributes)
-
+                    parent_guid = body.get('parentGuid', None)
+                    if parent_guid:
+                        body['parentRelationshipTypeName'] = "CollectionMembership"
+                        body['parentAtEnd1'] = True
 
                     guid = egeria_client.create_collection(body = body)
                     if guid:
@@ -528,7 +266,8 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         return None
 
 @logger.catch
-def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
+                                           directive: str = "display") -> Optional[str]:
     """
     Processes a digital product create or update object_action by extracting key attributes such as
     spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
@@ -573,6 +312,8 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str, 
 
     elif directive == "process":
         try:
+            prop_body = set_product_body(object_type, qualified_name, attributes)
+
             if object_action == "Update":
                 if not exists:
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
@@ -584,9 +325,9 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str, 
                 else:
                     print(Markdown(
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-                prop_body = set_product_body(object_type,qualified_name,attributes)
+
                 body = set_update_body(object_type, attributes)
-                body['properties'] = set_prop_body(object_type,qualified_name,attributes)
+                body['properties'] = prop_body
                 # Todo: Update product manager later?
 
                 egeria_client.update_digital_product(guid, body)
@@ -612,7 +353,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str, 
                 else:
                     body = set_create_body(object_type, attributes)
                     body["initialClassifications"] = set_collection_classifications(object_type, attributes,[])
-                    prop_body = set_product_body(object_type, qualified_name, attributes)
+
                     body["properties"] = prop_body
 
                     guid = egeria_client.create_digital_product(body_slimmer(body))
@@ -901,8 +642,8 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
 
     valid = parsed_output['valid']
-    exists = agreement_guid is not None and  item_guid is not None
-
+    # exists = agreement_guid is not None and  item_guid is not None
+    exists = collection_guid is not None and element_guid is not None
 
     if directive == "display":
 
@@ -929,7 +670,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "notes": notes,
             }
         try:
-            if object_action == "Detach":
+            if object_action in["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -950,7 +691,11 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Add", "Attach"]:
+                if valid is False and exists:
+                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
+                           f"`Link` to `Detach` in processed output\n")
+                    logger.error(msg)
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")

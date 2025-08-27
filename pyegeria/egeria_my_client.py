@@ -12,14 +12,13 @@ from pyegeria.utils import body_slimmer
 from pyegeria._exceptions import InvalidParameterException
 
 
-class EgeriaMy(MyProfile, FeedbackManager):
+class EgeriaMy:
     """
-    Client to issue Runtime status requests.
+    Client to issue Runtime status requests using composition of MyProfile and FeedbackManager.
 
     Attributes:
-
         view_server: str
-                Name of the server to use.
+            Name of the view server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -27,10 +26,11 @@ class EgeriaMy(MyProfile, FeedbackManager):
             when the user doesn't pass the user_id on a method call.
         user_pwd: str
             The password associated with the user_id. Defaults to None
-
+        token: str, optional
+            Bearer token used for authentication.
 
     Methods:
-        Inherits from MyProfile, FeedbackManager
+        Methods are provided by composed sub-clients (MyProfile, FeedbackManager) via delegation.
     """
 
     def __init__(
@@ -46,10 +46,45 @@ class EgeriaMy(MyProfile, FeedbackManager):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        FeedbackManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+        # Compose sub-clients
+        self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
+        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
+        # Keep an ordered list for delegation lookups and bulk operations
+        self._subclients = [self._my_profile, self._feedback]
+
+    # Delegation: route unknown attributes to first sub-client that has it
+    def __getattr__(self, name):
+        for sub in self._subclients:
+            if hasattr(sub, name):
+                return getattr(sub, name)
+        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
+
+    # Token management across subclients
+    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+        token_val = None
+        for sub in self._subclients:
+            token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        return token_val
+
+    def set_bearer_token(self, token: str) -> None:
+        for sub in self._subclients:
+            sub.set_bearer_token(token)
+
+    def get_token(self) -> str:
+        # Return token from the first sub-client that provides it
+        for sub in self._subclients:
+            if hasattr(sub, "get_token"):
+                return sub.get_token()
+        return None
+
+    def close_session(self) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "close_session"):
+                try:
+                    sub.close_session()
+                except Exception:
+                    # Best-effort close; ignore individual errors
+                    pass
 
 
 if __name__ == "__main__":

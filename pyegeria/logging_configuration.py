@@ -131,10 +131,7 @@ To suppress logging, an application can do the following:
 # application.py (Scenario A: App uses Loguru)
 import os, sys
 from loguru import logger
-from pyegeria.load_config import get_app_config
-
-# Load configuration parameters
-app_settings = get_app_config()
+from pyegeria.config import settings as app_settings
 
 def console_log_filter(record):
     if len(record["module"]) > 0:

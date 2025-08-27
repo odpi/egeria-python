@@ -8,39 +8,29 @@ AssetCatalog, CollectionManager, GlossaryManager, and ProjectManager.
 """
 from pyegeria.egeria_my_client import EgeriaMy
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.collection_manager import CollectionManager
+# from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager
 
 
-class EgeriaCat(
-    AssetCatalog,
-    CollectionManager,
-    EgeriaMy,
-    GlossaryManager,
-    # GovernanceAuthor,
-    # PeopleOrganizer,
-    ProjectManager,
-):
+class EgeriaCat:
     """
-    Client to issue Runtime status requests.
+    Catalog-oriented client using composition of AssetCatalog, EgeriaMy, GlossaryManager, and ProjectManager.
 
     Attributes:
-
-        server_name: str
-                Name of the server to use.
+        view_server: str
+            Name of the view server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
-            The identity of the user calling the method - this sets a default optionally used by the methods
-            when the user doesn't pass the user_id on a method call.
+            The identity of the user calling the method.
         user_pwd: str
             The password associated with the user_id. Defaults to None
         token: str
             An optional bearer token
 
     Methods:
-
+        Methods are provided by composed sub-clients via delegation.
     """
 
     def __init__(
@@ -56,19 +46,47 @@ class EgeriaCat(
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        CollectionManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        EgeriaMy.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        # Compose sub-clients
+        self._asset_catalog = AssetCatalog(view_server, platform_url, user_id, user_pwd, token)
+        self._my = EgeriaMy(view_server, platform_url, user_id, user_pwd, token)
+        self._glossary = GlossaryManager(view_server, platform_url, user_id, user_pwd, token)
+        self._projects = ProjectManager(view_server, platform_url, user_id, user_pwd, token)
+        self._subclients = [
+            self._asset_catalog,
+            self._my,
+            self._glossary,
+            self._projects,
+        ]
 
-        GlossaryManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+    def __getattr__(self, name):
+        for sub in self._subclients:
+            if hasattr(sub, name):
+                return getattr(sub, name)
+        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
 
-        ProjectManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+        token_val = None
+        for sub in self._subclients:
+            token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        return token_val
+
+    def set_bearer_token(self, token: str) -> None:
+        for sub in self._subclients:
+            sub.set_bearer_token(token)
+
+    def get_token(self) -> str:
+        for sub in self._subclients:
+            if hasattr(sub, "get_token"):
+                return sub.get_token()
+        return None
+
+    def close_session(self) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "close_session"):
+                try:
+                    sub.close_session()
+                except Exception:
+                    pass
 
 
 if __name__ == "__main__":
