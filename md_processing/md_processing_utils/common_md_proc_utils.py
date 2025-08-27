@@ -4,6 +4,7 @@ This file contains general utility functions for processing Egeria Markdown
 import json
 import os
 import sys
+import re
 from typing import List, Optional
 
 from loguru import logger
@@ -20,7 +21,7 @@ from md_processing.md_processing_utils.common_md_utils import (update_element_di
                                                                set_update_body, set_create_body,
                                                                set_peer_gov_def_request_body, set_rel_request_body,
                                                                set_delete_request_body,set_rel_request_body,
-                                                               set_filter_request_body, setup_log,
+                                                               set_filter_request_body,
                                                                ALL_GOVERNANCE_DEFINITIONS, set_find_body)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
@@ -227,8 +228,8 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
 
     if parsed_attributes.get('Parent ID', {}).get('value', None) is not None:
-        if (parsed_attributes['Parent Relationship Type Name']['value'] is None) or (
-                parsed_attributes['Parent at End1']['value'] is None):
+        if (parsed_attributes.get('Parent Relationship Type Name',{}).get('value', None) is None) or (
+                parsed_attributes.get('Parent at End1',{}).get('value',None) is None):
             msg = "Parent ID was found but either Parent `Relationship Type Name` or `Parent at End1` are missing"
             logger.error(msg)
             parsed_output['valid'] = False
@@ -290,6 +291,17 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
     msg = f"\tProcessing {object_action} on  {object_type}  \n"
     logger.info(msg)
 
+    # Helper: convert label to snake_case
+    def _to_snake_case(name: str) -> str:
+        name = name.strip()
+        # Replace non-alphanumeric with space, then collapse spaces to underscores
+        name = re.sub(r"[^0-9A-Za-z]+", "_", name)
+        # Lowercase and trim possible leading/trailing underscores
+        return name.strip("_").lower()
+
+    # Build known labels set from command spec
+    known_labels: set[str] = set()
+
     # get the version early because we may need it to construct qualified names.
 
     for attr in attributes:
@@ -326,6 +338,11 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             if lab is not None and lab != [""]:
                 labels.update(lab)
+
+            # Keep track of all known labels for later filtering of kwargs
+            for lab_entry in labels:
+                if lab_entry is not None and lab_entry != "":
+                    known_labels.add(lab_entry.strip())
 
             # set these to none since not needed for view commands
             version = None
@@ -420,6 +437,26 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
     parsed_output['attributes'] = parsed_attributes
 
+    # Now, collect any unrecognized commands into kwargs
+    # Find all level-2 headings in the text
+    all_headings = set(re.findall(r"^\s*##\s*([^\n#]+)", txt, flags=re.MULTILINE))
+
+    kwargs: dict = {}
+    for heading in all_headings:
+        h = heading.strip()
+        if not h:
+            continue
+        if h in known_labels:
+            continue  # already known/processed
+        # Parse this unknown attribute using the simple attribute logic
+        parsed = proc_simple_attribute(txt, object_action, {h}, INFO, None)
+        value = parsed.get('value', None)
+        if value is not None:
+            kwargs[_to_snake_case(h)] = value.replace('\n', '') if isinstance(value, str) else value
+
+    if kwargs:
+        parsed_output['kwargs'] = kwargs
+
 
     if directive in ["validate", "process"] and not parsed_output['valid'] and object_action == "Update":
         msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
@@ -474,6 +511,9 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     if attribute and simp_type == "int" :
         attribute = int(attribute)
+    elif attribute and simp_type == "list":
+        attribute = list(attribute)
+
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
 
@@ -915,74 +955,145 @@ def proc_name_list(egeria_client: EgeriaTech, element_type: str, txt: str, eleme
 
 
 @logger.catch
-def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
-                           categories_list: List[str]) -> None:
+def sync_collection_memberships(egeria_client: EgeriaTech, guid: str, get_method: callable, collection_types: list,
+                                to_be_collection_guids:list, merge_update: bool = True)-> None:
     """
+    Synchronize collection memberships for an element.
 
-    Adds or removes a term to/from specified categories in a glossary.
+    Parameters
+    - egeria_client: EgeriaTech composite client used to call add/remove operations.
+    - guid: the GUID of the element (e.g., GlossaryTerm) whose memberships we sync.
+    - get_method: callable to fetch the element details by guid; must accept (guid, output_format="JSON").
+    - collection_types: list of collection type identifiers to consider when syncing (e.g., ["Glossary", "Folder"]).
+    - to_be_collection_guids: list of lists of GUIDs corresponding positionally to collection_types; may contain None.
+    - merge_update: if True, only add missing memberships; if False, remove existing memberships for the
+      specified collection_types and then add the desired memberships.
 
-    This function associates a term, identified by its GUID, with one or more
-    categories. It uses the provided EgeriaTech client to assign the term
-    to the categories. If the GUID of a category is not readily available, it
-    is retrieved either from a pre-loaded dictionary or through a client lookup.
-
-    Args:
-        egeria_client (EgeriaTech): The client to interact with the glossary.
-        term_guid (str): The GUID of the term to be associated with categories.
-        categories_exist (bool): Flag indicating whether the categories already
-                                 exist.
-        categories_list (List[str]): A list of category names to associate with
-                                     the term.
-
-    Returns:
-        None
+    Behavior
+    - When merge_update is True: determine the element's current memberships and add the missing ones only.
+    - When merge_update is False: remove the element from all collections of the specified types, then add the
+      provided target memberships for those types.
     """
-    to_be_cat_guids: list[str] = []
-    # find the categories a term is currently in.
-    existing_categories = egeria_client.get_categories_for_term(term_guid)
-    if type(existing_categories) is str:
-        current_categories = []
-    else:
-        current_categories = [cat['elementHeader']['guid'] for cat in existing_categories]
+    try:
+        # Defensive defaults and shape normalization
+        collection_types = collection_types or []
+        to_be_collection_guids = to_be_collection_guids or []
+        # Ensure the lists align by index; pad to length
+        max_len = max(len(collection_types), len(to_be_collection_guids)) if (collection_types or to_be_collection_guids) else 0
+        if len(collection_types) < max_len:
+            collection_types = collection_types + [None] * (max_len - len(collection_types))
+        if len(to_be_collection_guids) < max_len:
+            to_be_collection_guids = to_be_collection_guids + [None] * (max_len - len(to_be_collection_guids))
 
-    if categories_exist is True and categories_list is not None:
-        if type(categories_list) is str:
-            # categories_list = re.split(r'[;,\n]+', categories_list)
-            # categories_list = categories_list.split(";,").trim()
-            categories_list = split_tb_string(categories_list)
-        for category in categories_list:
-            cat_guid = None
-            cat_el = category.strip()
-            element_dict = get_element_dictionary()
-            if cat_el in element_dict:
-                cat = element_dict.get(cat_el, None)
-                cat_guid = cat.get('guid', None) if cat else None
-            if cat_guid is None:
-                cat_guid = egeria_client.__get_guid__(qualified_name=cat_el)
-                update_element_dictionary(cat_el, {'guid': cat_guid})
-            to_be_cat_guids.append(cat_guid)
+        # Get current element details with raw JSON to inspect relationships
+        element = None
+        try:
+            element = get_method(guid, output_format="JSON")
+        except TypeError:
+            # Some get methods require element_type parameter; fallback best-effort
+            element = get_method(guid, element_type=None, output_format="JSON")
+        if isinstance(element, str):
+            # e.g., "No elements found"; nothing to do
+            logger.debug(f"sync_collection_memberships: element lookup returned: {element}")
+            return
+        if not isinstance(element, dict):
+            logger.debug("sync_collection_memberships: element lookup did not return a dict; skipping")
+            return
 
-        for cat in to_be_cat_guids:
-            if cat not in current_categories:
-                egeria_client.add_term_to_category(term_guid, cat)
-                current_categories.append(cat)
-                msg = f"Added term {term_guid} to category {cat}"
-                logger.info(msg)
+        member_rels = element.get("memberOfCollections", []) or []
 
-        for cat in current_categories:
-            if cat not in to_be_cat_guids:
-                egeria_client.remove_term_from_category(term_guid, cat)
-                msg = f"Removed term {term_guid} from category {cat}"
-                logger.info(msg)
-    else:  # No categories specified - so remove any categories a term is in
-        for cat in current_categories:
-            egeria_client.remove_term_from_category(term_guid, cat)
-            msg = f"Removed term {term_guid} from category {cat}"
-            logger.info(msg)
+        # Build current membership maps
+        # - by GUID: set of current collection guids
+        # - by type name (classification names found on related collection): map type->set(guids)
+        current_all_guids: set[str] = set()
+        current_by_type: dict[str, set[str]] = {}
 
+        for rel in member_rels:
+            try:
+                related = (rel or {}).get("relatedElement", {})
+                rel_guid = ((related.get("elementHeader") or {}).get("guid"))
+                if not rel_guid:
+                    continue
+                current_all_guids.add(rel_guid)
 
+                # Collect type hints from classifications and from properties.collectionType
+                type_names: set[str] = set()
+                classifications = ((related.get("elementHeader") or {}).get("classifications")) or []
+                for cls in classifications:
+                    tname = (((cls or {}).get("type") or {}).get("typeName"))
+                    if tname:
+                        type_names.add(tname)
+                ctype = ((related.get("properties") or {}).get("collectionType"))
+                if isinstance(ctype, str) and ctype:
+                    type_names.add(ctype)
 
+                if not type_names:
+                    # Fallback: try elementHeader.type.typeName
+                    tname2 = (((related.get("elementHeader") or {}).get("type") or {}).get("typeName"))
+                    if tname2:
+                        type_names.add(tname2)
 
+                for tn in type_names:
+                    s = current_by_type.setdefault(tn, set())
+                    s.add(rel_guid)
+            except Exception as e:
+                logger.debug(f"sync_collection_memberships: skipping malformed relationship: {e}")
+                continue
+
+        # Helper to coerce incoming desired list entry to a set of guids
+        def to_guid_set(maybe_list) -> set[str]:
+            if not maybe_list:
+                return set()
+            if isinstance(maybe_list, list):
+                return {g for g in maybe_list if isinstance(g, str) and g}
+            # Sometimes a single guid may slip through
+            if isinstance(maybe_list, str):
+                return {maybe_list}
+            return set()
+
+        # If merge_update is False: remove all existing memberships for the specified types
+        if not merge_update:
+            # Build a set of guids to remove across specified types
+            to_remove: set[str] = set()
+            for t in collection_types:
+                if not t:
+                    continue
+                # Match by exact type name as seen in current_by_type
+                guids_for_type = current_by_type.get(t) or set()
+                if not guids_for_type and t.lower() in {k.lower() for k in current_by_type.keys()}:
+                    # Case-insensitive fallback
+                    for k, v in current_by_type.items():
+                        if k.lower() == t.lower():
+                            guids_for_type = v
+                            break
+                to_remove.update(guids_for_type)
+
+            for coll_guid in to_remove:
+                try:
+                    egeria_client.remove_from_collection(coll_guid, guid)
+                    logger.info(f"Removed element {guid} from collection {coll_guid}")
+                except Exception as e:
+                    logger.debug(f"Failed to remove element {guid} from collection {coll_guid}: {e}")
+
+        # Now add desired memberships (for both merge and replace flows)
+        for idx, t in enumerate(collection_types):
+            desired_set = to_guid_set(to_be_collection_guids[idx] if idx < len(to_be_collection_guids) else None)
+            if not desired_set:
+                continue
+            for coll_guid in desired_set:
+                # If merge_update True, skip if already a member; if False, we removed earlier so can re-add
+                if merge_update and coll_guid in current_all_guids:
+                    continue
+                try:
+                    egeria_client.add_to_collection(coll_guid, guid)
+                    logger.info(f"Added element {guid} to collection {coll_guid}")
+                except Exception as e:
+                    logger.debug(f"Failed to add element {guid} to collection {coll_guid}: {e}")
+
+        return
+    except Exception as e:
+        logger.error(f"sync_collection_memberships: unexpected error: {e}")
+        return
 
 @logger.catch
 def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:

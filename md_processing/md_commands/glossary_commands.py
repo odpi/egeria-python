@@ -11,8 +11,9 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log, set_update_body, \
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
+                                                                    sync_collection_memberships)
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
     set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_collection_classifications, set_product_body
 
@@ -25,14 +26,13 @@ from pyegeria.egeria_tech_client import EgeriaTech
 
 from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, set_debug_level,
                                                                get_element_dictionary, update_element_dictionary,
-                                                               setup_log)
+                                                               )
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
                                                                 process_simple_attribute, process_element_identifiers,
                                                                 update_a_command, extract_attribute,
                                                                 get_element_by_name, process_name_list)
 from md_processing.md_processing_utils.md_processing_constants import (GLOSSARY_NAME_LABELS, TERM_NAME_LABELS,
-                                                                       TERM_RELATIONSHPS, PARENT_CATEGORY_LABELS,
-                                                                       CATEGORY_NAME_LABELS, ALWAYS, ERROR, INFO,
+                                                                       TERM_RELATIONSHPS, ALWAYS, ERROR, INFO,
                                                                        WARNING, pre_command, EXISTS_REQUIRED,
                                                                        OUTPUT_LABELS, SEARCH_LABELS, GUID_LABELS,
                                                                        ELEMENT_OUTPUT_FORMATS, command_seperator)
@@ -42,7 +42,6 @@ from pyegeria.egeria_tech_client import EgeriaTech
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 # console = Console(width=EGERIA_WIDTH)
-setup_log()
 
 def update_term_categories(egeria_client: EgeriaTech, term_guid: str, categories_exist: bool,
                            categories_list: List[str]) -> None:
@@ -154,8 +153,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
 
     elif directive == "process":
         try:
-            if object_type in ["Taxonomy", "CanonicalVocabulary"]:
-                obj = "Glossary"
+            obj = "Glossary"
             #   Set the property body for a glossary collection
             #
             prop_body = set_prop_body(obj, qualified_name, attributes)
@@ -186,8 +184,8 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
-                return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
-                                                            output_format='MD')
+                return egeria_client.get_collection_by_guid(guid, element_type='Glossary',
+                                                            output_format='MD', output_format_set = "DrE-Glossary")
 
 
             elif object_action == "Create":
@@ -480,211 +478,136 @@ def update_category_parent(egeria_client, category_guid: str, parent_category_na
 
 def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     pass
-#     """
-#     Processes a term create or update object_action by extracting key attributes such as
-#     term name, summary, description, abbreviation, examples, usage, version, and status from the given cell.
-#
-#     :param txt: A string representing the input cell to be processed for
-#         extracting glossary-related attributes.
-#     :param directive: an optional string indicating the directive to be used - display, validate or execute
-#     :return: A string summarizing the outcome of the processing.
-#     """
-#     valid = True
-#     categories_list = None
-#     cats_exist = False
-#     set_debug_level(directive)
-#     known_q_name = None
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     object_type = command.split(' ')[1].strip()
-#     object_action = command.split(' ')[0].strip()
-#
-#     term_name = process_simple_attribute(txt, ['Term Name', 'Display Name'], ERROR)
-#     print(Markdown(f"{pre_command} `{command}` for term:`{term_name}` with directive: `{directive}`"))
-#     summary = process_simple_attribute(txt, ['Summary'], INFO)
-#     description = process_simple_attribute(txt, ['Description'], INFO)
-#     abbreviation = process_simple_attribute(txt, ['Abbreviation'], INFO)
-#     examples = process_simple_attribute(txt, ['Examples'], INFO)
-#     usage = process_simple_attribute(txt, ['Usage'], INFO)
-#     status = process_simple_attribute(txt, ['Status'])
-#     status = status.upper() if status else 'DRAFT'
-#     version = process_simple_attribute(txt, ['Version', "Version Identifier", "Published Version"], INFO)
-#     q_name = process_simple_attribute(txt, ['Qualified Name'], INFO)
-#
-#     aliases = process_simple_attribute(txt, ['Aliases', 'Alias'], INFO)
-#     if aliases:
-#         alias_list = list(filter(None, re.split(r'[,\n]+', aliases.strip())))
-#     else:
-#         alias_list = None
-#
-#     # validate term name and get existing qualified_name and guid if they exist
-#     if term_name is None:
-#         valid = False
-#         known_q_name, known_guid, term_exists = None
-#     else:
-#         element_labels = TERM_NAME_LABELS
-#         element_labels.append('Display Name')
-#         known_q_name, known_guid, valid, term_exists = process_element_identifiers(egeria_client, object_type,
-#                                                                                    element_labels, txt, object_action,
-#                                                                                    version)
-#
-#     # get the glossary qualified name this term is in
-#     glossary_name = process_simple_attribute(txt, GLOSSARY_NAME_LABELS, ERROR)
-#     if glossary_name is None:
-#         valid = False
-#         known_glossary_guid = None
-#         known_glossary_q_name = None
-#         glossary_valid = False
-#         glossary_exists = False
-#     else:
-#         known_glossary_q_name, known_glossary_guid, glossary_valid, glossary_exists = process_element_identifiers(
-#             egeria_client, "Glossary", GLOSSARY_NAME_LABELS, txt, EXISTS_REQUIRED, None)
-#         if not glossary_exists or known_glossary_guid is None:
-#             glossary_valid = False
-#             valid = False
-#
-#     # process categories, if present
-#     categories = process_simple_attribute(txt, ['Glossary Categories', 'Glossary Category', 'Category', 'Categories'])
-#     if categories:  # Find information about categoriess that classify this term
-#         msg = "Checking for categories that classify this term"
-#         print_msg("DEBUG-INFO", msg, debug_level)
-#         categories_list, cat_q_name_list, cats_valid, cats_exist = process_name_list(egeria_client,
-#                                                                                      'Glossary Categories', txt,
-#                                                                                      CATEGORY_NAME_LABELS)
-#         if cats_exist and cats_valid:
-#             msg = f"Found valid glossary categories to classify the term:\n\t{term_name}"
-#             print_msg("INFO", msg, debug_level)
-#         else:
-#             msg = "No valid glossary categories found."
-#             print_msg("INFO", msg, debug_level)
-#     else:
-#         cats_exist = cats_valid = False
-#         cat_q_name_list = None
-#
-#     if object_action == "Update":  # check to see if provided information exists and is consistent with existing info
-#         term_guid = process_simple_attribute(txt, GUID_LABELS)
-#         update_description = process_simple_attribute(txt, ['Update Description'])
-#         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
-#                         f"* Term Name: {term_name}\n\t* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t"
-#                         f"* Categories: {categories}\n\t"
-#                         f"* Summary: {summary}\n\t* Description: {description}\n\t"
-#                         f"* Abbreviation: {abbreviation}\n\t* Examples: {examples}\n\t* Usage: {usage}\n\t"
-#                         f"* Version: {version}\n\t* Status: {status}\n\t* GUID: {term_guid}"
-#                         f"\n\t* Update Description: {update_description}\n")
-#         if not term_exists:
-#             msg = f"Update request invalid, Term {term_name} does not exist\n"
-#             print_msg(ERROR, msg, debug_level)
-#             valid = False
-#
-#     elif object_action == 'Create':  # if the object_action is create, check that it doesn't already exist
-#         term_display = (f"\n* Command: {command}\n\t* Glossary: {known_glossary_q_name}\n\t"
-#                         f"* Term Name: {term_name}\n\t* Categories: {categories}\n\t* Summary: {summary}\n\t"
-#                         f"* Qualified Name: {q_name}\n\t* Aliases: {aliases}\n\t* Description: {description}\n\t"
-#                         f"* Abbreviation: {abbreviation}\n\t* Examples: {examples}\n\t* Usage: {usage}\n\t"
-#                         f"* Version: {version}\n\t* Status: {status}\n")
-#         if term_exists:
-#             msg = f"Term `{term_name}` cannot be created since it already exists\n"
-#             print_msg(ERROR, msg, debug_level)
-#         else:
-#             msg = f"It is valid to create Term `{term_name}`"
-#             print_msg(ALWAYS, msg, debug_level)
-#
-#     if directive == "display":
-#         print(Markdown(term_display))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(term_display))
-#         return valid
-#     elif directive == "process":
-#         try:
-#             if not valid:  # First validate the term before we process it
-#                 if term_exists and object_action == "Create":
-#                     msg = (f"Create failed because term `{term_name}` exists - changing `Create` to `Update` in "
-#                            f"processed output \n")
-#                     print_msg(ERROR, msg, debug_level)
-#                     print(Markdown(term_display))
-#                     return update_a_command(txt, object_action, object_type, known_q_name, known_guid)
-#                 else:
-#                     return None
-#
-#             print(Markdown(term_display))
-#             if object_action == "Update" and directive == "process":
-#                 if not term_exists:
-#                     return None
-#                 body = {
-#                     "class": "ReferenceableRequestBody", "elementProperties": {
-#                         "displayName": term_name, "class": "GlossaryTermProperties", "qualifiedName": known_q_name,
-#                         "aliases": alias_list, "summary": summary, "description": description,
-#                         "abbreviation": abbreviation, "examples": examples, "usage": usage,
-#                         "publishVersionIdentifier": version, "status": status
-#                         }, "updateDescription": update_description
-#                     }
-#                 egeria_client.update_term(known_guid, body_slimmer(body), is_merge_update=False)
-#                 # if cat_exist and cat_valid:
-#                 update_term_categories(egeria_client, known_guid, cats_exist, cat_q_name_list)
-#                 print_msg(ALWAYS,
-#                           f"\tUpdated Term `{term_name}` with GUID {known_guid}\n\tand categories `{categories}`",
-#                           debug_level)
-#                 return egeria_client.get_term_by_guid(known_guid,
-#                                                       'md')  # return update_a_command(txt, object_action, object_type,
-#                 # known_q_name, known_guid)
-#             elif object_action == "Update" and directive == "validate":  # is sthis reachable?
-#                 return egeria_client.get_term_by_guid(known_guid, 'md')
-#
-#             elif object_action == "Create":
-#                 if term_exists:
-#                     msg = f"Term {term_name} exists so result document modifies term create to term update"
-#                     print_msg(INFO, msg, debug_level)
-#                     return update_a_command(txt, object_action, object_type, q_name, known_guid)
-#                 else:
-#                     ## get the guid for the glossary from the name - first look in cache
-#                     cached = get_element_dictionary().get(known_glossary_q_name, None)
-#
-#                     if cached is not None:
-#                         glossary_guid = cached.get('guid', None)
-#                         if glossary_guid is None:
-#                             msg = f"Glossary GUID for {known_glossary_q_name} not found in cache"
-#                             print_msg(WARNING, msg, debug_level)  # should this ever occur?
-#                             return None
-#                     else:
-#                         glossary_guid = egeria_client.__get_guid__(qualified_name=known_glossary_q_name)
-#                         if glossary_guid == NO_ELEMENTS_FOUND:
-#                             msg = f"Glossary {known_glossary_q_name} not found"
-#                             print_msg(WARNING, msg, debug_level)
-#                             return None
-#                     term_body = {
-#                         "class": "ReferenceableRequestBody", "elementProperties": {
-#                             "class": "GlossaryTermProperties", "qualifiedName": known_q_name, "displayName": term_name,
-#                             "aliases": alias_list, "summary": summary, "description": description,
-#                             "abbreviation": abbreviation, "examples": examples, "usage": usage,
-#                             "publishVersionIdentifier": version
-#                             # "additionalProperties":
-#                             #     {
-#                             #         "propertyName1": "xxxx",
-#                             #         "propertyName2": "xxxx"
-#                             #         }
-#                             }, "initialStatus": status
-#                         }
-#                     term_guid = egeria_client.create_controlled_glossary_term(glossary_guid, body_slimmer(term_body))
-#                     if term_guid == NO_ELEMENTS_FOUND:
-#                         print(f"{ERROR}Term {term_name} not created")
-#                         return None
-#                     if cats_exist and categories is not None:
-#                         update_term_categories(egeria_client, term_guid, cats_exist, cat_q_name_list)
-#                     update_element_dictionary(known_q_name, {'guid': term_guid, 'display_name': term_name})
-#                     print_msg(ALWAYS, f"Created term `{term_name}` with GUID {term_guid}", debug_level)
-#                     return egeria_client.get_term_by_guid(term_guid,
-#                                                           'MD')  # return update_a_command(txt, object_action,
-#                     # object_type, q_name, term_guid)
-#         except Exception as e:
-#             print(f"{ERROR}Error creating term {term_name}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
+    """
+    Processes a term create or update object_action by extracting key attributes such as
+    term name, summary, description, abbreviation, examples, usage, version, and status from the given cell.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting glossary-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+
+    parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
+    if not parsed_output:
+        logger.error(f"No output for `{object_action}`")
+        return None
+
+    valid = parsed_output['valid']
+    exists = parsed_output['exists']
+
+    qualified_name = parsed_output.get('qualified_name', None)
+    guid = parsed_output.get('guid', None)
+
+    print(Markdown(parsed_output['display']))
+
+    logger.debug(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+
+    display_name = attributes['Display Name'].get('value', None)
+    status = attributes.get('Status', {}).get('value', None)
+    merge_update = attributes.get('Merge Update', {}).get('value', True)
+    #
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+        return valid
+
+    elif directive == "process":
+        try:
+            obj = "GlossaryTerm"
+            #   Set the property body for a glossary collection
+            #
+            prop_body = set_prop_body(obj, qualified_name, attributes)
+            prop_body["aliases"] = attributes.get('Aliases', {}).get('value', None)
+            prop_body["summary"] = attributes.get('Summary', {}).get('value', None)
+            prop_body["examples"] = attributes.get('Examples', {}).get('value', None)
+            prop_body["abbreviation"] = attributes.get('Abbreviation', {}).get('value', None)
+            prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
+            prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
+            to_be_collection_guids = [attributes.get("Glossary", {}).get("guid_list", {}),
+                                      attributes.get("Folder", {}).get("guid_list", {})]
+
+            get_method = egeria_client.get_term_by_guid
+            collection_types = ["Glossary", "Folder"]
+
+            if object_action == "Update":
+                if not exists:
+                    msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
+                           f"{object_action}\n")
+                    logger.error(msg)
+                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                elif not valid:
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+
+                body = set_update_body(obj, attributes)
+                body['properties'] = prop_body
+
+                egeria_client.update_glossary_term(guid, body)
+                if status:
+                    egeria_client.update_term_status(guid, status)
+                get_method = egeria_client.get_term_by_guid
+                collection_types = ["Glossary", "Folder"]
+
+                sync_collection_memberships(egeria_client, guid, get_method,  collection_types,
+                                            to_be_collection_guids, merge_update)
+                logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
+                update_element_dictionary(qualified_name, {
+                    'guid': guid, 'display_name': display_name
+                    })
+                return egeria_client.get_term_by_guid(guid, element_type='GlossaryTerm',
+                                                            output_format='MD', output_format_set="DrE-Term")
+
+
+            elif object_action == "Create":
+                if valid is False and exists:
+                    msg = (f"  Digital Product `{display_name}` already exists and result document updated changing "
+                           f"`Create` to `Update` in processed output\n\n___")
+                    logger.error(msg)
+                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
+
+                else:
+                    body = set_create_body(obj,attributes)
+
+                    # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
+
+                    body["properties"] = prop_body
+
+                    guid = egeria_client.create_glossary_term(body = body)
+                    if guid:
+                        sync_collection_memberships(egeria_client, guid, get_method,
+                                                    collection_types, to_be_collection_guids, True)
+                        update_element_dictionary(qualified_name, {
+                            'guid': guid, 'display_name': display_name
+                            })
+                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        logger.success(msg)
+                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD')
+                    else:
+                        msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                        logger.error(msg)
+                        return None
+
+        except PyegeriaException as e:
+            logger.error(f"Pyegeria error performing {command}: {e}")
+            print_basic_exception(e)
+            return None
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+    else:
+        return None
 def process_create_term_term_relationship_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     pass
 #     """ Relate two terms through the specified relationship. ."""

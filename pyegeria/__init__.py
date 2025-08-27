@@ -31,7 +31,7 @@ from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIExcep
                               PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
                               PyegeriaConnectionException, PyegeriaNotFoundException,
                               print_exception_table, print_basic_exception, print_validation_error)
-from .load_config import load_app_config, get_app_config
+from .config import load_app_config, get_app_config, settings
 from .logging_configuration import config_logging, console_log_filter, init_logging
 from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
                           print_exception_response, )
@@ -44,7 +44,7 @@ from .collection_manager import CollectionManager
 from .core_omag_server_config import CoreServerConfig
 from .create_tech_guid_lists import build_global_guid_lists
 from .egeria_cat_client import EgeriaCat
-# from .egeria_client import Egeria
+from .egeria_client import Egeria
 from .egeria_config_client import EgeriaConfig
 from .egeria_my_client import EgeriaMy
 from .egeria_tech_client import EgeriaTech
@@ -69,6 +69,7 @@ from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
 #
 global template_guids, integration_guids
+
 # 2/12/25
 #
 TEMPLATE_GUIDS['File System Directory'] = 'c353fd5d-9523-4a5e-a5e2-723ae490fe54'
@@ -163,6 +164,25 @@ INTEGRATION_GUIDS['ContentPacksCataloguer'] = '6bb2181e-7724-4515-ba3c-877cded55
 INTEGRATION_GUIDS['OpenLineageCataloguer'] = '3347ac71-8dd2-403a-bc16-75a71be64bd7'
 INTEGRATION_GUIDS['ApacheAtlasExchange'] = '5721627a-2dd4-4f95-a274-6cfb128edb97'
 INTEGRATION_GUIDS['HarvestSurveys'] = 'fae162c3-2bfd-467f-9c47-2e3b63a655de'
+
+def __getattr__(name):
+    """
+    Lazy attribute loader to avoid import-time circular dependencies while preserving API.
+    Exposes:
+    - process_markdown_file via commands.cat.dr_egeria_md
+    - md_processing package
+    - commands package
+    """
+    if name == "process_markdown_file":
+        from commands.cat.dr_egeria_md import process_markdown_file as _pmf
+        return _pmf
+    if name == "md_processing":
+        import md_processing as _mdp
+        return _mdp
+    if name == "commands":
+        import commands as _cmd
+        return _cmd
+    raise AttributeError(f"module 'pyegeria' has no attribute {name!r}")
 
 if __name__ == "__main__":
     print("Main-Init")

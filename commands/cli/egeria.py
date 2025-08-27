@@ -16,7 +16,7 @@ import click
 from trogon import tui
 from loguru import logger
 
-from pyegeria import config_logging, get_app_config
+from pyegeria import config_logging,  settings
 
 from commands.cat.list_format_set import execute_format_set_action
 from commands.cat.get_asset_graph import asset_viewer
@@ -38,7 +38,7 @@ from commands.cat.glossary_actions import (
     remove_term_from_category
 )
 
-from commands.cat.list_categories import display_categories
+
 from commands.cat.list_assets import display_assets
 from commands.cat.list_cert_types import display_certifications
 from commands.cat.list_collections import display_collections
@@ -137,7 +137,7 @@ from commands.tech.generic_actions import delete_element
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-app_settings = get_app_config()
+app_settings = settings
 app_config = app_settings.Environment
 config_logging()
 

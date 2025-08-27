@@ -90,7 +90,7 @@ def create_custom_format_sets():
         action=[
             ActionParameter(
                 function="ProductManager.find_products",
-                user_params=["search_string"],
+                required_params=["search_string"],
                 spec_params={},
             )
         ],
@@ -104,7 +104,7 @@ def create_custom_format_sets():
         action=[
             ActionParameter(
                 function="CustomerManager.find_customers",
-                user_params=["search_string"],
+                required_params=["search_string"],
                 spec_params={},
             )
         ],

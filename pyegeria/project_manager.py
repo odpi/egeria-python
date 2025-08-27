@@ -10,12 +10,11 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 
 from pyegeria._client_new import Client2
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
-app_settings = get_app_config()
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND
 

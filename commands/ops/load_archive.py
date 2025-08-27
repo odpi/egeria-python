@@ -13,7 +13,7 @@ import os
 import click
 from loguru import logger
 from pyegeria import AutomatedCuration, EgeriaTech
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
 from pyegeria._exceptions_new import (
 PyegeriaException, print_exception_response, print_basic_exception
@@ -35,7 +35,7 @@ PyegeriaException, print_exception_response, print_basic_exception
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-app_settings = get_app_config()
+app_settings = settings
 app_config = app_settings.Environment
 config_logging()
 

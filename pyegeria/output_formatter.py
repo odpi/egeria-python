@@ -468,7 +468,7 @@ def generate_entity_md(elements: List[Dict],
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
                 elements_md += make_md_attribute(name, value, output_format)
-            if wk := returned_struct.get("annotations", {}).get("wikilinks"):
+            if wk := returned_struct.get("annotations", {}).get("wikilinks", None):
                 elements_md += ", ".join(wk)
         elif base_columns:
             # If we have columns but extractor didn't return struct, use legacy props lookup
@@ -525,7 +525,14 @@ def generate_entity_md_table(elements: List[Dict],
         str: Markdown table
     """
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
-    entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
+    target_type = columns_struct.get('target_type', entity_type)
+    if target_type.endswith('y'):
+        target_type = target_type.replace('y', 'ies')
+    else:
+        target_type = target_type.replace('s', 's')
+
+    # entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
+    entity_type_plural = target_type
     columns = columns_struct['formats'].get('columns', [])
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
@@ -592,8 +599,8 @@ def generate_entity_md_table(elements: List[Dict],
                 row += f"{value} | "
 
         elements_md += row + "\n"
-        if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
-            elements_md += ", ".join(wk)
+        # if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
+        #     elements_md += ", ".join(wk)
     return elements_md
 
 def generate_entity_dict(elements: List[Dict], 
@@ -802,6 +809,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         Formatted output as string or list of dictionaries
     """
     columns = columns_struct['formats'].get('columns',None) if columns_struct else None
+    target_type = columns_struct.get('target_type') if columns_struct else None
 
     # Ensure elements is a list
     if isinstance(elements, dict):
@@ -856,7 +864,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
 
     else:  #  MD, FORM, REPORT
         elements_md, elements_action = make_preamble(
-            obj_type=entity_type,
+            obj_type=target_type,
             search_string=search_string,
             output_format=output_format
         )
@@ -865,7 +873,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
             elements=elements,
             elements_action=elements_action,
             output_format=output_format,
-            entity_type=entity_type,
+            entity_type=target_type,
             extract_properties_func=extract_properties_func,
             get_additional_props_func=get_additional_props_func,
             columns_struct = columns_struct

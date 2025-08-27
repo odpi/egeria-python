@@ -12,7 +12,7 @@ from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert
                                                                     process_output_command)
 from md_processing.md_processing_utils.common_md_utils import (set_gov_prop_body,
                                                                set_update_body, set_create_body,
-                                                               set_peer_gov_def_request_body, setup_log,
+                                                               set_peer_gov_def_request_body,
                                                                ALL_GOVERNANCE_DEFINITIONS, GOVERNANCE_POLICIES,
                                                                GOVERNANCE_CONTROLS, GOVERNANCE_DRIVERS,
                                                                set_find_body,
@@ -54,7 +54,6 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(250))
-setup_log()
 
 
 #

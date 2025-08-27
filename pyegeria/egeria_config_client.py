@@ -10,14 +10,13 @@ from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.server_operations import  ServerOps
 
 
-class EgeriaConfig(FullServerConfig, ServerOps):
+class EgeriaConfig:
     """
-    Client for configuring the Egeria Platform and Servers
+    Client for configuring the Egeria Platform and Servers using composition.
 
     Attributes:
-
         server_name: str
-                Name of the server to use.
+            Name of the server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -27,7 +26,7 @@ class EgeriaConfig(FullServerConfig, ServerOps):
             The password associated with the user_id. Defaults to None
 
     Methods:
-        Inherits methods from FullServerConfig
+        Methods are provided by composed sub-clients via delegation.
     """
 
     def __init__(
@@ -38,8 +37,39 @@ class EgeriaConfig(FullServerConfig, ServerOps):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        FullServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
-        ServerOps.__init__(self, server_name, platform_url, user_id, user_pwd)
+        self._config = FullServerConfig(server_name, platform_url, user_id, user_pwd)
+        self._ops = ServerOps(server_name, platform_url, user_id, user_pwd)
+        self._subclients = [self._config, self._ops]
+
+    def __getattr__(self, name):
+        for sub in self._subclients:
+            if hasattr(sub, name):
+                return getattr(sub, name)
+        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
+
+    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+        token_val = None
+        for sub in self._subclients:
+            token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        return token_val
+
+    def set_bearer_token(self, token: str) -> None:
+        for sub in self._subclients:
+            sub.set_bearer_token(token)
+
+    def get_token(self) -> str:
+        for sub in self._subclients:
+            if hasattr(sub, "get_token"):
+                return sub.get_token()
+        return None
+
+    def close_session(self) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "close_session"):
+                try:
+                    sub.close_session()
+                except Exception:
+                    pass
 
 
 if __name__ == "__main__":

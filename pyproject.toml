@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.4.0.26"
+version = "5.4.0.33"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -17,13 +17,7 @@ classifiers = [
  ]
 packages = [
     { include = "pyegeria"},
-    { include = "commands/cat" },
-    { include = "commands/tech" },
-    { include = "commands/my"},
-    { include = "commands/ops"},
-    { include = "commands/cli"},
-    { include = "md_processing/md_commands"},
-    { include = "md_processing/md_processing_utils"},
+    { include = "commands" },
     { include = "md_processing"}
     ]
 include = ["md_Processing/data/"]

@@ -11,12 +11,10 @@ from datetime import datetime
 from loguru import logger
 from rich import print, print_json
 from rich.console import Console
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings as app_settings
 from typing import Callable, TypeVar
 
 T = TypeVar('T', bound=Callable)
-
-app_settings = get_app_config()
 
 console = Console(width=200)
 

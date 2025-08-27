@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log, set_update_body, \
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary,  set_update_body, \
     set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_collection_classifications, set_product_body
 
@@ -44,7 +44,6 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
-setup_log()
 
 
 #
@@ -239,7 +238,10 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
                     body["initialClassifications"] = set_collection_classifications(object_type, attributes, ["Folder", "Root Collection"])
                     body["properties"] = set_prop_body(obj, qualified_name,attributes)
-
+                    parent_guid = body.get('parentGuid', None)
+                    if parent_guid:
+                        body['parentRelationshipTypeName'] = "CollectionMembership"
+                        body['parentAtEnd1'] = True
 
                     guid = egeria_client.create_collection(body = body)
                     if guid:
@@ -264,7 +266,8 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
         return None
 
 @logger.catch
-def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
+                                           directive: str = "display") -> Optional[str]:
     """
     Processes a digital product create or update object_action by extracting key attributes such as
     spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
@@ -639,8 +642,8 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
 
     valid = parsed_output['valid']
-    exists = agreement_guid is not None and  item_guid is not None
-
+    # exists = agreement_guid is not None and  item_guid is not None
+    exists = collection_guid is not None and element_guid is not None
 
     if directive == "display":
 
@@ -667,7 +670,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "notes": notes,
             }
         try:
-            if object_action == "Detach":
+            if object_action in["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -688,7 +691,11 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Add", "Attach"]:
+                if valid is False and exists:
+                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
+                           f"`Link` to `Detach` in processed output\n")
+                    logger.error(msg)
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")

@@ -47,7 +47,7 @@ from md_processing.md_commands.project_commands import (process_per_proj_upsert_
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility
 from md_processing.md_processing_utils.common_md_utils import (render_markdown, is_valid_iso_date, set_debug_level,
                                                                get_current_datetime_string, print_msg, EGERIA_WIDTH,
-                                                               console, debug_level, get_element_dictionary,
+                                                               debug_level, get_element_dictionary,
                                                                update_element_dictionary, clear_element_dictionary,
                                                                is_present, find_key_with_value,
                                                                process_provenance_command, set_delete_request_body,
@@ -62,8 +62,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
                                                                 get_element_by_name, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, ERROR, INFO, WARNING, pre_command,
                                                                        command_seperator, EXISTS_REQUIRED,
-                                                                       GLOSSARY_NAME_LABELS, CATEGORY_NAME_LABELS,
-                                                                       PARENT_CATEGORY_LABELS, CHILD_CATEGORY_LABELS,
+                                                                       GLOSSARY_NAME_LABELS,
                                                                        TERM_NAME_LABELS, PROJECT_NAME_LABELS,
                                                                        BLUEPRINT_NAME_LABELS, COMPONENT_NAME_LABELS,
                                                                        SOLUTION_ROLE_LABELS, SOLUTION_ACTOR_ROLE_LABELS,
@@ -71,7 +70,8 @@ from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, E
                                                                        SEARCH_LABELS, GUID_LABELS,
                                                                        ELEMENT_OUTPUT_FORMATS, TERM_RELATIONSHPS,
                                                                        command_list, COMMAND_DEFINITIONS, GOV_COM_LIST,
-                                                                       GOV_LINK_LIST, COLLECTIONS_LIST, SIMPLE_COLLECTIONS,)
+                                                                       GOV_LINK_LIST, COLLECTIONS_LIST, SIMPLE_COLLECTIONS,
+                                                                       LIST_COMMANDS)
 # Import functions from md_processing_constants
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, get_command_spec, get_attribute,
                                                                        get_attribute_labels, get_alternate_names)
@@ -79,3 +79,4 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
 from md_processing.md_processing_utils.message_constants import (message_types, ALWAYS, ERROR, INFO, WARNING)
 
 from md_processing.md_processing_utils.common_md_proc_utils import process_output_command
+from md_processing.md_commands.view_commands import process_format_set_action, process_output_command

@@ -22,42 +22,24 @@ from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria._validators import validate_guid
 from pyegeria.collection_manager import CollectionManager
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings as app_settings
 from pyegeria.models import (NewElementRequestBody,
                              ReferenceableProperties, UpdateElementRequestBody, DeleteRequestBody, TemplateRequestBody,
                              NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
-                             FilterRequestBody, GetRequestBody, SearchStringRequestBody)
+                             FilterRequestBody, GetRequestBody, SearchStringRequestBody, UpdateStatusRequestBody)
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
                                        get_required_relationships)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
-app_settings = get_app_config()
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-
-
-def query_seperator(current_string):
-    if current_string == "":
-        return "?"
-    else:
-        return "&"
 
 
 ("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
  "the query string")
 
 
-def query_string(params):
-    result = ""
-    for i in range(len(params)):
-        if params[i][1] is not None:
-            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
-    return result
-
-
-def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
 
 
 class GlossaryProperties(ReferenceableProperties):
@@ -112,7 +94,8 @@ class GlossaryManager(CollectionManager):
         self.user_pwd = user_pwd
 
         CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-
+        result = self.get_platform_origin()
+        logger.info(f"GlossaryManager initialized, platform origin is: {result}")
     #
     #       Get Valid Values for Enumerations
     #
@@ -908,7 +891,7 @@ class GlossaryManager(CollectionManager):
 
         return response
 
-    async def _async_update_term(
+    async def _async_update_glossary_term(
             self,
             glossary_term_guid: str,
             body: dict | UpdateElementRequestBody,
@@ -950,7 +933,7 @@ class GlossaryManager(CollectionManager):
         await self._async_update_element_body_request(url, ["GlossaryTermProperties"], body)
         logger.info(f"Updated digital subscription {glossary_term_guid}")
 
-    def update_term(
+    def update_glossary_term(
             self,
             glossary_term_guid: str,
             body: dict | UpdateElementRequestBody,
@@ -999,13 +982,102 @@ class GlossaryManager(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_term(
+            self._async_update_glossary_term(
                 glossary_term_guid,
                 body,
                 )
             )
 
 
+    @dynamic_catch
+    async def _async_update_term_status(self, term_guid: str, status: str = None,
+                                              body: dict | UpdateStatusRequestBody = None):
+        """Update the status of a collection. Async version.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to update.
+        status: str, optional
+            The new lifecycle status for the collection. Ignored, if the body is provided.
+        body: dict | UpdateStatusRequestBody, optional
+            A structure representing the details of the collection to create. If supplied, these details
+            supersede the status parameter provided.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+         {
+          "class": "UpdateStatusRequestBody",
+          "status": "APPROVED",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/metadata-elements/{term_guid}/update-status"
+        await self._async_update_status_request(url, status, body)
+        logger.info(f"Updated status for term {term_guid}")
+
+    @dynamic_catch
+    def update_term_status(self, term_guid: str, status: str = None,
+                                 body: dict | UpdateStatusRequestBody = None):
+        """Update the status of a DigitalProduct collection.
+
+        Parameters
+        ----------
+        collection_guid: str
+            The guid of the collection to update.
+        status: str, optional
+            The new lifecycle status for the digital product. Ignored, if the body is provided.
+        body: dict | UpdateStatusRequestBody, optional
+            A structure representing the details of the collection to create. If supplied, these details
+            supersede the status parameter provided.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+         {
+          "class": "UpdateStatusRequestBody",
+          "status": "APPROVED",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_collection_status(term_guid, status, body))
 
 
     async def _async_delete_term(
@@ -1167,6 +1239,8 @@ class GlossaryManager(CollectionManager):
     #
     #   Categories are just Folders in collection manager
     #
+
+
 
 
     #

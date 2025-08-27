@@ -444,7 +444,7 @@ def load_app_config(env_file: str = None):
     return _app_config
 
 
-def get_app_config(env_file: str = None):
+def get_app_config(env_file: str = None)-> AppConfig:
     """
     Provides access to the loaded application configuration.
     Ensures config is loaded if not already (useful for testing or simple scripts).
@@ -463,6 +463,8 @@ def get_app_config(env_file: str = None):
         logger.info(f"The env_file {env_file} is being passed in")
         return load_app_config(env_file)
     return _app_config
+
+
 
 
 def _parse_bool_env(env_var: str, default: bool) -> bool:
@@ -516,3 +518,6 @@ def _parse_list_env(env_var: str, default: List[str]) -> List[str]:
         if value:
             return [item.strip() for item in value.split(',')]
     return default
+
+
+settings = get_app_config()

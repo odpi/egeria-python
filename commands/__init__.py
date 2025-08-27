@@ -6,7 +6,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 pyegeria md_commands available also from python.
 """
-
+from .cat.dr_egeria_md import process_markdown_file
 from .cat.list_deployed_catalogs import list_deployed_catalogs
 from .cat.list_deployed_database_schemas import list_deployed_database_schemas
 from .cat.list_deployed_databases import list_deployed_databases

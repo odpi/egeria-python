@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, setup_log
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer
@@ -41,7 +41,6 @@ load_commands('commands.json')
 debug_level = DEBUG_LEVEL
 
 console = Console(width=int(200))
-setup_log()
 
 
 #

@@ -21,7 +21,7 @@ from rich.console import Console
 from pyegeria.collection_manager import CollectionManager, CollectionProperties
 from pyegeria.collection_models import ClassificationProperties
 # from pyegeria import EgeriaTech, CollectionManager
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging, init_logging
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException, PyegeriaException, PyegeriaConnectionException, PyegeriaClientException,
@@ -40,7 +40,7 @@ disable_ssl_warnings = True
 console = Console(width=250)
 
 from loguru import logger
-app_settings = get_app_config()
+
 config_logging()
 init_logging(True)
 
@@ -138,12 +138,13 @@ class TestCollectionManager:
                     "formats": [{"columns": [
                         {'name': 'Name', 'key': 'display_name'},
                         {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
-                        {'name': 'Super Category', 'key': 'category'},
+                        {'name': 'Category', 'key': 'category'},
                         {'name': 'My Description', 'key': 'description', 'format': True},
                         {'name': "Classifications", 'key': 'classifications'},
                         {'name': 'Members', 'key': 'members', 'format': True},
-                        {'name': 'CreatedBy Meow', 'key': 'created_by'},
+                        {'name': 'CreatedBy', 'key': 'created_by'},
                         {'name': 'GUID', 'key': 'GUID'},
+                        {'name': 'Type', 'key': 'type'},
                         ],
                         "types": ["ALL"]
                         },
@@ -341,10 +342,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "1944d8cb-b11e-4014-ac31-2ac3c0430b1d"
+            collection_guid = "4ad1fec9-9b42-4edd-bcde-a315f6c37599"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
-                                                       output_format="JSON", output_format_set="Agreement")
+                                                       output_format="JSON", output_format_set="Folders")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -622,41 +623,7 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_create_glossary_category(self):
-        glossary_guid = "9bf9e61a-bc4f-4e52-ac2a-c5c46eda950e"
-        try:
-            c_client = CollectionManager('qs-view-server', self.good_platform1_url, user_id=self.good_user_2,
-                user_pwd="secret", )
 
-            # token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            token = c_client.create_egeria_bearer_token()
-
-            start_time = time.perf_counter()
-            anchor_guid = glossary_guid
-            parent_guid = glossary_guid
-            parent_relationship_type_name = CategoryHierarchy
-            parent_at_end1 = True
-            display_name = "Science"
-            description = "This catalog is for scientific termsg"
-            is_own_anchor = False
-            qualified_name = c_client.__create_qualified_name__("GlossaryCategory",display_name)
-
-            response = c_client.create_glossary_category(display_name, parent_guid, description )
-
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-        finally:
-            c_client.close_session()
 
     def test_create_root_collection(self):
         try:
@@ -697,6 +664,62 @@ class TestCollectionManager:
 
     def test_create_folder_collection(self):
         try:
+            c_client = CollectionManager('qs-view-server', self.good_platform1_url, user_id=self.good_user_2,
+                user_pwd="secret", )
+
+            # token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = c_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            anchor_guid = "6222f556-9123-4bb2-ba60-d2fe2b1d7fe9"
+            parent_guid = anchor_guid
+            parent_relationship_type_name = "CollectionMembership"
+            parent_at_end1 = True
+            display_name = "Big Folder3"
+            description = "This is First Glossary Folder"
+            is_own_anchor = False
+            qualified_name = "Folder::Big Folder3"
+            category = "Test Folder"
+            body = {
+                "class": "NewElementRequestBody",
+                "parent_guid": parent_guid,
+                "anchor_guid": anchor_guid,
+                "parent_relationship_type_name": parent_relationship_type_name,
+                "parent_at_end1": parent_at_end1,
+                "is_own_anchor": is_own_anchor,
+                "initialClassifications": {
+                    "Folder": {
+                        "class": "FolderProperties"
+                        }
+                    },
+                "properties": {
+                    "class": "CollectionProperties",
+                    "displayName": display_name,
+                    "description": description,
+                    "category": category,
+                    "qualifiedName": qualified_name,
+                    },
+                }
+            validated_body = NewElementRequestBody.model_validate(body)
+            response = c_client.create_folder_collection(body=validated_body)
+
+            duration = time.perf_counter() - start_time
+            # resp_str = json.loads(response)
+            print(f"\n\tDuration was {duration} seconds\n")
+            if type(response) is dict:
+                print_json(json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+    def test_create_folder_collection2(self):
+        try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
@@ -706,7 +729,7 @@ class TestCollectionManager:
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
             display_name = "Dans Artifacts"
-            description = ("This folder contains Dans artifacts")
+            description = "This folder contains Dans artifacts"
             collection_type = "User Data"
             is_own_anchor = True
 

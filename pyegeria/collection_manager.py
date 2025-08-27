@@ -17,7 +17,7 @@ from pydantic import ValidationError, Field, HttpUrl
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED, NO_MEMBERS_FOUND
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
-from pyegeria.load_config import get_app_config
+from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
@@ -29,7 +29,7 @@ from pyegeria.output_formatter import (generate_output,
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 
-app_settings = get_app_config()
+app_settings = settings
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
@@ -5094,11 +5094,11 @@ class CollectionManager(Client2):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
 
-    def add_term_to_folder(self, category_guid: str, term_guid: str,
+    def add_term_to_folder(self, folder_guid: str, term_guid: str,
                              body: dict | NewRelationshipRequestBody = None) -> None:
         """Add a term to a category.  The request body is optional."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection(category_guid, term_guid, body))
+        loop.run_until_complete(self._async_add_to_collection(folder_guid, term_guid, body))
 
 
     @dynamic_catch
@@ -5274,7 +5274,7 @@ class CollectionManager(Client2):
 
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/detach")
-        await self._async_delete_collection(url, body)
+        await self._async_delete_request(url, body)
         logger.info(f"Removed member {element_guid} from collection {collection_guid}")
 
 
@@ -5325,7 +5325,7 @@ class CollectionManager(Client2):
         #
 
 
-    def remove_term_from_category(self, category_guid: str, term_guid: str,
+    def remove_term_from_category(self, folder_guid: str, term_guid: str,
                                body: dict | DeleteRequestBody= None) -> None:
         """Remove a term from a category.
 
@@ -5357,7 +5357,7 @@ class CollectionManager(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_remove_from_collection(category_guid, term_guid, body))
+        loop.run_until_complete(self._async_remove_from_collection(folder_guid, term_guid, body))
 
         #
         #

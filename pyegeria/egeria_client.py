@@ -34,37 +34,13 @@ from pyegeria.governance_officer import GovernanceOfficer
 # from pyegeria.md_processing_utils import render_markdown
 
 
-class Egeria(
-    AssetCatalog,
-    # CollectionManager,
-    MyProfile,
-    FeedbackManager,
-    GlossaryManager,
-    # GovernanceAuthor,
-    # PeopleOrganizer,
-    ProjectManager,
-    RuntimeManager,
-    ServerOps,
-    FullServerConfig,
-    # ActionAuthor,
-    AutomatedCuration,
-    ClassificationManager,
-    RegisteredInfo,
-    TemplateManager,
-    ValidMetadataManager,
-    MetadataExplorer,
-    SolutionArchitect,
-    EgeriaConfig,
-    DataDesigner,
-    GovernanceOfficer
-):
+class Egeria:
     """
-    Client to issue Runtime status requests.
+    Overall Egeria client that composes all functional pyegeria clients and delegates calls to them.
 
     Attributes:
-
         view_server: str
-                Name of the view server to use.
+            Name of the view server to use.
         platform_url : str
             URL of the server platform to connect to
         user_id : str
@@ -76,7 +52,7 @@ class Egeria(
             An optional bearer token
 
     Methods:
-
+        Methods are provided by composed sub-clients via delegation.
     """
 
     def __init__(
@@ -87,51 +63,75 @@ class Egeria(
         user_pwd: str = None,
         token: str = None,
     ):
-        AssetCatalog.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        # CollectionManager.__init__(
-        #     self, view_server, platform_url, user_id, user_pwd, token
-        # )
+        # Compose major umbrella and service clients
+        self._asset_catalog = AssetCatalog(view_server, platform_url, user_id, user_pwd, token)
+        self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
+        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
+        self._glossary = GlossaryManager(view_server, platform_url, user_id, user_pwd, token)
+        self._projects = ProjectManager(view_server, platform_url, user_id, user_pwd, token)
+        self._runtime = RuntimeManager(view_server, platform_url, user_id, user_pwd, token)
+        self._server_ops = ServerOps(view_server, platform_url, user_id, user_pwd)
+        self._full_server_config = FullServerConfig(view_server, platform_url, user_id, user_pwd)
+        self._auto_curate = AutomatedCuration(view_server, platform_url, user_id, user_pwd, token)
+        self._class_mgr = ClassificationManager(view_server, platform_url, user_id, user_pwd, token)
+        self._reg_info = RegisteredInfo(view_server, platform_url, user_id, user_pwd, token)
+        self._templates = TemplateManager(view_server, platform_url, user_id, user_pwd, token)
+        self._valid = ValidMetadataManager(view_server, platform_url, user_id, user_pwd, token)
+        self._explorer = MetadataExplorer(view_server, platform_url, user_id, user_pwd, token)
+        self._sol_arch = SolutionArchitect(view_server, platform_url, user_id, user_pwd, token)
+        self._config = EgeriaConfig(view_server, platform_url, user_id, user_pwd)
+        self._designer = DataDesigner(view_server, platform_url, user_id, user_pwd, token)
+        self._gov_officer = GovernanceOfficer(view_server, platform_url, user_id, user_pwd, token)
 
-        MyProfile.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        FeedbackManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
+        self._subclients = [
+            self._asset_catalog,
+            self._my_profile,
+            self._feedback,
+            self._glossary,
+            self._projects,
+            self._runtime,
+            self._server_ops,
+            self._full_server_config,
+            self._auto_curate,
+            self._class_mgr,
+            self._reg_info,
+            self._templates,
+            self._valid,
+            self._explorer,
+            self._sol_arch,
+            self._config,
+            self._designer,
+            self._gov_officer,
+        ]
 
-        GlossaryManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+    def __getattr__(self, name):
+        for sub in self._subclients:
+            if hasattr(sub, name):
+                return getattr(sub, name)
+        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
 
-        ProjectManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
+    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+        token_val = None
+        for sub in self._subclients:
+            if hasattr(sub, "create_egeria_bearer_token"):
+                token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        return token_val
 
-        RuntimeManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token=token
-        )
-        ServerOps.__init__(self, view_server, platform_url, user_id, user_pwd)
+    def set_bearer_token(self, token: str) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "set_bearer_token"):
+                sub.set_bearer_token(token)
 
-        EgeriaConfig.__init__(self, view_server, platform_url, user_id, user_pwd)
+    def get_token(self) -> str:
+        for sub in self._subclients:
+            if hasattr(sub, "get_token"):
+                return sub.get_token()
+        return None
 
-        # ActionAuthor.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        AutomatedCuration.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        ClassificationManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        RegisteredInfo.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        ValidMetadataManager.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        SolutionArchitect.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-        )
-        DataDesigner.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
-        GovernanceOfficer.__init__(
-            self, view_server, platform_url, user_id, user_pwd, token
-            )
-print(Egeria.mro())
+    def close_session(self) -> None:
+        for sub in self._subclients:
+            if hasattr(sub, "close_session"):
+                try:
+                    sub.close_session()
+                except Exception:
+                    pass
