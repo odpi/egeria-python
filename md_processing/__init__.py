@@ -43,7 +43,8 @@ from md_processing.md_commands.glossary_commands import (process_glossary_upsert
                                                          process_term_list_command, process_term_details_command,
                                                          process_term_history_command,
                                                          process_term_revision_history_command)
-from md_processing.md_commands.project_commands import (process_per_proj_upsert_command)
+from md_processing.md_commands.project_commands import (process_project_upsert_command, process_link_project_dependency_command,
+                                                        process_link_project_hierarchy_command)
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility
 from md_processing.md_processing_utils.common_md_utils import (render_markdown, is_valid_iso_date, set_debug_level,
                                                                get_current_datetime_string, print_msg, EGERIA_WIDTH,
@@ -71,7 +72,7 @@ from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, E
                                                                        ELEMENT_OUTPUT_FORMATS, TERM_RELATIONSHPS,
                                                                        command_list, COMMAND_DEFINITIONS, GOV_COM_LIST,
                                                                        GOV_LINK_LIST, COLLECTIONS_LIST, SIMPLE_COLLECTIONS,
-                                                                       LIST_COMMANDS)
+                                                                       LIST_COMMANDS, PROJECT_COMMANDS)
 # Import functions from md_processing_constants
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, get_command_spec, get_attribute,
                                                                        get_attribute_labels, get_alternate_names)

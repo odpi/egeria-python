@@ -126,11 +126,17 @@ COLLECTIONS_LIST = ["List Collections", "View Collections", "List Digital Produc
                     "List Naming Standard Rulesets", "View Naming Standard Rulesets",
                     ]
 
+PROJECT_COMMANDS = ["Create Project", "Update Project", "Create Campaign", "Update Campaign",
+                    "Create Task", "Update Task", "Create Study Project", "Update Study Project",
+                    "Create Personal Project", "Update Personal Project"]
+
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
-                "List Glossary Categories", "Create Personal Project", "Update Personal Project", "Create Category",
-                "Update Category", "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
+                "List Glossary Categories", "Lnk Project Dependency", "Attach Project Dependency",
+                "Detach Project Dependency", "Link Parent Project", "Attach Parent Project", "Detach Parent Project",
+                "Detach Parent Project",
+                 "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
                 "View Solution Blueprints", "View Blueprints",
                 "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains", "View Supply Chain",
                 "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
@@ -191,6 +197,7 @@ command_list.extend(GOV_COM_LIST)
 command_list.extend(GOV_LINK_LIST)
 command_list.extend(COLLECTIONS_LIST)
 command_list.extend(SIMPLE_COLLECTIONS)
+command_list.extend(PROJECT_COMMANDS)
 command_list.extend(["Link Governance Response", "Detach Governance Response",
                   "Link Governance Mechanism", "Detach Governance Mechanism"])
 

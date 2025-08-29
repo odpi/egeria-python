@@ -46,7 +46,7 @@ from .pyegeria._validators import (is_json, validate_guid, validate_name, valida
 from .pyegeria.asset_catalog_omvs import AssetCatalog
 from .pyegeria.automated_curation_omvs import AutomatedCuration
 from .pyegeria.classification_manager_omvs import ClassificationManager
-from .pyegeria.collection_manager_omvs import CollectionManager
+from .pyegeria.collection_manager import CollectionManager
 from .pyegeria.core_omag_server_config import CoreServerConfig
 from .pyegeria.create_tech_guid_lists import build_global_guid_lists
 from .pyegeria.egeria_cat_client import EgeriaCat
@@ -56,14 +56,14 @@ from .pyegeria.egeria_my_client import EgeriaMy
 from .pyegeria.egeria_tech_client import EgeriaTech
 from .pyegeria.feedback_manager_omvs import FeedbackManager
 from .pyegeria.full_omag_server_config import FullServerConfig
-from .pyegeria.glossary_browser_omvs import GlossaryBrowser
-from .pyegeria.glossary_manager_omvs import GlossaryManager
+
+from .pyegeria.glossary_manager import GlossaryManager
 from .pyegeria.mermaid_utilities import (construct_mermaid_web, construct_mermaid_jup, generate_process_graph, load_mermaid,
                                 parse_mermaid_code, render_mermaid, save_mermaid_graph, save_mermaid_html, )
 from .pyegeria.metadata_explorer_omvs import MetadataExplorer
 from .pyegeria.my_profile_omvs import MyProfile
 from .pyegeria.platform_services import Platform
-from .pyegeria.project_manager_omvs import ProjectManager
+from .pyegeria.project_manager import ProjectManager
 from .pyegeria.registered_info import RegisteredInfo
 from .pyegeria.runtime_manager_omvs import RuntimeManager
 from .pyegeria.server_operations import ServerOps

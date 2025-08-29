@@ -14,7 +14,7 @@ from rich.markdown import Markdown
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary,  set_update_body, \
     set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
-    set_rel_request_body, set_create_body, set_collection_classifications, set_product_body
+    set_rel_request_body, set_create_body, set_object_classifications, set_product_body
 
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
@@ -236,7 +236,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     body = set_create_body(object_type,attributes)
 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
-                    body["initialClassifications"] = set_collection_classifications(object_type, attributes, ["Folder", "Root Collection"])
+                    body["initialClassifications"] = set_object_classifications(object_type, attributes, ["Folder", "Root Collection"])
                     body["properties"] = set_prop_body(obj, qualified_name,attributes)
                     parent_guid = body.get('parentGuid', None)
                     if parent_guid:
@@ -352,7 +352,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
 
                 else:
                     body = set_create_body(object_type, attributes)
-                    body["initialClassifications"] = set_collection_classifications(object_type, attributes,[])
+                    body["initialClassifications"] = set_object_classifications(object_type, attributes, [])
 
                     body["properties"] = prop_body
 
@@ -468,8 +468,8 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     body = set_create_body(object_type, attributes)
 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
-                    body["initialClassifications"] = set_collection_classifications(object_type, attributes,
-                                                                                    ["Data Sharing Agreement"])
+                    body["initialClassifications"] = set_object_classifications(object_type, attributes,
+                                                                                ["Data Sharing Agreement"])
                     body["properties"] = set_prop_body(obj, qualified_name, attributes)
 
                     guid = egeria_client.create_agreement(body=body)

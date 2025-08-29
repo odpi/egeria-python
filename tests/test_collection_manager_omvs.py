@@ -166,7 +166,7 @@ class TestCollectionManager:
                 "sequencingProperty": "qualifiedName",
                 }
 
-            response = c_client.find_collections(body=body, output_format="DICT", output_format_set=out_struct)
+            response = c_client.find_collections(body=body, output_format="LIST", output_format_set=out_struct)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -671,15 +671,15 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            anchor_guid = "6222f556-9123-4bb2-ba60-d2fe2b1d7fe9"
+            anchor_guid = "c95617f2-c3c4-478e-a7cd-5369f3d4ed51"
             parent_guid = anchor_guid
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
-            display_name = "Big Folder3"
-            description = "This is First Glossary Folder"
+            display_name = "Writing Dr.Egeria Markdown"
+            description = "This folder holds descriptions of Dr.Egeria commands"
             is_own_anchor = False
-            qualified_name = "Folder::Big Folder3"
-            category = "Test Folder"
+            qualified_name = "Folder::Writing Dr.Egeria Markdown"
+            category = "Dr.Egeria"
             body = {
                 "class": "NewElementRequestBody",
                 "parent_guid": parent_guid,

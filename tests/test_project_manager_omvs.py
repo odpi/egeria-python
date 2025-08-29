@@ -146,10 +146,10 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "First"
 
             response = p_client.find_projects(
-                search_string, output_format="DICT", output_format_set="Referenceable"
+                search_string, output_format="JSON", output_format_set="Project"
             )
             duration = time.perf_counter() - start_time
 
@@ -181,7 +181,7 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-            project_name = "Clinical Trials Management"
+            project_name = "Second Task"
             response = p_client.get_projects_by_name(project_name)
             duration = time.perf_counter() - start_time
 
@@ -215,7 +215,7 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_classification = "PersonalProject"
+            project_classification = "Campaign"
 
             response = p_client.get_classified_projects(project_classification)
             duration = time.perf_counter() - start_time
@@ -250,15 +250,15 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "8a728d43-3f24-4ab6-8be2-f584fcba408b"
+            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
 
-            response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Project")
+            response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Projects")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Type of response is {type(response)}")
 
-            if type(response) is list:
+            if isinstance(response, list| dict):
                 print("dict:\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is tuple:
@@ -286,10 +286,10 @@ class TestProjectManager:
                 )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "a7c35953-1571-4221-96cd-11f97d5ac9a8"
-            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # clinical trials management
 
-            response = p_client.get_project_graph(project_guid)
+            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
+
+            response = p_client.get_project_graph(project_guid, output_format='DICT', output_format_set='Project')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -298,7 +298,7 @@ class TestProjectManager:
             if type(response) is dict:
                 print("dict:\n\n")
                 print(json.dumps(response, indent=4))
-            elif type(response) is tuple:
+            elif type(response) is list:
                 print(f"Type is {type(response)}\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
@@ -329,14 +329,12 @@ class TestProjectManager:
             classification_name = "PersonalProject"
             body = {
                 "class": "NewElementRequestBody",
-                "anchorGUID": None,
-                "isOwnAnchor": True,
-                "parentGUID": "72972949-6274-4cac-a5b9-d6387052b2d9",
+                "parentGUID": "79ec7de5-7367-4bde-a3c8-b8d8c582b521",
                 "parentRelationshipTypeName": "ProjectHierarchy",
                 "properties":{
                     "class": "ProjectProperties",
                     "name": "My Study Project",
-                    "qualifiedName": f"{classification_name}-MyPersonalProject-{time.asctime()}",
+                    "qualifiedName": f"{classification_name}-MyPersonalProject",
                     "description": "my first personal project",
                     "projectStatus": "DEFINED",
                     "startDate": "2021-01-01",
@@ -476,16 +474,16 @@ class TestProjectManager:
     def test_delete_project(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "71e55eca-42da-4d34-ace7-5247cf19ea57"
+            project_guid = "90213557-be19-421c-990d-78a76c30e0f5"
 
-            response = p_client.delete_project(project_guid, cascade = False)
+            response = p_client.delete_project(project_guid)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
@@ -493,11 +491,9 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()

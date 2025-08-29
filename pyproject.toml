@@ -46,6 +46,7 @@ inflect = "^7.5.0"
 pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
 pydevd-pycharm = "^252.23892.364"
+wcwidth = "==0.2.13"
 
 
 

@@ -5,6 +5,7 @@ from pyegeria.utils import (camel_to_title_case)
 from markdown_it import MarkdownIt
 from rich.console import Console
 from loguru import logger
+from pyegeria.config import settings
 
 from pyegeria.mermaid_utilities import construct_mermaid_web
 from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR
@@ -17,7 +18,7 @@ This function and related data structures have been moved back to _output_format
 Please import select_output_format_set from pyegeria._output_formats instead of from this module.
 """
 
-console = Console(width= 250)
+Console = Console(width=settings.Environment.console_width)
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
@@ -526,13 +527,13 @@ def generate_entity_md_table(elements: List[Dict],
     """
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
     target_type = columns_struct.get('target_type', entity_type)
-    if target_type.endswith('y'):
-        target_type = target_type.replace('y', 'ies')
-    else:
-        target_type = target_type.replace('s', 's')
+    # if target_type.endswith('y'):
+    #     target_type = target_type.replace('y', 'ies')
+    # else:
+    #     target_type = target_type.replace('s', 's')
 
-    # entity_type_plural = f"{entity_type[:-1]}ies" if entity_type.endswith('y') else f"{entity_type}s"
-    entity_type_plural = target_type
+    entity_type_plural = f"{target_type[:-1]}ies" if target_type.endswith('y') else f"{target_type}s"
+    # entity_type_plural = target_type
     columns = columns_struct['formats'].get('columns', [])
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
@@ -556,7 +557,7 @@ def generate_entity_md_table(elements: List[Dict],
 
     # Add rows
     for element in elements:
-        guid = element.get('elementHeader', {}).get('guid')
+        guid = element.get('elementHeader', {}).get('guid', None)
 
         # Extractor returns columns_struct with values when possible
         try:

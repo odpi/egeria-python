@@ -1249,8 +1249,6 @@ class GlossaryManager(CollectionManager):
 
 
 
-
-
     async def _async_add_is_abstract_concepts(
             self, term_guid: str, body: dict | NewClassificationRequestBody = None,
             ) -> None:
