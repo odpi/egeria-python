@@ -9,16 +9,22 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
+from pyegeria import select_output_format_set
 from pyegeria._client_new import Client2
+from pyegeria._output_formats import get_output_format_type_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody)
+                             TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
+                             NewRelationshipRequestBody)
+from pyegeria.output_formatter import generate_output, populate_columns_from_properties, \
+    _extract_referenceable_properties, get_required_relationships
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-from pyegeria._globals import NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND
+from loguru import logger
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject"]
+
 
 class ProjectManager(Client2):
     """
@@ -45,30 +51,105 @@ class ProjectManager(Client2):
             user_id: str,
             user_pwd: str = None,
             token: str = None,
-            ):
+    ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
         self.project_command_base: str = (
-            f"/api/open-metadata/project-manager/projects"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         )
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
+    def _extract_additional_project_properties(self, element: dict, columns_struct: dict)-> dict:
 
-    def _generate_project_output(self):
-        pass
+
+        roles_required = any(column.get('key') == 'project_roles'
+                             for column in columns_struct.get('formats', {}).get('columns', []))
+        project_props = {}
+
+        if roles_required:
+            project_roles = element['elementHeader'].get('projectRoles', [])
+            project_roles_list = []
+            for project_role in project_roles:
+                project_roles_list.append(project_role.get('classificationName', ""))
+            project_roles_md = (", \n".join(project_roles_list)).rstrip(',') if project_roles_list else ''
+            project_props = {
+                'project_roles': project_roles_md,
+            }
+        return project_props
+
+
+
+
+    def _extract_project_properties(self, element: dict, columns_struct: dict) -> dict:
+        props = element.get('properties', {}) or {}
+        normalized = {
+            'properties': props,
+            'elementHeader': element.get('elementHeader', {}),
+        }
+        col_data = populate_columns_from_properties(element, columns_struct)
+        # col_data = populate_columns_from_properties(normalized, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        header_props = _extract_referenceable_properties(element)
+        # Populate requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+        additional_props = self._extract_additional_project_properties(element, columns_struct)
+        guid = header_props.get('GUID')
+
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif key == 'project_roles':
+                column['value'] = additional_props.get('project_roles', '')
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
+
+        for column in columns_list:
+            if column.get('key') == 'mermaid' and not column.get('value'):
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        return col_data
+
+
+    def _generate_project_output(self, elements: dict | list[dict], search_string: str,
+                                 element_type_name: str | None,
+                                 output_format: str = 'DICT',
+                                 output_format_set: dict | str = None) -> str | list[dict]:
+        entity_type = 'Project'
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+            else:
+                output_formats = None
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set('Default', output_format)
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_project_properties,
+            get_additional_props_func=None,
+            columns_struct=output_formats,
+        )
+
     #
     #       Retrieving Projects= Information - https://egeria-project.org/concepts/project
     #
+    @dynamic_catch
     async def _async_get_linked_projects(
             self,
             parent_guid: str,
-            project_status: str = None,
-            effective_time: str = None,
-            start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
+            body: dict | GetRequestBody = None,
+            output_format: str = 'JSON',
+            output_format_set: str | dict = None,
+    ) -> list | str:
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status. Async version.
 
@@ -78,8 +159,6 @@ class ProjectManager(Client2):
             The identity of the parent to find linked projects from.
         project_status: str, optional
             Optionally, filter results by project status.
-        effective_time: str, optional
-            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
 
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -104,30 +183,25 @@ class ProjectManager(Client2):
 
         """
 
-        if page_size is None:
-            page_size = self.page_size
-
-        body = {
-            "filter": project_status,
-            "effectiveTime": effective_time,
-            }
-        body_s = body_slimmer(body)
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
-            f"metadata-elements/{parent_guid}/projects?startFrom={start_from}&pageSize={page_size}"
+            f"metadata-elements/{parent_guid}/projects"
         )
 
-        resp = await self._async_make_request("POST", url, body_s)
-        return resp.json().get("elements", "No linked projects found")
+        response = await self._async_get_guid_request(url, "Project", self._extract_project_properties,
+                                                      body=body,
+                                                      output_format=output_format,
+                                                      output_format_set=output_format_set)
+        return response
 
+    @dynamic_catch
     def get_linked_projects(
             self,
             parent_guid: str,
-            project_status: str = None,
-            effective_time: str = None,
-            start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
+            body: dict | GetRequestBody = None,
+            output_format: str = 'JSON',
+            output_format_set: str | dict = None) -> str | dict:
+
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status.
 
@@ -166,21 +240,23 @@ class ProjectManager(Client2):
         resp = loop.run_until_complete(
             self._async_get_linked_projects(
                 parent_guid,
-                project_status,
-                effective_time,
-                start_from,
-                page_size,
-                )
+                body,
+                output_format,
+                output_format_set
             )
+        )
         return resp
 
+    @dynamic_catch
     async def _async_get_classified_projects(
             self,
             project_classification: str,
-            effective_time: str = None,
             start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            output_format_set: str | dict = None,
+            body: dict | GetRequestBody = None,) -> str | dict:
+
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
             Campaign or Task. There is also GlossaryProject and GovernanceProject. Async version.
@@ -189,9 +265,6 @@ class ProjectManager(Client2):
         ----------
         project_classification: str
             The project classification to search for.
-        effective_time: str, optional
-            Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -215,29 +288,28 @@ class ProjectManager(Client2):
 
         """
 
-        if page_size is None:
-            page_size = self.page_size
 
-        body = {
-            "filter": project_classification,
-            "effectiveTime": effective_time,
-            }
-        body_s = body_slimmer(body)
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
-            f"projects/by-classifications?startFrom={start_from}&pageSize={page_size}"
+            f"projects/by-classifications"
         )
+        response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
+                                                      filter_string = project_classification, start_from=start_from,
+                                                      page_size=page_size, body=body,
+                                                      output_format=output_format,
+                                                      output_format_set=output_format_set)
+        return response
 
-        resp = await self._async_make_request("POST", url, body_s)
-        return resp.json()
-
+    @dynamic_catch
     def get_classified_projects(
             self,
             project_classification: str,
-            effective_time: str = None,
             start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            output_format_set: str | dict = None,
+            body: dict | GetRequestBody = None,
+    ) -> str | dict:
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
             Campaign or Task. There is also GlossaryProject and GovernanceProject.
@@ -273,129 +345,14 @@ class ProjectManager(Client2):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_classified_projects(
-                project_classification,
-                effective_time,
-                start_from,
-                page_size,
-                )
+            self._async_get_classified_projects(project_classification,
+                start_from,page_size,
+
+                output_format,
+                output_format_set,
+                body
             )
-        return resp
-
-    async def _async_get_project_team(
-            self,
-            project_guid: str,
-            team_role: str = None,
-            effective_time: str = None,
-            start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
-        """Returns the list of actors that are linked off of the project. This includes the project managers.
-            The optional request body allows a teamRole to be specified as a filter. To filter out the project managers,
-            specify ProjectManagement as the team role. See https://egeria-project.org/concepts/project for details.
-            Async version.
-
-        Parameters
-        ----------
-        project_guid: str
-            The identity of the project to return team information about.
-        team_role: str, optional
-            team role to filter on. Project managers would be "ProjectManagement".
-        effective_time: str, optional
-            Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-
-        Returns
-        -------
-        list | str
-            The list of actors linked off the project, including project managers Returns a string if none found.
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-
-        if page_size is None:
-            page_size = self.page_size
-
-        body = {effective_time: effective_time, "filter": team_role}
-        body_s = body_slimmer(body)
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
-            f"{project_guid}/team?startFrom={start_from}&pageSize={page_size}"
         )
-
-        resp = await self._async_make_request("POST", url, body_s)
-
-        result = resp.json().get("elements", NO_ELEMENTS_FOUND)
-        return result
-
-    def get_project_team(
-            self,
-            project_guid: str,
-            team_role: str = None,
-            effective_time: str = None,
-            start_from: int = 0,
-            page_size: int = None,
-            ) -> list | str:
-        """Returns the list of actors that are linked off of the project. This includes the project managers.
-            The optional request body allows a teamRole to be specified as a filter. To filter out the project managers,
-            specify ProjectManagement as the team role. See https://egeria-project.org/concepts/project for details.
-            Async version.
-
-        Parameters
-        ----------
-        project_guid: str
-            The identity of the project to return team information about.
-        team_role: str, optional
-            team role to filter on. Project managers would be "ProjectManagement".
-        effective_time: str, optional
-            Time at which to query the team role. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-        start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=None]
-            The number of items to return in a single page. If not specified, the default will be taken from
-            the class instance.
-
-        Returns
-        -------
-        list | str
-            The list of actors linked off the project, including project managers Returns a string if none found.
-
-        Raises
-        ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
-        Notes
-        -----
-        """
-        loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(
-            self._async_get_project_team(
-                project_guid,
-                team_role,
-                effective_time,
-                start_from,
-                page_size,
-                )
-            )
         return resp
 
     @dynamic_catch
@@ -409,7 +366,7 @@ class ProjectManager(Client2):
             page_size: int = 0,
             output_format: str = "json", output_format_set: str | dict = None,
             body: dict | SearchStringRequestBody = None
-            ) -> list | str:
+    ) -> list | str:
         """Returns the list of projects matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.
@@ -479,7 +436,7 @@ class ProjectManager(Client2):
             page_size: int = 0,
             output_format: str = "json", output_format_set: str | dict = None,
             body: dict | SearchStringRequestBody = None
-            ) -> list | str:
+    ) -> list | str:
 
         """Returns the list of projects matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -534,29 +491,29 @@ class ProjectManager(Client2):
                 output_format,
                 output_format_set,
                 body,
-                )
             )
+        )
 
         return resp
 
     @dynamic_catch
     async def _async_get_projects_by_name(
-            self,  filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> list | str:
-            url = f"{self.project_command_base}/by-name"
+            self, filter_string: str = None, classification_names: list[str] = None,
+            body: dict | FilterRequestBody = None,
+            start_from: int = 0, page_size: int = 0,
+            output_format: str = 'JSON',
+            output_format_set: str | dict = None) -> list | str:
+        url = f"{self.project_command_base}/by-name"
 
-            response = await self._async_get_name_request(url, _type="Projects",
-                                                  _gen_output=self._generate_projects_output,
-                                                  filter_string=filter_string,
-                                                  classification_names=classification_names,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
-                                                  body=body)
+        response = await self._async_get_name_request(url, _type="Projects",
+                                                      _gen_output=self._generate_project_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
-            return response
+        return response
 
     @dynamic_catch
     def get_projects_by_name(
@@ -576,15 +533,15 @@ class ProjectManager(Client2):
                 page_size,
                 output_format,
                 output_format_set,
-                )
             )
+        )
         return resp
 
     @dynamic_catch
     async def _async_get_project_by_guid(self, project_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
-                                            output_format: str = 'JSON',
-                                            output_format_set: str | dict = None) -> dict | str:
+                                         body: dict | GetRequestBody = None,
+                                         output_format: str = 'JSON',
+                                         output_format_set: str | dict = None) -> dict | str:
         """Return the properties of a specific project. Async version.
 
             Parameters
@@ -633,7 +590,7 @@ class ProjectManager(Client2):
         type = element_type if element_type else "Collection"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_collection_output,
+                                                      _gen_output=self._generate_project_output,
                                                       output_format=output_format, output_format_set=output_format_set,
                                                       body=body)
 
@@ -641,9 +598,9 @@ class ProjectManager(Client2):
 
     @dynamic_catch
     def get_project_by_guid(self, project_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
-                                            output_format: str = 'JSON',
-                                            output_format_set: str | dict = None) -> dict | str:
+                            body: dict | GetRequestBody = None,
+                            output_format: str = 'JSON',
+                            output_format_set: str | dict = None) -> dict | str:
         """Return the properties of a specific project.
 
             Parameters
@@ -688,8 +645,8 @@ class ProjectManager(Client2):
             """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project_by_guid(project_guid, element_type, body, output_format, output_format_set )
-            )
+            self._async_get_project_by_guid(project_guid, element_type, body, output_format, output_format_set)
+        )
 
         return resp
 
@@ -701,7 +658,7 @@ class ProjectManager(Client2):
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
             output_format_set: str | dict = None,
-            ) -> dict | str:
+    ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
         Parameters
@@ -728,7 +685,6 @@ class ProjectManager(Client2):
 
         """
 
-
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/pr"
                f"ojects/{project_guid}/graph")
 
@@ -747,7 +703,7 @@ class ProjectManager(Client2):
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
             output_format_set: str | dict = None,
-            ) -> dict | str:
+    ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
         Parameters
@@ -776,7 +732,7 @@ class ProjectManager(Client2):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_get_project_graph(project_guid, element_type, body, output_format, output_format_set)
-            )
+        )
 
         return resp
 
@@ -787,7 +743,7 @@ class ProjectManager(Client2):
     async def _async_create_project(
             self,
             body: dict | NewElementRequestBody,
-            ) -> str:
+    ) -> str:
         """Create project: https://egeria-project.org/concepts/project Async version.
 
         Parameters
@@ -841,16 +797,15 @@ class ProjectManager(Client2):
 
         """
 
-
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
 
-        return await self._async_create_element_body_request(body, ["ProjectProperties"], body)
+        return await self._async_create_element_body_request(url, ["ProjectProperties"], body)
 
     @dynamic_catch
     def create_project(
             self,
             body: dict | NewElementRequestBody,
-            ) -> str:
+    ) -> str:
         """Create project: https://egeria-project.org/concepts/project
 
         Parameters
@@ -898,14 +853,14 @@ class ProjectManager(Client2):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_create_project(body)
-            )
+        )
         return resp
 
     @dynamic_catch
     async def _async_create_project_from_template(
             self,
             body: dict | TemplateRequestBody,
-            ) -> str:
+    ) -> str:
         """Create a new metadata element to represent a project using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new project.
         Async version.
@@ -968,7 +923,7 @@ class ProjectManager(Client2):
     def create_project_from_template(
             self,
             body: dict,
-            ) -> str:
+    ) -> str:
         """Create a new metadata element to represent a project using an existing metadata element as a template.
         The template defines additional classifications and relationships that should be added to the new project.
 
@@ -1028,20 +983,12 @@ class ProjectManager(Client2):
     #
     #
 
+    @dynamic_catch
     async def _async_update_project(
             self,
             project_guid: str,
-            qualified_name: str = None,
-            identifier: str = None,
-            display_name: str = None,
-            description: str = None,
-            project_status: str = None,
-            project_phase: str = None,
-            project_health: str = None,
-            start_date: str = None,
-            planned_end_date: str = None,
-            replace_all_props: bool = False,
-            ) -> None:
+            body: dict | UpdateElementRequestBody
+    ) -> None:
         """Update the properties of a project. Async Version.
 
         Parameters
@@ -1083,42 +1030,20 @@ class ProjectManager(Client2):
           The principle specified by the user_id does not have authorization for the requested action
         """
 
-        replace_all_props_s = str(replace_all_props).lower()
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
-            f"update?replaceAllProperties={replace_all_props_s}"
+            f"update"
         )
 
-        body = {
-            "class": "ProjectProperties",
-            "qualifiedName": qualified_name,
-            "identifier": identifier,
-            "name": display_name,
-            "description": description,
-            "projectStatus": project_status,
-            "projectPhase": project_phase,
-            "projectHealth": project_health,
-            "startDate": start_date,
-            "plannedEndDate": planned_end_date,
-            }
-        body_s = body_slimmer(body)
-        await self._async_make_request("POST", url, body_s)
-        return
+        await self._async_update_element_body_request(url, ["ProjectProperties"], body)
+        logger.info(f"Updated digital subscription {project_guid}")
 
+    @dynamic_catch
     def update_project(
             self,
             project_guid: str,
-            qualified_name: str = None,
-            identifier: str = None,
-            display_name: str = None,
-            description: str = None,
-            project_status: str = None,
-            project_phase: str = None,
-            project_health: str = None,
-            start_date: str = None,
-            planned_end_date: str = None,
-            replace_all_props: bool = False,
-            ) -> None:
+            body: dict | UpdateElementRequestBody,
+    ) -> None:
         """Update the properties of a project.
 
         Parameters
@@ -1161,26 +1086,12 @@ class ProjectManager(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_project(
-                project_guid,
-                qualified_name,
-                identifier,
-                display_name,
-                description,
-                project_status,
-                project_phase,
-                project_health,
-                start_date,
-                planned_end_date,
-                replace_all_props,
-                )
-            )
-        return
+            self._async_update_project(project_guid, body))
 
+    @dynamic_catch
     async def _async_delete_project(
             self,
-            project_guid: str, cascade: bool = False
-            ) -> None:
+            project_guid: str, cascade: bool = False, body: dict | DeleteRequestBody = None) -> None:
         """Delete a project.  It is detected from all parent elements. Async version
 
         Parameters
@@ -1207,18 +1118,16 @@ class ProjectManager(Client2):
         cascade_s = str(cascade).lower()
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
-            f"{project_guid}/delete?cascadedDelete={cascade_s}"
+            f"{project_guid}/delete"
         )
 
-        body = {"class": "NullRequestBody"}
+        await self._async_delete_request(url, body, cascade)
+        logger.info(f"Deleted project {project_guid} with cascade {cascade}")
 
-        await self._async_make_request("POST", url, body)
-        return
-
+    @dynamic_catch
     def delete_project(
             self,
-            project_guid: str, cascade: bool = False
-            ) -> None:
+            project_guid: str, cascade: bool = False, body: dict | DeleteRequestBody = None) -> None:
         """Delete a project.  It is detected from all parent elements.
 
         Parameters
@@ -1247,17 +1156,354 @@ class ProjectManager(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_project(project_guid, cascade))
-        return
+        loop.run_until_complete(self._async_delete_project(project_guid, cascade, body))
 
+    @dynamic_catch
+    async def _async_set_project_dependency(self, project_guid: str,
+                                            upstream_project_guid: str,
+                                            body: dict | NewRelationshipRequestBody = None):
+        """ A project depends on an upstream project.
+            Request body is optional. Async version.
+
+        Parameters
+        ----------
+        upstream_project_guid: str
+            The guid of the project depended on.
+        project_guid: str
+            The guid of the dependent project
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        """
+        url = (
+            f"{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/attach"
+        )
+        await self._async_new_relationship_request(url, "ProjectDependencyProperties", body)
+        logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
+
+    @dynamic_catch
+    async def _async_set_project_dependency(self, project_guid: str,
+                                            upstream_project_guid: str,
+                                            body: dict | NewRelationshipRequestBody = None):
+        """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
+            Request body is optional.
+
+            Parameters
+            ----------
+            upstream_digital_prod_guid: str
+                The guid of the first digital product
+            downstream_digital_prod_guid: str
+                The guid of the downstream digital product
+            body: dict | NewRelationshipRequestBody, optional, default = None
+                A structure representing the details of the relationship.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_project_dependency(project_guid, upstream_project_guid,
+                                               body))
+
+    @dynamic_catch
+    async def _async_clear_project_dependency(self, project_guid: str,
+                                              upstream_project_guid: str,
+                                              body: dict | DeleteRequestBody = None) -> None:
+        """ Unlink two dependent projects.  Request body is optional. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the dependent project.
+        upstream_project_guid: str
+            The guid of the upstream digital project
+        body: dict | DeleteRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+
+        url = "{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/detach"
+
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached project {project_guid} from -> {upstream_project_guid}")
+
+    @dynamic_catch
+    def clear_project_dependency(self, project_guid: str, upstream_project_guid: str,
+                                 body: dict | DeleteRequestBody = None):
+        """ Unlink two dependent projects.  Request body is optional.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the dependent project.
+        upstream_project_guid: str
+            The guid of the upstream digital project
+        body: dict | DeleteRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_project_dependency(project_guid, upstream_project_guid, body))
+
+    @dynamic_catch
+    async def _async_set_project_hierarchy(self, project_guid: str,
+                                           parent_project_guid: str,
+                                           body: dict | NewRelationshipRequestBody = None):
+        """ Set a hierarchy relationship between two projects.
+            Request body is optional. Async version.
+
+
+        Parameters
+        ----------
+        parent_project_guid: str
+            The guid of the project depended on.
+        project_guid: str
+            The guid of the dependent project
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A dict representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+
+        """
+        url = (
+            f"{self.project_command_base}/{parent_project_guid}/project-dependencies/{project_guid}/attach"
+        )
+        await self._async_new_relationship_request(url, ["ProjectHierarchyProperties"], body)
+        logger.info(f"Project {project_guid} managed by -> {parent_project_guid}")
+
+    @dynamic_catch
+    def set_project_hierarchy(self, project_guid: str,
+                              parent_project_guid: str,
+                              body: dict | NewRelationshipRequestBody = None):
+        """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
+            Request body is optional.
+
+            Parameters
+            ----------
+            upstream_digital_prod_guid: str
+                The guid of the first digital product
+            downstream_digital_prod_guid: str
+                The guid of the downstream digital product
+            body: dict | NewRelationshipRequestBody, optional, default = None
+                A structure representing the details of the relationship.
+
+            Returns
+            -------
+            Nothing
+
+            Raises
+            ------
+            InvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PropertyServerException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_project_hierarchy(project_guid, parent_project_guid,
+                                              body))
+
+    @dynamic_catch
+    async def _async_clear_project_hierarchy(self, project_guid: str,
+                                             parent_project_guid: str,
+                                             body: dict | DeleteRequestBody = None) -> None:
+        """ Unlink hierarchy relationship.  Request body is optional. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the dependent project.
+        parent_project_guid: str
+            The guid of the upstream digital project
+        body: dict | DeleteRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        """
+
+        url = "{self.project_command_base}/{parent_project_guid}/project-dependencies/{project_guid}/detach"
+
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached project {project_guid} from -> {parent_project_guid}")
+
+    @dynamic_catch
+    def clear_project_hierarchy(self, project_guid: str, parent_project_guid: str,
+                                body: dict | DeleteRequestBody = None):
+        """ Unlink two dependent projects.  Request body is optional.
+
+        Parameters
+        ----------
+        project_guid: str
+            The guid of the dependent project.
+        parent_project_guid: str
+            The guid of the upstream digital project
+        body: dict | DeleteRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+
+        Returns
+        -------
+        Nothing
+
+        Raises
+        ------
+        InvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PropertyServerException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_project_hierarchy(project_guid, parent_project_guid, body))
+
+    @dynamic_catch
     async def _async_add_to_project_team(
             self,
             project_guid: str,
             actor_guid: str,
-            team_role: str = None,
-            effective_from: str = None,
-            effective_to: str = None,
-            ) -> None:
+            assignment_type: str = None,
+            description: str = None,
+            body: dict | NewRelationshipRequestBody = None
+    ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
         the actor plays in the project. Async version.
 
@@ -1294,27 +1540,29 @@ class ProjectManager(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
             f"members/{actor_guid}/attach"
         )
-        body = {
-            "class": "ProjectTeamProperties",
-            "teamRole": team_role,
-            "effectiveFrom": effective_from,
-            "effectiveTo": effective_to,
+        if body is None:
+            body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssignmentScopeProperties",
+                    "description": description,
+                    "assignmentType": assignment_type,
+                }
             }
-        body_s = body_slimmer(body)
-        if body_s is None:
-            await self._async_make_request("POST", url)
-        else:
-            await self._async_make_request("POST", url, body_s)
-        return
+            body_s = body_slimmer(body)
 
+        await self._async_new_relationship_request(url, ["AssignmentScopeRelationship"], body)
+        logger.info(f"Added member {actor_guid} to project {project_guid}")
+
+    @dynamic_catch
     def add_to_project_team(
             self,
             project_guid: str,
             actor_guid: str,
-            team_role: str = None,
-            effective_from: str = None,
-            effective_to: str = None,
-            ) -> None:
+            assignment_type: str = None,
+            description: str = None,
+            body: dict | NewRelationshipRequestBody = None
+    ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
         the actor plays in the project.
 
@@ -1351,18 +1599,19 @@ class ProjectManager(Client2):
             self._async_add_to_project_team(
                 project_guid,
                 actor_guid,
-                team_role,
-                effective_from,
-                effective_to,
-                )
+                assignment_type,
+                description,
+                body,
             )
-        return
+        )
 
+    @dynamic_catch
     async def _async_remove_from_project_team(
             self,
             project_guid: str,
             actor_guid: str,
-            ) -> None:
+            body: dict | DeleteRequestBody = None
+    ) -> None:
         """Remove an actor from a project. Async version.
 
         Parameters
@@ -1393,15 +1642,16 @@ class ProjectManager(Client2):
             f"members/{actor_guid}/detach"
         )
 
-        body = {"class": "NullRequestBody"}
-        await self._async_make_request("POST", url, body)
-        return
+        await self._async_delete_request(url, body)
+        logger.info(f"Removed member {actor_guid} from project {project_guid}")
 
+    @dynamic_catch
     def remove_from_project_team(
             self,
             project_guid: str,
             actor_guid: str,
-            ) -> None:
+            body: dict | DeleteRequestBody = None
+    ) -> None:
         """Remove an actor from a project.
 
         Parameters
@@ -1428,163 +1678,34 @@ class ProjectManager(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_from_project_team(project_guid, actor_guid)
-            )
-        return
-
-    async def _async_setup_project_management_role(
-            self,
-            project_guid: str,
-            project_role_guid: str,
-            ) -> None:
-        """Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
-        the role is a member of the project. Async version.
-
-        Parameters
-        ----------
-        project_guid: str
-            identity of the project.
-        project_role_guid: str
-            guid of the role to assign to the project.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
-            f"project-management-roles/{project_role_guid}/attach"
+            self._async_remove_from_project_team(project_guid, actor_guid, body)
         )
 
-        body = {"class": "NullRequestBody"}
-        await self._async_make_request("POST", url, body)
-        return
-
-    def setup_project_management_role(
+    @dynamic_catch
+    async def _async_create_task_for_project(
             self,
             project_guid: str,
-            project_role_guid: str,
-            ) -> None:
-        """Create a ProjectManagement relationship between a project and a person role to show that anyone appointed to
-        the role is a member of the project. Async version.
+            body: dict | NewElementRequestBody
+    ) -> str:
+        """Create a new task for a project.  Async version."""
 
-        Parameters
-        ----------
-        project_guid: str
-            identity of the project.
-        project_role_guid: str
-            guid of the role to assign to the project.
+        url = f"{self.project_command_base}/{project_guid}/task"
+        response = await self._async_new_element_request(url, body)
+        logger.info(f"Created task for project {project_guid}")
+        return response
 
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
+    @dynamic_catch
+    def create_task_for_project(
+            self,
+            project_guid: str,
+            body: dict | NewElementRequestBody
+    ) -> str:
+        """Create a new task for a project.  """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_setup_project_management_role(project_guid, project_role_guid)
-            )
-        return
-
-    async def _async_clear_project_management_role(
-            self,
-            project_guid: str,
-            project_role_guid: str,
-            ) -> None:
-        """Remove a ProjectManagement relationship between a project and a person role. Async version.
-
-        Parameters
-        ----------
-        project_guid: str
-            identity of the project.
-        project_role_guid: str
-            guid of the role to assign to the project.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
-            f"project-management-roles/{project_role_guid}/detach"
+        resp = loop.run_until_complete(
+            self._async_create_task_for_project(project_guid, body)
         )
-
-        body = {"class": "NullRequestBody"}
-        await self._async_make_request("POST", url, body)
-        return
-
-    def clear_project_management_role(
-            self,
-            project_guid: str,
-            project_role_guid: str,
-            ) -> None:
-        """Clear a ProjectManagement relationship between a project and a person role.
-
-        Parameters
-        ----------
-        project_guid: str
-            identity of the project.
-        project_role_guid: str
-            guid of the role to assign to the project.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_clear_project_management_role(project_guid, project_role_guid)
-            )
-        return
+        return resp
 
 
 if __name__ == "__main__":

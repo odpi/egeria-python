@@ -125,7 +125,7 @@ COMMON_FORMATS_ALL = Format(
     columns=COMMON_COLUMNS,
 )
 
-PROJECT_COLUMNS = COMMON_COLUMNS + [
+PROJECT_COLUMNS = COMMON_COLUMNS  +[
     Column(name="Classifications", key='classifications'),
     Column(name='Priority', key='priority'),
     Column(name='Project Status', key='project_status'),
@@ -133,6 +133,8 @@ PROJECT_COLUMNS = COMMON_COLUMNS + [
     Column(name='Start Date', key='start_date'),
     Column(name='Assigned Actors', key='assigned_actors'),
     Column(name='Resources', key='resource_list'),
+    Column(name="Project Roles", key='project_roles'),
+    Column(name="Managed Projects", key='managed_projects'),
     ]
 
 GLOSSARY_COLUMNS = COMMON_COLUMNS + [
@@ -249,14 +251,14 @@ output_format_sets = FormatSetDict({
             )
         ],
     ),
-    "Project": FormatSet(
+    "Projects": FormatSet(
         target_type="Project",
         heading="Project Attributes",
         description="Attributes that apply to all Projects.",
         annotations={},
         formats=[
             Format(
-                types=["ALL"],
+                types=["ALL", "LIST"],
                 columns=PROJECT_COLUMNS
             )
         ],
@@ -308,6 +310,32 @@ output_format_sets = FormatSetDict({
                     Column(name="Open Metadata Type Name", key='type_name'),
                     Column(name="Glossary", key='parent_glossary'),
                     Column(name="Subject Area", key='subject_area'),
+                ],
+            )
+            ],
+            action = ActionParameter(
+                function="GlossaryManager.find_glossary_terms",
+                required_params=["search_string"],
+                optional_params=OPTIONAL_PARAMS,
+                spec_params={},
+            )
+        ),
+    "Help-Terms": FormatSet(
+        target_type="Term",
+        heading="Display Help for Dr.Egeria Commands",
+        description="Designed for help output of Dr.Egeria commands.",
+        annotations={"wikilinks": ["[[Help]]", "[[Dr.Egeria]]"]},
+        formats=[
+            Format(
+
+                types=["DICT", "FORM", "LIST", "TABLE"],
+                columns= [
+                    Column(name='Term Name', key='display_name'),
+                    Column(name='Description', key='description'),
+                    Column(name="Usage", key='usage', format=True),
+                    Column(name="Update Time", key='update_time')
+
+
                 ],
             )
             ],
@@ -571,13 +599,13 @@ output_format_sets = FormatSetDict({
             )
     ),
     "Governance Policies": FormatSet(
-    target_type="GovernancePolicy",
-    heading="Governance-Definitions Information",
-    description="Attributes useful to Governance-Definitions.",
-    aliases=["GovernanceDefinitions"],
-    annotations={"wikilinks": ["[[Governance]]"]},
-    formats=[Format(types=["ALL"], columns=GOVERNANCE_DEFINITIONS_COLUMNS)],
-    action=ActionParameter(
+        target_type="GovernancePolicy",
+        heading="Governance-Definitions Information",
+        description="Attributes useful to Governance-Definitions.",
+        aliases=["GovernanceDefinitions"],
+        annotations={"wikilinks": ["[[Governance]]"]},
+        formats=[Format(types=["ALL"], columns=GOVERNANCE_DEFINITIONS_COLUMNS)],
+        action=ActionParameter(
         function="GovernanceOfficer.find_governance_definitions",
         required_params=["search_string"],
         optional_params=OPTIONAL_PARAMS,

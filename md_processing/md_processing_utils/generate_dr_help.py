@@ -23,7 +23,7 @@ from md_processing.md_processing_utils.md_processing_constants import (get_comma
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
 from pyegeria import EgeriaTech
 from pyegeria._globals import DEBUG_LEVEL
-from pyegeria.output_formatter import generate_entity_md_table
+from pyegeria.output_formatter import generate_entity_md_table, populate_columns_from_properties
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
@@ -69,18 +69,17 @@ def yes_no(input: str)->str:
 @logger.catch
 def _extract_help_fields(command: dict):
     """
-
+    Build a list of attribute dictionaries for a given command spec.
+    This prepares the data rows used to render the help table.
     """
 
     command_spec = get_command_spec(command)
     attributes = command_spec.get('Attributes', [])
-    command_display_name = command_spec.get('display_name', None)
-    command_qn_prefix = command_spec.get('qn_prefix', None)
 
     term_entry: list = []
     for attr in attributes:
         for key in attr:
-            if attr[key].get('level','Basic') != "Basic":
+            if attr[key].get('level', 'Basic') != "Basic":
                 continue
             attribute_name = key
             input_required = yes_no(attr[key].get('input_required', "No"))
@@ -93,18 +92,40 @@ def _extract_help_fields(command: dict):
             unique = yes_no(attr[key].get('unique', "No"))
             notes = attr[key].get('description', "")
             valid_values = attr[key].get('valid_values', [])
-            term_entry.append ({
-                'Attribute Name' : attribute_name,
-                'Input Required' : input_required,
-                'Read Only' : read_only,
-                'Generated' : generated,
-                'Default Value' : default,
-                'Notes' : notes,
-                'Unique Values' : unique,
-                'Valid Values' : valid_values,
-                })
+            term_entry.append({
+                'Attribute Name': attribute_name,
+                'Input Required': input_required,
+                'Read Only': read_only,
+                'Generated': generated,
+                'Default Value': default,
+                'Notes': notes,
+                'Unique Values': unique,
+                'Valid Values': valid_values,
+            })
 
     return term_entry
+
+@logger.catch
+def _extract_help_function(element: dict, columns_struct: dict) -> dict:
+    """
+    Return a populated columns data structure matching the signature and structure
+    of _extract_glossary_properties in glossary_manager.
+
+    Args:
+        element: One row (dict) describing a help attribute with keys matching columns_struct
+        columns_struct: Dict containing formats->columns definitions
+
+    Returns:
+        dict: A structure with key 'formats' and a 'columns' list whose entries have
+              their 'value' fields populated from the element dict.
+    """
+    # Normalize to a shape compatible with populate_columns_from_properties
+    normalized = {
+        'properties': element or {},
+        'elementHeader': {},
+    }
+    col_data = populate_columns_from_properties(normalized, columns_struct)
+    return col_data
 
 def create_help_terms():
     term_entry:str = ""
@@ -118,6 +139,10 @@ def create_help_terms():
                {'name': 'Notes', 'key': 'Notes'},
                {'name': 'Unique Values', 'key': 'Unique Values'},
                {'name': 'Valid Values', 'key': 'Valid Values'}]
+    columns_struct = {"target_type": "Term", "formats": {
+                                          "types": "ALL",
+                                        "columns": columns}
+                      }
 
     term_entry = """# Generating glossary entries for the documented commands\n\n
             This file contains generated Dr.Egeria commands to generate glossary term entries describing
@@ -137,14 +162,15 @@ def create_help_terms():
         term_entry+= "# Create Term\n"
         term_entry+= f"## Term Name\n\n{command}\n\n"
         term_entry+= f"## Description\n\n{command_description}\n\n"
-        term_entry+= f"## Owning Glossary\n\n{glossary_name}\n\n"
-        term_entry+= f"## Categories\n\nWriting Dr.Egeria Markdown\n\n"
+        term_entry+= f"## Glossary\n\n{glossary_name}\n\n"
+        term_entry+= f"## Folders\n\nWriting Dr.Egeria Markdown\n\n"
 
 
         du = _extract_help_fields(command)
-        output = generate_entity_md_table(du, "", "", _extract_help_fields, columns, None, "help" )
+        output = generate_entity_md_table(du, "", "", _extract_help_function, columns_struct, None, "help" )
 
         term_entry+= f"## Usage\n\n{output}\n\n___\n\n"
+
     print(term_entry)
     # Generate filename with current date and time in ISO 8601 format
     current_datetime = get_iso8601_datetime()

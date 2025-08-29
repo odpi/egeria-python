@@ -8,6 +8,8 @@ from datetime import datetime
 from loguru import logger
 from pydantic import ValidationError
 
+from .md_commands.project_commands import process_link_project_dependency_command
+
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
 logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
@@ -19,7 +21,7 @@ from rich.console import Console
 
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                            process_category_upsert_command, process_provenance_command, get_current_datetime_string,
-                           process_per_proj_upsert_command, command_list, process_blueprint_upsert_command,
+                           process_project_upsert_command, command_list, process_blueprint_upsert_command,
                            process_solution_component_upsert_command, process_component_link_unlink_command,
                            process_term_list_command,
                            process_category_list_command, process_glossary_list_command, process_term_history_command,
@@ -28,14 +30,15 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_information_supply_chain_upsert_command,
                            process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
                            process_digital_product_upsert_command, process_agreement_upsert_command,
-                            process_collection_upsert_command, process_link_agreement_item_command,
+                           process_collection_upsert_command, process_link_agreement_item_command,
                            process_gov_definition_upsert_command, GOV_COM_LIST, GOV_LINK_LIST,
                            process_gov_def_link_detach_command, process_product_dependency_command,
                            process_add_to_collection_command, process_attach_collection_command,
-                           # process_collection_list_command, process_gov_definition_list_command,
+    # process_collection_list_command, process_gov_definition_list_command,
                            process_gov_def_context_command, process_supporting_gov_def_link_detach_command,
                            process_attach_subscriber_command, process_output_command,
-                           COLLECTIONS_LIST, SIMPLE_COLLECTIONS, GOV_LINK_LIST, process_output_command, LIST_COMMANDS)
+                           COLLECTIONS_LIST, SIMPLE_COLLECTIONS, GOV_LINK_LIST, process_output_command, LIST_COMMANDS,
+                           PROJECT_COMMANDS, process_link_project_hierarchy_command)
 from .md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_collection_list_command,
@@ -129,8 +132,13 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             elif potential_command in ["List Glossaries", "List Terms", "List Glossary Terms", "View Glossaries"
                                        "View Terms", "View Glossary Terms"]:
                 result = process_output_command(client, current_block, directive)
-            elif potential_command in ["Create Personal Project", "Update Personal Project"]:
-                result = process_per_proj_upsert_command(client, current_block, directive)
+            elif potential_command in PROJECT_COMMANDS:
+                result = process_project_upsert_command(client, current_block, directive)
+            elif potential_command in ["Link Parent Project", "Attach Parent Project", "Detach Parent Project"]:
+                result = process_link_project_hierarchy_command(client, current_block, directive)
+            elif potential_command in ["Link Project Dependency", "Attach Project Dependency", "Detach Project Dependency"]:
+                result = process_link_project_dependency_command(client, current_block, directive)
+
             elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint",
                                        "Update Solution Blueprint"]:
                 result = process_blueprint_upsert_command(client, current_block, directive)

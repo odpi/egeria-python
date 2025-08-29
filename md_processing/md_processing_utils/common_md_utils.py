@@ -419,6 +419,18 @@ def set_peer_gov_def_request_body(object_type: str, attributes: dict)->dict:
         }
     return rel_body
 
+def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
+    rel_body = set_rel_request_body(object_type, attributes)
+    class_prop = camel_to_title_case(object_type) + "Properties"
+    rel_body["properties"] = {
+        "class" : class_prop,
+        "description": attributes.get('Description', {}).get('value', None),
+        "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
+        "effectiveTo": attributes.get('Effective To', {}).get('value', None),
+        "label": attributes.get('Label', {}).get('value', None),
+        }
+    return rel_body
+
 def set_delete_request_body(object_type: str, attributes: dict)->dict:
     return {
         "class": "DeleteRequestBody",
@@ -463,7 +475,7 @@ def set_classifications(object_type: str, attributes: dict)->dict:
         body = {classification: {} for classification in classifications} if cclassifications else {}
     return body
 
-def set_collection_classifications(object_type: str, attributes: dict, obj_types: list[str])->dict:
+def set_object_classifications(object_type: str, attributes: dict, obj_types: list[str])->dict:
     classifications = attributes.get('Classifications', {}).get('name_list', None)
     obj = object_type.replace(" ", "")
     if object_type in obj_types:

@@ -282,6 +282,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
         command_spec = get_command_spec(f"Link {object_type}")
     else:
         command_spec = get_command_spec(f"{object_action} {object_type}")
+
     attributes = command_spec.get('Attributes', [])
     command_display_name = command_spec.get('display_name', None)
 

@@ -310,7 +310,10 @@ def execute_format_set_action(
                 # Add columns dynamically based on the first result
                 column_headings = list(sorted_results[0].keys())
                 for heading in column_headings:
-                    table.add_column(heading, justify="left", style="cyan")
+                    if heading == "Usage":
+                        table.add_column(heading, justify="left", style="cyan")
+                    else:
+                        table.add_column(heading, justify="left", style="cyan")
 
                 # Add rows
                 for item in sorted_results:
