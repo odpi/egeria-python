@@ -19,7 +19,8 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from pydantic import ValidationError
 
-from pyegeria import PyegeriaException, print_exception_table, print_validation_error, PyegeriaInvalidParameterException
+from pyegeria import PyegeriaException, print_exception_table, print_validation_error, \
+    PyegeriaInvalidParameterException, print_basic_exception
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -484,7 +485,7 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Test-Term"
+            term_name = "Calico"
             glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
             response = g_client.get_terms_by_name(term_name)
 
@@ -642,7 +643,7 @@ class TestGlossaryManager:
     def test_delete_term(self):
         try:
             g_client = GlossaryManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd=self.good_user_2_pwd,
@@ -652,7 +653,7 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            term_guid = "50c7668a-9cef-4c1e-bd9d-dde99c03a310"
+            term_guid = "675d210c-3801-4555-9abe-99bdb45f000a"
             g_client.delete_term(term_guid)
             duration = time.perf_counter() - start_time
 
@@ -715,13 +716,13 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
 
-            guid1 = "ecb57c19-fb1c-42f4-ab1a-c85b6fe753ea"
-            guid2 = "76786599-05d8-4bd6-84ee-0f32833c417f"
+            guid1 = "16fe1b6f-b66c-490e-bc23-a47d0510b433"
+            guid2 = "ecf8b8d6-e593-4240-839c-019b820f1897"
             relationship_type = "Antonym"
             body = {
-                "class": "RelationshipRequestBody",
+                "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "GlossaryTermRelationship",
+                    "class": "GlossaryTermRelationship"
                     # "confidence": 10,
                     # "description": "Why not",
                     # "status": "DRAFT",
@@ -729,17 +730,16 @@ class TestGlossaryManager:
                 }
             }
 
-            g_client.add_relationship_between_terms(guid1, guid2, relationship_type, body)
+            g_client.add_relationship_between_terms(guid1, guid2, relationship_type)
 
             assert True
 
-        except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+        except (PyegeriaException
                 ) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
 
         finally:
             g_client.close_session()

@@ -2245,9 +2245,9 @@ class GlossaryManager(CollectionManager):
 
         if body is None:
             body = {
-                "class": "RelationshipRequestBody",
+                "class": "NewRelationshipRequestBody",
                 "properties":
-                    {"class": "GlossaryTermRelationship", }
+                    {"class": "GlossaryTermRelationship" }
                 }
 
 

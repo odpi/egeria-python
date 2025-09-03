@@ -14,8 +14,8 @@ from rich.markdown import Markdown
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
                                                                     sync_collection_memberships)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
-    set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
-    set_rel_request_body, set_create_body, set_object_classifications, set_product_body
+    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
+    set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_prop_body
 
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
@@ -156,7 +156,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
             obj = "Glossary"
             #   Set the property body for a glossary collection
             #
-            prop_body = set_prop_body(obj, qualified_name, attributes)
+            prop_body = set_element_prop_body(obj, qualified_name, attributes)
             prop_body["languager"] = attributes.get('Language', {}).get('value', None)
             prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
 
@@ -527,15 +527,18 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
             obj = "GlossaryTerm"
             #   Set the property body for a glossary collection
             #
-            prop_body = set_prop_body(obj, qualified_name, attributes)
+            prop_body = set_element_prop_body(obj, qualified_name, attributes)
             prop_body["aliases"] = attributes.get('Aliases', {}).get('value', None)
             prop_body["summary"] = attributes.get('Summary', {}).get('value', None)
             prop_body["examples"] = attributes.get('Examples', {}).get('value', None)
             prop_body["abbreviation"] = attributes.get('Abbreviation', {}).get('value', None)
             prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
             prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
-            to_be_collection_guids = [attributes.get("Glossary", {}).get("guid_list", {}),
+            to_be_collection_guids = [attributes.get("Glossary", {}).get("guid", {}),
                                       attributes.get("Folder", {}).get("guid_list", {})]
+            glossary_guid = attributes.get("Glossary", {}).get('guid', None)
+            anchor_scope_guid = attributes.get("Anchor Scope", {}).get('guid', None)
+
 
             get_method = egeria_client.get_term_by_guid
             collection_types = ["Glossary", "Folder"]
@@ -584,6 +587,9 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
 
                     body["properties"] = prop_body
+                    # If the anchor scope is not already set and a glossary is specified
+                    if anchor_scope_guid is None and glossary_guid:
+                        body["anchorScopeGUID"] = glossary_guid
 
                     guid = egeria_client.create_glossary_term(body = body)
                     if guid:
@@ -594,7 +600,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD')
+                        return egeria_client.get_term_by_guid(guid, obj, output_format='MD')
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -608,460 +614,86 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
             logger.error(f"Error performing {command}: {e}")
     else:
         return None
-def process_create_term_term_relationship_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ Relate two terms through the specified relationship. ."""
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     object_type = command.split(' ')[1].strip()
-#     object_action = command.split(' ')[0].strip()
-#     term1_guid = None
-#     term2_guid = None
-#
-#     term_relationship = process_simple_attribute(txt, ["Term Relationship", "Relationship Type"], "ERROR")
-#     if term_relationship not in TERM_RELATIONSHPS:
-#         valid = False
-#
-#     print(Markdown(
-#         f"{pre_command} `{command}` for term relationship: `{term_relationship}` with directive: `{directive}` "))
-#
-#     term1_q_name, term1_guid, term1_valid, term1_exists = process_element_identifiers(egeria_client, object_type,
-#                                                                                       ["Term 1 Name", "Term 1"], txt,
-#                                                                                       "Exists Required", None)
-#
-#     term2_q_name, term2_guid, term2_valid, term2_exists = process_element_identifiers(egeria_client, object_type,
-#                                                                                       ["Term 2 Name", "Term 2"], txt,
-#                                                                                       "Exists Required", None)
-#
-#     request_display = (f"\n\t* Term 1 Qualified Name: {term1_q_name}\n\t* Term 2 Qualified Name {term2_q_name}\n\t"
-#                        f"* Term Relationship: {term_relationship}")
-#
-#     if not (term1_valid and term2_valid and term1_exists and term2_exists):
-#         valid = False
-#
-#     if directive == "display":
-#         print(request_display)
-#         return None
-#     elif directive == "validate":
-#         print(request_display)
-#         return str(valid)
-#     elif directive == "process":
-#         try:
-#             print(request_display)
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#             egeria_client.add_relationship_between_terms(term1_guid, term2_guid, term_relationship)
-#             print_msg(ALWAYS, f"Relationship `{term_relationship}` created", debug_level)
-#             update_md = (f"\n\n# Update Term-Term Relationship\n\n## Term 1 Name:\n\n{term1_q_name}"
-#                          f"\n\n## Term 2 Name\n\n{term2_q_name}\n\n## Term Relationship:\n\n{term_relationship}")
-#             return update_md
-#
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
+
+def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: str,
+                                                  directive: str = "display") -> Optional[str]:
+    """ Relate two terms through the specified relationship. ."""
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    print(Markdown(parsed_output['display']))
+
+    logger.debug(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+    term1_guid = attributes.get('Term 1', {}).get('guid', None)
+    term1_qname = attributes.get('Term 1', {}).get('qualified_name', None)
+    term2_guid = attributes.get('Term 2', {}).get('guid', None)
+    term2_qname = attributes.get('Term 2', {}).get('qualified_name', None)
+    relationship = attributes.get('Relationship', {}).get('value', None)
+    expression = attributes.get('Expression', {}).get('value', None)
+    confidence = attributes.get('Confidence', {}).get('value', None)
+    status = attributes.get('Status', {}).get('value', None)
+    steward = attributes.get('Steward', {}).get('value', None)
+    source = attributes.get('Source', {}).get('value', None)
 
 
-def process_term_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     search_string = process_simple_attribute(txt, SEARCH_LABELS)
-#     if search_string is None:
-#         search_string = '*'
-#     print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
-#
-#     glossary = process_simple_attribute(txt, ['Glossary', 'In Glossary', "Glossary Name"])
-#     if glossary is not None:
-#         _, glossary_guid, _, glossary_exists = get_element_by_name(egeria_client, "Glossary", glossary)
-#         msg = f"Found glossary `{glossary}` with GUID {glossary_guid}"
-#         print_msg(INFO, msg, debug_level)
-#     else:
-#         glossary_guid = None
-#         msg = f"No glossary found"
-#         print_msg(INFO, msg, debug_level)
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS)
-#     if output_format is None:
-#         output_format = "LIST"
-#     elif output_format not in ELEMENT_OUTPUT_FORMATS:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = (f"\n\t* Search String: {search_string}\n\t* Glossary: {glossary}\n\t* Output Format: "
-#                        f"{output_format}\n")
-#
-#     if directive == "display":
-#         print(Markdown(request_display))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(request_display))
-#         return valid
-#     elif directive == "process":
-#         try:
-#             print(Markdown(request_display))
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#
-#             term_list_md = f"\n# Term List for search string: `{search_string}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
-#                 term_list_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 term_list_md += egeria_client.find_glossary_terms(search_string, glossary_guid,
-#                                                                   output_format=output_format)
-#             print_msg("ALWAYS", f"Wrote Term List for search string: `{search_string}`", debug_level)
-#
-#             return term_list_md
-#
-#             md_table = egeria_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
-#
-#             print_msg("ALWAYS", f"Wrote Term list for search string `{search_string}`", debug_level)
-#             return md_table
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
-def process_category_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     search_string = process_simple_attribute(txt, SEARCH_LABELS, "INFO")
-#     if search_string is None:
-#         search_string = '*'
-#     print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS, "INFO")
-#     if output_format is None:
-#         output_format = "LIST"
-#     elif output_format not in ELEMENT_OUTPUT_FORMATS:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Search String: {search_string}\n\t* Output Format: {output_format}\n"
-#
-#     if directive == "display":
-#         print(Markdown(request_display))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(request_display))
-#         return valid
-#     elif directive == "process":
-#         try:
-#             print(Markdown(request_display))
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#
-#             cat_list_md = f"\n# Category List for search string: `{search_string}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.find_glossary_categories(search_string, output_format=output_format)
-#                 cat_list_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 cat_list_md += egeria_client.find_glossary_categories(search_string, output_format=output_format)
-#             print_msg("ALWAYS", f"Wrote Category List for search string: `{search_string}`", debug_level)
-#
-#             return cat_list_md
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#
-#         return None
-#
-#
-def process_glossary_structure_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     known_glossary_guid = ""
-#
-#     glossary_name = process_simple_attribute(txt, GLOSSARY_NAME_LABELS, "ERROR")
-#
-#     _, known_glossary_guid, valid, _ = process_element_identifiers(egeria_client, "Glossary", GLOSSARY_NAME_LABELS, txt,
-#                                                                    EXISTS_REQUIRED, None)
-#
-#     print(Markdown(f"{pre_command} `{command}` for glossary:`{glossary_name}` with directive: `{directive}`"))
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS, "INFO")
-#     if output_format is None:
-#         output_format = "MD"
-#     elif output_format not in ["DICT", "LIST", "MD"]:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Glossary name: {glossary_name}\n\t* Output Format: {output_format}\n"
-#
-#     if directive == "display":
-#         print(Markdown(request_display))
-#         return None
-#     elif directive == "validate":
-#         print(Markdown(request_display))
-#         return str(valid)
-#     elif directive == "process":
-#         try:
-#             print(Markdown(request_display))
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#
-#             glossary_structure_md = f"\n# Glossary Structure for `{glossary_name}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.get_glossary_category_structure(known_glossary_guid, output_format=output_format)
-#                 glossary_structure_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 glossary_structure_md += egeria_client.get_glossary_category_structure(known_glossary_guid,
-#                                                                                        output_format=output_format)
-#             print_msg("ALWAYS", f"Wrote Glossary Structure for glossary: `{glossary_name}`", debug_level)
-#
-#             return glossary_structure_md
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
-def process_glossary_list_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#
-#     search_string = process_simple_attribute(txt, SEARCH_LABELS, "INFO")
-#     if search_string is None:
-#         search_string = '*'
-#     print(Markdown(f"{pre_command} `{command}` with search string:`{search_string}` with directive: `{directive}`"))
-#     if search_string is None:
-#         search_string = '*'
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS, "INFO")
-#     if output_format is None:
-#         output_format = "LIST"
-#     elif output_format not in ELEMENT_OUTPUT_FORMATS:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Search String: {search_string}\n\t* Output Format: {output_format}\n"
-#
-#     if directive == "display":
-#         print(request_display)
-#         return None
-#     elif directive == "validate":
-#         print(request_display)
-#         return valid
-#     elif directive == "process":
-#         try:
-#             print(request_display)
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#
-#             glossary_list_md = f"\n# Glossary List for `{search_string}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.find_glossaries(search_string, output_format=output_format)
-#                 glossary_list_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 glossary_list_md += egeria_client.find_glossaries(search_string, output_format=output_format)
-#             print_msg("ALWAYS", f"Wrote Glossary List for search string: `{search_string}`", debug_level)
-#
-#             return glossary_list_md
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
-def process_term_details_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#     object_type = command.split(' ')[1].strip()
-#     object_action = command.split(' ')[0].strip()
-#
-#     term_identifier = process_simple_attribute(txt, TERM_NAME_LABELS, "ERROR")
-#
-#     print(Markdown(f"{pre_command} `{command}` for term:`{term_identifier}` with directive: `{directive}`"))
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS, "INFO")
-#     if output_format is None:
-#         output_format = "REPORT"
-#     else:
-#         output_format = output_format.upper()
-#
-#     if output_format not in ["DICT", "REPORT"]:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Term Identifier: {term_identifier}\n\t* Output Format {output_format}"
-#
-#     if directive == "display":
-#         print(request_display)
-#         return None
-#     elif directive == "validate":
-#         print(request_display)
-#         return valid
-#     elif directive == "process":
-#         try:
-#             print(request_display)
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#             output = egeria_client.get_term_details(term_identifier, output_format=output_format)
-#             if output_format == "DICT":
-#                 output = f"```{json.dumps(output, indent=4)}```"
-#             print_msg("ALWAYS", f"Wrote Term Details for term: `{term_identifier}`", debug_level)
-#
-#             return output
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
-def process_term_history_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List terms as a markdown table. Filter based on optional search string. """
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#     object_type = command.split(' ')[1].strip()
-#     object_action = command.split(' ')[0].strip()
-#
-#     element_labels = TERM_NAME_LABELS
-#     element_labels.append('Display Name')
-#
-#     term_name = process_simple_attribute(txt, element_labels, "ERROR")
-#
-#     known_q_name, known_guid, valid, term_exists = process_element_identifiers(egeria_client, object_type,
-#                                                                                element_labels, txt, object_action, )
-#
-#     print(Markdown(f"{pre_command} `{command}` for term:`{term_name}` with directive: `{directive}`"))
-#
-#     output_format = process_simple_attribute(txt, OUTPUT_LABELS, "INFO")
-#     if output_format is None:
-#         output_format = "LIST"
-#     elif output_format not in ["DICT", "LIST"]:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Term Name: {term_name}\n\t* Output Format {output_format}\n\t* GUID: {known_guid}\n"
-#
-#     if directive == "display":
-#         print(request_display)
-#         return None
-#     elif directive == "validate":
-#         print(request_display)
-#         return valid
-#     elif directive == "process":
-#         try:
-#             print(request_display)
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#             term_history_md = f"\n# Term History for `{term_name}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.list_term_revision_history(known_guid, output_format=output_format)
-#                 term_history_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 term_history_md += egeria_client.list_full_term_history(known_guid, output_format)
-#             print_msg("ALWAYS", f"Wrote Term History for term `{term_name}`", debug_level)
-#
-#             return term_history_md
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
-#
-#
-def process_term_revision_history_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
-    pass
-#     """ List term revision history as a markdown table or list."""
-#     set_debug_level(directive)
-#     valid = True
-#     command = extract_command(txt)
-#     print(Markdown(f"# {command}\n"))
-#     object_type = command.split(' ')[1].strip()
-#     object_action = command.split(' ')[0].strip()
-#     known_q_name = None
-#     known_guid = None
-#
-#     element_labels = TERM_NAME_LABELS
-#
-#     term_name = process_simple_attribute(txt, element_labels, "ERROR")
-#     print(Markdown(f"{pre_command} `{command}` for term: `{term_name}` with directive: `{directive}` "))
-#
-#     known_q_name, known_guid, valid, _ = process_element_identifiers(egeria_client, object_type, element_labels, txt,
-#                                                                      object_action, )
-#     output_format = process_simple_attribute(txt, ['Output Format', 'Format'], 'INFO')
-#     if output_format is None:
-#         output_format = "LIST"
-#     elif output_format not in ["DICT", "LIST", "MD"]:
-#         valid = False
-#         print_msg(ERROR, f"Invalid output format: `{output_format}`", debug_level)
-#
-#     request_display = f"\n\t* Term Name: {term_name}\n\t* Output Format: {output_format}\n"
-#
-#     if directive == "display":
-#         print(request_display)
-#         return None
-#     elif directive == "validate":
-#         print(request_display)
-#         return str(valid)
-#     elif directive == "process":
-#         try:
-#             print(request_display)
-#             if not valid:  # First validate the term before we process it
-#                 return None
-#             term_history_md = f"\n# Term Revision History for `{term_name}`\n\n"
-#             if output_format == "DICT":
-#                 struct = egeria_client.list_term_revision_history(known_guid, output_format)
-#                 term_history_md += f"```{json.dumps(struct, indent=4)}```\n"
-#             else:
-#                 term_history_md += egeria_client.list_term_revision_history(known_guid, output_format)
-#             print_msg("ALWAYS", f"Wrote Term Revision History for term `{term_name}`", debug_level)
-#             return term_history_md
-#
-#         except Exception as e:
-#             print(f"{ERROR}Error performing {command}: {e}")
-#             console.print_exception(show_locals=True)
-#             return None
-#     else:
-#         return None
+
+    valid = parsed_output['valid']
+    exists = term1_guid is not None and term2_guid is not None
+
+    if not (valid and exists):
+        valid = False
+
+    if directive == "display":
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+        return valid
+
+    elif directive == "process":
+        prop_body = set_rel_prop_body("GlossaryTerm", attributes)
+        prop_body['expression'] = expression
+        prop_body['confidence'] = confidence
+        prop_body['status'] = status
+        prop_body['steward'] = steward
+        prop_body['source'] = source
+
+        try:
+
+            if not valid:  # First validate the term before we process it
+                return None
+
+            if object_action == "Link":
+                if not exists:
+                    msg = f"  Term `{term1_guid}` or {term2_guid} does not exist! "
+                    logger.error(msg)
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+            body = set_rel_request_body(relationship, prop_body)
+            body['properties'] = prop_body
+            body = body_slimmer(body)
+            # todo removing body for now since don't know relationship properties class
+            egeria_client.add_relationship_between_terms(term1_guid, term2_guid, relationship)
+            logger.success(f"Created  `{relationship}` relationship between `{term1_qname}` and `{term2_qname}`\n\n___")
+            update_md = (f"\n\n# Update Term-Term Relationship\n\n## Term 1 Name:\n\n{term1_qname}"
+                         f"\n\n## Term 2 Name\n\n{term2_qname}\n\n## Term Relationship:\n\n{relationship}")
+            return update_md
+
+
+        except Exception as e:
+            print(f"{ERROR}Error performing {command}: {e}")
+            print_basic_exception(e)
+            return None
+            return None
+    else:
+        return None
+
+

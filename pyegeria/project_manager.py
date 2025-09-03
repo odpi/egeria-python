@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria import select_output_format_set
+from pyegeria._output_formats import select_output_format_set
 from pyegeria._client_new import Client2
 from pyegeria._output_formats import get_output_format_type_match
 from pyegeria.config import settings as app_settings
@@ -1198,7 +1198,7 @@ class ProjectManager(Client2):
         logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
 
     @dynamic_catch
-    async def _async_set_project_dependency(self, project_guid: str,
+    def set_project_dependency(self, project_guid: str,
                                             upstream_project_guid: str,
                                             body: dict | NewRelationshipRequestBody = None):
         """ Link two dependent digital products.  The linked elements are of type DigitalProduct.

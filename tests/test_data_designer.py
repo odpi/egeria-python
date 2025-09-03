@@ -18,6 +18,7 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import PyegeriaAPIException
+from pyegeria._deprecated_gov_engine import body_slimmer
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -61,19 +62,34 @@ class TestDataDesigner:
     def test_create_data_structure(self):
         display_name = "solar_power2"
         namespace = "solar"
+        # body = {
+        #     "class": "NewElementRequestBody",
+        #     "isOwnAnchor": True,
+        #     "properties": {
+        #         "class" : "DataStructureProperties",
+        #         "displayName": display_name,
+        #         "qualifiedName": f"{namespace}::data-structure::{display_name}",
+        #         "description": "a solar power data structure",
+        #         "namespace": namespace,
+        #         "versionIdentifier": "0.1"
+        #       }
+        #     }
         body = {
-            "class": "NewElementRequestBody",
-            "isOwnAnchor": True,
-            "properties": {
-                "class" : "DataStructureProperties",
-                "displayName": display_name,
-                "qualifiedName": f"{namespace}::data-structure::{display_name}",
-                "description": "a solar power data structure",
-                "namespace": namespace,
-                "versionIdentifier": "0.1"
-              }
-            }
 
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor" : True,
+          "initialClassifications" : { },
+          "initialStatus" : "ACTIVE",
+          "parentAtEnd1" : True,
+          "properties" : {
+            "class" : "DataSpecProperties",
+            "displayName" : "Data Specification for the Teddy Bear Drop Foot Clinical Trial",
+            "qualifiedName" : "DataSpec::Data Specification for the Teddy Bear Drop Foot Clinical Trial",
+            "description" : "Principle data requirements for this clinical trial."
+
+          }
+        }
+        body = body_slimmer(body)
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
@@ -100,13 +116,13 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_delete_data_structure(self):
-        guid = 'ff806689-e88a-425f-91de-7fe896f0f7aa'
+        guid = 'ed7e21b3-6c94-48dd-b24d-a0ce923754ba'
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            m_client.delete_data_structure(guid, cascade=True)
+            m_client.delete_data_structure(guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds"
@@ -345,13 +361,13 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_structures_by_guid(self):
-        guid = "458a4e48-6d97-4ffc-bd12-85e49bca8829"
+        guid = "dc13d802-3b91-42d9-99e0-3d31f0bb2dd8"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structure_by_guid(guid, output_format="JSON")
+            response = m_client.get_data_structure_by_guid(guid, output_format="REPORT", output_format_set="Mandy-DataStruct")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -440,7 +456,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="JSON")
+            response = m_client.find_all_data_fields(output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

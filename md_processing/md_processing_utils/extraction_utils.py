@@ -92,11 +92,20 @@ def extract_attribute(text: str, labels: set) -> str | None:
     for label in labels:
         # Construct pattern for the current label
         # text = re.sub(r'\s+', ' ', text).strip() # just added
-        text = re.sub(r'\n\n+', '\n\n', text).strip()
+        # text = re.sub(r'\n\n+', '\n\n', text).strip()
 
-        label = label.strip()
-        pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+        # Replace multiple spaces or tabs with a single space
+        normalized = re.sub(r'\s+', ' ', text)
+        # Collapse multiple blank lines into a single one
+        normalized = re.sub(r'\n\s*\n', '\n', normalized).strip()
 
+        # label = label.strip()
+        # pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+        # Normalize the label
+        normalized_label = re.sub(r'\s+', ' ', label.strip())
+
+        # Construct the regex pattern
+        pattern = rf"##\s*{re.escape(normalized_label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
         # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:

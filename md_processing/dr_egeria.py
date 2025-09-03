@@ -20,13 +20,11 @@ from rich import print
 from rich.console import Console
 
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                           process_category_upsert_command, process_provenance_command, get_current_datetime_string,
+                            process_provenance_command, get_current_datetime_string,
                            process_project_upsert_command, command_list, process_blueprint_upsert_command,
                            process_solution_component_upsert_command, process_component_link_unlink_command,
-                           process_term_list_command,
-                           process_category_list_command, process_glossary_list_command, process_term_history_command,
-                           process_glossary_structure_command, process_term_revision_history_command,
-                           process_create_term_term_relationship_command, process_term_details_command,
+
+                           process_link_term_term_relationship_command,
                            process_information_supply_chain_upsert_command,
                            process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
                            process_digital_product_upsert_command, process_agreement_upsert_command,
@@ -123,7 +121,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Term-Term Relationship", "Update Term-Term Relationship"]:
-                result = process_create_term_term_relationship_command(client, current_block, directive)
+                result = process_link_term_term_relationship_command(client, current_block, directive)
              #
             elif potential_command in LIST_COMMANDS:
                 result = process_output_command(client, current_block, directive)
@@ -132,6 +130,9 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             elif potential_command in ["List Glossaries", "List Terms", "List Glossary Terms", "View Glossaries"
                                        "View Terms", "View Glossary Terms"]:
                 result = process_output_command(client, current_block, directive)
+            elif potential_command in ["Link Termss", "Detach Terms",
+                                       "Link Term-Term Relationship", "Detach Term-Term Relationship"]:
+                result = process_link_term_term_relationship_command(client, current_block, directive)
             elif potential_command in PROJECT_COMMANDS:
                 result = process_project_upsert_command(client, current_block, directive)
             elif potential_command in ["Link Parent Project", "Attach Parent Project", "Detach Parent Project"]:

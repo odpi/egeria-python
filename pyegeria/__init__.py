@@ -17,7 +17,7 @@ from ._globals import (INTEGRATION_GUIDS, TEMPLATE_GUIDS, default_time_out, disa
                        NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,
                        NO_PROJECTS_FOUND, DEBUG_LEVEL, NO_COLLECTION_FOUND, NO_GUID_RETURNED)
 
-from ._output_formats import select_output_format_set
+
 
 if disable_ssl_warnings:
     from urllib3 import disable_warnings
@@ -67,6 +67,7 @@ from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
+from ._output_formats import select_output_format_set
 #
 global template_guids, integration_guids
 

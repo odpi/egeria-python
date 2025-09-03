@@ -18,7 +18,8 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteRequestBody)
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict)
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_columns_from_properties,
+                                       get_required_relationships)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties)
 from pyegeria.utils import body_slimmer, dynamic_catch
@@ -1300,9 +1301,8 @@ class DataDesigner(Client2):
             guid = collection["relatedElement"]["elementHeader"]["guid"]
             name = collection["relatedElement"]["properties"].get("name", "") or ""
             qualifiedName = collection['relatedElement']["properties"].get("qualifiedName", "") or ""
-            classifications = collection["relatedElement"]["elementHeader"]["classifications"]
-            for classification in classifications:
-                type_name = classification["type"]['typeName']
+            type_name = collection["relatedElement"]["elementHeader"].get("classificationProperties",{}).get('anchorTypeName', None)
+            if type_name:
                 if type_name == "DataDictionary":
                     member_of_data_dicts_guids.append(guid)
                     member_of_data_dicts_names.append(name)
@@ -4682,7 +4682,7 @@ class DataDesigner(Client2):
 
 
 
-    def _extract_data_structure_properties(self, element: dict) -> dict:
+    def _extract_data_structure_properties(self, element: dict, columns_struct: dict) -> dict:
         """
         Extract common properties from a data structure element.
 
@@ -4692,31 +4692,33 @@ class DataDesigner(Client2):
         Returns:
             dict: Dictionary of extracted properties
         """
-        props = _extract_referenceable_properties(element)
 
-        props['properties'] = element.get('properties', {})
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        header_props = _extract_referenceable_properties(element)
+        # Populate requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
+        guid = header_props.get('GUID')
 
-        props['namespace'] = props['properties'].get("namespace", "") or ""
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            # Todo - any special columns go here..
+            # elif key == 'project_roles':
+            #     column['value'] = additional_props.get('project_roles', '')
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        for column in columns_list:
+            if column.get('key') == 'mermaid' and not column.get('value'):
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        return col_data
 
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_specs'] = associated_elements.get("member_of_data_spec_qnames", [])
 
-        # data_structures = associated_elements.get("member_of_data_struct_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['member_data_fields'] = associated_elements.get("member_data_field_qnames", [])
-
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _extract_data_class_properties(self, element: dict) -> dict:
+    def _extract_data_class_properties(self, element: dict,columns_struct: dict) -> dict:
         """
         Extract common properties from a data class element.
 
@@ -4726,36 +4728,31 @@ class DataDesigner(Client2):
         Returns:
             dict: Dictionary of extracted properties
         """
-        props = _extract_referenceable_properties(element)
-        properties = element.get('properties', {})
-        props['properties'] = properties
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        header_props = _extract_referenceable_properties(element)
+        # Populate requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
+        guid = header_props.get('GUID')
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            # Todo - any special columns go here..
+            # elif key == 'project_roles':
+            #     column['value'] = additional_props.get('project_roles', '')
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
 
-        props['namespace'] = props['properties'].get("namespace", "") or ""
+        for column in columns_list:
+            if column.get('key') == 'mermaid' and not column.get('value'):
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        return col_data
 
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['match_property_names'] = properties.get('matchPropertyNames', []) or []
-        props['match_threshold'] = properties.get('matchThreshold', 0)
-        props['allow_duplicate_values'] = properties.get('allowDuplicateValues', False)
-        props['is_case_sensitive'] = properties.get('isCaseSensitive', False)
-        props['is_nullable'] = properties.get('isNullable', False)
-
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['nested_data_classes'] = associated_elements.get("nested_data_class_qnames", [])
-        props['specialized_data_classes'] = associated_elements.get("specialized_data_class_qnames", [])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _extract_data_field_properties(self, element: dict) -> dict:
+    def _extract_data_field_properties(self, element: dict, columns_struct: dict) -> dict:
         """
         Extract common properties from a data field element.
 
@@ -4765,37 +4762,31 @@ class DataDesigner(Client2):
         Returns:
             dict: Dictionary of extracted properties
         """
-        props = _extract_referenceable_properties(element)
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        header_props = _extract_referenceable_properties(element)
+        # Populate requested relationship-based columns generically
+        col_data = get_required_relationships(element, col_data)
+        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
+        guid = header_props.get('GUID')
 
-        props['properties'] = element.get('properties', {})
-        props['namespace'] = props['properties'].get("namespace", "") or ""
-        properties = element.get('properties', {})
+        for column in columns_list:
+            key = column.get('key')
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            # Todo - any special columns go here..
+            # elif key == 'project_roles':
+            #     column['value'] = additional_props.get('project_roles', '')
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
 
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
+        for column in columns_list:
+            if column.get('key') == 'mermaid' and not column.get('value'):
+                column['value'] = element.get('mermaidGraph', '') or ''
+                break
+        return col_data
 
-        props['is_nullable'] = properties.get('isNullable', False)
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['minimum_length'] = properties.get('minimumLength', 0)
-        props['length'] = properties.get('length', 0)
-        props['precision'] = properties.get('precision', 0)
-        props['ordered_values'] = properties.get('orderedValues', False)
-        props['sort_order'] = properties.get('sortOrder', "") or ""
-
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
-        props['data_structures'] = associated_elements.get("data_structure_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['data_class'] = associated_elements.get("data_class_qnames", [])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _generate_basic_structured_output(self, elements: dict, filter: str, output_format: str,
+    def _generate_basic_structured_output(self, elements: dict, filter: str, type: str = None ,output_format: str = 'DICT',
                                           columns_struct: dict = None) -> str | list:
         """
         Generate output in the specified format for the given elements.
@@ -4837,7 +4828,7 @@ class DataDesigner(Client2):
                                    columns_struct,
                                    )
 
-    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None,
+    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None, type: str = None,
                                         output_format: str = "DICT",
                                         output_format_set: str | dict = None) -> str | list:
         """
@@ -4872,7 +4863,7 @@ class DataDesigner(Client2):
                                output_formats,
                                )
 
-    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
+    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
@@ -4907,7 +4898,7 @@ class DataDesigner(Client2):
                                output_formats,
                                )
 
-    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
+    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.
@@ -4942,6 +4933,9 @@ class DataDesigner(Client2):
                                None,
                                output_formats,
                                )
+
+    def _extract_additional_data_struct_properties(self, element, columns_struct):
+        return None
 
 
 if __name__ == "__main__":

@@ -677,7 +677,7 @@ def generate_entity_dict(elements: List[Dict],
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
                 entity_dict[name] = value
         else:
-            props = extract_properties_func(element)
+            props = extract_properties_func(element, columns_struct)
             # Add properties based on include/exclude lists
             for key, value in props.items():
                 if key not in ['properties', 'mermaid']:  # Skip the raw properties object
@@ -810,7 +810,14 @@ def generate_output(elements: Union[Dict, List[Dict]],
         Formatted output as string or list of dictionaries
     """
     columns = columns_struct['formats'].get('columns',None) if columns_struct else None
-    target_type = columns_struct.get('target_type') if columns_struct else None
+    if not columns:
+        columns_struct = select_output_format_set("Default",output_format)
+        if columns_struct:
+            columns = columns_struct.get('formats', {}).get('columns', None)
+
+    target_type = columns_struct.get('target_type', entity_type) if columns_struct else entity_type
+    if target_type is None:
+        target_type = entity_type
 
     # Ensure elements is a list
     if isinstance(elements, dict):

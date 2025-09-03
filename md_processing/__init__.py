@@ -34,15 +34,10 @@ from md_processing.md_commands.data_designer_commands import (process_data_field
                                                               process_data_class_list_command,
                                                               process_data_structure_upsert_command)
 
-from md_processing.md_commands.glossary_commands import (process_glossary_upsert_command, process_glossary_list_command,
-                                                         process_glossary_structure_command,
-                                                         process_category_upsert_command, update_category_parent,
-                                                         process_category_list_command, update_term_categories,
+from md_processing.md_commands.glossary_commands import (process_glossary_upsert_command,
                                                          process_term_upsert_command,
-                                                         process_create_term_term_relationship_command,
-                                                         process_term_list_command, process_term_details_command,
-                                                         process_term_history_command,
-                                                         process_term_revision_history_command)
+                                                         process_link_term_term_relationship_command,
+                                                         )
 from md_processing.md_commands.project_commands import (process_project_upsert_command, process_link_project_dependency_command,
                                                         process_link_project_hierarchy_command)
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility
@@ -53,9 +48,9 @@ from md_processing.md_processing_utils.common_md_utils import (render_markdown, 
                                                                is_present, find_key_with_value,
                                                                process_provenance_command, set_delete_request_body,
                                                                set_rel_request_body, set_filter_request_body,
-                                                               set_update_body, set_peer_gov_def_request_body,
-                                                                set_gov_prop_body, set_prop_body, set_create_body,
-                                                                GOVERNANCE_POLICIES, GOVERNANCE_CONTROLS, GOVERNANCE_DRIVERS
+                                                               set_update_body, set_peer_gov_def_request_body, set_rel_prop_body,
+                                                               set_gov_prop_body, set_element_prop_body, set_create_body,
+                                                               GOVERNANCE_POLICIES, GOVERNANCE_CONTROLS, GOVERNANCE_DRIVERS
                                                                )
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
                                                                 extract_attribute, process_simple_attribute,

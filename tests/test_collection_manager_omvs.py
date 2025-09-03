@@ -342,7 +342,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "4ad1fec9-9b42-4edd-bcde-a315f6c37599"
+            collection_guid = "5bf92cf6-2168-49c6-a686-40ebe4a7e0eb"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", output_format_set="Folders")
@@ -788,12 +788,23 @@ class TestCollectionManager:
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            display_name = "Clinical Trial Data Spec2"
-            description = "Clinical Trials Specification"
-            collection_type = "Data Specification"
+            body = {
 
-            response = c_client.create_data_spec_collection(display_name, description,
-                collection_type)
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor" : True,
+          "initialClassifications" : { },
+          "initialStatus" : "ACTIVE",
+          "parentAtEnd1" : True,
+          "properties" : {
+            "class" : "DataSpecProperties",
+            "displayName" : "Data Specification for the Teddy Bear Drop Foot Clinical Trial",
+            "qualifiedName" : "DataSpec::Data Specification for the Teddy Bear Drop Foot Clinical Trial",
+            "description" : "Principle data requirements for this clinical trial."
+
+          }
+        }
+
+            response = c_client.create_data_spec_collection(body=body)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds\n")
@@ -1231,7 +1242,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "cd18fd27-e88b-4aed-96c5-5009dd8acfaa"
+            collection_guid = "5bf92cf6-2168-49c6-a686-40ebe4a7e0eb"
             body = {
                 "class": "DeleteRequestBody",
                 "cascadedDelete": True

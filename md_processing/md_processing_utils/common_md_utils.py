@@ -55,16 +55,6 @@ ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROL
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
-# def setup_log():
-#     logger.remove()
-#     logger.add(sys.stderr, level="SUCCESS", format=CONSOLE_LOG_FORMAT, colorize=True)
-#     full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
-#     # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-#     #            colorize=True)
-#     logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=LOG_FORMAT,
-#                colorize=True)
-
-
 def split_tb_string(input: str)-> [Any]:
     """Split the string and trim the items"""
     l = [item.strip() for item in re.split(r'[;,\n]+',input)] if input is not None else None
@@ -226,23 +216,17 @@ def find_key_with_value(value: str) -> str | None:
 
 def set_find_body(object_type: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
-
-    start = attributes.get('Start From', {}).get('value', 0)
-    start_from = int(start) if start else 0
-    page = attributes.get('Page Size', {}).get('value', 0)
-    page_size = int(page) if page else 0
-    depth = attributes.get('Graph Query Depth', {}).get('value', 0)
-    depth = int(depth) if depth else 0
-
+    s = attributes.get('Search String', {}).get('value', None)
+    search_string = None if s =='*' else s
 
 
     body = {
         "class": "SearchStringRequestBody",
-        "searchString": attributes.get('Search String', {}).get('value', None),
+        "searchString": search_string,
         "startsWith": attributes.get('Start With', {}).get('value', True),
         "endWith": attributes.get('End With', {}).get('value', False),
         "ignoreCase": attributes.get('Ignore Case', {}).get('value', False),
-        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', False),
+        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', []),
         "startFrom": int(attributes.get('Start From', {}).get('value', 0)),
         "pageSize": int(attributes.get('Page Size', {}).get('value', 0)),
         # "metadataElementSubtypeNames": attributes.get('Metadata Element Subtype Name', {}).get('value', None),
@@ -250,8 +234,7 @@ def set_find_body(object_type: str, attributes: dict)->dict:
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
         "governanceZoneFilter" : attributes.get('Governance Zone Filter', {}).get('value', None),
         "graphQueryDepth": int(attributes.get('Graph Query Depth', {}).get('value', 0)),
-        "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
-        "initialClassifications": {}}
+    }
 
     return body
 
@@ -272,6 +255,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None),
         "parentRelationshipProperties": attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
+        "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
         "properties": "",
         "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
         "initialClassifications": {}}
@@ -293,9 +277,21 @@ def set_update_body(object_type: str, attributes: dict)->dict:
       "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
       "properties": "",
     }
+def set_rel_prop_body(object_type: str, attributes: dict)->dict:
+    prop_name = object_type.replace(" ", "")
+    display_name = attributes.get('Display Name', {}).get('value', None)
 
-def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    return {
+        "class": prop_name + "Properties",
+        "description": attributes['Description'].get('value', None),
+        "label": attributes.get('Label', {}).get('value', None),
+        "typeName" : attributes.get('Type Name', {}).get('value', None),
+        "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
+        "effectiveTo": attributes.get('Effective To', {}).get('value', None),
+        "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
+        }
 
+def set_element_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     display_name = attributes.get('Display Name', {}).get('value', None)
 
@@ -317,7 +313,7 @@ def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict
         }
 
 def set_product_body(object_type: str, qualified_name: str, attributes: dict)->dict:
-    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
     prop_bod["productName"] = attributes.get('Product Name', {}).get('value', None)
     prop_bod["maturity"] = attributes.get('Maturity', {}).get('value', None)
@@ -340,7 +336,7 @@ def set_update_status_body(object_type: str, attributes: dict)->dict:
 
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
-    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["domainIdentifier"] = attributes.get('Domain Identifier', {}).get('value', None)
     prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
     prop_bod['qualifiedName'] = qualified_name
@@ -421,7 +417,8 @@ def set_peer_gov_def_request_body(object_type: str, attributes: dict)->dict:
 
 def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
     rel_body = set_rel_request_body(object_type, attributes)
-    class_prop = camel_to_title_case(object_type) + "Properties"
+    # class_prop = camel_to_title_case(object_type) + "Properties"
+    class_prop = f"{object_type}Properties"
     rel_body["properties"] = {
         "class" : class_prop,
         "description": attributes.get('Description', {}).get('value', None),

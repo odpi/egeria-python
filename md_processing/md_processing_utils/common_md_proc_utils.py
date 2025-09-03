@@ -70,6 +70,9 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
     labels = {}
 
     command_spec = get_command_spec(f"Create {object_type}")
+    if command_spec is None:
+        logger.error("Command not found in command spec")
+        raise Exception("Command not found in command spec")
     attributes = command_spec.get('Attributes', [])
     command_display_name = command_spec.get('display_name', None)
     command_qn_prefix = command_spec.get('qn_prefix', None)
@@ -282,7 +285,11 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
         command_spec = get_command_spec(f"Link {object_type}")
     else:
         command_spec = get_command_spec(f"{object_action} {object_type}")
-
+    if command_spec is None:
+        msg = f"Parser failed to find `{object_action} {object_type}` command for in the specification"
+        logger.error(msg)
+        print(Markdown("# " + msg))
+        exit(0)
     attributes = command_spec.get('Attributes', [])
     command_display_name = command_spec.get('display_name', None)
 
@@ -374,20 +381,20 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
                 parsed_output['guid'] = parsed_attributes[key].get('guid', None)
                 parsed_output['qualified_name'] = parsed_attributes[key].get('qualified_name', None)
-                parsed_output['exists'] = parsed_attributes[key]['exists']
-                if parsed_attributes[key]['valid'] is False:
+                parsed_output['exists'] = parsed_attributes.get(key,{}).get('exists',None)
+                if parsed_attributes.get(key,{}).get('valid',None) is False:
                     parsed_output['valid'] = False
-                    parsed_output['reason'] += parsed_attributes[key]['reason']
+                    parsed_output['reason'] += parsed_attributes.get(key,{}).get('reason',None)
 
             elif style == 'Reference Name':
                 parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
                 if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) is None):
-                    msg = f"Required parameter `{parsed_attributes[key]['value']}` is missing"
+                    msg = f"Required parameter `{parsed_attributes.get(key,{}).get('value',None)}` is missing"
                     logger.error(msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
-                elif parsed_attributes[key]['value'] and parsed_attributes[key]['exists'] is False:
-                    msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
+                elif parsed_attributes.get(key,{}).get('value',None) and parsed_attributes.get(key,{}).get('exists',None) is False:
+                    msg = f"Reference Name `{parsed_attributes.get(key,{}).get('value',None)}` is specified but does not exist"
                     logger.error(msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg

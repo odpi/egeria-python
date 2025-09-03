@@ -300,9 +300,9 @@ def execute_format_set_action(
                     return
 
                 # Sort the results by display_name if available
-                if "display_name" in result[0]:
+                if result[0].get("display_name", None):
                     sorted_results = sorted(result, key=lambda k: k.get("display_name", ""))
-                elif "Display Name" in result[0]:
+                elif result[0].get("Display Name", None):
                     sorted_results = sorted(result, key=lambda k: k.get("Display Name", ""))
                 else:
                     sorted_results = result

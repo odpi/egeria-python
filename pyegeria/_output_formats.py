@@ -73,13 +73,13 @@ from loguru import logger
 
 from pyegeria._output_format_models import (Column, Format, ActionParameter, FormatSet, FormatSetDict,
                                             save_format_sets_to_json, load_format_sets_from_json)
-from pyegeria.config import settings
+# from pyegeria.config import settings
 
 
 # Get the configured value for the user format sets directory
 
-USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_format_sets_dir)
-
+# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_format_sets_dir)
+USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./")
 # Constants
 MD_SEPARATOR = "\n---\n\n"
 
@@ -513,13 +513,17 @@ output_format_sets = FormatSetDict({
         )
     ),
 
-    "Data Structure": FormatSet(
+    "Data Structures": FormatSet(
         target_type="Data Structure",
         heading="Data Structure Information",
         description="Attributes useful to Data Structures.",
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
-        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS)],  # Reusing common formats and columns
+        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS +
+                    [
+                        Column(name="Member Of", key='member_of_collections')
+                    ]
+                )],  # Reusing common formats and columns
         action=ActionParameter(
             function="DataDesigner.find_data_structures",
             required_params=["search_string"],
