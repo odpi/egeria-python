@@ -17,6 +17,12 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
+from typing import List, Dict, Any
+from html import escape
+try:
+    from markdown_it import MarkdownIt
+except Exception:
+    MarkdownIt = None
 
 from pyegeria import (
     EgeriaTech,
@@ -48,6 +54,40 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
+def _get_console_width_from_config(default_width: int = EGERIA_WIDTH) -> int:
+    try:
+        from pyegeria.config import settings
+        return int(getattr(settings.Environment, "console_width", default_width) or default_width)
+    except Exception:
+        return default_width
+
+def _get_outbox_dir() -> str:
+    root = os.environ.get("EGERIA_ROOT_PATH", EGERIA_ROOT_PATH)
+    out = os.environ.get("EGERIA_OUTBOX_PATH", EGERIA_OUTBOX_PATH)
+    return os.path.join(root, out)
+
+def _md_to_html(md_text: str) -> str:
+    if not md_text:
+        return ""
+    if MarkdownIt is None:
+        return f"<pre>{escape(md_text)}</pre>"
+    try:
+        return MarkdownIt().render(md_text)
+    except Exception:
+        return f"<pre>{escape(md_text)}</pre>"
+
+def _build_html_table(columns: List[str], rows: List[List[str]]) -> str:
+    ths = ''.join(f'<th>{escape(c)}</th>' for c in columns)
+    body_rows = []
+    for r in rows:
+        tds = []
+        for cell in r:
+            if isinstance(cell, str) and cell.lstrip().startswith('<table'):
+                tds.append(f"<td>{cell}</td>")
+            else:
+                tds.append(f"<td>{escape(cell or '')}</td>")
+        body_rows.append('<tr>' + ''.join(tds) + '</tr>')
+    return '<table>\n<thead><tr>' + ths + '</tr></thead>\n<tbody>\n' + "\n".join(body_rows) + '\n</tbody>\n</table>'
 
 def display_command_terms(
     search_string: str = "*",
@@ -60,6 +100,7 @@ def display_command_terms(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
     output_format: str = "TABLE",
+    mode: str = "terminal",
 ):
     """Display a table of glossary terms filtered by search_string and glossary, if specified. If no
         filters then all terms are displayed. If glossary_guid or name is specified, then only terms from that
@@ -113,7 +154,7 @@ def display_command_terms(
         elif output_format == "REPORT":
             action = "Report"
         if output_format != "TABLE":
-            file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
+            file_path = _get_outbox_dir()
             file_name = f"Command-Help-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
@@ -156,25 +197,21 @@ def display_command_terms(
 
         terms = g_client.find_glossary_terms(
             search_string,
-            glossary_guid,
-            starts_with=False,
-            ends_with=False,
-            status_filter=[],
             page_size=500,
         )
 
-        if type(terms) is str:
+        if isinstance(terms, str):
             print(f"No commands found - this was not the command you were looking for?! - {search_string} : {glossary_guid} ")
             sys.exit(0)
         sorted_terms = sorted(
-            terms, key=lambda k: k["glossaryTermProperties"].get("displayName","---")
+            terms, key=lambda k: (k.get("properties") or {}).get("displayName","---")
         )
         style = "bright_white on black"
         if type(terms) is str:
             return table
         glossary_info = {}
         for term in sorted_terms:
-            props = term.get("glossaryTermProperties", "None")
+            props = term.get("properties", "None")
             if props == "None":
                 return table
 
@@ -193,11 +230,9 @@ def display_command_terms(
             usage = props.get("usage", "---")
             # ex_us_out = Markdown(f"Example:\n{example}\n---\nUsage: \n{usage}")
 
-            classifications = term["elementHeader"]["classifications"]
+            classifications = term["elementHeader"].get("classifications",None)
             glossary_guid = None
-            for c in classifications:
-                if c["classificationName"] == "Anchors":
-                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
+
 
             if glossary_guid and glossary_guid in glossary_info:
                 glossary_name = glossary_info[glossary_guid]
@@ -218,9 +253,70 @@ def display_command_terms(
                 Markdown(usage),
                 style="bold white on black",
             )
+            if not classifications:
+                continue
+            for c in classifications:
+                if c["classificationName"] == "Anchors":
+                    glossary_guid = c["classificationProperties"]["anchorScopeGUID"]
 
         g_client.close_session()
         return table
+
+    # Shared fetch for md modes
+    if mode in ("md", "md-html"):
+        try:
+            terms = g_client.find_glossary_terms(search_string, page_size=500)
+        except Exception:
+            terms = []
+        if isinstance(terms, str) and terms == "NO_TERMS_FOUND":
+            print(f"\n==> No commands found for search string '{search_string}'")
+            return
+        # Build outputs
+        out_dir = _get_outbox_dir()
+        os.makedirs(out_dir, exist_ok=True)
+        stamp = time.strftime('%Y-%m-%d-%H-%M-%S')
+        if mode == "md":
+            # Simple sections per term
+            lines: List[str] = []
+            lines.append(f"# Dr.Egeria Commands (search: `{search_string}`)")
+            lines.append("")
+            sorted_terms = sorted(terms, key=lambda t: (t.get("properties") or {}).get("displayName", "---"))
+            for term in sorted_terms:
+                props = term.get("properties") or {}
+                name = props.get("displayName", "---") or "---"
+                desc = props.get("description", "") or ""
+                usage = props.get("usage", "") or ""
+                lines.append(f"## {name}")
+                lines.append("")
+                lines.append("### Description\n")
+                lines.append(desc if desc.strip() else "_No description_")
+                lines.append("")
+                if usage.strip():
+                    lines.append("### Usage\n")
+                    lines.append(usage)
+                    lines.append("")
+                lines.append("---\n")
+            content = "\n".join(lines)
+            file_name = f"Command-Help-{stamp}-md.md"
+        else:
+            # md-html nested tables
+            columns = ["Command", "Description", "Usage"]
+            rows: List[List[str]] = []
+            sorted_terms = sorted(terms, key=lambda t: (t.get("properties") or {}).get("displayName", "---"))
+            for term in sorted_terms:
+                props = term.get("properties") or {}
+                name = props.get("displayName", "---") or "---"
+                desc = props.get("description", "") or ""
+                usage_md = props.get("usage", "") or ""
+                usage_html = _md_to_html(usage_md).strip()
+                rows.append([name, desc, usage_html])
+            content = f"# Dr.Egeria Commands (search: `{search_string}`)\n\n" + _build_html_table(columns, rows) + "\n"
+            file_name = f"Command-Help-{stamp}-md-html.md"
+        full_file_path = os.path.join(out_dir, file_name)
+        with open(full_file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"\n==> Help written to {full_file_path}")
+        return
 
     try:
         with console.pager(styles=True):
@@ -242,6 +338,8 @@ def main():
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
     parser.add_argument("--guid", help="GUID of glossary to search")
+    parser.add_argument("--mode", choices=["terminal","md","md-html"], default="terminal", help="Output mode: terminal (default) prints Rich table; md writes Markdown; md-html writes Markdown with HTML tables.")
+    parser.add_argument("--search", help="Search string for commands", default=None)
 
     args = parser.parse_args()
 
@@ -254,13 +352,17 @@ def main():
     guid = args.guid if args.guid is not None else EGERIA_HOME_GLOSSARY_GUID
 
     try:
-        search_string = Prompt.ask("Enter the command you are searching for:", default="*")
+        search_default = args.search or "*"
+        search_string = args.search or Prompt.ask("Enter the command you are searching for:", default=search_default)
 
-        output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "LIST", "REPORT"], default="TABLE")
+        if args.mode == "terminal":
+            output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "LIST", "REPORT"], default="TABLE")
+        else:
+            output_format = "TABLE"
 
         display_command_terms(
-        search_string, guid, 'Egeria-Markdown', server, url,
-            userid, user_pass, output_format= output_format
+            search_string, guid, 'Egeria-Markdown', server, url,
+            userid, user_pass, output_format=output_format, mode=args.mode
         )
 
     except KeyboardInterrupt:

@@ -39,7 +39,6 @@ app_settings = settings
 app_config = app_settings.Environment
 config_logging()
 
-print(f"Console width is {app_config.console_width}")
 
 @click.command("load-archive")
 @click.option(

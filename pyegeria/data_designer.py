@@ -18,7 +18,8 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteRequestBody)
-from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict)
+from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_columns_from_properties,
+                                       get_required_relationships, populate_common_columns)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties)
 from pyegeria.utils import body_slimmer, dynamic_catch
@@ -1296,13 +1297,11 @@ class DataDesigner(Client2):
 
         member_of_collections = el_struct.get("memberOfCollections", {})
         for collection in member_of_collections:
-            c_type = collection["relatedElement"]["properties"].get("collectionType", "") or ""
+            type_name = collection["relatedElement"]["elementHeader"]["type"].get("typeName", "") or ""
             guid = collection["relatedElement"]["elementHeader"]["guid"]
-            name = collection["relatedElement"]["properties"].get("name", "") or ""
+            name = collection["relatedElement"]["properties"].get("displayName", "") or ""
             qualifiedName = collection['relatedElement']["properties"].get("qualifiedName", "") or ""
-            classifications = collection["relatedElement"]["elementHeader"]["classifications"]
-            for classification in classifications:
-                type_name = classification["type"]['typeName']
+            if type_name:
                 if type_name == "DataDictionary":
                     member_of_data_dicts_guids.append(guid)
                     member_of_data_dicts_names.append(name)
@@ -2517,7 +2516,7 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(filter, classification_names, body, start_from, page_size,
+            self._async_get_data_fields_by_name(filter_string, classification_names, body, start_from, page_size,
                                                 output_format, output_format_set))
         return response
 
@@ -4682,120 +4681,163 @@ class DataDesigner(Client2):
 
 
 
-    def _extract_data_structure_properties(self, element: dict) -> dict:
+    def _extract_data_structure_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Structure elements with related overlay.
+
+        Pattern:
+        - Populate common columns via populate_common_columns.
+        - Derive related properties using get_data_rel_elements_dict from the element body.
+        - Overlay values into matching columns' 'value' fields, handling formats as list or dict.
+        - Return the enriched columns_struct.
         """
-        Extract common properties from a data structure element.
+        col_data = populate_common_columns(element, columns_struct)
 
-        Args:
-            element (dict): The data structure element
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
 
-        Returns:
-            dict: Dictionary of extracted properties
+        if isinstance(related_map, dict) and related_map:
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
+
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                pass
+
+        return col_data
+
+
+    def _extract_data_class_properties(self, element: dict,columns_struct: dict) -> dict:
+        """Extractor for Data Class elements with related overlay, mirroring Data Field pattern."""
+        col_data = populate_common_columns(element, columns_struct)
+
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
+
+        if isinstance(related_map, dict) and related_map:
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
+
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                pass
+
+        return col_data
+
+    def _extract_data_field_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Field elements.
+        
+        Steps:
+        - Populate base/referenceable/common properties into columns_struct via populate_common_columns.
+        - Derive related properties using get_data_rel_elements_dict from the element body.
+        - For each column in columns_struct, if its 'key' matches a key from the related dict, set its 'value'.
+        - Return the enriched columns_struct.
         """
-        props = _extract_referenceable_properties(element)
+        # 1) Populate common columns first (header, properties, basic relationships, mermaid)
+        col_data = populate_common_columns(element, columns_struct)
+        
+        # 2) Build a map of related properties/elements from the body. The Data Designer methods
+        #    return a body that may include keys like assignedMeanings, otherRelatedElements,
+        #    memberOfCollections, memberDataFields, assignedDataClasses, nestedDataClasses, etc.
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
+        
+        if isinstance(related_map, dict) and related_map:
+            # 3) Walk the configured columns and overlay values when the key matches an entry from related_map
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    # Handle dict variant. It may be a single format dict or a wrapper containing 'formats'.
+                    # Examples seen:
+                    #   { 'columns': [...] }
+                    #   { 'types': 'ALL', 'columns': [...] }
+                    #   { 'formats': { 'columns': [...] } }
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), dict | list) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
 
-        props['properties'] = element.get('properties', {})
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    # If columns are on the top-level (non-standard), attempt to handle gracefully
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                # Do not fail rendering due to overlay issues; keep the base columns
+                pass
+        
+        return col_data
 
-        props['namespace'] = props['properties'].get("namespace", "") or ""
-
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
-
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_specs'] = associated_elements.get("member_of_data_spec_qnames", [])
-
-        # data_structures = associated_elements.get("member_of_data_struct_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['member_data_fields'] = associated_elements.get("member_data_field_qnames", [])
-
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _extract_data_class_properties(self, element: dict) -> dict:
-        """
-        Extract common properties from a data class element.
-
-        Args:
-            element (dict): The data class element
-
-        Returns:
-            dict: Dictionary of extracted properties
-        """
-        props = _extract_referenceable_properties(element)
-        properties = element.get('properties', {})
-        props['properties'] = properties
-
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
-
-        props['namespace'] = props['properties'].get("namespace", "") or ""
-
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['match_property_names'] = properties.get('matchPropertyNames', []) or []
-        props['match_threshold'] = properties.get('matchThreshold', 0)
-        props['allow_duplicate_values'] = properties.get('allowDuplicateValues', False)
-        props['is_case_sensitive'] = properties.get('isCaseSensitive', False)
-        props['is_nullable'] = properties.get('isNullable', False)
-
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['nested_data_classes'] = associated_elements.get("nested_data_class_qnames", [])
-        props['specialized_data_classes'] = associated_elements.get("specialized_data_class_qnames", [])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _extract_data_field_properties(self, element: dict) -> dict:
-        """
-        Extract common properties from a data field element.
-
-        Args:
-            element (dict): The data field element
-
-        Returns:
-            dict: Dictionary of extracted properties
-        """
-        props = _extract_referenceable_properties(element)
-
-        props['properties'] = element.get('properties', {})
-        props['namespace'] = props['properties'].get("namespace", "") or ""
-        properties = element.get('properties', {})
-
-        classification_names = []
-        for c in props['classifications']:
-            classification_names.append(c.get("classificationName", None))
-        props['classifications'] = classification_names
-
-        props['is_nullable'] = properties.get('isNullable', False)
-        props['data_type'] = properties.get('dataType', "") or ""
-        props['minimum_length'] = properties.get('minimumLength', 0)
-        props['length'] = properties.get('length', 0)
-        props['precision'] = properties.get('precision', 0)
-        props['ordered_values'] = properties.get('orderedValues', False)
-        props['sort_order'] = properties.get('sortOrder', "") or ""
-
-        # Now lets get the related elements
-        associated_elements = self.get_data_rel_elements_dict(element)
-        props['data_dictionaries'] = associated_elements.get("member_of_data_dicts_qnames", [])
-        props['data_structures'] = associated_elements.get("data_structure_qnames", [])
-        props['assigned_meanings'] = associated_elements.get("assigned_meanings_qnames", [])
-        props['parent_names'] = associated_elements.get("parent_qnames", [])
-        props['data_class'] = associated_elements.get("data_class_qnames", [])
-        props['mermaid'] = element.get('mermaidGraph', "") or ""
-
-        return props
-
-    def _generate_basic_structured_output(self, elements: dict, filter: str, output_format: str,
+    def _generate_basic_structured_output(self, elements: dict, filter: str, type: str = None ,output_format: str = 'DICT',
                                           columns_struct: dict = None) -> str | list:
         """
         Generate output in the specified format for the given elements.
@@ -4837,7 +4879,7 @@ class DataDesigner(Client2):
                                    columns_struct,
                                    )
 
-    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None,
+    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None, type: str = None,
                                         output_format: str = "DICT",
                                         output_format_set: str | dict = None) -> str | list:
         """
@@ -4872,7 +4914,7 @@ class DataDesigner(Client2):
                                output_formats,
                                )
 
-    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
+    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
@@ -4907,7 +4949,7 @@ class DataDesigner(Client2):
                                output_formats,
                                )
 
-    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, output_format: str = "DICT",
+    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
                                     output_format_set: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.
@@ -4943,6 +4985,12 @@ class DataDesigner(Client2):
                                output_formats,
                                )
 
+    def _extract_additional_data_struct_properties(self, element, columns_struct):
+        return None
+    def _extract_additional_data_field_properties(self, element, columns_struct):
+        return None
+    def _extract_additional_data_class_properties(self, element, columns_struct):
+        return None
 
 if __name__ == "__main__":
     print("Data Designer")

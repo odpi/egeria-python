@@ -1221,7 +1221,7 @@ class RuntimeManager(Client2):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "displayName",
             qualified_name,
             "Metadata Access Server",
         )

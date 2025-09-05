@@ -17,7 +17,7 @@ from rich.markdown import Markdown
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
                                                                     sync_collection_memberships)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
-    set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, \
+    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, \
     set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_request_body_for_type
 
@@ -102,7 +102,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
 
             #   Set the property body for a glossary collection
             #
-            prop_body = set_prop_body(obj, qualified_name, attributes)
+            prop_body = set_element_prop_body(obj, qualified_name, attributes)
             prop_body["identifier"] = attributes.get('Identifier', {}).get('value', None)
             prop_body["mission"] = attributes.get('Mission', {}).get('value', None)
             prop_body["purposes"] = attributes.get('Purposes', {}).get('value', None)
@@ -268,11 +268,11 @@ def process_link_project_hierarchy_command(egeria_client: EgeriaTech, txt: str, 
                     return
 
                 else:
-                    body = set_rel_request_body_for_type("Project", attributes)
+                    body = set_rel_request_body_for_type("ProjectHierarchy", attributes)
 
                     egeria_client.set_project_hierarchy(project_guid =child_project_guid,
-                                                        parent_project_guid = parent_project_guid,
-                                                        body=body_slimmer(body))
+                                                        parent_project_guid = parent_project_guid)
+                                                        # body=body_slimmer(body))
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -297,12 +297,14 @@ def process_link_project_hierarchy_command(egeria_client: EgeriaTech, txt: str, 
 
 def process_link_project_dependency_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
 
-#     """ Set one project to manage another."""
+#     """ Set one project dependence on another."""
 #
+
     command, object_type, object_action = extract_command_plus(txt)
     print(Markdown(f"# {command}\n"))
 
-    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+    parsed_output = parse_view_command(egeria_client, object_type, object_action,
+                                       txt, directive)
 
     if not parsed_output:
         logger.error(f"No output for `{object_action}`")
@@ -372,10 +374,10 @@ def process_link_project_dependency_command(egeria_client: EgeriaTech, txt: str,
                     return
 
                 else:
-                    body = set_rel_request_body_for_type("Project", attributes)
+                    body = set_rel_request_body_for_type("ProjectDependency", attributes)
 
                     egeria_client.set_project_dependency(project_guid =child_project_guid,
-                                                        parent_project_guid = parent_project_guid,
+                                                        upstream_project_guid = parent_project_guid,
                                                         body=body_slimmer(body))
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)

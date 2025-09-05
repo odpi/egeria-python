@@ -24,7 +24,7 @@ from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.my_profile_omvs import MyProfile
 from pyegeria.feedback_manager_omvs import FeedbackManager
-from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.solution_architect import SolutionArchitect
 from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
 from pyegeria.valid_metadata_omvs import ValidMetadataManager

@@ -28,7 +28,7 @@ from pyegeria import (
     save_mermaid_html,
 )
 from pyegeria._exceptions import print_exception_response
-from pyegeria.solution_architect_omvs import SolutionArchitect
+from pyegeria.solution_architect import SolutionArchitect
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria import select_output_format_set
+from pyegeria._output_formats import select_output_format_set
 from pyegeria._client_new import Client2
 from pyegeria._output_formats import get_output_format_type_match
 from pyegeria.config import settings as app_settings
@@ -17,7 +17,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody)
 from pyegeria.output_formatter import generate_output, populate_columns_from_properties, \
-    _extract_referenceable_properties, get_required_relationships
+    _extract_referenceable_properties, get_required_relationships, populate_common_columns, overlay_additional_values
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -28,20 +28,33 @@ PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject
 
 class ProjectManager(Client2):
     """
-    Create and manage projects. Projects may be organized in a hierarchy.
-    See https://egeria-project.org/types/1/0130-Projects
+    Manage Open Metadata Projects via the Project Manager OMVS.
 
-    Attributes:
+    This client provides asynchronous and synchronous helpers to create, update, search,
+    and relate Project elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
 
-        server_name: str
-            The name of the View Server to connect to.
-        platform_url : str
-            URL of the server platform to connect to
-        user_id : str
-            The identity of the user calling the method - this sets a default optionally used by the methods
-            when the user doesn't pass the user_id on a method call.
-        user_pwd: str
-            The password associated with the user_id. Defaults to None
+    References
+    - Egeria concept: https://egeria-project.org/concepts/project
+    - Type lineage: https://egeria-project.org/types/1/0130-Projects
+
+    Parameters
+    -----------
+    view_server : str
+        The name of the View Server to connect to.
+    platform_url : str
+        URL of the server platform to connect to.
+    user_id : str
+        Default user identity for calls (can be overridden per call).
+    user_pwd : str, optional
+        Password for the user_id. If a token is supplied, this may be None.
+
+    Notes
+    -----
+    - Most high-level list/report methods accept an `output_format` and an optional `output_format_set` and
+      delegate rendering to `pyegeria.output_formatter.generate_output` along with shared helpers such as
+      `populate_common_columns`.
+    - Private extractor methods follow the convention: `_extract_<entity>_properties(element, columns_struct)` and
+      must return the same `columns_struct` with per-column `value` fields populated.
     """
 
     def __init__(
@@ -88,28 +101,12 @@ class ProjectManager(Client2):
             'properties': props,
             'elementHeader': element.get('elementHeader', {}),
         }
-        col_data = populate_columns_from_properties(element, columns_struct)
-        # col_data = populate_columns_from_properties(normalized, columns_struct)
+        # Common population pipeline
+        col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('columns', [])
-        header_props = _extract_referenceable_properties(element)
-        # Populate requested relationship-based columns generically
-        col_data = get_required_relationships(element, col_data)
-        additional_props = self._extract_additional_project_properties(element, columns_struct)
-        guid = header_props.get('GUID')
-
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif key == 'project_roles':
-                column['value'] = additional_props.get('project_roles', '')
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
-
-        for column in columns_list:
-            if column.get('key') == 'mermaid' and not column.get('value'):
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
+        # Overlay extras (project roles) only where empty
+        extra = self._extract_additional_project_properties(element, columns_struct)
+        col_data = overlay_additional_values(col_data, extra)
         return col_data
 
 
@@ -1198,7 +1195,7 @@ class ProjectManager(Client2):
         logger.info(f"Project {project_guid} depends on -> {upstream_project_guid}")
 
     @dynamic_catch
-    async def _async_set_project_dependency(self, project_guid: str,
+    def set_project_dependency(self, project_guid: str,
                                             upstream_project_guid: str,
                                             body: dict | NewRelationshipRequestBody = None):
         """ Link two dependent digital products.  The linked elements are of type DigitalProduct.

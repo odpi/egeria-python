@@ -133,7 +133,7 @@ PROJECT_COMMANDS = ["Create Project", "Update Project", "Create Campaign", "Upda
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
-                "List Glossary Categories", "Lnk Project Dependency", "Attach Project Dependency",
+                "List Glossary Categories", "Link Project Dependency", "Attach Project Dependency",
                 "Detach Project Dependency", "Link Parent Project", "Attach Parent Project", "Detach Parent Project",
                 "Detach Parent Project",
                  "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
@@ -144,13 +144,13 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Link Information Supply Chain Peers", "Link Supply Chains", "Link Information Supply Chains",
                 "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains",
                 "Create Solution Component", "Update Solution Component", "Link Solution Components", "Wire Solution Components",
-                "Detach Solution Components", "Unlink Solution Components", "Create Term-Term Relationship",
-                "Update Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
+                "Detach Solution Components", "Unlink Solution Components", "Link Term-Term Relationship", "Link Terms", "Detach Terms",
+                "Detach Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
                 "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",
                 "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
                 "Update Data Dict",
                 "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
-                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",
+                "View Data Classes", "View Data Class", "Create Data Class", "Update Data Class",
                 "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
                 "Create Agreement", "Update Agreement",
                 "Link Digital Products", "Link Product-Product", "Detach Digital Products", "Detach Product-Product",
@@ -233,6 +233,28 @@ def get_command_spec(command: str) -> dict | None:
         if obj:
             return COMMAND_DEFINITIONS.get('Command Specifications', {}).get(obj, None)
 
+def does_command_match(command: str, alt_names: list[str]) -> bool:
+    # Define verb synonyms
+    verbs_synonyms = {
+        "Link": ["Link", "Attach", "Detach", "Unlink"],
+        "Create": ["Create", "Update"],
+        "View": ["List", "View"],
+    }
+
+    # Extract the verb from the command
+    command_parts = command.split(maxsplit=1)
+    if len(command_parts) < 2:
+        return False  # Invalid command structure
+    verb, terms = command_parts
+
+    # Generate all possible combinations and check for a match
+    for primary_verb, synonyms in verbs_synonyms.items():
+        for synonym in synonyms:
+            for alt_name in alt_names:
+                tst = f"{synonym} {alt_name}"
+                if tst == command:
+                    return True
+    return False
 
 def find_alternate_names(command: str) -> str | None:
     global COMMAND_DEFINITIONS
@@ -241,7 +263,13 @@ def find_alternate_names(command: str) -> str | None:
     for key, value in comm_spec.items():
         if isinstance(value, dict):
             v = value.get('alternate_names', "")
-            if command in v:
+            v = v.split(';') if v else ""
+            verb = command.split()[0] if command else ""
+            normalized_command = " ".join(command.split())
+            # normalized_alternates = (" ".join(s.split()) for s in v)
+            if (normalized_command in v):
+                return key
+            elif does_command_match(normalized_command, v):
                 return key
     return None
 

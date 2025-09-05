@@ -13,7 +13,7 @@ from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary,  set_update_body, \
-    set_element_status_request_body, set_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
+    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_object_classifications, set_product_body
 
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
@@ -208,10 +208,10 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 else:
                     print(Markdown(
                         f"==> Validation of `{command}` completed successfully! Proceeding to apply the changes.\n"))
-                prop_body = set_prop_body(obj,qualified_name,attributes)
+                prop_body = set_element_prop_body(obj, qualified_name, attributes)
 
                 body = set_update_body(obj, attributes)
-                body['properties'] = set_prop_body(obj,qualified_name,attributes)
+                body['properties'] = set_element_prop_body(obj, qualified_name, attributes)
 
                 egeria_client.update_collection(guid, body)
                 if status:
@@ -237,7 +237,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
                     body["initialClassifications"] = set_object_classifications(object_type, attributes, ["Folder", "Root Collection"])
-                    body["properties"] = set_prop_body(obj, qualified_name,attributes)
+                    body["properties"] = set_element_prop_body(obj, qualified_name, attributes)
                     parent_guid = body.get('parentGuid', None)
                     if parent_guid:
                         body['parentRelationshipTypeName'] = "CollectionMembership"
@@ -440,10 +440,10 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                 else:
                     print(Markdown(
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-                prop_body = set_prop_body(obj, qualified_name, attributes)
+                prop_body = set_element_prop_body(obj, qualified_name, attributes)
 
                 body = set_update_body(object_type, attributes)
-                body['properties'] = set_prop_body(object_type, qualified_name, attributes)
+                body['properties'] = set_element_prop_body(object_type, qualified_name, attributes)
 
                 egeria_client.update_agreement(guid, body)
                 # if status is not None and status !={}:
@@ -470,7 +470,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
                     body["initialClassifications"] = set_object_classifications(object_type, attributes,
                                                                                 ["Data Sharing Agreement"])
-                    body["properties"] = set_prop_body(obj, qualified_name, attributes)
+                    body["properties"] = set_element_prop_body(obj, qualified_name, attributes)
 
                     guid = egeria_client.create_agreement(body=body)
                     if guid:
@@ -944,13 +944,16 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
     print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+    if parsed_output is None:
+        logger.error(f"Input error in command `{txt}`")
+        return None
 
     print(Markdown(parsed_output['display']))
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
-    subscriber_guid = attributes.get('Subscriber', {}).get('guid', None)
+    subscriber_guid = attributes.get('Subscriber Id', {}).get('guid', None)
     subscription_guid = attributes.get('Subscription', {}).get('guid', None)
 
     valid = parsed_output['valid']

@@ -33,6 +33,91 @@ you can engage via the community or directly reach out to
 
 This is a learning experience.
 
+## Configuration
+
+pyegeria uses a simple, predictable precedence for configuration:
+
+1. Built-in defaults (Pydantic models in pyegeria.config)
+2. Config file (JSON) if found
+3. Environment variables (OS env and optional .env)
+4. Explicit env file passed to get_app_config/load_app_config
+
+Environment always overrides config file, which overrides defaults.
+
+### Where to put your configuration
+
+- Config file: A JSON file named config.json. The loader looks in this order:
+  - If PYEGERIA_CONFIG_DIRECTORY is set: $PYEGERIA_CONFIG_DIRECTORY/$PYEGERIA_CONFIG_FILE
+  - Else if PYEGERIA_ROOT_PATH is set: $PYEGERIA_ROOT_PATH/$PYEGERIA_CONFIG_FILE
+  - Else: ./config.json (the current working directory)
+
+- .env file: Optional. If present in the current working directory (.env), variables from it will be loaded. You can also pass a specific env file path to get_app_config(env_file=...) or load_app_config(env_file=...). For sample variables, see config/env in this repo.
+
+### Common environment variables
+
+- PYEGERIA_CONFIG_DIRECTORY: directory containing your config.json
+- PYEGERIA_ROOT_PATH: root folder used to resolve config.json when CONFIG_DIRECTORY is not set
+- PYEGERIA_CONFIG_FILE: filename of the configuration JSON (default: config.json)
+- PYEGERIA_CONSOLE_WIDTH: integer console width (e.g., 200 or 280)
+- EGERIA_PLATFORM_URL, EGERIA_VIEW_SERVER_URL, EGERIA_ENGINE_HOST_URL: URLs for your Egeria servers
+- EGERIA_USER, EGERIA_USER_PASSWORD: credentials used by some clients
+- Logging related: PYEGERIA_ENABLE_LOGGING, PYEGERIA_LOG_DIRECTORY, PYEGERIA_CONSOLE_LOG_LVL, PYEGERIA_FILE_LOG_LVL, etc.
+
+See config/env for more variables and defaults.
+
+### Example .env
+
+# PYEGERIA_CONFIG_DIRECTORY=/path/to/configs
+# PYEGERIA_ROOT_PATH=/path/to/project
+# PYEGERIA_CONFIG_FILE=config.json
+# EGERIA_PLATFORM_URL=https://localhost:9443
+# EGERIA_VIEW_SERVER=qs-view-server
+# EGERIA_VIEW_SERVER_URL=https://localhost:9443
+# EGERIA_USER=myuser
+# EGERIA_USER_PASSWORD=mypassword
+# PYEGERIA_CONSOLE_WIDTH=280
+
+Lines starting with # are comments. Quotes are optional; python-dotenv/pydantic-settings handle both.
+
+### Example config.json (minimal)
+
+{
+  "Environment": {
+    "Pyegeria Root": ".",
+    "Egeria Platform URL": "https://localhost:9443"
+  },
+  "User Profile": {
+    "Egeria Home Collection": "MyHome"
+  }
+}
+
+### Programmatic usage
+
+from pyegeria import get_app_config
+cfg = get_app_config()  # uses OS env and ./.env
+# or with explicit env file
+cfg = get_app_config(env_file="/path/to/dev.env")
+
+# Access values via Pydantic models
+print(cfg.Environment.egeria_platform_url)
+print(cfg.Logging.enable_logging)
+
+### CLI quick checks
+
+- Validate your env file:
+  python scripts/validate_env.py --env config/env
+  python scripts/validate_env.py               # auto-detects ./config/env or ./.env
+
+- Run tests (requires Poetry):
+  poetry install
+  poetry run pytest -v
+
+### Troubleshooting
+
+- If your env doesn’t seem to apply, confirm which config.json is used (the loader checks PYEGERIA_CONFIG_DIRECTORY first, then PYEGERIA_ROOT_PATH, then ./config.json).
+- .env files are optional. Missing .env is not an error.
+- You can always override values with OS environment variables (they take precedence over config.json).
+
 
 
 ----

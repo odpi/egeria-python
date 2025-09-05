@@ -92,11 +92,20 @@ def extract_attribute(text: str, labels: set) -> str | None:
     for label in labels:
         # Construct pattern for the current label
         # text = re.sub(r'\s+', ' ', text).strip() # just added
-        text = re.sub(r'\n\n+', '\n\n', text).strip()
+        # text = re.sub(r'\n\n+', '\n\n', text).strip()
 
-        label = label.strip()
-        pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+        # Replace multiple spaces or tabs with a single space
+        normalized = re.sub(r'\s+', ' ', text)
+        # Collapse multiple blank lines into a single one
+        normalized = re.sub(r'\n\s*\n', '\n', normalized).strip()
 
+        # label = label.strip()
+        # pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+        # Normalize the label
+        normalized_label = re.sub(r'\s+', ' ', label.strip())
+
+        # Construct the regex pattern
+        pattern = rf"##\s*{re.escape(normalized_label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
         # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
         match = re.search(pattern, text, re.DOTALL)
         if match:
@@ -412,7 +421,7 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
                 return q_name, guid, unique, exists
 
     # Haven't seen this element before
-    property_names = ['qualifiedName', 'name', 'displayName', 'title']
+    property_names = ['qualifiedName', 'displayName', 'title']
     open_metadata_type_name = None
     details = egeria_client.get_elements_by_property_value(element_name, property_names, open_metadata_type_name)
     if isinstance(details, str):
@@ -421,12 +430,19 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
         exists = False
         return None, None, unique, exists
     if len(details) > 1:
-        msg = (f"More than one element with name {element_name} found, please specify a "
-               f"**Qualified Name**")
-        print_msg("DEBUG-ERROR", msg, debug_level)
-        unique = False
-        exists = None
-        return element_name, None, unique, exists
+        if q_name is None:
+            q_name = egeria_client.__create_qualified_name__(element_type, element_name)
+            guid = egeria_client.__get_guid__(qualified_name=q_name)
+            update_element_dictionary(q_name, {'guid': guid})
+            exists = True if guid != "No elements found" else False
+            return q_name, guid, unique, exists
+        else:
+            msg = (f"More than one element with name {element_name} found, please specify a "
+                   f"**Qualified Name**")
+            print_msg("DEBUG-ERROR", msg, debug_level)
+            unique = False
+            exists = None
+            return element_name, None, unique, exists
 
     el_qname = details[0]["properties"].get('qualifiedName', None)
     el_guid = details[0]['elementHeader']['guid']

@@ -55,16 +55,6 @@ ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROL
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
-# def setup_log():
-#     logger.remove()
-#     logger.add(sys.stderr, level="SUCCESS", format=CONSOLE_LOG_FORMAT, colorize=True)
-#     full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
-#     # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
-#     #            colorize=True)
-#     logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=LOG_FORMAT,
-#                colorize=True)
-
-
 def split_tb_string(input: str)-> [Any]:
     """Split the string and trim the items"""
     l = [item.strip() for item in re.split(r'[;,\n]+',input)] if input is not None else None
@@ -226,23 +216,17 @@ def find_key_with_value(value: str) -> str | None:
 
 def set_find_body(object_type: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
-
-    start = attributes.get('Start From', {}).get('value', 0)
-    start_from = int(start) if start else 0
-    page = attributes.get('Page Size', {}).get('value', 0)
-    page_size = int(page) if page else 0
-    depth = attributes.get('Graph Query Depth', {}).get('value', 0)
-    depth = int(depth) if depth else 0
-
+    s = attributes.get('Search String', {}).get('value', None)
+    search_string = None if s =='*' else s
 
 
     body = {
         "class": "SearchStringRequestBody",
-        "searchString": attributes.get('Search String', {}).get('value', None),
+        "searchString": search_string,
         "startsWith": attributes.get('Start With', {}).get('value', True),
         "endWith": attributes.get('End With', {}).get('value', False),
         "ignoreCase": attributes.get('Ignore Case', {}).get('value', False),
-        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', False),
+        "limitResultsByStatus": attributes.get('Limit Results By Status', {}).get('value', []),
         "startFrom": int(attributes.get('Start From', {}).get('value', 0)),
         "pageSize": int(attributes.get('Page Size', {}).get('value', 0)),
         # "metadataElementSubtypeNames": attributes.get('Metadata Element Subtype Name', {}).get('value', None),
@@ -250,13 +234,20 @@ def set_find_body(object_type: str, attributes: dict)->dict:
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
         "governanceZoneFilter" : attributes.get('Governance Zone Filter', {}).get('value', None),
         "graphQueryDepth": int(attributes.get('Graph Query Depth', {}).get('value', 0)),
-        "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
-        "initialClassifications": {}}
+    }
 
     return body
 
 
 def set_create_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for a create action (NewElementRequestBody).
+
+    Notes on two-layer convention:
+    - Outer layer (this function): action wrapper with metadata like externalSource*, effectiveTime, anchor/parent hints, and an empty "properties" field.
+    - Inner layer: an element-type-specific Properties structure built by set_element_prop_body, set_product_body, set_data_field_body, etc.
+    Callers should build the inner body separately with the appropriate helper and then assign it to body["properties"].
+    """
     prop_name = object_type.replace(" ", "")
     body = {
         "class": "NewElementRequestBody",
@@ -272,6 +263,7 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None),
         "parentRelationshipProperties": attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
+        "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
         "properties": "",
         "initialStatus": attributes.get('Status', {}).get('value', "ACTIVE"),
         "initialClassifications": {}}
@@ -282,6 +274,13 @@ def set_create_body(object_type: str, attributes: dict)->dict:
 
 
 def set_update_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for an update action (UpdateElementRequestBody).
+
+    Two-layer convention:
+    - Outer layer (this function) provides action metadata and an empty "properties" slot.
+    - Inner layer must be constructed via element-specific helpers (e.g., set_element_prop_body) and assigned to the returned dict's "properties" key by the caller before invoking the client.
+    """
     return {
       "class" : "UpdateElementRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -293,9 +292,31 @@ def set_update_body(object_type: str, attributes: dict)->dict:
       "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
       "properties": "",
     }
+def set_rel_prop_body(object_type: str, attributes: dict)->dict:
+    prop_name = object_type.replace(" ", "")
+    display_name = attributes.get('Display Name', {}).get('value', None)
 
-def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    return {
+        "class": prop_name + "Properties",
+        "description": attributes['Description'].get('value', None),
+        "label": attributes.get('Label', {}).get('value', None),
+        "typeName" : attributes.get('Type Name', {}).get('value', None),
+        "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
+        "effectiveTo": attributes.get('Effective To', {}).get('value', None),
+        "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
+        }
 
+def set_element_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    """
+    Build the INNER element-specific Properties body to be placed under the outer body's "properties" key.
+
+    This returns the typed properties structure (e.g., "ReferenceableProperties" subtypes) appropriate for the object_type.
+    Usage example:
+    - outer = set_create_body(object_type, attributes)
+    - props = set_element_prop_body(object_type, qualified_name, attributes)
+    - outer["properties"] = props
+    - client.create_xxx(outer)
+    """
     prop_name = object_type.replace(" ", "")
     display_name = attributes.get('Display Name', {}).get('value', None)
 
@@ -317,7 +338,7 @@ def set_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict
         }
 
 def set_product_body(object_type: str, qualified_name: str, attributes: dict)->dict:
-    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
     prop_bod["productName"] = attributes.get('Product Name', {}).get('value', None)
     prop_bod["maturity"] = attributes.get('Maturity', {}).get('value', None)
@@ -327,7 +348,21 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict)->d
     prop_bod["nextVersion"] = attributes.get('Next Version Date', {}).get('value', [])
     return prop_bod
 
-
+def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+    prop_bod["namespace"] = attributes.get('Namespace', {}).get('value', None)
+    prop_bod["aliases"] = attributes.get('Aliases', {}).get('value', [])
+    prop_bod["namePatterns"] = attributes.get('Name Patterns', {}).get('value', [])
+    prop_bod["defaultValue"] = attributes.get('Default Value', {}).get('value', None)
+    prop_bod["isNullable"] = attributes.get('Is Nullable', {}).get('value', None)
+    prop_bod["dataType"] = attributes.get('Data Type', {}).get('value', None)
+    prop_bod["units"] = attributes.get('Units', {}).get('value', None)
+    prop_bod["minimumLength"] = attributes.get('Minimum Length', {}).get('value', None)
+    prop_bod["length"] = attributes.get('Length', {}).get('value', None)
+    prop_bod["precision"] = attributes.get('Precision', {}).get('value', None)
+    prop_bod["orderedValues"] = attributes.get('Ordered Values', {}).get('value', [])
+    prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
+    return prop_bod
 
 def set_update_status_body(object_type: str, attributes: dict)->dict:
     return {
@@ -340,7 +375,7 @@ def set_update_status_body(object_type: str, attributes: dict)->dict:
 
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
-    prop_bod = set_prop_body(object_type, qualified_name, attributes)
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["domainIdentifier"] = attributes.get('Domain Identifier', {}).get('value', None)
     prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
     prop_bod['qualifiedName'] = qualified_name
@@ -398,6 +433,11 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
 
 
 def set_rel_request_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for creating a relationship (NewRelationshipRequestBody).
+    The inner relationship properties must be assigned to the returned dict under the "properties" key,
+    commonly via set_rel_prop_body or set_rel_request_body_for_type.
+    """
     return {
       "class" : "NewRelationshipRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -420,8 +460,14 @@ def set_peer_gov_def_request_body(object_type: str, attributes: dict)->dict:
     return rel_body
 
 def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
+    """
+    Convenience helper that builds both layers (outer + inner) for a relationship of a known type.
+    It creates the outer NewRelationshipRequestBody via set_rel_request_body and fills rel_body["properties"]
+    with a typed properties structure under the "class" of f"{object_type}Properties".
+    """
     rel_body = set_rel_request_body(object_type, attributes)
-    class_prop = camel_to_title_case(object_type) + "Properties"
+    # class_prop = camel_to_title_case(object_type) + "Properties"
+    class_prop = f"{object_type}Properties"
     rel_body["properties"] = {
         "class" : class_prop,
         "description": attributes.get('Description', {}).get('value', None),

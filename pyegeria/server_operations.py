@@ -115,7 +115,7 @@ class ServerOps(Platform):
             + "/instance/open-metadata-archives/file"
         )
 
-        await self._async_make_request("POST-DATA", url, archive_file, time_out=timeout)
+        await self._async_make_request("POST-DATA", url, archive_file,  time_out=timeout)
 
     def add_archive_file(
         self, archive_file: str, server: str = None, timeout: int = 30
