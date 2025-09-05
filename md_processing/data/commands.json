@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "Sep 2, 2025 at 4:41:26 PM",
+    "exported": "Sep 4, 2025 at 10:26:24 AM",
     "Create Governance Driver": {
       "display_name": "Governance Driver",
       "qn_prefix": "GovDriver",
@@ -33349,7 +33349,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "DataField-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -33658,7 +33658,7 @@
       ]
     },
     "View Data Classes": {
-      "display_name": "View Data Fields",
+      "display_name": "View Data Classes",
       "qn_prefix": "",
       "alternate_names": " Data Class",
       "family": "Data Designer",
@@ -33728,7 +33728,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "DataClass-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",

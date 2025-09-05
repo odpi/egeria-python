@@ -39,10 +39,6 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            PROJECT_COMMANDS, process_link_project_hierarchy_command)
 from .md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
-                                                              process_data_collection_list_command,
-                                                              process_data_structure_list_command,
-                                                              process_data_field_list_command,
-                                                              process_data_class_list_command,
                                                               process_data_field_upsert_command,
                                                               process_data_structure_upsert_command,
                                                               process_data_class_upsert_command)
@@ -178,13 +174,14 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 result = process_data_class_upsert_command(client, current_block, directive)
             elif potential_command in ["View Data Dictionaries", "View Data Dictionary", "View Data Specifications",
                                        "View Data Specs"]:
-                result = process_data_collection_list_command(client, current_block, directive)
+                result = process_output_command(client, current_block, directive)
+
             elif potential_command in ["View Data Structures", "View Data Structure"]:
-                result = process_data_structure_list_command(client, current_block, directive)
+                result = process_output_command(client, current_block, directive)
             elif potential_command in ["View Data Fields", "View Data Field"]:
-                result = process_data_field_list_command(client, current_block, directive)
+                result = process_output_command(client, current_block, directive)
             elif potential_command in ["View Data Classes", "View Data Class"]:
-                result = process_data_class_list_command(client, current_block, directive)
+                result = process_output_command(client, current_block, directive)
             elif potential_command in ["Create Digital Product", "Create Data Product","Update Digital Product", "Update Data Product"]:
                 result = process_digital_product_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Agreement", "Create Data Sharing Agreement", "Create Digital Subscription",
@@ -302,7 +299,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
         else:
             if directive != 'display':
                 print("\nNo updates detected. New File not created.")
-                logger.error("===> Unknown Command? <===")
+                logger.error(f"===> Unknown Command?  <===")
 
     except PyegeriaException as e:
         print_basic_exception(e)

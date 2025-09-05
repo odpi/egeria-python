@@ -22,6 +22,7 @@ from pyegeria.output_formatter import (
     _extract_referenceable_properties,
     populate_columns_from_properties,
     get_required_relationships,
+    populate_common_columns,
 )
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 
@@ -108,16 +109,26 @@ class GovernanceOfficer(Client2):
                                                output_format: str = 'DICT', output_format_set: dict | str = None
                                                ) -> str | list:
         """
-        Generate output for governance definitions in the specified format, using output format sets.
+        Render governance definitions using the shared output pipeline.
 
-        Args:
-            elements: Dictionary or list of dictionaries containing governance definition elements
-            search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            output_format_set: Optional format set name or structure to control columns
+        Parameters
+        ----------
+        elements : dict | list[dict]
+            Element(s) returned by the OMVS.
+        search_string : str
+            The search string used to retrieve these elements (shown in preamble for some formats).
+        element_type_name : str, optional
+            Friendly type label to display (defaults to "Governance Definition").
+        output_format : str
+            One of: MD, FORM, REPORT, LIST, DICT, MERMAID, HTML.
+        output_format_set : dict | str, optional
+            Either a label for a format set or a concrete format-set dict. When omitted, a sensible
+            default for Governance Definitions is chosen, falling back to "Default".
 
-        Returns:
-            Formatted output as string or list of dictionaries
+        Returns
+        -------
+        str | list
+            Rendered output in the requested format.
         """
         # Ensure elements handled consistently for MERMAID
         if output_format == "MERMAID":
@@ -167,27 +178,13 @@ class GovernanceOfficer(Client2):
         Returns:
             dict: columns_struct with populated 'value' fields
         """
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
-
-        # Header-derived values (GUID, type_name, etc.)
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
-
-        # Populate requested relationship-based columns generically
-        col_data = get_required_relationships(element, col_data)
-
-        # Mermaid graph if requested
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
-
+        # Use the common population pipeline to reduce duplication
+        col_data = populate_common_columns(element, columns_struct,
+                                           include_header=True,
+                                           include_relationships=True,
+                                           include_subject_area=True,
+                                           mermaid_source_key='mermaidGraph',
+                                           mermaid_dest_key='mermaid')
         return col_data
 
     def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:

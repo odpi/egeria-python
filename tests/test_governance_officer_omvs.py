@@ -22,6 +22,12 @@ from pyegeria._exceptions_new import print_validation_error
 from pyegeria.models import SearchStringRequestBody
 
 console = Console(width=200)
+from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server
+import pytest
+
+@pytest.fixture(autouse=True)
+def _ensure_server():
+    require_local_server()
 
 from pyegeria import GovernanceOfficer, PyegeriaException, print_basic_exception
 from pyegeria._exceptions import (
@@ -49,10 +55,10 @@ def valid_guid(guid):
 
 
 class TestGovernanceOfficer:
-    platform_url = "https://localhost:9443"
-    view_server = "qs-view-server"
-    user = "erinoverview"
-    password = "secret"
+    platform_url = PLATFORM_URL
+    view_server = VIEW_SERVER
+    user = USER_ID
+    password = USER_PWD
 
     #
     ##

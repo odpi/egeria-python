@@ -16,13 +16,14 @@ import time
 
 from rich import print, print_json
 
-from pyegeria import SolutionArchitect
+from pyegeria import SolutionArchitect, PyegeriaException
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
     print_exception_response,
 )
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception
 
 disable_ssl_warnings = True
 
@@ -346,7 +347,7 @@ class TestSolutionArchitect:
 
 
     def test_find_information_supply_chains_body(self):
-        filter = "My"
+        filter = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -354,16 +355,15 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             body = {
-                "class": "FilterRequestBody",
+                "class": "SearchSTringRequestBody",
                 # "effective_time": None,
                 # "limitResultsByStatus": ["ACTIVE"],
-                "asOfTime": "2025-07-06T07:20:40.038+00:00",
                 "sequencingOrder": None,
                 "sequencingProperty": None,
-                "filter": filter
+                "searchString": None
                 }
             start_time = time.perf_counter()
-            response = s_client.find_information_supply_chains(filter, output_format="DICT")
+            response = s_client.find_information_supply_chains(filter, body=body, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -408,11 +408,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

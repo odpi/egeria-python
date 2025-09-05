@@ -240,6 +240,14 @@ def set_find_body(object_type: str, attributes: dict)->dict:
 
 
 def set_create_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for a create action (NewElementRequestBody).
+
+    Notes on two-layer convention:
+    - Outer layer (this function): action wrapper with metadata like externalSource*, effectiveTime, anchor/parent hints, and an empty "properties" field.
+    - Inner layer: an element-type-specific Properties structure built by set_element_prop_body, set_product_body, set_data_field_body, etc.
+    Callers should build the inner body separately with the appropriate helper and then assign it to body["properties"].
+    """
     prop_name = object_type.replace(" ", "")
     body = {
         "class": "NewElementRequestBody",
@@ -266,6 +274,13 @@ def set_create_body(object_type: str, attributes: dict)->dict:
 
 
 def set_update_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for an update action (UpdateElementRequestBody).
+
+    Two-layer convention:
+    - Outer layer (this function) provides action metadata and an empty "properties" slot.
+    - Inner layer must be constructed via element-specific helpers (e.g., set_element_prop_body) and assigned to the returned dict's "properties" key by the caller before invoking the client.
+    """
     return {
       "class" : "UpdateElementRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -292,6 +307,16 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
         }
 
 def set_element_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    """
+    Build the INNER element-specific Properties body to be placed under the outer body's "properties" key.
+
+    This returns the typed properties structure (e.g., "ReferenceableProperties" subtypes) appropriate for the object_type.
+    Usage example:
+    - outer = set_create_body(object_type, attributes)
+    - props = set_element_prop_body(object_type, qualified_name, attributes)
+    - outer["properties"] = props
+    - client.create_xxx(outer)
+    """
     prop_name = object_type.replace(" ", "")
     display_name = attributes.get('Display Name', {}).get('value', None)
 
@@ -323,7 +348,21 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict)->d
     prop_bod["nextVersion"] = attributes.get('Next Version Date', {}).get('value', [])
     return prop_bod
 
-
+def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+    prop_bod["namespace"] = attributes.get('Namespace', {}).get('value', None)
+    prop_bod["aliases"] = attributes.get('Aliases', {}).get('value', [])
+    prop_bod["namePatterns"] = attributes.get('Name Patterns', {}).get('value', [])
+    prop_bod["defaultValue"] = attributes.get('Default Value', {}).get('value', None)
+    prop_bod["isNullable"] = attributes.get('Is Nullable', {}).get('value', None)
+    prop_bod["dataType"] = attributes.get('Data Type', {}).get('value', None)
+    prop_bod["units"] = attributes.get('Units', {}).get('value', None)
+    prop_bod["minimumLength"] = attributes.get('Minimum Length', {}).get('value', None)
+    prop_bod["length"] = attributes.get('Length', {}).get('value', None)
+    prop_bod["precision"] = attributes.get('Precision', {}).get('value', None)
+    prop_bod["orderedValues"] = attributes.get('Ordered Values', {}).get('value', [])
+    prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
+    return prop_bod
 
 def set_update_status_body(object_type: str, attributes: dict)->dict:
     return {
@@ -394,6 +433,11 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
 
 
 def set_rel_request_body(object_type: str, attributes: dict)->dict:
+    """
+    Build the OUTER request body for creating a relationship (NewRelationshipRequestBody).
+    The inner relationship properties must be assigned to the returned dict under the "properties" key,
+    commonly via set_rel_prop_body or set_rel_request_body_for_type.
+    """
     return {
       "class" : "NewRelationshipRequestBody",
       "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
@@ -416,6 +460,11 @@ def set_peer_gov_def_request_body(object_type: str, attributes: dict)->dict:
     return rel_body
 
 def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
+    """
+    Convenience helper that builds both layers (outer + inner) for a relationship of a known type.
+    It creates the outer NewRelationshipRequestBody via set_rel_request_body and fills rel_body["properties"]
+    with a typed properties structure under the "class" of f"{object_type}Properties".
+    """
     rel_body = set_rel_request_body(object_type, attributes)
     # class_prop = camel_to_title_case(object_type) + "Properties"
     class_prop = f"{object_type}Properties"

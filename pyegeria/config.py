@@ -25,6 +25,7 @@ import inspect
 import os
 import json
 from typing import List, Optional, Union, Dict, Any
+import sys
 
 from loguru import logger
 from pydantic import BaseModel, Field, validator, ConfigDict
@@ -36,6 +37,12 @@ logger.disable("pyegeria")
 # --- Pydantic Settings for Environment Variables ---
 
 class PyegeriaSettings(BaseSettings):
+    """Top-level environment settings for pyegeria.
+
+    This class centralizes discovery of important filesystem paths and default
+    configuration values. It can be constructed directly or via `with_env_file`
+    to load overrides from a specific .env-like file.
+    """
     """
     Settings loaded from environment variables using pydantic-settings.
     This class is used to load environment variables from the .env file.
@@ -89,6 +96,7 @@ class PyegeriaSettings(BaseSettings):
 # --- Pydantic Models for Configuration ---
 
 class EnvironmentConfig(BaseModel):
+    """Runtime environment parameters that influence formatting and behavior."""
     """Environment configuration settings"""
     console_width: int = Field(default=200, alias="Console Width")
     dr_egeria_inbox: str = Field(default="md_processing/dr-egeria-inbox", alias="Dr.Egeria Inbox")
@@ -149,6 +157,7 @@ class UserProfileConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
+    """Aggregated application configuration used by pyegeria components."""
     """Main application configuration"""
     Environment: EnvironmentConfig
     Debug: DebugConfig
@@ -333,7 +342,7 @@ def load_app_config(env_file: str | None = None):
     )
     log["logging_file_format"] = os.getenv(
         "PYEGERIA_LOGGING_FILE_FORMAT",
-        log.get("logging_file_format", " {time:YYYY-MM-DD HH:mm:ss} | {level} | {function}:{line} - {message }-{extra}"),
+        log.get("logging_file_format", " {time:YYYY-MM-DD HH:mm:ss} | {level} | {function}:{line} - {message}-{extra}"),
     )
 
     # User Profile

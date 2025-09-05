@@ -25,7 +25,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              get_defined_field_values, PyegeriaModel)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
-                                       get_required_relationships)
+                                       get_required_relationships, populate_common_columns)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 
@@ -2680,7 +2680,7 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/attach")
-        await self._async_new_relationship_request(url, "InformationSupplyChainLinkProperties", body)
+        await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
         logger.info(f"Linked {upstream_digital_prod_guid} -> {downstream_digital_prod_guid}")
 
 
@@ -5483,64 +5483,25 @@ class CollectionManager(Client2):
         return added_props
 
     def _extract_collection_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate collection columns for output.
+
+        Uses `populate_common_columns` to fill standard fields and derive requested relationships.
+
+        Parameters
+        ----------
+        element : dict
+            Raw element from the OMVS.
+        columns_struct : dict
+            Format-set structure whose columns' `value` fields will be populated.
+
+        Returns
+        -------
+        dict
+            The same columns_struct with populated values.
         """
-        Extract common properties from a collection element and populate into the provided columns_struct.
-
-        Args:
-            element (dict): The collection element
-            columns_struct (dict): The columns structure to populate
-
-        Returns:
-            dict: columns_struct with column 'value' fields populated
-        """
-        # First, populate from element.properties using the utility
-        col_data = populate_columns_from_properties(element, columns_struct)
-
-        columns_list = col_data.get("formats", {}).get("columns", [])
-
-        # Populate header-derived values
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
-
-        # Derived/computed fields
-        # collectionCategories are classifications
-        classification_names = ""
-        classifications = element.get('elementHeader', {}).get("collectionCategories", [])
-        for classification in classifications:
-            classification_names += f"{classification['classificationName']}, "
-        if classification_names:
-            for column in columns_list:
-                if column.get('key') == 'classifications':
-                    column['value'] = classification_names[:-2]
-                    break
-
-        # Populate requested relationship-based columns generically from top-level keys
-        col_data = get_required_relationships(element, col_data)
-
-        # Subject area classification
-        subject_area = element.get('elementHeader', {}).get("subjectArea", "") or ""
-        subj_val = ""
-        if isinstance(subject_area, dict):
-            subj_val = subject_area.get("classificationProperties", {}).get("subjectAreaName", "")
-        for column in columns_list:
-            if column.get('key') == 'subject_area':
-                column['value'] = subj_val
-                break
-
-        # Mermaid graph
-        mermaid_val = element.get('mermaidGraph', "") or ""
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = mermaid_val
-                break
-
+        # Use centralized common population
+        col_data = populate_common_columns(element, columns_struct)
         logger.trace(f"Extracted/Populated columns: {col_data}")
-
         return col_data
 
 

@@ -92,6 +92,7 @@ COMMON_COLUMNS = [
     Column(name='Qualified Name', key='qualified_name', format=True),
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
+    Column(name='Status', key='status'),
 ]
 
 COMMON_METADATA_COLUMNS = [
@@ -544,7 +545,90 @@ output_format_sets = FormatSetDict({
             spec_params={},
         )
     ),
-
+"DataField-DrE": FormatSet(
+        target_type="Data Field",
+        heading="Data Field Information",
+        description="Attributes useful to Data Fields.",
+        aliases=[],
+        annotations={"wikilinks": ["[[Data Field]]"]},
+        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS +
+                        [Column(name='Data Type', key='data_type'),
+                         Column(name='Position', key='position'),
+                         Column(name='Minimum Cardinality', key='min_cardinality'),
+                         Column(name='Maximum Cardinality', key='max_cardinality'),
+                         Column(name='In Data Structure', key='data_structure_qnames'),
+                         Column(name='Data Class', key='data_class'),
+                         Column(name='Glossary Term', key='glossary_term'),
+                         Column(name='Aliases', key='aliases'),
+                         Column(name='Name Patterns', key='name_patterns'),
+                         Column(name='Namespaces', key='namespaces'),
+                         Column(name='IsNullable', key='is_nullable'),
+                         Column(name='Minimum Length', key='min_length'),
+                         Column(name='Length', key='length'),
+                         Column(name='Precision', key='precision'),
+                         Column(name='Ordered Values', key='ordered_values'),
+                         Column(name='Units', key='units'),
+                         Column(name='Sort Order', key='sort_order'),
+                         Column(name='Default Value', key='default_value'),
+                         Column(name='Version Identifier', key='version_identifier'),
+                         Column(name='In Data Specification', key='member_of_data_spec_qnames'),
+                         Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
+                         Column(name='Parent Data Field', key='parent_data_field'),
+                         Column(name='Qualified Name', key='qualified_name'),
+                         Column(name='GUID', key='GUID'),
+                         Column(name ='Merge Update', key='merge_update'),
+                         Column(name='Additional Properties', key='additional_properties'),
+                         Column(name='Extended Properties', key='extended_properties'),
+                         ])
+                 ],
+        action=ActionParameter(
+            function="DataDesigner.find_data_fields",
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+"DataClass-DrE": FormatSet(
+        target_type="Data Class",
+        heading="Data Class Information",
+        description="Attributes useful to Data Classes.",
+        aliases=[],
+        annotations={"wikilinks": ["[[Data Field]]"]},
+        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS +
+                        [Column(name='Namespaces', key='namespaces'),
+                         Column(name='Match Property Names', key='match_property_names'),
+                         Column(name='Match Threshold', key='match_threshold'),
+                         Column(name='IsCaseSensitive', key='is_case_sensitive'),
+                         Column(name='Specification', key='specification'),
+                         Column(name='Specification Details', key='specification_details'),
+                         Column(name='Data Type', key='data_type'),
+                         Column(name='Allow Duplicate Values', key='allow_duplicate_values'),
+                         Column(name='IsNullable', key='is_nullable'),
+                         Column(name='IsCaseSensitive', key='is_case_sensitive'),
+                         Column(name='Default Value', key='default_value'),
+                         Column(name='Average Value', key='average_value'),
+                         Column(name='Value List', key='value_list'),
+                         Column(name='Value Range From', key='value_range_from'),
+                         Column(name='Value Range To', key='value_range_to'),
+                         Column(name='Sample Values', key='sample_values'),
+                         Column(name='Data Patterns', key='data_patterns'),
+                         Column(name='Glossary Term', key='glossary_term'),
+                         Column(name='In Data Dictionary', key='in_data_dictionary'),
+                         Column(name='Containing Data Class', key='containing_data_class'),
+                         Column(name='Specialized Data Class', key='specialized_data_class'),
+                         Column(name='Version Identifier', key='version_identifier'),
+                         Column(name='Qualified Name', key='qualified_name'),
+                         Column(name='GUID', key='GUID'),
+                         Column(name ='Merge Update', key='merge_update'),
+                         Column(name='Additional Properties', key='additional_properties'),
+                         Column(name='Extended Properties', key='extended_properties'),
+                         ])
+                 ],
+        action=ActionParameter(
+            function="DataDesigner.find_data_fields",
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
     "Mandy-DataStruct": FormatSet(
         target_type="Data Structure",
         heading="Puddy Approves",
@@ -561,6 +645,39 @@ output_format_sets = FormatSetDict({
             function="DataDesigner.find_data_structures",
             required_params=["search_string"],
             spec_params={"output_format":"DICT"},
+        )
+    ),
+    "DataStruct-DrE": FormatSet(
+        target_type="Data Structure",
+        heading="Data Structure Information",
+        description="Information used with Dr. Egeria to describe Data Structures.",
+        aliases=[],
+        annotations={"wikilinks": ["[[Data Structure]]"]},
+        formats=[
+            Format(types=["TABLE", "LIST"], columns=COMMON_COLUMNS + [
+                Column(name='Namespace', key='namespace'),
+                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
+                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
+                Column(name='Glossary Term', key='glossary_term'),
+               ]),
+            Format(types=["DICT", "MD"], columns=COMMON_COLUMNS + [
+                Column(name='Namespace', key='namespace'),
+                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
+                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
+                Column(name='Glossary Term', key='glossary_term'),
+                Column(name='GUID', key='GUID')]),
+            Format(types=["REPORT", "MERMAID", "HTML"], columns=COMMON_COLUMNS + [
+                Column(name='Namespace', key='namespace'),
+                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
+                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
+                Column(name='Glossary Term', key='glossary_term'),
+                Column(name='Mermaid', key='mermaid'),
+                Column(name='GUID', key='GUID')])
+        ],
+        action=ActionParameter(
+            function="DataDesigner.find_data_structures",
+            required_params=["search_string"],
+            spec_params={"output_format": "DICT"},
         )
     ),
     "Governance Basics": FormatSet(

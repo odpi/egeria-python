@@ -19,7 +19,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteRequestBody)
 from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_columns_from_properties,
-                                       get_required_relationships)
+                                       get_required_relationships, populate_common_columns)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties)
 from pyegeria.utils import body_slimmer, dynamic_catch
@@ -1297,11 +1297,10 @@ class DataDesigner(Client2):
 
         member_of_collections = el_struct.get("memberOfCollections", {})
         for collection in member_of_collections:
-            c_type = collection["relatedElement"]["properties"].get("collectionType", "") or ""
+            type_name = collection["relatedElement"]["elementHeader"]["type"].get("typeName", "") or ""
             guid = collection["relatedElement"]["elementHeader"]["guid"]
-            name = collection["relatedElement"]["properties"].get("name", "") or ""
+            name = collection["relatedElement"]["properties"].get("displayName", "") or ""
             qualifiedName = collection['relatedElement']["properties"].get("qualifiedName", "") or ""
-            type_name = collection["relatedElement"]["elementHeader"].get("classificationProperties",{}).get('anchorTypeName', None)
             if type_name:
                 if type_name == "DataDictionary":
                     member_of_data_dicts_guids.append(guid)
@@ -2517,7 +2516,7 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_fields_by_name(filter, classification_names, body, start_from, page_size,
+            self._async_get_data_fields_by_name(filter_string, classification_names, body, start_from, page_size,
                                                 output_format, output_format_set))
         return response
 
@@ -4683,107 +4682,159 @@ class DataDesigner(Client2):
 
 
     def _extract_data_structure_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Structure elements with related overlay.
+
+        Pattern:
+        - Populate common columns via populate_common_columns.
+        - Derive related properties using get_data_rel_elements_dict from the element body.
+        - Overlay values into matching columns' 'value' fields, handling formats as list or dict.
+        - Return the enriched columns_struct.
         """
-        Extract common properties from a data structure element.
+        col_data = populate_common_columns(element, columns_struct)
 
-        Args:
-            element (dict): The data structure element
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
 
-        Returns:
-            dict: Dictionary of extracted properties
-        """
+        if isinstance(related_map, dict) and related_map:
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
 
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
-        header_props = _extract_referenceable_properties(element)
-        # Populate requested relationship-based columns generically
-        col_data = get_required_relationships(element, col_data)
-        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
-        guid = header_props.get('GUID')
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                pass
 
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            # Todo - any special columns go here..
-            # elif key == 'project_roles':
-            #     column['value'] = additional_props.get('project_roles', '')
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
-
-        for column in columns_list:
-            if column.get('key') == 'mermaid' and not column.get('value'):
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
         return col_data
 
 
     def _extract_data_class_properties(self, element: dict,columns_struct: dict) -> dict:
-        """
-        Extract common properties from a data class element.
+        """Extractor for Data Class elements with related overlay, mirroring Data Field pattern."""
+        col_data = populate_common_columns(element, columns_struct)
 
-        Args:
-            element (dict): The data class element
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
 
-        Returns:
-            dict: Dictionary of extracted properties
-        """
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
-        header_props = _extract_referenceable_properties(element)
-        # Populate requested relationship-based columns generically
-        col_data = get_required_relationships(element, col_data)
-        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
-        guid = header_props.get('GUID')
+        if isinstance(related_map, dict) and related_map:
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
 
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            # Todo - any special columns go here..
-            # elif key == 'project_roles':
-            #     column['value'] = additional_props.get('project_roles', '')
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                pass
 
-        for column in columns_list:
-            if column.get('key') == 'mermaid' and not column.get('value'):
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
         return col_data
 
     def _extract_data_field_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Field elements.
+        
+        Steps:
+        - Populate base/referenceable/common properties into columns_struct via populate_common_columns.
+        - Derive related properties using get_data_rel_elements_dict from the element body.
+        - For each column in columns_struct, if its 'key' matches a key from the related dict, set its 'value'.
+        - Return the enriched columns_struct.
         """
-        Extract common properties from a data field element.
+        # 1) Populate common columns first (header, properties, basic relationships, mermaid)
+        col_data = populate_common_columns(element, columns_struct)
+        
+        # 2) Build a map of related properties/elements from the body. The Data Designer methods
+        #    return a body that may include keys like assignedMeanings, otherRelatedElements,
+        #    memberOfCollections, memberDataFields, assignedDataClasses, nestedDataClasses, etc.
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
+        
+        if isinstance(related_map, dict) and related_map:
+            # 3) Walk the configured columns and overlay values when the key matches an entry from related_map
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    # Handle dict variant. It may be a single format dict or a wrapper containing 'formats'.
+                    # Examples seen:
+                    #   { 'columns': [...] }
+                    #   { 'types': 'ALL', 'columns': [...] }
+                    #   { 'formats': { 'columns': [...] } }
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), dict | list) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
 
-        Args:
-            element (dict): The data field element
-
-        Returns:
-            dict: Dictionary of extracted properties
-        """
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
-        header_props = _extract_referenceable_properties(element)
-        # Populate requested relationship-based columns generically
-        col_data = get_required_relationships(element, col_data)
-        additional_props = self._extract_additional_data_struct_properties(element, columns_struct)
-        guid = header_props.get('GUID')
-
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            # Todo - any special columns go here..
-            # elif key == 'project_roles':
-            #     column['value'] = additional_props.get('project_roles', '')
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
-
-        for column in columns_list:
-            if column.get('key') == 'mermaid' and not column.get('value'):
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    # If columns are on the top-level (non-standard), attempt to handle gracefully
+                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                # Do not fail rendering due to overlay issues; keep the base columns
+                pass
+        
         return col_data
 
     def _generate_basic_structured_output(self, elements: dict, filter: str, type: str = None ,output_format: str = 'DICT',
@@ -4936,7 +4987,10 @@ class DataDesigner(Client2):
 
     def _extract_additional_data_struct_properties(self, element, columns_struct):
         return None
-
+    def _extract_additional_data_field_properties(self, element, columns_struct):
+        return None
+    def _extract_additional_data_class_properties(self, element, columns_struct):
+        return None
 
 if __name__ == "__main__":
     print("Data Designer")

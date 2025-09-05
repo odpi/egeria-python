@@ -12,13 +12,17 @@ import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from httpx import Response
+from loguru import logger
+
+from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
+    NewRelationshipRequestBody, DeleteRequestBody, UpdateStatusRequestBody
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR
 from pyegeria import validate_guid
 from pyegeria.governance_officer import GovernanceOfficer
-from pyegeria._client import Client, max_paging_size
-from pyegeria._globals import NO_ELEMENTS_FOUND
-from pyegeria.utils import body_slimmer
+from pyegeria._client_new import Client2, max_paging_size
+from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
+from pyegeria.utils import body_slimmer, dynamic_catch
 from pyegeria._exceptions import (InvalidParameterException)
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -53,7 +57,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-explorer"
 
 
-class SolutionArchitect(Client):
+class SolutionArchitect(Client2):
     """SolutionArchitect is a class that extends the Client class. The Solution Architect OMVS provides APIs for
       searching for architectural elements such as information supply chains, solution blueprints, solution components,
       and component implementations.
@@ -82,7 +86,7 @@ class SolutionArchitect(Client):
         self.user_pwd = user_pwd
         self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
                                                      f"/api/open-metadata/solution-architect")
-        Client.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        Client2.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
         self.url_marker = "solution-architect"
     #
     # Extract properties functions
@@ -830,12 +834,13 @@ class SolutionArchitect(Client):
         # Default case
         return None
 
-    async def _async_create_info_supply_chain(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_info_supply_chain(self, body: dict | NewElementRequestBody) -> str:
         """Create an information supply. Async version.
 
         Parameters
         ----------
-        body: dict
+        body: dict | NewElementRequestBody
             A dictionary containing the definition of the supply chain to create.
 
         Returns
@@ -887,6 +892,7 @@ class SolutionArchitect(Client):
             "description": "add description here",
             "scope": "add scope of this information supply chain's applicability.",
             "purposes": ["purpose1", "purpose2"],
+            "estimatedVolumetrics": {},
             "additionalProperties": {
               "property1": "propertyValue1",
               "property2": "propertyValue2"
@@ -900,16 +906,15 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return await self._async_create_element_body_request(url, ["InformationSupplyChainProperties"], body)
 
-        return response.json().get("guid", "Supply Chain not created")
-
-    def create_info_supply_chain(self, body: dict) -> str:
+    @dynamic_catch
+    def create_info_supply_chain(self, body: dict | NewElementRequestBody) -> str:
         """Create an information supply.
 
         Parameters
         ----------
-        body: dict
+        body: dict | NewElementRequestBody
             A dictionary containing the definition of the supply chain to create.
 
         Returns
@@ -961,6 +966,7 @@ class SolutionArchitect(Client):
             "description": "add description here",
             "scope": "add scope of this information supply chain's applicability.",
             "purposes": ["purpose1", "purpose2"],
+             "estimatedVolumetrics": {},
             "additionalProperties": {
               "property1": "propertyValue1",
               "property2": "propertyValue2"
@@ -975,7 +981,8 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_info_supply_chain(body))
         return response
 
-    async def _async_create_info_supply_chain_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_info_supply_chain_from_template(self, body: dict | TemplateRequestBody) -> str:
         """ Create a new metadata element to represent an information supply chain using an existing metadata element
          as a template.  The template defines additional classifications and relationships that should be added to
           the new element. Async Version.
@@ -983,7 +990,7 @@ class SolutionArchitect(Client):
 
         Parameters
         ----------
-        body: dict
+        body: dict | NewElementRequestBody
             A dictionary containing the definition of the supply chain to create.
 
         Returns
@@ -1049,18 +1056,27 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/from-template")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
 
-        return response.json().get("guid", "Supply Chain not created")
+        elif isinstance(body, dict):
+            validated_body = self._template_request_adapter.validate_python(body)
 
-    def create_info_supply_chain_from_template(self, body: dict) -> str:
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create Supply Chain from template with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_info_supply_chain_from_template(self, body: dict| TemplateRequestBody) -> str:
         """ Create a new metadata element to represent an information supply chain using an existing metadata element
          as a template.  The template defines additional classifications and relationships that should be added to
           the new element.
 
         Parameters
         ----------
-        body: dict
+        body: dict | TemplateRequestBody
             A dictionary containing the definition of the supply chain to create.
 
         Returns
@@ -1128,18 +1144,17 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_info_supply_chain_from_template(body))
         return response
 
-    async def _async_update_info_supply_chain(self, guid: str, body: dict,
-                                              replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_info_supply_chain(self, guid: str, body: dict | UpdateElementRequestBody,) -> None:
         """ Update the properties of an information supply chain. Async Version.
 
         Parameters
         ----------
         guid: str
             guid of the information supply chain to update.
-        body: dict
+        body: dict | UpdateElementRequestBody
             A dictionary containing the updates to the supply chain.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
+
 
         Returns
         -------
@@ -1184,24 +1199,22 @@ class SolutionArchitect(Client):
           }
         }
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"information-supply-chains/{guid}/update")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_element_body_request(url, ["InformationSupplyChainProperties"],body)
 
-    def update_info_supply_chain(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_info_supply_chain(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of an information supply chain. Async Version.
 
             Parameters
             ----------
             guid: str
                 guid of the information supply chain to update.
-            body: dict
+            body: dict | UpdateElementRequestBody
                 A dictionary containing the updates to the supply chain.
-            replace_all_properties: bool, optional
-                Whether to replace all properties with those provided in the body or to merge with existing properties.
 
             Returns
             -------
@@ -1247,10 +1260,10 @@ class SolutionArchitect(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_info_supply_chain(guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_info_supply_chain(guid, body))
 
-
-    async def _async_link_peer_info_supply_chain(self, peer1_guid: str, peer2_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    async def _async_link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
         """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
         allow significant data stores to be included in the definition of the information supply chain.
         Request body is optional. Async Version.
@@ -1261,7 +1274,7 @@ class SolutionArchitect(Client):
             guid of the first information supply chain  to link.
         peer2_guid: str
             guid of the second information supply chain to link.
-        body: dict, optional
+        body: dict | NewRelationshipRequestBody, optional
             The body describing the link between the two chains.
 
         Returns
@@ -1282,7 +1295,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class" : "NewRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1297,17 +1310,15 @@ class SolutionArchitect(Client):
           }
         }
         """
-        validate_guid(peer1_guid)
-        validate_guid(peer2_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/attach")
 
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
+        logger.info(f"Linked Supply Chains {peer1_guid} -> {peer2_guid}")
 
-    def link_peer_info_supply_chain(self, peer1_guid: str, peer2_guid: str, body: dict) -> None:
+    @dynamic_catch
+    def link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
         allow significant data stores to be included in the definition of the information supply chain.
         Request body is optional.
@@ -1318,7 +1329,7 @@ class SolutionArchitect(Client):
             guid of the first information supply chain  to link.
         peer2_guid: str
             guid of the second information supply chain to link.
-        body: dict
+        body: dict | NewRelationshipRequestBody, optional
             The body describing the link between the two chains.
 
         Returns
@@ -1355,10 +1366,11 @@ class SolutionArchitect(Client):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_peer_info_supply_chain(peer1_guid, peer2_guid, body))
+        loop.run_until_complete(self._async_link_peer_info_supply_chains(peer1_guid, peer2_guid, body))
 
+    @dynamic_catch
     async def _async_unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
-                                                       body: dict = None) -> None:
+                                                       body: dict | DeleteRequestBody = None) -> None:
         """ Detach two peers in an information supply chain from one another.  The linked elements are of type
            'Referenceable' to allow significant data stores to be included in the definition of the information
            supply chain. Request body is optional. Async Version.
@@ -1369,7 +1381,7 @@ class SolutionArchitect(Client):
             guid of the first information supply chain to link.
         peer2_guid: str
             guid of the second information supply chain to link.
-        body: dict, optional
+        body: dict | DeleteRequestBody, optional
             The body describing the link between the two segments.
 
         Returns
@@ -1390,7 +1402,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -1403,11 +1415,11 @@ class SolutionArchitect(Client):
         validate_guid(peer2_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/detach")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached supply chains  {peer1_guid} -> {peer2_guid}")
 
+    @dynamic_catch
     def unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
                                                        body: dict = None) -> None:
         """ Detach two peers in an information supply chain from one another.  The linked elements are of type
@@ -1452,7 +1464,9 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_unlink_peer_info_supply_chains(peer1_guid,peer2_guid, body))
 
-    async def _async_compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    async def _async_compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
+                                                body: dict | NewRelationshipRequestBody = None) -> None:
         """ Connect a nested information supply chain to its parent. Request body is optional.
             Async Version.
 
@@ -1462,7 +1476,7 @@ class SolutionArchitect(Client):
             guid of the first information supply chain  to link.
         nested_chain_guid: str
             guid of the second information supply chain to link.
-        body: dict, optional
+        body: dict | NewRelationshipRequestBody, optional
             The body describing the link between the two chains.
 
         Returns
@@ -1483,7 +1497,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class" : "NewRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1502,21 +1516,21 @@ class SolutionArchitect(Client):
         validate_guid(nested_chain_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/attach")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
 
-    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict = None) -> None:
+        await self._async_new_relationship_request(url, ["InformationSupplyChainCompositionProperties"], body)
+        logger.info(f"Linked {chain_guid} -> {nested_chain_guid}")
+
+    @dynamic_catch
+    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
         """ Connect a nested information supply chain to its parent. Request body is optional.
 
         Parameters
         ----------
         chain_guid: str
-            guid of the first information supply chain  to link.
+            guid of the first information supply chain to link.
         nested_chain_guid: str
             guid of the second information supply chain to link.
-        body: dict, optional
+        body: dict | NewRelationshipRequestBody, optional
             The body describing the link between the two chains.
 
         Returns
@@ -1537,7 +1551,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class" : "NewRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1555,6 +1569,8 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_compose_info_supply_chains(chain_guid, nested_chain_guid, body))
 
+
+    @dynamic_catch
     async def _async_decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
                                                        body: dict = None) -> None:
         """ Detach two peers in an information supply chain from one another.  Request body is optional. Async Version.
@@ -1600,10 +1616,12 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/detach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(f"Removed composition of {nested_chain_guid} -> {chain_guid}")
 
+    @dynamic_catch
     def decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                       body: dict = None) -> None:
+                                                       body: dict | DeleteRequestBody = None) -> None:
         """ Detach two peers in an information supply chain from one another.  Request body is optional.
 
         Parameters
@@ -1612,7 +1630,7 @@ class SolutionArchitect(Client):
             guid of the first information supply chain to link.
         nested_chain_guid: str
             guid of the second information supply chain to link.
-        body: dict, optional
+        body: dict | DeleteRequestBody, optional
             The body describing the link between the two segments.
 
         Returns
@@ -1633,7 +1651,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -1645,8 +1663,8 @@ class SolutionArchitect(Client):
         loop.run_until_complete(self._async_decompose_info_supply_chains(chain_guid,
                                                                          nested_chain_guid, body))
 
-
-    async def _async_delete_info_supply_chain(self, guid: str, body: dict = None, cascade_delete: bool = False) -> None:
+    @dynamic_catch
+    async def _async_delete_info_supply_chain(self, guid: str, body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
         """Delete an information supply chain. Async Version.
 
            Parameters
@@ -1664,8 +1682,6 @@ class SolutionArchitect(Client):
 
            Raises
            ------
-           Raises
-           ------
            InvalidParameterException
                one of the parameters is null or invalid or
            PropertyServerException
@@ -1678,7 +1694,7 @@ class SolutionArchitect(Client):
 
            Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -1686,25 +1702,23 @@ class SolutionArchitect(Client):
               "forDuplicateProcessing": false
             }
            """
-        validate_guid(guid)
-        cascaded_s = str(cascade_delete).lower()
+
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{guid}/delete?cascadedDelete={cascaded_s}")
-        try:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        except (InvalidParameterException) as e:
-            if e.exception_error_message_id == 'OMAG-REPOSITORY-HANDLER-404-007':
-                print("The GUID does not exist")
+               f"information-supply-chains/{guid}/delete")
 
-    def delete_info_supply_chain(self, guid: str, body: dict = None, cascade_delete: bool = False) -> None:
+        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade_delete}")
+
+    @dynamic_catch
+    def delete_info_supply_chain(self, guid: str, body: dict | DeleteRequestBody= None, cascade_delete: bool = False) -> None:
         """ Delete an information supply chain.
 
             Parameters
             ----------
             guid: str
                 guid of the information supply chain to delete.
-            body: dict, optional
+            body: dict | DeleteRequestBody, optional
                 A dictionary containing parameters of the deletion.
            cascade_delete: bool, optional
                If true, the child objects will also be deleted.
@@ -1726,7 +1740,7 @@ class SolutionArchitect(Client):
 
             Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -2195,7 +2209,8 @@ class SolutionArchitect(Client):
     #  Blueprints
     #
 
-    async def _async_create_solution_blueprint(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
         """ Create a solution blueprint. To set a lifecycle status
             use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
             NewElementRequestBody sets the status to ACTIVE.
@@ -2203,7 +2218,7 @@ class SolutionArchitect(Client):
 
             Parameters
             ----------
-            body: dict
+            body: dict | NewElementRequestBody
                 A dictionary containing the definition of the blueprint to create.
 
             Returns
@@ -2251,6 +2266,8 @@ class SolutionArchitect(Client):
                 "displayName": "add short name here",
                 "description": "add description here",
                 "versionIdentifier": "add version here",
+                "userDefinedStatus" : "add status here",
+                "lifecycleStatus": "DRAFT"
                 "additionalProperties": {
                   "property1": "propertyValue1",
                   "property2": "propertyValue2"
@@ -2308,18 +2325,17 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return await self._async_create_element_body_request(url, ["SolutionBlueprintProperties"], body)
 
-        return response.json().get("guid", "Blueprint not created")
-
-    def create_solution_blueprint(self, body: dict) -> str:
+    @dynamic_catch
+    def create_solution_blueprint(self, body: dict | NewElementRequestBody) -> str:
         """ Create a solution blueprint. To set a lifecycle status
             use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
             NewElementRequestBody sets the status to ACTIVE.
 
             Parameters
             ----------
-            body: dict
+            body: dict | NewElementRequestBody
                 A dictionary containing the definition of the blueprint to create.
 
             Returns
@@ -2420,13 +2436,14 @@ class SolutionArchitect(Client):
               "forDuplicateProcessing" : false
             }
 
-       """
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_create_solution_blueprint(body))
         return response
 
-    async def _async_create_solution_blueprint_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_blueprint_from_template(self, body: dict | TemplateRequestBody) -> str:
         """ Create a new solution blueprint using an existing metadata element
          as a template.  The template defines additional classifications and relationships that should be added to
           the new element. Async Version.
@@ -2434,7 +2451,7 @@ class SolutionArchitect(Client):
 
         Parameters
         ----------
-        body: dict
+        body: dict | TemplateRequestBody
             A dictionary containing the definition of the solution blueprint to create.
 
         Returns
@@ -2499,19 +2516,28 @@ class SolutionArchitect(Client):
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/from-template")
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        elif isinstance(body, dict):
+            validated_body = self._template_request_adapter.validate_python(body)
 
-        return response.json().get("guid", "Blueprint not created")
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create Blueprint from template with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
 
-    def create_solution_blueprint_from_template(self, body: dict) -> str:
+
+    @dynamic_catch
+    def create_solution_blueprint_from_template(self, body: dict | TemplateRequestBody) -> str:
         """ Create a new solution blueprint using an existing metadata element
          as a template.  The template defines additional classifications and relationships that should be added to
           the new element.
 
         Parameters
         ----------
-        body: dict
+        body: dict | TemplateRequestBody
             A dictionary containing the definition of the solution blueprint to create.
 
         Returns
@@ -2519,8 +2545,6 @@ class SolutionArchitect(Client):
 
         str - guid of the supply chain created.
 
-        Raises
-        ------
         Raises
         ------
         InvalidParameterException
@@ -2578,26 +2602,21 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_blueprint_from_template(body))
         return response
 
-    async def _async_update_solution_blueprint(self, guid: str, body: dict,
-                                               replace_all_properties: bool = False) -> None:
-        """ Update the properties of a solution blueprint. Async Version.
+    @dynamic_catch
+    async def _async_update_solution_blueprint(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """ Update a solution blueprint. Async Version.
 
         Parameters
         ----------
         guid: str
             guid of the information supply chain to update.
-        body: dict
+        body: dict | UpdateElementRequestBody
             A dictionary containing the updates to the supply chain.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
         Returns
         -------
 
         None
 
-        Raises
-        ------
         Raises
         ------
         InvalidParameterException
@@ -2633,24 +2652,22 @@ class SolutionArchitect(Client):
            }
         }
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"solution-blueprints/{guid}/update")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_element_body_request(url, ["SolutionBlueprintProperties"],body)
 
-    def update_solution_blueprint(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_solution_blueprint(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a solution blueprint. Async Version.
 
             Parameters
             ----------
             guid: str
                 guid of the information supply chain to update.
-            body: dict
-                A dictionary containing the updates to the supply chain.
-            replace_all_properties: bool, optional
-                Whether to replace all properties with those provided in the body or to merge with existing properties.
+            body: dict | UpdateElementRequestBody
+                A dictionary containing the updates to the blueprint.
 
             Returns
             -------
@@ -2696,18 +2713,110 @@ class SolutionArchitect(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_blueprint(guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_solution_blueprint(guid, body))
 
-    async def _async_update_solution_element_status(self, guid: str, body: dict,
-                                               replace_all_properties: bool = False) -> None:
+
+    @dynamic_catch
+    async def _async_delete_solution_blueprint(self, guid: str, body: dict | DeleteRequestBody, cascade: bool = False) -> None:
+        """ Delete a solution blueprint. Async Version.
+         Parameters
+           ----------
+           guid: str
+               guid of the information supply chain to delete.
+           body: dict, optional
+               A dictionary containing parameters of the deletion.
+           cascade: bool, optional
+               If true, the child objects will also be deleted.
+
+           Returns
+           -------
+           None
+
+           Raises
+           ------
+           InvalidParameterException
+               one of the parameters is null or invalid or
+           PropertyServerException
+               There is a problem adding the element properties to the metadata repository or
+           UserNotAuthorizedException
+               the requesting user is not authorized to issue this request.
+
+           Notes
+           ----
+
+           Body structure:
+            {
+              "class": "DeleteRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+           """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"information-supply-chains/{guid}/delete")
+
+        await self._async_delete_request(url, body, cascade_delete=cascade)
+        logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade}")
+
+    @dynamic_catch
+    def delete_solution_blueprint(self, guid: str, body: dict | DeleteRequestBody = None,
+                                 cascade: bool = False) -> None:
+        """ Delete an Solution Blueprint.
+
+            Parameters
+            ----------
+            guid: str
+                guid of the information supply chain to delete.
+            body: dict | DeleteRequestBody, optional
+                A dictionary containing parameters of the deletion.
+           cascade: bool, optional
+               If true, the child objects will also be deleted.
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            InvalidParameterException
+                one of the parameters is null or invalid or
+            PropertyServerException
+                There is a problem adding the element properties to the metadata repository or
+            UserNotAuthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            ----
+
+            Body structure:
+            {
+              "class": "DeleteRequestBody",
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime": {{isotime}},
+              "forLineage": false,
+              "forDuplicateProcessing": false
+            }
+            """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_info_supply_chain(guid, body, cascade))
+
+
+    @dynamic_catch
+    async def _async_update_solution_element_status(self, guid: str, status: str= None, body: dict| UpdateStatusRequestBody = None,
+                                               ) -> None:
         """ Update the properties of a blueprint, solution component, or solution port. Async Version.
 
         Parameters
         ----------
         guid: str
             guid of the information supply chain to update.
-        body: dict
+        body: dict | UpdateStatusRequestBody, optional
             A dictionary containing the updates to the supply chain.
+        status: str, optional
+            The status to update the supply chain to.
 
         Returns
         -------
@@ -2728,7 +2837,7 @@ class SolutionArchitect(Client):
 
         Body structure:
              {
-              "class" : "SolutionElementStatusRequestBody",
+              "class" : "UpdateStatusRequestBody",
               "status" : "APPROVED",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
@@ -2737,14 +2846,14 @@ class SolutionArchitect(Client):
               "forDuplicateProcessing" : false
             }
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"solution-blueprints/{guid}/update")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_status_request(url, status, body)
 
-    def update_solution_element_status(self, guid: str, body: dict) -> None:
+    @dynamic_catch
+    def update_solution_element_status(self, guid: str, status: str = None, body: dict| UpdateStatusRequestBody = None) -> None:
         """ Update the status of a blueprint, solution component, or solution port.
 
             Parameters
@@ -2782,12 +2891,12 @@ class SolutionArchitect(Client):
             }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_element_status(guid, body))
+        loop.run_until_complete(self._async_update_solution_element_status(guid = guid, status= status, body=body))
 
 
-
+    @dynamic_catch
     async def _async_link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                          body: dict) -> None:
+                                                          body: dict | NewRelationshipRequestBody) -> None:
         """ Connect a solution component to a blueprint. Async Version.
 
         Parameters
@@ -2796,7 +2905,7 @@ class SolutionArchitect(Client):
             guid of the blueprint to connect to.
         component_guid: str
             guid of the component to link.
-        body: dict
+        body: dict | NewRelationshipRequestBody
             The body describing the link.
 
         Returns
@@ -2817,7 +2926,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class" : "NewRelationshipRequestBody",
           "properties": {
             "class": "SolutionBlueprintCompositionProperties",
             "role": "Add role that the component plays in the solution blueprint here",
@@ -2833,14 +2942,15 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(blueprint_guid)
-        validate_guid(component_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/attach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["SolutionComponentCompositionProperties"], body)
+        logger.info(f"Linked component to blueprint {component_guid} -> {blueprint_guid}")
 
-    def link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str, body: dict) -> None:
+    @dynamic_catch
+    def link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Connect a solution component to a blueprint.
 
         Parameters
@@ -2849,7 +2959,7 @@ class SolutionArchitect(Client):
             guid of the blueprint to connect to.
         component_guid: str
             guid of the component to link.
-        body: dict
+        body: dict | NewRelationshipRequestBody
             The body describing the link.
 
         Returns
@@ -2888,8 +2998,9 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_solution_component_to_blueprint(blueprint_guid, component_guid, body))
 
+    @dynamic_catch
     async def _async_detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                              body: dict = None) -> None:
+                                                              body: dict | DeleteRequestBody = None) -> None:
         """ Detach a solution component from a solution blueprint.
             Async Version.
 
@@ -2929,15 +3040,17 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(blueprint_guid)
-        validate_guid(component_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/detach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached component from blueprint  {component_guid} -> {blueprint_guid}")
 
+    @dynamic_catch
     def detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                 body: dict = None) -> None:
+                                                 body: dict | DeleteRequestBody = None) -> None:
         """ Detach a solution component from a solution blueprint.
 
         Parameters
@@ -2980,8 +3093,10 @@ class SolutionArchitect(Client):
         loop.run_until_complete(
             self._async_detach_solution_component_from_blueprint(blueprint_guid, component_guid, body))
 
+
+    @dynamic_catch
     async def _async_delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False,
-                                               body: dict = None) -> None:
+                                               body: dict | DeleteRequestBody = None) -> None:
         """Delete a solution blueprint. Async Version.
 
            Parameters
@@ -3022,15 +3137,14 @@ class SolutionArchitect(Client):
             }
            """
         validate_guid(blueprint_guid)
-        cascaded_s = str(cascade_delete).lower()
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{blueprint_guid}/delete?cascadeDelete={cascaded_s}")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
 
-    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: dict = None) -> None:
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-blueprints/{blueprint_guid}/delete")
+        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Deleted Blueprint  {blueprint_guid} with cascade {cascade_delete}")
+
+    @dynamic_catch
+    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: dict | DeleteRequestBody = None) -> None:
         """ Delete a solution blueprint.
             Parameters
             ----------
@@ -3069,6 +3183,8 @@ class SolutionArchitect(Client):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_blueprint(blueprint_guid, cascade_delete, body))
+
+
 
 
     async def _async_find_solution_blueprints(self, search_filter: str = "*", starts_with: bool = True,
@@ -3467,7 +3583,8 @@ class SolutionArchitect(Client):
     #   Components
     #
 
-    async def _async_create_solution_component(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_component(self, body: dict | NewElementRequestBody) -> str:
         """Create a solution component. To set a lifecycle status
             use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
             NewElementRequestBody sets the status to ACTIVE.
@@ -3475,7 +3592,8 @@ class SolutionArchitect(Client):
 
         Parameters
         ----------
-        body: dict
+        body: dict | NewElementRequestBody
+            A dictionary containing parameters of the creation.
             A dictionary containing the definition of the component to create.
 
         Returns
@@ -3500,7 +3618,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewSolutionComponentRequestBody",
+          "class": "NewElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -3545,61 +3663,22 @@ class SolutionArchitect(Client):
           "forDuplicateProcessing" : false
         }
 
-        Without lifecycle:
-        {
-          "class" : "NewElementRequestBody",
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "SolutionComponentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "solutionComponentType": "add optional type for this component",
-            "versionIdentifier": "add version for this component",
-            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return await self._async_create_element_body_request(url, ["SolutionComponentProperties"], body)
 
-        return response.json().get("guid", "Solution component not created")
-
-    def create_solution_component(self, body: dict) -> str:
+    @dynamic_catch
+    def create_solution_component(self, body: dict | NewElementRequestBody) -> str:
         """Create a solution component. To set a lifecycle status
             use a NewSolutionElementRequestBody which has a default status of DRAFT. Using a
             NewElementRequestBody sets the status to ACTIVE.
 
         Parameters
         ----------
-        body: dict
+        body: dict | NewElementRequestBody
             A dictionary containing the definition of the component to create.
 
         Returns
@@ -3624,7 +3703,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "NewSolutionComponentRequestBody",
+          "class": "NewElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -3669,52 +3748,15 @@ class SolutionArchitect(Client):
           "forDuplicateProcessing" : false
         }
 
-        Without lifecycle:
-        {
-          "class" : "NewElementRequestBody",
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "SolutionComponentProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "solutionComponentType": "add optional type for this component",
-            "versionIdentifier": "add version for this component",
-            "plannedDeployedImplementationType": "add details of the type of implementation for this component",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
+
        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_create_solution_component(body))
         return response
 
-    async def _async_create_solution_component_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_component_from_template(self, body: dict| TemplateRequestBody) -> str:
         """ Create a new solution component using an existing metadata element
          as a template.  The template defines additional classifications and relationships that should be added to
           the new element. Async Version.
@@ -3722,7 +3764,7 @@ class SolutionArchitect(Client):
 
         Parameters
         ----------
-        body: dict
+        body: dict | TemplateRequestBody
             A dictionary containing the definition of the solution component to create.
 
         Returns
@@ -3786,11 +3828,20 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/from-template")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
 
-        return response.json().get("guid", "Component not created")
+        elif isinstance(body, dict):
+            validated_body = self._template_request_adapter.validate_python(body)
 
-    def create_solution_component_from_template(self, body: dict) -> str:
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create Solution Component from template with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_solution_component_from_template(self, body: dict| TemplateRequestBody) -> str:
         """ Create a new solution component using an existing metadata element
                  as a template.  The template defines additional classifications and relationships that should be
                  added to
@@ -3799,7 +3850,7 @@ class SolutionArchitect(Client):
 
                 Parameters
                 ----------
-                body: dict
+                body: dict| TemplateRequestBody
                     A dictionary containing the definition of the solution component to create.
 
                 Returns
@@ -3865,26 +3916,22 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_component_from_template(body))
         return response
 
-    async def _async_update_solution_component(self, guid: str, body: dict,
-                                               replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_solution_component(self, guid: str, body: dict | UpdateElementRequestBody,
+                                               ) -> None:
         """ Update the properties of a solution component. Async Version.
 
         Parameters
         ----------
         guid: str
             guid of the solution component to update.
-        body: dict
+        body: dict | UpdateElementRequestBody
             A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
 
         Returns
         -------
-
         None
 
-        Raises
-        ------
         Raises
         ------
         InvalidParameterException
@@ -3923,32 +3970,26 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"solution-components/{guid}/update")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_element_body_request(url, ["SolutionComponentProperties"], body)
 
-    def update_solution_component(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_solution_component(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a solution component. Async Version.
 
         Parameters
         ----------
         guid: str
             guid of the solution component to update.
-        body: dict
+        body: dict | UpdateElementRequestBody
             A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
-
         Returns
         -------
-
         None
 
-        Raises
-        ------
         Raises
         ------
         InvalidParameterException
@@ -3988,9 +4029,10 @@ class SolutionArchitect(Client):
 
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_component(guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_solution_component(guid, body))
 
-    async def _async_link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict) -> None:
+    @dynamic_catch
+    async def _async_link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution component. Async Version.
 
         Parameters
@@ -3999,7 +4041,7 @@ class SolutionArchitect(Client):
             guid of the blueprint to connect to.
         sub_component_guid: str
             guid of the component to link.
-        body: dict
+        body: dict | NewRelationshipRequestBody
             The body describing the link.
 
         Returns
@@ -4020,25 +4062,23 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class": "NewRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
         }
         """
-        validate_guid(component_guid)
-        validate_guid(sub_component_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component_guid}/subcomponents/{sub_component_guid}/attach")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
 
+        await self._async_new_relationship_request(url, ["SolutionCompositionProperties"], body)
+        logger.info(f"Linked Subcomponent {component_guid} -> {sub_component_guid}")
 
-    def link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict) -> None:
+    @dynamic_catch
+    def link_subcomponent(self, component_guid: str, sub_component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution component.
 
                 Parameters
@@ -4047,7 +4087,7 @@ class SolutionArchitect(Client):
                     guid of the blueprint to connect to.
                 sub_component_guid: str
                     guid of the component to link.
-                body: dict
+                body: dict | NewRelationshipRequestBody
                     The body describing the link.
 
                 Returns
@@ -4068,7 +4108,7 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class" : "RelationshipRequestBody",
+                  "class" : "NewRelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
                   "effectiveTime" : "{{$isoTimestamp}}",
@@ -4078,9 +4118,9 @@ class SolutionArchitect(Client):
                 """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_subcomponent(component_guid, sub_component_guid, body))
-
+    @dynamic_catch
     async def _async_detach_sub_component(self, parent_component_guid: str, member_component_guid: str,
-                                          body: dict = None) -> None:
+                                          body: dict |DeleteRequestBody = None) -> None:
         """ Detach a solution component from a solution component.
             Async Version.
 
@@ -4111,7 +4151,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -4120,14 +4160,16 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(parent_component_guid)
-        validate_guid(member_component_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{parent_component_guid}/subcomponents/{member_component_guid}/detach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached components  {parent_component_guid} -> {member_component_guid}")
 
-    def detach_sub_component(self, parent_component_guid: str, member_component_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def detach_sub_component(self, parent_component_guid: str, member_component_guid: str, body: dict| DeleteRequestBody = None) -> None:
         """ Detach a solution component from a solution component.
             Async Version.
 
@@ -4137,7 +4179,7 @@ class SolutionArchitect(Client):
             guid of the parent component to disconnect from.
         member_component_guid: str
             guid of the member (child) component to disconnect.
-        body: dict
+        body: dict | DeleteRequestBody
             The body describing the request.
 
         Returns
@@ -4158,7 +4200,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -4170,7 +4212,8 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_sub_component(parent_component_guid, member_component_guid, body))
 
-    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
+    @dynamic_catch
+    async def _async_link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution component as a peer in a solution. Async Version.
 
         Parameters
@@ -4179,8 +4222,9 @@ class SolutionArchitect(Client):
             GUID of the first component to link.
         component2_guid: str
            GUID of the second component to link.
-        body: dict
+        body: dict | NewRelationshipRequestBody
             The body describing the link.
+
 
         Returns
         -------
@@ -4200,7 +4244,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "RelationshipRequestBody",
+          "class": "NewRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "properties": {
@@ -4214,16 +4258,14 @@ class SolutionArchitect(Client):
           "forDuplicateProcessing": false
         }
         """
-        validate_guid(component1_guid)
-        validate_guid(component2_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
+        await self._async_new_relationship_request(url, ["SolutionLinkingWireProperties"], body)
+        logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
 
-    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict) -> None:
+    @dynamic_catch
+    def link_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution component as a peer in a solution.
 
                 Parameters
@@ -4232,7 +4274,7 @@ class SolutionArchitect(Client):
                     GUID of the first component to link.
                 component2_guid: str
                    GUID of the second component to link.
-                body: dict
+                body: dict | NewRelationshipRequestBody
                     The body describing the link.
 
                 Returns
@@ -4253,7 +4295,7 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class": "RelationshipRequestBody",
+                  "class": "NewRelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
                   "properties": {
@@ -4270,8 +4312,9 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_solution_linking_wire(component1_guid, component2_guid, body))
 
+    @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
-                                                  body: dict = None) -> None:
+                                                  body: dict | DeleteRequestBody = None) -> None:
         """ Detach a solution component from a peer solution component.
             Async Version.
 
@@ -4281,7 +4324,7 @@ class SolutionArchitect(Client):
             GUID of the first component to unlink.
         component2_guid: str
             GUID of the second component to unlink.
-        body: dict
+        body: dict | DeleteRequestBody
             The body describing the request.
 
         Returns
@@ -4302,7 +4345,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "MetadataSourceRequestBody",
+          "class" : "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -4311,14 +4354,16 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(component1_guid)
-        validate_guid(component2_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/detach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached solution linking wire between  {component1_guid} -> {component2_guid}")
 
-    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | DeleteRequestBody = None) -> None:
         """ Detach a solution component from a peer solution component.
                     Async Version.
 
@@ -4328,7 +4373,8 @@ class SolutionArchitect(Client):
                     GUID of the first component to unlink.
                 component2_guid: str
                     GUID of the second component to unlink.
-                body: dict
+                body: dict | DeleteRequestBody
+                    The body describing the request.
                     The body describing the request.
 
                 Returns
@@ -4349,7 +4395,7 @@ class SolutionArchitect(Client):
 
                 Body structure:
                 {
-                  "class" : "MetadataSourceRequestBody",
+                  "class" : "DeleteRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
                   "effectiveTime" : "{{$isoTimestamp}}",
@@ -4361,9 +4407,9 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_solution_linking_wire(component1_guid, component2_guid, body))
 
-
+    @dynamic_catch
     async def _async_delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
-                                               body: dict = None) -> None:
+                                               body: dict  | DeleteRequestBody= None) -> None:
         """Delete a solution component. Async Version.
 
            Parameters
@@ -4372,7 +4418,7 @@ class SolutionArchitect(Client):
                guid of the component to delete.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
-           body: dict, optional
+           body: dict | DeleteRequestBody, optional
                A dictionary containing parameters for the deletion.
 
            Returns
@@ -4393,7 +4439,7 @@ class SolutionArchitect(Client):
 
            Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -4401,18 +4447,16 @@ class SolutionArchitect(Client):
               "forDuplicateProcessing": false
             }
            """
-        validate_guid(solution_component_guid)
-        cascaded_s = str(cascade_delete).lower()
+
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-components/{solution_component_guid}/delete?cascadeDelete={cascade_delete}")
-        if body:
-            await self._async_make_request("POST", url, body_slimmer(body))
-        else:
-            await self._async_make_request("POST", url)
+               f"solution-components/{solution_component_guid}/delete")
+        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Deleted Solution Component  {solution_component_guid} with cascade {cascade_delete}")
 
+    @dynamic_catch
     def delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
-                                  body: dict = None) -> None:
+                                  body: dict | DeleteRequestBody = None) -> None:
         """Delete a solution component.
            Parameters
            ----------
@@ -4420,7 +4464,7 @@ class SolutionArchitect(Client):
                guid of the component to delete.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
-           body: dict, optional
+           body: dict | DeleteRequestBody, optional
                A dictionary containing parameters for the deletion.
 
            Returns
@@ -4441,7 +4485,7 @@ class SolutionArchitect(Client):
 
            Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -5018,22 +5062,20 @@ class SolutionArchitect(Client):
     #
     #   Roles
     #
-
-    async def _async_create_solution_role(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_role(self, body: dict | NewElementRequestBody) -> str:
         """ Create a solution role. Async version.
 
         Parameters
         ----------
-        body: dict
-            A dictionary containing the definition of the role to create.
+        body: dict | NewElementRequestBody
+            A dictionary containing the properties of the solution role to create.
 
         Returns
         -------
 
         str - guid of the role created.
 
-        Raises
-        ------
         Raises
         ------
         InvalidParameterException
@@ -5087,17 +5129,16 @@ class SolutionArchitect(Client):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles")
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        return await self._async_create_element_body_request(url, ["SolutionRoleProperties"], body)
 
-        return response.json().get("guid", "Solution role not created")
-
-    def create_solution_role(self, body: dict) -> str:
+    @dynamic_catch
+    def create_solution_role(self, body: dict| NewElementRequestBody) -> str:
         """Create a solution role. Async version.
 
         Parameters
         ----------
-        body: dict
-            A dictionary containing the definition of the role to create.
+        body: dict | NewElementRequestBody
+            A dictionary containing the properties of the solution role to create.
 
         Returns
         -------
@@ -5162,7 +5203,8 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_role(body))
         return response
 
-    async def _async_create_solution_role_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    async def _async_create_solution_role_from_template(self, body: dict | TemplateRequestBody) -> str:
         """ Create a new metadata element to represent a solution role using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async Version.
@@ -5170,8 +5212,9 @@ class SolutionArchitect(Client):
 
         Parameters
         ----------
-        body: dict
-            A dictionary containing the definition of the solution component to create.
+        body: dict | TemplateRequestBody
+            A dictionary containing the properties of the solution role to create.
+
 
         Returns
         -------
@@ -5233,12 +5276,20 @@ class SolutionArchitect(Client):
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/from-template")
+        if isinstance(body, TemplateRequestBody):
+            validated_body = body
 
-        response = await self._async_make_request("POST", url, body_slimmer(body))
+        elif isinstance(body, dict):
+            validated_body = self._template_request_adapter.validate_python(body)
 
-        return response.json().get("guid", "Role not created")
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create Solution Role from template with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
 
-    def create_solution_role_from_template(self, body: dict) -> str:
+    @dynamic_catch
+    def create_solution_role_from_template(self, body: dict |TemplateRequestBody) -> str:
         """ Create a new solution component using an existing metadata element
                  as a template.  The template defines additional classifications and relationships that should be
                  added to
@@ -5247,8 +5298,8 @@ class SolutionArchitect(Client):
 
                 Parameters
                 ----------
-                body: dict
-                    A dictionary containing the definition of the solution component to create.
+                body: dict | TemplateRequestBody
+                    A dictionary containing the properties of the solution role to create.
 
                 Returns
                 -------
@@ -5313,7 +5364,8 @@ class SolutionArchitect(Client):
         response = loop.run_until_complete(self._async_create_solution_role_from_template(body))
         return response
 
-    async def _async_update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    async def _async_update_solution_role(self, guid: str, body: dict |UpdateElementRequestBody) -> None:
         """ Update the properties of a solution role. Async Version.
 
         Parameters
@@ -5368,24 +5420,22 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(guid)
-        replace_all_properties_s = str(replace_all_properties).lower()
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{guid}/update?replaceAllProperties={replace_all_properties_s}")
+               f"solution-roles/{guid}/update")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_update_element_body_request(url, ["SolutionRoleProperties"], body)
 
-    def update_solution_role(self, guid: str, body: dict, replace_all_properties: bool = False) -> None:
+    @dynamic_catch
+    def update_solution_role(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a solution role.
 
         Parameters
         ----------
         guid: str
             guid of the solution role to update.
-        body: dict
-            A dictionary containing the updates to the component.
-        replace_all_properties: bool, optional, default is False
-            Whether to replace all properties with those provided in the body or to merge with existing properties.
+        body: dict | UpdateElementRequestBody
+            A dictionary containing the updates to the role.
 
         Returns
         -------
@@ -5430,9 +5480,10 @@ class SolutionArchitect(Client):
         }
             """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_solution_role(guid, body, replace_all_properties))
+        loop.run_until_complete(self._async_update_solution_role(guid, body))
 
-    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
+    @dynamic_catch
+    async def _async_link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution role. Async Version.
 
         Parameters
@@ -5441,8 +5492,8 @@ class SolutionArchitect(Client):
             guid of the role to link.
         component_guid: str
             guid of the component to link.
-        body: dict
-            The body describing the link.
+        body: dict | NewRelationshipRequestBody
+            A dictionary containing the properties of the relationship to create.
 
         Returns
         -------
@@ -5462,7 +5513,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class" : "RelationshipRequestBody",
+          "class" : "NewRelationshipRequestBody",
           "properties": {
             "class": "SolutionComponentActorProperties",
             "role": "Add role here",
@@ -5477,14 +5528,15 @@ class SolutionArchitect(Client):
           "forDuplicateProcessing" : false
         }
         """
-        validate_guid(component_guid)
-        validate_guid(role_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/{role_guid}/solution-roles/{component_guid}/attach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
+        logger.info(f"Linked Role to Component {role_guid} -> {component_guid}")
 
-    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict) -> None:
+    @dynamic_catch
+    def link_component_to_actor(self, role_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
         """ Attach a solution component to a solution role.
 
             Parameters
@@ -5493,8 +5545,8 @@ class SolutionArchitect(Client):
                 guid of the role to link.
             component_guid: str
                 guid of the component to link.
-            body: dict
-                The body describing the link.
+            body: dict | NewRelationshipRequestBody
+                A dictionary containing the properties of the relationship to create.
 
             Returns
             -------
@@ -5514,7 +5566,7 @@ class SolutionArchitect(Client):
 
             Body structure:
             {
-              "class" : "RelationshipRequestBody",
+              "class" : "NewRelationshipRequestBody",
               "properties": {
                 "class": "SolutionComponentActorProperties",
                 "role": "Add role here",
@@ -5533,7 +5585,8 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_component_to_actor(role_guid, component_guid, body))
 
-    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict | DeleteRequestBody = None) -> None:
         """ Detach a solution role from a solution component.
             Async Version.
 
@@ -5543,8 +5596,8 @@ class SolutionArchitect(Client):
             guid of the role to disconnect from.
         component_guid: str
             guid of the component to disconnect.
-        body: dict
-            The body describing the request.
+        body: dict | DeleteRequestBody, optional
+            A dictionary containing the properties of the relationship to create.
 
         Returns
         -------
@@ -5564,7 +5617,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -5573,14 +5626,16 @@ class SolutionArchitect(Client):
         }
 
         """
-        validate_guid(role_guid)
-        validate_guid(component_guid)
+
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{role_guid}/solution-component-actors/{component_guid}/detach")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached role from component  {role_guid} -> {component_guid}")
 
-    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict = None) -> None:
+    @dynamic_catch
+    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict |DeleteRequestBody = None) -> None:
         """ Detach a solution role from a solution component.
 
         Parameters
@@ -5589,8 +5644,8 @@ class SolutionArchitect(Client):
             guid of the role to disconnect from.
         component_guid: str
             guid of the component to disconnect.
-        body: dict
-            The body describing the request.
+        body: dict | DeleteRequestBody, optional
+            A dictionary containing the properties of the relationship to create.
 
         Returns
         -------
@@ -5610,7 +5665,7 @@ class SolutionArchitect(Client):
 
         Body structure:
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -5621,15 +5676,15 @@ class SolutionArchitect(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_component_actor(role_guid, component_guid, body))
 
-
-    async def _async_delete_solution_role(self, guid: str,  body: dict = None, cascade_delete: bool = False,) -> None:
+    @dynamic_catch
+    async def _async_delete_solution_role(self, guid: str,  body: dict | DeleteRequestBody= None, cascade_delete: bool = False,) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
-            body: dict, optional
+            body: dict | DeleteRequestBody, optional
                A dictionary containing parameters for the deletion.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
@@ -5653,7 +5708,7 @@ class SolutionArchitect(Client):
 
            Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -5661,22 +5716,22 @@ class SolutionArchitect(Client):
               "forDuplicateProcessing": false
             }
            """
-        validate_guid(guid)
-        cascaded_s = str(cascade_delete).lower()
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{guid}/delete?cascadedDelete={cascaded_s}")
+               f"solution-roles/{guid}/delete")
 
-        await self._async_make_request("POST", url, body_slimmer(body))
+        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        logger.info(f"Delete solution rule  {guid} with cascade {cascade_delete}")
 
-    def delete_solution_role(self, guid: str, body: dict = None,cascade_delete: bool = False) -> None:
+    @dynamic_catch
+    def delete_solution_role(self, guid: str, body: dict | DeleteRequestBody = None,cascade_delete: bool = False) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
-           body: dict, optional
+           body: dict | DeleteRequestBody, optional
                A dictionary containing parameters for the deletion.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
@@ -5699,7 +5754,7 @@ class SolutionArchitect(Client):
 
            Body structure:
             {
-              "class": "MetadataSourceRequestBody",
+              "class": "DeleteRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},

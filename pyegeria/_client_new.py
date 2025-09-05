@@ -360,18 +360,20 @@ class Client2:
         """Retrieve and return the bearer token"""
         return self.text_headers["Authorization"]
 
-    def get_platform_origin(self):
-        """Validate platform connectivity"""
+    def get_platform_origin(self) -> str:
+        """Return the platform origin string if reachable.
+        
+        Historically this method returned a boolean; tests and helpers expect the actual origin text.
+        """
         origin_url = f"{self.platform_url}/open-metadata/platform-services/users/{self.user_id}/server-platform/origin"
         response = self.make_request("GET", origin_url, is_json=False)
         if response.status_code == 200:
-            logger.success(f"Got response from {origin_url}\n Response: {response.text}")
-            if response.text.split()[0] == "Egeria":
-                return True
-            else:
-                return False
+            text = response.text.strip()
+            logger.success(f"Got response from {origin_url}\n Response: {text}")
+            return text
         else:
             logger.info(f"Got response from {origin_url}\n status_code: {response.status_code}")
+            return ""
 
     # @logger.catch
     def make_request(

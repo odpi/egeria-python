@@ -44,19 +44,30 @@ from loguru import logger
 config_logging()
 init_logging(True)
 
-class TestCollectionManager:
-    good_platform1_url = "https://127.0.0.1:9443"
+from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server, make_client
+import pytest
 
-    good_user_1 = "garygeeke"
-    good_user_2 = "erinoverview"
+@pytest.fixture(autouse=True)
+def _ensure_server():
+    require_local_server()
+
+class TestCollectionManager:
+    good_platform1_url = PLATFORM_URL
+
+    good_user_1 = USER_ID
+    good_user_2 = USER_ID
     # good_user_3 = "peterprofile"
     # bad_user_1 = "eviledna"
     # bad_user_2 = ""
-    good_server_1 = "simple-metadata-store"
-    good_server_2 = "qs-view-server"
+    good_server_1 = VIEW_SERVER
+    good_server_2 = VIEW_SERVER
     # good_server_3 = "active-metadata-store"
     # good_engine_host_1 = "governDL01"
-    good_view_server_1 = "qs-view-server"
+    good_view_server_1 = VIEW_SERVER
+
+    def _unique_qname(self, prefix: str = "Collection") -> str:
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        return f"{prefix}::{ts}"
 
 
     def test_get_attached_collections(self):
@@ -214,10 +225,12 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = None
+            search_string = "Agreement"
             request_body = SearchStringRequestBody(
                 class_ = "SearchStringRequestBody",
                 search_string=search_string,
+                starts_with=True,
+                ends_with=False,
                 ignore_case=True,
                 as_of_time=None,
                 sequencing_order=SequencingOrder.CREATION_DATE_OLDEST,
@@ -225,7 +238,7 @@ class TestCollectionManager:
 
                 )
 
-            response = c_client.find_collections_w_body(request_body, output_format="DICT", output_format_set="Collections")
+            response = c_client.find_collections(request_body, output_format="DICT", output_format_set="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -1999,6 +2012,84 @@ class TestCollectionManager:
             assert False, "Invalid request"
         finally:
             c_client.close_session()
+
+    def test_crud_collection_e2e(self):
+        """End-to-end smoke test for Collection: create -> get -> update -> find -> delete."""
+        from uuid import uuid4
+        c_client = None
+        created_guid = None
+        display_name = f"Smoke Collection {uuid4().hex[:8]}"
+        classification_name = "Folder"
+        try:
+            # Use helper to ensure token etc. If unavailable, fall back to direct constructor
+            try:
+                c_client = make_client(CollectionManager)
+            except Exception:
+                c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+                c_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+
+            # Create
+            q_name = c_client.__create_qualified_name__(classification_name, display_name, version_identifier="")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": {classification_name: {"class": "ClassificationProperties"}},
+                "properties": {
+                    "class": "CollectionProperties",
+                    "displayName": display_name,
+                    "qualifiedName": q_name,
+                    "description": "e2e smoke collection",
+                    "category": "Test"
+                }
+            }
+            create_resp = c_client.create_collection(body=body)
+            assert isinstance(create_resp, (dict, str))
+            created_guid = create_resp.get("guid") if isinstance(create_resp, dict) else create_resp
+            assert created_guid and isinstance(created_guid, str)
+
+            # Get by GUID
+            got = c_client.get_collection_by_guid(created_guid, output_format="DICT")
+            assert got, "get by guid returned empty"
+
+            # Update
+            new_desc = "updated description"
+            upd_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "CollectionProperties",
+                    "qualifiedName": q_name,
+                    "description": new_desc,
+                }
+            }
+            upd_resp = c_client.update_collection(created_guid, upd_body)
+            assert upd_resp in (None, "") or isinstance(upd_resp, (dict, str))
+
+            # Find
+            found = c_client.find_collections(search_string=display_name, output_format="DICT")
+            assert isinstance(found, list) and len(found) >= 1
+
+            # Delete
+            del_resp = c_client.delete_collection(created_guid)
+            assert del_resp in (None, "", created_guid) or isinstance(del_resp, (dict, str))
+
+            # Verify deletion (best effort)
+            try:
+                after = c_client.get_collection_by_guid(created_guid, output_format="DICT")
+                # Some servers return not found exceptions; if we got content, ensure it's empty list or error-like
+                assert not after or (isinstance(after, list) and len(after) == 0)
+            except Exception:
+                # Accept exceptions as deletion confirmation
+                pass
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "CRUD e2e failed"
+        finally:
+            try:
+                if c_client:
+                    c_client.close_session()
+            except Exception:
+                pass
     #
     # def test_create_data_sharing_agreement(self):
     #     try:

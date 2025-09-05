@@ -150,7 +150,7 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
                 "Update Data Dict",
                 "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
-                "View Dataa Classes", "View Data Class", "Create Data Class", "Update Data Class",
+                "View Data Classes", "View Data Class", "Create Data Class", "Update Data Class",
                 "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
                 "Create Agreement", "Update Agreement",
                 "Link Digital Products", "Link Product-Product", "Detach Digital Products", "Detach Product-Product",

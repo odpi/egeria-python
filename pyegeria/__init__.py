@@ -61,7 +61,7 @@ from .project_manager import ProjectManager
 from .registered_info import RegisteredInfo
 from .runtime_manager_omvs import RuntimeManager
 from .server_operations import ServerOps
-from .solution_architect_omvs import SolutionArchitect
+from .solution_architect import SolutionArchitect
 from .utils import body_slimmer, print_response, to_pascal_case, to_camel_case, camel_to_title_case
 from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor

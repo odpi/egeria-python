@@ -28,10 +28,6 @@ from md_processing.md_commands.solution_architect_commands import (process_bluep
 from md_processing.md_commands.data_designer_commands import (process_data_field_upsert_command,
                                                               process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
-                                                              process_data_collection_list_command,
-                                                              process_data_structure_list_command,
-                                                              process_data_field_list_command,
-                                                              process_data_class_list_command,
                                                               process_data_structure_upsert_command)
 
 from md_processing.md_commands.glossary_commands import (process_glossary_upsert_command,

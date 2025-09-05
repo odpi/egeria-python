@@ -30,7 +30,7 @@ from pyegeria.models import (NewElementRequestBody,
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
-                                       get_required_relationships)
+                                       get_required_relationships, populate_common_columns, overlay_additional_values, resolve_output_formats)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -2527,84 +2527,90 @@ class GlossaryManager(CollectionManager):
     #
 
     def _extract_glossary_properties(self, element: dict, columns_struct: dict) -> dict:
-        props = element.get('properties', {}) or {}
-        normalized = {
-            'properties': props,
-            'elementHeader': element.get('elementHeader', {}),
-        }
-        col_data = populate_columns_from_properties(normalized, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
+        """Extract glossary columns for rendering.
+
+        This extractor uses `populate_common_columns` for standard fields (properties, header, relationships,
+        subject area, mermaid). It then overlays glossary-specific values such as:
+        - categories_names: comma/newline separated Display Names of categories in the glossary
+        - categories_qualified_names: comma/newline separated Qualified Names of categories in the glossary
+
+        Parameters
+        ----------
+        element : dict
+            Raw element as returned by the OMVS.
+        columns_struct : dict
+            The selected output format structure (from _output_formats), whose columns' `value` fields will be filled.
+
+        Returns
+        -------
+        dict
+            The same columns_struct with values populated. Non-empty values are not overwritten.
+        """
+        # Common population first
+        col_data = populate_common_columns(element, columns_struct)
+        # Overlay glossary-specific extras: categories lists
         header_props = _extract_referenceable_properties(element)
         guid = header_props.get('GUID')
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
+        extra: dict = {}
         if guid:
-            categories = None
             try:
                 categories = self.get_categories_for_glossary(guid)
             except Exception:
                 categories = None
-            cat_display_list = []
-            cat_qn_list = []
             if isinstance(categories, list):
+                cat_display_list = []
+                cat_qn_list = []
                 for category in categories:
                     gcp = category.get('glossaryCategoryProperties', {})
-                    dn = gcp.get('displayName', '') or ''
-                    qn = gcp.get('qualifiedName', '') or ''
+                    dn = (gcp.get('displayName') or '')
+                    qn = (gcp.get('qualifiedName') or '')
                     if dn:
                         cat_display_list.append(dn)
                     if qn:
                         cat_qn_list.append(qn)
-            cat_names_md = (", \n".join(cat_display_list)).rstrip(',') if cat_display_list else ''
-            cat_qn_md = (", \n".join(cat_qn_list)).rstrip(',') if cat_qn_list else ''
-            for column in columns_list:
-                if column.get('key') == 'categories_names' and not column.get('value'):
-                    column['value'] = cat_names_md
-                if column.get('key') == 'categories_qualified_names' and not column.get('value'):
-                    column['value'] = cat_qn_md
-        for column in columns_list:
-            if column.get('key') == 'mermaid' and not column.get('value'):
-                column['value'] = element.get('mermaidGraph', '') or ''
-                break
-        return col_data
+                if cat_display_list:
+                    extra['categories_names'] = ", \n".join(cat_display_list)
+                if cat_qn_list:
+                    extra['categories_qualified_names'] = ", \n".join(cat_qn_list)
+        return overlay_additional_values(col_data, extra)
 
     def _extract_term_properties(self, element: dict, columns_struct: dict) -> dict:
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get('key')
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = header_props.get('GUID')
-        classification_names = ""
-        classifications = element.get('elementHeader', {}).get("collectionCategories", [])
-        for classification in classifications:
-            classification_names += f"{classification['classificationName']}, "
-        if classification_names:
-            for column in columns_list:
-                if column.get('key') == 'classifications':
-                    column['value'] = classification_names[:-2]
-                    break
-        col_data = get_required_relationships(element, col_data)
-        subject_area = element.get('elementHeader', {}).get("subjectArea", "") or ""
-        subj_val = ""
-        if isinstance(subject_area, dict):
-            subj_val = subject_area.get("classificationProperties", {}).get("subjectAreaName", "")
-        for column in columns_list:
-            if column.get('key') == 'subject_area':
-                column['value'] = subj_val
-                break
-        mermaid_val = element.get('mermaidGraph', "") or ""
-        for column in columns_list:
-            if column.get('key') == 'mermaid':
-                column['value'] = mermaid_val
-                break
+        """Extract glossary term columns for rendering.
+
+        Populates standard columns via `populate_common_columns`, and if requested by the
+        selected columns, derives a classifications string (from `elementHeader.collectionCategories`)
+        into the `classifications` column.
+
+        Parameters
+        ----------
+        element : dict
+            Raw term element returned by the OMVS.
+        columns_struct : dict
+            The chosen format-set structure whose column `value`s will be set.
+
+        Returns
+        -------
+        dict
+            The same `columns_struct` with values populated.
+        """
+        # Use centralized population
+        col_data = populate_common_columns(element, columns_struct)
+        # Term-specific classifications (collectionCategories) to 'classifications' column
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        try:
+            classification_names = ""
+            classifications = element.get('elementHeader', {}).get("collectionCategories", [])
+            for classification in classifications:
+                nm = classification.get('classificationName')
+                if nm:
+                    classification_names += f"{nm}, "
+            if classification_names:
+                for column in columns_list:
+                    if column.get('key') == 'classifications' and column.get('value') in (None, ""):
+                        column['value'] = classification_names[:-2]
+                        break
+        except Exception:
+            pass
         return col_data
 
     def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
@@ -2650,17 +2656,7 @@ class GlossaryManager(CollectionManager):
                                   output_format: str = 'DICT',
                                   output_format_set: dict | str = None) -> str | list[dict]:
         entity_type = 'Glossary'
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_output_format_set(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_output_format_set('Default', output_format)
+        output_formats = resolve_output_formats(entity_type, output_format, output_format_set)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -2676,17 +2672,7 @@ class GlossaryManager(CollectionManager):
                                output_format: str = 'DICT',
                                output_format_set: dict | str = None) -> str | list[dict]:
         entity_type = 'GlossaryTerm'
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_output_format_set(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_output_format_set('Default', output_format)
+        output_formats = resolve_output_formats(entity_type, output_format, output_format_set)
         return generate_output(
             elements=elements,
             search_string=search_string,

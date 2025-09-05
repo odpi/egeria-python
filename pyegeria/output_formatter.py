@@ -721,6 +721,127 @@ def generate_entity_dict(elements: List[Dict],
 
     return result
 
+def resolve_output_formats(entity_type: str,
+                           output_format: str,
+                           output_format_set: Optional[Union[str, dict]] = None,
+                           default_label: Optional[str] = None) -> Optional[dict]:
+    """
+    Resolve an output format set structure given an entity type, the desired output format
+    (e.g., DICT, LIST, MD, REPORT, FORM), and either a label (str) or a dict of format sets.
+
+    Selection order:
+    - If output_format_set is a str: select by label.
+    - If output_format_set is a dict: use get_output_format_type_match to pick a matching format.
+    - Else: try selecting by entity_type or default_label.
+    - Fallback: select "Default".
+    """
+    from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+
+    if isinstance(output_format_set, str):
+        return select_output_format_set(output_format_set, output_format)
+    if isinstance(output_format_set, dict):
+        return get_output_format_type_match(output_format_set, output_format)
+
+    label = default_label or entity_type
+    fmt = select_output_format_set(label, output_format)
+    if fmt is None:
+        fmt = select_output_format_set("Default", output_format)
+    return fmt
+
+
+def overlay_additional_values(columns_struct: dict, extra: Optional[dict]) -> dict:
+    """
+    Overlay extra values into columns_struct only where the column's value is empty or missing.
+    Returns the modified columns_struct.
+    """
+    if not isinstance(columns_struct, dict) or not extra:
+        return columns_struct
+    columns = columns_struct.get('formats', {}).get('columns')
+    if not isinstance(columns, list):
+        return columns_struct
+    for col in columns:
+        if not isinstance(col, dict):
+            continue
+        key = col.get('key')
+        if not key:
+            continue
+        if col.get('value') in (None, "") and key in extra:
+            col['value'] = extra[key]
+    return columns_struct
+
+
+def populate_common_columns(
+    element: dict,
+    columns_struct: dict,
+    *,
+    include_header: bool = True,
+    include_relationships: bool = True,
+    include_subject_area: bool = True,
+    mermaid_source_key: str = 'mermaidGraph',
+    mermaid_dest_key: str = 'mermaid'
+) -> dict:
+    """
+    Populate the common columns in columns_struct based on a standard Egeria element shape.
+
+    Steps:
+    - Populate from element.properties (camelCase mapped from snake_case keys)
+    - Optionally overlay header-derived values (GUID, type_name, times, etc.)
+    - Optionally populate relationship-based columns via get_required_relationships
+    - Optionally populate subject_area from element.elementHeader.subjectArea.classificationProperties.subjectAreaName
+    - If a column with key == mermaid_dest_key is present, set it from mermaid_source_key
+    - Do not overwrite non-empty values already set
+    """
+    # 1) Base properties
+    col_data = populate_columns_from_properties(element, columns_struct)
+    columns_list = col_data.get('formats', {}).get('columns', [])
+
+    # 2) Header overlay
+    header_props = _extract_referenceable_properties(element) if include_header else {}
+    guid = header_props.get('GUID') if include_header else None
+    if include_header:
+        for column in columns_list:
+            if not isinstance(column, dict):
+                continue
+            key = column.get('key')
+            if not key:
+                continue
+            if column.get('value') not in (None, ""):
+                continue
+            if key in header_props:
+                column['value'] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
+
+    # 3) Relationships
+    if include_relationships:
+        col_data = get_required_relationships(element, col_data)
+
+    # 4) Subject area
+    if include_subject_area:
+        try:
+            subject_area = element.get('elementHeader', {}).get('subjectArea') or ""
+            subj_val = ""
+            if isinstance(subject_area, dict):
+                subj_val = subject_area.get('classificationProperties', {}).get('subjectAreaName', '')
+            for column in columns_list:
+                if column.get('key') == 'subject_area' and column.get('value') in (None, ""):
+                    column['value'] = subj_val
+        except Exception as e:
+            logger.debug(f"populate_common_columns: subject_area handling error: {e}")
+
+    # 5) Mermaid
+    try:
+        mermaid_val = element.get(mermaid_source_key, '') or ''
+        for column in columns_list:
+            if column.get('key') == mermaid_dest_key and column.get('value') in (None, ""):
+                column['value'] = mermaid_val
+                break
+    except Exception as e:
+        logger.debug(f"populate_common_columns: mermaid handling error: {e}")
+
+    return col_data
+
+
 def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> Union[str, List[str]]:
     """
     Extract mermaid graph data from elements.
