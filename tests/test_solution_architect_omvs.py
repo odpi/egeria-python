@@ -347,7 +347,7 @@ class TestSolutionArchitect:
 
 
     def test_find_information_supply_chains_body(self):
-        filter = "*"
+        filter = "Co"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -355,15 +355,16 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             body = {
-                "class": "SearchSTringRequestBody",
+                "class": "SearchStringRequestBody",
                 # "effective_time": None,
                 # "limitResultsByStatus": ["ACTIVE"],
                 "sequencingOrder": None,
                 "sequencingProperty": None,
-                "searchString": None
+                "searchString": filter
                 }
             start_time = time.perf_counter()
-            response = s_client.find_information_supply_chains(filter, body=body, output_format="DICT")
+            response = s_client.find_information_supply_chains(filter,
+                                                               body=body, output_format="REPORT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -376,11 +377,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -576,13 +575,13 @@ class TestSolutionArchitect:
             display_name = "my_second_blueprint"
             q_name = s_client.__create_qualified_name__("Blueprint",display_name)
             body = {
-                "class": "NewSolutionElementRequestBody",
+                "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "SolutionBlueprintProperties",
                     "displayName": display_name,
                     "qualifiedName": q_name,
-                    "description": "some description",
+                    "description": "some description"
                     },
                 "initialStatus": "ACTIVE"
                 }
@@ -600,11 +599,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -751,7 +748,7 @@ class TestSolutionArchitect:
 
 
     def test_find_solution_blueprints(self):
-        search_string = "Blueprint::my_first_blueprint"
+        search_string = "Co"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -759,7 +756,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(search_string, output_format='MD')
+            response = s_client.find_solution_blueprints(search_string, output_format='DICT')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -772,11 +769,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

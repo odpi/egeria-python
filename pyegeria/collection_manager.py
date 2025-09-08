@@ -459,7 +459,7 @@ class CollectionManager(Client2):
         return response
 
 
-    def get_collections_by_name(self, name: str = None, classification_names: list[str] = None,
+    def get_collections_by_name(self, filter_string: str = None, classification_names: list[str] = None,
                                 body: dict | FilterRequestBody = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 output_format_set: str | dict = None) -> list | str:
@@ -469,7 +469,7 @@ class CollectionManager(Client2):
 
         Parameters
         ----------
-        name: str,
+        filter_string: str,
             name to use to find matching collections.
         classification_names: list[str], optional, default = None
             type of collection to filter by - e.g., DataDict, Folder, Root
@@ -497,7 +497,7 @@ class CollectionManager(Client2):
 
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_collections_by_name(name, classification_names, body, start_from, page_size,
+            self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size,
                                                 output_format, output_format_set))
 
 

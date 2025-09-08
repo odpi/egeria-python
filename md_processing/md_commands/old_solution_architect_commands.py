@@ -12,11 +12,10 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_element_prop_body, \
-    set_update_body, set_create_body
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
-from pyegeria import body_slimmer, EgeriaTech, PyegeriaException, print_basic_exception
+from pyegeria import body_slimmer, EgeriaTech
 
 load_commands('commands.json')
 
@@ -276,15 +275,30 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     attributes = parsed_output['attributes']
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
+    version_identifier = attributes.get('Version Identifier', {}).get('value', None)
+    effective_time = attributes.get('Effective Time', {}).get('value', None)
+    effective_from = attributes.get('Effective From', {}).get('value', None)
+    effective_to = attributes.get('Effective To', {}).get('value', None)
+    external_source_guid = attributes.get('External Source GUID', {}).get('value', None)
+    external_source_name = attributes.get('External Source Name', {}).get('value', None)
 
+    anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
+    parent_guid = attributes.get('Parent ID', {}).get('guid', None)
+    parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
+    parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
 
+    anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
+    is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
+    if parent_guid is None:
+        is_own_anchor = True
 
-
+    additional_prop = attributes.get('Additional Properties', {}).get('value', None)
+    additional_properties = json.loads(additional_prop) if additional_prop is not None else None
+    extended_prop = attributes.get('Extended Properties', {}).get('value', None)
+    extended_properties = json.loads(extended_prop) if extended_prop is not None else None
     component_guids = attributes.get('Solution Components', {}).get('guid_list', None)
 
-    status = attributes.get('Status', {}).get('value', None)
-    if status is None:
-        status = "ACTIVE"
+    initial_status = "ACTIVE"
 
     replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
@@ -299,8 +313,6 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return valid
 
     elif directive == "process":
-        prop_body = set_element_prop_body(object_type, qualified_name, attributes)
-
         try:
             if object_action == "Update":
                 if not exists:
@@ -314,19 +326,16 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     print(Markdown(
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
-                    body = set_update_body(object_type, attributes)
-                    body['properties'] = prop_body
-                    egeria_client.update_solution_blueprint(guid, body)
-                    if status:
-                        egeria_client.update_solution_element_status(guid, status)
-
-                    msg = f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___"
-                    update_element_dictionary(qualified_name, {
-                        'guid': guid, 'display_name': display_name
-                    })
-                    logger.info(msg)
-                    logger.success(msg)
-                    return egeria_client.find_solution_blueprints(qualified_name, output_format='MD')
+                    body = body_slimmer({
+                        "class": "UpdateSolutionBlueprintRequestBody", "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name, "effectiveTime": effective_time,
+                        "forLineage": False, "forDuplicateProcessing": False, "properties": {
+                            "class": "SolutionBlueprintProperties", "qualifiedName": qualified_name,
+                            "displayName": display_name, "description": description, "version": version_identifier,
+                            "additionalProperties": additional_properties, "extendedProperties": extended_properties,
+                            "effectiveFrom": effective_from, "effectiveTo": effective_to
+                            }
+                        })
 
                 egeria_client.update_solution_blueprint(guid, body, replace_all_props)
                 logger.success(f"==> Updated  {object_type} `{display_name}` with GUID {guid}\n\n")
@@ -354,8 +363,32 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         return
 
                     else:
-                        body = set_create_body(object_type,attributes)
-                        body['properties'] = prop_body
+                        body = {
+                        "class": "NewSolutionBlueprintRequestBody",
+                        "externalSourceGUID": external_source_guid,
+                        "externalSourceName": external_source_name,
+                        "forLineage": False,
+                        "forDuplicateProcessing": False,
+                        "effectiveTime": effective_time,
+                        "anchorGUID": anchor_guid,
+                        "isOwnAnchor": is_own_anchor,
+                        "anchorScopeGUID": anchor_scope_guid,
+                        "parentGUID": parent_guid,
+                        "parentRelationshipTypeName": parent_relationship_type_name,
+                        "parentAtEnd1": parent_at_end1,
+                        "properties": {
+                            "class": "SolutionBlueprintProperties",
+                            "effectiveFrom": effective_from,
+                            "effectiveTo": effective_to,  # "typeName": type_name,
+                            "extendedProperties": extended_properties,
+                            "qualifiedName": qualified_name,
+                            "additionalProperties": additional_properties,
+                            "displayName": display_name,
+                            "description": description,
+                            "versionIdentifier": version_identifier
+                            },
+                        "initialStatus": initial_status,
+                        }
                         guid = egeria_client.create_solution_blueprint(body)
                 except Exception as e:
                     print(f"Unexpected error: {e}, {type(valid)}, {valid}")
@@ -373,8 +406,8 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     logger.error(msg)
                     return None
 
-        except PyegeriaException as e:
-            print_basic_exception(e)
+        except Exception as e:
+            print("why did I get here")
             logger.error(f"Error performing {command}: {e}")
             return None
     else:
