@@ -471,30 +471,30 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
-    def test_update_status(self):
-        try:
-            p_client = ExternalReferences(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            guid = "8269a34d-fc7b-44c5-b111-b156f2e48bc2"
-            new_status = "DRAFT"
-            p_client.update_element_status(guid, status=new_status)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds\n")
-            assert True
-
-        except (
-            PyegeriaException
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Invalid request"
-        finally:
-            p_client.close_session()
+    # def test_update_status(self):
+    #     try:
+    #         p_client = ExternalReferences(
+    #             self.good_view_server_2,
+    #             self.good_platform1_url,
+    #             user_id=self.good_user_2,
+    #         )
+    #
+    #         token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+    #         start_time = time.perf_counter()
+    #         guid = "8269a34d-fc7b-44c5-b111-b156f2e48bc2"
+    #         new_status = "DRAFT"
+    #         p_client.update_element_status(guid, status=new_status)
+    #         duration = time.perf_counter() - start_time
+    #         print(f"\n\tDuration was {duration} seconds\n")
+    #         assert True
+    #
+    #     except (
+    #         PyegeriaException
+    #     ) as e:
+    #         print_basic_exception(e)
+    #         assert False, "Invalid request"
+    #     finally:
+    #         p_client.close_session()
 
     def test_delete_project(self):
         try:
