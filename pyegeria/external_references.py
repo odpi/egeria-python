@@ -17,8 +17,8 @@ from pyegeria._output_formats import select_output_format_set, get_output_format
 from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
-                             UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody, UpdateRelationshipRequestBody, get_defined_field_values)
+                             UpdateElementRequestBody, NewRelationshipRequestBody,
+                             DeleteRequestBody)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
                                        get_required_relationships)
@@ -26,11 +26,12 @@ from pyegeria.utils import dynamic_catch
 
 app_settings = settings
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties","ExternalDataSourceProperties","ExternalModelSourceProperties",
-                            "RelatedMediaProperties","CitedDocumentProperties"]
+EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourceProperties",
+                            "ExternalModelSourceProperties",
+                            "RelatedMediaProperties", "CitedDocumentProperties"]
 
-EXTERNAL_REFERENCE_TYPES = ["ExternalReference","ExternalDataSource","ExternalModelSource",
-                            "RelatedMedia","CitedDocument"]
+EXTERNAL_REFERENCE_TYPES = ["ExternalReference", "ExternalDataSource", "ExternalModelSource",
+                            "RelatedMedia", "CitedDocument"]
 from pyegeria._client_new import Client2
 
 
@@ -158,7 +159,7 @@ class ExternalReferences(Client2):
     """
 
         url = f"{self.command_root}/external-references"
-        return await self._async_create_element_body_request(url,EXTERNAL_REFERENCE_PROPS,body)
+        return await self._async_create_element_body_request(url, EXTERNAL_REFERENCE_PROPS, body)
 
     @dynamic_catch
     def create_external_reference(self, body: dict | NewElementRequestBody = None) -> str:
@@ -283,8 +284,7 @@ class ExternalReferences(Client2):
 
         return asyncio.get_event_loop().run_until_complete(self._async_create_external_reference(body))
 
-
-#######
+    #######
 
     @dynamic_catch
     async def _async_create_external_reference_from_template(self, body: TemplateRequestBody | dict) -> str:
@@ -341,20 +341,20 @@ class ExternalReferences(Client2):
         }
     
         """
-    
+
         if isinstance(body, TemplateRequestBody):
             validated_body = body
-    
+
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
-    
-        url = f"{self.command_root}/from-template"
+
+        url = f"{self.command_root}/external-references/from-template"
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create external_reference from template with GUID: {resp.json().get('guid')}")
         return resp.json().get("guid", NO_GUID_RETURNED)
-    
+
     @dynamic_catch
     def create_external_reference_from_template(self, body: dict) -> str:
         """Create a new metadata element to represent a external_reference using an existing metadata element as a template.
@@ -410,12 +410,11 @@ class ExternalReferences(Client2):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(self._async_create_external_reference_from_template(body))
         return resp
-    
+
         #
         # Manage external_references
         #
-    
-    
+
     @dynamic_catch
     async def _async_update_external_reference(self, external_reference_guid: str,
                                                body: dict | UpdateElementRequestBody) -> None:
@@ -470,13 +469,12 @@ class ExternalReferences(Client2):
           "forDuplicateProcessing" : false
         }
         """
-    
+
         # try:
-    
-        url = (f"{self.command_root}/{external_reference_guid}/update")
+
+        url = (f"{self.command_root}/external-references/{external_reference_guid}/update")
         await self._async_update_element_body_request(url, EXTERNAL_REFERENCE_PROPS, body)
-    
-    
+
     @dynamic_catch
     def update_external_reference(self, external_reference_guid: str, body: dict | NewElementRequestBody) -> None:
         """ Update the properties of a external_reference. Use the correct properties object (CollectionProperties,
@@ -529,13 +527,13 @@ class ExternalReferences(Client2):
           "forDuplicateProcessing" : false
         }
         """
-    
+
         return asyncio.get_event_loop().run_until_complete(
             self._async_update_external_reference(external_reference_guid, body))
-    
+
     @dynamic_catch
     async def _async_link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                     body: dict | NewRelationshipRequestBody = None) -> None:
+                                             body: dict | NewRelationshipRequestBody = None) -> None:
         """ Attach an element to an external reference.
             Async version.
     
@@ -583,11 +581,10 @@ class ExternalReferences(Client2):
         url = url = (f"{self.command_root}/elements/{element_guid}/external_references/{ext_ref_guid}/attach")
         await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
         logger.info(f"Linking element {element_guid} to ext. ref.  {ext_ref_guid}")
-    
-    
+
     @dynamic_catch
     def link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                        body: dict | NewRelationshipRequestBody = None):
+                                body: dict | NewRelationshipRequestBody = None):
         """ Attach an element to an external reference.
     
             Parameters
@@ -633,11 +630,10 @@ class ExternalReferences(Client2):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_external_reference(element_guid, ext_ref_guid, body))
-    
-    
+
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                       body: dict | DeleteRequestBody = None) -> None:
+                                               body: dict | DeleteRequestBody = None) -> None:
         """ Detach an element from an external reference; body is optional. Async version.
     
         Parameters
@@ -675,11 +671,10 @@ class ExternalReferences(Client2):
         }
         """
         url = (f"{self.command_root}/elements/{element_guid}/external_references/{ext_ref_guid}/detach")
-    
+
         await self._async_delete_request(url, body)
         logger.info(f"Detached element {element_guid} from external reference {ext_ref_guid}")
-    
-    
+
     def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: dict | DeleteRequestBody = None):
         """ Detach an element from an external reference. Request body is optional.
     
@@ -719,11 +714,10 @@ class ExternalReferences(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_external_reference(element_guid, ext_ref_guid, body))
-    
-    
+
     @dynamic_catch
     async def _async_link_media_reference(self, element_guid: str, media_ref_guid: str,
-                                     body: dict | NewRelationshipRequestBody = None) -> None:
+                                          body: dict | NewRelationshipRequestBody = None) -> None:
         """ Attach an element to a related media reference.
             Async version.
     
@@ -789,16 +783,13 @@ class ExternalReferences(Client2):
                   }
         }
         """
-        url =f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/attach"
+        url = f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/attach"
         await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
         logger.info(f"Linking element {element_guid} to media reference  {media_ref_guid}")
-    
-    
-    
-    
+
     @dynamic_catch
     def link_media_reference(self, element_guid: str, media_ref_guid: str,
-                                body: dict | NewRelationshipRequestBody = None):
+                             body: dict | NewRelationshipRequestBody = None):
         """ Attach an element to an external media reference.
     
             Parameters
@@ -865,10 +856,10 @@ class ExternalReferences(Client2):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))
-    
+
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
-                                               body: dict | DeleteRequestBody = None) -> None:
+                                            body: dict | DeleteRequestBody = None) -> None:
         """ Detach an element from an external media reference; body is optional. Async version.
     
         Parameters
@@ -907,9 +898,10 @@ class ExternalReferences(Client2):
         """
         url = (
             f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/detach")
-    
+
         await self._async_delete_request(url, body)
         logger.info(f"Detached element {element_guid} from external media reference {media_ref_guid}")
+
     @dynamic_catch
     def detach_media_reference(self, element_guid: str, media_ref_guid: str, body: dict | DeleteRequestBody = None):
         """ Detach an element from an external media reference. Request body is optional.
@@ -950,10 +942,10 @@ class ExternalReferences(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_media_reference(element_guid, media_ref_guid, body))
-    
+
     @dynamic_catch
     async def _async_link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                          body: dict | NewRelationshipRequestBody = None) -> None:
+                                         body: dict | NewRelationshipRequestBody = None) -> None:
         """ Attach an element to a cited document reference.
             Async version.
     
@@ -1000,10 +992,10 @@ class ExternalReferences(Client2):
         url = f"{self.command_root}/elements/{element_guid}/cited-document-references/{cited_doc_guid}/attach"
         await self._async_new_relationship_request(url, "CitedDocumentLinkProperties", body)
         logger.info(f"Linking element {element_guid} to cited document  {cited_doc_guid}")
-    
+
     @dynamic_catch
     def link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                             body: dict | NewRelationshipRequestBody = None):
+                            body: dict | NewRelationshipRequestBody = None):
         """ Attach an element to an external media reference.
     
             Parameters
@@ -1048,10 +1040,10 @@ class ExternalReferences(Client2):
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_cited_document(element_guid, cited_doc_guid, body))
-    
+
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                            body: dict | DeleteRequestBody = None) -> None:
+                                           body: dict | DeleteRequestBody = None) -> None:
         """ Detach an element from an cited document reference; body is optional. Async version.
     
         Parameters
@@ -1089,10 +1081,10 @@ class ExternalReferences(Client2):
         }
         """
         url = f"{self.command_root}/elements/{element_guid}/cited-document-references/{cited_doc_guid}/detach"
-    
+
         await self._async_delete_request(url, body)
         logger.info(f"Detached element {element_guid} from cited document reference {cited_doc_guid}")
-    
+
     @dynamic_catch
     def detach_cited_document(self, element_guid: str, cited_doc_guid: str, body: dict | DeleteRequestBody = None):
         """ Detach an element from acited document reference. Request body is optional.
@@ -1133,14 +1125,14 @@ class ExternalReferences(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_cited_document(element_guid, cited_doc_guid, body))
-    
+
     #
     # do deletes etc
     #
     @dynamic_catch
     async def _async_delete_external_reference(self, ext_ref_guid: str,
-                                                  body: dict | DeleteRequestBody = None,
-                                                  cascade: bool = False) -> None:
+                                               body: dict | DeleteRequestBody = None,
+                                               cascade: bool = False) -> None:
         """ Delete an external reference. Async Version.
     
         Parameters
@@ -1186,7 +1178,7 @@ class ExternalReferences(Client2):
 
     @dynamic_catch
     def delete_external_reference(self, ext_ref_guid: str, body: dict | DeleteRequestBody = None,
-                                     cascade: bool = False) -> None:
+                                  cascade: bool = False) -> None:
         """Delete an external reference..
     
         Parameters
@@ -1226,17 +1218,16 @@ class ExternalReferences(Client2):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_external_reference(ext_ref_guid,body, cascade))
-        
-
+        loop.run_until_complete(self._async_delete_external_reference(ext_ref_guid, body, cascade))
 
     @dynamic_catch
     async def _async_find_external_references(self, search_string: str = "*", classification_names: list[str] = None,
-                                      metadata_element_types: list[str] = EXTERNAL_REFERENCE_TYPES,
-                                      starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                      start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                      output_format_set: str | dict = None,
-                                      body: dict | SearchStringRequestBody = None) -> list | str:
+                                              metadata_element_types: list[str] = EXTERNAL_REFERENCE_TYPES,
+                                              starts_with: bool = True, ends_with: bool = False,
+                                              ignore_case: bool = False,
+                                              start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                              output_format_set: str | dict = "ExternalReference",
+                                              body: dict | SearchStringRequestBody = None) -> list | str:
         """ Returns the list of external references matching the search string filtered by the optional classification.
             This method can either be used with a body, allowing full control, or with the individual parameters.
             If the body is provided it will be used and the search_string will be ignored.
@@ -1289,10 +1280,10 @@ class ExternalReferences(Client2):
         url = str(HttpUrl(f"{self.command_root}/external-references/by-search-string"))
         response = await self._async_find_request(url, _type="ExternalReference", search_string=search_string,
                                                   _gen_output=self._generate_external_reference_output,
-                                                   classification_names = classification_names,
-                                                  metadata_element_types = metadata_element_types,
-                                                  starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
-                                                  start_from = start_from, page_size = page_size,
+                                                  classification_names=classification_names,
+                                                  metadata_element_types=metadata_element_types,
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
                                                   output_format=output_format, output_format_set=output_format_set,
                                                   body=body)
 
@@ -1300,11 +1291,11 @@ class ExternalReferences(Client2):
 
     @dynamic_catch
     def find_external_references(self, search_string: str = '*', classification_names: str = None,
-                         metadata_element_types: list[str] = EXTERNAL_REFERENCE_TYPES, starts_with: bool = True,
-                         ends_with: bool = False, ignore_case: bool = False,
-                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                         output_format_set: str | dict = None,
-                         body: dict | SearchStringRequestBody = None) -> list | str:
+                                 metadata_element_types: list[str] = EXTERNAL_REFERENCE_TYPES, starts_with: bool = True,
+                                 ends_with: bool = False, ignore_case: bool = False,
+                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                 output_format_set: str | dict = "ExternalReference",
+                                 body: dict | SearchStringRequestBody = None) -> list | str:
         """ Returns the list of external references matching the search string filtered by the optional classification.
             This method can either be used with a body, allowing full control, or with the individual parameters.
             If the body is provided it will be used and the search_string will be ignored.
@@ -1361,17 +1352,17 @@ class ExternalReferences(Client2):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_find_external_references(search_string, classification_names, metadata_element_types,
-                                         starts_with, ends_with, ignore_case,
-                                         start_from, page_size, output_format,
-                                         output_format_set, body))
-
+                                                 starts_with, ends_with, ignore_case,
+                                                 start_from, page_size, output_format,
+                                                 output_format_set, body))
 
     @dynamic_catch
-    async def _async_get_external_references_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
-                                             start_from: int = 0, page_size: int = 0,
-                                             output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> list | str:
+    async def _async_get_external_references_by_name(self, filter_string: str = None,
+                                                     classification_names: list[str] = None,
+                                                     body: dict | FilterRequestBody = None,
+                                                     start_from: int = 0, page_size: int = 0,
+                                                     output_format: str = 'JSON',
+                                                     output_format_set: str | dict = "ExternalReference") -> list | str:
         """ Returns the list of external references with a particular name.
 
             Parameters
@@ -1408,21 +1399,21 @@ class ExternalReferences(Client2):
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
         """
-        url = str(HttpUrl(f"{self.command_root}/by-name"))
+        url = str(HttpUrl(f"{self.command_root}/external-references/by-name"))
         response = await self._async_get_name_request(url, _type="Collection",
-                                                  _gen_output=self._generate_external_reference_output,
-                                                  filter_string = filter_string, classification_names = classification_names,
-                                                  start_from = start_from, page_size = page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
-                                                  body=body)
+                                                      _gen_output=self._generate_external_reference_output,
+                                                      filter_string=filter_string,
+                                                      classification_names=classification_names,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
         return response
 
-
     def get_external_references_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                body: dict | FilterRequestBody = None,
-                                start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                output_format_set: str | dict = None) -> list | str:
+                                        body: dict | FilterRequestBody = None,
+                                        start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                        output_format_set: str | dict = "ExternalReference") -> list | str:
         """Returns the list of external references matching the filter string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1457,17 +1448,15 @@ class ExternalReferences(Client2):
 
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_external_references_by_name(filter_string, classification_names, body, start_from, page_size,
-                                                output_format, output_format_set))
-
-
-
+            self._async_get_external_references_by_name(filter_string, classification_names, body, start_from,
+                                                        page_size,
+                                                        output_format, output_format_set))
 
     @dynamic_catch
     async def _async_get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
-                                            output_format: str = 'JSON',
-                                            output_format_set: str | dict = None) -> dict | str:
+                                                    body: dict | GetRequestBody = None,
+                                                    output_format: str = 'JSON',
+                                                    output_format_set: str | dict = "ExternalReference") -> dict | str:
         """Return the properties of a specific external reference. Async version.
 
         Parameters
@@ -1511,19 +1500,21 @@ class ExternalReferences(Client2):
         }
         """
 
-        url = str(HttpUrl(f"{self.command_root}/{ext_ref_guid}/retrieve"))
+        url = str(HttpUrl(f"{self.command_root}/external-references/{ext_ref_guid}/retrieve"))
         type = element_type if element_type else "ExternalReference"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                  _gen_output=self._generate_external_reference_output,
-                                                  output_format=output_format, output_format_set=output_format_set,
-                                                  body=body)
+                                                      _gen_output=self._generate_external_reference_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
 
         return response
 
     @dynamic_catch
-    def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None, body: dict | GetRequestBody= None,
-                               output_format: str = 'JSON', output_format_set: str | dict = None) -> dict | str:
+    def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
+                                       body: dict | GetRequestBody = None,
+                                       output_format: str = 'JSON',
+                                       output_format_set: str | dict = "ExternalReference") -> dict | str:
         """ Return the properties of a specific external reference. Async version.
 
             Parameters
@@ -1569,106 +1560,7 @@ class ExternalReferences(Client2):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_external_reference_by_guid(ext_ref_guid, element_type, body,
-                                               output_format, output_format_set))
-
-
-
-
-
-
-    @dynamic_catch
-    async def _async_update_external_reference_status(self, external_reference_guid: str, status: str = None,
-                                                      body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a external_reference. Async version.
-
-        Parameters
-        ----------
-        external_reference_guid: str
-            The guid of the external_reference to update.
-        status: str, optional
-            The new lifecycle status for the external_reference. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the external_reference to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/external-reference-managermetadata-elements/{external_reference_guid}/update-status"
-        await self._async_update_status_request(url, status, body)
-
-
-    @dynamic_catch
-    def update_external_reference_status(self, external_reference_guid: str, status: str = None,
-                                         body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a DigitalProduct external_reference.
-
-        Parameters
-        ----------
-        external_reference_guid: str
-            The guid of the external_reference to update.
-        status: str, optional
-            The new lifecycle status for the digital product. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the external_reference to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_external_reference_status(external_reference_guid, status, body))
-
-
-
-
+                                                       output_format, output_format_set))
 
     def _extract_external_reference_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -1730,7 +1622,6 @@ class ExternalReferences(Client2):
         logger.trace(f"Extracted/Populated columns: {col_data}")
 
         return col_data
-
 
     def _generate_external_reference_output(self, elements: dict | list[dict], filter: Optional[str],
                                             element_type_name: Optional[str], output_format: str = "DICT",

@@ -60,7 +60,7 @@ from pyegeria.registered_info import RegisteredInfo
 from pyegeria.runtime_manager_omvs import RuntimeManager
 from pyegeria.server_operations import ServerOps
 from pyegeria.solution_architect import SolutionArchitect
-from pyegeria.utils import body_slimmer, print_response
+from pyegeria.utils import body_slimmer
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.x_action_author_omvs import ActionAuthor
 from pyegeria.template_manager_omvs import TemplateManager

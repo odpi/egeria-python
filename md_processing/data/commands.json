@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "Sep 7, 2025 at 7:46:16 PM",
+    "exported": "Sep 10, 2025 at 2:26:07 PM",
     "Create Governance Driver": {
       "display_name": "Governance Driver",
       "qn_prefix": "GovDriver",
@@ -13,9 +13,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceDriver\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -813,7 +816,7 @@
       ]
     },
     "Create Governance Strategy": {
-      "display_name": "governance_strategy",
+      "display_name": "Governance Strategy",
       "qn_prefix": "GovStrategy",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -824,9 +827,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceStrategy\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -1635,9 +1641,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceDriver\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -2435,7 +2444,7 @@
       ]
     },
     "Create Regulation": {
-      "display_name": "regulation",
+      "display_name": "Regulation",
       "qn_prefix": "Regulation",
       "alternate_names": "Create Regulation; Regulation Definition",
       "family": "Governance Officer",
@@ -2446,9 +2455,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"Regulation\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -3305,9 +3317,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"RegulationArticle\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -4116,9 +4131,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"ThreatDefinition\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -4927,9 +4945,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernancePolicy\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -5738,9 +5759,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernancePrinciple\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -6549,9 +6573,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceObligation\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -7360,9 +7387,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceApproach\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -8171,9 +8201,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceControl\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -8982,9 +9015,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceMetric\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -9841,9 +9877,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceAction\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -10652,9 +10691,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"DataProcessingPurpose\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -11452,7 +11494,7 @@
       ]
     },
     "Create Governance Rule": {
-      "display_name": "governance_rule",
+      "display_name": "Governance Rule",
       "qn_prefix": "GovRule",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -11463,9 +11505,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceRule\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -12287,7 +12332,7 @@
       ]
     },
     "Create Service Level Objectives": {
-      "display_name": "service_level_objective",
+      "display_name": "Service Level Objectives",
       "qn_prefix": "ServiceLevelObj",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -12298,9 +12343,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"ServiceLevelObjectives\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -13122,7 +13170,7 @@
       ]
     },
     "Create Governance Responsibility": {
-      "display_name": "governance_responsibility",
+      "display_name": "Governance Responsibility",
       "qn_prefix": "GovResponsibility",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -13133,9 +13181,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceResponsibility\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -13957,7 +14008,7 @@
       ]
     },
     "Create Governance Procedure": {
-      "display_name": "governance_procedure",
+      "display_name": "Governance Procedure",
       "qn_prefix": "GovProcedure",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -13968,9 +14019,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceProcedure\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -14816,7 +14870,7 @@
       ]
     },
     "Create Security Access Control": {
-      "display_name": "security_access_control",
+      "display_name": "Security Access Control",
       "qn_prefix": "SecurityAccessCtl",
       "alternate_names": "Access Control",
       "family": "Governance Officer",
@@ -14827,9 +14881,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"SecurityAccessControl\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -15638,9 +15695,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"GovernanceZone\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -16462,7 +16522,7 @@
       ]
     },
     "Create Security Group": {
-      "display_name": "security_group",
+      "display_name": "Security Group",
       "qn_prefix": "SecurityGroup",
       "alternate_names": "Access Control",
       "family": "Governance Officer",
@@ -16473,9 +16533,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"SEcurityGroup\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -17273,7 +17336,7 @@
       ]
     },
     "Create Naming Standard Rule": {
-      "display_name": "naming_standard_rule",
+      "display_name": "Naming Standard Rule",
       "qn_prefix": "NamingStandard",
       "alternate_names": "Naming Standard",
       "family": "Governance Officer",
@@ -17284,9 +17347,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"NamingStandardRule\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -18130,24 +18196,360 @@
       "Journal Entry": "",
       "Attributes": [
         {
-          "Agreement Name": {
-            "variable_name": "agreement_name",
+          "Display Name": {
+            "variable_name": "display_name",
             "inUpdate": true,
-            "attr_labels": "Agreement",
+            "attr_labels": "T&C",
             "examples": "",
             "default_value": "",
             "valid_values": "",
-            "existing_element": "Agreement",
-            "description": "The name of the agreement to add an item to. Using qualified names is recommended.",
+            "existing_element": "",
+            "description": "Terms and Conditions are a form of governance control.",
             "qualified_name_pattern": "",
             "generated": false,
-            "style": "Reference Name",
+            "style": "ID",
             "user_specified": true,
             "unique": false,
             "input_required": true,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "inUpdate": true,
+            "attr_labels": "Doc Id",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A user supplied identifier for the governance definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "0",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple Int",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Summary of the definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Scope of the definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "How the governance definition will be used.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Importance of the definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "List of implications.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "List of desired outcomes.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A list of expected results.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Status": {
+            "variable_name": "element_status",
+            "inUpdate": true,
+            "attr_labels": "Definition Status",
+            "examples": "APPROVED",
+            "default_value": "ACTIVE",
+            "valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE'; DEPRECATED; OTHER",
+            "existing_element": "",
+            "description": "The status of the business imperative. There is a list of valid values that this conforms to.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Valid Value",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "User Defined Status": {
+            "variable_name": "user_defined_status",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "Pink",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Only valid if Product Status is set to OTHER. User defined & managed status values.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Description of the contents of the definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Category": {
+            "variable_name": "category",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Version Identifier": {
+            "variable_name": "version_identifier",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "V1.01",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Published  version identifier.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
@@ -18196,102 +18598,6 @@
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "T&C Definition Name": {
-            "variable_name": "t&c_definition_name",
-            "inUpdate": true,
-            "attr_labels": "T&C",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "Referenceable",
-            "description": "The name of the Terms and Conditions definition that governans an agreement.  Using qualified names is recommended.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Reference Name",
-            "user_specified": true,
-            "unique": false,
-            "input_required": true,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Implementation Description": {
-            "variable_name": "implementation_description",
-            "inUpdate": true,
-            "attr_labels": "implementation",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "How the Terms and Conditions are implemented.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Agreement Start": {
-            "variable_name": "agreement_start",
-            "inUpdate": true,
-            "attr_labels": "Start Date",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "The start date of the agreement as an ISO 8601 string.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Agreement End": {
-            "variable_name": "agreement_end",
-            "inUpdate": true,
-            "attr_labels": "End Date",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "The end date of the agreement as an ISO 8601 string.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
@@ -18355,30 +18661,6 @@
             "valid_values": "",
             "existing_element": "",
             "description": "A dictionary of property:value pairs describing entitlements.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Dictionary",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Usage Measurements": {
-            "variable_name": "usage_measurements",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A dictionary of property:value pairs describing usage measurements.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Dictionary",
@@ -18516,7 +18798,7 @@
       ]
     },
     "Create Certification Type": {
-      "display_name": "certification_type",
+      "display_name": "Certification Type",
       "qn_prefix": "CertType",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -18527,9 +18809,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"CertificationTYpe\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -18725,6 +19010,30 @@
           }
         },
         {
+          "Usage": {
+            "variable_name": "usage",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "How the governance definition will be used.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Importance": {
             "variable_name": "importance",
             "inUpdate": true,
@@ -18833,6 +19142,78 @@
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Simple List",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
             "user_specified": true,
             "unique": false,
             "input_required": false,
@@ -19327,7 +19708,7 @@
       ]
     },
     "Create License Type": {
-      "display_name": "license_type",
+      "display_name": "License Type",
       "qn_prefix": "LicenseType",
       "alternate_names": "",
       "family": "Governance Officer",
@@ -19338,9 +19719,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_types\": [\"LicenseType\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -19368,63 +19752,15 @@
           }
         },
         {
-          "Summary": {
-            "variable_name": "summary",
+          "Document Identifier": {
+            "variable_name": "document_identifier",
             "inUpdate": true,
-            "attr_labels": "",
+            "attr_labels": "Doc Id",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "Summary of the definition.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Description": {
-            "variable_name": "description",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Description of the contents of the definition.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Category": {
-            "variable_name": "category",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+            "description": "A user supplied identifier for the governance document.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Simple",
@@ -19464,39 +19800,15 @@
           }
         },
         {
-          "Document Identifier": {
-            "variable_name": "document_identifier",
+          "Summary": {
+            "variable_name": "summary",
             "inUpdate": true,
-            "attr_labels": "Doc Id",
+            "attr_labels": "",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "A user supplied identifier for the governance document.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Version Identifier": {
-            "variable_name": "version_identifier",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "V1.01",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Published  version identifier.",
+            "description": "Summary of the definition.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Simple",
@@ -19536,6 +19848,30 @@
           }
         },
         {
+          "Usage": {
+            "variable_name": "usage",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "How the governance definition will be used.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Importance": {
             "variable_name": "importance",
             "inUpdate": true,
@@ -19554,30 +19890,6 @@
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Details": {
-            "variable_name": "details",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "Details of the license.",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "Simple",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
@@ -19656,6 +19968,102 @@
           }
         },
         {
+          "Description": {
+            "variable_name": "description",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Description of the contents of the definition.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Category": {
+            "variable_name": "category",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Version Identifier": {
+            "variable_name": "version_identifier",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "V1.01",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Published  version identifier.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Details": {
+            "variable_name": "details",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Details of the license.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Status": {
             "variable_name": "element_status",
             "inUpdate": true,
@@ -19692,6 +20100,78 @@
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
             "user_specified": true,
             "unique": false,
             "input_required": false,
@@ -20149,9 +20629,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -20264,9 +20747,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -20787,9 +21273,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -21238,9 +21727,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -21353,9 +21845,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -21756,9 +22251,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -22039,9 +22537,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -22346,9 +22847,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -22653,9 +23157,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -22936,9 +23443,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -23243,9 +23753,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -23526,9 +24039,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -23809,9 +24325,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -24068,9 +24587,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -24125,7 +24647,7 @@
           "Output Format Set": {
             "variable_name": "output_foprmat_set",
             "inUpdate": true,
-            "attr_labels": "OUTPUT SET",
+            "attr_labels": "Output Set",
             "examples": "Collections, Agreements",
             "default_value": "Governance Definitions",
             "valid_values": "",
@@ -24294,7 +24816,7 @@
     "Create External Reference": {
       "display_name": "External Reference",
       "qn_prefix": "ExtRef",
-      "alternate_names": "Create Related Media; Create Cited Documents; External Data Source; External Model Source",
+      "alternate_names": "",
       "family": "External Reference",
       "description": "Create or update External Reference Elements - or sub-types Related Media, Cited Documents, External Data Source and External Model Source.",
       "verb": "Create",
@@ -24303,9 +24825,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -24480,6 +25005,7 @@
           "Organization": {
             "variable_name": "organization",
             "inUpdate": true,
+            "attr_labels": "",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -24999,7 +25525,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Advanced",
+            "level": "Basic",
             "Journal Entry": ""
           }
         },
@@ -25113,9 +25639,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_types\": [\"ExternalDataSource\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -25290,6 +25819,7 @@
           "Organization": {
             "variable_name": "organization",
             "inUpdate": true,
+            "attr_labels": "Category Name",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -25809,7 +26339,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Advanced",
+            "level": "Basic",
             "Journal Entry": ""
           }
         },
@@ -25923,9 +26453,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_types\": [\"ExternalModelSource\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -26100,6 +26633,7 @@
           "Organization": {
             "variable_name": "organization",
             "inUpdate": true,
+            "attr_labels": "Category Name",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -26619,7 +27153,7 @@
             "isAnchor": false,
             "min_cardinality": 0,
             "max_cardinality": -1,
-            "level": "Advanced",
+            "level": "Basic",
             "Journal Entry": ""
           }
         },
@@ -26733,9 +27267,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_types\": [\"RelatedMedia\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -26910,6 +27447,7 @@
           "Organization": {
             "variable_name": "organization",
             "inUpdate": true,
+            "attr_labels": "Category Name",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -27639,9 +28177,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_types\": [\"CitedDocument\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -27816,6 +28357,7 @@
           "Organization": {
             "variable_name": "organization",
             "inUpdate": true,
+            "attr_labels": "Category Name",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -28704,7 +29246,7 @@
     "Link External Reference Link": {
       "display_name": "External Reference Link",
       "qn_prefix": "",
-      "alternate_names": "Link Referenceable->External Reference; Link External Reference",
+      "alternate_names": "Referenceable->External Reference; External Reference;  External Data Source; External Model Source",
       "family": "External Reference",
       "description": "Link an external reference to a referenceable.",
       "verb": "Link",
@@ -28713,9 +29255,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -28987,7 +29532,7 @@
     "Link Media Reference Link": {
       "display_name": "Media Reference Link",
       "qn_prefix": "",
-      "alternate_names": "Link Referenceable->Media Reference; Link Media Reference",
+      "alternate_names": "Referenceable->Media Reference; Media Reference",
       "family": "External Reference",
       "description": "Link a medial reference to a referenceable.",
       "verb": "Link",
@@ -28996,9 +29541,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -29339,6 +29887,340 @@
         }
       ]
     },
+    "Link Cited Document Link": {
+      "display_name": "Cited Document Link",
+      "qn_prefix": "",
+      "alternate_names": "Link Referenceable->Cited Document; Link Cited Document",
+      "family": "External Reference",
+      "description": "Link a cited document reference to a referenceable.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "level": "Basic",
+      "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "Journal Entry": "",
+      "Attributes": [
+        {
+          "Element Name": {
+            "variable_name": "element_name",
+            "inUpdate": true,
+            "attr_labels": "Referenceable",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "Referenceable",
+            "description": "A referenceable to link.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Reference Name",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Cited Document": {
+            "variable_name": "cited_document",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "CitedDocument",
+            "description": "The cited document to link to.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Reference Name",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Labels the link between the referenceable and the media reference.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A description of the link.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Reference  Id": {
+            "variable_name": "reference_id",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An identifier of the cited document to link to.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Pages": {
+            "variable_name": "pages",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The pages referenced.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Effective Time": {
+            "variable_name": "effective_time",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Effective From": {
+            "variable_name": "effective_from",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Effective To": {
+            "variable_name": "effective_to",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Additional Properties": {
+            "variable_name": "additional_properties",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Extended Properties": {
+            "variable_name": "additional_properties",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Dictionary",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Invisible",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Glossary Term": {
+            "variable_name": "glossary_term",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "Term::Zip Code",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "GlossaryTerm",
+            "description": "Term that provides meaning to this field.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Reference Name",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Journal Entry": {
+            "variable_name": "journal_entry",
+            "inUpdate": true,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Invisible",
+            "Journal Entry": ""
+          }
+        }
+      ]
+    },
     "View External References": {
       "display_name": "List External References",
       "qn_prefix": "",
@@ -29351,9 +30233,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -29410,7 +30295,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "External-Reference-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -29586,9 +30471,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -30181,9 +31069,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"DigitalProduct\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -31040,9 +31931,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Collection",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -31323,9 +32217,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"Agreement\"]}",
+      "extra_find": "CollectionManager._extract_agreement_properties",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -31990,9 +32887,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"classification_names\": [\"DataSharingAgreement\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -32681,9 +33581,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"DigitalSubscription\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -33703,9 +34606,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -33938,9 +34844,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Simple",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -34101,9 +35010,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -34456,9 +35368,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -34931,9 +35846,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -34990,7 +35908,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Collection-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -35166,9 +36084,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"DataDictionary\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -35713,9 +36634,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "https://egeria-project.org/concepts/data-specification",
-      "style": "Collection",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"DataSpec\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -36260,9 +37184,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "DataDesigner.find_data_structures",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -36759,9 +37686,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "DataDesigner.find_data_fields",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "\n\n",
       "Attributes": [
         {
@@ -37666,9 +38596,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Reference Name",
       "level": "Basic",
       "view": false,
+      "find_method": "DataDesigner.find_data_classes",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -38573,9 +39506,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -38952,9 +39888,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -39331,9 +40270,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -39710,9 +40652,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -39769,7 +40714,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Data Specification",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -40089,9 +41034,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Advanced",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -40148,7 +41096,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Data Field",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -40468,9 +41416,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Advanced",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -40847,9 +41798,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -40906,7 +41860,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Data-Dictionary-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -41226,9 +42180,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "SolutionArchitect.find_information_supply_chains",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -41701,9 +42658,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "SolutionArchitect.find_solution_blueprints",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -42152,9 +43112,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "SolutionArchitect.find_solution_components",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -42795,9 +43758,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -43078,9 +44044,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "SolutionArchitect.find_solution_roles",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -43577,9 +44546,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -43860,9 +44832,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -43905,6 +44880,30 @@
             "user_specified": true,
             "unique": false,
             "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Output Format Set": {
+            "variable_name": "output_foprmat_set",
+            "inUpdate": true,
+            "attr_labels": "OUTPUT SET",
+            "examples": "Collections, Agreements",
+            "default_value": "Information-Supply_Chain-DrE",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
@@ -44053,6 +45052,30 @@
           }
         },
         {
+          "Output Format Set": {
+            "variable_name": "output_foprmat_set",
+            "inUpdate": true,
+            "attr_labels": "OUTPUT SET",
+            "examples": "Collections, Agreements",
+            "default_value": "Solution-Component-DrE",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
           "Category": {
             "variable_name": "category",
             "inUpdate": true,
@@ -44138,9 +45161,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -44183,6 +45209,30 @@
             "user_specified": true,
             "unique": false,
             "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Output Format Set": {
+            "variable_name": "output_foprmat_set",
+            "inUpdate": true,
+            "attr_labels": "OUTPUT SET",
+            "examples": "Collections, Agreements",
+            "default_value": "Solution-Blueprint-DrE",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
@@ -44277,9 +45327,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -44322,6 +45375,30 @@
             "user_specified": true,
             "unique": false,
             "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Output Format Set": {
+            "variable_name": "output_foprmat_set",
+            "inUpdate": true,
+            "attr_labels": "OUTPUT SET",
+            "examples": "Collections, Agreements",
+            "default_value": "Solution-Role-DrE",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
@@ -44416,9 +45493,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_types\": [\"Glossary\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -44759,10 +45839,10 @@
         }
       ]
     },
-    "Create Term": {
-      "display_name": "",
+    "Create Glossary Term": {
+      "display_name": "Glossary Term",
       "qn_prefix": "Term",
-      "alternate_names": "",
+      "alternate_names": "Term",
       "family": "Glossary",
       "description": "",
       "verb": "Create",
@@ -44771,9 +45851,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "GlossaryManager.find_glossary_terms",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -45246,9 +46329,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "",
       "level": "Basic",
       "view": false,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -45481,9 +46567,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -45540,7 +46629,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Glossary-Term-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -45707,8 +46796,8 @@
     "View Glossaries": {
       "display_name": "View Glossaries",
       "qn_prefix": "",
-      "alternate_names": "Glossaries; Glossary",
-      "family": "GlossaryManager",
+      "alternate_names": "Glossaries; Glossary; List Glossaries",
+      "family": "Glossary",
       "description": "Return the glossaries, optionally filtered by the search string.",
       "verb": "View",
       "upsert": false,
@@ -45716,9 +46805,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -45775,7 +46867,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Glossary-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -45951,9 +47043,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Basic",
       "level": "Basic",
       "view": false,
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -46498,9 +47593,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Basic",
       "level": "Basic",
       "view": false,
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"Campaign\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -47045,9 +48143,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Basic",
       "level": "Basic",
       "view": false,
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"Task\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -47581,7 +48682,7 @@
       ]
     },
     "Create Personal Project": {
-      "display_name": "Project",
+      "display_name": "Personal Project",
       "qn_prefix": "PersonalProject",
       "alternate_names": "",
       "family": "Project",
@@ -47592,9 +48693,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "Basic",
       "level": "Basic",
       "view": false,
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"PersonalProject\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -48128,6 +49232,23 @@
       ]
     },
     "Create Study Project": {
+      "display_name": "Study Project",
+      "qn_prefix": "StudyProject",
+      "alternate_names": "",
+      "family": "Project",
+      "description": "A personal project.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "details": false,
+      "form": false,
+      "ReferenceURL": "",
+      "level": "Basic",
+      "view": false,
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"StudyProject\"]}",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -48467,30 +49588,6 @@
           }
         },
         {
-          "GUID": {
-            "variable_name": "guid",
-            "inUpdate": true,
-            "attr_labels": "Guid; guid",
-            "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "A system generated unique identifier.",
-            "qualified_name_pattern": "",
-            "generated": true,
-            "style": "GUID",
-            "user_specified": false,
-            "unique": true,
-            "input_required": false,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
           "Anchor Scope Name": {
             "variable_name": "anchor_scope",
             "inUpdate": false,
@@ -48511,6 +49608,30 @@
             "min_cardinality": 0,
             "max_cardinality": 1,
             "level": "Advanced",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "GUID": {
+            "variable_name": "guid",
+            "inUpdate": true,
+            "attr_labels": "Guid; guid",
+            "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A system generated unique identifier.",
+            "qualified_name_pattern": "",
+            "generated": true,
+            "style": "GUID",
+            "user_specified": false,
+            "unique": true,
+            "input_required": false,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
             "Journal Entry": ""
           }
         },
@@ -48910,9 +50031,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -48969,7 +50093,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Projects-DrE",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
@@ -49145,9 +50269,12 @@
       "details": false,
       "form": false,
       "ReferenceURL": "",
-      "style": "display",
       "level": "Basic",
       "view": true,
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
       "Journal Entry": "",
       "Attributes": [
         {
@@ -49204,7 +50331,7 @@
             "inUpdate": true,
             "attr_labels": "OUTPUT SET",
             "examples": "Collections, Agreements",
-            "default_value": "Governance Definitions",
+            "default_value": "Referenceable",
             "valid_values": "",
             "existing_element": "",
             "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",

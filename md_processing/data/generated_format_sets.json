@@ -1,0 +1,4137 @@
+{
+  "Driver": {
+    "target_type": "Driver",
+    "heading": "Driver Attributes",
+    "description": "Auto-generated format for Governance Driver (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_types": [
+          "GovernanceDriver"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "Strategy": {
+    "target_type": "Strategy",
+    "heading": "Strategy Attributes",
+    "description": "Auto-generated format for Governance Strategy (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_types": [
+          "GovernanceStrategy"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "Imperative": {
+    "target_type": "Imperative",
+    "heading": "Imperative Attributes",
+    "description": "Auto-generated format for Business Imperative (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "regulation": {
+    "target_type": "regulation",
+    "heading": "regulation Attributes",
+    "description": "Auto-generated format for regulation (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Regulation Source",
+            "key": "regulation_source",
+            "format": false
+          },
+          {
+            "name": "Regulators",
+            "key": "regulators",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Article": {
+    "target_type": "Article",
+    "heading": "Article Attributes",
+    "description": "Auto-generated format for Regulation Article (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Definition": {
+    "target_type": "Definition",
+    "heading": "Definition Attributes",
+    "description": "Auto-generated format for Threat Definition (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Policy": {
+    "target_type": "Policy",
+    "heading": "Policy Attributes",
+    "description": "Auto-generated format for Governance Policy (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Principle": {
+    "target_type": "Principle",
+    "heading": "Principle Attributes",
+    "description": "Auto-generated format for Governance Principle (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Obligation": {
+    "target_type": "Obligation",
+    "heading": "Obligation Attributes",
+    "description": "Auto-generated format for Governance Obligation (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Approach": {
+    "target_type": "Approach",
+    "heading": "Approach Attributes",
+    "description": "Auto-generated format for Governance Approach (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Control": {
+    "target_type": "Control",
+    "heading": "Control Attributes",
+    "description": "Auto-generated format for Governance Control (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "measurement",
+            "key": "measurement",
+            "format": false
+          },
+          {
+            "name": "target",
+            "key": "target",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Action": {
+    "target_type": "Action",
+    "heading": "Action Attributes",
+    "description": "Auto-generated format for Governance Action (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "ProcessingPurpose": {
+    "target_type": "ProcessingPurpose",
+    "heading": "ProcessingPurpose Attributes",
+    "description": "Auto-generated format for Data Processing Purpose (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "governance_rule": {
+    "target_type": "governance_rule",
+    "heading": "governance_rule Attributes",
+    "description": "Auto-generated format for governance_rule (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implementation Description",
+            "key": "implementation_description",
+            "format": false
+          },
+          {
+            "name": "Supports Policies",
+            "key": "supports_policies",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "service_level_objective": {
+    "target_type": "service_level_objective",
+    "heading": "service_level_objective Attributes",
+    "description": "Auto-generated format for service_level_objective (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implementation Description",
+            "key": "implementation_description",
+            "format": false
+          },
+          {
+            "name": "Supports Policies",
+            "key": "supports_policies",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "governance_responsibility": {
+    "target_type": "governance_responsibility",
+    "heading": "governance_responsibility Attributes",
+    "description": "Auto-generated format for governance_responsibility (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implementation Description",
+            "key": "implementation_description",
+            "format": false
+          },
+          {
+            "name": "Supports Policies",
+            "key": "supports_policies",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "governance_procedure": {
+    "target_type": "governance_procedure",
+    "heading": "governance_procedure Attributes",
+    "description": "Auto-generated format for governance_procedure (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implementation Description",
+            "key": "implementation_description",
+            "format": false
+          },
+          {
+            "name": "Supports Policies",
+            "key": "supports_policies",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "security_access_control": {
+    "target_type": "security_access_control",
+    "heading": "security_access_control Attributes",
+    "description": "Auto-generated format for security_access_control (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "criteria",
+            "key": "criteria",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "security_group": {
+    "target_type": "security_group",
+    "heading": "security_group Attributes",
+    "description": "Auto-generated format for security_group (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "naming_standard_rule": {
+    "target_type": "naming_standard_rule",
+    "heading": "naming_standard_rule Attributes",
+    "description": "Auto-generated format for naming_standard_rule (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implementation Description",
+            "key": "implementation_description",
+            "format": false
+          },
+          {
+            "name": "Supports Policies",
+            "key": "supports_policies",
+            "format": false
+          },
+          {
+            "name": "Name Patterns",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "certification_type": {
+    "target_type": "certification_type",
+    "heading": "certification_type Attributes",
+    "description": "Auto-generated format for certification_type (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Details",
+            "key": "details",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "license_type": {
+    "target_type": "license_type",
+    "heading": "license_type Attributes",
+    "description": "Auto-generated format for license_type (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Document Identifier",
+            "key": "document_identifier",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Details",
+            "key": "details",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Reference": {
+    "target_type": "Reference",
+    "heading": "Reference Attributes",
+    "description": "Auto-generated format for External Reference (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "URL",
+            "key": "reference_url",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Number of Pages",
+            "key": "number_of_pages",
+            "format": false
+          },
+          {
+            "name": "Page Range",
+            "key": "page_range",
+            "format": false
+          },
+          {
+            "name": "Publication Series",
+            "key": "publication_series",
+            "format": false
+          },
+          {
+            "name": "Publication Series Volume",
+            "key": "pub_series_volume",
+            "format": false
+          },
+          {
+            "name": "Publisher",
+            "key": "publisher",
+            "format": false
+          },
+          {
+            "name": "First Publication Date",
+            "key": "first_pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication Date",
+            "key": "pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication City",
+            "key": "pub_city",
+            "format": false
+          },
+          {
+            "name": "Publication Year",
+            "key": "pub_year",
+            "format": false
+          },
+          {
+            "name": "Publication Numbers",
+            "key": "pub_numbers",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "current_version",
+            "format": false
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ExternalReference.find_external_references",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_types": [
+          "CitedDocument"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "DataSource": {
+    "target_type": "DataSource",
+    "heading": "DataSource Attributes",
+    "description": "Auto-generated format for External Data Source (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "URL",
+            "key": "reference_url",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "current_version",
+            "format": false
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ExternalReference.find_external_references",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_types": [
+          "ExternalDataSource"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "Collection": {
+    "target_type": "Collection",
+    "heading": "Collection Attributes",
+    "description": "Auto-generated format for Collection (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Classifications",
+            "key": "classifications",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "current_version",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Product": {
+    "target_type": "Product",
+    "heading": "Product Attributes",
+    "description": "Auto-generated format for Digital Product (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Product Name",
+            "key": "product_name",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Maturity",
+            "key": "maturity",
+            "format": false
+          },
+          {
+            "name": "Service Life",
+            "key": "service_life",
+            "format": false
+          },
+          {
+            "name": "Introduction Date",
+            "key": "introduction_date",
+            "format": false
+          },
+          {
+            "name": "Next Version Date",
+            "key": "next_version_date",
+            "format": false
+          },
+          {
+            "name": "Withdrawal Date",
+            "key": "withdrawal_date",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "current_version",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Agreement": {
+    "target_type": "Agreement",
+    "heading": "Agreement Attributes",
+    "description": "Auto-generated format for Agreement (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "agreement_identifier",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User Defined Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Agreement Actors",
+            "key": "agreement_actors",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_types": [
+          "Agreement"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "SharingAgreement": {
+    "target_type": "SharingAgreement",
+    "heading": "SharingAgreement Attributes",
+    "description": "Auto-generated format for Data Sharing Agreement (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User_Defined_Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Subscription": {
+    "target_type": "Subscription",
+    "heading": "Subscription Attributes",
+    "description": "Auto-generated format for Digital Subscription (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "User_Defined_Status",
+            "key": "user_defined_status",
+            "format": false
+          },
+          {
+            "name": "Support Level",
+            "key": "support_level",
+            "format": false
+          },
+          {
+            "name": "Service Levels",
+            "key": "service_levels",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Dictionary": {
+    "target_type": "Dictionary",
+    "heading": "Dictionary Attributes",
+    "description": "Auto-generated format for Data Dictionary (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Specification": {
+    "target_type": "Specification",
+    "heading": "Specification Attributes",
+    "description": "Auto-generated format for Data Specification (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Structure": {
+    "target_type": "Structure",
+    "heading": "Structure Attributes",
+    "description": "Auto-generated format for Data Structure (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "In Data Specification",
+            "key": "in_data_spec",
+            "format": false
+          },
+          {
+            "name": "In Data Dictionary",
+            "key": "in_data_dictionary",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Field": {
+    "target_type": "Field",
+    "heading": "Field Attributes",
+    "description": "Auto-generated format for Data Field (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "format": false
+          },
+          {
+            "name": "Position",
+            "key": "position",
+            "format": false
+          },
+          {
+            "name": "Minimum Cardinality",
+            "key": "min_cardinality",
+            "format": false
+          },
+          {
+            "name": "Maximum Cardinality",
+            "key": "max_cardinality",
+            "format": false
+          },
+          {
+            "name": "In Data Structure",
+            "key": "in_data_structure",
+            "format": false
+          },
+          {
+            "name": "Data Class",
+            "key": "data_class",
+            "format": false
+          },
+          {
+            "name": "Glossary Term",
+            "key": "glossary_term",
+            "format": false
+          },
+          {
+            "name": "isNullable",
+            "key": "is_nullable",
+            "format": false
+          },
+          {
+            "name": "Minimum Length",
+            "key": "min_length",
+            "format": false
+          },
+          {
+            "name": "Length",
+            "key": "length",
+            "format": false
+          },
+          {
+            "name": "Precision",
+            "key": "precision",
+            "format": false
+          },
+          {
+            "name": "Ordered Values",
+            "key": "ordered_values",
+            "format": false
+          },
+          {
+            "name": "Units",
+            "key": "units",
+            "format": false
+          },
+          {
+            "name": "Default Value",
+            "key": "default_value",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_id",
+            "format": false
+          },
+          {
+            "name": "In Data Dictionary",
+            "key": "in_data_dictionary",
+            "format": false
+          },
+          {
+            "name": "Parent Data Field",
+            "key": "parent_data_field",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Class": {
+    "target_type": "Class",
+    "heading": "Class Attributes",
+    "description": "Auto-generated format for Data Class (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "Namespace",
+            "key": "namespace",
+            "format": false
+          },
+          {
+            "name": "Match Property Names",
+            "key": "match_property_names",
+            "format": false
+          },
+          {
+            "name": "Match Threshold",
+            "key": "match_threshold",
+            "format": false
+          },
+          {
+            "name": "IsCaseSensitive",
+            "key": "is_case_sensitive",
+            "format": false
+          },
+          {
+            "name": "Data Type",
+            "key": "data_type",
+            "format": false
+          },
+          {
+            "name": "Allow Duplicate Values",
+            "key": "duplicates_allowed",
+            "format": false
+          },
+          {
+            "name": "isNullable",
+            "key": "is_nullable",
+            "format": false
+          },
+          {
+            "name": "Default Value",
+            "key": "default_value",
+            "format": false
+          },
+          {
+            "name": "Average Value",
+            "key": "avg_value",
+            "format": false
+          },
+          {
+            "name": "Value List",
+            "key": "value_list",
+            "format": false
+          },
+          {
+            "name": "Value Range From",
+            "key": "value_range_from",
+            "format": false
+          },
+          {
+            "name": "Value Range To",
+            "key": "value_range_to",
+            "format": false
+          },
+          {
+            "name": "Sample Values",
+            "key": "sample_values",
+            "format": false
+          },
+          {
+            "name": "Data Patterns",
+            "key": "data_patterns",
+            "format": false
+          },
+          {
+            "name": "In Data Dictionary",
+            "key": "in_data_dictionary",
+            "format": false
+          },
+          {
+            "name": "Containing Data Class",
+            "key": "containing_data_class",
+            "format": false
+          },
+          {
+            "name": "Specializes Data Class",
+            "key": "specializes_data_class",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "SupplyChain": {
+    "target_type": "SupplyChain",
+    "heading": "SupplyChain Attributes",
+    "description": "Auto-generated format for Information Supply Chain (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Nested Information Supply Chains",
+            "key": "nested_info_supply_chains",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chain",
+            "key": "in_supply_chain",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          },
+          {
+            "name": "Merge Update",
+            "key": "merge_update",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Blueprint": {
+    "target_type": "Blueprint",
+    "heading": "Blueprint Attributes",
+    "description": "Auto-generated format for Solution Blueprint (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_id",
+            "format": false
+          },
+          {
+            "name": "Solution Components",
+            "key": "solution_components",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Component": {
+    "target_type": "Component",
+    "heading": "Component Attributes",
+    "description": "Auto-generated format for Solution Component (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "Solution Component Type",
+            "key": "soln_comp_type",
+            "format": false
+          },
+          {
+            "name": "Planned Deployed Implementation Type",
+            "key": "planned_deployed_impl_type",
+            "format": false
+          },
+          {
+            "name": "Initial Status",
+            "key": "initial_status",
+            "format": false
+          },
+          {
+            "name": "In Solution Components",
+            "key": "in_components",
+            "format": false
+          },
+          {
+            "name": "In Solution Blueprints",
+            "key": "solution_blueprints",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chains",
+            "key": "in_supply_chains",
+            "format": false
+          },
+          {
+            "name": "Actors",
+            "key": "actors",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          },
+          {
+            "name": "Merge Update",
+            "key": "merge_update",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Role": {
+    "target_type": "Role",
+    "heading": "Role Attributes",
+    "description": "Auto-generated format for Solution Role (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Title",
+            "key": "title",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Glossary": {
+    "target_type": "Glossary",
+    "heading": "Glossary Attributes",
+    "description": "Auto-generated format for Glossary (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Language",
+            "key": "language",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Term": {
+    "target_type": "Term",
+    "heading": "Term Attributes",
+    "description": "Auto-generated format for Glossary Term (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "term_name",
+            "format": false
+          },
+          {
+            "name": "Glossary",
+            "key": "glossary_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Abbreviation",
+            "key": "abbreviation",
+            "format": false
+          },
+          {
+            "name": "Example",
+            "key": "example",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Status",
+            "key": "element_status",
+            "format": false
+          },
+          {
+            "name": "Version Identifier",
+            "key": "version_identifier",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": null,
+    "get_additional_props": null
+  },
+  "Project": {
+    "target_type": "Project",
+    "heading": "Project Attributes",
+    "description": "Auto-generated format for Study Project (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "StudyProject"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "Campaign": {
+    "target_type": "Campaign",
+    "heading": "Campaign Attributes",
+    "description": "Auto-generated format for Campaign (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "Campaign"
+        ]
+      }
+    },
+    "get_additional_props": null
+  },
+  "Task": {
+    "target_type": "Task",
+    "heading": "Task Attributes",
+    "description": "Auto-generated format for Task (Create).",
+    "aliases": [],
+    "annotations": {},
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Category",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          },
+          {
+            "name": "Qualified Name",
+            "key": "qualified_name",
+            "format": false
+          },
+          {
+            "name": "GUID",
+            "key": "guid",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "Task"
+        ]
+      }
+    },
+    "get_additional_props": null
+  }
+}

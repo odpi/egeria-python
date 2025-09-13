@@ -14,13 +14,12 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing import set_rel_prop_body
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
-                                                                    sync_collection_memberships)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
-    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, \
-    set_peer_gov_def_request_body, \
-    set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_request_body_for_type
+                                                                    sync_collection_memberships, )
+from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_update_body,   set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body,
+    set_peer_gov_def_request_body,
+    set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_request_body_for_type,
+    set_rel_prop_body,)
 
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
@@ -112,7 +111,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
             prop_body = set_element_prop_body(obj, qualified_name, attributes)
             prop_body["referenceTitle"] = attributes.get('Reference Title', {}).get('value', None)
             prop_body["referenceAbstract"] = attributes.get('Reference Abstract', {}).get('value', None)
-            prop_body["authors"] = attributes.get('Authors', {}).get('name_list', None)
+            prop_body["authors"] = attributes.get('Authors', {}).get('value', None)
             prop_body["organization"] = attributes.get('Organization', {}).get('value', None)
             prop_body["url"] = attributes.get('URL', {}).get('value', None)
             prop_body["sources"] = attributes.get('Sources', {}).get('value', None)
@@ -162,9 +161,9 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                 body = set_update_body(obj, attributes)
                 body['properties'] = prop_body
 
-                egeria_client.update_project(guid, body)
-                if status:
-                    egeria_client.update_external_reference_status(guid, status)
+                egeria_client.update_external_reference(guid, body)
+                # if status:
+                #     egeria_client.update_external_reference_status(guid, status)
 
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -191,7 +190,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                     body = set_create_body(object_type,attributes)
 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
-                    body["initialClassifications"] = set_object_classifications(object_type, attributes, None)
+                    # body["initialClassifications"] = set_object_classifications(object_type, attributes, None)
 
                     body["properties"] = prop_body
                     slim_body = body_slimmer(body)

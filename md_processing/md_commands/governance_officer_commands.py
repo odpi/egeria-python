@@ -132,6 +132,8 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
             return valid
 
         elif directive == "process":
+            output_set = make_format_set_name_from_type(object_type)
+
             if object_action == "Update":
                 if not guid:
                     msg = (f"The `{object_type}` '{display_name}' does not yet exist.\n The result document has been "
@@ -147,11 +149,13 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
                 # Proceed with the update
                 update_body = set_update_body(object_type, parsed_output['attributes'])
                 update_body['properties'] = set_gov_prop_body(object_type, qualified_name, parsed_output['attributes'])
-                egeria_client.update_governance_definition(guid, body_slimmer(update_body))
+                update_body = body_slimmer(update_body)
+                egeria_client.update_governance_definition(guid, update_body)
                 if status := parsed_output['attributes'].get('Status', {}).get('value', None):
                     egeria_client.update_governance_definition_status(guid, status)
                 logger.success(f"Updated {object_type} `{display_name}` with GUID {guid}")
-                return egeria_client.get_governance_definition_by_guid(guid, output_format='MD')
+                return egeria_client.get_governance_definition_by_guid(guid, output_format='MD',
+                                                output_format_set = output_set)
 
             elif object_action == "Create":
                 if valid is False and exists:
@@ -171,7 +175,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
                     guid = egeria_client.create_governance_definition(body_slimmer(create_body))
                     if guid:
                         logger.success(f"Created {object_type} `{display_name}` with GUID {guid}")
-                        return egeria_client.get_governance_definition_by_guid(guid, output_format='MD')
+                        return egeria_client.get_governance_definition_by_guid(guid, output_format='MD', output_format_set = output_set)
                     else:
                         logger.error(f"Failed to create {object_type} `{display_name}`.")
                         return None
@@ -187,6 +191,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
 
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
+        print("Unexepected error occurred:\n {e}")
         return None
 
 

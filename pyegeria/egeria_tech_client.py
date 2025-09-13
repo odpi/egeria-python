@@ -17,6 +17,7 @@ from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
+from pyegeria.external_references import ExternalReferences
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class EgeriaTech:
@@ -65,6 +66,7 @@ class EgeriaTech:
         self._templates = TemplateManager(view_server, platform_url, user_id, user_pwd, token)
         self._gov_officer = GovernanceOfficer(view_server, platform_url, user_id, user_pwd, token)
         self._collections = CollectionManager(view_server, platform_url, user_id, user_pwd, token)
+        self._external_references = ExternalReferences(view_server, platform_url, user_id, user_pwd, token)
 
         self._subclients = [
             self._auto_curate,
@@ -79,6 +81,7 @@ class EgeriaTech:
             self._templates,
             self._gov_officer,
             self._collections,
+            self._external_references,
         ]
         self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND
 

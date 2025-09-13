@@ -123,13 +123,30 @@ COLLECTIONS_LIST = ["List Collections", "View Collections", "List Digital Produc
                     "List Context Event Collections", "View Context Event Collections",
                     "List Name Space Collections", "View Name Space Collections",
                     "List Event Set Collections", "View Event Set Collections",
-                    "List Naming Standard Rulesets", "View Naming Standard Rulesets",
+                    "List Naming Standard Rulesets", "View Naming Standard Rulesets", "List External Reference",
+                    "List Related Media", "List Cited Document", "List External Data Source", "List External Model Source",
                     ]
 
 PROJECT_COMMANDS = ["Create Project", "Update Project", "Create Campaign", "Update Campaign",
                     "Create Task", "Update Task", "Create Study Project", "Update Study Project",
                     "Create Personal Project", "Update Personal Project"]
 
+LINK_EXT_REF = ["Link External Reference", "Link Referenceable->External Reference", "Attach External Reference",
+                "Detach External Reference", "Detach External Reference Link", "Link External Data Source",
+                "Link External Model Source", "Detach External Data Source", "Detach External Model Source",]
+
+LINK_MEDIA = ["Link Related Media", "Link Referenceable->Related Media", "Attach Related Media", "Attach Media Reference Link",
+              "Detach Related Media", "Detach Related Media Link", "Detach Media Reference Link"]
+
+LINK_CITED_DOC = ["Link Cited Document", "Link Referenceable->Cited Document", "Attach Cited Document", "Attach Cited Document Link",
+                  "Detach Cited Document", "Detach Cited Document Link",]
+
+EXT_REF_UPSERT = ["Create External Reference", "Update External Reference",
+                    "Create Related Media", "Update Related Media",
+                    "Create Cited Document", "Update Cited Document",
+                    "Create External Data Source", "Update External Data Source", "Create External Model Source",
+                    "Update External Model Source",]
+EXT_REF_COMMANDS = EXT_REF_UPSERT + LINK_EXT_REF + LINK_MEDIA + LINK_CITED_DOC
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
                 "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
@@ -198,6 +215,7 @@ command_list.extend(GOV_LINK_LIST)
 command_list.extend(COLLECTIONS_LIST)
 command_list.extend(SIMPLE_COLLECTIONS)
 command_list.extend(PROJECT_COMMANDS)
+command_list.extend(EXT_REF_COMMANDS)
 command_list.extend(["Link Governance Response", "Detach Governance Response",
                   "Link Governance Mechanism", "Detach Governance Mechanism"])
 

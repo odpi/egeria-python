@@ -88,8 +88,8 @@ def main():
             command_output = io.StringIO()
 
             # Write command header
-            command_output.write(f"# **{command}**\n>\t{command_description}\n")
-            print(f"\n## {command_verb} **{command}**\n>\t{command_description}")
+            command_output.write(f"# {command}\n>\t{command_description}\n")
+            print(f"\n## {command_verb} {command}\n>\t{command_description}")
 
             # Process command attributes
             attributes = values['Attributes']
@@ -99,8 +99,8 @@ def main():
                         continue
                     user_specified = value.get('user_specified', 'true') in ["true", "True"]
 
-                    command_output.write(f"\n## **{key}**\n")
-                    print(f"\n### **{key}**")
+                    command_output.write(f"\n## {key}\n")
+                    print(f"\n### {key}")
 
                     command_output.write(f">\t**Input Required**: {value.get('input_required', 'false')}\n\n")
                     print(f">\tInput Required: {value.get('input_required', 'false')}")

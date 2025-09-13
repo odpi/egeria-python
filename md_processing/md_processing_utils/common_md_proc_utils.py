@@ -8,9 +8,11 @@ import re
 from typing import List, Optional
 
 from loguru import logger
+from pydantic import ValidationError
 from rich import print
 from rich.markdown import Markdown
 from rich.console import Console
+from pyegeria.utils import parse_to_dict
 
 from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
                                                                update_element_dictionary,
@@ -26,7 +28,8 @@ from md_processing.md_processing_utils.common_md_utils import (update_element_di
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech, select_output_format_set
+from pyegeria import EgeriaTech, select_output_format_set, PyegeriaException, print_basic_exception, \
+    print_validation_error
 
 from pyegeria._globals import DEBUG_LEVEL
 
@@ -93,131 +96,157 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
     for attr in attributes:
         for key in attr:
-            # Run some checks to see if the attribute is appropriate to the operation and usage level
-            for_update = attr[key].get('inUpdate', True)
-            level = attr[key].get('level', 'Basic')
-            msg = (f"___\nProcessing `{key}` in `{object_action}` on a `{object_type}` "
-                   f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` and  attribute level `{level}` and for_update `"
-                   f"{for_update}`\n")
-            logger.trace(msg)
-            if for_update is False and object_action == "Update":
-                logger.trace(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
-                continue
-            if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                            highlight=True)
-                continue
-            if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                            highlight=True)
-                continue
-            if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                            highlight=True)
-                continue
+            try:
+                # Run some checks to see if the attribute is appropriate to the operation and usage level
+                for_update = attr[key].get('inUpdate', True)
+                level = attr[key].get('level', 'Basic')
+                msg = (f"___\nProcessing `{key}` in `{object_action}` on a `{object_type}` "
+                       f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` and  attribute level `{level}` and for_update `"
+                       f"{for_update}`\n")
+                logger.trace(msg)
+                if for_update is False and object_action == "Update":
+                    logger.trace(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
+                    continue
+                if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
+                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                                highlight=True)
+                    continue
+                if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
+                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                                highlight=True)
+                    continue
+                if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
+                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
+                                highlight=True)
+                    continue
 
-            if attr[key].get('input_required', False) is True:
-                if_missing = ERROR
-            else:
-                if_missing = INFO
+                if attr[key].get('input_required', False) is True:
+                    if_missing = ERROR
+                else:
+                    if_missing = INFO
 
-            # lab = [item.strip() for item in re.split(r'[;,\n]+',attr[key]['attr_labels'])]
-            lab = split_tb_string(attr[key]['attr_labels'])
-            labels: set = set()
-            labels.add(key.strip())
-            if key == 'Display Name':
-                labels.add(object_type.strip())
-            if lab is not None and lab != [""]:
-                labels.update(lab)
+                # lab = [item.strip() for item in re.split(r'[;,\n]+',attr[key]['attr_labels'])]
+                lab = split_tb_string(attr[key]['attr_labels'])
+                labels: set = set()
+                labels.add(key.strip())
+                if key == 'Display Name':
+                    labels.add(object_type.strip())
+                if lab is not None and lab != [""]:
+                    labels.update(lab)
 
-            default_value = attr[key].get('default_value', None)
+                default_value = attr[key].get('default_value', None)
 
-            style = attr[key]['style']
-            if style in ['Simple', 'Comment']:
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
-            elif style == 'Dictionary':
-                parsed_attributes[key] = proc_dictionary_attribute(txt, object_action, labels, if_missing, default_value)
-                parsed_attributes[key]['name_list'] = json.dumps(parsed_attributes[key]['value'], indent=2)
+                style = attr[key]['style']
+                if style in ['Simple', 'Comment']:
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                elif style == 'Dictionary':
+                    parsed_attributes[key] = proc_dictionary_attribute(txt, object_action, labels, if_missing, default_value)
+                    if key in parsed_attributes and parsed_attributes[key] is not None:
+                            if parsed_attributes[key].get('value', None) is not None:
+                                if isinstance(parsed_attributes[key]['value'], dict):
+                                    parsed_attributes[key]['dict'] = json.dumps(parsed_attributes[key]['value'], indent=2)
+                            else:
+                                continue
+                    else:
+                        continue
 
-            elif style == 'Valid Value':
-                parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
-                                                          attr[key].get('valid_values', None), if_missing,
-                                                          default_value)
-            elif style == 'QN':
-                parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
-                                                    object_action, version, if_missing)
-                if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key][
-                    'exists'] is False:
-                    parsed_output['exists'] = False
-            elif style == 'ID':
-                parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
-                                                    object_action, version, if_missing)
+                elif style == 'Valid Value':
+                    parsed_attributes[key] = proc_valid_value(txt, object_action, labels,
+                                                              attr[key].get('valid_values', None), if_missing,
+                                                              default_value)
+                elif style == 'QN':
+                    parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
+                                                        object_action, version, if_missing)
+                    if key == 'Qualified Name' and parsed_attributes[key]['value'] and parsed_attributes[key][
+                        'exists'] is False:
+                        parsed_output['exists'] = False
+                elif style == 'ID':
+                    parsed_attributes[key] = proc_el_id(egeria_client, command_display_name, command_qn_prefix, labels, txt,
+                                                        object_action, version, if_missing)
 
-                parsed_output['guid'] = parsed_attributes[key].get('guid', None)
-                parsed_output['qualified_name'] = parsed_attributes[key].get('qualified_name', None)
-                parsed_output['exists'] = parsed_attributes[key]['exists']
-                if parsed_attributes[key]['valid'] is False:
-                    parsed_output['valid'] = False
-                    parsed_output['reason'] += parsed_attributes[key]['reason']
+                    parsed_output['guid'] = parsed_attributes[key].get('guid', None)
+                    parsed_output['qualified_name'] = parsed_attributes[key].get('qualified_name', None)
+                    parsed_output['exists'] = parsed_attributes[key]['exists']
+                    if parsed_attributes[key]['valid'] is False:
+                        parsed_output['valid'] = False
+                        parsed_output['reason'] += parsed_attributes[key]['reason']
 
-            elif style == 'Reference Name':
-                parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
-                if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
-                    'exists'] is False):
-                    msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
+                elif style == 'Reference Name':
+                    parsed_attributes[key] = proc_ids(egeria_client, key, labels, txt, object_action, if_missing)
+                    if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
+                        'exists'] is False):
+                        msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
+                        logger.error(msg)
+                        parsed_output['valid'] = False
+                        parsed_output['reason'] += msg
+                    elif parsed_attributes[key]['valid'] is False:
+                        parsed_output['valid'] = False
+                        parsed_output['reason'] += parsed_attributes[key]['reason']
+
+                elif style == 'GUID':
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+                elif style == 'Ordered Int':
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+                elif style == 'Simple Int':
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "int")
+                elif style == 'Simple List':
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "list")
+                    name_list = parsed_attributes[key]['value']
+                    # attribute = re.split(r'[;,\n]+', name_list) if name_list is not None else None
+                    attribute = split_tb_string(name_list)
+                    parsed_attributes[key]['value'] = attribute
+                    parsed_attributes[key]['name_list'] = name_list
+                elif style == 'Parent':
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                elif style == 'Bool':
+                    parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
+                elif style == "Dictionary List":
+                    parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
+                    parsed_attributes[key]['list'] = json.loads(parsed_attributes[key]['value'])
+
+
+                elif style == 'Reference Name List':
+                    parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
+                    if (parsed_attributes[key].get("value", None) and (
+                            parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
+                        msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
+                               f"does not exist")
+                        logger.error(msg)
+                        parsed_output['valid'] = False
+                        parsed_output['reason'] += msg
+                else:
+                    msg = f"Unknown attribute style: {style} for key `{key}`"
                     logger.error(msg)
-                    parsed_output['valid'] = False
-                    parsed_output['reason'] += msg
-                elif parsed_attributes[key]['valid'] is False:
-                    parsed_output['valid'] = False
-                    parsed_output['reason'] += parsed_attributes[key]['reason']
+                    sys.exit(1)
+                    parsed_attributes[key]['valid'] = False
+                    parsed_attributes[key]['value'] = None
+                if key == "Display Name":
+                    display_name = parsed_attributes[key]['value']
 
-            elif style == 'GUID':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
-            elif style == 'Ordered Int':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
-            elif style == 'Simple Int':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "int")
-            elif style == 'Simple List':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
-                name_list = parsed_attributes[key]['value']
-                # attribute = re.split(r'[;,\n]+', name_list) if name_list is not None else None
-                attribute = split_tb_string(name_list)
-                parsed_attributes[key]['value'] = attribute
-                parsed_attributes[key]['name_list'] = name_list
-            elif style == 'Parent':
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
-            elif style == 'Bool':
-                parsed_attributes[key] = proc_bool_attribute(txt, object_action, labels, if_missing, default_value)
-            elif style == "Dictionary List":
-                parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
-                parsed_attributes[key]['list'] = json.loads(parsed_attributes[key]['value'])
+                value = parsed_attributes[key].get('value', None)
 
+                if value is not None:
+                    if isinstance(value, list):
+                        list_out = f"\n\t* {key}:\n\n"
+                        for item in value:
+                            list_out += f"\t{item}\n"
+                        parsed_output['display'] += list_out
+                    elif isinstance(value, dict):
+                        list_out = f"\n\t* {key}:\n\n"
+                        for k, v in value.items():
+                            list_out += f"\t{k}: \n\t\t{v}\n"
+                        parsed_output['display'] += list_out
+                    else:
+                        parsed_output['display'] += f"\n\t* {key}: \n`{value}`\n\t"
+            except PyegeriaException as e:
+                logger.error(f"PyegeriaException occurred: {e}")
 
-            elif style == 'Reference Name List':
-                parsed_attributes[key] = proc_name_list(egeria_client, key, txt, labels, if_missing)
-                if (parsed_attributes[key].get("value", None) and (
-                        parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
-                    msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
-                           f"does not exist")
-                    logger.error(msg)
-                    parsed_output['valid'] = False
-                    parsed_output['reason'] += msg
-            else:
-                msg = f"Unknown attribute style: {style} for key `{key}`"
-                logger.error(msg)
-                sys.exit(1)
+                print_basic_exception(e)
+
+            except ValidationError as e:
                 parsed_attributes[key]['valid'] = False
                 parsed_attributes[key]['value'] = None
-            if key == "Display Name":
-                display_name = parsed_attributes[key]['value']
-
-            value = parsed_attributes[key].get('value', None)
-
-            if value is not None:
-                # if the value is a dict, get the flattened name list
-                value = parsed_attributes[key].get('name_list', None) if isinstance(value, (dict, list)) else value
-                parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
+                print_validation_error(e)
 
 
     parsed_output['attributes'] = parsed_attributes
@@ -504,7 +533,8 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     attribute = extract_attribute(txt, labels)
 
-    attribute = default_value if attribute is None else attribute.replace('\n', '')
+    # attribute = default_value if attribute is None else attribute.replace('\n', '')
+    attribute = default_value if attribute is None else attribute
 
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
@@ -519,8 +549,10 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     if attribute and simp_type == "int" :
         attribute = int(attribute)
-    elif attribute and simp_type == "list":
-        attribute = list(attribute)
+    # elif attribute and simp_type == "list":
+    #     if isinstance(attribute, str):
+    #         attribute = [piece.strip() for piece in re.split(r'[,\n]', attribute) if piece.strip()]
+
 
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
@@ -554,8 +586,8 @@ def proc_dictionary_attribute(txt: str, action: str, labels: set, if_missing: st
         default_value = None
 
     attr = extract_attribute(txt, labels)
-    attribute = json.loads(attr) if attr is not None else default_value
-
+    # attribute = json.loads(attr) if attr is not None else default_value
+    attribute = parse_to_dict(attr)
 
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:

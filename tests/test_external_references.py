@@ -145,10 +145,10 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "ERA"
 
             response = p_client.find_external_references(
-                search_string, output_format="JSON", output_format_set="ExternalReferences"
+                search_string, output_format="JSON", output_format_set="External-References-DrE"
             )
             duration = time.perf_counter() - start_time
 
@@ -240,7 +240,7 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
-    def test_get_project_by_guid(self):
+    def test_get_external_reference_by_guid(self):
         try:
             p_client = ExternalReferences(
                 self.good_view_server_2,
@@ -249,9 +249,10 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
+            ref_guid = "8269a34d-fc7b-44c5-b111-b156f2e48bc2"
 
-            response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Projects")
+            response = p_client.get_external_reference_by_guid(ref_guid, output_format="DICT", output_format_set="External-Reference-DrE")
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -470,6 +471,31 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
+    def test_update_status(self):
+        try:
+            p_client = ExternalReferences(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            guid = "8269a34d-fc7b-44c5-b111-b156f2e48bc2"
+            new_status = "DRAFT"
+            p_client.update_element_status(guid, status=new_status)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds\n")
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        finally:
+            p_client.close_session()
+
     def test_delete_project(self):
         try:
             p_client = ExternalReferences(
@@ -652,172 +678,5 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
-    def test_sustainability_sample_setup(self):
-        try:
-            p_client = ExternalReferences(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-
-            # Create a Sustainability Campaign
-            anchor_guid = None
-            parent_guid = None
-            parent_relationship_type_name = None
-            parent_at_end1 = False
-            display_name = "Sustainability Campaign"
-            description = "This is the overall sustainability project"
-            classification_name = "Campaign"
-            identifier = "Sustainability-Master"
-            is_own_anchor = True
-            phase = "Define"
-            status = "New"
-            health = "Not Started"
-            start_date = "2024-05-01"
-            planned_end_date = "2025-04-01"
-
-            response = p_client.create_project(
-                anchor_guid,
-                parent_guid,
-                parent_relationship_type_name,
-                parent_at_end1,
-                display_name,
-                description,
-                classification_name,
-                identifier,
-                is_own_anchor,
-                status,
-                phase,
-                health,
-                start_date,
-                planned_end_date,
-            )
-            campaign_guid = response
-
-            # Now lets create some tasks
-            # First a planning task
-            parent_guid = campaign_guid
-            display_name = "Plan Project"
-            description = "Do the initial planning for the project"
-            identifier = "Sustainability-Planning"
-            phase = "Define"
-            status = "New"
-            health = "Not Started"
-            start_date = "2024-05-01"
-            planned_end_date = "2025-04-01"
-
-            plan_task_guid = p_client.create_project_task(
-                parent_guid,
-                display_name,
-                identifier,
-                description,
-                status,
-                phase,
-                health,
-                start_date,
-                planned_end_date,
-            )
-            print(f"\n\n created a task with guid {plan_task_guid}")
-
-            # Now a task to set up a communications plan
-            parent_guid = campaign_guid
-            display_name = "Communications Plan"
-            description = "Plan the project communications"
-            identifier = "Sustainability-Planning"
-            phase = "Define"
-            status = "New"
-            health = "Not Started"
-            start_date = "2024-05-01"
-            planned_end_date = "2025-04-01"
-
-            comm_task_guid = p_client.create_project_task(
-                parent_guid,
-                display_name,
-                identifier,
-                description,
-                status,
-                phase,
-                health,
-                start_date,
-                planned_end_date,
-            )
-            print(f"\n\n created a task with guid {comm_task_guid}")
-
-            # Now a task to set up glossary to facilitate communications and understanding
-            parent_guid = campaign_guid
-            display_name = "Setup Glossary"
-            description = "Setup a Sustainability Glossary"
-            identifier = "Sustainability-Planning"
-            phase = "Define"
-            status = "New"
-            health = "Not Started"
-            start_date = "2024-05-01"
-            planned_end_date = "2025-04-01"
-
-            gloss_task_guid = p_client.create_project_task(
-                parent_guid,
-                display_name,
-                identifier,
-                description,
-                status,
-                phase,
-                health,
-                start_date,
-                planned_end_date,
-            )
-            print(f"\n\n created a task with guid {gloss_task_guid}")
-
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            p_client.close_session()
-
-    def test_set_project_hierarchy(self):
-        try:
-            p_client = ExternalReferences(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            project_guid = "94b883bb-f3f7-49b4-ab0e-2a381fff5243"
-            parent_project_guid = "8293b438-e43b-4bbb-a358-4683a3085b2d"
-            body = {
-                  "class" : "NewRelationshipRequestBody",
-                  "properties": {
-                        "class" : "ProjectDependencyProperties",
-                        "description": "a desciption",
-
-                        "label": "hierarchy label"
-                        }
-                }
-
-
-            p_client.set_project_hierarchy(project_guid, parent_project_guid, body)
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            print("Added project link ")
-            assert True
-
-        except (
-            PyegeriaException
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Invalid request"
-        finally:
-            p_client.close_session()
 
 

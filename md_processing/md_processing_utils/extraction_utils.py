@@ -2,6 +2,7 @@
 This file contains functions for extracting data from text for Egeria Markdown processing
 """
 import re
+import json
 from typing import Any
 
 from md_processing.md_processing_utils.common_md_utils import (print_msg, find_key_with_value, get_element_dictionary,
@@ -74,54 +75,92 @@ def extract_command(block: str) -> str | None:
     return None
 
 
-def extract_attribute(text: str, labels: set) -> str | None:
+# def extract_attribute(text: str, labels: set) -> str | None:
+#     """
+#         Extracts the attribute value from a string.
+#
+#         Args:
+#             text: The input string.
+#             labels: List of equivalent labels to search for
+#
+#         Returns:
+#             The value of the attribute, or None if not found.
+#
+#         Note:
+#             Lines beginning with '>' are ignored.
+#         """
+#     # Iterate over the list of labels
+#     for label in labels:
+#         # Construct pattern for the current label
+#         # text = re.sub(r'\s+', ' ', text).strip() # just added
+#         # text = re.sub(r'\n\n+', '\n\n', text).strip()
+#
+#         # Replace multiple spaces or tabs with a single space
+#         normalized = re.sub(r'\s+', ' ', text)
+#         # Collapse multiple blank lines into a single one
+#         normalized = re.sub(r'\n\s*\n', '\n', normalized).strip()
+#
+#         # label = label.strip()
+#         # pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+#         # Normalize the label
+#         normalized_label = re.sub(r'\s+', ' ', label.strip())
+#
+#         # Construct the regex pattern
+#         pattern = rf"##\s*{re.escape(normalized_label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
+#         # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
+#         match = re.search(pattern, text, re.DOTALL)
+#         if match:
+#             # Extract matched text
+#             matched_text = match.group(1)
+#
+#             # Filter out lines beginning with '>'
+#             filtered_lines = [line for line in matched_text.split('\n') if not line.strip().startswith('>')]
+#             filtered_text = '\n'.join(filtered_lines)
+#
+#             # Replace consecutive \n with a single \n
+#             extracted_text = re.sub(r'\n+', '\n', filtered_text)
+#             if not extracted_text.isspace() and extracted_text:
+#                 return extracted_text.strip()  # Return the cleaned text - I removed the title casing
+#
+#     return None
+
+
+from typing import Optional, List
+
+def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
     """
-        Extracts the attribute value from a string.
+    def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
 
-        Args:
-            text: The input string.
-            labels: List of equivalent labels to search for
+    Extracts the attribute value from a string while:
+    - Preserving single newlines within the matched text.
+    - Removing lines starting with '>'.
 
-        Returns:
-            The value of the attribute, or None if not found.
+    Args:
+        text: The input string containing labeled sections.
+        labels: List of equivalent labels to search for.
 
-        Note:
-            Lines beginning with '>' are ignored.
-        """
-    # Iterate over the list of labels
+    Returns:
+        The cleaned value of the attribute, or None if not found.
+    """
     for label in labels:
         # Construct pattern for the current label
-        # text = re.sub(r'\s+', ' ', text).strip() # just added
-        # text = re.sub(r'\n\n+', '\n\n', text).strip()
-
-        # Replace multiple spaces or tabs with a single space
-        normalized = re.sub(r'\s+', ' ', text)
-        # Collapse multiple blank lines into a single one
-        normalized = re.sub(r'\n\s*\n', '\n', normalized).strip()
-
-        # label = label.strip()
-        # pattern = rf"##\s*{re.escape(label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
-        # Normalize the label
-        normalized_label = re.sub(r'\s+', ' ', label.strip())
-
-        # Construct the regex pattern
-        pattern = rf"##\s*{re.escape(normalized_label)}\s*\n(?:\s*\n)*?(.*?)(?:#|___|$)"
-        # pattern = rf"##\s+{re.escape(label)}\n(.*?)(?:#|___|$)"  # modified from --- to enable embedded tables
-        match = re.search(pattern, text, re.DOTALL)
+        pattern = rf"## {re.escape(label)}\n(.*?)(?=^##|\Z)"  # Captures content until the next '##' or end of text
+        match = re.search(pattern, text, re.DOTALL | re.MULTILINE)
         if match:
             # Extract matched text
-            matched_text = match.group(1)
+            extracted_text = match.group(1)
 
-            # Filter out lines beginning with '>'
-            filtered_lines = [line for line in matched_text.split('\n') if not line.strip().startswith('>')]
-            filtered_text = '\n'.join(filtered_lines)
+            # Remove lines starting with '>'
+            filtered_lines = [line for line in extracted_text.splitlines() if not line.lstrip().startswith(">")]
 
-            # Replace consecutive \n with a single \n
-            extracted_text = re.sub(r'\n+', '\n', filtered_text)
-            if not extracted_text.isspace() and extracted_text:
-                return extracted_text.strip()  # Return the cleaned text - I removed the title casing
+            # Join the lines back, preserving single newlines
+            cleaned_text = "\n".join(filtered_lines).strip()
 
+            if cleaned_text:
+                return cleaned_text  # Return the cleaned and formatted text
     return None
+
+
 
 
 def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> str | None:

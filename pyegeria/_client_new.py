@@ -25,18 +25,18 @@ from pydantic import TypeAdapter
 from pyegeria._exceptions_new import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException
-    )
+)
 from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
     validate_url,
     validate_user_id,
-    )
+)
 from pyegeria.models import SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody, \
     TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody, \
     DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody, NewClassificationRequestBody
-from pyegeria.utils import body_slimmer
+from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
 
@@ -91,7 +91,7 @@ class Client2:
             token_src: str = None,
             api_key: str = None,
             page_size: int = max_paging_size,
-            ):
+    ):
         self.server_name = validate_server_name(server_name)
         self.platform_url = validate_url(platform_url)
         self.user_id = user_id
@@ -119,10 +119,10 @@ class Client2:
 
         self.headers = {
             "Content-Type": "application/json",
-            }
+        }
         self.text_headers = {
             "Content-Type": "text/plain",
-            }
+        }
         if self.api_key is not None:
             self.headers["X-Api-Key"] = self.api_key
             self.text_headers["X-Api-Key"] = self.api_key
@@ -138,7 +138,7 @@ class Client2:
             if validate_server_name(server_name):
                 self.server_name = server_name
             self.session = AsyncClient(verify=enable_ssl_check)
-
+        self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/generic"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
         self._filter_request_adapter = TypeAdapter(FilterRequestBody)
         self._get_request_adapter = TypeAdapter(GetRequestBody)
@@ -180,7 +180,7 @@ class Client2:
 
     async def _async_create_egeria_bearer_token(
             self, user_id: str = None, password: str = None
-            ) -> str:
+    ) -> str:
         """Create and set an Egeria Bearer Token for the user. Async version
         Parameters
         ----------
@@ -237,7 +237,7 @@ class Client2:
 
     def create_egeria_bearer_token(
             self, user_id: str = None, password: str = None
-            ) -> str:
+    ) -> str:
         """Create and set an Egeria Bearer Token for the user
         Parameters
         ----------
@@ -269,7 +269,7 @@ class Client2:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_egeria_bearer_token(user_id, password)
-            )
+        )
         return response
 
     async def _async_refresh_egeria_bearer_token(self) -> str:
@@ -296,7 +296,7 @@ class Client2:
         ):
             token = await self._async_create_egeria_bearer_token(
                 self.user_id, self.user_pwd
-                )
+            )
             return token
         else:
             additional_info = {"reason": "Invalid token source"}
@@ -383,7 +383,7 @@ class Client2:
             payload: str | dict = None,
             time_out: int = 30,
             is_json: bool = True
-            ) -> Response | str:
+    ) -> Response | str:
         """Make a request to the Egeria API."""
         try:
             loop = asyncio.get_running_loop()
@@ -404,7 +404,7 @@ class Client2:
             payload: str | dict = None,
             time_out: int = 30,
             is_json: bool = True
-            ) -> Response | str:
+    ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
         is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
@@ -429,17 +429,17 @@ class Client2:
             if request_type == "GET":
                 response = await self.session.get(
                     endpoint, params=payload, headers=self.headers, timeout=time_out
-                    )
+                )
 
             elif request_type == "POST":
                 if payload is None:
                     response = await self.session.post(
                         endpoint, headers=self.headers, timeout=time_out
-                        )
+                    )
                 elif type(payload) is dict:
                     response = await self.session.post(
                         endpoint, json=payload, headers=self.headers, timeout=time_out
-                        )
+                    )
                 elif type(payload) is str:
                     # if is_json:
                     #     response = await self.session.post(
@@ -451,7 +451,7 @@ class Client2:
                         headers=self.headers,
                         content=payload,
                         timeout=time_out,
-                        )
+                    )
                 else:
                     # response = await self.session.post(
                     #     endpoint, headers=self.headers, json=payload, timeout=time_out)
@@ -462,12 +462,12 @@ class Client2:
                 if True:
                     response = await self.session.post(
                         endpoint, headers=self.headers, data=payload, timeout=time_out
-                        )
+                    )
             elif request_type == "DELETE":
                 if True:
                     response = await self.session.delete(
                         endpoint, headers=self.headers, timeout=time_out
-                        )
+                    )
             response.raise_for_status()
 
             status_code = response.status_code
@@ -520,7 +520,7 @@ class Client2:
                 context['caught_exception'] = e
                 raise PyegeriaInvalidParameterException(
                     response, context, e=e
-                    )
+                )
 
     def build_global_guid_lists(self) -> None:
         global template_guids, integration_guids
@@ -579,7 +579,7 @@ class Client2:
             property_name: str = "qualifiedName",
             qualified_name: str = None,
             tech_type: str = None,
-            ) -> str:
+    ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
         values, server_guid will be used first, followed by qualified_name.  If the tech_type is supplied and the
@@ -602,7 +602,7 @@ class Client2:
                 "forLineage": False,
                 "forDuplicateProcessing": False,
                 "effectiveTime": None,
-                }
+            }
             url = (
                 f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
                 f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -626,7 +626,7 @@ class Client2:
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
-                    }
+                }
                 url = (
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -642,7 +642,7 @@ class Client2:
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
-                    }
+                }
                 url = (
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
                     f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
@@ -655,7 +655,7 @@ class Client2:
                 "reason": "Neither server_guid nor server_name were provided - please provide.",
                 "parameters": (f"GUID={guid}, display_name={display_name}, property_name={property_name},"
                                f"qualified_name={qualified_name}, tech_type={tech_type}")
-                }
+            }
             raise PyegeriaInvalidParameterException(None, None, additional_info)
 
     def __get_guid__(
@@ -665,7 +665,7 @@ class Client2:
             property_name: str = "qualifiedName",
             qualified_name: str = None,
             tech_type: str = None,
-            ) -> str:
+    ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
         values, server_guid will be used first, followed by qualified_name.  If the tech_type is supplied and the
@@ -680,8 +680,8 @@ class Client2:
         result = loop.run_until_complete(
             self.__async_get_guid__(
                 guid, display_name, property_name, qualified_name, tech_type
-                )
             )
+        )
         return result
 
     def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
@@ -728,7 +728,7 @@ class Client2:
         body = {
             "class": "EffectiveTimeQueryRequestBody",
             "effectiveTime": None,
-            }
+        }
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/elements/"
                f"{element_guid}?forLineage=false&forDuplicateProcessing=false")
@@ -759,7 +759,7 @@ class Client2:
         return validated_body
 
     def validate_new_element_from_template_request(self, body: dict | TemplateRequestBody
-                                     ) -> NewElementRequestBody | None:
+                                                   ) -> NewElementRequestBody | None:
         if isinstance(body, TemplateRequestBody):
             validated_body = body
 
@@ -791,7 +791,7 @@ class Client2:
         return validated_body
 
     def validate_new_classification_request(self, body: dict | NewClassificationRequestBody,
-                                          prop: str = None) -> NewClassificationRequestBody | None:
+                                            prop: str = None) -> NewClassificationRequestBody | None:
         if isinstance(body, NewClassificationRequestBody):
             if (prop and body.properties.class_ == prop) or (prop is None):
                 validated_body = body
@@ -816,12 +816,12 @@ class Client2:
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._delete_request_adapter.validate_python(body)
-        else: # handle case where body not provided
-            body= {
+        else:  # handle case where body not provided
+            body = {
                 "class": "DeleteRequestBody",
                 "cascadeDelete": cascade_delete
-                }
-            validated_body= DeleteRequestBody.model_validate(body)
+            }
+            validated_body = DeleteRequestBody.model_validate(body)
         return validated_body
 
     def validate_update_element_request(self, body: dict | UpdateElementRequestBody,
@@ -855,7 +855,7 @@ class Client2:
             body = {
                 "class": "UpdateStatusRequestBody",
                 "newStatus": status
-                }
+            }
             validated_body = UpdateStatusRequestBody.model_validate(body)
         else:
             raise PyegeriaInvalidParameterException(additional_info={"reason": "invalid parameters"})
@@ -905,7 +905,7 @@ class Client2:
                 "page_size": page_size,
                 "include_only_classified_elements": classification_names,
                 "metadata_element_subtype_names": metadata_element_types,
-                }
+            }
             validated_body = SearchStringRequestBody.model_validate(body)
 
         # classification_names = validated_body.include_only_classified_elements
@@ -944,7 +944,7 @@ class Client2:
                 "start_from": start_from,
                 "page_size": page_size,
                 "include_only_classified_elements": classification_names,
-                }
+            }
             validated_body = FilterRequestBody.model_validate(body)
 
         # classification_names = validated_body.include_only_classified_elements
@@ -976,7 +976,7 @@ class Client2:
             body = {
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type
-                }
+            }
             validated_body = GetRequestBody.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -1005,7 +1005,7 @@ class Client2:
                 "class": "ResultsRequestBody",
                 "start_from": start_from,
                 "page_size": page_size,
-                }
+            }
             validated_body = ResultsRequestBody.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -1069,7 +1069,7 @@ class Client2:
             await self._async_make_request("POST", url)
 
     async def _async_new_classification_request(self, url: str, prop: str,
-                                              body: dict | NewRelationshipRequestBody = None) -> None:
+                                                body: dict | NewRelationshipRequestBody = None) -> None:
         validated_body = self.validate_new_classification_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -1088,9 +1088,8 @@ class Client2:
         else:
             await self._async_make_request("POST", url)
 
-
     async def _async_update_relationship_request(self, url: str, prop: str,
-                                              body: dict | UpdateRelationshipRequestBody = None) -> None:
+                                                 body: dict | UpdateRelationshipRequestBody = None) -> None:
         validated_body = self.validate_update_relationship_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -1099,6 +1098,432 @@ class Client2:
         else:
             await self._async_make_request("POST", url)
 
+    @dynamic_catch
+    async def _async_update_element_status(self, guid: str, status: str = None,
+                                           body: dict | UpdateStatusRequestBody = None) -> None:
+        """ Update the status of an element. Async version.
 
-if __name__ == "__main__":
-    print("Main-__client")
+           Parameters
+           ----------
+           guid: str
+               The guid of the element to update.
+           status: str, optional
+               The new lifecycle status for the element. Ignored, if the body is provided.
+           body: dict | UpdateStatusRequestBody, optional
+               A structure representing the details of the element status to update. If supplied, these details
+               supersede the status parameter provided.
+
+           Returns
+           -------
+           Nothing
+
+           Raises
+           ------
+           PyegeriaException
+           ValidationError
+
+           Notes
+           -----
+           JSON Structure looks like:
+            {
+             "class": "UpdateStatusRequestBody",
+             "newStatus": "APPROVED",
+             "externalSourceGUID": "add guid here",
+             "externalSourceName": "add qualified name here",
+             "effectiveTime": "{{$isoTimestamp}}",
+             "forLineage": false,
+             "forDuplicateProcessing": false
+           }
+           """
+
+        url = f"{self.command_root}/metadata-elements/{guid}/update-status"
+        await self._async_update_status_request(url, status, body)
+
+    @dynamic_catch
+    def update_element_status(self, guid: str, status: str = None,
+                              body: dict | UpdateStatusRequestBody = None) -> None:
+        """ Update the status of an element. Async version.
+
+           Parameters
+           ----------
+           guid: str
+               The guid of the element to update.
+           status: str, optional
+               The new lifecycle status for the element. Ignored, if the body is provided.
+           body: dict | UpdateStatusRequestBody, optional
+               A structure representing the details of the element status to update. If supplied, these details
+               supersede the status parameter provided.
+
+           Returns
+           -------
+           Nothing
+
+           Raises
+           ------
+           PyegeriaException
+           ValidationError
+
+           Notes
+           -----
+           JSON Structure looks like:
+            {
+             "class": "UpdateStatusRequestBody",
+             "newStatus": "APPROVED",
+             "externalSourceGUID": "add guid here",
+             "externalSourceName": "add qualified name here",
+             "effectiveTime": "{{$isoTimestamp}}",
+             "forLineage": false,
+             "forDuplicateProcessing": false
+           }
+           """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_element_status(guid, status, body))
+
+    @dynamic_catch
+    async def _async_update_element_effectivity(self, guid: str, effectivity_time: str = None, body: dict = None) -> None:
+        """ Update the status of an element. Async version.
+
+           Parameters
+           ----------
+           guid: str
+               The guid of the element to update.
+           effectivity_time: str, optional
+               The new effectivity time for the element.
+           body: dict, optional
+               A structure representing the details of the effectivity time to update. If supplied, these details
+                supersede the effectivity time parameter provided.
+
+           Returns
+           -------
+           Nothing
+
+           Raises
+           ------
+           PyegeriaException
+           ValidationError
+
+           Notes
+           -----
+           JSON Structure looks like:
+            {
+              "class" : "UpdateEffectivityDatesRequestBody",
+              "externalSourceGUID" :  "",
+              "externalSourceName" : "",
+              "effectiveFrom" : "{{$isoTimestamp}}",
+              "effectiveTo": "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+              "effectiveTime" : "{{$isoTimestamp}}"
+            }
+           """
+
+        url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
+        if body is None:
+            body = {
+                "class": "UpdateEffectivityRequestBody",
+                "effectiveTime": effectivity_time
+            }
+        logger.info(body)
+        await self._async_make_request("POST", url, body)
+
+
+
+    @dynamic_catch
+    def update_element_effectivity(self, guid: str, status: str = None,
+                              body: dict = None) -> None:
+        """ Update the status of an element. Async version.
+
+           Parameters
+           ----------
+           guid: str
+               The guid of the element to update.
+           effectivity_time: str, optional
+               The new effectivity time for the element.
+           body: dict, optional
+               A structure representing the details of the effectivity time to update. If supplied, these details
+                supersede the effectivity time parameter provided.
+
+           Returns
+           -------
+           Nothing
+
+           Raises
+           ------
+           PyegeriaException
+           ValidationError
+
+           Notes
+           -----
+           JSON Structure looks like:
+            {
+              "class" : "UpdateEffectivityDatesRequestBody",
+              "externalSourceGUID" :  "",
+              "externalSourceName" : "",
+              "effectiveFrom" : "{{$isoTimestamp}}",
+              "effectiveTo": "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+              "effectiveTime" : "{{$isoTimestamp}}"
+            }
+           """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_element_status(guid, status, body))
+    #
+    # @dynamic_catch
+    # async def _async_classify_element(self, guid: str, status: str = None,
+    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        status: str, optional
+    #            The new lifecycle status for the element. Ignored, if the body is provided.
+    #        body: dict | UpdateStatusRequestBody, optional
+    #            A structure representing the details of the element status to update. If supplied, these details
+    #            supersede the status parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #          "class": "UpdateStatusRequestBody",
+    #          "newStatus": "APPROVED",
+    #          "externalSourceGUID": "add guid here",
+    #          "externalSourceName": "add qualified name here",
+    #          "effectiveTime": "{{$isoTimestamp}}",
+    #          "forLineage": false,
+    #          "forDuplicateProcessing": false
+    #        }
+    #        """
+    #
+    #     url = f"{self.command_root}/metadata-elements/{guid}/update-status"
+    #     await self._async_update_status_request(url, status, body)
+    #
+    # @dynamic_catch
+    # def classify_element(self, guid: str, status: str = None,
+    #                           body: dict | UpdateStatusRequestBody = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        status: str, optional
+    #            The new lifecycle status for the element. Ignored, if the body is provided.
+    #        body: dict | UpdateStatusRequestBody, optional
+    #            A structure representing the details of the element status to update. If supplied, these details
+    #            supersede the status parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #          "class": "UpdateStatusRequestBody",
+    #          "newStatus": "APPROVED",
+    #          "externalSourceGUID": "add guid here",
+    #          "externalSourceName": "add qualified name here",
+    #          "effectiveTime": "{{$isoTimestamp}}",
+    #          "forLineage": false,
+    #          "forDuplicateProcessing": false
+    #        }
+    #        """
+    #     loop = asyncio.get_event_loop()
+    #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
+    #
+    # @dynamic_catch
+    # async def _async_reclassify_element(self, guid: str, effectivity_time: str = None,
+    #                                             body: dict = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        effectivity_time: str, optional
+    #            The new effectivity time for the element.
+    #        body: dict, optional
+    #            A structure representing the details of the effectivity time to update. If supplied, these details
+    #             supersede the effectivity time parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #           "class" : "UpdateEffectivityDatesRequestBody",
+    #           "externalSourceGUID" :  "",
+    #           "externalSourceName" : "",
+    #           "effectiveFrom" : "{{$isoTimestamp}}",
+    #           "effectiveTo": "{{$isoTimestamp}}",
+    #           "forLineage" : false,
+    #           "forDuplicateProcessing" : false,
+    #           "effectiveTime" : "{{$isoTimestamp}}"
+    #         }
+    #        """
+    #
+    #     url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
+    #     if body is None:
+    #         body = {
+    #             "class": "UpdateEffectivityRequestBody",
+    #             "effectiveTime": effectivity_time
+    #         }
+    #     logger.info(body)
+    #     await self._async_make_request("POST", url, body)
+    #
+    # @dynamic_catch
+    # def reclassify_element(self, guid: str, status: str = None,
+    #                                body: dict = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        effectivity_time: str, optional
+    #            The new effectivity time for the element.
+    #        body: dict, optional
+    #            A structure representing the details of the effectivity time to update. If supplied, these details
+    #             supersede the effectivity time parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #           "class" : "UpdateEffectivityDatesRequestBody",
+    #           "externalSourceGUID" :  "",
+    #           "externalSourceName" : "",
+    #           "effectiveFrom" : "{{$isoTimestamp}}",
+    #           "effectiveTo": "{{$isoTimestamp}}",
+    #           "forLineage" : false,
+    #           "forDuplicateProcessing" : false,
+    #           "effectiveTime" : "{{$isoTimestamp}}"
+    #         }
+    #        """
+    #     loop = asyncio.get_event_loop()
+    #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
+    #
+    #     @dynamic_catch
+    #     async def _async_declassify_element(self, guid: str, effectivity_time: str = None,
+    #                                         body: dict = None) -> None:
+    #         """ Update the status of an element. Async version.
+    #
+    #            Parameters
+    #            ----------
+    #            guid: str
+    #                The guid of the element to update.
+    #            effectivity_time: str, optional
+    #                The new effectivity time for the element.
+    #            body: dict, optional
+    #                A structure representing the details of the effectivity time to update. If supplied, these details
+    #                 supersede the effectivity time parameter provided.
+    #
+    #            Returns
+    #            -------
+    #            Nothing
+    #
+    #            Raises
+    #            ------
+    #            PyegeriaException
+    #            ValidationError
+    #
+    #            Notes
+    #            -----
+    #            JSON Structure looks like:
+    #             {
+    #               "class" : "UpdateEffectivityDatesRequestBody",
+    #               "externalSourceGUID" :  "",
+    #               "externalSourceName" : "",
+    #               "effectiveFrom" : "{{$isoTimestamp}}",
+    #               "effectiveTo": "{{$isoTimestamp}}",
+    #               "forLineage" : false,
+    #               "forDuplicateProcessing" : false,
+    #               "effectiveTime" : "{{$isoTimestamp}}"
+    #             }
+    #            """
+    #
+    #         url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
+    #         if body is None:
+    #             body = {
+    #                 "class": "UpdateEffectivityRequestBody",
+    #                 "effectiveTime": effectivity_time
+    #             }
+    #         logger.info(body)
+    #         await self._async_make_request("POST", url, body)
+    #
+    #     @dynamic_catch
+    #     def declassify_element(self, guid: str, status: str = None,
+    #                            body: dict = None) -> None:
+    #         """ Update the status of an element. Async version.
+    #
+    #            Parameters
+    #            ----------
+    #            guid: str
+    #                The guid of the element to update.
+    #            effectivity_time: str, optional
+    #                The new effectivity time for the element.
+    #            body: dict, optional
+    #                A structure representing the details of the effectivity time to update. If supplied, these details
+    #                 supersede the effectivity time parameter provided.
+    #
+    #            Returns
+    #            -------
+    #            Nothing
+    #
+    #            Raises
+    #            ------
+    #            PyegeriaException
+    #            ValidationError
+    #
+    #            Notes
+    #            -----
+    #            JSON Structure looks like:
+    #             {
+    #               "class" : "UpdateEffectivityDatesRequestBody",
+    #               "externalSourceGUID" :  "",
+    #               "externalSourceName" : "",
+    #               "effectiveFrom" : "{{$isoTimestamp}}",
+    #               "effectiveTo": "{{$isoTimestamp}}",
+    #               "forLineage" : false,
+    #               "forDuplicateProcessing" : false,
+    #               "effectiveTime" : "{{$isoTimestamp}}"
+    #             }
+    #            """
+    #         loop = asyncio.get_event_loop()
+    #         loop.run_until_complete(self._async_update_element_status(guid, status, body))
