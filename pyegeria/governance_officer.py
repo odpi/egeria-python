@@ -787,9 +787,6 @@ class GovernanceOfficer(Client2):
             f"{guid}/update")
         await self._async_update_element_body_request(url, GOV_DEF_PROPERTIES_LIST, body)
 
-    @dynamic_catch
-    async def _async_update_governance_definition(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """ Update a governance definition. Async Version."""
 
     def update_governance_definition(self, guid: str, body: dict | UpdateStatusRequestBody) -> None:
         """ Update the properties of a governance definition.
@@ -899,7 +896,7 @@ class GovernanceOfficer(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-defnitions/"
             f"{guid}/update-status")
 
-        await self._async_update_status_request(url, status, body)
+        # await self._async_update_status_request(url, status, body)
 
     def update_governance_definition_status(self, guid: str, status: str = None,
                                             body: dict | UpdateStatusRequestBody = None) -> None:

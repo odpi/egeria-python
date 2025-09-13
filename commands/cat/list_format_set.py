@@ -55,7 +55,9 @@ from pyegeria import (
 )
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
-from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
+from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading,
+                                      load_user_format_sets, load_output_format_sets,
+                                      load_format_sets_from_json, get_output_format_set_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine

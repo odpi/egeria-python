@@ -57,70 +57,6 @@ def print_guid_list(guids):
 #
 
 
-def print_response(response):
-    """
-
-    Args:
-        response:
-
-    Returns:
-        : str
-    """
-    pretty_response = json.dumps(response.json(), indent=4)
-    print(" ")
-    print("Response: ")
-    print(pretty_response)
-    print(" ")
-
-
-def print_unexpected_response(server_name, platform_name, platform_url, response):
-    """
-
-    Args:
-        server_name:
-        platform_name:
-        platform_url:
-        response:
-    """
-    if response.status_code == 200:
-        related_http_code = response.json().get("related_http_code")
-        if related_http_code == 200:
-            print("Unexpected response from server " + server_name)
-            print_response(response)
-        else:
-            exceptionErrorMessage = response.json().get("exceptionErrorMessage")
-            exceptionSystemAction = response.json().get("exceptionSystemAction")
-            exceptionUserAction = response.json().get("exceptionUserAction")
-            if exceptionErrorMessage is not None:
-                print(exceptionErrorMessage)
-                print(" * " + exceptionSystemAction)
-                print(" * " + exceptionUserAction)
-            else:
-                print("Unexpected response from server " + server_name)
-                print_response(response)
-    else:
-        print(
-            "Unexpected response from server platform "
-            + platform_name
-            + " at "
-            + platform_url
-        )
-        print_response(response)
-
-
-def get_last_guid(guids):
-    """
-
-    Args:
-        guids:
-
-    Returns:
-
-    """
-    if guids is None:
-        return None
-    else:
-        return guids[-1]
 
 
 def body_slimmer(body: dict) -> dict:
@@ -246,11 +182,126 @@ def flatten_dict_to_string(d: dict) -> str:
 # The decorator logic, which applies @logger.catch dynamically
 
 
+import json
+import re
+
+
+# def parse_to_dict(input_str: str):
+#     """
+#     Check if a string is valid JSON or a name:value list without braces and convert to a dictionary.
+#
+#     Args:
+#         input_str: The input string to parse.
+#
+#     Returns:
+#         dict: A dictionary converted from the input string.
+#         None: If the input is neither valid JSON nor a valid name:value list.
+#     """
+#
+#     if input_str is None:
+#         return None
+#
+#     # Check if the input string is valid JSON
+#     try:
+#         result = json.loads(input_str)
+#         if isinstance(result, dict):  # Ensure it's a dictionary
+#             return result
+#     except json.JSONDecodeError:
+#         pass
+#
+#     # Check if input string looks like a name:value list
+#     # Supports both comma and newline as separators
+#     pattern = r'^(\s*("[^"]+"|\'[^\']+\'|[a-zA-Z0-9_-]+)\s*:\s*("[^"]+"|\'[^\']+\'|[a-zA-Z0-9 _-]*)\s*)' \
+#               r'(\s*[,|\n]\s*("[^"]+"|\'[^\']+\'|[a-zA-Z0-9_-]+)\s*:\s*("[^"]+"|\'[^\']+\'|[a-zA-Z0-9 _-]*)\s*)*$'
+#     if re.match(pattern, input_str.strip()):
+#         try:
+#             # Split by ',' or '\n' and process key-value pairs
+#             pairs = [pair.split(":", 1) for pair in re.split(r'[,|\n]+', input_str.strip())]
+#             return {key.strip().strip('\'"'): value.strip().strip('\'"') for key, value in pairs}
+#         except Exception:
+#             return None
+#
+#     # If neither pattern matches, return None
+#     return None
+
+
+def parse_to_dict(input_str: str) -> dict | None:
+    """
+    Parse input strings into a dictionary, handling both JSON and key-value pairs.
+    Recovers from malformed JSON (e.g., where commas are missing between key-value pairs)
+    and supports multiline values.
+
+    Args:
+        input_str (str): The input string to parse.
+
+    Returns:
+        dict: A parsed dictionary if validation is successful, or None if the string cannot be parsed.
+    """
+    if not input_str:
+        return None
+
+    # Attempt to parse valid JSON
+    try:
+        result = json.loads(input_str)
+        if isinstance(result, dict):
+            return result
+    except json.JSONDecodeError:
+        pass
+
+    # Fix malformed JSON or attempt alternate parsing for "key: value" patterns
+    try:
+        # Step 1: Inject missing commas where they are omitted between key-value pairs
+        fixed_input = re.sub(
+            r'("\s*:[^,}\n]+)\s*("(?![:,}\n]))',  # Find missing commas (key-value-value sequences)
+            r'\1,\2',  # Add a comma between the values
+            input_str
+        )
+
+        # Attempt to parse the fixed string as JSON
+        try:
+            result = json.loads(fixed_input)
+            if isinstance(result, dict):
+                return result
+        except json.JSONDecodeError:
+            pass
+
+        # Step 2: Handle key-value format fallback (supports multiline strings)
+        # Matches `key: value` pairs, including multiline quoted values
+        key_value_pattern = re.compile(r'''
+            (?:"([^"]+)"|'([^']+)'|([a-zA-Z0-9_-]+))  # Key: quoted "key", 'key', or unquoted key
+            \s*:\s*                                   # Key-value separator
+            (?:"((?:\\.|[^"\\])*?)"|'((?:\\.|[^'\\])*?)'|([^\n,]+))  # Value: quoted or unquoted
+        ''', re.VERBOSE | re.DOTALL)
+
+        matches = key_value_pattern.findall(input_str)
+
+        # Build dictionary from matches
+        result_dict = {}
+        for match in matches:
+            key = next((group for group in match[:3] if group), "").strip()
+            value = next((group for group in match[3:] if group), "").strip()
+            result_dict[key] = value
+
+        if result_dict:
+            return result_dict
+    except Exception as e:
+        # Log or handle parsing exception if needed
+        pass
+
+    # If all parsing attempts fail, return None
+    return None
+
+
 def dynamic_catch(func: T) -> T:
     if app_settings.get("enable_logger_catchh", False):
         return logger.catch(func)  # Apply the logger.catch decorator
     else:
         return func  # Return the function unwrapped
+
+def make_format_set_name_from_type(obj_type: str)-> str:
+    formatted_name = obj_type.replace(" ", "-")
+    return f"{formatted_name}-DrE"
+
 
 if __name__ == "__main__":
     print("Main-Utils")

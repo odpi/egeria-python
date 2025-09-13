@@ -87,15 +87,16 @@ class GlossaryManager(CollectionManager):
             user_pwd: str = None,
             token: str = None,
             ):
-        self.gl_mgr_command_root: str
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
+
         CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         result = self.get_platform_origin()
         logger.info(f"GlossaryManager initialized, platform origin is: {result}")
+        self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager"
     #
     #       Get Valid Values for Enumerations
     #
@@ -2828,11 +2829,11 @@ class GlossaryManager(CollectionManager):
         response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, element_type, body,  output_format, output_format_set))
         return response
 
-    async def _async_find_glossary_terms(self, search_string: str, starts_with: bool = False,
+    async def _async_find_glossary_terms(self, search_string: str, starts_with: bool = True,
                                      ends_with: bool = False, ignore_case: bool = False, type_name: str = "GlossaryTerm",
                                      classification_names: list[str] = None, start_from: int = 0,
                                      page_size: int = 0, output_format: str = 'JSON',
-                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
+                                     output_format_set: str | dict = "Glossary-Term-DrE", body: dict = None) -> list | str:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
                f"by-search-string")
         response = await self._async_find_request(url, _type= type_name,

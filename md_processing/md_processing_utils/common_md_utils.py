@@ -387,7 +387,7 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     prop_bod["importance"] = attributes.get('Importance', {}).get('value', None)
     prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
-    prop_bod["results"] = attributes.get('Results', {}).get('value', [])
+    prop_bod["results"] = attributes.get('Results', {}).get('value', []) or []
     prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None),
     prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None),
     prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None),
@@ -425,9 +425,12 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
     elif object_type in ["TermsAndConditions", "Certification Type", "License Type"]:
-        body['entitlements'] = attributes.get('Entitlementss', {}).get('value', {})
-        body['restrictions'] = attributes.get('Restrictions', {}).get('value', {})
-        body['obligations'] = attributes.get('Obligations', {}).get('value', {})
+        entitlements = attributes.get('Entitlementss', {}).get('value', {}) if attributes.get('Entitlementss',None) else None
+        restrictions = attributes.get('Restrictions', {}).get('value', {}) if attributes.get('Restrictions',None) else None
+        obligations = attributes.get('Obligations', {}).get('value', {}) if attributes.get('Obligations',None) else None
+        body['entitlements'] = entitlements
+        body['restrictions'] = restrictions
+        body['obligations'] = obligations
 
         return body
 

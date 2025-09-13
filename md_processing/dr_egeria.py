@@ -20,7 +20,7 @@ from rich import print
 from rich.console import Console
 
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                            process_provenance_command, get_current_datetime_string,
+                           process_provenance_command, get_current_datetime_string,
                            process_project_upsert_command, command_list, process_blueprint_upsert_command,
                            process_solution_component_upsert_command, process_component_link_unlink_command,
 
@@ -36,7 +36,11 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_gov_def_context_command, process_supporting_gov_def_link_detach_command,
                            process_attach_subscriber_command, process_output_command,
                            COLLECTIONS_LIST, SIMPLE_COLLECTIONS, GOV_LINK_LIST, process_output_command, LIST_COMMANDS,
-                           PROJECT_COMMANDS, process_link_project_hierarchy_command)
+                           PROJECT_COMMANDS, process_link_project_hierarchy_command,
+                           process_external_reference_upsert_command,
+                           process_link_to_external_reference_command, process_link_to_media_reference_command,
+                           process_link_to_cited_document_command, EXT_REF_UPSERT, LINK_CITED_DOC, LINK_MEDIA,LINK_EXT_REF)
+
 from .md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_field_upsert_command,
@@ -110,6 +114,14 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 result = process_provenance_command(input_file, current_block)
                 prov_found = True
 
+            elif potential_command in EXT_REF_UPSERT:
+                result = process_external_reference_upsert_command(client, current_block, directive)
+            elif potential_command in LINK_EXT_REF:
+                result = process_link_to_external_reference_command(client, current_block, directive)
+            elif potential_command in LINK_MEDIA:
+                result = process_link_to_media_reference_command(client, current_block, directive)
+            elif potential_command in LINK_CITED_DOC:
+                result = process_link_to_cited_document_command(client, current_block, directive)
             elif potential_command in ["Create Glossary", "Update Glossary"]:
                 result = process_glossary_upsert_command(client, current_block, directive)
             # elif potential_command in ["Create Category", "Update Category"]:

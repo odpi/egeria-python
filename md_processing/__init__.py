@@ -36,6 +36,13 @@ from md_processing.md_commands.glossary_commands import (process_glossary_upsert
                                                          )
 from md_processing.md_commands.project_commands import (process_project_upsert_command, process_link_project_dependency_command,
                                                         process_link_project_hierarchy_command)
+
+from md_processing.md_commands.ext_ref_commands import (process_external_reference_upsert_command,
+                                                        process_link_to_media_reference_command,
+                                                        process_link_to_external_reference_command,
+                                                        process_link_to_cited_document_command,
+                                                        )
+
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility
 from md_processing.md_processing_utils.common_md_utils import (render_markdown, is_valid_iso_date, set_debug_level,
                                                                get_current_datetime_string, print_msg, EGERIA_WIDTH,
@@ -63,7 +70,8 @@ from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, E
                                                                        ELEMENT_OUTPUT_FORMATS, TERM_RELATIONSHPS,
                                                                        command_list, COMMAND_DEFINITIONS, GOV_COM_LIST,
                                                                        GOV_LINK_LIST, COLLECTIONS_LIST, SIMPLE_COLLECTIONS,
-                                                                       LIST_COMMANDS, PROJECT_COMMANDS)
+                                                                       LIST_COMMANDS, PROJECT_COMMANDS, EXT_REF_UPSERT,
+                                                                       LINK_EXT_REF, LINK_MEDIA, LINK_CITED_DOC)
 # Import functions from md_processing_constants
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, get_command_spec, get_attribute,
                                                                        get_attribute_labels, get_alternate_names)

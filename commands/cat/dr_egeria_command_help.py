@@ -11,6 +11,7 @@ import os
 import sys
 import time
 
+from pydantic import ValidationError
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -28,8 +29,8 @@ from pyegeria import (
     EgeriaTech,
     InvalidParameterException,
     PropertyServerException,
-    UserNotAuthorizedException, NO_CATEGORIES_FOUND,
-    )
+    UserNotAuthorizedException, NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
+)
 from commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 from pyegeria._globals import NO_GLOSSARIES_FOUND
 
@@ -139,15 +140,7 @@ def display_command_terms(
     try:
         g_client = EgeriaTech(view_server, view_url, user_id, user_pass)
         token = g_client.create_egeria_bearer_token(user_id, user_pass)
-        if (glossary_name is not None) and (glossary_name != "*"):
-            glossary_guid = g_client.get_guid_for_name(glossary_name)
-            if glossary_guid == NO_GLOSSARIES_FOUND:
-                console.print(
-                    f"\nThe glossary name {glossary_name} was not found. Please try using the glossary guid"
-                )
-                sys.exit(1)
-        elif (glossary_guid is not None) and (len(glossary_guid) < 10):
-                glossary_guid = None
+
 
         if output_format == "LIST":
             action = "LIST"
@@ -158,7 +151,7 @@ def display_command_terms(
             file_name = f"Command-Help-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = g_client.find_glossary_terms(search_string, glossary_guid, output_format=output_format)
+            output = g_client.find_glossary_terms(search_string,  output_format=output_format, output_format_set="Help-Terms")
             if output == "NO_TERMS_FOUND":
                 print(f"\n==> No commands found for search string '{search_string}'")
                 return
@@ -168,12 +161,13 @@ def display_command_terms(
             return
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
         ) as e:
-        console.print_exception()
-
+        print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        console.print_exception(e)
 
 
     def generate_table(search_string: str, glossary_guid: str) -> Table:

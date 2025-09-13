@@ -331,7 +331,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "*"
+        filter = "CC"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -414,7 +414,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "8b9d1652-dd80-4eb5-a1b4-308eb5f153b4"
+        guid = "7f98b9a9-a1c4-4e35-a7ca-48c8cb796496"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
