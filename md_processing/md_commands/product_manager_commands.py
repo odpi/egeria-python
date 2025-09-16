@@ -20,6 +20,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
 from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.utils import make_format_set_name_from_type
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -179,6 +180,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     display_name = attributes['Display Name'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
 
     if directive == "display":
 
@@ -221,8 +223,8 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
-                return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
-                                                            output_format='MD')
+                return egeria_client.get_collection_by_guid(guid, element_type= obj,
+                                                            output_format='MD', output_format_set=output_set)
 
 
             elif object_action == "Create":
@@ -248,9 +250,9 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
                             })
-                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        msg = f"\nCreated Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD')
+                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -299,6 +301,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     display_name = attributes['Display Name'].get('value', None)
     product_manager = attributes.get('Product Manager',{}).get('value', None)
     product_status = attributes.get('Product Status',{}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
 
     if directive == "display":
 
@@ -340,7 +343,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
-                                                            output_format='MD')
+                                                            output_format='MD', output_format_set=output_set)
 
 
             elif object_action == "Create":
@@ -366,7 +369,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
-                                                                    output_format='MD')
+                                                                    output_format='MD', output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -377,6 +380,119 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
             return None
     else:
         return None
+
+    # @logger.catch
+    # def process_digital_product_catalog_upsert_command(egeria_client: EgeriaTech, txt: str,
+    #                                            directive: str = "display") -> Optional[str]:
+    #     """
+    #     Processes a digital product catalog create or update object_action by extracting key attributes such as
+    #     spec name, parent_guid, parent_relationship_type, parent_at_end_1, category
+    #
+    #     :param txt: A string representing the input cell to be processed for
+    #         extracting glossary-related attributes.
+    #     :param directive: an optional string indicating the directive to be used - display, validate or execute
+    #     :return: A string summarizing the outcome of the processing.
+    #     """
+    #
+    #     command, object_type, object_action = extract_command_plus(txt)
+    #     print(Markdown(f"# {command}\n"))
+    #
+    #     parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
+    #
+    #     valid = parsed_output['valid']
+    #     exists = parsed_output['exists']
+    #
+    #     qualified_name = parsed_output.get('qualified_name', None)
+    #     guid = parsed_output.get('guid', None)
+    #
+    #     print(Markdown(parsed_output['display']))
+    #
+    #     logger.debug(json.dumps(parsed_output, indent=4))
+    #
+    #     attributes = parsed_output['attributes']
+    #
+    #     display_name = attributes['Display Name'].get('value', None)
+    #
+    #     output_set = make_format_set_name_from_type(object_type)
+    #
+    #     if directive == "display":
+    #
+    #         return None
+    #     elif directive == "validate":
+    #         if valid:
+    #             print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+    #         else:
+    #             msg = f"Validation failed for object_action `{command}`\n"
+    #         return valid
+    #
+    #     elif directive == "process":
+    #         try:
+    #             prop_body = set_product_body(object_type, qualified_name, attributes)
+    #
+    #             if object_action == "Update":
+    #                 if not exists:
+    #                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
+    #                            f"object_action\n")
+    #                     logger.error(msg)
+    #                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
+    #                 elif not valid:
+    #                     return None
+    #                 else:
+    #                     print(Markdown(
+    #                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+    #
+    #                 body = set_update_body(object_type, attributes)
+    #                 body['properties'] = prop_body
+    #                 # Todo: Update product manager later?
+    #
+    #                 egeria_client.update_digital_product(guid, body)
+    #                 # if product_status:
+    #                 #     egeria_client.update_digital_product_status(guid, product_status)
+    #
+    #                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
+    #                 update_element_dictionary(qualified_name, {
+    #                     'guid': guid, 'display_name': display_name
+    #                 })
+    #                 return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
+    #                                                             output_format='MD', output_format_set=output_set)
+    #
+    #
+    #             elif object_action == "Create":
+    #                 if valid is False and exists:
+    #                     msg = (
+    #                         f"  Digital Product `{display_name}` already exists and result document updated changing "
+    #                         f"`Create` to `Update` in processed output\n\n___")
+    #                     logger.error(msg)
+    #                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
+    #
+    #                 else:
+    #                     body = set_create_body(object_type, attributes)
+    #                     body["initialClassifications"] = set_object_classifications(object_type, attributes, [])
+    #
+    #                     body["properties"] = prop_body
+    #
+    #                     guid = egeria_client.create_digital_product(body_slimmer(body))
+    #                     if guid:
+    #                         update_element_dictionary(qualified_name, {
+    #                             'guid': guid, 'display_name': display_name
+    #                         })
+    #                         # Todo: Add product manager link later? Agreements?
+    #
+    #                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+    #                         logger.success(msg)
+    #                         return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
+    #                                                                     output_format='MD',
+    #                                                                     output_format_set=output_set)
+    #                     else:
+    #                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+    #                         logger.error(msg)
+    #                         return None
+    #
+    #         except Exception as e:
+    #             logger.error(f"Error performing {command}: {e}")
+    #             return None
+    #     else:
+    #         return None
 
 @logger.catch
 def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
@@ -411,6 +527,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
     display_name = attributes['Display Name'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
 
     if directive == "display":
 
@@ -454,7 +571,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
-                                                            output_format='MD')
+                                                            output_format='MD', output_format_set=output_set)
 
 
             elif object_action == "Create":
@@ -479,7 +596,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD')
+                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

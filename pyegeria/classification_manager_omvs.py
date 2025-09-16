@@ -3681,7 +3681,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/{definition_guid}"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/{definition_guid}/attach"
             f"{possible_query_params}"
         )
 
@@ -3806,7 +3806,7 @@ class ClassificationManager(Client):
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/governed-by/definition/"
-            f"{definition_guid}/remove{possible_query_params}"
+            f"{definition_guid}/detach{possible_query_params}"
         )
 
         body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time}
@@ -4769,7 +4769,7 @@ class ClassificationManager(Client):
         )
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/attach"
             f"/{glossary_term_guid}{possible_query_params}"
         )
 
@@ -4911,7 +4911,7 @@ class ClassificationManager(Client):
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/"
-            f"{glossary_term_guid}/remove{possible_query_params}"
+            f"{glossary_term_guid}/detach{possible_query_params}"
         )
 
         body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time}

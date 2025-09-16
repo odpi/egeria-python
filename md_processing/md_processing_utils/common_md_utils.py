@@ -299,7 +299,7 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
     return {
         "class": prop_name + "Properties",
         "description": attributes['Description'].get('value', None),
-        "label": attributes.get('Label', {}).get('value', None),
+        "label": attributes.get('Label', {}).get('value', None) or attributes.get('Link Label', {}).get('value', None),
         "typeName" : attributes.get('Type Name', {}).get('value', None),
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),

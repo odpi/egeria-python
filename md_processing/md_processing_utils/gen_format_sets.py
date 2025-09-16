@@ -145,7 +145,7 @@ def build_format_sets_from_commands(
             )
 
         fs = FormatSet(
-            target_type=set_name,
+            target_type=display_name,
             heading=f"{set_name} Attributes",
             description=f"Auto-generated format for {display_name} (Create).",
             formats=[Format(types=types, columns=columns)],

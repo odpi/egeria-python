@@ -33,9 +33,10 @@ from pyegeria._validators import (
     validate_url,
     validate_user_id,
 )
-from pyegeria.models import SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody, \
-    TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody, \
-    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody, NewClassificationRequestBody
+from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
+    TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody,
+    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody, NewClassificationRequestBody,
+    DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody)
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
@@ -102,6 +103,7 @@ class Client2:
         self.exc_type = None
         self.exc_value = None
         self.exc_tb = None
+        # self.url_marker = "MetadataExpert"
 
         #
         #           I'm commenting this out since you should only have to use tokens if you want - just have to
@@ -148,6 +150,9 @@ class Client2:
         self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
         self._new_classification_request_adapter = TypeAdapter(NewClassificationRequestBody)
         self._delete_request_adapter = TypeAdapter(DeleteRequestBody)
+        self._delete_element_request_adapter = TypeAdapter(DeleteElementRequestBody)
+        self._delete_relationship_request_adapter = TypeAdapter(DeleteRelationshipRequestBody)
+        self._delete_classification_request_adapter = TypeAdapter(DeleteClassificationRequestBody)
         self._template_request_adapter = TypeAdapter(TemplateRequestBody)
         self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
         self._results_request_adapter = TypeAdapter(ResultsRequestBody)
@@ -823,6 +828,48 @@ class Client2:
             }
             validated_body = DeleteRequestBody.model_validate(body)
         return validated_body
+    def validate_delete_element_request(self, body: dict | DeleteElementRequestBody,
+                                cascade_delete: bool = False) -> DeleteElementRequestBody | None:
+        if isinstance(body, DeleteElementRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._delete_element_request_adapter.validate_python(body)
+        else:  # handle case where body not provided
+            body = {
+                "class": "DeleteElementRequestBody",
+                "cascadeDelete": cascade_delete
+            }
+            validated_body = DeleteElementRequestBody.model_validate(body)
+        return validated_body
+
+    def validate_delete_relationship_request(self, body: dict | DeleteRelationshipRequestBody,
+                                cascade_delete: bool = False) -> DeleteRelationshipRequestBody | None:
+        if isinstance(body, DeleteRelationshipRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._delete_relationship_request_adapter.validate_python(body)
+        else:  # handle case where body not provided
+            body = {
+                "class": "DeleteRelationshipRequestBody",
+                "cascadeDelete": cascade_delete
+            }
+            validated_body = DeleteRelationshipRequestBody.model_validate(body)
+        return validated_body
+
+    def validate_delete_classification_request(self, body: dict | DeleteClassificationRequestBody,
+                                cascade_delete: bool = False) -> DeleteClassificationRequestBody | None:
+        if isinstance(body, DeleteClassificationRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._delete_classification_request_adapter.validate_python(body)
+        else:  # handle case where body not provided
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "cascadeDelete": cascade_delete
+            }
+            validated_body = DeleteClassificationRequestBody.model_validate(body)
+        return validated_body
+
 
     def validate_update_element_request(self, body: dict | UpdateElementRequestBody,
                                         prop: list[str]) -> UpdateElementRequestBody | None:
@@ -1088,6 +1135,36 @@ class Client2:
         else:
             await self._async_make_request("POST", url)
 
+    async def _async_delete_element_request(self, url: str, body: dict | DeleteElementRequestBody = None,
+                                            cascade_delete: bool = False) -> None:
+        validated_body = self.validate_delete_element_request(body, cascade_delete)
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            logger.info(json_body)
+            await self._async_make_request("POST", url, json_body)
+        else:
+            await self._async_make_request("POST", url)
+
+    async def _async_delete_relationship_request(self, url: str, body: dict | DeleteRelationshipRequestBody = None,
+                                      cascade_delete: bool = False) -> None:
+        validated_body = self.validate_delete_relationshp_request(body, cascade_delete)
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            logger.info(json_body)
+            await self._async_make_request("POST", url, json_body)
+        else:
+            await self._async_make_request("POST", url)
+
+    async def _async_delete_classification_request(self, url: str, body: dict | DeleteClassificationRequestBody = None,
+                                                 cascade_delete: bool = False) -> None:
+        validated_body = self.validate_delete_classification_request(body, cascade_delete)
+        if validated_body:
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+            logger.info(json_body)
+            await self._async_make_request("POST", url, json_body)
+        else:
+            await self._async_make_request("POST", url)
+
     async def _async_update_relationship_request(self, url: str, prop: str,
                                                  body: dict | UpdateRelationshipRequestBody = None) -> None:
         validated_body = self.validate_update_relationship_request(body, prop)
@@ -1136,7 +1213,8 @@ class Client2:
            }
            """
 
-        url = f"{self.command_root}/metadata-elements/{guid}/update-status"
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"{self.url_marker}/metadata-elements/{guid}/update-status")
         await self._async_update_status_request(url, status, body)
 
     @dynamic_catch

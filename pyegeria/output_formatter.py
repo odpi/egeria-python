@@ -948,6 +948,10 @@ def generate_output(elements: Union[Dict, List[Dict]],
     if search_string is None or search_string == '':
         search_string = "All"
 
+    # Set the output format to DICT to return values to table display
+    if output_format == "TABLE":
+        output_format = "DICT"
+
     # Generate output based on format
     if output_format == 'MERMAID':
         return extract_mermaid_only(elements)

@@ -31,14 +31,12 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
                                                                 process_simple_attribute, process_element_identifiers,
                                                                 update_a_command, extract_attribute,
                                                                 get_element_by_name, process_name_list)
-from md_processing.md_processing_utils.md_processing_constants import (GLOSSARY_NAME_LABELS, TERM_NAME_LABELS,
-                                                                       TERM_RELATIONSHPS, ALWAYS, ERROR, INFO,
-                                                                       WARNING, pre_command, EXISTS_REQUIRED,
-                                                                       OUTPUT_LABELS, SEARCH_LABELS, GUID_LABELS,
-                                                                       ELEMENT_OUTPUT_FORMATS, command_seperator)
+
 from pyegeria import body_slimmer
 from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_CATEGORIES_FOUND)
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.utils import make_format_set_name_from_type
+
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 # console = Console(width=EGERIA_WIDTH)
@@ -543,6 +541,8 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
             get_method = egeria_client.get_term_by_guid
             collection_types = ["Glossary", "Folder"]
 
+            output_set = make_format_set_name_from_type(object_type)
+
             if object_action == "Update":
                 if not exists:
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
@@ -571,7 +571,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_term_by_guid(guid, element_type='GlossaryTerm',
-                                                            output_format='MD', output_format_set="DrE-Term")
+                                                            output_format='MD', output_format_set=output_set)
 
 
             elif object_action == "Create":
@@ -600,7 +600,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_term_by_guid(guid, obj, output_format='MD')
+                        return egeria_client.get_term_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

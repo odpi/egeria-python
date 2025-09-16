@@ -2357,6 +2357,108 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
+    async def _async_create_digital_product_catalog(self, body: dict | NewElementRequestBody) -> str:
+        """ Create a new collection that represents a digital product.
+            Async version.
+
+        Parameters
+        ----------
+        body: dict | NewElementRequestBody
+            A structure representing the details of the digital product to create.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        ValidationError
+          Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes
+        -----
+        Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+        be valid dates if specified, otherwise you will get a 400 error response.
+
+        simple body version:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "DigitalProductCatalogProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+        UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+        OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
+        default to ACTIVE.
+        """
+        url = f"{self.collection_command_root}"
+        return await self._async_create_element_body_request(url, "DigitalProductCatalogProperties", body)
+
+
+    @dynamic_catch
+    def create_digital_product_catalog(self, body: dict | NewElementRequestBody = None) -> str:
+        """ Create a new collection that represents a digital product.
+
+            Parameters
+            ----------
+            body: dict | NewElementRequestBody
+                A structure representing the details of the digital product to create.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            ValidationError
+              Raised by the pydantic validator if the body does not conform to the NewElementRequestBody.
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+            Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+            be valid dates if specified, otherwise you will get a 400 error response.
+
+             simple body version:
+            {
+              "class": "NewElementRequestBody",
+              "isOwnAnchor": true,
+              "properties": {
+                "class": "DigitalProductCatalogProperties",
+                "qualifiedName": "Must provide a unique name here",
+                "displayName": "Add display name here",
+                "description": "Add description of the collection here",
+                "category": "Add appropriate valid value for type"
+              }
+            }
+
+            The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+            UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+            OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
+            default to ACTIVE.
+            """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_digital_product_catalog(body))
+
+
+
+
+    @dynamic_catch
     async def _async_update_digital_product(self, collection_guid: str,  body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a digital product.
             Collections: https://egeria-project.org/concepts/collection
@@ -2535,8 +2637,8 @@ class CollectionManager(Client2):
         }
         """
 
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/metadata-elements/{collection_guid}/update-status"
-        await self._async_update_status_request(url, status, body)
+
+        await self._async_update_element_status(collection_guid, status, body)
 
     @dynamic_catch
     def update_collection_status(self, collection_guid: str, status: str = None,

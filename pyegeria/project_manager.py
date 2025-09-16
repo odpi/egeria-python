@@ -72,6 +72,7 @@ class ProjectManager(Client2):
         self.project_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         )
+        self.url_marker = 'project-manager'
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     def _extract_additional_project_properties(self, element: dict, columns_struct: dict)-> dict:

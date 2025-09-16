@@ -850,99 +850,6 @@ class GovernanceOfficer(Client2):
         loop.run_until_complete(self._async_update_governance_definition(guid, body))
 
     @dynamic_catch
-    async def _async_update_governance_definition_status(self, guid: str, status: str = None,
-                                                         body: dict | UpdateStatusRequestBody = None) -> None:
-        """ Update the status of a governance definition. Async Version.
-
-        Parameters
-        ----------
-        guid: str
-            guid of the governance definition to update.
-        status: str, optional, default is None
-            The status to update the governance definition to. Superseded by the body definition if present.
-        body: dict
-            A dictionary containing the updates to the governance definition.
-
-        Returns
-        -------
-
-        None
-
-        Raises
-        ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "UpdateGovernanceDefinitionRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "status": "ACTIVE"
-        }
-        """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-defnitions/"
-            f"{guid}/update-status")
-
-        # await self._async_update_status_request(url, status, body)
-
-    def update_governance_definition_status(self, guid: str, status: str = None,
-                                            body: dict | UpdateStatusRequestBody = None) -> None:
-        """ Update the status of a governance definition.
-
-            Parameters
-            ----------
-            guid: str
-                guid of the information governance definition to update.
-            status: str, optional, default is None
-                The status to update the governance definition to. Superseded by the body definition if present.
-            body: dict
-                A dictionary containing the updates to the governance definition.
-
-            Returns
-            -------
-
-            None
-
-            Raises
-            ------
-            InvalidParameterException
-                one of the parameters is null or invalid or
-            PropertyServerException
-                There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
-                the requesting user is not authorized to issue this request.
-
-            Notes
-            ----
-
-            Body structure:
-            {
-              "class" : "UpdateGovernanceDefinitionRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime" : "{{$isoTimestamp}}",
-              "forLineage" : false,
-              "forDuplicateProcessing" : false,
-              "status": "ACTIVE"
-            }
-            """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_governance_definition_status(guid, status, body))
-
-    @dynamic_catch
     async def _async_delete_governance_definition(self, definition_guid: str,
                                                   body: dict | DeleteRequestBody = None,
                                                   cascade: bool = False) -> None:
@@ -1430,7 +1337,7 @@ class GovernanceOfficer(Client2):
         logger.info(f"Detached digital supporting definitions: {definition_guid1} -> {definition_guid2}")
 
     @dynamic_catch
-    def detach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+    def detach_supporting_definitions(self, definition_guid: str, relationship_type: str, definition_guid2: str,
                                       body: dict | DeleteRequestBody = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
@@ -1476,6 +1383,197 @@ class GovernanceOfficer(Client2):
         loop.run_until_complete(
             self._async_detach_supporting_definitions(definition_guid1, relationship_type, definition_guid2, body))
 
+
+
+    async def _async_attach_governed_by_definition(self, element_guid: str, definition_guid: str,
+                                                   body: dict | NewRelationshipRequestBody = None) -> None:
+        """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
+
+        Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to be governed.
+        definition_guid: str
+            the governance definition guid.
+        body: dict
+            The body describing the link between the two.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+       {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/governed-by/definition/{definition_guid}/attach"
+        )
+        await self._async_new_relationship_request(url, "GovernedByProperties", body)
+        logger.info(f"Linked Governed-By {definition_guid} -> {element_guid}")
+
+    @dynamic_catch
+    def attach_governed_by_definition(self, element_guid: str, definition_guid: str,
+                                      body: dict | NewRelationshipRequestBody = None) -> None:
+        """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to be governed.
+        definition_guid: str
+            the governance definition guid.
+        body: dict
+            The body describing the link between the two.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+       {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_attach_governed_by_definition(element_guid, definition_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_governed_by_definition(self, element_guid: str, definition_guid: str,
+                                                   body: dict | DeleteRequestBody = None) -> None:
+        """ Detach a governance definition from a supporting governance definition.
+            Request body is optional. Async Version.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to be governed.
+        definition_guid: str
+            the governance definition guid.
+        body: dict
+            The body describing the link between the two.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/elements/{element_guid}/governed-by/{definition_guid}/detach"
+        )
+        await self._async_delete_request(url, body)
+        logger.info(f"Detached governed-by relationshup between: {definition_guid} -> {element_guid}")
+
+    @dynamic_catch
+    def detach_governed_by_definitio(self, element_guid: str, definition_guid: str,
+                                      body: dict | DeleteRequestBody = None) -> None:
+        """ Detach a governance definition from a supporting governance definition.
+            Request body is optional.
+
+        Parameters
+        ----------
+        element_guid: str
+            guid of the element to be governed.
+        definition_guid: str
+            the governance definition guid.
+        body: dict
+            The body describing the link between the two.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "DeleteRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_governed_by_definition(element_guid, definition_guid, body))
+
+
+
     @dynamic_catch
     async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteRequestBody = None) -> None:
         """ Delete an information supply. Async version.
@@ -1484,7 +1582,7 @@ class GovernanceOfficer(Client2):
         ----------
         guid: str
             GUID of the governance definition to delete.
- 
+
         body: dict, optional
             A dictionary containing the definition of the governance definition to create.
 
@@ -1521,6 +1619,7 @@ class GovernanceOfficer(Client2):
                f"{self.url_marker}/governance-definitions/{guid}/delete")
         await self._async_delete_request(url, body)
         logger.info(f"Deleted governance definition: {guid} ")
+
 
     @dynamic_catch
     def delete_governance_definition(self, guid: str, body: dict | DeleteRequestBody = None) -> None:
@@ -2372,6 +2471,188 @@ class GovernanceOfficer(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_implementation_resource(design_desc_guid, implementation_guid, body))
+
+
+    @dynamic_catch
+    async def _async_link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
+                                                  body: dict | NewRelationshipRequestBody = None) -> None:
+        """ Attach a governance metric to a data asset that describes where its measurements are kept.
+            Request body is optional. https://egeria-project.org/concepts/governance-definition/
+
+            Async Version.
+
+        Parameters
+        ----------
+        gov_metric_guid: str
+            guid of the governance metric to link.
+        data_asset_guid: str
+            guid of the data asset to link.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "GovernanceResultsProperties",
+            "description": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-metrics/"
+               f"{gov_metric_guid}/measurements/{data_asset_guid}/attach"
+               )
+        await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
+        logger.info(f"Linked governance metric to a data asset containing its measurements.: {gov_metric_guid} -> {data_asset_guid}")
+
+    @dynamic_catch
+    def link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
+                                                  body: dict | NewRelationshipRequestBody = None) -> None:
+        """ Attach a governance metric to a data asset that describes where its measurements are kept.
+            Request body is optional. https://egeria-project.org/concepts/governance-definition/
+
+
+        Parameters
+        ----------
+        gov_metric_guid: str
+            guid of the governance metric to link.
+        data_asset_guid: str
+            guid of the data asset to link.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "GovernanceResultsProperties",
+            "description": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_governance_results(gov_metric_guid, data_asset_guid, implementation_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict | DeleteRequestBody = None) -> None:
+        """ Detach an governance metric from its measurements data set. Request body is optional.
+            https://egeria-project.org/concepts/governance-definition/ Async version.
+
+        Parameters
+        ----------
+        gov_metric_guid: str
+            guid of the governance metric to link.
+        data_asset_guid: str
+            guid of the data asset to link.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "string",
+          "externalSourceName": "string",
+          "forLineage": true,
+          "forDuplicateProcessing": true,
+          "effectiveTime": "2025-06-13T15:13:31.339Z"
+        }
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-metrics/"
+               f"{gov_metric_guid}/measurements/{data_asset_guid}/detach")
+        await self._async_delete_request(url, body)
+        logger.info(
+            f"Detached governance metric from the asset where measurements were stored: {gov_metric_guid} -> {data_asset_guid}")
+
+    def detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
+                                  body: dict | DeleteRequestBody = None) -> None:
+        """ Detach an governance metric from its measurements data set. Request body is optional.
+             https://egeria-project.org/concepts/governance-definition/
+
+         Parameters
+         ----------
+         gov_metric_guid: str
+             guid of the governance metric to link.
+         data_asset_guid: str
+             guid of the data asset to link.
+         body: dict, optional
+             The body describing the link between the two elements.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         PyegeriaException
+         ValidationError
+
+         Notes
+         ----
+
+         Body structure:
+         {
+           "class": "MetadataSourceRequestBody",
+           "externalSourceGUID": "string",
+           "externalSourceName": "string",
+           "forLineage": true,
+           "forDuplicateProcessing": true,
+           "effectiveTime": "2025-06-13T15:13:31.339Z"
+         }
+         """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, data_asset_guid, body))
 
     # async def _async_get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON",
     # start_from: int = 0,

@@ -655,6 +655,65 @@ base_output_format_sets = FormatSetDict({
             spec_params={},
         )
     ),
+    'External-Reference': FormatSet(target_type='External-Reference',
+                                    heading='External-Reference Attributes',
+                                    description='External References', formats=[
+            Format(types=['MD', 'FORM', 'DICT'], columns=[Column(name='Display Name', key='display_name'),
+                                                          Column(name='Description', key='description'),
+                                                          Column(name='Category', key='category'),
+                                                          Column(name='Reference Title', key='reference_title'),
+                                                          Column(name='Reference Abstract', key='reference_abstract'),
+                                                          Column(name='Authors', key='authors'),
+                                                          Column(name='Organization', key='organization'),
+                                                          Column(name='URL', key='reference_url'),
+                                                          Column(name='Sources', key='reference_sources'),
+                                                          Column(name='License', key='license'),
+                                                          Column(name='Copyright', key='copyright'),
+                                                          Column(name='Number of Pages', key='number_of_pages'),
+                                                          Column(name='Page Range', key='page_range'),
+                                                          Column(name='Publication Series', key='publication_series'),
+                                                          Column(name='Publication Series Volume',
+                                                                 key='pub_series_volume'),
+                                                          Column(name='Publisher', key='publisher'),
+                                                          Column(name='First Publication Date', key='first_pub_date'),
+                                                          Column(name='Publication Date', key='pub_date'),
+                                                          Column(name='Publication City', key='pub_city'),
+                                                          Column(name='Publication Year', key='pub_year'),
+                                                          Column(name='Publication Numbers', key='pub_numbers'),
+                                                          Column(name='Version Identifier', key='current_version'),
+                                                          Column(name='Classifications', key='classifications'),
+                                                          Column(name='Qualified Name', key='qualified_name'),
+                                                          Column(name='GUID', key='guid')]),
+            Format(types=['TABLE','LIST'], columns=[Column(name='Display Name', key='display_name'),
+
+                                             Column(name='Category', key='category'),
+                                             Column(name='Reference Title', key='reference_title'),
+
+                                             Column(name='Sources', key='reference_sources'),
+                                             Column(name='License', key='license'),
+                                             Column(name='Qualified Name', key='qualified_name'),
+                                             ]),
+            Format(types=["REPORT"], columns=[Column(name='Display Name', key='display_name'),
+                                              Column(name='Description', key='description'),
+                                              Column(name='Category', key='category'),
+                                              Column(name='Reference Title', key='reference_title'),
+                                              Column(name='Reference Abstract', key='reference_abstract'),
+                                              Column(name='Organization', key='organization'),
+                                              Column(name='URL', key='reference_url'),
+                                              Column(name='Sources', key='reference_sources'),
+                                              Column(name='License', key='license'),
+                                              Column(name='Qualified Name', key='qualified_name'),
+                                              Column(name='Mermaid', key='mermaid'),
+                                              ]),
+
+            Format(types=["MERMAID"], columns=[Column(name='Mermaid', key='mermaid')]),
+        ],
+                                    action=ActionParameter(function='ExternalReference.find_external_references',
+                                                           required_params=['search_string'],
+                                                           optional_params=['page_size', 'start_from',
+                                                                            'starts_with', 'ends_with',
+                                                                            'ignore_case'], spec_params={
+                                            'metadata_element_types': ['ExternalReference']})),
 
     "Mandy-DataStruct": FormatSet(
         target_type="Data Structure",
@@ -746,9 +805,9 @@ base_output_format_sets = FormatSetDict({
             spec_params={"metadata_element_types": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
         )
     ),
-    'Governance Control': FormatSet(target_type='Control', heading='Control Attributes',
-                                    description='Auto-generated format for Governance Control (Create).', formats=[
-            Format(types=['ALL'],
+    'Governance-Control': FormatSet(target_type='Governance Control', heading='Control Attributes',
+                                    description= 'Governance Control (Create).', formats=[
+            Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
                    columns=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
                             Column(name='Description', key='description'), Column(name='Category', key='category'),
                             Column(name='Domain Identifier', key='domain_identifier'),
@@ -761,14 +820,77 @@ base_output_format_sets = FormatSetDict({
                             Column(name='Status', key='element_status'),
                             Column(name='User Defined Status', key='user_defined_status'),
                             Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')
-                            ])],
-                                    action=ActionParameter(
-                                        function="GovernanceOfficer.find_governance_definitions",
-                                        required_params=["search_string"],
-                                        optional_params=OPTIONAL_PARAMS,
-                                        spec_params={"metadata_element_types": ["GovernanceControl"]},
-                                    )
-                                    ),
+                            ]),
+            Format(types=['TABLE', 'LIST'],
+                   columns=[Column(name='Display Name', key='display_name'),
+                            Column(name='Summary', key='summary'),
+                            Column(name='Category', key='category'),
+                            Column(name='Identifier', key='identifier'),
+                            Column(name='Usage', key='usage'),
+                            Column(name='Status', key='element_status'),
+                            Column(name='Qualified Name', key='qualified_name'),
+                            ])
+        ],
+            action=ActionParameter(
+                function="GovernanceOfficer.find_governance_definitions",
+                required_params=["search_string"],
+                optional_params=OPTIONAL_PARAMS,
+                spec_params={"metadata_element_types": ["GovernanceControl"]},
+            )
+    ),
+    "Valid-Value-Def": FormatSet(
+        target_type="Valid Value Definition",
+        heading="Valid Value Definitions Information",
+        description="Attributes useful to Valid Value Definitions.",
+        aliases=[],
+        annotations={"wikilinks": ["[[VV-Def]]"]},
+        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS +
+                                               [Column(name='Data Type', key='data_type'),
+                                                Column(name='Preferred Value', key='preferred_value'),
+                                                Column(name='Usage', key='usage'),
+                                                Column(name='Scope', key='scope'),
+                                        ])
+                 ],
+        action=ActionParameter(
+            function="reference_data.find_valid_value_definitions",
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+
+    'License-Type': FormatSet(target_type='License Type', heading='License Type Attributes',
+                                    description='Attributes of a License type.', formats=[
+            Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
+                   columns=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
+                            Column(name='Description', key='description'), Column(name='Category', key='category'),
+                            Column(name='Domain Identifier', key='domain_identifier'),
+                            Column(name='Identifier', key='identifier'),
+                            Column(name='Version Identifier', key='version_identifier'),
+                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
+                            Column(name='Importance', key='importance'), Column(name='measurement', key='measurement'),
+                            Column(name='target', key='target'), Column(name='Implications', key='implications'),
+                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
+                            Column(name='Status', key='element_status'),
+                            Column(name='User Defined Status', key='user_defined_status'),
+                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')
+                            ]),
+            Format(types=['TABLE', 'LIST'],
+                   columns=[Column(name='Display Name', key='display_name'),
+                            Column(name='Summary', key='summary'),
+                            Column(name='Category', key='category'),
+                            Column(name='Identifier', key='identifier'),
+                            Column(name='Usage', key='usage'),
+                            Column(name='Status', key='element_status'),
+                            Column(name='Qualified Name', key='qualified_name'),
+                            ])
+        ],
+            action=ActionParameter(
+                function="GovernanceOfficer.find_governance_definitions",
+                required_params=["search_string"],
+                optional_params=OPTIONAL_PARAMS,
+                spec_params={"metadata_element_types": ["LicenseType"]},
+            )
+            ),
 
     "Governance Policies": FormatSet(
         target_type="GovernancePolicy",
@@ -837,53 +959,54 @@ generated_format_sets = FormatSetDict({
                                                               'ignore_case'],
                                              spec_params={'metadata_element_types': ['GovernanceDriver']})),
     'Campaign-DrE': FormatSet(target_type='Campaign-DrE', heading='Campaign-DrE Attributes',
-                              description='Auto-generated format for Campaign (Create).', formats=[Format(types=['ALL'],
-                                                                                                          columns=[
-                                                                                                              Column(
-                                                                                                                  name='Display Name',
-                                                                                                                  key='display_name'),
-                                                                                                              Column(
-                                                                                                                  name='Description',
-                                                                                                                  key='description'),
-                                                                                                              Column(
-                                                                                                                  name='Project Type',
-                                                                                                                  key='project_type'),
-                                                                                                              Column(
-                                                                                                                  name='Category',
-                                                                                                                  key='category'),
-                                                                                                              Column(
-                                                                                                                  name='Identifier',
-                                                                                                                  key='project_identifier'),
-                                                                                                              Column(
-                                                                                                                  name='Mission',
-                                                                                                                  key='mission'),
-                                                                                                              Column(
-                                                                                                                  name='Purposes',
-                                                                                                                  key='purposes'),
-                                                                                                              Column(
-                                                                                                                  name='Start Date',
-                                                                                                                  key='start_date'),
-                                                                                                              Column(
-                                                                                                                  name='Planned End Date',
-                                                                                                                  key='end_date'),
-                                                                                                              Column(
-                                                                                                                  name='Priority',
-                                                                                                                  key='priority'),
-                                                                                                              Column(
-                                                                                                                  name='Project Phase',
-                                                                                                                  key='project_phase'),
-                                                                                                              Column(
-                                                                                                                  name='Project Status',
-                                                                                                                  key='project_status'),
-                                                                                                              Column(
-                                                                                                                  name='Project Health',
-                                                                                                                  key='project_health'),
-                                                                                                              Column(
-                                                                                                                  name='Qualified Name',
-                                                                                                                  key='qualified_name'),
-                                                                                                              Column(
-                                                                                                                  name='GUID',
-                                                                                                                  key='guid')])],
+                              description='Auto-generated format for Campaign (Create).',
+                              formats=[Format(types=['ALL'],
+                                              columns=[
+                                                  Column(
+                                                      name='Display Name',
+                                                      key='display_name'),
+                                                  Column(
+                                                      name='Description',
+                                                      key='description'),
+                                                  Column(
+                                                      name='Project Type',
+                                                      key='project_type'),
+                                                  Column(
+                                                      name='Category',
+                                                      key='category'),
+                                                  Column(
+                                                      name='Identifier',
+                                                      key='project_identifier'),
+                                                  Column(
+                                                      name='Mission',
+                                                      key='mission'),
+                                                  Column(
+                                                      name='Purposes',
+                                                      key='purposes'),
+                                                  Column(
+                                                      name='Start Date',
+                                                      key='start_date'),
+                                                  Column(
+                                                      name='Planned End Date',
+                                                      key='end_date'),
+                                                  Column(
+                                                      name='Priority',
+                                                      key='priority'),
+                                                  Column(
+                                                      name='Project Phase',
+                                                      key='project_phase'),
+                                                  Column(
+                                                      name='Project Status',
+                                                      key='project_status'),
+                                                  Column(
+                                                      name='Project Health',
+                                                      key='project_health'),
+                                                  Column(
+                                                      name='Qualified Name',
+                                                      key='qualified_name'),
+                                                  Column(
+                                                      name='GUID',
+                                                      key='guid')])],
                               action=ActionParameter(function='ProjectManager.find_projects',
                                                      required_params=['search_string'],
                                                      optional_params=['page_size', 'start_from', 'starts_with',
@@ -1122,7 +1245,7 @@ generated_format_sets = FormatSetDict({
                                                                                   'starts_with', 'ends_with',
                                                                                   'ignore_case'], spec_params={
                                                   'metadata_element_types': ['DigitalSubscription']})),
-    'External-Data-Source-DrE': FormatSet(target_type='External-Data-Source-DrE',
+    'External-Data-Source-DrE': FormatSet(target_type='External Data Source',
                                           heading='External-Data-Source-DrE Attributes',
                                           description='Auto-generated format for External Data Source (Create).',
                                           formats=[Format(types=['ALL'],
@@ -1185,6 +1308,7 @@ generated_format_sets = FormatSetDict({
                                                                                 'starts_with', 'ends_with',
                                                                                 'ignore_case'], spec_params={
                                                 'metadata_element_types': ['ExternalReference']})),
+
     'Glossary-DrE': FormatSet(target_type='Glossary-DrE', heading='Glossary-DrE Attributes',
                               description='Auto-generated format for Glossary (Create).', formats=[Format(types=['ALL'],
                                                                                                           columns=[
@@ -1618,48 +1742,48 @@ generated_format_sets = FormatSetDict({
                                                                                                         columns=[Column(
                                                                                                             name='Display Name',
                                                                                                             key='display_name'),
-                                                                                                                 Column(
-                                                                                                                     name='Description',
-                                                                                                                     key='description'),
-                                                                                                                 Column(
-                                                                                                                     name='Project Type',
-                                                                                                                     key='project_type'),
-                                                                                                                 Column(
-                                                                                                                     name='Category',
-                                                                                                                     key='category'),
-                                                                                                                 Column(
-                                                                                                                     name='Identifier',
-                                                                                                                     key='project_identifier'),
-                                                                                                                 Column(
-                                                                                                                     name='Mission',
-                                                                                                                     key='mission'),
-                                                                                                                 Column(
-                                                                                                                     name='Purposes',
-                                                                                                                     key='purposes'),
-                                                                                                                 Column(
-                                                                                                                     name='Start Date',
-                                                                                                                     key='start_date'),
-                                                                                                                 Column(
-                                                                                                                     name='Planned End Date',
-                                                                                                                     key='end_date'),
-                                                                                                                 Column(
-                                                                                                                     name='Priority',
-                                                                                                                     key='priority'),
-                                                                                                                 Column(
-                                                                                                                     name='Project Phase',
-                                                                                                                     key='project_phase'),
-                                                                                                                 Column(
-                                                                                                                     name='Project Status',
-                                                                                                                     key='project_status'),
-                                                                                                                 Column(
-                                                                                                                     name='Project Health',
-                                                                                                                     key='project_health'),
-                                                                                                                 Column(
-                                                                                                                     name='Qualified Name',
-                                                                                                                     key='qualified_name'),
-                                                                                                                 Column(
-                                                                                                                     name='GUID',
-                                                                                                                     key='guid')])],
+                                                                                                            Column(
+                                                                                                                name='Description',
+                                                                                                                key='description'),
+                                                                                                            Column(
+                                                                                                                name='Project Type',
+                                                                                                                key='project_type'),
+                                                                                                            Column(
+                                                                                                                name='Category',
+                                                                                                                key='category'),
+                                                                                                            Column(
+                                                                                                                name='Identifier',
+                                                                                                                key='project_identifier'),
+                                                                                                            Column(
+                                                                                                                name='Mission',
+                                                                                                                key='mission'),
+                                                                                                            Column(
+                                                                                                                name='Purposes',
+                                                                                                                key='purposes'),
+                                                                                                            Column(
+                                                                                                                name='Start Date',
+                                                                                                                key='start_date'),
+                                                                                                            Column(
+                                                                                                                name='Planned End Date',
+                                                                                                                key='end_date'),
+                                                                                                            Column(
+                                                                                                                name='Priority',
+                                                                                                                key='priority'),
+                                                                                                            Column(
+                                                                                                                name='Project Phase',
+                                                                                                                key='project_phase'),
+                                                                                                            Column(
+                                                                                                                name='Project Status',
+                                                                                                                key='project_status'),
+                                                                                                            Column(
+                                                                                                                name='Project Health',
+                                                                                                                key='project_health'),
+                                                                                                            Column(
+                                                                                                                name='Qualified Name',
+                                                                                                                key='qualified_name'),
+                                                                                                            Column(
+                                                                                                                name='GUID',
+                                                                                                                key='guid')])],
                              action=ActionParameter(function='ProjectManager.find_projects',
                                                     required_params=['search_string'],
                                                     optional_params=['page_size', 'start_from', 'starts_with',
@@ -1901,48 +2025,48 @@ generated_format_sets = FormatSetDict({
                                                                                                   columns=[Column(
                                                                                                       name='Display Name',
                                                                                                       key='display_name'),
-                                                                                                           Column(
-                                                                                                               name='Description',
-                                                                                                               key='description'),
-                                                                                                           Column(
-                                                                                                               name='Project Type',
-                                                                                                               key='project_type'),
-                                                                                                           Column(
-                                                                                                               name='Category',
-                                                                                                               key='category'),
-                                                                                                           Column(
-                                                                                                               name='Identifier',
-                                                                                                               key='project_identifier'),
-                                                                                                           Column(
-                                                                                                               name='Mission',
-                                                                                                               key='mission'),
-                                                                                                           Column(
-                                                                                                               name='Purposes',
-                                                                                                               key='purposes'),
-                                                                                                           Column(
-                                                                                                               name='Start Date',
-                                                                                                               key='start_date'),
-                                                                                                           Column(
-                                                                                                               name='Planned End Date',
-                                                                                                               key='end_date'),
-                                                                                                           Column(
-                                                                                                               name='Priority',
-                                                                                                               key='priority'),
-                                                                                                           Column(
-                                                                                                               name='Project Phase',
-                                                                                                               key='project_phase'),
-                                                                                                           Column(
-                                                                                                               name='Project Status',
-                                                                                                               key='project_status'),
-                                                                                                           Column(
-                                                                                                               name='Project Health',
-                                                                                                               key='project_health'),
-                                                                                                           Column(
-                                                                                                               name='Qualified Name',
-                                                                                                               key='qualified_name'),
-                                                                                                           Column(
-                                                                                                               name='GUID',
-                                                                                                               key='guid')])],
+                                                                                                      Column(
+                                                                                                          name='Description',
+                                                                                                          key='description'),
+                                                                                                      Column(
+                                                                                                          name='Project Type',
+                                                                                                          key='project_type'),
+                                                                                                      Column(
+                                                                                                          name='Category',
+                                                                                                          key='category'),
+                                                                                                      Column(
+                                                                                                          name='Identifier',
+                                                                                                          key='project_identifier'),
+                                                                                                      Column(
+                                                                                                          name='Mission',
+                                                                                                          key='mission'),
+                                                                                                      Column(
+                                                                                                          name='Purposes',
+                                                                                                          key='purposes'),
+                                                                                                      Column(
+                                                                                                          name='Start Date',
+                                                                                                          key='start_date'),
+                                                                                                      Column(
+                                                                                                          name='Planned End Date',
+                                                                                                          key='end_date'),
+                                                                                                      Column(
+                                                                                                          name='Priority',
+                                                                                                          key='priority'),
+                                                                                                      Column(
+                                                                                                          name='Project Phase',
+                                                                                                          key='project_phase'),
+                                                                                                      Column(
+                                                                                                          name='Project Status',
+                                                                                                          key='project_status'),
+                                                                                                      Column(
+                                                                                                          name='Project Health',
+                                                                                                          key='project_health'),
+                                                                                                      Column(
+                                                                                                          name='Qualified Name',
+                                                                                                          key='qualified_name'),
+                                                                                                      Column(
+                                                                                                          name='GUID',
+                                                                                                          key='guid')])],
                           action=ActionParameter(function='ProjectManager.find_projects',
                                                  required_params=['search_string'],
                                                  optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',

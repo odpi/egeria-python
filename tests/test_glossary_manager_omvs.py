@@ -148,7 +148,7 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            glossary_guid = "b336de33-ae66-4db9-b669-85c146c4b053"
+            glossary_guid = "46ec84bc-7264-4cf4-86bc-253cca63e115"
             g_client.delete_glossary(glossary_guid, cascade = True)
             duration = time.perf_counter() - start_time
 
@@ -551,7 +551,7 @@ class TestGlossaryManager:
             glossary_guid = None
             start_time = time.perf_counter()
             response = g_client.find_glossary_terms(
-                "Calico",
+                "*",
                 True,
                 False,
                 True,

@@ -8,22 +8,21 @@ from typing import Optional
 from inflect import engine
 from jsonschema import ValidationError
 from loguru import logger
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
-                                                                    process_output_command)
+from rich import print
+from rich.console import Console
+from rich.markdown import Markdown
+
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import (set_gov_prop_body,
                                                                set_update_body, set_create_body,
-                                                               set_peer_gov_def_request_body,
-                                                               ALL_GOVERNANCE_DEFINITIONS, GOVERNANCE_POLICIES,
-                                                               GOVERNANCE_CONTROLS, GOVERNANCE_DRIVERS,
-                                                               set_find_body,
-                                                               set_delete_request_body)
+                                                               set_peer_gov_def_request_body, set_rel_prop_body,
+                                                               set_rel_request_body,
+                                                               ALL_GOVERNANCE_DEFINITIONS, set_delete_request_body)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech
-from rich import print
-from rich.console import Console
-from rich.markdown import Markdown
+from pyegeria.utils import make_format_set_name_from_type
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -84,8 +83,8 @@ def sync_gov_rel_elements(egeria_client: EgeriaTech, object_action: str, object_
 
 
 @logger.catch
-def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[
-    str]:
+def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
+                                          directive: str = "display") -> Optional[str]:
     """
     Processes a data specification create or update object_action by extracting key attributes.
 
@@ -152,10 +151,10 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
                 update_body = body_slimmer(update_body)
                 egeria_client.update_governance_definition(guid, update_body)
                 if status := parsed_output['attributes'].get('Status', {}).get('value', None):
-                    egeria_client.update_governance_definition_status(guid, status)
+                    egeria_client.update_element_status(guid, status)
                 logger.success(f"Updated {object_type} `{display_name}` with GUID {guid}")
                 return egeria_client.get_governance_definition_by_guid(guid, output_format='MD',
-                                                output_format_set = output_set)
+                                                                       output_format_set=output_set)
 
             elif object_action == "Create":
                 if valid is False and exists:
@@ -175,7 +174,8 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str, d
                     guid = egeria_client.create_governance_definition(body_slimmer(create_body))
                     if guid:
                         logger.success(f"Created {object_type} `{display_name}` with GUID {guid}")
-                        return egeria_client.get_governance_definition_by_guid(guid, output_format='MD', output_format_set = output_set)
+                        return egeria_client.get_governance_definition_by_guid(guid, output_format='MD',
+                                                                               output_format_set=output_set)
                     else:
                         logger.error(f"Failed to create {object_type} `{display_name}`.")
                         return None
@@ -400,7 +400,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
                     "rationale": attributes.get('Rationale', {}).get('value', None),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
                     "effectiveTo": attributes.get('Effective To', {}).get('value', None),
-                    }
+                }
 
                 body = set_peer_gov_def_request_body(object_type, attributes)
                 body['properties'] = body_prop
@@ -425,6 +425,113 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
         return None
     else:
         return None
+
+
+
+@logger.catch
+def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
+                                                   directive: str = "display") -> Optional[str]:
+    """
+    Processes a link or unlink command to associate or break up peer governance definitions.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting blueprint-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+
+    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+
+    print(Markdown(parsed_output['display']))
+
+    logger.debug(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+
+    element_guid = attributes.get('Referenceable', {}).get('guid', None)
+    definition_guid = attributes.get('Governance Definition', {}).get('guid', None)
+    label = attributes.get('Link Label', {}).get('value', None)
+    description = attributes.get('Description', {}).get('value', None)
+
+    valid = parsed_output['valid']
+    exists = element_guid is not None and definition_guid is not None
+
+    if directive == "display":
+
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+        return valid
+
+    elif directive == "process":
+
+
+        try:
+            if object_action == "Detach":
+                if not exists:
+                    msg = (f" Link `{label}` does not exist! Updating result document with Link "
+                           f"object_action\n")
+                    logger.error(msg)
+                    out = parsed_output['display'].replace('Link', 'Detach', 1)
+                    return out
+                elif not valid:
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+                    body = set_delete_request_body(object_type, attributes)
+
+                egeria_client.detach_governed_by_definitions(element_guid, definition_guid, body)
+
+                logger.success(f"===> Detached segment with {label} from `{definition1}`to {definition2}\n")
+                out = parsed_output['display'].replace('Unlink', 'Link', 1)
+
+                return (out)
+
+
+            elif object_action == "Link":
+                if valid is False and exists:
+                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
+                           f"`Link` to `Detach` in processed output\n")
+                    logger.error(msg)
+
+                elif valid is False:
+                    msg = f"==>{object_type} Link with label `{label}` is not valid and can't be created"
+                    logger.error(msg)
+                    return
+
+                else:
+                    body_prop = set_rel_prop_body(object_type, attributes)
+
+                    body = set_rel_request_body(object_type, attributes)
+                    body['properties'] = body_prop
+                    body = body_slimmer(body)
+                    egeria_client.attach_governed_by_definition(element_guid, definition_guid, body)
+                    msg = f"==>Created {object_type} link named `{label}`\n"
+                    logger.success(msg)
+                    out = parsed_output['display'].replace('Link', 'Detach', 1)
+                    return out
+
+        except ValidationError as e:
+            print_validation_error(e)
+            logger.error(f"Validation Error performing {command}: {e}")
+            return None
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            logger.error(f"PyegeriaException occurred: {e}")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+            return None
+    else:
+        return None
+
 
 
 @logger.catch

@@ -54,10 +54,12 @@ from pyegeria import (
     NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager,
 )
 from pyegeria.config import settings
+from pyegeria.external_references import ExternalReferences
 from pyegeria.logging_configuration import config_logging
+from pyegeria._output_format_models import load_format_sets_from_json
 from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading,
                                       load_user_format_sets, load_output_format_sets,
-                                      load_format_sets_from_json, get_output_format_set_description)
+                                       get_output_format_set_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
@@ -166,6 +168,8 @@ def execute_format_set_action(
             client_class = GovernanceOfficer
         elif class_name == "GlossaryManager":
             client_class = GlossaryManager
+        elif class_name == "ExternalReference":
+            client_class = ExternalReferences
         else:
             client_class = EgeriaTech
 
@@ -258,7 +262,7 @@ def execute_format_set_action(
             return
         else:
             # For TABLE output, add output_format to params
-            params['output_format'] = "DICT"
+            params['output_format'] = "TABLE"
             print(f"\n==> Calling function: {func} with parameters:{params}")
             # Call the function and create a table
             try:

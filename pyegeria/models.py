@@ -253,6 +253,17 @@ class DeleteRequestBody(RequestBody):
     archive_process: str | None = None
     archive_properties: dict | None = None
 
+class DeleteElementRequestBody(RequestBody):
+    class_: Annotated[Literal["DeleteElementRequestBody"], Field(alias="class")]
+
+
+class DeleteRelationshipRequestBody(RequestBody):
+    class_: Annotated[Literal["DeleteRelationshipRequestBody"], Field(alias="class")]
+
+
+class DeleteClassificationRequestBody(RequestBody):
+    class_: Annotated[Literal["DeleteClassificationRequestBody"], Field(alias="class")]
+
 
 class InitialClassifications(PyegeriaModel):
     class_: str = Field(alias="class"),
