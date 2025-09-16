@@ -148,7 +148,7 @@ class TestExternalReferences:
             search_string = "ERA"
 
             response = p_client.find_external_references(
-                search_string, output_format="JSON", output_format_set="External-References-DrE"
+                search_string, output_format="DICT", output_format_set="External-Reference"
             )
             duration = time.perf_counter() - start_time
 

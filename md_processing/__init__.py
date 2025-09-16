@@ -4,7 +4,7 @@ This package contains functions to parse and process Egeria Markdown (Freddie)
 from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
                                                                    process_gov_def_link_detach_command,
                                                                    process_supporting_gov_def_link_detach_command,
-                                                                   process_gov_def_context_command,
+                                                                   process_gov_def_context_command, process_governed_by_link_detach_command
                                                                    )
 
 
@@ -59,7 +59,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
                                                                 extract_attribute, process_simple_attribute,
                                                                 process_name_list, process_element_identifiers,
                                                                 get_element_by_name, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, ERROR, INFO, WARNING, pre_command,
+from md_processing.md_processing_utils.md_processing_constants import ( pre_command,
                                                                        command_seperator, EXISTS_REQUIRED,
                                                                        GLOSSARY_NAME_LABELS,
                                                                        TERM_NAME_LABELS, PROJECT_NAME_LABELS,
@@ -76,7 +76,6 @@ from md_processing.md_processing_utils.md_processing_constants import (ALWAYS, E
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, get_command_spec, get_attribute,
                                                                        get_attribute_labels, get_alternate_names)
 # Import message constants
-from md_processing.md_processing_utils.message_constants import (message_types, ALWAYS, ERROR, INFO, WARNING)
 
 from md_processing.md_processing_utils.common_md_proc_utils import process_output_command
 from md_processing.md_commands.view_commands import process_format_set_action, process_output_command

@@ -3,47 +3,28 @@ This file contains Dr. Egeria commands for working with External References.
 """
 
 import json
-import os
-import re
-from typing import List, Optional
+from typing import Optional
 
-from inflect import engine
 from loguru import logger
 from pydantic import ValidationError
 from rich import print
-from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
-                                                                    sync_collection_memberships, )
-from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_update_body,   set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body,
-    set_peer_gov_def_request_body,
-    set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_request_body_for_type,
-    set_rel_prop_body,)
-
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
-from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, \
-    print_exception_table, print_validation_error
-from pyegeria.egeria_tech_client import EgeriaTech
-
-
-
-from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, set_debug_level,
-                                                               get_element_dictionary, update_element_dictionary,
+                                                                    )
+from md_processing.md_processing_utils.common_md_utils import (set_update_body, set_element_prop_body,
+                                                               set_delete_request_body, set_create_body,
+                                                               set_rel_request_body_for_type,
+                                                               set_rel_prop_body, )
+from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary,
                                                                )
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
-                                                                process_simple_attribute, process_element_identifiers,
-                                                                update_a_command, extract_attribute,
-                                                                get_element_by_name, process_name_list)
-from md_processing.md_processing_utils.md_processing_constants import (GLOSSARY_NAME_LABELS, TERM_NAME_LABELS,
-                                                                       TERM_RELATIONSHPS, ALWAYS, ERROR, INFO,
-                                                                       WARNING, pre_command, EXISTS_REQUIRED,
-                                                                       OUTPUT_LABELS, SEARCH_LABELS, GUID_LABELS,
-                                                                       ELEMENT_OUTPUT_FORMATS, command_seperator)
+from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
+
+from pyegeria import PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria import body_slimmer
-from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_CATEGORIES_FOUND)
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.utils import make_format_set_name_from_type
+
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 # console = Console(width=EGERIA_WIDTH)
@@ -84,6 +65,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
 
     display_name = attributes['Display Name'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
     #
 
     if directive == "display":
@@ -170,7 +152,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_external_reference_by_guid(guid, element_type= object_type,
-                                                            output_format='MD', output_format_set = object_type)
+                                                            output_format='MD', output_format_set = output_set)
 
 
             elif object_action == "Create":
@@ -203,7 +185,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                         logger.success(msg)
                         return egeria_client.get_external_reference_by_guid(guid, element_type=object_type,
                                                                             output_format='MD',
-                                                                            output_format_set=object_type)
+                                                                            output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

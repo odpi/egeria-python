@@ -30,6 +30,7 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_digital_product_upsert_command, process_agreement_upsert_command,
                            process_collection_upsert_command, process_link_agreement_item_command,
                            process_gov_definition_upsert_command, GOV_COM_LIST, GOV_LINK_LIST,
+                           process_governed_by_link_detach_command,
                            process_gov_def_link_detach_command, process_product_dependency_command,
                            process_add_to_collection_command, process_attach_collection_command,
     # process_collection_list_command, process_gov_definition_list_command,
@@ -108,7 +109,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             return  # No block to process
 
         potential_command = extract_command(current_block)  # Extract object_action
-        if (potential_command in cmd_list):
+        if potential_command in cmd_list:
             # Process the block based on the object_action
             if potential_command == "Provenance":
                 result = process_provenance_command(input_file, current_block)
@@ -124,8 +125,6 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 result = process_link_to_cited_document_command(client, current_block, directive)
             elif potential_command in ["Create Glossary", "Update Glossary"]:
                 result = process_glossary_upsert_command(client, current_block, directive)
-            # elif potential_command in ["Create Category", "Update Category"]:
-            #     result = process_category_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Term", "Update Term"]:
                 result = process_term_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Term-Term Relationship", "Update Term-Term Relationship"]:
@@ -194,6 +193,9 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 result = process_output_command(client, current_block, directive)
             elif potential_command in ["View Data Classes", "View Data Class"]:
                 result = process_output_command(client, current_block, directive)
+            elif potential_command in ["Create Digital Product Catalog", "Create Collection","Create Folder", "Create Root Collection",
+                                       "Update Digital Product Catalog", "Update Collection","Update Folder", "Update Root Collection"]:
+                result = process_collection_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Digital Product", "Create Data Product","Update Digital Product", "Update Data Product"]:
                 result = process_digital_product_upsert_command(client, current_block, directive)
             elif potential_command in ["Create Agreement", "Create Data Sharing Agreement", "Create Digital Subscription",
@@ -212,10 +214,14 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             elif potential_command in ['Link Governance Mechanism', 'Detach Governance Mechanism',
                                        'Link Governance Response', 'Detach Governance Response',]:
                 result = process_supporting_gov_def_link_detach_command(client, current_block, directive)
+
             elif potential_command in ['Link Digital Products', 'Detach Digital Products',
                                        'Link Product-Product', 'Detach Product-Product'
                                      ]:
                 result = process_product_dependency_command(client, current_block, directive)
+            elif potential_command in ['Link Governed By', 'Detach Governed By']:
+                result = process_governed_by_link_detach_command(client, current_block, directive)
+
             elif potential_command in ['Link Agreement->Item', 'Detach Agreement->Item']:
                 result = process_link_agreement_item_command(client, current_block, directive)
             elif potential_command in ['Link Collection->Resource', 'Detach Collection->Resource']:

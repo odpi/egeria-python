@@ -414,7 +414,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "7f98b9a9-a1c4-4e35-a7ca-48c8cb796496"
+        guid = "fdec46ab-cf36-4029-85ee-755b9c2eb165"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password

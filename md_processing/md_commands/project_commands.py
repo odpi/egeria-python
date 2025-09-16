@@ -21,8 +21,7 @@ from md_processing.md_processing_utils.common_md_utils import update_element_dic
     set_peer_gov_def_request_body, \
     set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_request_body_for_type
 
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
+
 from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, \
     print_exception_table, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech
@@ -36,14 +35,12 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
                                                                 process_simple_attribute, process_element_identifiers,
                                                                 update_a_command, extract_attribute,
                                                                 get_element_by_name, process_name_list)
-from md_processing.md_processing_utils.md_processing_constants import (GLOSSARY_NAME_LABELS, TERM_NAME_LABELS,
-                                                                       TERM_RELATIONSHPS, ALWAYS, ERROR, INFO,
-                                                                       WARNING, pre_command, EXISTS_REQUIRED,
-                                                                       OUTPUT_LABELS, SEARCH_LABELS, GUID_LABELS,
-                                                                       ELEMENT_OUTPUT_FORMATS, command_seperator)
+
 from pyegeria import body_slimmer
 from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_CATEGORIES_FOUND)
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.utils import make_format_set_name_from_type
+
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
 # console = Console(width=EGERIA_WIDTH)
@@ -83,6 +80,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
 
     display_name = attributes['Display Name'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
     #
 
     if directive == "display":
@@ -142,7 +140,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_project_by_guid(guid, element_type='Project',
-                                                            output_format='MD', output_format_set = "Projects")
+                                                            output_format='MD', output_format_set = output_set)
 
 
             elif object_action == "Create":
@@ -173,7 +171,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_project_by_guid(guid, output_format='MD', output_format_set = "Projects")
+                        return egeria_client.get_project_by_guid(guid, output_format='MD', output_format_set = output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

@@ -91,12 +91,13 @@ class GlossaryManager(CollectionManager):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
+        self.url_marker = "glossary-manager"
 
 
         CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         result = self.get_platform_origin()
         logger.info(f"GlossaryManager initialized, platform origin is: {result}")
-        self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager"
+        self.glossary_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager"
     #
     #       Get Valid Values for Enumerations
     #
@@ -991,94 +992,6 @@ class GlossaryManager(CollectionManager):
 
 
     @dynamic_catch
-    async def _async_update_term_status(self, term_guid: str, status: str = None,
-                                              body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a collection. Async version.
-
-        Parameters
-        ----------
-        collection_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the collection. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the collection to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/metadata-elements/{term_guid}/update-status"
-        await self._async_update_status_request(url, status, body)
-        logger.info(f"Updated status for term {term_guid}")
-
-    @dynamic_catch
-    def update_term_status(self, term_guid: str, status: str = None,
-                                 body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a DigitalProduct collection.
-
-        Parameters
-        ----------
-        collection_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the digital product. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the collection to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(term_guid, status, body))
 
 
     async def _async_delete_term(
