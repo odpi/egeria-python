@@ -8,6 +8,7 @@ import time
 from typing import Optional
 
 from loguru import logger
+from pydantic import ValidationError
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -16,7 +17,7 @@ from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
-from pyegeria import DEBUG_LEVEL, body_slimmer, print_basic_exception
+from pyegeria import DEBUG_LEVEL, body_slimmer, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech, NO_ELEMENTS_FOUND
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
@@ -202,8 +203,9 @@ def process_format_set_action(
                 return json.dumps(output, indent=4)
             elif isinstance(output, (str, list)) and output_format in ["REPORT", "LIST", "FORM"]:
                 return output ## used to include pre-amble
-            elif isinstance(output, (str, list)) and output_format == "HTML":
-                return output
+            elif isinstance(output, (str, list)) and output_format in ["HTML", "MERMAID"]:
+                return '\n\n'.join(output)
+
 
             elif isinstance(output, (str, list)) and output_format == "TABLE":
                 return "Table is not a legal output format for this command."
@@ -211,6 +213,8 @@ def process_format_set_action(
 
     except PyegeriaException as e:
         print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
 
 
 def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:

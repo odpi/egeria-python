@@ -190,7 +190,7 @@ def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> s
             msg = f"Missing attribute with labels `{labels}` "
         print_msg(if_missing, msg, debug_level)
         return None
-    return attribute
+    return attribute.strip()
 
 
 # def process_simple_attribute(txt: str, labels: list[str], if_missing: str = INFO) -> str | None:

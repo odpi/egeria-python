@@ -104,10 +104,10 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = None
             classification_name = None
-            element_type = ["Collection"]
-            output_format = "DICT"
+            element_type = ["DigitalProduct"]
+            output_format = "JSON"
             output_format_set = "Collections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
@@ -141,7 +141,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             # collection_type = "DataSharingAgreement"
             # collection_type = "ConnectorTypeDirectory"
-            classification_name = ["DataSpec", "DataDictionary"]
+            classification_name = []
             out_struct = {
                     "heading": "General Agreement Information",
                     "description": "Attributes generic to all Agreements.",
@@ -175,9 +175,11 @@ class TestCollectionManager:
                 "limitResultsByStatus": [],
                 "sequencingOrder": "PROPERTY_ASCENDING",
                 "sequencingProperty": "qualifiedName",
+                "metadataElementTypeName" : "DigitalProduct",
+                "metadataElementSubtypeNames": []
                 }
 
-            response = c_client.find_collections(body=body, output_format="LIST", output_format_set=out_struct)
+            response = c_client.find_collections(body=body, output_format="DICT", output_format_set="Digital-Products")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -225,7 +227,7 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = "Agreement"
+            search_string = "GeoSpatial"
             request_body = SearchStringRequestBody(
                 class_ = "SearchStringRequestBody",
                 search_string=search_string,
@@ -355,7 +357,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "097179ee-61d2-45ba-8790-876521683dac"
+            collection_guid = "545c62f6-a706-45f2-a157-8641fa096c02"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", output_format_set="Folders")
@@ -1293,7 +1295,7 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5bf92cf6-2168-49c6-a686-40ebe4a7e0eb"
+            collection_guid = "8b407ab4-59fd-40c7-954a-a27163d727e8"
             body = {
                 "class": "DeleteRequestBody",
                 "cascadedDelete": True
@@ -1323,7 +1325,7 @@ class TestCollectionManager:
             # category = "Data Spec Collection"
             # category = "Medical Data"
             # category = "Data Product Marketplace"
-            collection_type = "GeoSpatial"
+            collection_type = "Sustainability"
 
             response = c_client.get_collections_by_category(collection_type)
             if type(response) is list:
@@ -1351,8 +1353,10 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             c_client.close_session()
 
@@ -1362,8 +1366,8 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "c744bf04-b9f5-4089-bd12-da6427f62b33" # folder
-            element_guid = "04b2707b-8afc-40ac-bdba-c090f5cb7776" # agreement
+            collection_guid =  '660bfc21-12b5-4de1-a8f3-63239fbb58a0'# folder
+            element_guid = '98c4c362-fd39-42fc-85e9-0718ab527131' # agreement
             body = {
                 "class": "NewRelationshipRequestBody", "properties": {
                     "class": "CollectionMembershipProperties", "membershipRationale": "test purposes",

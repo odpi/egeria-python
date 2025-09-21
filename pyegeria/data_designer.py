@@ -280,7 +280,7 @@ class DataDesigner(Client2):
 
         """
         url = f"{self.data_designer_root}/data-structures/from-template"
-        return await self._async_create_element_from_template(url, body)
+        return await self._async_create_elem_from_template(url, body)
 
     @dynamic_catch
     def create_data_structure_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -1277,23 +1277,21 @@ class DataDesigner(Client2):
             assigned_meanings_qnames.append(meaning['relatedElement']['properties']['qualifiedName'])
 
         # extract existing related data structure and data field elements
-        other_related_elements = el_struct.get("otherRelatedElements", None)
-        if other_related_elements:
-            for rel in other_related_elements:
+        part_of_data_struct = el_struct.get("partOfDataStructures", None)
+        if part_of_data_struct:
+            for rel in part_of_data_struct:
                 related_element = rel["relatedElement"]
-                type = related_element["elementHeader"]["type"]["typeName"]
                 guid = related_element["elementHeader"]["guid"]
                 qualified_name = related_element["properties"].get("qualifiedName", "") or ""
                 display_name = related_element["properties"].get("displayName", "") or ""
-                if type == "DataStructure":
-                    data_structure_guids.append(guid)
-                    data_structure_names.append(display_name)
-                    data_structure_qnames.append(qualified_name)
+                data_structure_guids.append(guid)
+                data_structure_names.append(display_name)
+                data_structure_qnames.append(qualified_name)
 
-                elif type == "DataField":
-                    parent_guids.append(guid)
-                    parent_names.append(display_name)
-                    parent_qnames.append(qualified_name)
+        elif type == "DataField":
+            parent_guids.append(guid)
+            parent_names.append(display_name)
+            parent_qnames.append(qualified_name)
 
         member_of_collections = el_struct.get("memberOfCollections", {})
         for collection in member_of_collections:
@@ -1311,11 +1309,12 @@ class DataDesigner(Client2):
                     member_of_data_spec_names.append(name)
                     member_of_data_spec_qnames.append(qualifiedName)
 
-        member_data_fields = el_struct.get("memberDataFields", {})
+        member_data_fields = el_struct.get("containsDataFields", {})
         for data_field in member_data_fields:
-            member_data_field_guids.append(data_field["elementHeader"]["guid"])
-            member_data_field_names.append(data_field["properties"]["displayName"])
-            member_data_field_qnames.append(data_field["properties"]["qualifiedName"])
+            rel_el = data_field.get("relatedElement",{})
+            member_data_field_guids.append(rel_el["elementHeader"]["guid"])
+            member_data_field_names.append(rel_el["properties"]["displayName"])
+            member_data_field_qnames.append(rel_el["properties"]["qualifiedName"])
 
         data_classes = el_struct.get("assignedDataClasses", {})
         for data_class in data_classes:
@@ -1344,7 +1343,7 @@ class DataDesigner(Client2):
 
             "data_structure_guids": data_structure_guids,
             "data_structure_names": data_structure_names,
-            "data_structure_qnames": data_structure_qnames,
+            "in_data_structure": data_structure_qnames,
 
             "assigned_meanings_guids": assigned_meanings_guids,
             "assigned_meanings_names": assigned_meanings_names,
@@ -1368,15 +1367,15 @@ class DataDesigner(Client2):
 
             "member_of_data_dicts_guids": member_of_data_dicts_guids,
             "member_of_data_dicts_names": member_of_data_dicts_names,
-            "member_of_data_dicts_qnames": member_of_data_dicts_qnames,
+            "in_data_dictionary": member_of_data_dicts_qnames,
 
             "member_of_data_spec_guids": member_of_data_spec_guids,
             "member_of_data_spec_names": member_of_data_spec_names,
-            "member_of_data_spec_qnames": member_of_data_spec_qnames,
+            "in_data_spec": member_of_data_spec_qnames,
 
             "member_data_field_guids": member_data_field_guids,
             "member_data_field_names": member_data_field_names,
-            "member_data_field_qnames": member_data_field_qnames,
+            "member_data_fields": member_data_field_qnames,
 
             "mermaid": mermaid,
             }
@@ -1697,7 +1696,7 @@ class DataDesigner(Client2):
 
         url = f"{base_path(self, self.view_server)}/data-fields/from-template"
 
-        return await self._async_create_element_from_template(url, body)
+        return await self._async_create_elem_from_template(url, body)
 
     @dynamic_catch
     def create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -2946,7 +2945,7 @@ class DataDesigner(Client2):
         """
 
         url = f"{base_path(self, self.view_server)}/data-classes/from-template"
-        return await self._async_create_element_from_template(url, body)
+        return await self._async_create_elem_from_template(url, body)
 
     @dynamic_catch
     def create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -4900,7 +4899,7 @@ class DataDesigner(Client2):
         if output_format_set:
             if isinstance(output_format_set, str):
                 output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
+            elif isinstance(output_format_set, dict):
                 output_formats = get_output_format_type_match(output_format_set, output_format)
         else:
             output_formats = None

@@ -36,7 +36,7 @@ from pyegeria._exceptions import (InvalidParameterException, PropertyServerExcep
 from pyegeria._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
                           validate_server_name, validate_url, validate_user_id, )
 from pyegeria.asset_catalog_omvs import AssetCatalog
-from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.automated_curation import AutomatedCuration
 from pyegeria.classification_manager_omvs import ClassificationManager
 from pyegeria.collection_manager import CollectionManager
 from pyegeria.core_omag_server_config import CoreServerConfig

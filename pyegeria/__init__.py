@@ -38,7 +38,7 @@ from ._exceptions import (InvalidParameterException, PropertyServerException, Us
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
                           validate_server_name, validate_url, validate_user_id, )
 from .asset_catalog_omvs import AssetCatalog
-from .automated_curation_omvs import AutomatedCuration
+from .automated_curation import AutomatedCuration
 from .classification_manager_omvs import ClassificationManager
 from .collection_manager import CollectionManager
 from .core_omag_server_config import CoreServerConfig

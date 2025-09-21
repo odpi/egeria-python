@@ -577,8 +577,11 @@ class ExternalReferences(Client2):
             "effectiveTo": "{{$isoTimestamp}}"
           }
         }
+        {{baseURL}}/servers/{{viewServer}}/api/open-metadata/external-references/elements/660bfc21-12b5-4de1-a8f3-63239fbb58a0/external-references/850ffe6c-c551-497b-9b7a-6efcadcf2c88/attach
+        `https://localhost:9443/servers/qs-view-server/api/open-metadata/external-references/elements/660bfc21-12b5-4de1-a8f3-63239fbb58a0/external_references/850ffe6c-c551-497b-9b7a-6efcadcf2c88/attach
         """
-        url = url = (f"{self.command_root}/elements/{element_guid}/external_references/{ext_ref_guid}/attach")
+
+        url = url = (f"{self.command_root}/elements/{element_guid}/external-references/{ext_ref_guid}/attach")
         await self._async_new_relationship_request(url, "ExternalReferenceLinkProperties", body)
         logger.info(f"Linking element {element_guid} to ext. ref.  {ext_ref_guid}")
 

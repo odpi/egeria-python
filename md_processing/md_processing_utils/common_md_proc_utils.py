@@ -36,7 +36,8 @@ from pyegeria._globals import DEBUG_LEVEL
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Basic")
+EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Advanced")
+LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", None)
 console = Console(width=EGERIA_WIDTH)
 
 debug_level = DEBUG_LEVEL
@@ -812,7 +813,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
         logger.info(msg)
 
         if q_name is None and qualified_name is None:
-            q_name = egeria_client.__create_qualified_name__(qn_prefix, element_name, version_identifier=version)
+            q_name = egeria_client.__create_qualified_name__(qn_prefix, element_name, LOCAL_QUALIFIER, version)
             update_element_dictionary(q_name, {'display_name': element_name})
 
         elif qualified_name:
