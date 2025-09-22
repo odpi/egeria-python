@@ -162,7 +162,7 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = None
+            search_string = "Emissions Factors Reference Data"
             body = {
                 "class": "SearchStringRequestBody",
                 "searchString": search_string,
@@ -175,11 +175,11 @@ class TestCollectionManager:
                 "limitResultsByStatus": [],
                 "sequencingOrder": "PROPERTY_ASCENDING",
                 "sequencingProperty": "qualifiedName",
-                "metadataElementTypeName" : "DigitalProduct",
+                "metadataElementTypeName" : "Collection",
                 "metadataElementSubtypeNames": []
                 }
 
-            response = c_client.find_collections(body=body, output_format="DICT", output_format_set="Digital-Products")
+            response = c_client.find_collections(body=body, output_format="JSON", output_format_set="Digital-Products")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")

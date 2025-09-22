@@ -12,8 +12,8 @@ from .md_commands.project_commands import process_link_project_dependency_comman
 
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
+logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=log_format,
            colorize=True)
 
 from rich import print

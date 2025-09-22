@@ -174,16 +174,29 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
 
     display_name = attributes['Display Name'].get('value', None)
+    version = attributes['Version Identifier'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
     output_set = make_format_set_name_from_type(object_type)
+    if object_type in ["Root Collection", "Folder"]:
+        obj = "Collection"
+        if object_type == "Folder":
+            qn_prefix = "Folder"
+        elif object_type == "Root Collection":
+            qn_prefix = "Root"
 
+        qualified_name = egeria_client.__create_qualified_name__(qn_prefix, display_name, LOCAL_QUALIFIER,
+                                                                 version_identifier=version)
+
+    else:
+        obj = object_type
+    print(Markdown(parsed_output['display']))
 
     if directive == "display":
 
@@ -197,17 +210,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     elif directive == "process":
         try:
-            if object_type in ["Root Collection", "Folder"]:
-                obj = "Collection"
-                if object_type == "Folder":
-                    qn_prefix = "Folder"
-                elif object_type == "Root Collection":
-                    qn_prefix = "Root"
 
-                qualified_name = egeria_client.__create_qualified_name__(qn_prefix, element_name, LOCAL_QUALIFIER, version_identifier=version)
-
-            else:
-                obj = object_type
 
             if object_action == "Update":
                 if not exists:

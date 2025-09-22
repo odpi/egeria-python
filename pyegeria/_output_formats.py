@@ -1169,7 +1169,7 @@ generated_format_sets = FormatSetDict({
                                              'metadata_element_types': ['DataDictionary']})),
     'Data-Field-DrE': FormatSet(target_type='Data-Field-DrE', heading='Data-Field-DrE Attributes',
                                 description='Auto-generated format for Data Field (Create).', formats=[
-            Format(types=['ALL'], columns=[Column(name='Display Name', key='display_name'),
+            Format(types=['ALL', 'MD'], columns=[Column(name='Display Name', key='display_name'),
                                            Column(name='Description', key='description'),
                                            Column(name='Category', key='category'),
                                            Column(name='Status', key='element_status'),

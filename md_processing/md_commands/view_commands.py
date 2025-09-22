@@ -230,6 +230,9 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
     print(Markdown(f"# {command}\n"))
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
+    if parsed_output is None:
+        logger.error(f"No valid output found for command '{command}'.")
+        return None
 
     attributes = parsed_output['attributes']
 

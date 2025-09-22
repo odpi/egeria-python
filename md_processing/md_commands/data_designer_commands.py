@@ -453,7 +453,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     in_data_spec_valid = attributes.get('In Data Specification', {}).get('valid', None)
     in_data_spec_exists = attributes.get('In Data Specification', {}).get('exists', None)
     output_set = make_format_set_name_from_type(object_type)
-
+    object_type = "DataSpec"
     print(Markdown(parsed_output['display']))
 
     if directive == "display":
@@ -482,7 +482,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 body = set_update_body(object_type, attributes)
-                body['properties'] = set_element_prop_body("Data Spec", qualified_name, attributes)
+                body['properties'] = set_element_prop_body(object_type, qualified_name, attributes)
 
                 egeria_client.update_collection(guid, body)
                 if status:
