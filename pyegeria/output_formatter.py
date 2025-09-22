@@ -201,7 +201,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
             return '\n'
 
         output = f"## {attribute_title}\n{attribute_value}\n\n"
-    elif output_type == "REPORT":
+    elif output_type in ["REPORT", "MERMAID"]:
         if attribute_title in ['Mermaid Graph', 'Mermaid']:
             output = f"## Mermaid Graph\n\n```mermaid\n{attribute_value}\n```\n"
         elif attribute_value:
@@ -853,11 +853,18 @@ def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> Union[str, List[s
         String or list of strings containing mermaid graph data
     """
     if isinstance(elements, dict):
-        return elements.get('mermaidGraph', '___')
+        mer = elements.get('mermaidGraph', None)
+        if mer:
+            return f"\n```mermaid\n{mer}\n```"
+        else:
+            return "---"
+
 
     result = []
     for element in elements:
-        result.append(element.get('mermaidGraph', '___'))
+        mer = element.get('mermaidGraph', "---")
+        mer_out = f"\n\n```mermaid\n{mer}\n\n```" if mer else "---"
+        result.append(mer_out)
     return result
 
 def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Dict]]:
@@ -908,13 +915,53 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         result.append(body)
     return result
 
-def generate_output(elements: Union[Dict, List[Dict]], 
-                   search_string: str,
-                   entity_type: str,
-                   output_format: str,
-                   extract_properties_func: Callable,
-                   get_additional_props_func: Optional[Callable] = None,
-                   columns_struct: dict = None) -> Union[str, list[dict]]:
+def _extract_default_properties(self, element: dict, columns_struct: dict) -> dict:
+    props = element.get('properties', {}) or {}
+    normalized = {
+        'properties': props,
+        'elementHeader': element.get('elementHeader', {}),
+    }
+    # Common population pipeline
+    col_data = populate_common_columns(element, columns_struct)
+    columns_list = col_data.get('formats', {}).get('columns', [])
+
+    return col_data
+
+
+def _generate_default_output(self, elements: dict | list[dict], search_string: str,
+                             element_type_name: str | None,
+                             output_format: str = 'DICT',
+                             output_format_set: dict | str = None) -> str | list[dict]:
+    entity_type = 'Referenceable'
+    if output_format_set:
+        if isinstance(output_format_set, str):
+            output_formats = select_output_format_set(output_format_set, output_format)
+        elif isinstance(output_format_set, dict):
+            output_formats = get_output_format_type_match(output_format_set, output_format)
+        else:
+            output_formats = None
+    else:
+        output_formats = select_output_format_set(entity_type, output_format)
+    if output_formats is None:
+        output_formats = select_output_format_set('Default', output_format)
+    return generate_output(
+        elements=elements,
+        search_string=search_string,
+        entity_type=entity_type,
+        output_format=output_format,
+        extract_properties_func=_extract_default_properties,
+        get_additional_props_func=None,
+        columns_struct=output_formats,
+    )
+
+
+def generate_output(elements: Union[Dict, List[Dict]],
+               search_string: str,
+               entity_type: str,
+               output_format: str,
+               extract_properties_func: Callable,
+               get_additional_props_func: Optional[Callable] = None,
+               columns_struct: dict = None) -> Union[str, list[dict]]:
     """
     Generate output in the specified format for the given elements.
 

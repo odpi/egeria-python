@@ -40,6 +40,7 @@ EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
+LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", None)
 
 load_commands('commands.json')
 debug_level = DEBUG_LEVEL
@@ -170,17 +171,32 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     exists = parsed_output['exists']
 
     qualified_name = parsed_output.get('qualified_name', None)
+
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
 
     display_name = attributes['Display Name'].get('value', None)
+    version = attributes['Version Identifier'].get('value', None)
     status = attributes.get('Status', {}).get('value', None)
     output_set = make_format_set_name_from_type(object_type)
+    if object_type in ["Root Collection", "Folder"]:
+        obj = "Collection"
+        if object_type == "Folder":
+            qn_prefix = "Folder"
+        elif object_type == "Root Collection":
+            qn_prefix = "Root"
+
+        qualified_name = egeria_client.__create_qualified_name__(qn_prefix, display_name, LOCAL_QUALIFIER,
+                                                                 version_identifier=version)
+
+    else:
+        obj = object_type
+    print(Markdown(parsed_output['display']))
 
     if directive == "display":
 
@@ -194,10 +210,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     elif directive == "process":
         try:
-            if object_type in ["Root Collection", "Folder"]:
-                obj = "Collection"
-            else:
-                obj = object_type
+
 
             if object_action == "Update":
                 if not exists:
@@ -251,6 +264,9 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             'guid': guid, 'display_name': display_name
                             })
                         msg = f"\nCreated Element `{display_name}` with GUID {guid}\n\n___"
+                       # todo - add the source member asset to the product manager
+                       # create_element_from_template
+                       # add this guid to the product collection
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
                     else:
@@ -314,6 +330,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
         return valid
 
     elif directive == "process":
+
         try:
             prop_body = set_product_body(object_type, qualified_name, attributes)
 
@@ -493,6 +510,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     #             return None
     #     else:
     #         return None
+
 
 @logger.catch
 def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
@@ -786,6 +804,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "source": source,
             "notes": notes,
             }
+        label = "Add Member"
         try:
             if object_action in["Detach", "Unlink", "Remove"]:
                 if not exists:
@@ -827,6 +846,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     body = set_rel_request_body(object_type, attributes)
 
                     body['properties'] = prop_body
+                    body = body_slimmer(body)
                     egeria_client.add_to_collection(collection_guid,
                                                         element_guid, body)
                     msg = f"==>Linked `{element_guid}` to collection `{collection_guid}` \n"

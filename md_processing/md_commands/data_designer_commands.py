@@ -453,6 +453,8 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     in_data_spec_valid = attributes.get('In Data Specification', {}).get('valid', None)
     in_data_spec_exists = attributes.get('In Data Specification', {}).get('exists', None)
     output_set = make_format_set_name_from_type(object_type)
+    object_type = "DataSpec"
+    print(Markdown(parsed_output['display']))
 
     if directive == "display":
 
@@ -480,7 +482,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                 body = set_update_body(object_type, attributes)
-                body['properties'] = set_element_prop_body("Data Spec", qualified_name, attributes)
+                body['properties'] = set_element_prop_body(object_type, qualified_name, attributes)
 
                 egeria_client.update_collection(guid, body)
                 if status:
@@ -490,7 +492,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                 })
-                return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
+                return egeria_client.get_collection_by_guid(guid, element_type='Data-Specification-DrE',
                                                             output_format='MD', output_format_set=output_set)
 
             elif object_action == "Create":
@@ -670,6 +672,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
     guid = parsed_output.get('guid', None)
     output_set = make_format_set_name_from_type(object_type)
 
+    print(Markdown(parsed_output['display']))
 
     if directive == "display":
         return None
@@ -731,6 +734,8 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
 
                     update_data_collection_memberships(egeria_client, object_type, data_spec_guid_list, "DataSpec", guid,
                                                        display_name, merge_update)
+                    update_data_collection_memberships(egeria_client, object_type, data_dict_guid_list, "DataSpec",
+                                                       guid,display_name, merge_update)
                     core_props += f"## In Data Dictionary\n\n{data_dict_name_list}\n\n"
                     core_props += f"## In Data Specification\n\n{data_spec_name_list}\n\n"
                     logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
@@ -764,13 +769,13 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
 
                         if in_data_dictionary:
                             logger.info(f"Will add to data dictionary(s) `{in_data_dictionary}`")
-                            result = add_member_to_data_collections(egeria_client, in_data_dictionary, display_name,
-                                                                    guid)
+                            add_member_to_data_collections(egeria_client, data_dict_guid_list,
+                                                                    display_name,guid)
                             core_props += f"## In Data Dictionary\n\n{data_dict_name_list}\n\n"
 
                         if data_spec_guid_list:
-                            result = add_member_to_data_collections(egeria_client, data_spec_guid_list, display_name,
-                                                                    guid)
+                            add_member_to_data_collections(egeria_client, data_spec_guid_list,
+                                                                    display_name, guid)
                             core_props += f"## In Data Specifications\n\n`{data_spec_name_list}`\n\n"
 
                         logger.info(f"Created Element `{display_name}` with GUID {guid}\n\n___")

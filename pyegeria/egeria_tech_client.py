@@ -5,7 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Runtime manager is a view service that supports user interaction with the running platforms.
 
 """
-from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.automated_curation import AutomatedCuration
 from pyegeria.classification_manager_omvs import ClassificationManager
 from pyegeria.data_designer import DataDesigner
 from pyegeria.egeria_cat_client import EgeriaCat

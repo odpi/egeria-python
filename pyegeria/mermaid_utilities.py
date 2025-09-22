@@ -21,7 +21,7 @@ nest_asyncio.apply()
 from IPython.display import HTML, display
 from rich.console import Console
 
-from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.automated_curation import AutomatedCuration
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,

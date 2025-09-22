@@ -17,11 +17,13 @@ import json
 import time
 from datetime import datetime
 
+from pydantic import ValidationError
 from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import INTEGRATION_GUIDS, AutomatedCuration
+from pyegeria import INTEGRATION_GUIDS, AutomatedCuration, PyegeriaException, print_basic_exception, \
+    print_validation_error, PyegeriaAPIException
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -105,10 +107,10 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            path_name = "/deployments"
-            folder_name = "deployments"
+            path_name = "/deployments/exchange"
+            folder_name = "exchange"
             file_system = None
-            description = "Folder for egeria container"
+            description = "Folder for data exchange"
             version = "0.1"
             start_time = time.perf_counter()
             response = a_client.create_folder_element_from_template(
@@ -126,11 +128,12 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
             assert False, "Invalid request"
 
         finally:
@@ -172,7 +175,8 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def test_create_postgres_server_element_from_template(self):
+
+    def test_create_kafka_element_from_template(self):
         try:
             a_client = AutomatedCuration(
                 self.good_view_server_1,
@@ -183,13 +187,75 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.create_postgres_server_element_from_template(
-                "cray-postgres-5432",
-                "cray.local",
-                "5432",
-                db_user="postgres",
-                db_pwd="notingres",
+            response = a_client.create_kafka_server_element_from_template(
+                "pdr-kafka5", "egeria.pdr-associates.com", "9093"
             )
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                pprint(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                pprint("created Kafka Server with GUID: " + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
+    def test_create_csv_data_file_element_from_template(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+
+            # response = a_client.create_csv_data_file_element_from_template(
+            #     "raw emission factor data.csv",
+            #     "CSV",
+            #     "/deployments/loading-bay/Sustainability Files/raw emission factor data.csv",
+            #     "2022-6-digit",
+            #     "UTF-8",
+            #     "csv",
+            #     "",
+            #     "NAICS was originally developed to provide a consistent framework for the collection, analysis, and dissemination of industrial statistics used by government policy analysts, by academics and researchers, by the business community, and by the public. Revisions for 2022 were made to account for our rapidly changing economies"
+            # )
+            #
+            # response = a_client.create_csv_data_file_element_from_template(
+            #     "raw emission factor data.csv",
+            #     "CSV",
+            #     "/loading-bay/Sustainability Files/raw emission factor data.csv",
+            #     None,
+            #     "UTF-8",
+            #     "csv",
+            #     None,
+            #     "Raw emissions factor data for deriving standard emissions from different fuels and sources"
+            # )
+            response = a_client.create_csv_data_file_element_from_template(
+                "NAICS-6-digit_2017_Codes.csv",
+                "CSV",
+                "/loading-bay/Sustainability Files/NAICS-6-digit_2017_Codes.csv",
+                "2022",
+                "UTF-8",
+                "csv",
+                "",
+                "NAICS was originally developed to provide a consistent framework for the collection, analysis, and dissemination of industrial statistics used by government policy analysts, by academics and researchers, by the business community, and by the public. Revisions for 2022 were made to account for our rapidly changing economies"
+            )
+
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -202,13 +268,12 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaAPIException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             a_client.close_session()
 
@@ -293,15 +358,19 @@ class TestAutomatedCuration:
     def test_get_engine_actions(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
+            body = {
+                "class": "GetRequestBody"
+
+            }
 
             start_time = time.perf_counter()
-            response = a_client.get_engine_actions()
+            response = a_client.get_engine_actions(body=body)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
@@ -315,11 +384,12 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
             assert False, "Invalid request"
 
         finally:
@@ -920,7 +990,7 @@ class TestAutomatedCuration:
     def test_get_all_technology_types(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -941,11 +1011,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -954,7 +1022,7 @@ class TestAutomatedCuration:
     def test_find_technology_types(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -963,7 +1031,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "Unity", starts_with=True, ignore_case=True
+                "CSV", starts_with=True, ignore_case=True
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -976,11 +1044,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -989,16 +1055,16 @@ class TestAutomatedCuration:
     def test_get_technology_types_for_open_metadata_type(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
-                user_id=self.good_user_2,
+                user_id="peterprofile",
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
             response = a_client.get_tech_types_for_open_metadata_type(
-                "SoftwareServer", "PostgreSQL"
+                "SoftwareServer", "CSV File"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1012,11 +1078,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -1033,7 +1097,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("File System")
+            response = a_client.get_technology_type_detail("CSV Data File", True)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -1056,6 +1120,39 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
+    def test_get_template_guid_for_technology_type(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            response = a_client.get_template_guid_for_technology_type("PostgreSQL Server",)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
     #
     #   Governance Actions
     #

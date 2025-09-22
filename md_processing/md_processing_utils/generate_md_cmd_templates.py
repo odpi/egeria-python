@@ -95,7 +95,7 @@ def main():
             attributes = values['Attributes']
             for attribute in attributes:
                 for key, value in attribute.items():
-                    if value.get('level', "") not in ["Basic"]:
+                    if value.get('level', "") not in ["Basic", "Advanced"]:
                         continue
                     user_specified = value.get('user_specified', 'true') in ["true", "True"]
 

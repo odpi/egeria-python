@@ -123,6 +123,7 @@ COMMON_COLUMNS = [
     Column(name='Status', key='status'),
 ]
 
+
 COMMON_METADATA_COLUMNS = [
     Column(name='GUID', key='guid', format=True),
     Column(name='Type Name', key='type_name'),
@@ -150,6 +151,12 @@ REFERNCEABLE_COLUMNS = COMMON_COLUMNS + [
 COMMON_FORMATS_ALL = Format(
     types=["ALL"],
     columns=COMMON_COLUMNS,
+)
+
+
+MERMAID_FORMAT = Format(
+    types = ["MERMAID"],
+    columns = [Column(name='Mermaid', key='mermaid')]
 )
 
 EXT_REF_COLUMNS = COMMON_COLUMNS + [
@@ -466,7 +473,7 @@ base_output_format_sets = FormatSetDict({
         aliases=["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection",
                  "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
         annotations=COMMON_ANNOTATIONS,
-        formats=[COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],  # Reusing common formats
+        formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],  # Reusing common formats
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
@@ -523,7 +530,38 @@ base_output_format_sets = FormatSetDict({
             spec_params={"output_format": "DICT"},
         )
     ),
-    "Digital Products": FormatSet(
+    "Digital-Product-Catalog": FormatSet(
+        target_type="DigitalProductCatalog",
+        heading="Catalogs for Digital Products",
+        description="Attributes generic to all Digital Product Catalogs..",
+        aliases=["Product Catalog", "DataProductCatalog"],
+        annotations={"Wikilinks": ["[[Digital Products]]"]},
+        formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                columns=COLLECTIONS_MEMBERS_COLUMNS
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                columns=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Mermaid", key='mermaid'),
+                ]),
+            Format(
+                types=["MERMAID"],
+                columns= [
+                    Column(name="Mermaid", key='mermaid'),
+                ])
+        ],
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_PARAMS,
+            spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
+        ),
+    ),
+
+    "Digital-Products": FormatSet(
         target_type="DigitalProduct",
         heading="Digital Product Information",
         description="Attributes useful to Digital Products.",
@@ -531,7 +569,7 @@ base_output_format_sets = FormatSetDict({
         annotations={},
         formats=[
             Format(
-                types=["REPORT", "DICT", "TABLE", "LIST"],
+                types=["FORM", "DICT", "TABLE", "LIST"],
                 columns=COMMON_COLUMNS + [
                     Column(name="Status", key='status'),
                     Column(name='Product Name', key='product_name'),
@@ -543,6 +581,27 @@ base_output_format_sets = FormatSetDict({
                     Column(name='Members', key='members', format=True),
                     Column(name='Uses Products', key='uses_digital_products'),
                     Column(name='Used by Products', key='used_by_digital_products'),
+                    Column(name='Product Manager', key='assigned_actors'),
+                    Column(name='License', key='governed_by'),
+                    Column(name='Solution Blueprint', key='solution_designs'),
+                ]),
+            Format(
+                types=[ "REPORT", "HTML"],
+                columns=COMMON_COLUMNS + [
+                    Column(name="Status", key='status'),
+                    Column(name='Product Name', key='product_name'),
+                    Column(name='Identifier', key='identifier'),
+                    Column(name='Maturity', key='maturity'),
+                    Column(name='Service Life', key='service_life'),
+                    Column(name='Next Version', key='next_version'),
+                    Column(name='Withdraw Date', key='withdraw_date'),
+                    Column(name='Members', key='members', format=True),
+                    Column(name='Uses Products', key='uses_digital_products'),
+                    Column(name='Used by Products', key='used_by_digital_products'),
+                    Column(name='Product Manager', key='assigned_actors'),
+                    Column(name='License', key='governed_by'),
+                    Column(name='Solution Blueprint', key='solution_designs'),
+                    Column(name="Mermaid",key = "mermaid")
                 ],
             )
         ],
@@ -630,11 +689,20 @@ base_output_format_sets = FormatSetDict({
         description="Attributes useful to Data Structures.",
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
-        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS +
+        formats=[Format(types=["FORM", "DICT", "LIST"], columns=COMMON_COLUMNS +
                                                [
-                                                   Column(name="Member Of", key='member_of_collections')
+                                                   Column(name="In Data Specifications", key='in_data_spec'),
+                                                   Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                   Column(name="Member Data Fields", key='member_data_fields')                                               ]
+                        ),  # Reusing common formats and columns
+                Format(types=["REPORT"], columns=COMMON_COLUMNS +
+                                               [
+                                                   Column(name="In Data Specifications", key='in_data_spec'),
+                                                   Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                   Column(name="Member Data Fields", key='member_data_fields'),
+                                                   Column(name="Mermaid", key='mermaid')
                                                ]
-                        )],  # Reusing common formats and columns
+                        )],
         action=ActionParameter(
             function="DataDesigner.find_data_structures",
             required_params=["search_string"],
@@ -642,13 +710,24 @@ base_output_format_sets = FormatSetDict({
         )
     ),
 
-    "DataField": FormatSet(
+    "Data Fields": FormatSet(
         target_type="Data Field",
         heading="Data Structure Information",
         description="Attributes useful to Data Structures.",
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
-        formats=[Format(types=["ALL"], columns=COMMON_COLUMNS)],  # Reusing common formats and columns
+        formats=[Format(types=["MD", "FORM", "DICT"], columns=COMMON_COLUMNS + [
+                                                        Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                        Column(name="In Data Structure", key='in_data_structure')]),
+                 Format(types=["REPORT"], columns=COMMON_COLUMNS +
+                                                  [
+                                                      Column(name="In Data Structure", key='in_data_structure'),
+                                                      Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                      Column(name="Member Data Fields", key='member_data_fields'),
+                                                      Column(name="Mermaid", key='mermaid')
+                                                  ]
+                        )],
+
         action=ActionParameter(
             function="DataDesigner.find_data_fields",
             required_params=["search_string"],
@@ -744,6 +823,7 @@ base_output_format_sets = FormatSetDict({
                 Column(name='Namespace', key='namespace'),
                 Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
                 Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
+                Column(name='Data Fields', key='containsDataFields'),
                 Column(name='Glossary Term', key='glossary_term'),
             ]),
             Format(types=["DICT", "MD"], columns=COMMON_COLUMNS + [
@@ -1089,7 +1169,7 @@ generated_format_sets = FormatSetDict({
                                              'metadata_element_types': ['DataDictionary']})),
     'Data-Field-DrE': FormatSet(target_type='Data-Field-DrE', heading='Data-Field-DrE Attributes',
                                 description='Auto-generated format for Data Field (Create).', formats=[
-            Format(types=['ALL'], columns=[Column(name='Display Name', key='display_name'),
+            Format(types=['ALL', 'MD'], columns=[Column(name='Display Name', key='display_name'),
                                            Column(name='Description', key='description'),
                                            Column(name='Category', key='category'),
                                            Column(name='Status', key='element_status'),
@@ -1221,7 +1301,7 @@ generated_format_sets = FormatSetDict({
                                                             required_params=['search_string'],
                                                             optional_params=['page_size', 'start_from', 'starts_with',
                                                                              'ends_with', 'ignore_case'], spec_params={
-                                             'metadata_element_types': ['DigitalProduct']})),
+                                             'metadata_element_types': ['DigitalProductCatalog', 'DigitalProductCatalogFolder']})),
     'Digital-Subscription-DrE': FormatSet(target_type='Digital-Subscription-DrE',
                                           heading='Digital-Subscription-DrE Attributes',
                                           description='Auto-generated format for Digital Subscription (Create).',

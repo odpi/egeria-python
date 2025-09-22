@@ -245,7 +245,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="DICT", output_format_set = columns_struct)
+            response = m_client.find_all_data_structures(output_format="REPORT", output_format_set = "Data Structures")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -276,7 +276,7 @@ class TestDataDesigner:
                     {'name': 'Super Category', 'key': 'category'},
                     {'name': 'My Description', 'key': 'description', 'format': True},
                     {'name': "Classifications", 'key': 'classifications'},
-                    # {'name': 'Members', 'key': 'members', 'format': True},
+                    {'name': 'Members', 'key': 'containsDataFields', 'format': True},
                     {'name': 'CreatedBy Meow', 'key': 'created_by'}
                     ]}
                 ],
@@ -288,8 +288,8 @@ class TestDataDesigner:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             search_string = "*"
-            response = m_client.find_data_structures(search_string, output_format="REPORT",
-                                                     output_format_set="Mandy-DataStruct")
+            response = m_client.find_data_structures(search_string, output_format="DICT",
+                                                     output_format_set=output_format_set)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -462,7 +462,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="DICT")
+            response = m_client.find_all_data_fields(output_format="REPORT", output_format_set="DataFields")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

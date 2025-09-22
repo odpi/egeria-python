@@ -5567,6 +5567,39 @@ class CollectionManager(Client2):
                 uses_digital_products_list += f"{prod["relatedElement"]["properties"]["qualifiedName"]}, "
             added_props["uses_digital_products"] = uses_digital_products_list[:-2]
 
+        resources = element.get("resourceList", "")
+        if isinstance(resources, (list | dict)):
+            resource_list = ""
+            for resource in resources:
+                resource_list += f"{resource.get('properties',{}).get('qualifiedName', None)}, "
+            added_props["resource_list"] = resource_list[:-2] if resource_list else ""
+
+        actors = element.get("assignedActors", "")
+        if isinstance(actors, (list | dict)):
+            actor_list = ""
+            for actor in actors:
+                actor_type = actor['relatedElement']['elementHeader']['type']['typeName']
+                actor_qname = actor['relatedElement']['properties']['qualifiedName']
+                actor_list += actor_qname
+            added_props["actor_list"] = actor_list[:-2] if actor_list else ""
+
+        governed_by = element.get("governedBy", "")
+        if isinstance(governed_by, (list | dict)):
+            governed_by_list = ""
+            for gov in governed_by:
+                license_type = gov['relatedElement']['properties'].get('typeName',"")
+                license_type_qname = gov['relatedElement']['properties'].get('qualifiedName','')
+                governed_by_list += license_type_qname
+            added_props["governed_list"] = governed_by_list[:-2] if governed_by_list else ""
+
+        solution_designs = element.get("solutionDesigns", "")
+        if isinstance(solution_designs, (list | dict)):
+            solution_design_list = ""
+            for design in solution_designs:
+                solution_design_qname = design['relatedElement']['properties'].get('qualifiedName', "")
+                solution_design_list += solution_design_qname
+            added_props["solution_design_list"] = solution_design_list[:-2] if solution_design_list else ""
+
         return added_props
 
     def _extract_agreement_properties(self, element: dict, guid: str, output_format: str) -> dict:

@@ -652,7 +652,7 @@ class ReferenceDataManager(Client2):
         """
 
         url = f"{self.ref_data_command_base}/valid-value-definitions/from-template"
-        return await self._async_create_element_from_template(url, body)
+        return await self._async_create_elem_from_template(url, body)
 
     @dynamic_catch
     def create_valid_value_definition_from_template(

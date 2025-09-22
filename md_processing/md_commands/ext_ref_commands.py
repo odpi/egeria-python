@@ -223,11 +223,11 @@ def process_link_to_external_reference_command(egeria_client: EgeriaTech, txt: s
     attributes = parsed_output['attributes']
 
     element_guid = attributes.get('Element Name', {}).get('guid', None)
-    external_reference_guid = attributes.get('Media Reference', {}).get('guid', None)
+    external_reference_guid = attributes.get('External Reference', {}).get('guid', None)
 
     valid = parsed_output['valid']
     exists = element_guid is not None and external_reference_guid is not None
-    prop_body = set_rel_prop_body("MediaReference", attributes)
+    prop_body = set_rel_prop_body("ExternalReferenceLink", attributes)
 
     if directive == "display":
 
@@ -276,7 +276,7 @@ def process_link_to_external_reference_command(egeria_client: EgeriaTech, txt: s
                     return
 
                 else:
-                    body = set_rel_request_body_for_type("CitedDocumentLink", attributes)
+                    body = set_rel_request_body_for_type("ExternalReferencesLink", attributes)
                     body['properties'] = prop_body
 
                     egeria_client.link_external_reference(element_guid,

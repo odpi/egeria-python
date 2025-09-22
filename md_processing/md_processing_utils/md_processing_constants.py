@@ -79,7 +79,7 @@ SIMPLE_BASE_COLLECTIONS: set = {"Collection", "Home Collection", "Digital Produc
                                 "Root Collection", "Folder", "Context Event Collection", "Name Space Collection",
                                 # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",
                                 # "Data Dictionaries", "Data Dictionaries",
-                                "Event Set Collection", "Naming Standard Ruleset",
+                                "Event Set Collection", "Naming Standard Ruleset", "Digital Product Catalog"
                                 }
 LIST_COMMANDS = {"List Collections", "View Collections", "List Agreements", "View Agreements",
                  "List Digital Products", "View Digital Products", "List Products", "View Products",
@@ -212,7 +212,7 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Link Subscriber->Subscription", "Detach Subscriber->Subscription",
                 "Link Collection->Resource", "Attach Collection->Resource",
                 "Unlink Collection->Resource", "Detach Collection->Resource",
-                "Add Member to Collection", "Add Member", "Member->Collection", 'Add Member', 'Add to Folder',
+                "Add Member to Collection", "Add Member", "Add Member->Collection", 'Add Member', 'Add to Folder',
                 "Remove Member from Collection", "Remove Member->Collection", ' Remove Member', 'Remove from Folder',
                 "View Governance Definitions", "View Gov Definitions",
                 "List Governance Definitions", "List Gov Definitions",

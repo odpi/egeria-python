@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 from requests import Response
-from pyegeria.automated_curation_omvs import AutomatedCuration
+from pyegeria.automated_curation import AutomatedCuration
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
 
@@ -49,7 +49,7 @@ class ActionAuthor(AutomatedCuration):
         )
         self.action_command_root = f"{platform_url}/servers/"
 
-    async def _async_create_element_from_template(
+    async def _async_create_elem_from_template(
         self, body: str, server: str = None
     ) -> str:
         """Create a metadata element from a template.  Async version.

@@ -323,7 +323,7 @@ class TemplateRequestBody(PyegeriaModel):
     parent_at_end_1: bool | None = True
     template_guid: str
     replacement_properties: dict[str, Any] = {}
-    placeholder_properties: dict[str, Any] = {}
+    placeholder_property_values: dict[str, Any] = {}
     deep_copy: bool | None = False
     effective_from: datetime | None = None
     effective_to: datetime | None = None
