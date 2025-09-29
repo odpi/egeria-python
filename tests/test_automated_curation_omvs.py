@@ -81,7 +81,7 @@ class TestAutomatedCuration:
                 },
             }
             start_time = time.perf_counter()
-            response = a_client.create_element_from_template(body)
+            response = a_client.create_elem_from_template(body)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print("Guid of created element is:" + str(response))
@@ -235,26 +235,26 @@ class TestAutomatedCuration:
             #     "NAICS was originally developed to provide a consistent framework for the collection, analysis, and dissemination of industrial statistics used by government policy analysts, by academics and researchers, by the business community, and by the public. Revisions for 2022 were made to account for our rapidly changing economies"
             # )
             #
-            # response = a_client.create_csv_data_file_element_from_template(
-            #     "raw emission factor data.csv",
-            #     "CSV",
-            #     "/loading-bay/Sustainability Files/raw emission factor data.csv",
-            #     None,
-            #     "UTF-8",
-            #     "csv",
-            #     None,
-            #     "Raw emissions factor data for deriving standard emissions from different fuels and sources"
-            # )
             response = a_client.create_csv_data_file_element_from_template(
-                "NAICS-6-digit_2017_Codes.csv",
+                "raw emission factor data.csv",
                 "CSV",
-                "/loading-bay/Sustainability Files/NAICS-6-digit_2017_Codes.csv",
-                "2022",
+                "/loading-bay/Sustainability Files/raw emission factor data.csv",
+                None,
                 "UTF-8",
                 "csv",
-                "",
-                "NAICS was originally developed to provide a consistent framework for the collection, analysis, and dissemination of industrial statistics used by government policy analysts, by academics and researchers, by the business community, and by the public. Revisions for 2022 were made to account for our rapidly changing economies"
+                None,
+                "Raw emissions factor data for deriving standard emissions from different fuels and sources"
             )
+            # response = a_client.create_csv_data_file_element_from_template(
+            #     "NAICS-6-digit_2022_Codes.csv",
+            #     "CSV",
+            #     "/loading-bay/Sustainability Files/NAICS-6-digit_2022_Codes.csv",
+            #     "2022",
+            #     "UTF-8",
+            #     "csv",
+            #     "",
+            #     "NAICS was originally developed to provide a consistent framework for the collection, analysis, and dissemination of industrial statistics used by government policy analysts, by academics and researchers, by the business community, and by the public. Revisions for 2022 were made to account for our rapidly changing economies"
+            # )
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")

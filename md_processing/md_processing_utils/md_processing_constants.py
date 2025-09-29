@@ -242,7 +242,8 @@ command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term
                 "Link Governance Drivers", "Detach Governance Drivers",
                 "Link Governance Policies", "Detach Governance Policies",
                 "Link Governance Controls", "Detach Governance Controls",
-                "Link Governed By", "Attach Governed By", "Detach Governed By"
+                "Link Governed By", "Attach Governed By", "Detach Governed By",
+                "Create CSV File"
 
                 ]
 command_list.extend(LIST_COMMANDS)

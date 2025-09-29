@@ -1081,7 +1081,7 @@ class Client2:
         logger.info(response.json())
         return response.json().get("guid", "NO_GUID_RETURNED")
 
-    async def _async_create_elem_from_template(self, url: str, body: dict | TemplateRequestBody = None) -> str:
+    async def _async_create_element_from_template(self, url: str, body: dict | TemplateRequestBody = None) -> str:
         validated_body = self.validate_new_element_from_template_request(body)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)

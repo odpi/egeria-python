@@ -162,12 +162,13 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = "Emissions Factors Reference Data"
+            search_string = "NAICS"
             body = {
                 "class": "SearchStringRequestBody",
                 "searchString": search_string,
                 # "includeOnlyClassifiedElements" : element_type_name,
                 "ignoreCase": True,
+                "startsWith": True,
                 "asOfTime": None,
                 "effectiveTime": None,
                 "forLineage": False,
@@ -175,7 +176,7 @@ class TestCollectionManager:
                 "limitResultsByStatus": [],
                 "sequencingOrder": "PROPERTY_ASCENDING",
                 "sequencingProperty": "qualifiedName",
-                "metadataElementTypeName" : "Collection",
+                "metadataElementTypeName" : "DigitalProduct",
                 "metadataElementSubtypeNames": []
                 }
 

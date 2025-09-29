@@ -16,6 +16,7 @@ from md_processing.md_commands.product_manager_commands import (process_digital_
                                                                 process_product_dependency_command,
                                                                 process_attach_collection_command,
                                                                 process_attach_subscriber_command,
+                                                                process_csv_element_upsert_command,
                                                                )
 
 from md_processing.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
@@ -41,6 +42,7 @@ from md_processing.md_commands.ext_ref_commands import (process_external_referen
                                                         process_link_to_media_reference_command,
                                                         process_link_to_external_reference_command,
                                                         process_link_to_cited_document_command,
+
                                                         )
 
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility

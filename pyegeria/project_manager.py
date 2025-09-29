@@ -915,7 +915,7 @@ class ProjectManager(Client2):
         """
 
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/from-template"
-        return await self._async_create_elem_from_template(url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_project_from_template(

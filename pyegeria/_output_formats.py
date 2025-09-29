@@ -2179,15 +2179,16 @@ output_format_sets = combine_format_set_dicts(base_output_format_sets, generated
 
 def select_output_format_set(kind: str, output_type: str) -> dict | None:
     """
-    This function retrieves the appropriate output set configuration dictionary based on the `kind` and `output_type`.
-    If output_type = `ANY` that indicates this is just a test to see of the output format set exists.
+    Retrieve the appropriate output set configuration dictionary based on `kind` and `output_type`.
 
-    :param kind: The kind of output set (e.g., "Referenceable", "Collections").
-    :param output_type: The desired output format type (e.g., "DICT", "LIST", "REPORT").
+    Intent of special output_type values:
+    - "ANY": Discovery-only. Resolve the FormatSet (including aliases), action, and metadata, but DO NOT
+      resolve a concrete format. Callers typically use this to check existence or to later pick a specific type
+      via get_output_format_type_match(...).
+
+    :param kind: The kind of output set (e.g., "Referenceable", "Collections"). Aliases are supported.
+    :param output_type: The desired output format type (e.g., "DICT", "LIST", "REPORT"), or "ANY".
     :return: The matched output set dictionary or None if no match is found.
-
-    Returns:
-        dict | None: 
     """
     # Normalize the output type to uppercase for consistency
     output_type = output_type.upper()
@@ -2254,6 +2255,27 @@ def output_format_set_list() -> list[str]:
         list[str]: A list of format set names
     """
     return list(output_format_sets.keys())
+
+
+def list_mcp_format_sets() -> list[str]:
+    """
+    Returns only those format set names that can be safely exposed as MCP tools.
+    A format set is eligible if it has a DICT format or an ALL catch-all format.
+    
+    This allows MCP to prefer machine-consumable outputs and avoid side effects.
+    """
+    eligible: list[str] = []
+    for name, fs in output_format_sets.items():
+        try:
+            # fs is a FormatSet
+            has_dict = any("DICT" in f.types for f in fs.formats)
+            has_all = any("ALL" in f.types for f in fs.formats)
+            if has_dict or has_all:
+                eligible.append(name)
+        except Exception:
+            # Defensive: skip malformed entries
+            continue
+    return sorted(eligible)
 
 
 def get_output_format_set_heading(format_set: str) -> str:

@@ -280,7 +280,7 @@ class DataDesigner(Client2):
 
         """
         url = f"{self.data_designer_root}/data-structures/from-template"
-        return await self._async_create_elem_from_template(url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_data_structure_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -1696,7 +1696,7 @@ class DataDesigner(Client2):
 
         url = f"{base_path(self, self.view_server)}/data-fields/from-template"
 
-        return await self._async_create_elem_from_template(url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
@@ -2945,7 +2945,7 @@ class DataDesigner(Client2):
         """
 
         url = f"{base_path(self, self.view_server)}/data-classes/from-template"
-        return await self._async_create_elem_from_template(url, body)
+        return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
     def create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:

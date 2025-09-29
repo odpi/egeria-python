@@ -23,7 +23,7 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_provenance_command, get_current_datetime_string,
                            process_project_upsert_command, command_list, process_blueprint_upsert_command,
                            process_solution_component_upsert_command, process_component_link_unlink_command,
-
+                           process_csv_element_upsert_command,
                            process_link_term_term_relationship_command,
                            process_information_supply_chain_upsert_command,
                            process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
@@ -202,6 +202,9 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                                        "Create Product Subscription", "Update Agreement", "Update Data Sharing Agreement",
                                        "Update Digital Subscription", "Update Product Subscription"]:
                 result = process_agreement_upsert_command(client, current_block, directive)
+            elif potential_command in ["Create CSV File"]:
+                result = process_csv_element_upsert_command(client, current_block, directive)
+
             elif potential_command in SIMPLE_COLLECTIONS:
                 result = process_collection_upsert_command(client, current_block, directive)
             elif potential_command in GOV_COM_LIST:
@@ -296,7 +299,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
         process_current_block(current_block)
 
     # Join the final output list into a single string
-    final_output = "\n".join(final_output)
+    final_output = "\n".join(final_output) if isinstance(final_output, list) else final_output
 
     try:
         if updated:

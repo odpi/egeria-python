@@ -54,7 +54,7 @@ class AutomatedCuration(Client2):
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
-    async def _async_create_element_from_template(self, body: dict) -> str:
+    async def _async_create_elem_from_template(self, body: dict) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
@@ -99,9 +99,9 @@ class AutomatedCuration(Client2):
         """
 
         url = f"{self.curation_command_root}/catalog-templates/new-element"
-        return await self._async_create_elem_from_template(url, body)
+        return await self._async_create_element_from_template(url, body)
 
-    def create_element_from_template(self, body: dict) -> str:
+    def create_elem_from_template(self, body: dict) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
@@ -147,9 +147,10 @@ class AutomatedCuration(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_element_from_template(body)
+            self._async_create_elem_from_template(body)
         )
         return response
+
 
     async def _async_create_kafka_server_element_from_template(
             self,
@@ -194,7 +195,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        return await self._async_create_element_from_template(body_s)
+        return await self._async_create_elem_from_template(body_s)
 
     def create_kafka_server_element_from_template(
             self,
@@ -289,7 +290,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        return await self._async_create_element_from_template(body_s)
+        return await self._async_create_elem_from_template(body_s)
 
     def create_csv_data_file_element_from_template(
             self,
@@ -331,6 +332,112 @@ class AutomatedCuration(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_create_csv_data_file_element_from_template(
+                file_name, file_type, file_path_name, version_identifier,
+                file_encoding, file_extension, file_system_name, description
+            )
+        )
+        return response
+
+    async def _async_get_create_csv_data_file_element_from_template(
+            self,
+            file_name: str,
+            file_type: str,
+            file_path_name: str,
+            version_identifier: str,
+            file_encoding: str = "UTF-8",
+            file_extension: str = "csv",
+            file_system_name: str = None,
+            description: str = None,
+    ) -> str:
+        """Create a CSV file element from a template if it doesn't exist. If it does exist,
+           the guid will be returned. Async version.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the Kafka server.
+        file_type : str
+            The host name of the Kafka server.
+        file_path_name : str
+            The port number of the Kafka server.
+        version_identifier : str
+            The version identifier of the CSV file..
+        file_encoding: str, opt, default UTF-8
+            The encoding of the CSV file.
+        file_extension: str, opt, default is CSV
+            File extension of the CSV file.
+        file_system_name: str, opt
+            Name of the file system the CSV file is hosted on.
+        description: str, opt
+            A description of the CSV file..
+
+
+        Returns
+        -------
+        str
+            The GUID of the CSV File element.
+        """
+        template_guid = await self._async_get_template_guid_for_technology_type("CSV Data File")
+        body = {
+            "class": "TemplateRequestBody",
+            "templateGUID": template_guid,
+            "isOwnAnchor": True,
+            "allowRetrieve" : True,
+            "placeholderPropertyValues": {
+                "fileName": file_name,
+                "fileType": file_type,
+                "filePathName": file_path_name,
+                "versionIdentifier": version_identifier,
+                "fileEncoding": file_encoding,
+                "fileExtension": file_extension,
+                "fileSystemName": file_system_name,
+                "description": description
+            },
+        }
+        body_s = body_slimmer(body)
+        return await self._async_create_elem_from_template(body_s)
+
+    def get_create_csv_data_file_element_from_template(
+            self,
+            file_name: str,
+            file_type: str,
+            file_path_name: str,
+            version_identifier: str,
+            file_encoding: str = "UTF-8",
+            file_extension: str = "csv",
+            file_system_name: str = None,
+            description: str = None,
+    ) -> str:
+        """Create a CSV file element from a template if it doesn't exist. If it does exist,
+           the guid will be returned.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the Kafka server.
+        file_type : str
+            The host name of the Kafka server.
+        file_path_name : str
+            The port number of the Kafka server.
+        version_identifier : str
+            The version identifier of the CSV file..
+        file_encoding: str, opt, default UTF-8
+            The encoding of the CSV file.
+        file_extension: str, opt, default is CSV
+            File extension of the CSV file.
+        file_system_name: str, opt
+            Name of the file system the CSV file is hosted on.
+        description: str, opt
+            A description of the CSV file..
+
+        Returns
+        -------
+        str
+            The GUID of the CSV File element.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_create_csv_data_file_element_from_template(
                 file_name, file_type, file_path_name, version_identifier,
                 file_encoding, file_extension, file_system_name, description
             )
@@ -391,7 +498,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        return await self._async_create_element_from_template(body_s)
+        return await self._async_create_elem_from_template(body_s)
 
     def create_postgres_server_element_from_template(
             self,
@@ -490,7 +597,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_postgres_database_element_from_template(
@@ -592,7 +699,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_folder_element_from_template(
@@ -687,7 +794,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_server_element_from_template(
@@ -776,7 +883,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_catalog_element_from_template(
@@ -866,7 +973,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_schema_element_from_template(
@@ -977,7 +1084,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_table_element_from_template(
@@ -1097,7 +1204,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_function_element_from_template(
@@ -1214,7 +1321,7 @@ class AutomatedCuration(Client2):
             },
         }
         body_s = body_slimmer(body)
-        response = await self._async_create_element_from_template(body_s)
+        response = await self._async_create_elem_from_template(body_s)
         return str(response)
 
     def create_uc_volume_element_from_template(

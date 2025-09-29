@@ -265,7 +265,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             })
                         msg = f"\nCreated Element `{display_name}` with GUID {guid}\n\n___"
                        # todo - add the source member asset to the product manager
-                       # create_element_from_template
+                       # create_elem_from_template
                        # add this guid to the product collection
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
@@ -630,6 +630,106 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return None
 
 
+
+@logger.catch
+def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a create CSV element command by extracting key attributes and calling the pyegeria
+    api that creates a csv element from template.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting glossary-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+
+    parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
+    if not parsed_output:
+        logger.error(f"No output for `{object_action}`")
+        return None
+
+    valid = parsed_output['valid']
+    exists = parsed_output['exists']
+
+    qualified_name = parsed_output.get('qualified_name', None)
+    guid = parsed_output.get('guid', None)
+
+    print(Markdown(parsed_output['display']))
+
+    logger.debug(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+
+    display_name = attributes['Display Name'].get('value', None)
+    status = attributes.get('Status', {}).get('value', None)
+    output_set = make_format_set_name_from_type(object_type)
+
+    file_name = attributes.get('File Name', {}).get('value', None)
+    file_type = attributes.get('File Type', {}).get('value', None)
+    file_path = attributes.get('File Path', {}).get('value', None)
+    file_encoding = attributes.get('File Encoding', {}).get('value', 'UTF-8')
+    file_extension = attributes.get('File Extension', {}).get('value', 'csv')
+    file_system_name = attributes.get('File System Name', {}).get('value', None)
+    version_identifier = attributes.get('Version Identifier', {}).get('value', None)
+    description = attributes.get('Description', {}).get('value', None)
+
+    if directive == "display":
+
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+        return valid
+
+    elif directive == "process":
+        try:
+
+            if object_action == "Create":
+                if valid is False and exists:
+                    msg = (f"  Element `{display_name}` already exists and result document updated changing "
+                           f"`Create` to `Update` in processed output\n\n___")
+                    logger.error(msg)
+                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
+
+                else:
+                    guid = egeria_client.get_create_csv_data_file_element_from_template(
+                       file_name, file_type, file_path, version_identifier, file_encoding, file_extension, file_system_name, description)
+
+                    if guid:
+                        update_element_dictionary(qualified_name, {
+                            'guid': guid, 'display_name': display_name
+                            })
+                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        logger.success(msg)
+                        output_md = (f"# Create CSV File\n\n## Display Name:\n\n {display_name}\n\n"
+                                    f"## File Type:\n\n {file_type}\n\n## File Path:\n\n {file_path}\n\n"
+                                    f"## File Encoding:\n\n {file_encoding}\n\n## File Extension:\n\n {file_extension}\n\n"
+                                    f"## File System Name:\n\n {file_system_name}\n\n## Version Identifier:\n\n {version_identifier}\n\n"
+                                    f"## Description:\n\n {description}\n\n"
+                                    f"## Qualified Name\n\n {qualified_name}\n\n"
+                                    f"## GUID:\n\n {guid}\n\n"
+                                     )
+                        return output_md
+                    else:
+                        msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                        logger.error(msg)
+                        return None
+            else:
+                logger.error(f"Currently only the Create action is supported for this command: {command}")
+
+        except PyegeriaException as e:
+            logger.error(f"Pyegeria error performing {command}: {e}")
+            print_exception_table(e)
+            return None
+        except Exception as e:
+            logger.error(f"Error performing {command}: {e}")
+    else:
+        logger.error(f"Invalid directive `{directive}`")
+        return None
 
 
 
