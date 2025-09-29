@@ -49,7 +49,7 @@ class ActionAuthor(AutomatedCuration):
         )
         self.action_command_root = f"{platform_url}/servers/"
 
-    async def _async_create_elem_from_template(
+    async def _async_x_create_element_from_template(
         self, body: str, server: str = None
     ) -> str:
         """Create a metadata element from a template.  Async version.

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyegeria"
-version = "5.4.4.8"
+version = "5.4.6"
 
 license = 'Apache 2.0'
 authors = ["Dan Wolfson <dan.wolfson@pdr-associates.com>"]
@@ -47,7 +47,9 @@ pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
 pydevd-pycharm = "^252.23892.364"
 wcwidth = "==0.2.13"
-
+altair = "^5.5.0"
+modelcontextprotocol = "^0.1.0"
+mcp = "^1.15.0"
 
 
 [build-system]
@@ -68,6 +70,7 @@ black = "^25.1.0"
 isort = "^6.0.0"
 
 [tool.poetry.scripts]
+    pyegeria-mcp = "pyegeria.mcp.server:main"
     list_format_set = "commands.cat.list_format_set:main"
     list_assets = "commands.cat.list_assets:main"
     list_tech_types = "commands.cat.list_tech_types:main"

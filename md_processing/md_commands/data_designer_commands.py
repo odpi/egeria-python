@@ -1,6 +1,11 @@
-"""
+"""PDX-License-Identifier: Apache-2.0
+Copyright Contributors to the ODPi Egeria project.
+
 This file contains term-related object_action functions for processing Egeria Markdown
+
+
 """
+
 import json
 import os
 import sys
