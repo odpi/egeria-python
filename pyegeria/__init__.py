@@ -68,6 +68,7 @@ from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
 from ._output_formats import select_output_format_set
+from .mcp_adapter import list_reports, describe_report, run_report
 #
 global template_guids, integration_guids
 
