@@ -121,6 +121,7 @@ COMMON_COLUMNS = [
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
     Column(name='Status', key='status'),
+    Column(name='Type Name', key='type_name')
 ]
 
 
@@ -560,6 +561,29 @@ base_output_format_sets = FormatSetDict({
             spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
         ),
     ),
+"Digital-Product-Catalog-MyE": FormatSet(
+        target_type="DigitalProductCatalog",
+        heading="Catalogs for Digital Products",
+        description="Attributes generic to all Digital Product Catalogs..",
+        aliases=[],
+        annotations={},
+        formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM","REPORT"],
+                columns=COMMON_COLUMNS + [
+                    Column(name="Containing Members", key='collection_members'),
+                    Column(name="Member Of", key='member_of_collections')
+                ]
+            ),
+
+        ],
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_PARAMS,
+            spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
+        ),
+    ),
 
     "Digital-Products": FormatSet(
         target_type="DigitalProduct",
@@ -602,6 +626,53 @@ base_output_format_sets = FormatSetDict({
                     Column(name='License', key='governed_by'),
                     Column(name='Solution Blueprint', key='solution_designs'),
                     Column(name="Mermaid",key = "mermaid")
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_PARAMS,
+            spec_params={"metadata_element_types": ["DigitalProduct"]},
+        ),
+        get_additional_props=ActionParameter(
+            function="CollectionManager._extract_digital_product_properties",
+            required_params=[],
+            spec_params={},
+        )
+    ),
+    "Digital-Products-MyE": FormatSet(
+        target_type="DigitalProduct",
+        heading="Digital Product Information",
+        description="Attributes useful to Digital Products.",
+        aliases=[],
+        annotations={},
+        formats=[
+            Format(
+                types=["FORM", "DICT", "TABLE", "LIST", "MD"],
+                columns=COMMON_COLUMNS + [
+                    Column(name="Status", key='status'),
+                    Column(name='Product Name', key='product_name'),
+                    Column(name='Members', key='members', format=True),
+                    Column(name='Product Manager', key='assigned_actors'),
+                ]),
+            Format(
+                types=["REPORT", "HTML"],
+                columns=COMMON_COLUMNS + [
+                    Column(name="Status", key='status'),
+                    Column(name='Product Name', key='product_name'),
+                    Column(name='Identifier', key='identifier'),
+                    Column(name='Maturity', key='maturity'),
+                    Column(name='Service Life', key='service_life'),
+                    Column(name='Next Version', key='next_version'),
+                    Column(name='Withdraw Date', key='withdraw_date'),
+                    Column(name='Members', key='members', format=True),
+                    Column(name='Uses Products', key='uses_digital_products'),
+                    Column(name='Used by Products', key='used_by_digital_products'),
+                    Column(name='Product Manager', key='assigned_actors'),
+                    Column(name='License', key='governed_by'),
+                    Column(name='Solution Blueprint', key='solution_designs'),
+                    Column(name="Mermaid", key="mermaid")
                 ],
             )
         ],

@@ -49,7 +49,7 @@ def main() -> None:
             _settings.User_Profile.user_name,
             _settings.User_Profile.user_pwd
         )
-        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token()
+        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview","secret")
         print("DEBUG: Egeria Client connected", file=sys.stderr)
 
     except Exception as e:

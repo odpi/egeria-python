@@ -2799,7 +2799,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/cd/57/c51d7d0279c2e9e1e
 
 [[package]]
 name = "pyegeria"
-version = "5.4.7"
+version = "5.4.7.1"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
@@ -2818,7 +2818,6 @@ dependencies = [
     { name = "pydevd-pycharm" },
     { name = "requests" },
     { name = "rich" },
-    { name = "textual" },
     { name = "trogon" },
     { name = "urllib3" },
     { name = "validators" },
@@ -2849,7 +2848,6 @@ requires-dist = [
     { name = "pydevd-pycharm", specifier = ">=252.23892.364" },
     { name = "requests" },
     { name = "rich" },
-    { name = "textual" },
     { name = "trogon" },
     { name = "urllib3" },
     { name = "validators" },
