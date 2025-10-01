@@ -33,7 +33,7 @@ def test_run_tool_monkeypatched(monkeypatch):
         assert kwargs["output_format"] == "DICT"
         return fake_result
 
-    monkeypatch.setattr(m, "run_format_set_action_return", fake_exec)
+    monkeypatch.setattr(m, "exec_format_set", fake_exec)
 
     out = m.run_mcp_tool(formatSet="Digital-Products", outputFormat="DICT", params={"search_string": "*"})
     assert out == fake_result
