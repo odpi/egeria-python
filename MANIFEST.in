@@ -1,1 +1,3 @@
-    recursive-include examples *
+   include LICENSE
+   include README.md
+   recursive-include md_processing/data *.json *.py

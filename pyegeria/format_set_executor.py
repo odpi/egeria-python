@@ -187,7 +187,7 @@ async def _async_run_report(
 
 
 
-def run_format_set_action_return(
+def exec_format_set(
     format_set_name: str,
     *,
     output_format: str = "DICT",
