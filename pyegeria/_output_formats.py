@@ -2257,25 +2257,39 @@ def output_format_set_list() -> list[str]:
     return list(output_format_sets.keys())
 
 
-def list_mcp_format_sets() -> list[str]:
+def list_mcp_format_sets() -> dict:
     """
     Returns only those format set names that can be safely exposed as MCP tools.
     A format set is eligible if it has a DICT format or an ALL catch-all format.
     
     This allows MCP to prefer machine-consumable outputs and avoid side effects.
     """
-    eligible: list[str] = []
-    for name, fs in output_format_sets.items():
-        try:
-            # fs is a FormatSet
-            has_dict = any("DICT" in f.types for f in fs.formats)
-            has_all = any("ALL" in f.types for f in fs.formats)
-            if has_dict or has_all:
-                eligible.append(name)
-        except Exception:
-            # Defensive: skip malformed entries
-            continue
-    return sorted(eligible)
+    # eligible: list[str] = []
+    # for name, fs in output_format_sets.items():
+    #     try:
+    #         # fs is a FormatSet
+    #         has_dict = any("DICT" in f.types for f in fs.formats)
+    #         has_all = any("ALL" in f.types for f in fs.formats)
+    #         if has_dict or has_all:
+    #             eligible.append(name)
+    #     except Exception:
+    #         # Defensive: skip malformed entries
+    #         continue
+    # return sorted(eligible)
+    return {
+        name: {
+            "description": fs.description,
+            "target_type": fs.target_type,
+            "required_params": ", ".join(fs.action.required_params) or "",
+            "optional_params": ", ".join(fs.action.optional_params) or "",
+        }
+        for name, fs in sorted(output_format_sets.items())
+        if fs and fs.action and any(
+            format_type in ["DICT", "ALL"]
+            for format_obj in fs.formats
+            for format_type in format_obj.types
+        )
+    }
 
 
 def get_output_format_set_heading(format_set: str) -> str:

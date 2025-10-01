@@ -3,7 +3,6 @@ This file contains product manager commands for processing Egeria Markdown
 """
 import json
 import os
-import sys
 from typing import Optional
 
 from loguru import logger
@@ -12,13 +11,12 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary,  set_update_body, \
-    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
-    set_rel_request_body, set_create_body, set_object_classifications, set_product_body
-
+from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
+    set_element_prop_body, set_delete_request_body, set_rel_request_body, set_create_body, set_object_classifications, \
+    set_product_body
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
-from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, print_exception_table
+from md_processing.md_processing_utils.md_processing_constants import (load_commands)
+from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.utils import make_format_set_name_from_type
 
@@ -53,7 +51,7 @@ console = Console(width=int(200))
 #
 @logger.catch
 def add_member_to_collections(egeria_client: EgeriaTech, collection_list: list, display_name: str,
-                                   guid: str) -> None:
+                              guid: str) -> None:
     """
     Add member to data dictionaries and data specifications.
     """
@@ -61,8 +59,8 @@ def add_member_to_collections(egeria_client: EgeriaTech, collection_list: list, 
         "class": "NewRelationshipRequestBody", "properties": {
             "class": "CollectionMembershipProperties", "membershipRationale": "User Specified",
             "notes": "Added by Dr.Egeria"
-            }
         }
+    }
     try:
         if collection_list is not None:
             for collection in collection_list:
@@ -79,7 +77,7 @@ def add_member_to_collections(egeria_client: EgeriaTech, collection_list: list, 
 
 @logger.catch
 def remove_member_from_collections(egeria_client: EgeriaTech, collection_list: list, display_name: str,
-                                        guid: str) -> None:
+                                   guid: str) -> None:
     try:
         for collection in collection_list:
             egeria_client.remove_from_collection(collection, guid)
@@ -174,8 +172,6 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     guid = parsed_output.get('guid', None)
 
-
-
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
@@ -211,7 +207,6 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     elif directive == "process":
         try:
 
-
             if object_action == "Update":
                 if not exists:
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
@@ -235,8 +230,8 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
-                    })
-                return egeria_client.get_collection_by_guid(guid, element_type= obj,
+                })
+                return egeria_client.get_collection_by_guid(guid, element_type=obj,
                                                             output_format='MD', output_format_set=output_set)
 
 
@@ -248,27 +243,29 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
 
                 else:
-                    body = set_create_body(object_type,attributes)
+                    body = set_create_body(object_type, attributes)
 
                     # if this is a root or folder (maybe more in the future), then make sure that the classification is set.
-                    body["initialClassifications"] = set_object_classifications(object_type, attributes, ["Folder", "Root Collection"])
+                    body["initialClassifications"] = set_object_classifications(object_type, attributes,
+                                                                                ["Folder", "Root Collection"])
                     body["properties"] = set_element_prop_body(obj, qualified_name, attributes)
                     parent_guid = body.get('parentGuid', None)
                     if parent_guid:
                         body['parentRelationshipTypeName'] = "CollectionMembership"
                         body['parentAtEnd1'] = True
 
-                    guid = egeria_client.create_collection(body = body)
+                    guid = egeria_client.create_collection(body=body)
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
-                            })
+                        })
                         msg = f"\nCreated Element `{display_name}` with GUID {guid}\n\n___"
-                       # todo - add the source member asset to the product manager
-                       # create_elem_from_template
-                       # add this guid to the product collection
+                        # todo - add the source member asset to the product manager
+                        # create_elem_from_template
+                        # add this guid to the product collection
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
+                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD',
+                                                                    output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -282,6 +279,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
             logger.error(f"Error performing {command}: {e}")
     else:
         return None
+
 
 @logger.catch
 def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
@@ -307,7 +305,6 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-
     print(Markdown(parsed_output['display']))
 
     logger.debug(json.dumps(parsed_output, indent=4))
@@ -315,8 +312,8 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     attributes = parsed_output['attributes']
 
     display_name = attributes['Display Name'].get('value', None)
-    product_manager = attributes.get('Product Manager',{}).get('value', None)
-    product_status = attributes.get('Product Status',{}).get('value', None)
+    product_manager = attributes.get('Product Manager', {}).get('value', None)
+    product_status = attributes.get('Product Status', {}).get('value', None)
     output_set = make_format_set_name_from_type(object_type)
 
     if directive == "display":
@@ -354,11 +351,10 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                 # if product_status:
                 #     egeria_client.update_digital_product_status(guid, product_status)
 
-
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
-                    })
+                })
                 return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
                                                             output_format='MD', output_format_set=output_set)
 
@@ -380,7 +376,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
-                            })
+                        })
                         # Todo: Add product manager link later? Agreements?
 
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
@@ -587,7 +583,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
-                    })
+                })
                 return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
                                                             output_format='MD', output_format_set=output_set)
 
@@ -611,10 +607,11 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
-                            })
+                        })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
+                        return egeria_client.get_collection_by_guid(guid, obj, output_format='MD',
+                                                                    output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -630,9 +627,9 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return None
 
 
-
 @logger.catch
-def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[
+    str]:
     """
     Processes a create CSV element command by extracting key attributes and calling the pyegeria
     api that creates a csv element from template.
@@ -697,21 +694,22 @@ def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, dire
 
                 else:
                     guid = egeria_client.get_create_csv_data_file_element_from_template(
-                       file_name, file_type, file_path, version_identifier, file_encoding, file_extension, file_system_name, description)
+                        file_name, file_type, file_path, version_identifier, file_encoding, file_extension,
+                        file_system_name, description)
 
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
-                            })
+                        })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
                         output_md = (f"# Create CSV File\n\n## Display Name:\n\n {display_name}\n\n"
-                                    f"## File Type:\n\n {file_type}\n\n## File Path:\n\n {file_path}\n\n"
-                                    f"## File Encoding:\n\n {file_encoding}\n\n## File Extension:\n\n {file_extension}\n\n"
-                                    f"## File System Name:\n\n {file_system_name}\n\n## Version Identifier:\n\n {version_identifier}\n\n"
-                                    f"## Description:\n\n {description}\n\n"
-                                    f"## Qualified Name\n\n {qualified_name}\n\n"
-                                    f"## GUID:\n\n {guid}\n\n"
+                                     f"## File Type:\n\n {file_type}\n\n## File Path:\n\n {file_path}\n\n"
+                                     f"## File Encoding:\n\n {file_encoding}\n\n## File Extension:\n\n {file_extension}\n\n"
+                                     f"## File System Name:\n\n {file_system_name}\n\n## Version Identifier:\n\n {version_identifier}\n\n"
+                                     f"## Description:\n\n {description}\n\n"
+                                     f"## Qualified Name\n\n {qualified_name}\n\n"
+                                     f"## GUID:\n\n {guid}\n\n"
                                      )
                         return output_md
                     else:
@@ -730,7 +728,6 @@ def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, dire
     else:
         logger.error(f"Invalid directive `{directive}`")
         return None
-
 
 
 def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
@@ -753,16 +750,15 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
-    agreement = attributes.get('Agreement Name',{}).get('value', None)
+    agreement = attributes.get('Agreement Name', {}).get('value', None)
     agreement_guid = attributes.get('Agreement Name', {}).get('guid', None)
-    item = attributes.get('Item Name',{}).get('value', None)
+    item = attributes.get('Item Name', {}).get('value', None)
     item_guid = attributes.get('Item Name', {}).get('guid', None)
     label = attributes.get('Link Label', {}).get('value', None)
     description = attributes.get('Description', {}).get('value', None)
 
     valid = parsed_output['valid']
-    exists = agreement_guid is not None and  item_guid is not None
-
+    exists = agreement_guid is not None and item_guid is not None
 
     if directive == "display":
 
@@ -791,7 +787,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
                     body = set_delete_request_body(object_type, attributes)
 
-                    egeria_client.detach_agreement_item(agreement_guid, item_guid,body)
+                    egeria_client.detach_agreement_item(agreement_guid, item_guid, body)
 
                     logger.success(f"===> Detached agreement item `{item}` from agreement `{agreement}`\n")
                     out = parsed_output['display'].replace('Unlink', 'Link', 1)
@@ -813,21 +809,21 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
                     body = set_rel_request_body(object_type, attributes)
                     item_props = {
                         "class": "AgreementItemProperties",
-                        "agreementItemId": attributes.get("Agreement Item Id",{}).get("value", None),
-                        "agreementItemTypeName": attributes.get("Agreement Item Type",{}).get("value", None),
-                        "agreementStart": attributes.get("Agreement Start",{}).get("value", None),
-                        "agreementEnd": attributes.get("Agreement End",{}).get("value", None),
-                        "restrictions": attributes.get("Restrictions",{}).get("value", None),
-                        "obligations": attributes.get("Obligations",{}).get("value", None),
-                        "entitlements": attributes.get("Entitlements",{}).get("value", None),
-                        "usageMeasurements": attributes.get("Usage Measurements",{}).get("value", None),
-                        "effectiveFrom": attributes.get("Effective From",{}).get("value", None),
-                        "effectiveTo": attributes.get("Effective To",{}).get("value", None)
+                        "agreementItemId": attributes.get("Agreement Item Id", {}).get("value", None),
+                        "agreementItemTypeName": attributes.get("Agreement Item Type", {}).get("value", None),
+                        "agreementStart": attributes.get("Agreement Start", {}).get("value", None),
+                        "agreementEnd": attributes.get("Agreement End", {}).get("value", None),
+                        "restrictions": attributes.get("Restrictions", {}).get("value", None),
+                        "obligations": attributes.get("Obligations", {}).get("value", None),
+                        "entitlements": attributes.get("Entitlements", {}).get("value", None),
+                        "usageMeasurements": attributes.get("Usage Measurements", {}).get("value", None),
+                        "effectiveFrom": attributes.get("Effective From", {}).get("value", None),
+                        "effectiveTo": attributes.get("Effective To", {}).get("value", None)
 
                     }
                     body['properties'] = item_props
                     egeria_client.link_agreement_item(agreement_guid,
-                                                        item_guid, body)
+                                                      item_guid, body)
                     msg = f"==>Linked {object_type} `{agreement} to item {item}\n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -840,8 +836,9 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
     else:
         return None
 
+
 def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
-                                        directive: str = "display") -> Optional[str]:
+                                      directive: str = "display") -> Optional[str]:
     """
     Processes a link or unlink command to add or remove a member to/from a collection..
 
@@ -860,9 +857,9 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
-    element_guid = attributes.get('Element Id',{}).get('guid', None)
+    element_guid = attributes.get('Element Id', {}).get('guid', None)
     collection_guid = attributes.get('Collection Id', {}).get('guid', None)
-    membership_rationale = attributes.get('Membership Rationale',{}).get('value', None)
+    membership_rationale = attributes.get('Membership Rationale', {}).get('value', None)
     expression = attributes.get('Expression', {}).get('value', None)
     confidence = attributes.get('Confidence', {}).get('value', None)
     membership_status = attributes.get('Membership Status', {}).get('value', None)
@@ -874,7 +871,6 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
     notes = attributes.get('Notes', {}).get('value', None)
     glossary_term = attributes.get('Glossary Term', {}).get('value', None)
     journal_entry = attributes.get('Journal Entry', {}).get('value', None)
-
 
     valid = parsed_output['valid']
     # exists = agreement_guid is not None and  item_guid is not None
@@ -892,7 +888,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
     elif directive == "process":
         prop_body = {
-            "class" : "CollectionMembershipProperties",
+            "class": "CollectionMembershipProperties",
             "membershipRationale": membership_rationale,
             "expression": expression,
             "membershipStatus": membership_status,
@@ -903,10 +899,10 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "stewardPropertyName": steward_property_name,
             "source": source,
             "notes": notes,
-            }
+        }
         label = "Add Member"
         try:
-            if object_action in["Detach", "Unlink", "Remove"]:
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -920,7 +916,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
                     body = set_delete_request_body(object_type, attributes)
 
-                    egeria_client.remove_from_collection(collection_guid, element_guid,body)
+                    egeria_client.remove_from_collection(collection_guid, element_guid, body)
 
                     logger.success(f"===> Detached element `{element_guid}` from collection `{collection_guid}`\n")
                     out = parsed_output['display'].replace('Unlink', 'Link', 1)
@@ -948,7 +944,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     body['properties'] = prop_body
                     body = body_slimmer(body)
                     egeria_client.add_to_collection(collection_guid,
-                                                        element_guid, body)
+                                                    element_guid, body)
                     msg = f"==>Linked `{element_guid}` to collection `{collection_guid}` \n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -961,8 +957,9 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
     else:
         return None
 
+
 def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
-                                        directive: str = "display") -> Optional[str]:
+                                       directive: str = "display") -> Optional[str]:
     """
     Processes a link or unlink command to associate or break up a dependency between digital products..
 
@@ -983,15 +980,13 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
     attributes = parsed_output['attributes']
     digital_product1_guid = attributes.get('Digital Product 1', None)
     digital_product2_guid = attributes.get('Digital Product 2', None)
-    label = attributes.get('Label',{}).get('value', None)
+    label = attributes.get('Label', {}).get('value', None)
     description = attributes.get('Description', {}).get('value', None)
     effective_from = attributes.get('Effective From', {}).get('value', None)
     effective_to = attributes.get('Effective To', {}).get('value', None)
 
-
     valid = parsed_output['valid']
-    exists = agreement_guid is not None and  item_guid is not None
-
+    exists = digital_product1_guid is not None and digital_product2_guid is not None
 
     if directive == "display":
 
@@ -1005,12 +1000,12 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
 
     elif directive == "process":
         prop_body = {
-            "class" : "DigitalProductDependencyProperties",
+            "class": "DigitalProductDependencyProperties",
             "label": label,
             "description": description,
             "effectiveFrom": effective_from,
             "effectiveTo": effective_to
-            }
+        }
 
         try:
             if object_action == "Detach":
@@ -1027,9 +1022,10 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
                     body = set_delete_request_body(object_type, attributes)
 
-                    egeria_client.detach_digital_product_dependency(digital_product1_guid, digital_product2_guid,body)
+                    egeria_client.detach_digital_product_dependency(digital_product1_guid, digital_product2_guid, body)
 
-                    logger.success(f"===> Detached dependency between products `{digital_product1_guid}` and `{digital_product2_guid}`\n")
+                    logger.success(
+                        f"===> Detached dependency between products `{digital_product1_guid}` and `{digital_product2_guid}`\n")
                     out = parsed_output['display'].replace('Unlink', 'Link', 1)
 
                     return (out)
@@ -1050,7 +1046,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
 
                     body['properties'] = prop_body
                     egeria_client.link_digital_product_dependency(digital_product1_guid,
-                                                        digital_product2_guid, body)
+                                                                  digital_product2_guid, body)
                     msg = f"==>Linked dependency from digital product `{digital_product1_guid}` to product `{digital_product2_guid}` \n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -1063,8 +1059,9 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
     else:
         return None
 
+
 def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
-                                        directive: str = "display") -> Optional[str]:
+                                      directive: str = "display") -> Optional[str]:
     """
     Processes a link or unlink command to attach a collection to a resources.
 
@@ -1091,10 +1088,8 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
     effective_from = attributes.get('Effective From', {}).get('value', None)
     effective_to = attributes.get('Effective To', {}).get('value', None)
 
-
     valid = parsed_output['valid']
-    exists = agreement_guid is not None and  item_guid is not None
-
+    exists = collection_guid is not None and resource_guid is not None
 
     if directive == "display":
 
@@ -1108,18 +1103,18 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
 
     elif directive == "process":
         prop_body = {
-            "class" : "ResourceListProperties",
+            "class": "ResourceListProperties",
             "resourceUse": resource_use,
             "resourceDescription": resource_description,
             "resourceProperties": resource_properties,
             "effectiveFrom": effective_from,
             "effectiveTo": effective_to
-            }
+        }
 
         try:
             if object_action == "Detach":
                 if not exists:
-                    msg = (f" Link `{label}` does not exist! Updating result document with Link "
+                    msg = (f" Link `Attach Resource to Collection` does not exist! Updating result document with Link "
                            f"object_action\n")
                     logger.error(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -1131,21 +1126,23 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
                     body = set_delete_request_body(object_type, attributes)
 
-                    egeria_client.detach_collection(resource_guid, collection_guid,body)
+                    egeria_client.detach_collection(resource_guid, collection_guid, body)
 
-                    logger.success(f"===> Detached linkage between resource `{resource_guid}` and collection`{collection_guid}`\n")
+                    logger.success(
+                        f"===> Detached linkage between resource `{resource_guid}` and collection`{collection_guid}`\n")
                     out = parsed_output['display'].replace('Unlink', 'Link', 1)
 
                     return (out)
 
             elif object_action == "Link":
                 if valid is False and exists:
-                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
-                           f"`Link` to `Detach` in processed output\n")
+                    msg = (
+                        f"-->  Link called `Attach Resource to Collection` already exists and result document updated changing "
+                        f"`Link` to `Detach` in processed output\n")
                     logger.error(msg)
 
                 elif valid is False:
-                    msg = f"==>{object_type} Link with label `{label}` is not valid and can't be created"
+                    msg = f"==>{object_type} Link with label `Attach Resource to Collection` is not valid and can't be created"
                     logger.error(msg)
                     return
 
@@ -1154,7 +1151,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
 
                     body['properties'] = prop_body
                     egeria_client.attach_collection(resource_guid,
-                                                        collection_guid, body)
+                                                    collection_guid, body)
                     msg = f"==>Attached collection `{collection_guid}` to resource `{resource_guid}` \n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -1167,8 +1164,9 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
     else:
         return None
 
+
 def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
-                                        directive: str = "display") -> Optional[str]:
+                                      directive: str = "display") -> Optional[str]:
     """
     Processes a link or unlink command to attach a subscriber to a subscription.
 
@@ -1194,7 +1192,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
     subscription_guid = attributes.get('Subscription', {}).get('guid', None)
 
     valid = parsed_output['valid']
-
+    exists = subscriber_guid is not None and subscription_guid is not None
     if directive == "display":
 
         return None
@@ -1208,7 +1206,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
     elif directive == "process":
         prop_body = {
             "class": "DigitalSubscriberProperties",
-            "subscriberId":  attributes.get('Subscriber Id', {}).get('value', None),
+            "subscriberId": attributes.get('Subscriber Id', {}).get('value', None),
             "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
             "effectiveTo": attributes.get('Effective To', {}).get('value', None),
         }
@@ -1216,8 +1214,9 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
         try:
             if object_action == "Detach":
                 if not exists:
-                    msg = (f" Link `{label}` does not exist! Updating result document with Link "
-                           f"object_action\n")
+                    msg = (
+                        f" Link `Attach Subscriber to Subscription` does not exist! Updating result document with Link "
+                        f"object_action\n")
                     logger.error(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
                     return out
@@ -1228,17 +1227,19 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
                     body = set_delete_request_body(object_type, attributes)
 
-                    egeria_client.detach_subscriber(subscriber_guid, subscription_guid,body)
+                    egeria_client.detach_subscriber(subscriber_guid, subscription_guid, body)
 
-                    logger.success(f"===> Detached linkage between subscriber `{subscriber_guid}` and subscription`{subscription_guid}`\n")
+                    logger.success(
+                        f"===> Detached linkage between subscriber `{subscriber_guid}` and subscription`{subscription_guid}`\n")
                     out = parsed_output['display'].replace('Unlink', 'Link', 1)
 
                     return (out)
 
             elif object_action == "Link":
                 if valid is False and exists:
-                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
-                           f"`Link` to `Detach` in processed output\n")
+                    msg = (
+                        f"-->  Link called `Attach Subscriber to Subscription` already exists and result document updated changing "
+                        f"`Link` to `Detach` in processed output\n")
                     logger.error(msg)
 
                 elif valid is False:
@@ -1251,7 +1252,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
 
                     body['properties'] = prop_body
                     egeria_client.link_subscriber(subscriber_guid,
-                                                        subscription_guid, body)
+                                                  subscription_guid, body)
                     msg = f"==>Attached subscriber `{subscriber_guid}` to subscription `{subscriber_guid}` \n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -1263,4 +1264,3 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
             return None
     else:
         return None
-
