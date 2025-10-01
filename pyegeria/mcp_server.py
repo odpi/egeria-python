@@ -3,25 +3,27 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module provides a basic MCP server for Egeria.
 """
-import asyncio
 import re
 import sys
-from typing import Any, Dict, Optional, List, Coroutine
+from typing import Any, Dict, Optional
+
+from pyegeria.egeria_tech_client import EgeriaTech
+
+GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
 
 try:
     # We use Optional[] and List[] types, so we import them.
     from mcp.server.fastmcp import FastMCP
+    from pyegeria.mcp_adapter import (
+        list_reports,
+        describe_report,
+        run_report, _execute_egeria_call_blocking,
+        _async_run_report_tool
+    )
     print("MCP import successful...", file=sys.stderr)
 except ImportError:
     print("MCP import failed.", file=sys.stderr)
     raise
-
-from pyegeria.mcp_adapter import (
-    list_reports,
-    describe_report,
-    run_report, _execute_egeria_call_blocking,
-)
-
 
 def _ok(result: Dict[str, Any] ) -> Dict[str, Any]:
     # Pass-through helper in case you want to normalize or add metadata
@@ -31,6 +33,29 @@ def _ok(result: Dict[str, Any] ) -> Dict[str, Any]:
 
 def main() -> None:
     # Initialize the server
+
+    global GLOBAL_EGERIA_CLIENT
+
+    try:
+        """ Runs ONCE when the server starts.
+            Initializes the Egeria client and stores it in the server's state.
+        """
+        print("DEBUG: Initializing Egeria client...", file=sys.stderr)
+        from pyegeria.config import settings as _settings
+
+        GLOBAL_EGERIA_CLIENT = EgeriaTech(
+            _settings.Environment.egeria_view_server,
+            _settings.Environment.egeria_view_server_url,
+            _settings.User_Profile.user_name,
+            _settings.User_Profile.user_pwd
+        )
+        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token()
+        print("DEBUG: Egeria Client connected", file=sys.stderr)
+
+    except Exception as e:
+        print(f"DEBUG: Exception occurred: {str(e)}", file=sys.stderr)
+        raise
+
     srv = FastMCP(name="pyegeria-mcp")
     print("Starting MCP server...", file=sys.stderr)
 
@@ -53,7 +78,6 @@ def main() -> None:
             print(f"DEBUG: Exception during describe_report: {str(e)}", file=sys.stderr)
             raise
 
-    # run_report tool (formerly run_format_set_action)
     @srv.tool(name="run_report")
     async def run_report_tool(
             report_name: str,
@@ -92,10 +116,13 @@ def main() -> None:
 
         try:
 
-            result = await asyncio.to_thread(
-                _execute_egeria_call_blocking,
-                report = report_name,
-                params = params
+            egeria_client: EgeriaTech = GLOBAL_EGERIA_CLIENT
+            print("DEBUG: Egeria Client connected", file=sys.stderr)
+
+            result = await _async_run_report_tool(
+                report=report_name,
+                egeria_client=egeria_client,
+                params=params
             )
             print("DEBUG: run_report completed successfully", file=sys.stderr)
             return _ok(result)

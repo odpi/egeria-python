@@ -11,9 +11,6 @@ from __future__ import annotations
 
 import json
 import sys
-import asyncio
-
-from loguru import logger
 from typing import Any, Dict, Optional
 
 from loguru import logger
@@ -21,9 +18,9 @@ from loguru import logger
 from pyegeria._output_formats import (
     list_mcp_format_sets,
     select_output_format_set,
-    get_output_format_type_match,
 )
-from pyegeria.format_set_executor import run_format_set_action_return
+from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.format_set_executor import run_format_set_action_return, _async_run_report
 
 
 def list_reports() -> dict:
@@ -31,12 +28,12 @@ def list_reports() -> dict:
     return  list_mcp_format_sets()
 
 
-def describe_report(name: str, outputType: str = "DICT") -> Dict[str, Any]:
+def describe_report(name: str, output_type: str = "DICT") -> Dict[str, Any]:
     """
     Describe a format set for MCP discovery. If outputType != ANY, a concrete format
     will be resolved; otherwise only metadata/action are returned.
     """
-    meta = select_output_format_set(name, outputType)
+    meta = select_output_format_set(name, output_type)
     if not meta:
         raise ValueError(f"Unknown or incompatible format set: {name}")
     return meta
@@ -82,6 +79,7 @@ def _execute_egeria_call_blocking(
     # }
 
 
+
 def run_report(
     *,
     report: str,
@@ -98,7 +96,7 @@ def run_report(
     print(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}", file=sys.stderr)
     # Lazy import of settings to avoid circulars when optional args are None
     from pyegeria.config import settings as _settings
-    logger.info(f"Format set: {formatSet}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}")
+    logger.info(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}")
     return run_format_set_action_return(
         format_set_name=report,
         output_format="DICT",
@@ -108,3 +106,19 @@ def run_report(
         user=user if user is not None else _settings.User_Profile.user_name,
         user_pass=user_pass if user_pass is not None else _settings.User_Profile.user_pwd,
     )
+
+async def _async_run_report_tool(
+    *,
+    report: str,
+    egeria_client: EgeriaTech,
+    params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Execute a format set action as an MCP-style tool. Enforces DICT/ALL by default.
+    Caller may pass credentials explicitly; otherwise defaults are used from config.
+    """
+    # Lazy import of settings to avoid circulars when optional args are None
+
+    print(f"Report: {report}\n params: {json.dumps(params)}\n", file=sys.stderr)
+    result = await _async_run_report(report, egeria_client, output_format="DICT", params=params)
+    return result
