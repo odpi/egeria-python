@@ -129,8 +129,8 @@ class CollectionManager(Client2):
 
 
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        result = self.get_platform_origin()
-        logger.info(f"CollectionManager initialized, platform origin is: {result}")
+        # result = self.get_platform_origin()
+        # logger.info(f"CollectionManager initialized, platform origin is: {result}")
         self.collection_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections")
         #

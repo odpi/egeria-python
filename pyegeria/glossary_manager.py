@@ -95,8 +95,8 @@ class GlossaryManager(CollectionManager):
 
 
         CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        result = self.get_platform_origin()
-        logger.info(f"GlossaryManager initialized, platform origin is: {result}")
+        # result = self.get_platform_origin()
+        # logger.info(f"GlossaryManager initialized, platform origin is: {result}")
         self.glossary_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager"
     #
     #       Get Valid Values for Enumerations

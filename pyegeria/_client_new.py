@@ -156,6 +156,25 @@ class Client2:
         self._template_request_adapter = TypeAdapter(TemplateRequestBody)
         self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
         self._results_request_adapter = TypeAdapter(ResultsRequestBody)
+        try:
+            result = self.check_connection()
+            logger.info(f"client initialized, platform origin is: {result}")
+        except PyegeriaConnectionException as e:
+            raise
+
+    async def _async_check_connection(self) -> str:
+        """Check if the connection is working"""
+        try:
+            response = await self.async_get_platform_origin()
+            return response
+
+        except PyegeriaConnectionException as e:
+            raise
+    def check_connection(self) -> str:
+        """Check if the connection is working"""
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_check_connection())
+        return response
 
     def __enter__(self):
         return self
@@ -365,13 +384,13 @@ class Client2:
         """Retrieve and return the bearer token"""
         return self.text_headers["Authorization"]
 
-    def get_platform_origin(self) -> str:
+    async def async_get_platform_origin(self) -> str:
         """Return the platform origin string if reachable.
-        
+
         Historically this method returned a boolean; tests and helpers expect the actual origin text.
         """
         origin_url = f"{self.platform_url}/open-metadata/platform-services/users/{self.user_id}/server-platform/origin"
-        response = self.make_request("GET", origin_url, is_json=False)
+        response = await self._async_make_request("GET", origin_url, is_json=False)
         if response.status_code == 200:
             text = response.text.strip()
             logger.success(f"Got response from {origin_url}\n Response: {text}")
@@ -379,6 +398,16 @@ class Client2:
         else:
             logger.info(f"Got response from {origin_url}\n status_code: {response.status_code}")
             return ""
+
+
+    def get_platform_origin(self) -> str:
+        """Return the platform origin string if reachable.
+
+        Historically this method returned a boolean; tests and helpers expect the actual origin text.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self.async_get_platform_origin())
+        return response
 
     # @logger.catch
     def make_request(

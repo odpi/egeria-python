@@ -72,8 +72,8 @@ class ExternalReferences(Client2):
         self.user_pwd = user_pwd
 
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        result = self.get_platform_origin()
-        logger.info(f"ExternalReferences initialized, platform origin is: {result}")
+        # result = self.get_platform_origin()
+        # logger.info(f"ExternalReferences initialized, platform origin is: {result}")
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/external-references")
 
