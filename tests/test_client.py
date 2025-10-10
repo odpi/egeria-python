@@ -10,8 +10,10 @@ import json
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+import asyncio
 from loguru import logger
 
+from pyegeria import print_basic_exception
 from pyegeria._client_new import Client2
 from pyegeria._exceptions_new import (
      PyegeriaException, PyegeriaConnectionException,  PyegeriaInvalidParameterException,
@@ -108,7 +110,7 @@ class TestClient:
 
     def test_refresh_egeria_bearer_token(self):
         c = Client2(
-            "active-metadata-store", "https://localhost:9443", "erinoverview", "secret"
+            "qs-metadata-store", "https://localhost:9443", "erinoverview", "secret"
             )
         token = c.create_egeria_bearer_token()
         token2 = c.refresh_egeria_bearer_token()
@@ -120,15 +122,21 @@ class TestClient:
     def test_get_guid(self):
         """This doesn't work since the method needs to be called from an omvs based class"""
         c = Client2(
-            "active-metadata-store", "https://localhost:9443", "erinoverview", "secret"
+            "qs-view-server", "https://localhost:9443", "erinoverview", "secret"
             )
-        display_name = "Coco Pharmaceuticals Governance Domains"
-        qname = None
-        guid = None
-        property_name = "displayName"
-        response = c.__get_guid__(guid, display_name, property_name, qname)
-        if type(response) == str:
-            print(f"The response returned is \n{response}")
+        try:
+            c.create_egeria_bearer_token()
+            display_name = "PostgreSQL Server"
+            qname = None
+            guid = None
+            property_name = "displayName"
+            response = c.__get_guid__(guid, display_name, property_name, qname)
+            if type(response) == str:
+                print(f"The response returned is \n{response}")
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
 
 
 if __name__ == "__main__":

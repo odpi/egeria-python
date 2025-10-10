@@ -11,24 +11,17 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import asyncio
 import json
 import time
-from contextlib import nullcontext as does_not_raise
 
-import pytest
+from pydantic import ValidationError
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-)
-from pyegeria.classification_manager_omvs import ClassificationManager
-from pyegeria.core_omag_server_config import CoreServerConfig
-from pyegeria.output_formatter import make_preamble, make_md_attribute
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria.classification_manager import ClassificationManager
+
+# from pyegeria.output_formatter import make_preamble, make_md_attribute
 
 disable_ssl_warnings = True
 
@@ -67,38 +60,180 @@ def valid_guid(guid):
 #
 ##
 #
-def test_get_elements():
-    # open_metadata_type_name = 'CertificationType'
+def test_get_classified_elements_by():
+    # metadata_element_type_name = 'CertificationType'
     #
-    # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "DataField"
-    c_client = ClassificationManager(view_server, platform_url)
+    # metadata_element_type_name = "DeployedDatabaseSchema"
+    classification_name = "confidentiality"
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
 
-    bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_elements(open_metadata_type_name)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        body = {
+            "class" : "LevelIdentifierQueryProperties",
+            "levelIdentifier" : 1
+        }
+        response = c_client.get_classified_elements_by(classification_name, body)
 
-    if type(response) is list:
-        print(f"\n\tElement count is: {len(response)}")
-        print_json(data=response)
-    elif type(response) is str:
-        console.print("\n\n\t Response is" + response)
+        if type(response) is list:
+            print(f"\n\tElement count is: {len(response)}")
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is: " + response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
 
-    assert True
+def test_get_security_tagged_elements():
+    # metadata_element_type_name = 'CertificationType'
+    #
+    # metadata_element_type_name = "DeployedDatabaseSchema"
+    classification_name = "confidentiality"
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        body = {
+            "class": "SecurityTagQueryProperties",
+
+            "metadataElementTypeName": "GlossaryTerm",
+            "limitResultsByStatus": ["ACTIVE", "DRAFT"],
+            "sequencingProperty": "displayName",
+            "sequencingOrder": "LAST_UPDATE_RECENT",
+            "securityLabels": ["???"],
+            "securityProperties": {
+                "propertyName": "propertyValue"
+            },
+            "accessGroups": {
+                "groupName": ["???"]
+            }
+        }
+        response = c_client.get_security_tagged_elements( body, output_format="DICT", output_format_set="Referenceable")
+
+        if type(response) is list:
+            print(f"\n\tElement count is: {len(response)}")
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is: " + response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+def test_get_owners_elements():
+
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        owner_name = "calliequartile"
+        body = {
+            "class" : "FilterRequestBody",
+            "filter" : owner_name
+        }
+        response = c_client.get_owners_elements(owner_name, body, output_format="DICT", output_format_set="Referenceable")
+
+        if type(response) is list:
+            print(f"\n\tElement count is: {len(response)}")
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is: " + response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+def test_get_elements_by_origin():
+
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        home_metadata_collection = "PostgresContentPack"
+        body = {
+            "class" : "FindDigitalResourceOriginProperties",
+            "metadataElementTypeName": "ValidValueDefinition",
+            "otherOriginValues" : { "homeMetadataCollectionName" : home_metadata_collection }
+        }
+        response = c_client.get_elements_by_origin(body, output_format="JSON", output_format_set="Referenceable")
+
+        if type(response) is list:
+            print(f"\n\tElement count is: {len(response)}")
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is: " + response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
+
+def test_get_elements():
+    # metadata_element_type_name = 'CertificationType'
+    #
+    # metadata_element_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = "Collection"
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", output_format_set="Collections")
+
+        if type(response) is list:
+            print(f"\n\tElement count is: {len(response)}")
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is" + response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    except Exception as e:
+        console.print_exception(show_locals=True)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()
 
 
 def test_get_elements_by_property_value():
-    # open_metadata_type_name = 'Project'
+    # metadata_element_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
-    # open_metadata_type_name = "ValidValueDefinition"
-    open_metadata_type_name = "InformationSupplyChainSegment"
+    # metadata_element_type_name = "ValidValueDefinition"
+    metadata_element_type_name = "Collection"
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    # open_metadata_type_name = "Asset"
+    # metadata_element_type_name = "Asset"
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name","displayName",'qualifiedName']
-    property_value = "first segment"
+    property_value = "Clinical"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -106,7 +241,7 @@ def test_get_elements_by_property_value():
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
         result = c_client.get_elements_by_property_value(
-            property_value, property_names, open_metadata_type_name
+            property_value, property_names, metadata_element_type_name
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
@@ -119,29 +254,26 @@ def test_get_elements_by_property_value():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
         assert False, "Invalid request"
     finally:
         c_client.close_session()
 
 
 def test_find_elements_by_property_value():
-    # open_metadata_type_name = 'Project'
+    # metadata_element_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
-    # open_metadata_type_name = "ValidValueDefinition"
-    # open_metadata_type_name = None
-    # open_metadata_type_name = "ArchiveFile"
-    open_metadata_type_name = "SolutionBlueprint"
-    # open_metadata_type_name = None
+    # metadata_element_type_name = "ValidValueDefinition"
+    # metadata_element_type_name = None
+    # metadata_element_type_name = "ArchiveFile"
+    open_metadata_type_name = "Collection"
+    # metadata_element_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
     property_names = ["displayName"]
-    property_value = "my_first_blueprint"
+    property_value = "Chemicals"
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -162,19 +294,16 @@ def test_find_elements_by_property_value():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
         assert False, "Invalid request"
     finally:
         c_client.close_session()
 
 
 def test_get_element_by_guid():
-    element_guid = '28ca67d8-9cb4-4bb9-9af8-9dce83ce3e17'
+    element_guid = '0759666b-5aff-4840-8432-63389bd2326a'
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -191,12 +320,9 @@ def test_get_element_by_guid():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
         assert False, "Invalid request"
     finally:
         c_client.close_session()
@@ -220,11 +346,8 @@ def test_get_actor_for_guid():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+PyegeriaException    ) as e:
+        print_basic_exception(e)
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
     finally:
@@ -297,16 +420,16 @@ def test_get_element_by_unique_name():
 
 
 def test_get_elements_by_classification():
-    # open_metadata_type_name = "Project"
-    # open_metadata_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "DataStructure"
+    # metadata_element_type_name = "Project"
+    # metadata_element_type_name = "DeployedDatabaseSchema"
+    open_metadata_type_name = "Collection"
     # classification = "GovernanceProject"
-    classification = "DataSpec"
+    classification = "Folder"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_elements_by_classification(
-        classification, open_metadata_type_name
+        classification, open_metadata_type_name, output_format = "DICT", output_format_set="Collections"
     )
 
     if type(response) is list:
@@ -319,7 +442,7 @@ def test_get_elements_by_classification():
 
 
 def test_get_elements_by_classification_with_property_value():
-    # open_metadata_type_name = "Project"
+    # metadata_element_type_name = "Project"
     open_metadata_type_name = None
     classification = "DataSpec"
     # property_value = "Collection"
@@ -342,11 +465,8 @@ def test_get_elements_by_classification_with_property_value():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+PyegeriaException    ) as e:
+        print_basic_exception(e)
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
     finally:
@@ -355,12 +475,12 @@ def test_get_elements_by_classification_with_property_value():
 
 def test_find_elements_by_classification_with_property_value():
     # classification = "GovernanceProject"
-    # open_metadata_type_name = "Project"
+    # metadata_element_type_name = "Project"
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
     classification = "DataSpec"
-    # open_metadata_type_name = "DeployedDatabaseSchema"
+    # metadata_element_type_name = "DeployedDatabaseSchema"
     open_metadata_type_name = None
     property_value = ""
     property_names = ["displayName"]
@@ -407,7 +527,7 @@ def test_find_anchored_elements_with_property_value():
 
 
 def test_get_all_related_elements():
-    # open_metadata_type_name = 'Project'
+    # metadata_element_type_name = 'Project'
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
@@ -428,15 +548,15 @@ def test_get_all_related_elements():
 
 
 def test_get_related_elements():
-    # open_metadata_type_name = 'CertificationType'
-    element_guid = "d71c7ee2-b414-4c8f-bf9b-b16bd3601855"
-    # open_metadata_type_name = "Organization"
-    # open_metadata_type_name = "CSVFile"
-    # open_metadata_type_name = "InformationSupplyChain"
+    # metadata_element_type_name = 'CertificationType'
+    element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
+    # metadata_element_type_name = "Organization"
+    # metadata_element_type_name = "CSVFile"
+    # metadata_element_type_name = "InformationSupplyChain"
     open_metadata_type_name = None
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    relationship_type = "CollectionMembership"
+    relationship_type = None
     # relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationManager(view_server, platform_url)
 
@@ -454,14 +574,14 @@ def test_get_related_elements():
 
 
 def test_get_related_elements_with_property_value():
-    # open_metadata_type_name = 'Project'
+    # metadata_element_type_name = 'Project'
     open_metadata_type_name = None
-    relationship_type = "Certification"
-    property_value = "Partner"
+    relationship_type = "ResourceList"
+    property_value = "Catalog Resource"
     property_names = [
-        "teamType",
+        "resourceUse",
     ]
-
+    element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -484,11 +604,8 @@ def test_get_related_elements_with_property_value():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+PyegeriaException    ) as e:
+        print_basic_exception(e)
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
     finally:
@@ -496,7 +613,7 @@ def test_get_related_elements_with_property_value():
 
 
 def test_find_related_elements_with_property_value():
-    # open_metadata_type_name = 'Project'
+    # metadata_element_type_name = 'Project'
     open_metadata_type_name = None
     property_value = "Clinical Trials Management"
     property_names = ["name", "qualifiedName"]
@@ -559,11 +676,8 @@ def test_get_relationships_with_property_value():
         assert True
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+PyegeriaException    ) as e:
+        print_basic_exception(e)
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
     finally:
@@ -601,3 +715,42 @@ def test_retrieve_instance_for_guid():
         console.print("\n\n\t Response is " + response)
 
     assert True
+
+
+def test_set_criticality_classification():
+    # metadata_element_type_name = 'Project'
+    element_guid = "9f6f668d-d9b8-44e3-915b-9edeb4c1f8a5"
+    body = {
+            "class": "NewClassificationRequestBody",
+            "Properties": {
+               "class": "CriticalityProperties",
+               "levelIdentifier": 3,
+               "criticality": 3
+           }
+        }
+
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        result = c_client.set_criticality_classification(
+            element_guid,
+            body
+        )
+
+        if type(result) is list:
+            print_json(data=result)
+        elif type(result) is str:
+            print("\n\n\t Response is: " + result)
+        else:
+            print(f"type is: {type(result)}")
+
+        assert True
+
+    except (
+        PyegeriaException
+    ) as e:
+        print_basic_exception(e)
+        assert False, "Invalid request"
+    finally:
+        c_client.close_session()

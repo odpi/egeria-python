@@ -10,6 +10,7 @@ List catalog targets
 """
 import argparse
 import os
+import sys
 import time
 
 from rich import box
@@ -18,13 +19,12 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 
+
 from pyegeria import (
-    INTEGRATION_GUIDS,
     AutomatedCuration,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+    EgeriaTech,
+    PyegeriaException,
+    print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -144,26 +144,28 @@ def display_catalog_targets(
         return table
 
     try:
-        a_client = AutomatedCuration(view_server, view_url, user)
+        a_client = EgeriaTech(view_server, view_url, user)
         token = a_client.create_egeria_bearer_token(user, user_pass)
         connector = connector.strip()
-        if connector not in INTEGRATION_GUIDS.keys():
-            raise Exception
 
-        connector_guid = INTEGRATION_GUIDS[connector]
+
+        connector_guid = a_client.get_connector_guid(connector)
+        if connector_guid is None or connector_guid == "No connector found":
+            console.print(f"\n\n===> No connector found with name '{connector}'\n\n")
+            sys.exit(1)
+
         cat_targets = a_client.get_catalog_targets(connector_guid)
         console = Console(force_terminal=not jupyter, width=width, soft_wrap=True)
         with console.pager(styles=True):
             console.print(generate_table(), soft_wrap=True)
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
-    except Exception as e:
+
+    except PyegeriaException as e:
         print(f"\n\n===> Perhaps integration connector {connector} is not known?\n\n")
+        print_basic_exception(e)
+    except (
+        Exception
+    ) as e:
         console.print_exception()
     finally:
         a_client.close_session()

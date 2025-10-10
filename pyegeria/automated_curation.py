@@ -10,16 +10,25 @@ import asyncio
 import datetime
 
 from httpx import Response
-
+from loguru import logger
+from pydantic import HttpUrl
+from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._client_new import Client2
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-)
-from pyegeria.models import GetRequestBody, FilterRequestBody
+from pyegeria._validators import validate_guid, validate_name, validate_search_string
+# from pyegeria._exceptions import (
+#     InvalidParameterException,
+#     PropertyServerException,
+#     UserNotAuthorizedException,
+# )
+from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody
 from pyegeria.utils import body_slimmer
-from ._validators import validate_guid, validate_name, validate_search_string
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.output_formatter import (
+    generate_output,
+    _extract_referenceable_properties,
+    populate_columns_from_properties,
+    get_required_relationships,
+)
 
 
 class AutomatedCuration(Client2):
@@ -54,6 +63,350 @@ class AutomatedCuration(Client2):
         Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
+        # Default entity label used by the output formatter for Technology Types
+        self.TECH_TYPE_ENTITY_LABEL = "TechType"
+        self.GOV_ACTION_TYPE_LABEL = "GovActionType"
+        self.CATALOG_TARGET_LABEL = "CatalogTarget"
+        self.ENGINE_ACTION_LABEL = "EngineAction"
+        self.GOV_ACTION_PROCESS_LABEL = "GovActionProcess"
+
+    def _extract_tech_type_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract properties from a technology type element and populate the provided columns_struct.
+        Tolerant to missing fields.
+        """
+        # Populate direct properties first
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+
+        # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get("key")
+            if key in header_props:
+                column["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                column["value"] = header_props.get("GUID")
+
+        # Try common category/type fields
+        category = (
+            element.get("properties", {}).get("category")
+            or element.get("elementProperties", {}).get("category")
+            or element.get("elementType", {}).get("typeName")
+            or ""
+        )
+        for column in columns_list:
+            if column.get("key") in ("category", "type_name"):
+                column["value"] = category
+
+        # Classification names if present
+        class_names = []
+        for c in (element.get("elementHeader", {}).get("classifications") or []):
+            name = c.get("classificationName")
+            if name:
+                class_names.append(name)
+        if class_names:
+            for column in columns_list:
+                if column.get("key") == "classifications":
+                    column["value"] = ", ".join(class_names)
+                    break
+
+        # Relationship-driven fields (generic handling)
+        col_data = get_required_relationships(element, col_data)
+
+        # Mermaid graph support if present
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for column in columns_list:
+            if column.get("key") == "mermaid":
+                column["value"] = mermaid_val
+                break
+
+        return col_data
+
+    def _generate_tech_type_output(
+        self,
+        elements: dict | list[dict],
+        filter: str | None,
+        element_type_name: str | None,
+        output_format: str = "DICT",
+        output_format_set: dict | str | None = None,
+    ) -> str | list[dict]:
+        """Generate output for technology types in the specified format."""
+        entity_type = element_type_name or self.TECH_TYPE_ENTITY_LABEL
+
+        # Resolve output format set
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+
+        # Optional hook for extra server calls to enrich rows
+        get_additional_props_name = (
+            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
+        )
+        if isinstance(get_additional_props_name, str):
+            parts = get_additional_props_name.split(".")
+            method_name = parts[-1] if parts else None
+            if method_name and hasattr(self, method_name):
+                get_additional_props_func = getattr(self, method_name)
+
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_tech_type_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
+    def _extract_gov_action_type_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get("key")
+            if key in header_props:
+                column["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                column["value"] = header_props.get("GUID")
+        col_data = get_required_relationships(element, col_data)
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for column in columns_list:
+            if column.get("key") == "mermaid":
+                column["value"] = mermaid_val
+                break
+        return col_data
+
+    def _generate_gov_action_type_output(self, elements: dict | list[dict], filter: str | None,
+                                         element_type_name: str | None, output_format: str = "DICT",
+                                         output_format_set: dict | str | None = None) -> str | list[dict]:
+        entity_type = element_type_name or self.GOV_ACTION_TYPE_LABEL
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+        get_additional_props_name = (
+            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
+        )
+        if isinstance(get_additional_props_name, str):
+            method_name = get_additional_props_name.split(".")[-1]
+            if hasattr(self, method_name):
+                get_additional_props_func = getattr(self, method_name)
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_gov_action_type_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
+    def _extract_catalog_target_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get("key")
+            if key in header_props:
+                column["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                column["value"] = header_props.get("GUID")
+        col_data = get_required_relationships(element, col_data)
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for column in columns_list:
+            if column.get("key") == "mermaid":
+                column["value"] = mermaid_val
+                break
+        return col_data
+
+    def _generate_catalog_target_output(self, elements: dict | list[dict], filter: str | None,
+                                        element_type_name: str | None, output_format: str = "DICT",
+                                        output_format_set: dict | str | None = None) -> str | list[dict]:
+        entity_type = element_type_name or self.CATALOG_TARGET_LABEL
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_catalog_target_properties,
+            None,
+            output_formats,
+        )
+
+    def _extract_engine_action_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+        header_props = _extract_referenceable_properties(element)
+        for col in columns_list:
+            key = col.get("key")
+            if key in header_props:
+                col["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                col["value"] = header_props.get("GUID")
+        # EngineAction specifics: status, process_name, received_guards, completion_guards, request_type
+        status = (
+            element.get("properties", {}).get("status")
+            or element.get("elementProperties", {}).get("status")
+            or element.get("status")
+        )
+        process_name = (
+            element.get("properties", {}).get("processName")
+            or element.get("elementProperties", {}).get("processName")
+            or element.get("processName")
+        )
+        req_type = (
+            element.get("properties", {}).get("requestType")
+            or element.get("elementProperties", {}).get("requestType")
+            or element.get("requestType")
+        )
+        rec_guards = element.get("receivedGuards") or element.get("received_guards") or []
+        comp_guards = element.get("completionGuards") or element.get("completion_guards") or []
+        # assign to columns if present
+        for col in columns_list:
+            key = col.get("key")
+            if key == "status":
+                col["value"] = status
+            elif key in ("process_name", "processName"):
+                col["value"] = process_name
+            elif key in ("request_type", "requestType"):
+                col["value"] = req_type
+            elif key in ("received_guards", "receivedGuards"):
+                col["value"] = ", ".join(map(str, rec_guards)) if isinstance(rec_guards, list) else rec_guards
+            elif key in ("completion_guards", "completionGuards"):
+                col["value"] = ", ".join(map(str, comp_guards)) if isinstance(comp_guards, list) else comp_guards
+        col_data = get_required_relationships(element, col_data)
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for col in columns_list:
+            if col.get("key") == "mermaid":
+                col["value"] = mermaid_val
+                break
+        return col_data
+
+    def _generate_engine_action_output(self, elements: dict | list[dict], filter: str | None,
+                                       element_type_name: str | None, output_format: str = "DICT",
+                                       output_format_set: dict | str | None = None) -> str | list[dict]:
+        entity_type = element_type_name or self.ENGINE_ACTION_LABEL
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+        get_additional_props_name = (
+            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
+        )
+        if isinstance(get_additional_props_name, str):
+            method_name = get_additional_props_name.split(".")[-1]
+            if hasattr(self, method_name):
+                get_additional_props_func = getattr(self, method_name)
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_engine_action_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
+    def _extract_gov_action_process_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+        header_props = _extract_referenceable_properties(element)
+        for col in columns_list:
+            key = col.get("key")
+            if key in header_props:
+                col["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                col["value"] = header_props.get("GUID")
+        # GAP specifics: processStatus, elementTypeName, stepCount
+        proc_status = (
+            element.get("properties", {}).get("processStatus")
+            or element.get("elementProperties", {}).get("processStatus")
+            or element.get("processStatus")
+        )
+        step_count = (
+            element.get("properties", {}).get("stepCount")
+            or element.get("elementProperties", {}).get("stepCount")
+            or element.get("stepCount")
+        )
+        for col in columns_list:
+            key = col.get("key")
+            if key in ("process_status", "processStatus"):
+                col["value"] = proc_status
+            elif key == "stepCount":
+                col["value"] = step_count
+        col_data = get_required_relationships(element, col_data)
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for col in columns_list:
+            if col.get("key") == "mermaid":
+                col["value"] = mermaid_val
+                break
+        return col_data
+
+    def _generate_gov_action_process_output(self, elements: dict | list[dict], filter: str | None,
+                                            element_type_name: str | None, output_format: str = "DICT",
+                                            output_format_set: dict | str | None = None) -> str | list[dict]:
+        entity_type = element_type_name or self.GOV_ACTION_PROCESS_LABEL
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_gov_action_process_properties,
+            None,
+            output_formats,
+        )
+
     async def _async_create_elem_from_template(self, body: dict) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
@@ -68,10 +421,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         See also: https://egeria-project.org/features/templated-cataloguing/overview/
@@ -150,7 +500,6 @@ class AutomatedCuration(Client2):
             self._async_create_elem_from_template(body)
         )
         return response
-
 
     async def _async_create_kafka_server_element_from_template(
             self,
@@ -382,7 +731,7 @@ class AutomatedCuration(Client2):
             "class": "TemplateRequestBody",
             "templateGUID": template_guid,
             "isOwnAnchor": True,
-            "allowRetrieve" : True,
+            "allowRetrieve": True,
             "placeholderPropertyValues": {
                 "fileName": file_name,
                 "fileType": file_type,
@@ -1389,8 +1738,9 @@ class AutomatedCuration(Client2):
     # Engine Actions
     #
     async def _async_get_engine_actions(
-            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None
-    ) -> list:
+            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None,
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
+    ) -> list | str:
         """Retrieve the engine actions that are known to the server. Async version.
         Parameters
         ----------
@@ -1409,7 +1759,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        PyegeriaException
+                PyegeriaException
         ValidationError
 
         Notes
@@ -1431,11 +1781,15 @@ class AutomatedCuration(Client2):
         # return await self._async_get_guid_request(url, "EngineAction", _generate_default_output,
         #                                          output_format="JSON", output_format_set="Referenceable", body=body )
         response = await self._async_make_request("GET", url)
-        return response.json().get("element", "No element found")
+        elements = response.json().get("elements", "No element found")
+        # Apply formatter if not raw JSON requested
+        return self._generate_engine_action_output(elements, None, self.ENGINE_ACTION_LABEL,
+                                                   output_format=output_format, output_format_set=output_format_set)
 
     def get_engine_actions(
-            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None
-    ) -> list:
+            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None,
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
+    ) -> list | str:
         """Retrieve the engine actions that are known to the server.
         Parameters
         ----------
@@ -1453,7 +1807,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        PyegeriaException
+                PyegeriaException
         ValidationError
 
         Notes
@@ -1470,7 +1824,8 @@ class AutomatedCuration(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_actions(start_from, page_size, body)
+            self._async_get_engine_actions(start_from, page_size, body,
+                                           output_format=output_format, output_format_set=output_format_set)
         )
         return response
 
@@ -1490,7 +1845,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        PyegeriaException
+                PyegeriaException
         ValidationError
 
 
@@ -1520,10 +1875,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1550,10 +1902,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1584,10 +1933,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1597,7 +1943,8 @@ class AutomatedCuration(Client2):
         return
 
     async def _async_get_active_engine_actions(
-            self, start_from: int = 0, page_size: int = 0
+            self, start_from: int = 0, page_size: int = 0,
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
     ) -> list | str:
         """Retrieve the engine actions that are still in process. Async Version.
 
@@ -1629,10 +1976,13 @@ class AutomatedCuration(Client2):
         )
 
         response = await self._async_make_request("GET", url)
-        return response.json().get("elements", "no actions")
+        elements = response.json().get("elements", "no actions")
+        return self._generate_engine_action_output(elements, None, self.ENGINE_ACTION_LABEL,
+                                                   output_format=output_format, output_format_set=output_format_set)
 
     def get_active_engine_actions(
-            self, start_from: int = 0, page_size: int = 0
+            self, start_from: int = 0, page_size: int = 0,
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
@@ -1659,7 +2009,8 @@ class AutomatedCuration(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_active_engine_actions(start_from, page_size)
+            self._async_get_active_engine_actions(start_from, page_size,
+                                                  output_format=output_format, output_format_set=output_format_set)
         )
         return response
 
@@ -1689,10 +2040,7 @@ class AutomatedCuration(Client2):
              found with the given name.
         Raises:
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1735,10 +2083,7 @@ class AutomatedCuration(Client2):
             found with the given name.
         Raises:
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1758,6 +2103,8 @@ class AutomatedCuration(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
@@ -1790,10 +2137,7 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1802,17 +2146,24 @@ class AutomatedCuration(Client2):
         validate_search_string(search_string)
         if search_string == "*":
             search_string = None
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
 
-        url = (
-            f"{self.curation_command_root}/engine-actions/"
-            f"by-search-string"
+        url = str(HttpUrl(f"{self.curation_command_root}/assets/by-search-string"))
+        return await self._async_find_request(
+            url,
+            _type=self.ENGINE_ACTION_LABEL,
+            search_string=search_string,
+            _gen_output=self._generate_engine_action_output,
+            classification_names=None,
+            metadata_element_types=["EngineAction"],
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            output_format_set=output_format_set,
+            body=None,
         )
-        body = {"class": "SearchStringRequestBody", "name": search_string}
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no actions")
 
     def find_engine_actions(
             self,
@@ -1822,6 +2173,8 @@ class AutomatedCuration(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the list of engine action metadata elements that contain the search string.
         Parameters
@@ -1854,10 +2207,7 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/engine-action
@@ -1872,6 +2222,8 @@ class AutomatedCuration(Client2):
                 ignore_case,
                 start_from,
                 page_size,
+                output_format=output_format,
+                output_format_set=output_format_set,
             )
         )
         return response
@@ -1880,328 +2232,6 @@ class AutomatedCuration(Client2):
     # Governance action processes
     #
 
-    async def _async_get_governance_action_process_by_guid(
-            self, process_guid: str
-    ) -> dict | str:
-        """Retrieve the governance action process metadata element with the supplied unique identifier. Async Version.
-
-        Parameters:
-        ----------
-            process_guid: str
-              The GUID (Globally Unique Identifier) of the governance action process.
-
-
-        Returns:
-        -------
-            dict: The JSON representation of the governance action process element.
-
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-        """
-
-        validate_guid(process_guid)
-
-        url = (
-            f"{self.curation_command_root}/"
-            f"governance-action-processes/{process_guid}"
-        )
-
-        response = await self._async_make_request("GET", url)
-        return response.json().get("element", "no actions")
-
-    def get_governance_action_process_by_guid(self, process_guid: str) -> dict | str:
-        """Retrieve the governance action process metadata element with the supplied unique identifier.
-
-        Parameters:
-        ----------
-            process_guid: str
-              The GUID (Globally Unique Identifier) of the governance action process.
-
-        Returns:
-        -------
-            dict: The JSON representation of the governance action process element.
-
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_governance_action_process_by_guid(process_guid)
-        )
-        return response
-
-    async def _async_get_gov_action_process_graph(
-            self, process_guid: str
-    ) -> dict | str:
-        """Retrieve the governance action process metadata element with the supplied unique
-            identifier along with the flow definition describing its implementation. Async Version.
-        Parameters
-        ----------
-        process_guid : str
-            The process GUID to retrieve the graph for.
-
-        Returns
-        -------
-        dict or str
-            A dictionary representing the graph of the governance action process, or the string "no actions"
-            if no actions are found.
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-
-        """
-
-        validate_guid(process_guid)
-
-        url = (
-            f"{self.curation_command_root}/"
-            f"governance-action-processes/{process_guid}/graph"
-        )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("element", "no actions")
-
-    def get_gov_action_process_graph(self, process_guid: str) -> dict | str:
-        """Retrieve the governance action process metadata element with the supplied unique
-         identifier along with the flow definition describing its implementation.
-        Parameters
-        ----------
-        process_guid : str
-            The process GUID to retrieve the graph for.
-
-        Returns
-        -------
-        dict or str
-            A dictionary representing the graph of the governance action process, or the string "no actions"
-            if no actions are found.
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-            this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_gov_action_process_graph(process_guid)
-        )
-        return response
-
-    async def _async_get_gov_action_processes_by_name(
-            self,
-            name: str,
-            start_from: int = None,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action process metadata elements with a matching qualified or display name.
-         There are no wildcards supported on this request. Async Version.
-
-        Parameters
-        ----------
-        name : str
-            The name of the engine action to retrieve.
-
-        start_from : int, optional
-            The index to start retrieving engine actions from. If not provided, the default value will be used.
-        page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default
-            global maximum paging size will be used.
-
-        Returns
-        -------
-        list of dict | str
-            A list of dictionaries representing the retrieved engine actions,
-            or "no actions" if no engine actions were found with the given name.
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
-
-        validate_name(name)
-
-        url = (
-            f"{self.curation_command_root}/governance-action-processes/"
-            f"by-name"
-        )
-        body = {"filter": name}
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no actions")
-
-    def get_gov_action_processes_by_name(
-            self,
-            name: str,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action process metadata elements with a matching qualified or display name.
-         There are no wildcards supported on this request.
-
-        Parameters
-        ----------
-        name : str
-            The name of the engine action to retrieve.
-
-        start_from : int, optional
-            The index to start retrieving engine actions from. If not provided, the default value will be used.
-        page_size : int, optional
-            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
-             maximum paging size will be used.
-
-        Returns
-        -------
-        list of dict | str
-            A list of dictionaries representing the retrieved engine actions,
-            or "no actions" if no engine actions were found with the given name.
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_gov_action_processes_by_name(name, start_from, page_size)
-        )
-        return response
-
-    async def _async_find_gov_action_processes(
-            self,
-            search_string: str,
-            starts_with: bool = False,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action process metadata elements that contain the search string. Async ver.
-
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
-
-
-
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
-
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
-
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
-
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the governance action processes found based on the search query.
-            If no actions are found, returns the string "no actions".
-
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
-
-        validate_search_string(search_string)
-        if search_string == "*":
-            search_string = None
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-
-        url = (
-            f"{self.curation_command_root}/governance-action-processes/"
-            f"by-search-string"
-        )
-
-        if search_string:
-            body = {"filter": search_string}
-            response = await self._async_make_request("POST", url, body)
-        else:
-            response = await self._async_make_request("POST", url)
-
-        return response.json().get("elements", "no actions")
-
-    def find_gov_action_processes(
-            self,
-            search_string: str = "*",
-            starts_with: bool = False,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action process metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
-
-
-
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
-
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
-
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
-
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the governance action processes found based on the search query.
-            If no actions are found, returns the string "no actions".
-
-        Raises:
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_gov_action_processes(
-                search_string,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-            )
-        )
-        return response
 
     async def _async_initiate_gov_action_process(
             self,
@@ -2238,10 +2268,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         """
 
         start_time: datetime = (
@@ -2298,10 +2325,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -2317,254 +2341,7 @@ class AutomatedCuration(Client2):
         )
         return response
 
-    async def _async_get_gov_action_types_by_guid(
-            self, gov_action_type_guid: str
-    ) -> dict | str:
-        """Retrieve the governance action type metadata element with the supplied unique identifier. Async version.
 
-        Parameters:
-        ----------
-            gov_action_type_guid: str
-              The GUID (Globally Unique Identifier) of the governance action type to retrieve.
-
-        Returns:
-        -------
-            dict: The JSON representation of the governance action type element.
-
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-        """
-
-        validate_guid(gov_action_type_guid)
-
-        url = (
-            f"{self.curation_command_root}/"
-            f"governance-action-types/{gov_action_type_guid}"
-        )
-
-        response = await self._async_make_request("GET", url)
-        return response.json().get("element", "no actions")
-
-    def get_gov_action_types_by_guid(self, gov_action_type_guid: str) -> dict | str:
-        """Retrieve the governance action type metadata element with the supplied unique identifier.
-
-        Parameters:
-        ----------
-            gov_action_type_guid: str
-              The GUID (Globally Unique Identifier) of the governance action type to retrieve.
-
-        Returns:
-        -------
-            dict: The JSON representation of the governance action type element.
-
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_gov_action_types_by_guid(gov_action_type_guid)
-        )
-        return response
-
-    async def _async_get_gov_action_types_by_name(
-            self,
-            action_type_name,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action type metadata elements with a matching qualified or display name.
-        There are no wildcards supported on this request. Async version.
-
-            Parameters:
-            ----------
-                action_type_name: str
-                  The name of the governance action type to retrieve.
-
-            Returns:
-            -------
-                dict: The JSON representation of the governance action type element.
-
-            Raises:
-            ------
-                InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                           this exception is raised with details from the response content.
-                PropertyServerException: If the API response indicates a server side error.
-                UserNotAuthorizedException:
-        """
-
-        validate_name(action_type_name)
-
-        url = (
-            f"{self.curation_command_root}/"
-            f"governance-action-types/by-name"
-        )
-
-        body = {"filter": action_type_name}
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no actions")
-
-    def get_gov_action_types_by_name(
-            self,
-            action_type_name,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action type metadata elements with a matching qualified or display name.
-        There are no wildcards supported on this request. Async version.
-
-        Parameters:
-        ----------
-            action_type_name: str
-              The name of the governance action type to retrieve.
-
-        Returns:
-        -------
-            dict: The JSON representation of the governance action type element.
-
-        Raises:
-        ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
-                                       this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_gov_action_types_by_name(
-                action_type_name, start_from, page_size
-            )
-        )
-        return response
-
-    async def _async_find_gov_action_types(
-            self,
-            search_string: str = "*",
-            starts_with: bool = False,
-            ends_with: bool = False,
-            ignore_case: bool = True,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action type metadata elements that contain the search string.
-         Async Version.
-
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
-
-
-
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
-
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
-
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
-
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the governance action types found based on the search query.
-            If no actions are found, returns the string "no action types".
-
-        Raises
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
-        """
-
-        validate_search_string(search_string)
-        if search_string == "*":
-            search_string = None
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-
-        url = (
-            f"{self.curation_command_root}/governance-action-types/"
-            f"by-search-string"
-        )
-        body = {"filter": search_string}
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no action types")
-
-    def find_gov_action_types(
-            self,
-            search_string: str = "*",
-            starts_with: bool = False,
-            ends_with: bool = False,
-            ignore_case: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-    ) -> list | str:
-        """Retrieve the list of governance action type metadata elements that contain the search string.
-
-        Parameters
-        ----------
-        search_string : str
-            The string used for searching engine actions by name.
-
-
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
-
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
-
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
-
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `0`.
-
-        Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the governance action types found based on the search query.
-            If no actions are found, returns the string "no action types".
-
-        Raises
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_gov_action_types(
-                search_string,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-            )
-        )
-        return response
 
     async def _async_initiate_gov_action_type(
             self,
@@ -2601,10 +2378,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         """
 
         url = f"{self.curation_command_root}/governance-action-types/initiate"
@@ -2658,10 +2432,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
+        PyegeriaException        """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_initiate_gov_action_type(
@@ -3155,6 +2926,8 @@ class AutomatedCuration(Client2):
             integ_connector_guid: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "CatalogTarget",
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
         Async version.
@@ -3183,13 +2956,20 @@ class AutomatedCuration(Client2):
         )
 
         response = await self._async_make_request("GET", url)
-        return response.json().get("elements", "no targets")
+        elements = response.json().get("elements", "no targets")
+        if isinstance(elements, str):
+            return elements
+        return self._generate_catalog_target_output(elements, None, self.CATALOG_TARGET_LABEL,
+                                                    output_format=output_format,
+                                                    output_format_set=output_format_set)
 
     def get_catalog_targets(
             self,
             integ_connector_guid: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "CatalogTarget",
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 
@@ -3211,11 +2991,16 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_targets(integ_connector_guid, start_from, page_size)
+            self._async_get_catalog_targets(integ_connector_guid, start_from, page_size,
+                                            output_format=output_format,
+                                            output_format_set=output_format_set)
         )
         return response
 
-    async def _async_get_catalog_target(self, relationship_guid: str) -> dict | str:
+    async def _async_get_catalog_target(self, relationship_guid: str,
+                                        output_format: str = "JSON",
+                                        output_format_set: str | dict = "CatalogTarget",
+                                        body: dict | GetRequestBody = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Further Information:
         https://egeria-project.org/concepts/integration-connector/ .    Async version.
 
@@ -3238,12 +3023,21 @@ class AutomatedCuration(Client2):
 
         validate_guid(relationship_guid)
 
-        url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}"
+        url = str(HttpUrl(f"{self.curation_command_root}/catalog-targets/{relationship_guid}"))
+        response = await self._async_get_guid_request(
+            url,
+            _type=self.CATALOG_TARGET_LABEL,
+            _gen_output=self._generate_catalog_target_output,
+            output_format=output_format,
+            output_format_set=output_format_set,
+            body=body,
+        )
+        return response
 
-        response = await self._async_make_request("GET", url)
-        return response.json().get("element", "no actions")
-
-    def get_catalog_target(self, relationship_guid: str) -> dict | str:
+    def get_catalog_target(self, relationship_guid: str,
+                           output_format: str = "JSON",
+                           output_format_set: str | dict = "CatalogTarget",
+                           body: dict | GetRequestBody = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.  Further Information:
         https://egeria-project.org/concepts/integration-connector/ .
 
@@ -3266,7 +3060,10 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_catalog_target(relationship_guid)
+            self._async_get_catalog_target(relationship_guid,
+                                           output_format=output_format,
+                                           output_format_set=output_format_set,
+                                           body=body)
         )
         return response
 
@@ -3651,7 +3448,9 @@ class AutomatedCuration(Client2):
         return response
 
     async def _async_get_technology_type_detail(self, type_name: str, template_only: bool = False,
-                                                body: dict | FilterRequestBody = None) -> list | str:
+                                                body: dict | FilterRequestBody = None,
+                                                output_format: str = "JSON",
+                                                output_format_set: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
@@ -3672,7 +3471,7 @@ class AutomatedCuration(Client2):
             If the technology type is not found, returns the string "no type found".
         Raises
         ------
-        PyegeriaException
+                PyegeriaException
         ValidationError
 
         Notes
@@ -3696,20 +3495,32 @@ class AutomatedCuration(Client2):
         """
 
         # validate_name(type_name)
-        url = f"{self.curation_command_root}/technology-types/by-name"
+        url = str(HttpUrl(f"{self.curation_command_root}/technology-types/by-name"))
         if body is None:
             classified_elements = ["Template"] if template_only else []
             body = {
                 "class": "FilterRequestBody",
                 "filter": type_name,
-                "includeOnlyClassifiedElements": classified_elements
+                "includeOnlyClassifiedElements": classified_elements,
             }
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("element", "no type found")
+        response = await self._async_get_name_request(
+            url,
+            _type=self.TECH_TYPE_ENTITY_LABEL,
+            _gen_output=self._generate_tech_type_output,
+            filter_string=type_name,
+            classification_names=classified_elements if template_only else None,
+            start_from=0,
+            page_size=0,
+            output_format=output_format,
+            output_format_set=output_format_set,
+            body=body,
+        )
+        return response
 
     def get_technology_type_detail(self, type_name: str, template_only: bool = False,
-                                   body: dict | FilterRequestBody = None) -> list | str:
+                                   body: dict | FilterRequestBody = None,
+                                   output_format: str = "JSON",
+                                   output_format_set: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
@@ -3730,7 +3541,7 @@ class AutomatedCuration(Client2):
                  If the technology type is not found, returns the string "no type found".
              Raises
              ------
-             PyegeriaException
+                     PyegeriaException
              ValidationError
 
              Notes
@@ -3755,7 +3566,9 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_detail(type_name, template_only=template_only, body=body)
+            self._async_get_technology_type_detail(type_name, template_only=template_only, body=body,
+                                                   output_format=output_format,
+                                                   output_format_set=output_format_set)
         )
         return response
 
@@ -3774,7 +3587,7 @@ class AutomatedCuration(Client2):
         )
         return response
 
-    async def _async_find_technology_types(
+    async def async_find_technology_types(
             self,
             search_string: str = "*",
             start_from: int = 0,
@@ -3782,6 +3595,8 @@ class AutomatedCuration(Client2):
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = True,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "TechType"
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -3819,10 +3634,6 @@ class AutomatedCuration(Client2):
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
 
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
-        validate_name(search_string)
         if search_string == "*":
             search_string = None
 
@@ -3844,9 +3655,135 @@ class AutomatedCuration(Client2):
         }
 
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no tech found")
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_tech_type_output(elements, search_string, "TechType",
+                                                   output_format, output_format_set)
+        return elements
+
 
     def find_technology_types(
+            self,
+            search_string: str = "*",
+            start_from: int = 0,
+            page_size: int = 0,
+            starts_with: bool = False,
+            ends_with: bool = False,
+            ignore_case: bool = True,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "TechType",
+    ) -> list | str:
+        """Retrieve the list of technology types that contain the search string. Async version.
+
+        Parameters:
+        ----------
+        type_name: str
+            The technology type we are looking for.
+
+        Returns:
+        -------
+            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+
+        Raises:
+        ------
+        InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                   this exception is raised with details from the response content.
+        PropertyServerException: If the API response indicates a server side error.
+        UserNotAuthorizedException:
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_find_technology_types(
+                search_string,
+                start_from,
+                page_size,
+                starts_with,
+                ends_with,
+                ignore_case,
+                output_format,
+                output_format_set
+            )
+        )
+        return response
+
+    async def async_find_technology_types_body(
+            self,
+            search_string: str = "*",
+            start_from: int = 0,
+            page_size: int = 0,
+            starts_with: bool = False,
+            ends_with: bool = False,
+            ignore_case: bool = True,
+            output_format: str = "JSON",
+            output_format_set: str | dict = "TechType",
+            body: dict | SearchStringRequestBody = None
+    ) -> list | str:
+        """Retrieve the list of technology types that contain the search string. Async version.
+
+        Parameters:
+        ----------
+        type_name: str
+            The technology type we are looking for.
+        starts_with : bool, optional
+           Whether to search engine actions that start with the given search string. Default is False.
+
+        ends_with : bool, optional
+           Whether to search engine actions that end with the given search string. Default is False.
+
+        ignore_case : bool, optional
+           Whether to ignore case while searching engine actions. Default is True.
+
+        start_from : int, optional
+           The index from which to start fetching the engine actions. Default is 0.
+
+        page_size : int, optional
+           The maximum number of engine actions to fetch in a single request. Default is `0`.
+        body: dict | SearchStringRequestBody, optional
+            Full request body, if provided, overrides other parameters.
+
+        Returns:
+        -------
+            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+
+        Raises:
+        ------
+        InvalidParameterException: If the API response indicates an error (non-200 status code),
+                                   this exception is raised with details from the response content.
+        PropertyServerException: If the API response indicates a server side error.
+        UserNotAuthorizedException:
+
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/deployed-implementation-type
+        """
+
+        if search_string == "*":
+            search_string = None
+
+        url = str(HttpUrl(f"{self.curation_command_root}/technology-types/by-search-string"))
+        response = await self._async_find_request(url, _type="TechType", search_string=search_string,
+                                                  _gen_output=self._generate_tech_type_output,
+                                                  classification_names=None,
+                                                  metadata_element_types='ValidMetadataValue',
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  body=body)
+
+        return response
+
+
+    def find_technology_types_body(
             self,
             search_string: str = "*",
             start_from: int = 0,
@@ -3880,7 +3817,7 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_technology_types(
+            self.async_find_technology_types_body(
                 search_string,
                 start_from,
                 page_size,
@@ -3892,16 +3829,16 @@ class AutomatedCuration(Client2):
         return response
 
     async def _async_get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0
+            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", output_format_set: str = "TechType"
     ) -> list | str:
         """Get all technology types - async version"""
-        return await self._async_find_technology_types("*", start_from, page_size)
+        return await self._async_find_technology_types("*", start_from, page_size, output_format, output_format_set)
 
     def get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0
+            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", output_format_set: str = "TechType"
     ) -> list | str:
         """Get all technology types"""
-        return self.find_technology_types("*", start_from, page_size)
+        return self.find_technology_types("*", start_from, page_size, output_format, output_format_set)
 
     def print_engine_action_summary(self, governance_action: dict):
         """print_governance_action_summary
@@ -3916,10 +3853,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-        """
+        PyegeriaException        """
         if governance_action:
             name = governance_action.get("displayName")
             if not name:
@@ -3962,10 +3896,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
+        PyegeriaException
         """
         governance_actions = self.get_engine_actions()
         if governance_actions is not None:

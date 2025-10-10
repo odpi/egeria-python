@@ -19,7 +19,7 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR, populate_common_columns
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
-from pyegeria import validate_guid
+from pyegeria._validators import validate_guid
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._client_new import Client2, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED

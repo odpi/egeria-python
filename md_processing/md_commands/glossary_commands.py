@@ -32,10 +32,9 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
                                                                 update_a_command, extract_attribute,
                                                                 get_element_by_name, process_name_list)
 
-from pyegeria import body_slimmer
 from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_CATEGORIES_FOUND)
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.utils import make_format_set_name_from_type
+from pyegeria.utils import make_format_set_name_from_type, body_slimmer
 
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))

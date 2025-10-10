@@ -5,11 +5,18 @@ This module provides a basic MCP server for Egeria.
 """
 import re
 import sys
+import nest_asyncio
+
 from typing import Any, Dict, Optional
 
+from mcp.server.fastmcp.exceptions import ValidationError
+
 from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria._exceptions_new import print_validation_error
+
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
+nest_asyncio.apply()
 
 try:
     # We use Optional[] and List[] types, so we import them.
@@ -42,16 +49,22 @@ def main() -> None:
         """
         print("DEBUG: Initializing Egeria client...", file=sys.stderr)
         from pyegeria.config import settings as _settings
+        user_id = _settings.User_Profile.user_name
+        user_pwd = _settings.User_Profile.user_pwd
 
         GLOBAL_EGERIA_CLIENT = EgeriaTech(
             _settings.Environment.egeria_view_server,
             _settings.Environment.egeria_view_server_url,
-            _settings.User_Profile.user_name,
-            _settings.User_Profile.user_pwd
+            user_id,
+            user_pwd
         )
+        print("DEBUG: Egeria Client initialized", file=sys.stderr)
         GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview","secret")
         print("DEBUG: Egeria Client connected", file=sys.stderr)
 
+    except ValidationError as e:
+        print_validation_error(e)
+        raise
     except Exception as e:
         print(f"DEBUG: Exception occurred: {str(e)}", file=sys.stderr)
         raise
@@ -89,6 +102,9 @@ def main() -> None:
             ignore_case: Optional[bool] = None,
             output_format: str = "DICT"
     ) -> Dict[str, Any]:
+        import asyncio
+        import nest_asyncio
+        nest_asyncio.apply()
 
         """Run a report with the specified parameters."""
         print("DEBUG: Running report...", file=sys.stderr)
@@ -118,12 +134,18 @@ def main() -> None:
 
             egeria_client: EgeriaTech = GLOBAL_EGERIA_CLIENT
             print("DEBUG: Egeria Client connected", file=sys.stderr)
-
-            result = await _async_run_report_tool(
-                report=report_name,
-                egeria_client=egeria_client,
-                params=params
+            result = await asyncio.wait_for(
+                _async_run_report_tool(
+                    report=report_name,
+                    egeria_client=egeria_client,
+                    params=params),
+                timeout=30  # Adjust timeout as needed
             )
+            # result = await _async_run_report_tool(
+            #     report=report_name,
+            #     egeria_client=egeria_client,
+            #     params=params
+            # )
             print("DEBUG: run_report completed successfully", file=sys.stderr)
             return _ok(result)
         except Exception as e:
@@ -132,7 +154,7 @@ def main() -> None:
             raise
 
     @srv.tool(name="prompt")
-    def natural_language_prompt(prompt: str) -> Dict[str, Any]:
+    async def natural_language_prompt(prompt: str) -> Dict[str, Any]:
         """
         Handles natural language queries from the user.
         In a production environment, this would call an LLM API.
@@ -142,11 +164,9 @@ def main() -> None:
         # Example of simple logic: If the user asks to list reports, delegate to the tool.
         if "list" in prompt.lower() and "reports" in prompt.lower():
             print("DEBUG: Delegating prompt to list_reports tool.", file=sys.stderr)
-            return list_reports()  # Call the standard tool function directly
+            return list_reports()  # This is sync, so no await needed
         elif "run" in prompt.lower() and "report" in prompt.lower():
             print("DEBUG: Delegating prompt to run_report tool.", file=sys.stderr)
-            # Simple entity extraction for report name (Requires more robust logic in reality!)
-            # Let's assume the report name is the word immediately following "report"
 
             match = re.search(r'report\s+([a-zA-Z0-9]+)', prompt, re.IGNORECASE)
             report_name = match.group(1) if match else None
@@ -154,37 +174,32 @@ def main() -> None:
             if report_name:
                 print(f"DEBUG: Extracted report name: {report_name}", file=sys.stderr)
 
-                # Use another simple regex to look for page size
                 page_size_match = re.search(r'page size of\s+(\d+)', prompt, re.IGNORECASE)
                 page_size = int(page_size_match.group(1)) if page_size_match else None
 
                 search_match = re.search(r'search for\s+(.*?)(?:\s+in\s+report|\.|$)', prompt, re.IGNORECASE)
 
                 if search_match:
-                    # Extract the content captured by the group (.*?)
                     search_string = search_match.group(1).strip()
 
-                    # Check if the search string is meaningful
                     if search_string:
-                        # Use a default report for demonstration purposes
-
                         print(
                             f"DEBUG: Delegating prompt to run_report tool. Report: {report_name}, Search: '{search_string}'",
                             file=sys.stderr)
 
-                        # Call the standard tool function with extracted parameters
-                        return run_report_tool(
+                        # AWAIT the async function call
+                        return await run_report_tool(
                             report_name=report_name,
                             page_size=page_size,
                             search_string=search_string
                         )
 
-                # Delegate to the run_report_tool with the extracted parameters
-                return run_report_tool(
+                # AWAIT the async function call
+                return await run_report_tool(
                     report_name=report_name,
                     page_size=page_size
                 )
-        # Fallback: Just confirm the prompt was received.
+
         return {
             "response": f"Acknowledged natural language query: '{prompt}'. This would be sent to an LLM."
         }

@@ -12,6 +12,7 @@ import inspect
 import json
 import os
 import re
+import sys
 from collections.abc import Callable
 from typing import Any
 
@@ -26,7 +27,7 @@ from pyegeria._exceptions_new import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
+from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND, default_time_out
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
@@ -34,9 +35,14 @@ from pyegeria._validators import (
     validate_user_id,
 )
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-    TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody,
-    DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody, NewClassificationRequestBody,
-    DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody)
+                             TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
+                             NewRelationshipRequestBody,
+                             DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody,
+                             NewClassificationRequestBody,
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
+                             LevelIdentifierQueryBody)
+
+from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
@@ -156,6 +162,8 @@ class Client2:
         self._template_request_adapter = TypeAdapter(TemplateRequestBody)
         self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
         self._results_request_adapter = TypeAdapter(ResultsRequestBody)
+        self._level_identifier_query_body = TypeAdapter(LevelIdentifierQueryBody)
+
         try:
             result = self.check_connection()
             logger.info(f"client initialized, platform origin is: {result}")
@@ -203,7 +211,7 @@ class Client2:
         return
 
     async def _async_create_egeria_bearer_token(
-            self, user_id: str = None, password: str = None
+            self, user_id: str , password: str
     ) -> str:
         """Create and set an Egeria Bearer Token for the user. Async version
         Parameters
@@ -234,10 +242,8 @@ class Client2:
 
         """
         if user_id is None:
-            validate_user_id(self.user_id)
             user_id = self.user_id
         if password is None:
-            validate_name(self.user_pwd)
             password = self.user_pwd
 
         url = f"{self.platform_url}/api/token"
@@ -639,7 +645,7 @@ class Client2:
             }
             url = (
                 f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/"
-                f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
+                f"elements/guid-by-unique-name"
             )
 
             result = await self._async_make_request("POST", url, body_slimmer(body))
@@ -691,6 +697,9 @@ class Client2:
                                f"qualified_name={qualified_name}, tech_type={tech_type}")
             }
             raise PyegeriaInvalidParameterException(None, None, additional_info)
+    #
+    # Include basic functions for finding elements and relationships.
+    #
 
     def __get_guid__(
             self,
@@ -734,7 +743,157 @@ class Client2:
             q_name = f"{q_name}::{version_identifier}"
         return q_name
 
-    async def _async_get_element_by_guid_(self, element_guid: str) -> dict | str:
+    async def _async_get_relationships_with_property_value(
+        self,
+        relationship_type: str,
+        property_value: str,
+        property_names: [str],
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve relationships of the requested relationship type name and with the requested a value found in
+        one of the relationship's properties specified.  The value must match exactly. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+
+
+        body = {
+            "class": "FindPropertyNamesProperties",
+            "openMetadataType": relationship_type,
+            "propertyValue": property_value,
+            "propertyNames": property_names,
+            "effectiveTime": effective_time,
+        }
+
+        url = (
+            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-manager/relationships/"
+            f"with-exact-property-value"
+        )
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+        rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
+        if type(rels) is list:
+            if len(rels) == 0:
+                return NO_ELEMENTS_FOUND
+        return rels
+
+    def get_relationships_with_property_value(
+        self,
+        relationship_type: str,
+        property_value: str,
+        property_names: [str],
+        effective_time: str = None,
+        for_lineage: bool = None,
+        for_duplicate_processing: bool = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve relationships of the requested relationship type name and with the requested a value found in
+        one of the relationship's properties specified.  The value must match exactly.
+
+        Parameters
+        ----------
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_relationships_with_property_value(
+                relationship_type,
+                property_value,
+                property_names,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+                time_out,
+            )
+        )
+        return response
+
+    async def async_get_element_by_guid_(self, element_guid: str) -> dict | str:
         """
         Simplified, internal version of get_element_by_guid found in Classification Manager.
         Retrieve an element by its guid.  Async version.
@@ -764,7 +923,7 @@ class Client2:
             "effectiveTime": None,
         }
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager/elements/"
+        url = (f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-manager/elements/"
                f"{element_guid}?forLineage=false&forDuplicateProcessing=false")
 
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
@@ -772,6 +931,210 @@ class Client2:
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
 
         return elements
+
+    async def async_get_related_elements_with_property_value(
+            self,
+            element_guid: str,
+            relationship_type: str,
+            property_value: str,
+            property_names: [str],
+            metadata_element_type_name: str = None,
+            start_at_end: int = 1,
+            effective_time: str = None,
+            for_lineage: bool = None,
+            for_duplicate_processing: bool = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
+        the classification's properties specified.  The value must match exactly. An open metadata type name may be
+        supplied to restrict the types of elements returned. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the base element to get related elements for
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        metadata_element_type_name : str, default = None
+            - restrict search to elements of this open metadata type
+        start_at_end: int, default = 1
+            - The end of the relationship to start from - typically End1
+            - open metadata type to be used to restrict the search
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        body = {
+            "class": "FindPropertyNamesProperties",
+            "metadataElementTypeName": metadata_element_type_name,
+            "propertyValue": property_value,
+            "propertyNames": property_names,
+            "effectiveTime": effective_time,
+            "forLineage": for_lineage,
+            "forDuplicateProcessing": for_duplicate_processing,
+            "startFrom": start_from,
+            "pageSize": page_size
+        }
+
+        url = (
+             f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/{element_guid}"
+             f"/by-relationship/{relationship_type}/with-exact-property-value"
+        )
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is list:
+            if len(elements) == 0:
+                return NO_ELEMENTS_FOUND
+        return elements
+
+    def get_relationships_with_property_value(
+            self,
+            relationship_type: str,
+            property_value: str,
+            property_names: [str],
+            effective_time: str = None,
+            for_lineage: bool = None,
+            for_duplicate_processing: bool = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve relationships of the requested relationship type name and with the requested a value found in
+        one of the relationship's properties specified.  The value must match exactly.
+
+        Parameters
+        ----------
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_relationships_with_property_value(
+                relationship_type,
+                property_value,
+                property_names,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+                time_out,
+            )
+        )
+        return response
+
+    async def async_get_connector_guid(self, connector_name: str) -> str:
+        """Get the guid of a connector. Async version.
+            Parameters:
+                connector_name (str): The name of the connector to retrieve the guid for.
+            Returns:
+                str: The guid of the connector.
+        """
+        rel = await self._async_get_relationships_with_property_value(relationship_type="RegisteredIntegrationConnector",
+                                                             property_names=["connectorName"],
+                                                             property_value=connector_name,
+                                                             )
+        if rel == "No elements found":
+            logger.error(f"\n\n===> No connector found with name '{connector_name}'\n\n")
+            return "No connector found"
+        connector_guid = rel[0]['end2']['guid']
+
+        if connector_guid is None:
+            logger.error(f"\n\n===> No connector found with name '{connector_name}'\n\n")
+            return "No connector found"
+
+        return connector_guid
+
+
+    def get_connector_guid(self, connector_name: str) -> str:
+        """Get the guid of a connector.
+            Parameters:
+                connector_name (str): The name of the connector to retrieve the guid for.
+            Returns:
+                str: The guid of the connector.
+        """
+
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(
+            self.async_get_connector_guid(
+                connector_name
+            )
+        )
+        return result
+
+
+
+    #
+    # Helper functions for requests
+    #
+
 
     def validate_new_element_request(self, body: dict | NewElementRequestBody,
                                      prop: list[str]) -> NewElementRequestBody | None:
@@ -1100,6 +1463,35 @@ class Client2:
             return _gen_output(elements, "Members", _type,
                                output_format, output_format_set)
         return elements
+
+    async def _async_get_level_identifier_query_body_request(self, url: str, _gen_output: Callable[..., Any],
+                                              output_format: str = 'JSON',
+                                              output_format_set: str | dict = None,
+                                              body: dict | ResultsRequestBody = None) -> Any:
+        if isinstance(body, LevelIdentifierQueryBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._level_identifier_query_body.validate_python(body)
+        else:
+            return None
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return _gen_output(elements, "", "Referenceable",
+                               output_format, output_format_set)
+        return elements
+
 
     async def _async_create_element_body_request(self, url: str, prop: list[str],
                                                  body: dict | NewElementRequestBody = None) -> str:
@@ -1634,3 +2026,32 @@ class Client2:
     #            """
     #         loop = asyncio.get_event_loop()
     #         loop.run_until_complete(self._async_update_element_status(guid, status, body))
+
+    @dynamic_catch
+    def _extract_referenceable_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate default Referenceable columns for output using common population pipeline."""
+        return populate_common_columns(element, columns_struct)
+
+    @dynamic_catch
+    def _generate_referenceable_output(self, elements: dict | list[dict], search_string: str | None,
+                                       element_type_name: str | None,
+                                       output_format: str = "JSON",
+                                       output_format_set: dict | str = None) -> str | list[dict]:
+        """Generate formatted output for generic Referenceable elements.
+
+        If output_format is 'JSON', returns elements unchanged. Otherwise, resolves an
+        output format set and delegates to generate_output with a standard extractor.
+        """
+        if output_format == "JSON":
+            return elements
+        entity_type = element_type_name or "Referenceable"
+        output_formats = resolve_output_formats(entity_type, output_format, output_format_set, default_label=entity_type)
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_referenceable_properties,
+            get_additional_props_func=None,
+            columns_struct=output_formats,
+        )

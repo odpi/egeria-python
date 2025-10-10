@@ -97,7 +97,7 @@ def run_report(
     # Lazy import of settings to avoid circulars when optional args are None
     from pyegeria.config import settings as _settings
     logger.info(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}")
-    return run_format_set(
+    return exec_format_set(
         format_set_name=report,
         output_format="DICT",
         params=params or {},

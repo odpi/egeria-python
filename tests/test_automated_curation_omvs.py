@@ -22,7 +22,7 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import INTEGRATION_GUIDS, AutomatedCuration, PyegeriaException, print_basic_exception, \
+from pyegeria import  AutomatedCuration, PyegeriaException, print_basic_exception, \
     print_validation_error, PyegeriaAPIException
 from pyegeria._exceptions import (
     InvalidParameterException,
@@ -398,13 +398,13 @@ class TestAutomatedCuration:
     def test_get_engine_action(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            engine_action_guid = "493ad696-4a0d-4116-a526-c38cebb63640"
+            engine_action_guid = "3034d5f3-2cf1-420a-8b64-103079570659"
             start_time = time.perf_counter()
             response = a_client.get_engine_action(engine_action_guid)
             duration = time.perf_counter() - start_time
@@ -460,12 +460,12 @@ class TestAutomatedCuration:
     def test_get_active_engine_actions(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
-            token = a_client.create_egeria_bearer_token()
+            token = a_client.create_egeria_bearer_token("peterprofile","secret")
 
             start_time = time.perf_counter()
             response = a_client.get_active_engine_actions()
@@ -481,11 +481,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -529,7 +527,7 @@ class TestAutomatedCuration:
     def test_find_engine_actions(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -537,7 +535,16 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.find_engine_actions("Postgres")
+            response = a_client.find_engine_actions("*", output_format = "DICT", output_format_set = "Referenceable")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -550,11 +557,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -563,269 +568,7 @@ class TestAutomatedCuration:
     #
     #   Governance Processes
     #
-    def test_get_governance_action_process_by_guid(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            action_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
-            start_time = time.perf_counter()
-            response = a_client.get_governance_action_process_by_guid(action_guid)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
-
-    def test_get_gov_action_process_graph(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            # action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
-            action_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
-            start_time = time.perf_counter()
-            response = a_client.get_gov_action_process_graph(action_guid)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n Type of response is {type(response)}")
-            if type(response) is dict:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
-
-    def test_summarize_graph(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            # action_guid = "508d3878-8eae-47e5-8507-ee936f33b418"
-            action_guid = "dde1e255-6d0c-4589-b4a6-17e7d01db5ab"
-            start_time = time.perf_counter()
-            response = a_client.get_gov_action_process_graph(action_guid)
-            duration = time.perf_counter() - start_time
-
-            if type(response) is dict:
-                process_steps: [dict]
-                step_links: [dict] = []
-                gov_process_qn = response["governanceActionProcess"][
-                    "processProperties"
-                ]["qualifiedName"]
-                gov_process_dn = response["governanceActionProcess"][
-                    "processProperties"
-                ]["displayName"]
-                domain_id = response["governanceActionProcess"]["processProperties"][
-                    "domainIdentifier"
-                ]
-                # print(f"\n\n Qualified Name: {gov_process_qn} \t\t Display Name: {gov_process_dn}")
-                md = f"\n---\ntitle: {gov_process_dn}\n---\nflowchart LR\n"
-                element = response["firstProcessStep"]["element"]
-                qname = element["processStepProperties"]["qualifiedName"]
-                dname = element["processStepProperties"]["displayName"]
-                domain_id = element["processStepProperties"]["domainIdentifier"]
-                guid = element["elementHeader"]["guid"]
-                wait = element["processStepProperties"]["waitTime"]
-                ignore_mult_trig = element["processStepProperties"][
-                    "ignoreMultipleTriggers"
-                ]
-                link = response["firstProcessStep"]["linkGUID"]
-
-                # print(f"\n\n First Step: {qname}\tDisplay Name: {dname}\t Wait: {wait}\t Link: {link}")
-                md = f'{md}\nStep1(["\'**{dname}**\n* guid: {guid}\nwait_time: {wait}\ndomain: {domain_id}\nmult_trig: {ignore_mult_trig}`"])'
-                process_steps = {
-                    qname: {
-                        "step": "Step1",
-                        "displayName": dname,
-                        "guid": guid,
-                        "domain": domain_id,
-                        "ignoreMultTrig": ignore_mult_trig,
-                        "waitTime": wait,
-                        "link_guid": link,
-                    }
-                }
-                next_steps = response.get("nextProcessSteps", None)
-                if next_steps is not None:
-                    i = 1
-                    for step in next_steps:
-                        i += 1
-                        qname = step["processStepProperties"]["qualifiedName"]
-                        dname = step["processStepProperties"]["displayName"]
-                        wait = step["processStepProperties"]["waitTime"]
-                        step = f"Step{i}"
-                        md = f'{md}\n{step}("`**{dname}**\nguid: {guid}\nwait_time: {wait}\ndomain: {domain_id}\nmult_trig: {ignore_mult_trig}`")'
-                        process_steps.update(
-                            {
-                                qname: {
-                                    "step": step,
-                                    "displayName": dname,
-                                    "guid": guid,
-                                    "domain": domain_id,
-                                    "ignoreMultTrig": ignore_mult_trig,
-                                    "waitTime": wait,
-                                }
-                            }
-                        )  # process_steps.append({qname: {"step": step,"displayName": dname, "waitTime": wait}})
-                # print(md)
-                # Now process the links
-                process_step_links = response.get("processStepLinks", None)
-                if process_step_links is not None:
-                    for slink in process_step_links:
-                        prev_step_name = slink["previousProcessStep"]["uniqueName"]
-                        next_step_name = slink["nextProcessStep"]["uniqueName"]
-                        next_step_link_guid = slink["nextProcessStepLinkGUID"]
-                        guard = slink["guard"]
-                        mandatory_guard = slink["mandatoryGuard"]
-                        # print(f"\n\n Links: prev_step: {prev_step_name}\t next_step: {next_step_name}\t next_step_link: {next_step_link_guid}\t Guard: {guard}\t mandatory_guard: {mandatory_guard}")
-                        step_links.append(
-                            {
-                                next_step_link_guid: {
-                                    "prev_step_name": prev_step_name,
-                                    "next_step_name": next_step_name,
-                                    "guard": guard,
-                                    "mandatory_guard": mandatory_guard,
-                                }
-                            }
-                        )
-                        step_p = process_steps[prev_step_name]["step"]
-                        step_n = process_steps[next_step_name]["step"]
-                        if mandatory_guard:
-                            link = f"Mandatory:{guard}"
-                        else:
-                            link = guard
-                        md = f"{md}\n{step_p}-->|{link}|{step_n}"
-                    i = 1
-
-                print(md)
-
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
-
-    def test_get_gov_action_process_by_name(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            name = "Onboard Landing Area Files"
-            start_time = time.perf_counter()
-            response = a_client.get_gov_action_processes_by_name(name)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n Type of response is {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
-
-    def test_find_gov_action_processes(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            name = "*"
-            start_time = time.perf_counter()
-            response = a_client.find_gov_action_processes(
-                name, starts_with=True, ignore_case=True
-            )
-            duration = time.perf_counter() - start_time
-            print(f"n\tDuration was {duration} seconds")
-            print(f"\n Type of response is {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
 
     def test_initiate_gov_action_process(self):
         try:
@@ -949,40 +692,7 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def test_find_gov_action_types(self):
-        try:
-            a_client = AutomatedCuration(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-                user_pwd="secret",
-            )
-            token = a_client.create_egeria_bearer_token()
-            search_string = "survey-postgres-database"
-            start_time = time.perf_counter()
-            response = a_client.find_gov_action_types(search_string)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n Type of response is {type(response)}")
-            if type(response) is list:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
-            assert True
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            a_client.close_session()
 
     #   Get Technology types
     #
@@ -998,7 +708,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_all_technology_types()
+            response = a_client.get_all_technology_types(output_format = "DICT", output_format_set = "Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -1031,7 +741,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "CSV", starts_with=True, ignore_case=True
+                "POST", starts_with=True, ignore_case=True
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -1048,6 +758,8 @@ class TestAutomatedCuration:
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
 
         finally:
             a_client.close_session()
@@ -1064,7 +776,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.get_tech_types_for_open_metadata_type(
-                "SoftwareServer", "CSV File"
+                "SoftwareServer", "Database", output_format = "JSON", output_format_set = "Referenceable"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1097,7 +809,9 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_technology_type_detail("CSV Data File", True)
+            # response = a_client.get_technology_type_detail("CSV Data File", True)
+            response = a_client.get_technology_type_detail("PostgreSQL Server", True)
+
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
@@ -1235,21 +949,22 @@ class TestAutomatedCuration:
     def test_get_catalog_targets(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
+            postgres_server_connector_guid = a_client.get_connector_guid('PostgreSQL Server')
 
             element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
             # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
-            t = INTEGRATION_GUIDS["UnityCatalogServerSynchronizer"]
+            t = a_client.get_connector_guid('UnityCatalogServerSynchronizer')
+            # t = INTEGRATION_GUIDS["UnityCatalogServerSynchronizer"]
             start_time = time.perf_counter()
-            connector_guid = "6bb2181e-7724-4515-ba3c-877cded55980"
-            response = a_client.get_catalog_targets(t)
+
+            response = a_client.get_catalog_targets(postgres_server_connector_guid)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1263,11 +978,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -1282,12 +995,13 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            element_guid = "60e4c944-fc0b-4d48-a191-80803ad99dc8"
-            catalog_target_name = "cray-postgres-5432"
+            element_guid = "ff0aec48-b3c8-4732-a0da-5ab4596c2a60"
+            catalog_target_name = "exchange-folder"
             postgres_con_guid = ""
             start_time = time.perf_counter()
+            connector_guid = a_client.get_connector_guid('PostgreSQLServer')
             guid = a_client.add_catalog_target(
-                INTEGRATION_GUIDS["PostgreSQLServer"], element_guid, catalog_target_name
+                connector_guid, element_guid, catalog_target_name
             )
             duration = time.perf_counter() - start_time
             print(f"guid returned is: {guid}")
@@ -1349,9 +1063,9 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
             # jdbc_database_connector_guid = "70dcd0b7-9f06-48ad-ad44-ae4d7a7762aa"
             # postgres_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
-            folder_guid = INTEGRATION_GUIDS["FileFolder"]
+            folder_guid = a_client.get_connector_guid("FileFolder")
             catalog_target_name = "Brain-API-Quickstart"
-            file_connector_guid = INTEGRATION_GUIDS["FileFolder"]
+            file_connector_guid = a_client.get_connector_guid("FileFolder")
             # element_guid = "64296369-323f-4d74-aab3-c2ebae923d25"
             # catalog_target_name = "coco_ods_catalog_target"
             start_time = time.perf_counter()
@@ -1587,7 +1301,7 @@ class TestAutomatedCuration:
     def test_get_technology_type_elements(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -1596,7 +1310,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # filter = "CSV Data File"
-            filter = "OSS Unity Catalog (UC) Server:Unity Catalog 1"
+            filter = "PostgreSQL Server"
             response = a_client.get_technology_type_elements(
                 filter, get_templates=False
             )
@@ -1612,11 +1326,9 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

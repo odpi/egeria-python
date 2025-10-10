@@ -117,7 +117,7 @@ OPTIONAL_PARAMS = ["page_size", "start_from", "starts_with", "ends_with", "ignor
 # Define shared elements
 COMMON_COLUMNS = [
     Column(name='Display Name', key='display_name'),
-    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
     Column(name='Status', key='status'),

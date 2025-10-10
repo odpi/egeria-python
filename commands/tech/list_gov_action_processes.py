@@ -19,11 +19,9 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+    PyegeriaException,
     ValidMetadataManager,
-    print_exception_response,
+    print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -104,15 +102,13 @@ def display_gov_processes(
             console.print(generate_table(type_name))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
         ValueError,
     ) as e:
         if type(e) is str:
             print(e)
         else:
-            print_exception_response(e)
+            print_basic_exception(e)
 
 
 def main():

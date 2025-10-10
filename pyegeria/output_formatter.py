@@ -8,7 +8,7 @@ from loguru import logger
 from pyegeria.config import settings
 
 from pyegeria.mermaid_utilities import construct_mermaid_web
-from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR
+from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR, get_output_format_type_match
 from pyegeria.models import to_camel_case
 
 """

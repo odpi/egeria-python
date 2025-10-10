@@ -146,7 +146,7 @@ def display_engine_activity(
                     "ACTIVATING",
                 ):
                     action_status = f"[yellow]{action['actionStatus']}"
-                elif action["actionStatus"] in ("IN_PROGRESS", "ACTIONED"):
+                elif action["actionStatus"] in ("IN_PROGRESS", "COMPLETED"):
                     action_status = f"[green]{action['actionStatus']}"
                 else:
                     action_status = f"[red]{action['actionStatus']}"

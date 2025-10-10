@@ -13,9 +13,15 @@ from loguru import logger
 # import json
 from pyegeria._client_new import Client2
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
-from pyegeria.models import LevelIdentifierQueryBody
-from pyegeria.utils import body_slimmer
-from pyegeria.output_formatter import generate_output, populate_common_columns, resolve_output_formats
+from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody
+from pyegeria.utils import body_slimmer, dynamic_catch
+from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.output_formatter import (
+    generate_output,
+    _extract_referenceable_properties,
+    populate_columns_from_properties,
+    get_required_relationships,
+)
 
 
 def query_seperator(current_string):
@@ -84,11 +90,85 @@ class ClassificationManager(Client2):
             token=token,
         )
 
+        # Default entity label for formatter when not specified
+        self.REFERENCEABLE_LABEL = "Referenceable"
+
+    def _extract_referenceable_output_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate requested columns from a generic Referenceable element.
+        Tolerant of missing values; fills from properties, header, relationships, and mermaid graph.
+        """
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+
+        # Header-derived fields (GUID, qualifiedName, displayName, etc.)
+        header_props = _extract_referenceable_properties(element)
+        for col in columns_list:
+            key = col.get("key")
+            if key in header_props:
+                col["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                col["value"] = header_props.get("GUID")
+
+        # Relationships (generic handler fills requested relationship-driven columns if present in format set)
+        col_data = get_required_relationships(element, col_data)
+
+        # Mermaid graph support if present
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for col in columns_list:
+            if col.get("key") == "mermaid":
+                col["value"] = mermaid_val
+                break
+
+        return col_data
+
+    def _generate_referenceable_output(self,
+                                       elements: dict | list[dict],
+                                       filter: str | None,
+                                       element_type_name: str | None,
+                                       output_format: str = "DICT",
+                                       output_format_set: dict | str | None = None) -> str | list[dict]:
+        """Resolve format set and generate output for Referenceable-derived elements."""
+        entity_type = element_type_name or self.REFERENCEABLE_LABEL
+
+        # Resolve output format set
+        get_additional_props_func = None
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            else:
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+        elif element_type_name:
+            output_formats = select_output_format_set(element_type_name, output_format)
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+
+        if output_formats is None:
+            output_formats = select_output_format_set("Default", output_format)
+
+        # Optional hook: allow format set to specify an enrichment method on this class
+        get_additional_props_name = (
+            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
+        )
+        if isinstance(get_additional_props_name, str):
+            method_name = get_additional_props_name.split(".")[-1]
+            if hasattr(self, method_name):
+                get_additional_props_func = getattr(self, method_name)
+
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_referenceable_output_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
 
     #
     #   Get elements
     #
-
+    @dynamic_catch
     async def async_get_classified_elements_by(
             self,
             classification_name: str,
@@ -149,6 +229,7 @@ class ClassificationManager(Client2):
         )
         return response
 
+    @dynamic_catch
     def get_classified_elements_by(
             self,
             classification_name: str,
@@ -208,8 +289,803 @@ class ClassificationManager(Client2):
         )
         return response
 
+    @dynamic_catch
+    async def async_get_security_tagged_elements(
+            self,
+            body: dict,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the security tags classification. Async version.
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SecurityTagQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "securityLabels" : [ "???" ],
+            "securityProperties" : {
+               "propertyName" : "propertyValue"
+            },
+            "accessGroups" : {
+                "groupName" : [ "???" ]
+            }
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/elements/by-security-tags")
+
+        response = await self._async_make_request("POST", url, body_slimmer(body))
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_referenceable_output(elements, "", "Referenceable",
+                               output_format, output_format_set)
+        return elements
+
+    @dynamic_catch
+    def get_security_tagged_elements(
+            self,
+            body: dict,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the specified classification.
+
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        classification_name: str
+            One of impact, confidence, criticality, confidentiality, retention
+        body: dict
+            Details of the query. See LevelIdentifierQueryBody for details.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SecurityTagQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "securityLabels" : [ "???" ],
+            "securityProperties" : {
+               "propertyName" : "propertyValue"
+            },
+            "accessGroups" : {
+                "groupName" : [ "???" ]
+            }
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_security_tagged_elements(
+                body, output_format, output_format_set
+            )
+        )
+        return response
+
+    @dynamic_catch
+    async def async_get_owners_elements(
+            self,
+            owner_name: str,
+            body: dict | FilterRequestBody,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the ownership classification. Async version.
+
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        owner_name: str
+            Name of owner to retrieve elements for.
+        body: dict | FilterRequestBody
+            Details of the query. See LevelIdentifierQueryBody for details.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "????",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "GlossaryTerm",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/elements/by-ownership")
+
+        response = await self._async_get_name_request(url, "Referenceable",
+                                                      self._generate_referenceable_output, owner_name,
+                                                      None, 0, 0,
+                                                      output_format, output_format_set, body)
+        return response
+
+    @dynamic_catch
+    def get_owners_elements(
+            self,
+            owner_name: str,
+            body: dict | FilterRequestBody,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the ownership classification.
+
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        owner_name: str
+            Name of owner to retrieve elements for.
+        body: dict | FilterRequestBody
+            Details of the query. See LevelIdentifierQueryBody for details.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "????",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "GlossaryTerm",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_owners_elements(
+                owner_name, body, output_format, output_format_set
+            )
+        )
+        return response
+
+    @dynamic_catch
+    async def async_get_subject_area_members(
+            self,
+            subject_area: str,
+            body: dict | FilterRequestBody,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the subject area classification. Async version.
+
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        subject_area: str
+            Name of subject area to retrieve elements for.
+        body: dict | FilterRequestBody
+            Details of the query. See LevelIdentifierQueryBody for details.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "????",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "GlossaryTerm",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
 
 
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/elements/by-ownership")
+
+        response = await self._async_get_name_request(url, "Referenceable",
+                                                      self._generate_referenceable_output, subject_area,
+                                                      None, 0, 0,
+                                                      output_format, output_format_set, body)
+        return response
+
+    @dynamic_catch
+    def get_subject_area_members(
+            self,
+            subject_area: str,
+            body: dict | FilterRequestBody,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the elements classified with the subject area classification.
+
+        https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
+
+        Parameters
+        ----------
+        subject_area: str
+            Name of subject area to retrieve elements for.
+        body: dict | FilterRequestBody
+            Details of the query. See LevelIdentifierQueryBody for details.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class": "FilterRequestBody",
+            "filter": "????",
+            "effectiveTime": "{{$isoTimestamp}}",
+            "asOfTime": "{{$isoTimestamp}}",
+            "forLineage": false,
+            "forDuplicateProcessing": false,
+            "metadataElementTypeName": "GlossaryTerm",
+            "limitResultsByStatus": [ "ACTIVE", "DRAFT"],
+            "sequencingProperty": "???",
+            "sequencingOrder": "LAST_UPDATE_RECENT"
+        }
+
+
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_subject_area_members(
+                subject_area, body, output_format, output_format_set
+            )
+        )
+        return response
+
+    @dynamic_catch
+    async def async_get_elements_by_origin(
+            self,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the digital resources from a specific origin. Async version.
+
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        ----------
+
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "FindDigitalResourceOriginProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "organizationGUID" : "????",
+            "businessCapabilityGUID" : "????",
+            "otherOriginValues" : {
+                 "propertyName" : "propertyValue"
+            }
+        }
+
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/elements/by-digital-resource-origin")
+
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_referenceable_output(elements, "", "Referenceable",
+                                                       output_format, output_format_set)
+        return elements
+
+    @dynamic_catch
+    def get_elements_by_origin(
+            self,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Return information about the digital resources from a specific origin.
+
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        ----------
+
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "FindDigitalResourceOriginProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "organizationGUID" : "????",
+            "businessCapabilityGUID" : "????",
+            "otherOriginValues" : {
+                 "propertyName" : "propertyValue"
+            }
+        }
+
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_elements_by_origin(body, output_format, output_format_set
+                )
+        )
+        return response
+
+    @dynamic_catch
+    async def async_get_meanings(
+            self,
+            element_guid: str,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element. Async version.
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SemanticAssignmentQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "expression" : "????",
+            "description" : "????",
+            "status" : "VALIDATED",
+            "returnSpecificConfidence" : true,
+            "confidence" : 100,
+            "createdBy" : "???",
+            "steward" : "??",
+            "source" : "???"
+
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/glossaries/terms/by-semantic-assignment/{element_guid}")
+
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_referenceable_output(elements, "", "Referenceable",
+                                                       output_format, output_format_set)
+        return elements
+
+    @dynamic_catch
+    def get_meanings(
+            self,
+            element_guid: str,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element.
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        __________
+        element_guid: str
+            Element to retrieve information for.
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SemanticAssignmentQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "expression" : "????",
+            "description" : "????",
+            "status" : "VALIDATED",
+            "returnSpecificConfidence" : true,
+            "confidence" : 100,
+            "createdBy" : "???",
+            "steward" : "??",
+            "source" : "???"
+
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_meanings(element_guid,body, output_format, output_format_set
+                )
+        )
+        return response
+
+    @dynamic_catch
+    async def async_get_semantic_asignees(
+            self,
+            term_guid: str,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term. Async version.
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        __________
+        term_guid: str
+            Element to retrieve information for.
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SemanticAssignmentQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "expression" : "????",
+            "description" : "????",
+            "status" : "VALIDATED",
+            "returnSpecificConfidence" : true,
+            "confidence" : 100,
+            "createdBy" : "???",
+            "steward" : "??",
+            "source" : "???"
+
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"classification-explorer/glossaries/elements/by-semantic-assignment/{term_guid}")
+
+        response = await self._async_make_request("POST", url, body_slimmer(body), time_out=default_time_out)
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_referenceable_output(elements, "", "Referenceable",
+                                                       output_format, output_format_set)
+        return elements
+
+    @dynamic_catch
+    def get_semantic_asignees(
+            self,
+            term_guid: str,
+            body: dict ,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None
+    ) -> list | str:
+        """
+        Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term.
+        https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        __________
+        term_guid: str
+            Element to retrieve information for.
+        body: dict
+            Details of the query.
+        output_format: str, default = "JSON"
+            Type of output to return.
+        output_format_set: dict | str, default = None
+            Output format set to use. If None, the default output format set is used.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+            "class" : "SemanticAssignmentQueryProperties",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "asOfTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false,
+            "metadataElementTypeName" : "GlossaryTerm",
+            "limitResultsByStatus" : [ "ACTIVE", "DRAFT"],
+            "sequencingProperty" : "???",
+            "sequencingOrder" : "LAST_UPDATE_RECENT",
+            "expression" : "????",
+            "description" : "????",
+            "status" : "VALIDATED",
+            "returnSpecificConfidence" : true,
+            "confidence" : 100,
+            "createdBy" : "???",
+            "steward" : "??",
+            "source" : "???"
+
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_semantic_asignees(term_guid,body, output_format, output_format_set
+                )
+        )
+        return response
+
+
+
+
+
+    #
+    #
+    #
     async def async_get_elements(
             self,
             metadata_element_type_name: str = None,
@@ -334,6 +1210,9 @@ class ClassificationManager(Client2):
                 time_out,
             )
         )
+        if isinstance(response, list) and output_format != "JSON":
+            return self._generate_referenceable_output(response, None, self.REFERENCEABLE_LABEL,
+                                                       output_format=output_format, output_format_set=output_format_set)
         return response
 
     async def async_get_elements_by_property_value(

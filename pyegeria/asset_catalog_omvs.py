@@ -15,7 +15,7 @@ import json
 from httpx import Response
 from pyegeria.utils import body_slimmer
 from pyegeria._client import Client
-from pyegeria import TEMPLATE_GUIDS, max_paging_size
+from pyegeria._globals import TEMPLATE_GUIDS, max_paging_size
 from pyegeria._exceptions import InvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from ._validators import validate_search_string

@@ -93,8 +93,20 @@ class DigitalProductProperties(CollectionProperties):
     next_version_date: datetime | None = None
     withdrawal_date: datetime | None = None
 
+class DigitalProductFamilyProperties(CollectionProperties):
+    class_: Annotated[Literal["DigitalProductFamilyProperties"], Field(alias="class")]
+    user_defined_status: str | None = None
+    product_name: str | None = None
+    identifier: str | None = None
+    introduction_date: datetime | None = None
+    maturity: str | None = None
+    service_life: str | None = None
+    next_version_date: datetime | None = None
+    withdrawal_date: datetime | None = None
+
+
 class Collections(PyegeriaModel):
-    collection: Union[CollectionProperties, DigitalSubscriptionProperties, DigitalProductProperties, AgreementProperties,
+    collection: Union[CollectionProperties, DigitalSubscriptionProperties, DigitalProductProperties, DigitalProductFamilyProperties,AgreementProperties,
                       DataSpecProperties, DataDictionaryProperties] = Field(desciminator="class_")
 
 
@@ -5505,7 +5517,7 @@ class CollectionManager(Client2):
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            member = await self._async_get_element_by_guid_(member_guid)
+            member = await self.async_get_element_by_guid_(member_guid)
             if isinstance(member, dict):
                 member_instance = {
                     "name": member["properties"].get('displayName', ''),

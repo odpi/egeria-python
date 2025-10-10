@@ -22,7 +22,7 @@ from pyegeria._exceptions_new import print_validation_error
 from pyegeria.models import SearchStringRequestBody
 
 console = Console(width=200)
-from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server
+
 import pytest
 
 @pytest.fixture(autouse=True)

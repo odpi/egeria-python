@@ -12,7 +12,7 @@ import os
 
 import click
 from loguru import logger
-from pyegeria import AutomatedCuration, EgeriaTech
+from pyegeria import EgeriaTech, PyegeriaAPIException
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
 from pyegeria._exceptions_new import (
@@ -64,13 +64,13 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
     try:
         s_client = EgeriaTech(view_server, url, userid, password)
         token = s_client.create_egeria_bearer_token()
-        server_guid = None
+        server_guid = s_client.__get_guid__(display_name = server_name, property_name = "displayName", tech_type = "MetadataStore")
         file_name = file_name.strip()
         s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout)
 
         click.echo(f"Loaded archive: {file_name}")
 
-    except (PyegeriaException) as e:
+    except (PyegeriaException, PyegeriaAPIException) as e:
         print(
             f"Perhaps there was a timeout? If so, the command will complete despite the exception\n"
             f"===> You can check by rerunning the command in a few minutes"
