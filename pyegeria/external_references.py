@@ -1252,7 +1252,7 @@ class ExternalReferences(Client2):
         ignore_case : bool, [default=False], optional
             Ignore case when searching
         start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
+            When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.

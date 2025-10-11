@@ -107,10 +107,10 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            path_name = "/deployments/exchange"
-            folder_name = "exchange"
+            path_name = "/deployments/loading-bay"
+            folder_name = "loading-bay"
             file_system = None
-            description = "Folder for data exchange"
+            description = "Loading bay folder"
             version = "0.1"
             start_time = time.perf_counter()
             response = a_client.create_folder_element_from_template(
@@ -741,7 +741,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "POST", starts_with=True, ignore_case=True
+                "File", starts_with=True, ignore_case=True
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -810,7 +810,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_technology_type_detail("CSV Data File", True)
-            response = a_client.get_technology_type_detail("PostgreSQL Server", True)
+            response = a_client.get_technology_type_detail("File System", True)
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -845,16 +845,16 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_template_guid_for_technology_type("PostgreSQL Server",)
+            response = a_client.get_template_guid_for_technology_type("File System",)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is dict:
                 out = "\n\n" + json.dumps(response, indent=4)
                 count = len(response)
-                console.log(f"Found {count} elements")
+                print(f"Found {count} elements")
                 print_json(out)
             elif type(response) is str:
-                console.log("\n\n" + response)
+                print("\nTemplate GUID is: " + response)
             assert True
 
         except (

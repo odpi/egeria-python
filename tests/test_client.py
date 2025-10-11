@@ -137,6 +137,24 @@ class TestClient:
             print_basic_exception(e)
             assert False, "Invalid request"
 
+    def test_get_guid(self):
+        c = Client2(
+            "qs-view-server", "https://localhost:9443", "erinoverview", "secret"
+        )
+        try:
+            c.create_egeria_bearer_token()
+            display_name = "PostgreSQL Server"
+            type_name = "ValidMetadataValue"
+            property_name = ["displayName"]
+            response = c.get_guid_for_name( display_name, property_name, type_name)
+            # response = c.get_elements_by_property_value(display_name, property_name, type_name)
+            if type(response) == str:
+                print(f"The response returned is \n{response}")
+            if isinstance(response, list | dict):
+                print(json.dumps(response, indent=2))
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
 
 
 if __name__ == "__main__":

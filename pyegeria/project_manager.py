@@ -157,6 +157,10 @@ class ProjectManager(Client2):
             The identity of the parent to find linked projects from.
         project_status: str, optional
             Optionally, filter results by project status.
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        output_format_set: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
 
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
@@ -211,6 +215,10 @@ class ProjectManager(Client2):
             Optionally, filter results by project status.
         effective_time: str, optional
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        output_format_set: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
 
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.

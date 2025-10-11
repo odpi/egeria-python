@@ -562,56 +562,6 @@ class Client2:
                     response, context, e=e
                 )
 
-    def build_global_guid_lists(self) -> None:
-        global template_guids, integration_guids
-
-        self.create_egeria_bearer_token(self.user_id, self.user_pwd)
-        # get all technology types
-        url = (
-            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/automated-curation/technology-types/"
-            f"by-search-string?startFrom=0&pageSize=0&startsWith=false&"
-            f"endsWith=false&ignoreCase=true"
-        )
-        body = {"filter": ""}
-
-        response = self.make_request("POST", url, body)
-        tech_types = response.json().get("elements", "no tech found")
-        if type(tech_types) is list:
-            for tech_type in tech_types:
-                # get tech type details
-                display_name = tech_type["name"]
-
-                url = (f"{self.platform_url}/servers/"
-                       f"{self.server_name}/api/open-metadata/automated-curation/technology-types/by-name")
-                body = {"filter": display_name}
-                response = self.make_request("POST", url, body)
-                details = response.json().get("element", "no type found")
-                if type(details) is str:
-                    continue
-                # get templates and update the template_guids global
-                templates = details.get("catalogTemplates", "Not Found")
-                if type(templates) is str:
-                    template_guids[display_name] = None
-                else:
-                    for template in templates:
-                        template_name = template.get("name", None)
-                        template_guid = template["relatedElement"]["guid"]
-                        template_guids[template_name] = template_guid
-                        # print(f"Added {template_name} template with GUID {template_guids[template_name]}")
-
-                # Now find the integration connector guids
-                resource_list = details.get("resourceList", " ")
-                if type(resource_list) is str:
-                    integration_guids[display_name] = None
-                else:
-                    for resource in resource_list:
-                        resource_guid = resource["relatedElement"]["guid"]
-                        resource_type = resource["relatedElement"]["type"]["typeName"]
-                        if resource_type == "IntegrationConnector":
-                            integration_guids[display_name] = resource_guid
-                            # print(f"Added {display_name} integration connector with GUID {integration_guids[
-                            # display_name]}")
-
     async def __async_get_guid__(
             self,
             guid: str = None,
@@ -726,6 +676,11 @@ class Client2:
             )
         )
         return result
+
+
+
+
+
 
     def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
                                   version_identifier: str = None) -> str:
@@ -893,10 +848,228 @@ class Client2:
         )
         return response
 
+
+    async def async_get_elements_by_property_value(
+            self,
+            property_value: str,
+            property_names: [str],
+            metadata_element_type_name: str = None,
+            effective_time: str = None,
+            for_lineage: bool = None,
+            for_duplicate_processing: bool = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            time_out: int = default_time_out,
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
+        An open metadata type name may be supplied to restrict the results. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        metadata_element_type_name : str, default = None
+            - open metadata type to be used to restrict the search
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        body = {
+            "class": "FindPropertyNamesProperties",
+            "metadataElementTypeName": metadata_element_type_name,
+            "propertyValue": property_value,
+            "propertyNames": property_names,
+            "effectiveTime": effective_time,
+            "startFrom": start_from,
+            "pageSize": page_size,
+            "forLineage": for_lineage,
+            "forDuplicateProcessing": for_duplicate_processing
+        }
+
+        url = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/by-exact-property-value"
+
+        response: Response = await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is list:
+            if len(elements) == 0:
+                return NO_ELEMENTS_FOUND
+        return elements
+
+    def get_elements_by_property_value(
+            self,
+            property_value: str,
+            property_names: [str],
+            metadata_element_type_name: str = None,
+            effective_time: str = None,
+            for_lineage: bool = None,
+            for_duplicate_processing: bool = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            time_out: int = default_time_out,
+            output_format: str = "JSON",
+            output_format_set: dict | str = None,
+    ) -> list | str:
+        """
+        Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
+        An open metadata type name may be supplied to restrict the results.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        property_value: str
+            - property value to be searched.
+        property_names: [str]
+            - property names to search in.
+        metadata_element_type_name : str, default = None
+            - open metadata type to be used to restrict the search
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        output_format_set: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException.
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_elements_by_property_value(
+                property_value,
+                property_names,
+                metadata_element_type_name,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+                time_out,
+            )
+        )
+        return response
+
+    async def async_get_guid_for_name(
+            self, name: str, property_name: [str] = ["qualifiedName","displayName"], type_name: str = "ValidMetadataValue"
+
+    ) -> list | str:
+        """
+        Retrieve the guid associated with the supplied element name.
+        If more than one element returned, an exception is thrown. Async version.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: [str], default = ["qualifiedName","displayName"]
+            - propertys to search in.
+        type_name: str, default = "ValidMetadataValue"
+            - metadata element type name to be used to restrict the search
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        elements = await self.async_get_elements_by_property_value(
+            name, property_name, type_name
+        )
+
+        if type(elements) is list:
+            if len(elements) == 0:
+                return NO_ELEMENTS_FOUND
+            elif len(elements) > 1:
+                raise Exception("Multiple elements found for supplied name!")
+            elif len(elements) == 1:
+                return elements[0]["elementHeader"]["guid"]
+        return elements
+
+    def get_guid_for_name(
+            self, name: str, property_name: [str] = ["qualifiedName","displayName"], type_name: str = "ValidMetadataValue"
+    ) -> list | str:
+        """
+        Retrieve the guid associated with the supplied element name.
+        If more than one element returned, an exception is thrown.
+
+        Parameters
+        ----------
+        name: str
+            - element name to be searched.
+        property_name: [str], default = ["qualifiedName","displayName"]
+            - propertys to search in.
+        type_name: str, default = "ValidMetadataValue"
+            - metadata element type name to be used to restrict the search
+        Returns
+        -------
+        str
+            Returns the guid of the element.
+
+        Raises
+        ------
+        PyegeriaExeception
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_guid_for_name(name, property_name, type_name)
+        )
+        return response
+
+
     async def async_get_element_by_guid_(self, element_guid: str) -> dict | str:
         """
-        Simplified, internal version of get_element_by_guid found in Classification Manager.
-        Retrieve an element by its guid.  Async version.
+            Simplified, internal version of get_element_by_guid found in Classification Manager.
+            Retrieve an element by its guid.  Async version.
 
         Parameters
         ----------
@@ -1008,7 +1181,7 @@ class Client2:
 
         url = (
              f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/{element_guid}"
-             f"/by-relationship/{relationship_type}/with-exact-property-value"
+             f"/by-relationship/{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
         )
 
         response: Response = await self._async_make_request(
@@ -1392,7 +1565,7 @@ class Client2:
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
