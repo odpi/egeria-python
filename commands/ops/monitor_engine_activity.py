@@ -109,7 +109,7 @@ def display_engine_activity(
         table.add_column("Process Name")
         table.add_column("Completion Message")
 
-        action_status = g_client.get_engine_actions()
+        action_status = g_client.get_active_engine_actions()
 
         if type(action_status) is str:
             requested_time = " "

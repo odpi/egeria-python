@@ -75,44 +75,35 @@ class AutomatedCuration(Client2):
         Extract properties from a technology type element and populate the provided columns_struct.
         Tolerant to missing fields.
         """
-        # Populate direct properties first
-        col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        # # Populate direct properties first
+        # col_data = populate_columns_from_properties(element, columns_struct)
+        # columns_list = col_data.get("formats", {}).get("columns", [])
+        #
+        # # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
+        # header_props = _extract_referenceable_properties(element)
+        # for column in columns_list:
+        #     key = column.get("key")
+        #     if key in header_props:
+        #         column["value"] = header_props.get(key)
+        #     elif isinstance(key, str) and key.lower() == "guid":
+        #         column["value"] = header_props.get("GUID")
+        #
+        # # Try common category/type fields
+        # category = (
+        #     element.get("properties", {}).get("category")
+        #     or element.get("elementProperties", {}).get("category")
+        #     or element.get("elementType", {}).get("typeName")
+        #     or ""
+        # )
+        columns_list = columns_struct.get("formats", {}).get("columns", [])
 
-        # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
-        header_props = _extract_referenceable_properties(element)
-        for column in columns_list:
-            key = column.get("key")
-            if key in header_props:
-                column["value"] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == "guid":
-                column["value"] = header_props.get("GUID")
+        guid = element.get('technologyTypeGUID',None)
+        qualified_name = element.get('qualifiedName',None)
+        display_name = element.get('displayName',None)
+        description = element.get('description',None)
+        catalog_templates = element.get('catalogTemplates',None)
+        external_references = element.get('externalReferences',None)
 
-        # Try common category/type fields
-        category = (
-            element.get("properties", {}).get("category")
-            or element.get("elementProperties", {}).get("category")
-            or element.get("elementType", {}).get("typeName")
-            or ""
-        )
-        for column in columns_list:
-            if column.get("key") in ("category", "type_name"):
-                column["value"] = category
-
-        # Classification names if present
-        class_names = []
-        for c in (element.get("elementHeader", {}).get("classifications") or []):
-            name = c.get("classificationName")
-            if name:
-                class_names.append(name)
-        if class_names:
-            for column in columns_list:
-                if column.get("key") == "classifications":
-                    column["value"] = ", ".join(class_names)
-                    break
-
-        # Relationship-driven fields (generic handling)
-        col_data = get_required_relationships(element, col_data)
 
         # Mermaid graph support if present
         mermaid_val = element.get("mermaidGraph", "") or ""
@@ -120,8 +111,33 @@ class AutomatedCuration(Client2):
             if column.get("key") == "mermaid":
                 column["value"] = mermaid_val
                 break
+            elif column.get("key") == "catalog_template_specs":
+                specs = ""
+                for template in catalog_templates:
+                    for placeholder in template['specification']['placeholderProperty']:
+                        specs += (f"* Placeholder Property: {placeholder['placeholderPropertyName']}\n\t"
+                                  f"Type: {placeholder.get('dataType',"")}\n\t"
+                                  f"Description:  {placeholder.get('description',"")}\n\t"
+                                  f"Required: {placeholder.get("required","")}\n\t"
+                                  f"Example: {placeholder.get("example","")}\n\n")
+                column["value"] = specs
+            elif column.get("key") == "catalog_templates":
+                column["value"] =catalog_templates
+            elif column.get("key") == "guid":
+                column["value"] = guid
+            elif column.get("key") == "qualified_name":
+                column["value"] = qualified_name
+            elif column.get("key") == "display_name":
+                column["value"] = display_name
+            elif column.get("key") == "description":
+                column["value"] = description
+            elif column.get("key") == "external_references":
+                column["value"] = external_references
+            elif column.get("key") == "ref_url":
+                column["value"] = external_references[0]['relatedElement']['properties'].get('url',"")
 
-        return col_data
+        columns_struct["formats"]["columns"] = columns_list
+        return columns_struct
 
     def _generate_tech_type_output(
         self,
@@ -1737,154 +1753,6 @@ class AutomatedCuration(Client2):
     #
     # Engine Actions
     #
-    async def _async_get_engine_actions(
-            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
-    ) -> list | str:
-        """Retrieve the engine actions that are known to the server. Async version.
-        Parameters
-        ----------
-
-        start_from : int, optional
-            The starting index of the actions to retrieve. Default is 0.
-        page_size : int, optional
-            The maximum number of actions to retrieve per page. Default is the global maximum paging size.
-        body: dict, optional
-            If provided, supersedes the other parameters. Allows advanced options.
-
-        Returns
-        -------
-        [dict]
-            A list of engine action descriptions as JSON.
-
-        Raises
-        ------
-                PyegeriaException
-        ValidationError
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        sample body:
-            {
-              "class": "GetRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-        """
-        url = (
-            f"{self.curation_command_root}/engine-actions?startFrom={start_from}&pageSize={page_size}"
-        )
-
-        # return await self._async_get_guid_request(url, "EngineAction", _generate_default_output,
-        #                                          output_format="JSON", output_format_set="Referenceable", body=body )
-        response = await self._async_make_request("GET", url)
-        elements = response.json().get("elements", "No element found")
-        # Apply formatter if not raw JSON requested
-        return self._generate_engine_action_output(elements, None, self.ENGINE_ACTION_LABEL,
-                                                   output_format=output_format, output_format_set=output_format_set)
-
-    def get_engine_actions(
-            self, start_from: int = 0, page_size: int = 0, body: dict | GetRequestBody = None,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
-    ) -> list | str:
-        """Retrieve the engine actions that are known to the server.
-        Parameters
-        ----------
-        start_from : int, optional
-            The starting index of the actions to retrieve. Default is 0.
-        page_size : int, optional
-            The maximum number of actions to retrieve per page. Default is the global maximum paging size.
-        body: dict, optional
-            If provided, supersedes the other parameters. Allows advanced options.
-
-        Returns
-        -------
-        [dict]
-            A list of engine action descriptions as JSON.
-
-        Raises
-        ------
-                PyegeriaException
-        ValidationError
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        sample body:
-            {
-              "class": "GetRequestBody",
-              "asOfTime": "{{$isoTimestamp}}",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_engine_actions(start_from, page_size, body,
-                                           output_format=output_format, output_format_set=output_format_set)
-        )
-        return response
-
-    async def _async_get_engine_action(self, engine_action_guid: str) -> dict:
-        """Request the status and properties of an executing engine action request. Async version.
-        Parameters
-        ----------
-        engine_action_guid : str
-            The GUID of the engine action to retrieve.
-
-
-
-        Returns
-        -------
-        dict
-            The JSON representation of the engine action.
-
-        Raises
-        ------
-                PyegeriaException
-        ValidationError
-
-
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-
-        url = f"{self.curation_command_root}/engine-actions/{engine_action_guid}"
-
-        response = await self._async_make_request("GET", url)
-        return response.json().get("element", "No element found")
-
-    def get_engine_action(self, engine_action_guid: str) -> dict:
-        """Request the status and properties of an executing engine action request.
-        Parameters
-        ----------
-        engine_action_guid : str
-            The GUID of the engine action to retrieve.
-
-
-
-        Returns
-        -------
-        dict
-            The JSON representation of the engine action.
-
-        Raises
-        ------
-        PyegeriaException
-        Notes
-        -----
-        For more information see: https://egeria-project.org/concepts/engine-action
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_engine_action(engine_action_guid)
-        )
-        return response
 
     async def _async_cancel_engine_action(self, engine_action_guid: str) -> None:
         """Request that an engine action request is cancelled and any running governance service is stopped. Async Ver.
@@ -1944,7 +1812,7 @@ class AutomatedCuration(Client2):
 
     async def _async_get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the engine actions that are still in process. Async Version.
 
@@ -1976,13 +1844,20 @@ class AutomatedCuration(Client2):
         )
 
         response = await self._async_make_request("GET", url)
-        elements = response.json().get("elements", "no actions")
-        return self._generate_engine_action_output(elements, None, self.ENGINE_ACTION_LABEL,
-                                                   output_format=output_format, output_format_set=output_format_set)
+        elements = response.json().get("elements", "No actions found")
+        if type(elements) is str:
+            logger.info("No Actions Found")
+            return "No Actions Found"
+
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_engine_action_output(elements, None, "EngineAction",
+                               output_format, output_format_set)
+        return elements
 
     def get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction"
+            output_format: str = "JSON", output_format_set: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
@@ -3447,7 +3322,7 @@ class AutomatedCuration(Client2):
         )
         return response
 
-    async def _async_get_technology_type_detail(self, type_name: str, template_only: bool = False,
+    async def _async_get_technology_type_detail(self, type_name: str,
                                                 body: dict | FilterRequestBody = None,
                                                 output_format: str = "JSON",
                                                 output_format_set: str | dict = "TechType") -> list | str:
@@ -3457,12 +3332,8 @@ class AutomatedCuration(Client2):
         ----------
         type_name : str
             The name of the technology type to retrieve detailed information for.
-        template_only : bool
-            If true, only the template information will be returned.
         body: dict | FilterRequestBody
             If provided, the information in the body supersedes the other parameters and allows more advanced requests.
-
-
 
         Returns
         -------
@@ -3497,27 +3368,24 @@ class AutomatedCuration(Client2):
         # validate_name(type_name)
         url = str(HttpUrl(f"{self.curation_command_root}/technology-types/by-name"))
         if body is None:
-            classified_elements = ["Template"] if template_only else []
             body = {
                 "class": "FilterRequestBody",
-                "filter": type_name,
-                "includeOnlyClassifiedElements": classified_elements,
+                "filter": type_name
             }
-        response = await self._async_get_name_request(
-            url,
-            _type=self.TECH_TYPE_ENTITY_LABEL,
-            _gen_output=self._generate_tech_type_output,
-            filter_string=type_name,
-            classification_names=classified_elements if template_only else None,
-            start_from=0,
-            page_size=0,
-            output_format=output_format,
-            output_format_set=output_format_set,
-            body=body,
-        )
-        return response
 
-    def get_technology_type_detail(self, type_name: str, template_only: bool = False,
+        response = await self._async_make_request("POST", url, body)
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(element) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            return self._generate_tech_type_output(element, type_name, "ValidMetadataValue",
+                               output_format, output_format_set)
+        return element
+
+    def get_technology_type_detail(self, type_name: str,
                                    body: dict | FilterRequestBody = None,
                                    output_format: str = "JSON",
                                    output_format_set: str | dict = "TechType") -> list | str:
@@ -3527,12 +3395,8 @@ class AutomatedCuration(Client2):
              ----------
              type_name : str
                  The name of the technology type to retrieve detailed information for.
-             template_only : bool
-                 If true, only the template information will be returned.
              body: dict | FilterRequestBody
                  If provided, the information in the body supersedes the other parameters and allows more advanced requests.
-
-
 
              Returns
              -------
@@ -3566,7 +3430,7 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_detail(type_name, template_only=template_only, body=body,
+            self._async_get_technology_type_detail(type_name, body=body,
                                                    output_format=output_format,
                                                    output_format_set=output_format_set)
         )

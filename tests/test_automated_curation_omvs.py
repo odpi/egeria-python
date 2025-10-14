@@ -34,7 +34,7 @@ from pyegeria._exceptions import (
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
-console = Console()
+console = Console(width=200)
 
 
 class TestAutomatedCuration:
@@ -364,13 +364,10 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            body = {
-                "class": "GetRequestBody"
 
-            }
 
             start_time = time.perf_counter()
-            response = a_client.get_engine_actions(body=body)
+            response = a_client.get_active_engine_actions()
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
@@ -810,7 +807,17 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_technology_type_detail("CSV Data File", True)
-            response = a_client.get_technology_type_detail("File System", True)
+            response = a_client.get_technology_type_detail("File System", output_format="DICT",
+                                                           output_format_set="TechTypeDetail")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")

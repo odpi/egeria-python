@@ -57,43 +57,7 @@ class TestExternalReferences:
     bad_server_1 = "coco"
     bad_server_2 = ""
 
-    def test_get_linked_external_references(self):
-        try:
-            p_client = ExternalReferences(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            # parent_guid = "5d4a0b11-5552-4fe8-85e0-75d53e947cb7" # management
-            # parent_guid = "994283c2-deaf-42dc-adf9-ce87cdee0d1f"
-            # parent_guid = '4fe24e34-490a-43f0-a0d4-fe45ac45c663' # it setup
-            parent_guid = '2d86e375-c31b-494d-9e73-a03af1370d81' # trial
-            # parent_guid = "25452b45-942d-47af-90b6-3fa9df4a5df7"  # proj template
-            response = p_client.get_linked_external_references(parent_guid)
-            duration = time.perf_counter() - start_time
 
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}")
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            p_client.close_session()
 
     def test_get_classified_external_references(self):
         try:
@@ -145,16 +109,16 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "ERA"
+            search_string = "ExtRef::Milvus---Web-Site"
 
             response = p_client.find_external_references(
-                search_string, output_format="DICT", output_format_set="External-Reference"
+                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", output_format_set="Regerenceable"
             )
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
-                print(f"Found {len(response)} projects {type(response)}\n\n")
+                print(f"Found {len(response)} External References {type(response)}\n\n")
                 print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
@@ -180,8 +144,8 @@ class TestExternalReferences:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-            project_name = "Second Task"
-            response = p_client.get_external_references_by_name(project_name)
+            ref_name = "ExtRef::Data-Prep-Kit"
+            response = p_client.get_external_references_by_name(ref_name)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -249,9 +213,9 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            ref_guid = "8269a34d-fc7b-44c5-b111-b156f2e48bc2"
+            ref_guid = 'c85c1f5e-f7fb-4a2c-82ee-4bc90534fcbd'
 
-            response = p_client.get_external_reference_by_guid(ref_guid, output_format="DICT", output_format_set="External-Reference-DrE")
+            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", output_format_set="External-Reference-DrE")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 
@@ -277,28 +241,29 @@ class TestExternalReferences:
         finally:
             p_client.close_session()
 
-    def test_get_project_graph(self):
+    def test_link_external_reference(self):
         try:
             p_client = ExternalReferences(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
-                )
+            )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
+            ref_guid = '75821ed5-eec9-41cf-867c-349eb8c797f6'
+            element = '60f00f73-76c6-4227-9859-313253a5fdbe'
+            pages = '1'
 
-            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
-
-            response = p_client.get_project_graph(project_guid, output_format='DICT', output_format_set='Project')
+            response = p_client.link_external_reference(element, ref_guid)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             print(f"Type of response is {type(response)}")
 
-            if type(response) is dict:
+            if isinstance(response, list | dict):
                 print("dict:\n\n")
                 print(json.dumps(response, indent=4))
-            elif type(response) is list:
+            elif type(response) is tuple:
                 print(f"Type is {type(response)}\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
@@ -306,134 +271,94 @@ class TestExternalReferences:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
-                ) as e:
-            print_exception_response(e)
+                PyegeriaException, PyegeriaAPIException,
+        ) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             p_client.close_session()
 
-    def test_create_project(self):
+    def test_unlink_external_reference(self):
         try:
             p_client = ExternalReferences(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
-
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            classification_name = "PersonalProject"
-            body = {
-                "class": "NewElementRequestBody",
-                "parentGUID": "79ec7de5-7367-4bde-a3c8-b8d8c582b521",
-                "parentRelationshipTypeName": "ProjectHierarchy",
-                "properties":{
-                    "class": "ProjectProperties",
-                    "name": "My Study Project",
-                    "qualifiedName": f"{classification_name}-MyPersonalProject",
-                    "description": "my first personal project",
-                    "projectStatus": "DEFINED",
-                    "startDate": "2021-01-01",
-                    "plannedEndDate": "2028-01-01",
-                    "initialClassifications" : {
-                        "PersonalProject" : {
-                          "class": "PersonalProjectProperties"
-                        }
-                    },
-                },
-            }
-            response = p_client.create_project(body)
+            ref_guid = '75821ed5-eec9-41cf-867c-349eb8c797f6'
+            element = '60f00f73-76c6-4227-9859-313253a5fdbe'
+            pages = '1'
+
+            response = p_client.detach_external_reference(element, ref_guid)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Type of response is {type(response)}")
+
+            if isinstance(response, list | dict):
+                print("dict:\n\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
 
         except (
-            PyegeriaException,
+                PyegeriaException, PyegeriaAPIException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
-        except ValidationError as e:
-            print_validation_error(e)
+
         finally:
             p_client.close_session()
 
-    def test_create_project_from_template(self):
+
+    def test_link_cited_document(self):
         try:
             p_client = ExternalReferences(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
-
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            anchor_guid = None
-            parent_guid = "97bbfe07-6696-4550-bf8b-6b577d25bef0"
-            parent_relationship_type_name = "CollectionMembership"
-            parent_at_end1 = True
-            display_name = "Meow"
-            description = "Meow"
-            project_type = "Meow"
-            is_own_anchor = False
-            project_ordering = "NAME"
-            order_property_name = None
+            ref_guid = '75821ed5-eec9-41cf-867c-349eb8c797f6'
+            element = '60f00f73-76c6-4227-9859-313253a5fdbe'
+            pages = '1'
+            description = 'This is a test description'
             body = {
-                "class": "TemplateRequestBody",
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "templateGUID": "c7368217-d013-43cb-9af1-b58e3a491e77",
-                "replacementProperties": {
-                    "class": "ElementProperties",
-                    "propertyValueMap": {
-                        "qualifiedName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": f"templated-{display_name}-{time.asctime()}",
-                        },
-                        "name": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": display_name,
-                        },
-                        "description": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": description,
-                        },
-                    },
-                },
+                "class": "CitedDOcumentLinkProperties",
+                "referenceId" : ref_guid,
+                "description" : description,
+                "pages" : pages
             }
-
-            response = p_client.create_project_from_template(body)
+            response = p_client.link_cited_document(element, ref_guid)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"Type of response is {type(response)}")
+
+            if isinstance(response, list | dict):
+                print("dict:\n\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}\n\n")
                 print(json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaException, PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
+
         finally:
             p_client.close_session()
 
@@ -496,7 +421,7 @@ class TestExternalReferences:
     #     finally:
     #         p_client.close_session()
 
-    def test_delete_project(self):
+    def test_delete_ext_ref(self):
         try:
             p_client = ExternalReferences(
                 self.good_view_server_2,
@@ -506,13 +431,13 @@ class TestExternalReferences:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "90213557-be19-421c-990d-78a76c30e0f5"
+            ext_ref_guid = '----'
 
-            response = p_client.delete_project(project_guid)
+            response = p_client.delete_external_reference(ext_ref_guid)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
-            print(f"Project GUID: {project_guid} was deleted")
+            print(f"Project GUID: {ext_ref_guid} was deleted")
             assert True
 
         except (

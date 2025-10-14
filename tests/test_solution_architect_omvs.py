@@ -216,18 +216,16 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             s_client.close_session()
 
     def test_get_information_supply_chain_by_guid(self):
-        guid = "9fff0cfc-874b-4b01-b80f-75770c66b876"
+        guid = "7cbcb2ae-0b06-4dc6-83b7-d5951c435fe3"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -249,11 +247,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -347,7 +343,7 @@ class TestSolutionArchitect:
 
 
     def test_find_information_supply_chains_body(self):
-        filter = "Co"
+        filter = "puddy"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -364,7 +360,7 @@ class TestSolutionArchitect:
                 }
             start_time = time.perf_counter()
             response = s_client.find_information_supply_chains(filter,
-                                                               body=body, output_format="REPORT")
+                                                               body=body, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -681,7 +677,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_solution_blueprint_by_guid(self):
-        guid = "423d0074-6b8a-40f5-8116-8540220bd1c2"
+        guid = "c83c3bc4-5858-4267-bb24-d93c5517b215"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -690,7 +686,6 @@ class TestSolutionArchitect:
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.get_solution_blueprint_by_guid(guid, output_format='DICT')
-            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -748,7 +743,7 @@ class TestSolutionArchitect:
 
 
     def test_find_solution_blueprints(self):
-        search_string = "Co"
+        search_string = "Data"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -756,7 +751,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(search_string, output_format='DICT')
+            response = s_client.find_solution_blueprints(search_string, output_format='MERMAID')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -1112,17 +1107,18 @@ class TestSolutionArchitect:
             s_client.create_egeria_bearer_token()
 
             body = {
-              "class" : "UpdateSolutionComponentRequestBody",
+              "class" : "UpdateElementRequestBody",
+              "mergeUpdate": True,
               "properties": {
                 "class": "SolutionComponentProperties",
-                "description": "Maui's favorite meow store",
-                "solutionComponentType": "store",
-                "plannedDeployedImplementationType": "movie"
+                "description": "Milvus now",
+                "solutionComponentType": "SoftwareServer",
+                "plannedDeployedImplementationType": "DataStore"
                   }
             }
             start_time = time.perf_counter()
-            guid = "0f8fea0d-d6e7-46e4-a32f-486899868bc0"
-            s_client.update_solution_component(guid,body, False)
+            guid = '6948894a-5fd4-41e7-a250-955cfede5147'
+            s_client.update_solution_component(guid,body)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds"
@@ -1130,11 +1126,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException,
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -1235,7 +1229,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_solution_component_by_guid(self):
-        guid = "d026fbd6-709b-45d4-beec-f7a08764b5e2"
+        guid = "b464cd96-5941-4a80-8894-7badee899fb8"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1243,7 +1237,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_solution_component_by_guid(guid, output_format='REPORT')
+            response = s_client.get_solution_component_by_guid(guid, output_format='JSON')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
@@ -1332,7 +1326,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "*"
+        filter = "Data-Prep"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1340,7 +1334,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_components(filter, output_format='DICT')
+            response = s_client.find_solution_components(filter, output_format='JSON', output_format_set="Solution-Component-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -1353,11 +1347,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

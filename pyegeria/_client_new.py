@@ -166,7 +166,7 @@ class Client2:
 
         try:
             result = self.check_connection()
-            logger.info(f"client initialized, platform origin is: {result}")
+            logger.debug(f"client initialized, platform origin is: {result}")
         except PyegeriaConnectionException as e:
             raise
 
@@ -399,10 +399,10 @@ class Client2:
         response = await self._async_make_request("GET", origin_url, is_json=False)
         if response.status_code == 200:
             text = response.text.strip()
-            logger.success(f"Got response from {origin_url}\n Response: {text}")
+            logger.debug(f"Got response from {origin_url}\n Response: {text}")
             return text
         else:
-            logger.info(f"Got response from {origin_url}\n status_code: {response.status_code}")
+            logger.debug(f"Got response from {origin_url}\n status_code: {response.status_code}")
             return ""
 
 
@@ -1565,7 +1565,7 @@ class Client2:
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
         response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND

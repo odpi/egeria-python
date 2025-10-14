@@ -23,7 +23,9 @@ Console = Console(width=settings.Environment.console_width)
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
     # Get general header attributes
-    guid = element['elementHeader'].get("guid", None)
+    guid = element.get('elementHeader', {}).get("guid", None)
+    if guid is None:
+        return {}
     metadata_collection_id = element['elementHeader']['origin'].get("homeMetadataCollectionId", None)
     metadata_collection_name = element['elementHeader']['origin'].get("homeMetadataCollectionName", None)
     origin_category = element['elementHeader'].get("origin_category", None)
@@ -197,13 +199,13 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
         attribute_title = ""
 
     if output_type in ["FORM", "MD"]:
-        if attribute_name.lower() in [ "mermaid", "links", "implemented by", "sub_components"]:
+        if attribute_name.lower() in [ "mermaid", "solutionBlueprintMermaidGraph", "links", "implemented by", "sub_components"]:
             return '\n'
 
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type in ["REPORT", "MERMAID"]:
-        if attribute_title in ['Mermaid Graph', 'Mermaid']:
-            output = f"## Mermaid Graph\n\n```mermaid\n{attribute_value}\n```\n"
+        if attribute_title in ['Mermaid Graph', 'Mermaid', 'Solution Blueprint Mermaid Graph']:
+            output = f"## {attribute_title}\n\n```mermaid\n{attribute_value}\n```\n"
         elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output

@@ -186,6 +186,9 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
                 elif style == 'GUID':
                     parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+                    g = parsed_attributes[key].get('value', None)
+                    if g and ("___" not in g and "---" not in g):
+                        parsed_output['guid'] = parsed_attributes[key]['value']
                 elif style == 'Ordered Int':
                     parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
                 elif style == 'Simple Int':
@@ -536,6 +539,10 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     # attribute = default_value if attribute is None else attribute.replace('\n', '')
     attribute = default_value if attribute is None else attribute
+    if isinstance(attribute, str):
+        attribute = re.sub(r'\n+', '\n', attribute)
+        attribute = None if attribute.startswith('___') or attribute.startswith('---') else attribute
+
 
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:

@@ -133,9 +133,9 @@ class DebugConfig(BaseModel):
 
 class LoggingConfig(BaseModel):
     """Logging configuration settings"""
-    console_filter_levels: List[str] = ["ERROR"]
-    console_logging_enabled: List[str] = ["_client_new", "_exceptions_new", "collections_manager_omvs", "tests"]
-    console_logging_level: str = "INFO"
+    console_filter_levels: List[str] = ["SUCCESS"]
+    console_logging_enabled: List[str] = ["_client_new", "_exceptions_new", "dr_egeria_md", "tests"]
+    console_logging_level: str = "ERROR"
     enable_logging: bool = False
     file_logging_level: str = "INFO"
     log_directory: str = "logs"

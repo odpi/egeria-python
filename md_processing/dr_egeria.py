@@ -258,7 +258,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
                       f"\tPlease correct and try again. \n")
                 final_output.append(current_block)
-                final_output.append('\n___\n')
+                final_output.append('\n____\n')
         else:
             # If there is no object_action, append the block as-is
             final_output.append(current_block)
@@ -278,7 +278,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             in_h1_block = True
 
         # Handle the end of a block (line starts with `---`)
-        elif line.startswith("___"):
+        elif line.startswith("___") or line.startswith("---"):
             if in_h1_block:
                 # Process the current block when it ends with `---`
                 current_block += f"\n{line}"

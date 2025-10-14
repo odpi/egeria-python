@@ -46,7 +46,7 @@ def load_mermaid():
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             mermaid.initialize({startOnLoad: true},
-            {maxTextSize: 300000});
+            {maxTextSize: 300000}, {securityLevel: 'loose'});
         });
     </script>
 

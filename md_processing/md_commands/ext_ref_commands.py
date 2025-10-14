@@ -100,13 +100,15 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
             prop_body["copyright"] = attributes.get('Copyright', {}).get('value', None)
             prop_body["attribution"] = attributes.get('Attribution', {}).get('value', None)
 
-            if object_type == "RelatedMedia":
+            if object_type in ["RelatedMedia", "Related Media"]:
+                object_type = "RelatedMedia"
                 prop_body["class"]  = "RelatedProperties"
                 prop_body["mediaType"]  = attributes.get('Media Type', {}).get('value', None)
                 prop_body["mediaTypeOtherId"] = attributes.get('Media Type Other ID', {}).get('value', None)
                 prop_body["defaultMediaUsage"]= attributes.get('Default Media Usage', {}).get('value', None)
                 prop_body["defaultMediaUsageOtherId"] = attributes.get('Default Media Usage Other ID', {}).get('value', None)
-            elif object_type == "CitedDocument":
+            elif object_type in ["CitedDocument", "Cited Document"]:
+                object_type = "CitedDocument"
                 prop_body["class"]  = "CitedDocumentProperties"
                 prop_body["numberOfPages"]  = attributes.get('Number of Pages', {}).get('value', None)
                 prop_body["pageRange"] = attributes.get('Page Range', {}).get('value', None)
@@ -119,7 +121,8 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                 prop_body["publicationCity"] = attributes.get('Publication City', {}).get('value', None)
                 prop_body["publicationYear"] = attributes.get('Publication Year', {}).get('value', None)
                 prop_body["publicationNumbers"]= attributes.get('Publication Numbers', {}).get('value', None)
-
+            elif object_type in ["ExternalReference", "External Reference"]:
+                object_type = "ExternalReference"
 
 
             if object_action == "Update":
@@ -147,6 +150,7 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                 #     egeria_client.update_external_reference_status(guid, status)
 
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
+                print(Markdown(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___"))
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
@@ -182,11 +186,13 @@ def process_external_reference_upsert_command(egeria_client: EgeriaTech, txt: st
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
+                        print(Markdown(msg))
                         return egeria_client.get_external_reference_by_guid(guid, element_type=object_type,
                                                                             output_format='MD',
                                                                             output_format_set=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                        print(Markdown(msg))
                         logger.error(msg)
                         return None
 

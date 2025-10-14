@@ -209,7 +209,7 @@ class CollectionManager(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/"
                f"metadata-elements/{parent_guid}/collections")
-        return await self._async_get_name_request(url, body, output_format, output_format_set)
+
         response = await self._async_make_request("POST", url, body_slimmer(body))
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
