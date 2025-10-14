@@ -20,13 +20,11 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
-from pyegeria import (
-    EgeriaTech,
-    CollectionManager,
-    GovernanceOfficer,
-    GlossaryManager,
-    NO_ELEMENTS_FOUND,
-)
+from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.collection_manager import CollectionManager
+from pyegeria.governance_officer import GovernanceOfficer
+from pyegeria.glossary_manager import GlossaryManager
+from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.config import settings
 from pyegeria.external_references import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException
@@ -93,6 +91,8 @@ async def _async_run_report(
         - {"kind":"unknown","raw": any}
         """
     params = dict(params or {})
+    user_name = egeria_client.user_id
+    user_pwd = egeria_client.user_pwd
 
     # Resolve the format set and action
     fmt = select_output_format_set(report_name, output_format)
@@ -141,7 +141,6 @@ async def _async_run_report(
 
 
     try:
-        egeria_client.create_egeria_bearer_token()
         func = getattr(egeria_client, method_name) if method_name and hasattr(egeria_client, method_name) else None
         # Add logging to validate func
         msg = f"DEBUG: func={func}, method_name={method_name}, client_class={client_class}"
@@ -152,7 +151,7 @@ async def _async_run_report(
             raise TypeError(
                 f"Resolved function '{method_name}'  not found in client class '{client_class.__name__}' is not callable."
             )
-
+        token = await egeria_client._async_create_egeria_bearer_token(user_name, user_pwd)
         result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:

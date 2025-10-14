@@ -20,9 +20,9 @@
         "Logging": {
                 "enable_logging": true,
                 "log_directory": "./logs",
-                "console_logging_level": "INFO",
+                "console_logging_level": "WARNING",
                 "console_filter_levels": [
-                        "ERROR"
+                        "WARNING"
                 ],
                 "console_logging_enabled": [
                         "tests",

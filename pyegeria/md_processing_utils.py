@@ -15,14 +15,14 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import body_slimmer
+from pyegeria.utils import body_slimmer
 from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND, DEBUG_LEVEL)
 from pyegeria.egeria_tech_client import EgeriaTech
-from md_processing.md_processing_utils.md_processing_constants import (message_types,
+from md_processing.md_processing_utils.md_processing_constants import (
         pre_command, EXISTS_REQUIRED, load_commands, get_command_spec, get_attribute, get_attribute_labels, get_alternate_names)
 
 
-from pyegeria.project_manager_omvs import ProjectManager
+from pyegeria.project_manager import ProjectManager
 
 ALWAYS = "ALWAYS"
 ERROR = "ERROR"

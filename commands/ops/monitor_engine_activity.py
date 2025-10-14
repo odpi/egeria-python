@@ -109,7 +109,7 @@ def display_engine_activity(
         table.add_column("Process Name")
         table.add_column("Completion Message")
 
-        action_status = g_client.get_engine_actions()
+        action_status = g_client.get_active_engine_actions()
 
         if type(action_status) is str:
             requested_time = " "
@@ -146,7 +146,7 @@ def display_engine_activity(
                     "ACTIVATING",
                 ):
                     action_status = f"[yellow]{action['actionStatus']}"
-                elif action["actionStatus"] in ("IN_PROGRESS", "ACTIONED"):
+                elif action["actionStatus"] in ("IN_PROGRESS", "COMPLETED"):
                     action_status = f"[green]{action['actionStatus']}"
                 else:
                     action_status = f"[red]{action['actionStatus']}"

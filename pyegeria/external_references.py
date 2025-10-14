@@ -1252,7 +1252,7 @@ class ExternalReferences(Client2):
         ignore_case : bool, [default=False], optional
             Ignore case when searching
         start_from: int, [default=0], optional
-                    When multiple pages of results are available, the page number to start from.
+            When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
             The number of items to return in a single page. If not specified, the default will be taken from
             the class instance.
@@ -1403,7 +1403,7 @@ class ExternalReferences(Client2):
               The principle specified by the user_id does not have authorization for the requested action
         """
         url = str(HttpUrl(f"{self.command_root}/external-references/by-name"))
-        response = await self._async_get_name_request(url, _type="Collection",
+        response = await self._async_get_name_request(url, _type="ExternalReference",
                                                       _gen_output=self._generate_external_reference_output,
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,

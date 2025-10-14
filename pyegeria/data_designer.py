@@ -11,8 +11,7 @@ import asyncio
 
 from loguru import logger
 
-from pyegeria import Client2
-from pyegeria._client import max_paging_size
+from pyegeria._client_new import max_paging_size, Client2
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,

@@ -378,6 +378,11 @@ class ResultsRequestBody(GetRequestBody):
     start_from: int = 0
     page_size: int = 0
 
+class LevelIdentifierQueryBody(ResultsRequestBody):
+    class_: Annotated[Literal["LevelIdentifierQueryProperties"], Field(alias="class")]
+    return_specific_level: bool = True
+    level_identifier: int
+
 class FilterRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["FilterRequestBody"], Field(alias="class")]
     filter: str

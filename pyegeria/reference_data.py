@@ -164,6 +164,10 @@ class ReferenceDataManager(Client2):
             Search string to use to find matching projects. If the search string is '*' then all projects returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        output_format_set: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
 
         starts_with : bool, [default=False], optional
             Starts with the supplied string.

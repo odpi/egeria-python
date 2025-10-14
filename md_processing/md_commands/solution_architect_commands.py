@@ -307,6 +307,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
                            f"object_action\n")
                     logger.error(msg)
+                    print(Markdown(msg))
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 elif not valid:
                     return None
@@ -324,19 +325,11 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     update_element_dictionary(qualified_name, {
                         'guid': guid, 'display_name': display_name
                     })
-                    logger.info(msg)
                     logger.success(msg)
-                    return egeria_client.find_solution_blueprints(qualified_name, output_format='MD')
-
-                egeria_client.update_solution_blueprint(guid, body, replace_all_props)
-                logger.success(f"==> Updated  {object_type} `{display_name}` with GUID {guid}\n\n")
-                update_element_dictionary(qualified_name, {
-                    'guid': guid, 'display_name': display_name
-                    })
-                sync_blueprint_related_elements(egeria_client, object_type, component_guids, guid, qualified_name,
-                                                display_name, replace_all_props)
-                logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
-                return egeria_client.find_solution_blueprints(qualified_name, output_format='MD')
+                    sync_blueprint_related_elements(egeria_client, object_type, component_guids, guid, qualified_name,
+                                                    display_name, replace_all_props)
+                    logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
+                    return egeria_client.get_solution_blueprints_by_name(qualified_name, output_format='MD', output_format_set = "Solution-Blueprint-DrE")
 
 
             elif object_action == "Create":
@@ -346,10 +339,12 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         msg = (f"  Data Specification `{display_name}` already exists and result document updated changing "
                                f"`Create` to `Update` in processed output\n\n___")
                         logger.error(msg)
+                        print(Markdown(msg))
                         return update_a_command(txt, object_action, object_type, qualified_name, guid)
 
                     elif not valid:
                         msg = (f"==>{object_type} `{display_name}` is not valid and can't be created")
+                        print(Markdown(msg))
                         logger.error(msg)
                         return
 
@@ -366,10 +361,12 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         'guid': guid, 'display_name': display_name
                         })
                     msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                    print(Markdown(msg))
                     logger.success(msg)
-                    return egeria_client.find_solution_blueprints(qualified_name, output_format='MD')
+                    return egeria_client.get_solution_blueprint_by_guid(guid, output_format='MD', output_format_set = "Solution-Blueprint-DrE")
                 else:
                     msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                    print(Markdown(msg))
                     logger.error(msg)
                     return None
 
@@ -488,9 +485,10 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                     "class": "UpdateElementRequestBody",
                     "externalSourceGUID": external_source_guid,
                     "externalSourceName": external_source_name,
-                    "effectiveTime": effective_time, "forLineage": False,
+                    "effectiveTime": effective_time,
+                    "mergeUpdate": merge_update,
+                    "forLineage": False,
                     "forDuplicateProcessing": False,
-                    "parentAtEnd1": parent_at_end1,
                     "properties": {
                         "class": "SolutionComponentProperties",
                         "qualifiedName": qualified_name,
@@ -505,7 +503,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                         }
                     })
 
-                egeria_client.update_solution_component(guid, body, not merge_update)
+                egeria_client.update_solution_component(guid, body)
                 logger.success(f"==>Updated  {object_type} `{display_name}` with GUID {guid}\n")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
@@ -534,7 +532,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
 
                 else:
                     body = body_slimmer({
-                        "class": "NewSolutionElementRequestBody",
+                        "class": "NewElementRequestBody",
                         "anchorGUID": anchor_guid,
                         "isOwnAnchor": is_own_anchor,
                         "parentGUID": parent_guid,
@@ -720,6 +718,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                     egeria_client.link_solution_linking_wire(component1, component2, None)
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)
+                    print(Markdown(msg))
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
                     return out
 

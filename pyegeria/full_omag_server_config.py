@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import json
 from pyegeria.utils import body_slimmer
 from pyegeria._client import Client
-from pyegeria import TEMPLATE_GUIDS, max_paging_size
+from pyegeria._globals import max_paging_size
 from pyegeria._exceptions import  InvalidParameterException
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_name, validate_url

@@ -117,7 +117,7 @@ OPTIONAL_PARAMS = ["page_size", "start_from", "starts_with", "ends_with", "ignor
 # Define shared elements
 COMMON_COLUMNS = [
     Column(name='Display Name', key='display_name'),
-    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
     Column(name='Status', key='status'),
@@ -191,7 +191,6 @@ GLOSSARY_COLUMNS = COMMON_COLUMNS + [
 ]
 
 COLLECTIONS_COLUMNS = COMMON_COLUMNS + [
-    Column(name='Type Name', key='type_name'),
     Column(name='Classifications', key='classifications'),
     Column(name="Created By", key='created_by'),
     Column(name="Create Time", key='create_time'),
@@ -298,6 +297,26 @@ base_output_format_sets = FormatSetDict({
             )
         ],
     ),
+    "TechTypeDetail": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Details",
+        description="Details of a Technology Type Valid Value.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                columns= [
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Catalog Template Placeholders", key='catalog_template_specs'),
+                    Column(name="Reference URL", key='ref_url'),
+                ],
+            )
+        ],
+    ),
+
     "ExternalReference": FormatSet(
         target_type="External Reference",
         heading="External Reference Attributes",
@@ -530,6 +549,38 @@ base_output_format_sets = FormatSetDict({
             optional_params=OPTIONAL_PARAMS,
             spec_params={"output_format": "DICT"},
         )
+    ),
+"Solution-Blueprint": FormatSet(
+        target_type="SolutionBlueprint",
+        heading="Solution Blueprint Report",
+        description="Details of a Solution Blueprint.",
+        aliases=[],
+        annotations={"Wikilinks": ["[[Solution-Blueprint]]"]},
+        formats=[
+            Format(
+                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                columns=COLLECTIONS_MEMBERS_COLUMNS
+            ),
+            Format(
+                types=["REPORT", "HTML"],
+                columns=COLLECTIONS_MEMBERS_COLUMNS + [
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ]),
+            Format(
+                types=["MERMAID"],
+                columns= [
+                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                ])
+        ],
+        action=ActionParameter(
+            function="SolutionArchitect.find_solution_blueprints",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_PARAMS,
+            spec_params={},
+        ),
     ),
     "Digital-Product-Catalog": FormatSet(
         target_type="DigitalProductCatalog",

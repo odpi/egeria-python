@@ -40,6 +40,7 @@ import os
 import time
 
 from loguru import logger
+from pydantic import ValidationError
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -51,7 +52,7 @@ import pydevd_pycharm
 from pyegeria import (
     EgeriaTech,
     CollectionManager,
-    NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager,
+    NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager, print_validation_error,
 )
 from pyegeria.config import settings
 from pyegeria.external_references import ExternalReferences
@@ -238,6 +239,10 @@ def execute_format_set_action(
                 else:
                     # For standalone functions, call with client as first argument
                     output = func(client, **params)
+            except ValidationError as e:
+                print_validation_error(e)
+                return
+
             except TypeError as e:
                 # Handle parameter mismatch errors
                 print(f"Error calling function: {e}")

@@ -44,18 +44,22 @@ from loguru import logger
 config_logging()
 init_logging(True)
 
-from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server, make_client
-import pytest
-
-@pytest.fixture(autouse=True)
-def _ensure_server():
-    require_local_server()
+# from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server, make_client
+# import pytest
+#
+# @pytest.fixture(autouse=True)
+# def _ensure_server():
+#     require_local_server()
+VIEW_SERVER = "qs-view-server"
+PLATFORM_URL = "https://localhost:9443"
+USER_ID = "peterprofile"
+USER_PWD = "secret"
 
 class TestCollectionManager:
     good_platform1_url = PLATFORM_URL
 
     good_user_1 = USER_ID
-    good_user_2 = USER_ID
+    good_user_2 = "peterprofile"
     # good_user_3 = "peterprofile"
     # bad_user_1 = "eviledna"
     # bad_user_2 = ""
@@ -106,9 +110,9 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = None
             classification_name = None
-            element_type = ["DigitalProduct"]
-            output_format = "JSON"
-            output_format_set = "Collections"
+            element_type = ["Glossary"]
+            output_format = "DICT"
+            output_format_set = "Glossary"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
                                                  ,metadata_element_types=element_type
@@ -127,8 +131,9 @@ class TestCollectionManager:
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
-        # except ValidationError as e:
-        #     print_validation_error(e)
+        except ValidationError as e:
+            print_validation_error(e)
+            print_basic_exception(e)
 
         finally:
             c_client.close_session()

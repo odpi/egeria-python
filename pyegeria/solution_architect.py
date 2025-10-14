@@ -19,7 +19,7 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR, populate_common_columns
 from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
-from pyegeria import validate_guid
+from pyegeria._validators import validate_guid
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._client_new import Client2, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
@@ -1619,7 +1619,8 @@ class SolutionArchitect(Client2):
 
         return self.find_information_supply_chains("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body)
 
-    async def _async_find_information_supply_chains(self, search_string: str = "*", classification_names: list[str] = None,
+    async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
+                                                    classification_names: list[str] = None,
                                                     metadata_element_types: list[str] = None,
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
@@ -1682,7 +1683,7 @@ class SolutionArchitect(Client2):
 
             """
 
-        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string"
+        url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
         return await self._async_find_request(url, _type="GovernanceDefinition",
                                               _gen_output=self.generate_info_supply_chain_output,
                                               search_string=search_string, classification_names=classification_names,
@@ -1694,7 +1695,8 @@ class SolutionArchitect(Client2):
 
 
 
-    def find_information_supply_chains(self, search_string: str = "*", classification_names: list[str] = None,
+    def find_information_supply_chains(self, search_string: str = "*",  add_implementation: bool = False,
+                                    classification_names: list[str] = None,
                                     metadata_element_types: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
@@ -1763,7 +1765,7 @@ class SolutionArchitect(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_information_supply_chains(search_string, classification_names, metadata_element_types,
+            self._async_find_information_supply_chains(search_string, add_implementation,classification_names, metadata_element_types,
                                                        starts_with, ends_with, ignore_case,
                                                        start_from, page_size,  output_format,
                                                        output_format_set, body))
@@ -2910,7 +2912,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    output_format_set: str = "Solution-Blueprint",
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
@@ -3066,7 +3068,8 @@ class SolutionArchitect(Client2):
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str, body: dict = None,
-                                                    output_format: str = "JSON") -> dict | str:
+                                                    output_format: str = "JSON",
+                                                    output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
             Parameters
@@ -3082,6 +3085,8 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            output_format_set: str|Dict, optional
+                Structure of content to return.
 
             Returns
             -------
@@ -3120,10 +3125,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_blueprint_output(element, None, output_format)
+            return self.generate_solution_blueprint_output(element, guid, "SolutionBlueprint",
+                                                           output_format, output_format_set=output_format_set)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_blueprint_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+    def get_solution_blueprint_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON",
+                                       output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
             Parameters
@@ -3139,6 +3146,8 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            output_format_set: str|Dict, optional
+                Structure of content to return.
 
             Returns
             -------
@@ -3166,12 +3175,13 @@ class SolutionArchitect(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid, body, output_format))
+        response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid, body,
+                                                                                      output_format, output_format_set))
         return response
 
     async def _async_get_solution_blueprints_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                      page_size: int = max_paging_size,
-                                                     output_format: str = "JSON") -> dict | str:
+                                                     output_format: str = "JSON", output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Returns the list of solution blueprints with a particular name. Async Version.
 
             Parameters
@@ -3187,6 +3197,8 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            output_format_set: str|Dict, optional
+                Structure of content to return.
 
             Returns
             -------
@@ -3219,8 +3231,6 @@ class SolutionArchitect(Client2):
 
         """
 
-        possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
-
         if body is None:
             body = {
                 "filter": search_filter,
@@ -3228,18 +3238,19 @@ class SolutionArchitect(Client2):
         else:
             body["filter"] = search_filter
 
-        url = (f"{self.solution_architect_command_root}/solution-blueprints/by-name"
-               f"{possible_query_params}")
+        url = f"{self.solution_architect_command_root}/solution-blueprints/by-name"
+
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_blueprint_output(element, search_filter, output_format)
+            return self.generate_solution_blueprint_output(element, search_filter, output_format, output_format_set=output_format_set)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_blueprints_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+                                        page_size: int = max_paging_size, output_format: str = "JSON",
+                                        output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Returns the list of solution blueprints with a particular name.
 
             Parameters
@@ -3260,6 +3271,8 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            output_format_set: str|Dict, optional
+                Structure of content to return.
 
             Returns
             -------
@@ -3293,7 +3306,7 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_blueprints_by_name(search_filter, body, start_from, page_size, output_format))
+            self._async_get_solution_blueprints_by_name(search_filter, body, start_from, page_size, output_format, output_format_set))
         return response
 
 
@@ -4281,7 +4294,7 @@ class SolutionArchitect(Client2):
 
         url = f"{self.solution_architect_command_root}/solution-components/by-search-string"
 
-        return await self._async_find_request(url, _type="GovernanceDefinition",
+        return await self._async_find_request(url, _type="SolutionComponent",
                                               _gen_output=self.generate_info_supply_chain_output,
                                               search_string=search_string, classification_names=classification_names,
                                               metadata_element_types=metadata_element_types,
@@ -4612,29 +4625,37 @@ class SolutionArchitect(Client2):
         supply_chain_guids = []
         parent_component_guids = []
 
+        col_members = response.get('memberOfCollection', None)
+        if col_members is not None:
+            for member in col_members:
+                guid = member['relatedElement'].get('guid', None)
+                member_props = member['relatedElement'].get('properties', None)
+                if member_props is not None:
+                    if member_props.get('typeName', None) == 'SolutionBlueprint':
+                        blueprint_guids.append(guid)
+                    elif member_props.get('class', None) == 'InformationSupplyChain':
+                        supply_chain_guids.append(guid)
+
+        sub_components = response.get('nestedSolutionComponents', None)
+        if sub_components is not None:
+            for comp in sub_components:
+                guid = comp['relatedElement']['elementHeader'].get('guid', None)
+                sub_component_guids.append(guid)
+
         sub_components = response.get("subComponents",{})
         for sub_component in sub_components:
             sub_component_guids.append(sub_component["elementHeader"]["guid"])
+
+        parent_components = response.get('usedInSolutionComponents', None)
+        if parent_components is not None:
+            for comp in parent_components:
+                guid = comp['relatedElement']['elementHeader'].get('guid', None)
+                parent_component_guids.append(guid)
 
         actors = response.get("actors",{})
         for actor in actors:
             actor_guids.append(actor["elementHeader"]["guid"])
 
-        blueprints = response.get("blueprints",{})
-        for blueprint in blueprints:
-            blueprint_guids.append(blueprint["relatedElement"]['elementHeader']["guid"])
-
-        context = response.get("context",[])
-        for c in context:
-            supply_chains = c.get("owningInformationSupplyChains", [])
-            if supply_chains:
-                for chain in supply_chains:
-                    supply_chain_guids.append(chain['relatedElement']["elementHeader"]["guid"])
-
-            parent_components = c.get("parentComponents",[])
-            if parent_components:
-                for parent_component in parent_components:
-                    parent_component_guids.append(parent_component["elementHeader"]["guid"])
 
         return {
             "sub_component_guids": sub_component_guids,

@@ -67,6 +67,8 @@ class EgeriaTech:
         self._gov_officer = GovernanceOfficer(view_server, platform_url, user_id, user_pwd, token)
         self._collections = CollectionManager(view_server, platform_url, user_id, user_pwd, token)
         self._external_references = ExternalReferences(view_server, platform_url, user_id, user_pwd, token)
+        self._classification_manager = ClassificationManager(view_server, platform_url, user_id, user_pwd, token)
+
 
         self._subclients = [
             self._auto_curate,
@@ -82,6 +84,7 @@ class EgeriaTech:
             self._gov_officer,
             self._collections,
             self._external_references,
+            self._classification_manager
         ]
         self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND
 

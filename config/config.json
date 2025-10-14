@@ -28,12 +28,12 @@
   "feature_x_enabled": "foo",
   "Logging": {
     "console_filter_levels": [
-      "ERROR",  "WARNING", "INFO", "SUCCESS"
+      "ERROR"
     ],
     "console_logging_enabled": [
       "TestCollectionManager"
     ],
-    "console_logging_level": "INFO",
+    "console_logging_level": "ERROR",
     "enable_logging": true,
     "file_logging_level": "INFO",
     "log_directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/logs",

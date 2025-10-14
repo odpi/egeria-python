@@ -42,7 +42,7 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_link_to_external_reference_command, process_link_to_media_reference_command,
                            process_link_to_cited_document_command, EXT_REF_UPSERT, LINK_CITED_DOC, LINK_MEDIA,LINK_EXT_REF)
 
-from .md_commands.data_designer_commands import (process_data_spec_upsert_command,
+from md_processing.md_commands.data_designer_commands import (process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_field_upsert_command,
                                                               process_data_structure_upsert_command,
@@ -258,7 +258,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
                       f"\tPlease correct and try again. \n")
                 final_output.append(current_block)
-                final_output.append('\n___\n')
+                final_output.append('\n____\n')
         else:
             # If there is no object_action, append the block as-is
             final_output.append(current_block)
@@ -278,7 +278,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             in_h1_block = True
 
         # Handle the end of a block (line starts with `---`)
-        elif line.startswith("___"):
+        elif line.startswith("___") or line.startswith("---"):
             if in_h1_block:
                 # Process the current block when it ends with `---`
                 current_block += f"\n{line}"

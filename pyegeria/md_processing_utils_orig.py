@@ -17,11 +17,11 @@ from rich import box, print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import body_slimmer
+from pyegeria.utils import body_slimmer
 from pyegeria._globals import NO_TERMS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.project_manager_omvs import ProjectManager
-from pyegeria.glossary_manager_omvs import GlossaryManager
+from pyegeria.project_manager import ProjectManager
+from pyegeria.glossary_manager import GlossaryManager
 
 from datetime import datetime
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))

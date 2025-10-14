@@ -18,7 +18,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria import INTEGRATION_GUIDS, TEMPLATE_GUIDS
+
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -26,7 +26,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 from pyegeria.asset_catalog_omvs import AssetCatalog
-
+from pyegeria.automated_curation import AutomatedCuration
 # from pyegeria.md_processing_utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig
@@ -342,10 +342,16 @@ class TestAssetCatalog:
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
+            b_client = AutomatedCuration(server_name, self.good_platform1_url, user_id=self.good_user_2)
+
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            token = b_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            file_folder_template_guid = b_client.get_template_guid_for_technology_type(
+                "FileFolder template"
+            )
             body = {
-                "templateGUID": TEMPLATE_GUIDS["FileFolder template"],
+                "templateGUID": file_folder_template_guid,
                 "isOwnAnchor": True,
                 "placeholderPropertyValues": {
                     "clinicalTrialId": "TransMorg-1",
