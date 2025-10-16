@@ -72,8 +72,6 @@ from ._output_formats import select_output_format_set
 from .mcp_adapter import list_reports, describe_report, run_report, _async_run_report, _execute_egeria_call_blocking
 
 #
-global template_guids, integration_guids
-
 # 2/12/25
 
 def __getattr__(name):

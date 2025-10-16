@@ -204,7 +204,7 @@ class SolutionArchitect(Client2):
                 "mermaid" : mermaid,
             }
 
-    
+
     def _extract_supply_chain_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
         """
         Normalize supply chain response for a list of dictionaries.
@@ -256,15 +256,19 @@ class SolutionArchitect(Client2):
         Returns:
             Dictionary with extracted properties
         """
-        return populate_common_columns(
+        struct = populate_common_columns(
             element,
             columns_struct,
             include_header=True,
             include_relationships=True,
             include_subject_area=True,
             mermaid_source_key='mermaidGraph',
-            mermaid_dest_key='mermaid'
+            mermaid_dest_key='mermaid',
         )
+
+        # solution blueprint
+
+        return struct
 
     def _extract_solution_roles_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -287,9 +291,6 @@ class SolutionArchitect(Client2):
         )
 
 
-
-
-
     def _get_component_rel_elements(self, guid:str)-> dict | str:
         elements = self.get_info_supply_chain_by_guid(guid)
         return self._get_supply_chain_rel_elements_dict(elements)
@@ -301,7 +302,7 @@ class SolutionArchitect(Client2):
         actor_guids = []
         actor_name_roles = []
         actor_qnames = []
-        
+
         parent_guids = []
         parent_names = []
         parent_qnames = []
@@ -318,60 +319,92 @@ class SolutionArchitect(Client2):
         blueprint_names = []
         blueprint_qnames = []
 
-
-        external_references_guids = []
-        external_references_names = []
-        external_references_qnames = []
-
-        other_related_elements_guids = []
-        other_related_elements_names = []
-        other_related_elements_qnames = []
-        
-        owning_info_supply_chain_guids = []
-        owning_info_supply_chain_qnames = []
-        owning_info_supply_chain_names = []
+        supply_chain_guids = []
+        supply_chain_qnames = []
+        supply_chain_names = []
 
         wired_to_guids = []
         wired_to_names = []
         wired_to_link_labels = []
         wired_to_qnames = []
-        
+
         wired_from_guids = []
         wired_from_names = []
         wired_from_link_labels = []
         wired_from_qnames = []
 
+        sub_component_guids = []
+        actor_guids = []
+        blueprint_guids = []
+        supply_chain_guids = []
+
+
+
+        sub_components = el_struct.get('nestedSolutionComponents', None)
+        if sub_components is not None:
+            for comp in sub_components:
+                guid = comp['relatedElement']['elementHeader'].get('guid', None)
+                sub_component_guids.append(guid)
+                sub_component_qnames.append(comp['relatedElement']['properties'].get("qualifiedName", ""))
+                sub_component_names.append(comp['relatedElement']['properties'].get('displayName', ""))
+
         actors = el_struct.get("actors", {})
         if actors:
             for actor in actors:
                 actor_guids.append(actor['relatedElement']['elementHeader'].get("guid", None))
-                actor_role = actor['relationshipProperties'].get('role',"")      
+                actor_role = actor['relationshipProperties'].get('role',"")
                 actor_name = actor['relatedElement']['properties'].get("displayName", "")
                 actor_name_roles.append(f"`{actor_name}` in role `{actor_role}`")
                 actor_qnames.append(actor['relatedElement']['properties'].get("qualifiedName", ""))
 
-        wired_to = el_struct.get("wiredToLinks", {})
+        wired_to = el_struct.get("wiredTo", {})
         if wired_to:
             for wire in wired_to:
-                wired_to_link_labels.append(wire['properties'].get("label", ""))
-                wired_to_guids.append(wire['linkedElement']['elementHeader']['guid'])
-                wired_to_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
-                wired_to_names.append(wire['linkedElement']['properties'].get('displayName', ""))
-                
-        wired_from = el_struct.get("wiredFromLinks", {})
-        if wired_from:
-            for wire in wired_from:
-                wired_from_link_labels.append(wire['properties'].get("label", ""))
-                wired_from_guids.append(wire['linkedElement']['elementHeader']['guid'])
-                wired_from_qnames.append(wire['linkedElement']['properties'].get("qualifiedName", ""))
-                wired_from_names.append(wire['linkedElement']['properties'].get('displayName', ""))
+                end_1 = wire['relatedElementAtEnd1']
+                if end_1:
+                    wired_from_link_labels.append(wire['relationshipProperties'].get("label", ""))
+                    wired_from_guids.append(wire['relatedElement']['elementHeader']['guid'])
+                    wired_from_qnames.append(wire['relatedElement']['properties'].get("qualifiedName", ""))
+                    wired_from_names.append(wire['relatedElement']['properties'].get('displayName', ""))
+                else:
+                    wired_to_link_labels.append(wire['relationshipProperties'].get("label", ""))
+                    wired_to_guids.append(wire['relatedElement']['elementHeader']['guid'])
+                    wired_to_qnames.append(wire['relatedElement']['properties'].get("qualifiedName", ""))
+                    wired_to_names.append(wire['relatedElement']['properties'].get('displayName', ""))
 
-        blueprints = el_struct.get("blueprints", {})
-        if blueprints:
-            for bp in blueprints:
-                blueprint_guids.append(bp['relatedElement']['elementHeader']['guid'])
-                blueprint_qnames.append(bp['relatedElement']['properties'].get("qualifiedName", ""))
-                blueprint_names.append(bp['relatedElement']['properties'].get('displayName', ""))
+
+        col_members = el_struct.get('memberOfCollections', None)
+        if col_members is not None:
+            for member in col_members:
+                guid = member['relatedElement'].get('guid', None)
+                member_props = member['relatedElement'].get('properties', None)
+                if member_props is not None:
+                    if member_props.get('typeName', None) == 'SolutionBlueprint':
+                        blueprint_guids.append(guid)
+                        blueprint_names.append(member_props.get('displayName',""))
+                        blueprint_qnames.append(member_props.get('qualifiedName', ""))
+
+                    elif member_props.get('class', None) == 'InformationSupplyChain':
+                        supply_chain_guids.append(guid)
+                        supply_chain_names.append(member_props.get('displayName',""))
+                        supply_chain_qnames.append(member_props.get('qualifiedName', ""))
+
+        isc = el_struct.get('derivedFrom', None)
+        if isc is not None:
+            for member in isc:
+                supply_chain_guids.append(member['relatedElement']['elementHeader'].get("guid", None))
+                member_props = member['relatedElement'].get('properties', None)
+                supply_chain_names.append(member_props.get('displayName', ""))
+                supply_chain_qnames.append(member_props.get('qualifiedName', ""))
+
+
+        parent_components = el_struct.get('usedInSolutionComponents', None)
+        if parent_components is not None:
+            for comp in parent_components:
+                guid = comp['relatedElement']['elementHeader'].get('guid', None)
+                parent_guids.append(guid)
+                parent_qnames.append(comp['relatedElement']['properties'].get("qualifiedName", ""))
+                parent_names.append(comp['relatedElement']['properties'].get('displayName', ""))
 
         sub_components = el_struct.get("subComponents", {})
         if sub_components:
@@ -380,39 +413,12 @@ class SolutionArchitect(Client2):
                 sub_component_qnames.append(sub_component['properties'].get("qualifiedName", ""))
                 sub_component_names.append(sub_component['properties'].get('displayName', ""))
 
-        context = el_struct.get("context", None)
-        if context:
-            for c in context:
-
-                parents = c.get("parentComponents", None) if context else None
-                if parents:
-                    for parent in parents:
-                        parent_guids.append(parent['relatedElement']['elementHeader']["guid"])
-                        parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
-                        parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
-
-                owning_isc = c.get("owningInformationSupplyChains", None) if context else None
-                if owning_isc:
-                    for isc in owning_isc:
-                        owning_info_supply_chain_guids.append(isc['relatedElement']['elementHeader']["guid"])
-                        owning_info_supply_chain_names.append(isc['relatedElement']['properties'].get("displayName", ""))
-                        owning_info_supply_chain_qnames.append(isc['relatedElement']['properties'].get("qualifiedName", ""))
-
-
-
-        # implemented_by = el_struct.get("implementedByList", {})
-        # if len(implemented_by) > 0:
-        #     for peer in peer_supply_chains:
-        #         implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
-        #         implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
-        #         implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
-
 
         mermaid = el_struct.get("mermaidGraph", {})
 
-        return {"parent_guids": parent_guids,
-                "parent_names": parent_names,
-                "parent_qnames": parent_qnames,
+        return {"in_components_guids": parent_guids,
+                "in_components_names": parent_names,
+                "in_components": parent_qnames,
 
                 "actor_guids": actor_guids,
                 "actor_name_roles": actor_name_roles,
@@ -422,13 +428,9 @@ class SolutionArchitect(Client2):
                 "sub_component_names": sub_component_names,
                 "sub_component_qnames": sub_component_qnames,
 
-                "blueprint_guids": blueprint_guids,
-                "blueprint_names": blueprint_names,
-                "blueprint_qnames": blueprint_qnames,
-
-                "owning_info_supply_chain_guids": owning_info_supply_chain_guids,
-                "owning_info_supply_chain_names": owning_info_supply_chain_names,
-                "owning_info_supply_chain_qnames": owning_info_supply_chain_qnames,
+                "solution_blueprint_guids": blueprint_guids,
+                "solution_blueprint_names": blueprint_names,
+                "solution_blueprints": blueprint_qnames,
 
                 "implemented_by_guids": implemented_by_guids,
                 "implemented_by_names": implemented_by_names,
@@ -444,32 +446,32 @@ class SolutionArchitect(Client2):
                 "wired_to_qnames": wired_to_qnames,
                 "wired_to_link_labels": wired_to_link_labels,
 
-                "external_references_guids": external_references_guids,
-                "external_references_names": external_references_names,
-                "external_references_qnames": external_references_qnames,
+                "in_supply_chain_guids": supply_chain_guids,
+                "in_supply_chain_names": supply_chain_names,
+                "in_supply_chains": supply_chain_qnames,
 
                 "mermaid" : mermaid,
             }
-
-    def _extract_component_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
-        """
-        Normalize for a list of dictionaries.
-        Args:
-            element: Dict or List
-
-        Returns:
-            list of Dict
-
-        """
-        if isinstance(element, dict):
-            return [self._extract_solution_components_properties(element)]
-        elif isinstance(element, list):
-            comp_list = []
-            for i in range(len(element)):
-                comp_list.append( self._extract_solution_components_properties(element[i]))
-            return comp_list
-        else:
-            return []
+    #
+    # def _extract_component_list(self, element: Union[Dict,List[Dict]])->List[Dict]:
+    #     """
+    #     Normalize for a list of dictionaries.
+    #     Args:
+    #         element: Dict or List
+    #
+    #     Returns:
+    #         list of Dict
+    #
+    #     """
+    #     if isinstance(element, dict):
+    #         return [self._extract_solution_components_properties(element)]
+    #     elif isinstance(element, list):
+    #         comp_list = []
+    #         for i in range(len(element)):
+    #             comp_list.append( self._extract_solution_components_properties(element[i]))
+    #         return comp_list
+    #     else:
+    #         return []
 
     def _extract_solution_components_properties(self, element: Union[Dict,List[Dict]], columns_struct: dict) -> dict:
         """
@@ -482,7 +484,8 @@ class SolutionArchitect(Client2):
             Dictionary with extracted properties
         """
 
-        return populate_common_columns(
+        # Start with common columns (header, relationships, subject area, and mermaid where applicable)
+        col_data = populate_common_columns(
             element,
             columns_struct,
             include_header=True,
@@ -492,6 +495,38 @@ class SolutionArchitect(Client2):
             mermaid_dest_key='mermaid'
         )
 
+        # Build a dictionary of relationship-derived values for this component
+        rel_dict = self._get_component_rel_elements_dict(element)
+
+        # If we have a columns structure, populate any matching keys from rel_dict.
+        # We only set a column's value if it is currently empty (None or "").
+        try:
+            formats = col_data.get('formats') if isinstance(col_data, dict) else None
+            columns = formats.get('columns') if isinstance(formats, dict) else None
+            if isinstance(columns, list) and isinstance(rel_dict, dict):
+                for col in columns:
+                    if not isinstance(col, dict):
+                        continue
+                    key = col.get('key')
+                    if not key:
+                        continue
+                    # Skip if already has a value
+                    if col.get('value') not in (None, ""):
+                        continue
+                    if key in rel_dict:
+                        val = rel_dict.get(key)
+                        # Join lists to a readable string; stringify primitives
+                        if isinstance(val, list):
+                            col['value'] = ", ".join([str(v) for v in val])
+                        elif val is None:
+                            col['value'] = ""
+                        else:
+                            col['value'] = str(val)
+        except Exception as e:
+            # Keep extraction resilient; log at debug level and proceed with existing col_data
+            logger.debug(f"_extract_solution_components_properties: error applying rel_dict values: {e}")
+
+        return col_data
     #
     # Markdown output support
     #
@@ -609,8 +644,8 @@ class SolutionArchitect(Client2):
         Generate output for solution components in the specified format.
 
         Given a set of elements representing solution components (either as a list or a dictionary),
-        this function generates output in the specified format. The output includes various 
-        attributes of the solution components, such as their names, descriptions, types, and 
+        this function generates output in the specified format. The output includes various
+        attributes of the solution components, such as their names, descriptions, types, and
         related information like blueprints, parents, and extended properties.
 
         Args:
@@ -3993,7 +4028,7 @@ class SolutionArchitect(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/attach")
-        await self._async_new_relationship_request(url, ["SolutionLinkingWireProperties"], body)
+        await self._async_new_relationship_request(url, "SolutionLinkingWireProperties", body)
         logger.info(f"Linked Solution Linking wires between {component1_guid} -> {component2_guid}")
 
     @dynamic_catch
@@ -4295,7 +4330,7 @@ class SolutionArchitect(Client2):
         url = f"{self.solution_architect_command_root}/solution-components/by-search-string"
 
         return await self._async_find_request(url, _type="SolutionComponent",
-                                              _gen_output=self.generate_info_supply_chain_output,
+                                              _gen_output=self.generate_solution_components_output,
                                               search_string=search_string, classification_names=classification_names,
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
@@ -4381,6 +4416,7 @@ class SolutionArchitect(Client2):
         https://egeria-project.org/concepts/solution-components
         """
         return self.find_solution_components("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body)
+
 
     async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                      page_size: int = 0, output_format: str = "JSON") -> dict | str:
@@ -4507,7 +4543,7 @@ class SolutionArchitect(Client2):
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
-                                                    output_format: str = "JSON") -> dict | str:
+                                                    output_format: str = "JSON", output_format_set: str = "Solution-Component-DrE") -> dict | str:
         """ Return the properties of a specific solution component. Async Version.
 
             Parameters
@@ -4523,6 +4559,8 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
+            output_format_set: str, default = "Solution-Component-DrE"
+                Structure of output to produce:
 
             Returns
             -------
@@ -4552,17 +4590,21 @@ class SolutionArchitect(Client2):
         validate_guid(guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{guid}/retrieve")
+        response = await self._async_get_guid_request(url, 'SolutionComponent',
+                                                      self.generate_solution_components_output,
+                                                      output_format, output_format_set, body)
+        return response
 
-        if body is None:
-            response = await self._async_make_request("POST", url)
-        else:
-            response = await self._async_make_request("POST", url, body_slimmer(body))
-        element = response.json().get("element", NO_ELEMENTS_FOUND)
-        if element == NO_ELEMENTS_FOUND:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, None, output_format)
-        return response.json().get("element", NO_ELEMENTS_FOUND)
+        # if body is None:
+        #     response = await self._async_make_request("POST", url)
+        # else:
+        #     response = await self._async_make_request("POST", url, body_slimmer(body))
+        # element = response.json().get("element", NO_ELEMENTS_FOUND)
+        # if element == NO_ELEMENTS_FOUND:
+        #     return NO_ELEMENTS_FOUND
+        # if output_format != 'JSON':  # return a simplified markdown representation
+        #     return self.generate_solution_components_output(element, None, output_format)
+        # return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
         """ Return the properties of a specific solution component.
@@ -5551,7 +5593,7 @@ class SolutionArchitect(Client2):
         Notes
         -----
         Sample body:
-        
+
         {
           "class": "FilterRequestBody",
           "asOfTime": "{{$isoTimestamp}}",

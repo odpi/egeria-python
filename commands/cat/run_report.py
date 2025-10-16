@@ -361,11 +361,11 @@ def main():
     # First, parse just the format-set argument to determine which other arguments to add
     logger.enable("pyegeria")
     initial_parser = argparse.ArgumentParser(add_help=False)
-    initial_parser.add_argument("--format-set", help="Name of the output format set", required=True)
+    initial_parser.add_argument("--report", help="Name of the output format set", required=True)
     initial_args, _ = initial_parser.parse_known_args()
 
     # Get the format set to determine parameters
-    format_set_name = initial_args.format_set
+    format_set_name = initial_args.report
     format_set = select_output_format_set(format_set_name, "ANY")
 
     # Check if the format set exists
@@ -379,7 +379,7 @@ def main():
     
     # Create the full parser with all arguments
     parser = argparse.ArgumentParser(description="Execute an action from an output format set")
-    parser.add_argument("--format-set", help="Name of the output format set", required=True)
+    parser.add_argument("--report", help="Name of the output format set", required=True)
     parser.add_argument("--server", help="Name of the server to connect to")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
@@ -412,7 +412,7 @@ def main():
     print(f"root path: {app_config.pyegeria_root}, config_file: {app_config.pyegeria_config_file}")
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    format_set_name = args.format_set
+    format_set_name = args.report
     output_format = args.output_format
 
     logger.info(f"view server @ {url}")

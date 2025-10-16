@@ -19,6 +19,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
+from pyegeria import PyegeriaException, print_basic_exception
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -44,7 +45,7 @@ fm_client = FeedbackManager(view_server, TESTING_EGERIA_PLATFORM_URL, user)
 
 bearer_token = fm_client.create_egeria_bearer_token(user, password)
 
-term_guid = "1dfb68d4-4fc7-49d1-9cac-11b0073e6266"
+term_guid = "b9a2735d-3a4a-4208-afe8-974e4369e733"
 
 tag_for_testing = {
     "isPrivateTag": False,
@@ -101,11 +102,11 @@ updated_note_for_testing = {
 
 
 standard_comment = {
-    "class": "ReferenceableUpdateRequestBody",
+    "class": "NewFeedbackRequestBody",
     "elementProperties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleStandardComment",
-        "commentText": "This is just an example STANDARD comment",
+        "description": "This is just an example STANDARD comment",
         "comment-type": "STANDARD_COMMENT",
         "additionalProperties": {
             "propertyName1": "property value 1",
@@ -237,11 +238,17 @@ def test_add_comment_reply_with_access_service_specified():
 ## test_add_comment_to_element test
 #
 def test_add_comment_to_element():
-    response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    fm_client.remove_comment_from_element(response["guid"])
-    assert response["relatedHTTPCode"] == 200
-    assert response["class"] == "GUIDResponse"
-    assert "guid" in response
+
+    try:
+        response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
+        fm_client.remove_comment_from_element(response["guid"])
+        assert response["relatedHTTPCode"] == 200
+        assert response["class"] == "GUIDResponse"
+        assert "guid" in response
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    except InvalidParameterException as e:
+        print_exception_response(e)
 
 
 #

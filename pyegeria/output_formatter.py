@@ -18,7 +18,7 @@ This function and related data structures have been moved back to _output_format
 Please import select_output_format_set from pyegeria._output_formats instead of from this module.
 """
 
-Console = Console(width=settings.Environment.console_width)
+console = Console(width=settings.Environment.console_width)
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
@@ -865,7 +865,7 @@ def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> Union[str, List[s
     result = []
     for element in elements:
         mer = element.get('mermaidGraph', "---")
-        mer_out = f"\n\n```mermaid\n{mer}\n\n```" if mer else "---"
+        mer_out = f"\n\n```mermaid\n{mer}\n```" if mer else "---"
         result.append(mer_out)
     return result
 
