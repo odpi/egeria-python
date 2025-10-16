@@ -4,8 +4,6 @@ Copyright Contributors to the ODPi Egeria project.
 
 """
 from pyegeria import (
-    INTEGRATION_GUIDS,
-    TEMPLATE_GUIDS,
     default_time_out,
     disable_ssl_warnings,
     enable_ssl_check,

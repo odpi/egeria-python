@@ -151,7 +151,22 @@ async def _async_run_report(
             raise TypeError(
                 f"Resolved function '{method_name}'  not found in client class '{client_class.__name__}' is not callable."
             )
-        token = await egeria_client._async_create_egeria_bearer_token(user_name, user_pwd)
+        # Only (re)create a bearer token if one is not already set on the client.
+        try:
+            existing_token = None
+            if hasattr(egeria_client, "get_token"):
+                existing_token = egeria_client.get_token()
+            if not existing_token:
+                print("DEBUG: No existing bearer token; attempting async creation...", file=sys.stderr)
+                if user_name and user_pwd:
+                    await egeria_client._async_create_egeria_bearer_token(user_name, user_pwd)
+                else:
+                    print("DEBUG: Missing credentials; skipping token creation and relying on pre-initialized token.", file=sys.stderr)
+            else:
+                print("DEBUG: Using existing bearer token.", file=sys.stderr)
+        except Exception as auth_err:
+            # Do not fail the entire call if token refresh fails; downstream call may still work
+            print(f"DEBUG: Token creation/lookup issue: {auth_err}", file=sys.stderr)
         result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:

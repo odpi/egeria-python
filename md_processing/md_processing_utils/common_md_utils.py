@@ -51,7 +51,7 @@ GOVERNANCE_CONTROLS = ["Governance Control", "Governance Rule", "Service Level O
 ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROLS + ["Governance Strategy", "Regulation",
                                                 "Security Group", "GovernanceMetric",
                                                 "Naming Standard Rule", "TermsAndConditions", "Certification Type", "License Type"]
-
+console = Console(width=EGERIA_WIDTH)
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS
 
@@ -521,7 +521,7 @@ def set_classifications(object_type: str, attributes: dict)->dict:
     classifications = attributes.get('Classifications', {}).get('name_list', None)
     body = None
     if classifications:
-        body = {classification: {} for classification in classifications} if cclassifications else {}
+        body = {classification: {} for classification in classifications} if classifications else {}
     return body
 
 def set_object_classifications(object_type: str, attributes: dict, obj_types: list[str])->dict:

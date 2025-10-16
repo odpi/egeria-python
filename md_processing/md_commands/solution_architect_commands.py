@@ -155,7 +155,7 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
         logger.trace(f"supply_chains_to_add: {list(supply_chains_to_add)}")
         if len(supply_chains_to_add) > 0:
             body = {
-                "class": "RelationshipRequestBody",
+                "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "ImplementedByProperties",
                     "description": "a blank description to satisfy the Egeria gods"
@@ -188,7 +188,7 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
 
         if supply_chain_guids:
             body = {
-                "class": "RelationshipRequestBody",
+                "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "ImplementedByProperties",
                     "description": "a blank description to satisfy the Egeria gods"
@@ -515,7 +515,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                                                 display_name,
                                                 merge_update)
                 logger.success(f"==>Updated  {object_type} `{display_name}` with related elements")
-                return egeria_client.get_solution_component_by_guid(guid, output_format='MD')
+                return egeria_client.get_solution_component_by_guid(guid, output_format='MD', output_format_set = "Solution-Component-DrE")
 
 
             elif object_action == "Create":
@@ -702,7 +702,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                     return
                 else:
                     body = {
-                        "class": "RelationshipRequestBody",
+                        "class": "NewRelationshipRequestBody",
                         "effectiveTime": effective_time,
                         "forLineage": False,
                         "forDuplicateProcessing": False,
@@ -715,13 +715,12 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                             }
                         }
 
-                    egeria_client.link_solution_linking_wire(component1, component2, None)
+                    egeria_client.link_solution_linking_wire(component1, component2, body)
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)
                     print(Markdown(msg))
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
                     return out
-
 
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -1005,7 +1004,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                     return
                 else:
                     body = {
-                        "class": "RelationshipRequestBody",
+                        "class": "NewRelationshipRequestBody",
                         "effectiveTime": effective_time,
                         "forLineage": False,
                         "forDuplicateProcessing": False,

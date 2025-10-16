@@ -14,7 +14,7 @@ import click
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria import INTEGRATION_GUIDS, AutomatedCuration, EgeriaTech
+from pyegeria import AutomatedCuration, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -36,17 +36,18 @@ def add_catalog_target(
 ) -> str:
     """Add catalog targets to the specified integration connector"""
     try:
-        if integration_connector not in INTEGRATION_GUIDS.keys():
-            click.echo("Integration connector is not known")
-
         c = ctx.obj
         a_client = AutomatedCuration(
             c.view_server, c.view_server_url, c.userid, c.password
         )
         token = a_client.create_egeria_bearer_token()
 
+        integ_connector_guid = a_client.get_connector_guid(integration_connector)
+        if not integ_connector_guid or c.catalog_targets == 'No connector found':
+            raise InvalidParameterException('No Connector found')
+
         guid = a_client.add_catalog_target(
-            INTEGRATION_GUIDS[integration_connector],
+            integ_connector_guid,
             metadata_element_guid,
             catalog_target_name,
         )

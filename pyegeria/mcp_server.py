@@ -141,11 +141,7 @@ def main() -> None:
                     params=params),
                 timeout=30  # Adjust timeout as needed
             )
-            # result = await _async_run_report_tool(
-            #     report=report_name,
-            #     egeria_client=egeria_client,
-            #     params=params
-            # )
+
             print("DEBUG: run_report completed successfully", file=sys.stderr)
             return _ok(result)
         except Exception as e:

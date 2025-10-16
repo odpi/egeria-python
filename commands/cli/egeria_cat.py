@@ -14,8 +14,9 @@ import os
 import click
 from trogon import tui
 from pyegeria import settings
+from loguru import logger
 
-from commands.cat.list_format_set import execute_format_set_action
+from commands.cat.run_report import execute_format_set_action
 from commands.cat.dr_egeria_md import process_markdown_file
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
@@ -64,7 +65,7 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 app_settings = settings
 
-app_config = app_settings["Environment"]
+app_config = app_settings.Environment
 # config_logging()
 
 
@@ -76,7 +77,7 @@ app_config = app_settings["Environment"]
 @click.group()
 @click.option(
     "--server",
-    default=app_config['Egeria Metadata Store'],
+    default=app_config.egeria_metadata_store,
     help="Egeria metadata store to work with",
 )
 @click.option(
@@ -123,9 +124,11 @@ app_config = app_settings["Environment"]
 @click.option(
     "--password",
     default=EGERIA_USER_PASSWORD,
-    help="Egeria user password",
+    help="Egeria user password"
 )
+
 @click.option("--timeout", default=60, help="Number of seconds to wait")
+
 @click.option(
     "--jupyter",
     is_flag=True,
@@ -135,18 +138,18 @@ app_config = app_settings["Environment"]
 )
 @click.option(
     "--width",
-    default=app_config.console__width,
+    default=app_config.console_width,
     type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
-    "--home_glossary_guid",
-    default=app_settings.User_Profile.home_glossary_guid,
+    "--home_glossary_name",
+    default=app_settings.User_Profile.egeria_home_glossary_name,
     help="Glossary name to use as the home glossary",
 )
 @click.option(
     "--glossary_path",
-    default=app_config.egeria_platform_glossary_path,
+    default=app_config.egeria_glossary_path,
     help="Path to glossary import/export files",
 )
 
@@ -183,7 +186,7 @@ def cli(
     timeout,
     jupyter,
     width,
-    home_glossary_guid,
+    home_glossary_name,
     glossary_path,
     root_path,
     inbox_path,
@@ -204,7 +207,7 @@ def cli(
         timeout,
         jupyter,
         width,
-        home_glossary_guid,
+        home_glossary_name,
         glossary_path,
         root_path,
         inbox_path,
@@ -227,17 +230,17 @@ def info(ctx):
     pass
 
 
-@info.command("list-output-set")
-@click.option("--format-set", help="Format set to output")
+@info.command("Run Report")
+@click.option("--report", help="Report to output", default="Digital-Products")
 @click.option("--output-format", default = "TABLE", help="Output format type")
 @click.option('--search-string', default="*", help="Search string")
 @click.pass_context
-def show_format_set(ctx, format_set, output_format, search_string):
+def show_format_set(ctx, report, output_format, search_string):
     """Dynamically generate output based on a format set"""
     c = ctx.obj
-
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
     execute_format_set_action(
-        format_set, c.view_server, c.view_server_url,
+        report, c.view_server, c.view_server_url,
         c.userid, c.password, output_format, search_string = search_string
     )
 

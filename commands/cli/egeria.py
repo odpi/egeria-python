@@ -18,7 +18,7 @@ from loguru import logger
 
 from pyegeria import config_logging,  settings
 
-from commands.cat.list_format_set import execute_format_set_action
+from commands.cat.run_report import execute_format_set_action
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
@@ -1041,17 +1041,17 @@ def show_cat_info(ctx):
     """Group of md_commands to show information about various Egeria objects"""
     pass
 
-@show_cat_info.command("list-output-set")
-@click.option("--format-set", help="Format set to output")
+@show_cat_info.command("Run Report")
+@click.option("--report", help="Report to output", default="Digital-Products")
 @click.option("--output-format", default = "TABLE", help="Output format type")
 @click.option('--search-string', default="*", help="Search string")
 @click.pass_context
-def show_format_set(ctx, format_set, output_format, search_string):
+def show_format_set(ctx, report, output_format, search_string):
     """Dynamically generate output based on a format set"""
     c = ctx.obj
     logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
     execute_format_set_action(
-        format_set, c.view_server, c.view_server_url,
+        report, c.view_server, c.view_server_url,
         c.userid, c.password, output_format, search_string = search_string
     )
 
