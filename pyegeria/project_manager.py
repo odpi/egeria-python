@@ -420,7 +420,7 @@ class ProjectManager(Client2):
         )
 
         response = await self._async_find_request(url, _type="Project",
-                                                  _gen_output=self._generate_project_output,
+                                                  _gen_output=self._generate_comment_output,
                                                   search_string=search_string,
                                                   classification_names=classification_names,
                                                   metadata_element_types=metadata_element_types,
@@ -512,7 +512,7 @@ class ProjectManager(Client2):
         url = f"{self.project_command_base}/by-name"
 
         response = await self._async_get_name_request(url, _type="Projects",
-                                                      _gen_output=self._generate_project_output,
+                                                      _gen_output=self._generate_comment_output,
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
@@ -596,7 +596,7 @@ class ProjectManager(Client2):
         type = element_type if element_type else "Collection"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_project_output,
+                                                      _gen_output=self._generate_comment_output,
                                                       output_format=output_format, output_format_set=output_format_set,
                                                       body=body)
 
@@ -695,7 +695,7 @@ class ProjectManager(Client2):
                f"ojects/{project_guid}/graph")
 
         response = await self._async_get_guid_request(url, _type=element_type,
-                                                      _gen_output=self._generate_project_output,
+                                                      _gen_output=self._generate_comment_output,
                                                       output_format=output_format, output_format_set=output_format_set,
                                                       body=body)
 

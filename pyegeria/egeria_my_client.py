@@ -5,7 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Runtime manager is a view service that supports user interaction with the running platforms.
 
 """
-from pyegeria.feedback_manager_omvs import FeedbackManager
+
 from pyegeria.my_profile_omvs import MyProfile
 from pyegeria.utils import body_slimmer
 
@@ -48,7 +48,7 @@ class EgeriaMy:
 
         # Compose sub-clients
         self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
-        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
+        # self._feedback = Client2(view_server, platform_url, user_id, user_pwd, token)
         # Keep an ordered list for delegation lookups and bulk operations
         self._subclients = [self._my_profile, self._feedback]
 

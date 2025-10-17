@@ -33,7 +33,6 @@ from pydantic import ValidationError
 from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
                              NewElementRequestBody, InitialClassifications)
 
-from tests.test_feedback_manager_omvs import password
 
 disable_ssl_warnings = True
 
@@ -363,7 +362,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "545c62f6-a706-45f2-a157-8641fa096c02"
+            collection_guid = "5f4ed132-407a-4047-ac65-dee8ca09c057"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", output_format_set="Folders")
@@ -697,7 +696,7 @@ class TestCollectionManager:
             parent_guid = None
             parent_relationship_type_name = None
             parent_at_end1 = None
-            display_name = "Base Collection"
+            display_name = "Base Collection2"
             description = "This is the root catalog Testing"
             collection_type = "Test Data"
             is_own_anchor = True
@@ -787,7 +786,7 @@ class TestCollectionManager:
             parent_guid = None
             parent_relationship_type_name = "CollectionMembership"
             parent_at_end1 = True
-            display_name = "Dans Artifacts"
+            display_name = "Dans Old Artifacts"
             description = "This folder contains Dans artifacts"
             collection_type = "User Data"
             is_own_anchor = True

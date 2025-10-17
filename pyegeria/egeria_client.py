@@ -23,7 +23,7 @@ from pyegeria.runtime_manager_omvs import RuntimeManager
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.my_profile_omvs import MyProfile
-from pyegeria.feedback_manager_omvs import FeedbackManager
+# from pyegeria.feedback_manager_omvs import FeedbackManager
 from pyegeria.solution_architect import SolutionArchitect
 from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
@@ -66,7 +66,7 @@ class Egeria:
         # Compose major umbrella and service clients
         self._asset_catalog = AssetCatalog(view_server, platform_url, user_id, user_pwd, token)
         self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
-        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
+        # self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
         self._glossary = GlossaryManager(view_server, platform_url, user_id, user_pwd, token)
         self._projects = ProjectManager(view_server, platform_url, user_id, user_pwd, token)
         self._runtime = RuntimeManager(view_server, platform_url, user_id, user_pwd, token)

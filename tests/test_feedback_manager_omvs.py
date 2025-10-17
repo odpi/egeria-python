@@ -19,7 +19,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria import PyegeriaException, print_basic_exception
+from pyegeria import Client2, PyegeriaException, print_basic_exception
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -27,7 +27,7 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
-from pyegeria.feedback_manager_omvs import FeedbackManager
+# from pyegeria.feedback_manager_omvs import FeedbackManager
 
 disable_ssl_warnings = True
 
@@ -40,12 +40,12 @@ view_server = "qs-view-server"
 user = "erinoverview"
 password = "secret"
 
-fm_client = FeedbackManager(view_server, TESTING_EGERIA_PLATFORM_URL, user)
+fm_client = Client2(view_server, TESTING_EGERIA_PLATFORM_URL, user)
 
 
 bearer_token = fm_client.create_egeria_bearer_token(user, password)
 
-term_guid = "b9a2735d-3a4a-4208-afe8-974e4369e733"
+term_guid = "25791bdf-9301-46e0-9546-8596d5734572"
 
 tag_for_testing = {
     "isPrivateTag": False,
@@ -69,7 +69,7 @@ notelog_for_testing = {
 
 updated_notelog_for_testing = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "NoteLogProperties",
         "qualifiedName": "test-note-log",
         "name": "Test Note Log",
@@ -91,7 +91,7 @@ note_for_testing = {
 
 updated_note_for_testing = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "NoteProperties",
         "qualifiedName": "ready for testing",
         "title": "Ready for Testing",
@@ -103,7 +103,7 @@ updated_note_for_testing = {
 
 standard_comment = {
     "class": "NewFeedbackRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleStandardComment",
         "description": "This is just an example STANDARD comment",
@@ -117,10 +117,10 @@ standard_comment = {
 
 updated_standard_comment = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleStandardComment",
-        "commentText": "This is just an example of an updatedSTANDARD comment",
+        "description": "This is just an example of an updatedSTANDARD comment",
         "comment-type": "STANDARD_COMMENT",
         "additionalProperties": {
             "propertyName2": "property value 2",
@@ -131,10 +131,10 @@ updated_standard_comment = {
 
 reply_comment = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleReplyComment",
-        "commentText": "This is just an example STANDARD comment reply",
+        "description": "This is just an example STANDARD comment reply",
         "comment-type": "STANDARD_COMMENT",
         "additionalProperties": {
             "propertyName1": "property value 1",
@@ -146,10 +146,10 @@ reply_comment = {
 
 question_comment = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleQuestionComment",
-        "commentText": "This is just an example Question comment. We would pose some question here.",
+        "description": "This is just an example Question comment. We would pose some question here.",
         "commentType": "QUESTION",
         "additionalProperties": {
             "propertyName1": "property value 1",
@@ -160,10 +160,10 @@ question_comment = {
 
 answer_comment = {
     "class": "ReferenceableUpdateRequestBody",
-    "elementProperties": {
+    "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleAnswerComment",
-        "commentText": "This is just an example Answer comment. We would propose an answer to a question question here.",
+        "description": "This is just an example Answer comment. We would propose an answer to a question question here.",
         "commentType": "ANSWER",
         "additionalProperties": {
             "propertyName1": "property value 1",
@@ -190,9 +190,7 @@ def valid_guid(guid):
 ## test_add_comment_reply test
 #
 def test_add_comment_reply():
-    comment_response = fm_client.add_comment_to_element(
-        term_guid, body=standard_comment
-    )
+    comment_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
     reply_response = fm_client.add_comment_reply(
         term_guid, comment_response["guid"], body=reply_comment
     )
@@ -204,9 +202,7 @@ def test_add_comment_reply():
 
 
 def test_add_comment_reply_with_private_reply():
-    comment_response = fm_client.add_comment_to_element(
-        term_guid, body=standard_comment
-    )
+    comment_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
     reply_response = fm_client.add_comment_reply(
         term_guid, comment_response["guid"], body=reply_comment, is_public=False
     )
@@ -218,9 +214,7 @@ def test_add_comment_reply_with_private_reply():
 
 
 def test_add_comment_reply_with_access_service_specified():
-    comment_response = fm_client.add_comment_to_element(
-        term_guid, body=standard_comment
-    )
+    comment_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
     reply_response = fm_client.add_comment_reply(
         term_guid,
         comment_response["guid"],
@@ -288,9 +282,7 @@ def test_add_tag_to_element():
 
 
 def test_clear_accepted_answer():
-    question_comment_response = fm_client.add_comment_to_element(
-        term_guid, body=question_comment
-    )
+    question_comment_response = fm_client.add_comment_to_element(term_guid, body=question_comment)
     answer_comment_response = fm_client.add_comment_reply(
         term_guid, question_comment_response["guid"], body=answer_comment
     )
@@ -510,24 +502,24 @@ def test_can_handle_no_comments():
 
 
 def test_can_handle_no_comments_with_details_requested():
-    response = fm_client.find_comments({"filter": ""}, detailed_response=True)
+    response = fm_client.find_comments({"filter": ""})
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
 
 
 def test_find_comments():
-    create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.find_comments({"filter": ""})
+    # create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
+    response = fm_client.find_comments("*")
     assert "class" in response[0]
-    assert response[0]["class"] == "CommentProperties"
-    assert "qualifiedName" in response[0]
-    assert "guid" in response[0]
-    fm_client.remove_comment_from_element(create_response["guid"])
+    assert response[0]["properties"]["class"] == "CommentProperties"
+    assert "qualifiedName" in response[0]["properties"].keys()
+    assert "guid" in response[0]['elementHeader']
+    # fm_client.remove_comment_from_element(create_response["guid"])
 
 
 def test_find_comments_detailed():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.find_comments({"filter": ""}, detailed_response=True)
+    response = fm_client.find_comments({"filter": ""})
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "CommentElementsResponse"
     assert "elementList" in response
@@ -1004,9 +996,7 @@ def test_remove_tag_from_element():
 ## test_setup_accepted_answer test
 #
 def test_setup_accepted_answer():
-    question_comment_response = fm_client.add_comment_to_element(
-        term_guid, body=question_comment
-    )
+    question_comment_response = fm_client.add_comment_to_element(term_guid, body=question_comment)
     answer_comment_response = fm_client.add_comment_reply(
         term_guid, question_comment_response["guid"], body=answer_comment
     )

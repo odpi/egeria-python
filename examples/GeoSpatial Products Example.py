@@ -538,7 +538,6 @@ try:
 except (PyegeriaInvalidParameterException, PyegeriaConnectionException, PyegeriaAPIException,
         PyegeriaUnknownException, PyegeriaException) as e:
     print_exception_table(e)
-
 except ValidationError as e:
     print_validation_error(e)
 

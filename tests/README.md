@@ -7,6 +7,8 @@
 
 # pyegeria: unit tests
 
+Note: For detailed instructions on running the test suite (including the optional live testing mode with --live-egeria or PYEG_LIVE_EGERIA=1), see the repository root README.md, “Testing” section.
+
 This directory holds unit tests for pyegeria. The testing framework is **pytest**.
 Each python file in the src/pyegeria directory has a corresponding unit test file in this directory.
 The unit tests may be run individually or in batch - however there are some configuration 

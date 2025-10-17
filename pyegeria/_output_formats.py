@@ -211,7 +211,7 @@ COLLECTION_DICT = Format(
 )
 
 BASIC_COLLECTIONS_COLUMNS = [
-    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name='GUID', key='guid', format=True),
     Column(name='Type Name', key='type_name'),
     Column(name="Containing Members", key='collection_members'),
@@ -532,7 +532,7 @@ base_output_format_sets = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_PARAMS,
-            spec_params={"classification_names": ["Folder"]},
+            spec_params={"metadata_element_typs": ["FolderCollection"]},
         )
     ),
 

@@ -108,9 +108,33 @@ print(cfg.Logging.enable_logging)
   python scripts/validate_env.py --env config/env
   python scripts/validate_env.py               # auto-detects ./config/env or ./.env
 
-- Run tests (requires Poetry):
+### Testing
+
+By default, running pytest executes unit tests that use monkeypatching/fakes and do not contact a live Egeria.
+
+- Run unit tests (recommended default):
   poetry install
   poetry run pytest -v
+
+You can also run tests live against a local Egeria instance. Enable live mode with either a CLI flag or an environment variable. In live mode, tests marked as `unit` are skipped and live tests run using a real Client2 connection.
+
+- Enable live mode via CLI:
+  poetry run pytest -q --live-egeria
+
+- Or enable via environment variable:
+  PYEG_LIVE_EGERIA=1 poetry run pytest -q
+
+Default live connection parameters (can be overridden via env):
+- server_name = "qs-view-server"           (override with PYEG_SERVER_NAME)
+- platform_url = "https://localhost:9443" (override with PYEG_PLATFORM_URL)
+- user_id = "peterprofile"                (override with PYEG_USER_ID)
+- user_pwd = "secret"                      (override with PYEG_USER_PWD)
+
+Notes:
+- SSL verification is controlled by pyegeria._globals.enable_ssl_check, which defaults to False in this repo to support localhost/self-signed certs.
+- See tests/conftest.py for the live test fixtures and switches.
+
+### Troubleshooting
 
 ### Troubleshooting
 
